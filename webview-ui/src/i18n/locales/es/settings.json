@@ -41,7 +41,7 @@
 		"description": "Configura los ajustes de indexación de código para habilitar búsqueda semántica en tu proyecto. <0>Más información</0>",
 		"statusTitle": "Estado",
 		"enableLabel": "Habilitar indexación de código",
-		"enableDescription": "<0>La indexación de código</0> es una función experimental que crea un índice de búsqueda semántica de tu proyecto usando embeddings de IA. Esto permite a Roo Code entender mejor y navegar grandes bases de código encontrando código relevante basado en significado en lugar de solo palabras clave.",
+		"enableDescription": "Habilita la indexación de código para mejorar la búsqueda y la comprensión del contexto",
 		"settingsTitle": "Configuración de indexación",
 		"disabledMessage": "La indexación de código está actualmente deshabilitada. Habilítala en la configuración global para configurar las opciones de indexación.",
 		"providerLabel": "Proveedor de embeddings",
@@ -175,8 +175,12 @@
 			"description": "Ejecutar automáticamente comandos de terminal permitidos sin requerir aprobación",
 			"allowedCommands": "Comandos de auto-ejecución permitidos",
 			"allowedCommandsDescription": "Prefijos de comandos que pueden ser ejecutados automáticamente cuando \"Aprobar siempre operaciones de ejecución\" está habilitado. Añade * para permitir todos los comandos (usar con precaución).",
+			"deniedCommands": "Comandos denegados",
+			"deniedCommandsDescription": "Prefijos de comandos que serán automáticamente denegados sin pedir aprobación. En caso de conflictos con comandos permitidos, la coincidencia de prefijo más larga tiene prioridad. Añade * para denegar todos los comandos.",
 			"commandPlaceholder": "Ingrese prefijo de comando (ej. 'git ')",
-			"addButton": "Añadir"
+			"deniedCommandPlaceholder": "Ingrese prefijo de comando a denegar (ej. 'rm -rf')",
+			"addButton": "Añadir",
+			"autoDenied": "Los comandos con el prefijo `{{prefix}}` han sido prohibidos por el usuario. No eludes esta restricción ejecutando otro comando."
 		},
 		"updateTodoList": {
 			"label": "Todo",
@@ -373,7 +377,9 @@
 		"claudeCode": {
 			"pathLabel": "Ruta de Claude Code",
 			"description": "Ruta opcional a su CLI de Claude Code. Por defecto, es 'claude' si no se establece.",
-			"placeholder": "Por defecto: claude"
+			"placeholder": "Por defecto: claude",
+			"maxTokensLabel": "Tokens máximos de salida",
+			"maxTokensDescription": "Número máximo de tokens de salida para las respuestas de Claude Code. El valor predeterminado es 8000."
 		}
 	},
 	"browser": {

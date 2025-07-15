@@ -19,6 +19,15 @@ vitest.mock("../../../shared/embeddingModels", () => ({
 	getModelDimension: vitest.fn(),
 }))
 
+// Mock TelemetryService
+vitest.mock("@roo-code/telemetry", () => ({
+	TelemetryService: {
+		instance: {
+			captureEvent: vitest.fn(),
+		},
+	},
+}))
+
 const MockedOpenAiEmbedder = OpenAiEmbedder as MockedClass<typeof OpenAiEmbedder>
 const MockedCodeIndexOllamaEmbedder = CodeIndexOllamaEmbedder as MockedClass<typeof CodeIndexOllamaEmbedder>
 const MockedOpenAICompatibleEmbedder = OpenAICompatibleEmbedder as MockedClass<typeof OpenAICompatibleEmbedder>
@@ -256,7 +265,7 @@ describe("CodeIndexServiceFactory", () => {
 			expect(() => factory.createEmbedder()).toThrow("serviceFactory.openAiCompatibleConfigMissing")
 		})
 
-		it("should create GeminiEmbedder when using Gemini provider", () => {
+		it("should create GeminiEmbedder with default model when no modelId specified", () => {
 			// Arrange
 			const testConfig = {
 				embedderProvider: "gemini",
@@ -270,7 +279,25 @@ describe("CodeIndexServiceFactory", () => {
 			factory.createEmbedder()
 
 			// Assert
-			expect(MockedGeminiEmbedder).toHaveBeenCalledWith("test-gemini-api-key")
+			expect(MockedGeminiEmbedder).toHaveBeenCalledWith("test-gemini-api-key", undefined)
+		})
+
+		it("should create GeminiEmbedder with specified modelId", () => {
+			// Arrange
+			const testConfig = {
+				embedderProvider: "gemini",
+				modelId: "text-embedding-004",
+				geminiOptions: {
+					apiKey: "test-gemini-api-key",
+				},
+			}
+			mockConfigManager.getConfig.mockReturnValue(testConfig as any)
+
+			// Act
+			factory.createEmbedder()
+
+			// Assert
+			expect(MockedGeminiEmbedder).toHaveBeenCalledWith("test-gemini-api-key", "text-embedding-004")
 		})
 
 		it("should throw error when Gemini API key is missing", () => {
@@ -393,9 +420,41 @@ describe("CodeIndexServiceFactory", () => {
 			)
 		})
 
-		it("should prioritize manual modelDimension over getModelDimension for OpenAI Compatible provider", () => {
+		it("should prioritize getModelDimension over manual modelDimension for OpenAI Compatible provider", () => {
 			// Arrange
 			const testModelId = "custom-model"
+			const manualDimension = 1024
+			const modelDimension = 768
+			const testConfig = {
+				embedderProvider: "openai-compatible",
+				modelId: testModelId,
+				modelDimension: manualDimension, // This should be ignored when model has built-in dimension
+				openAiCompatibleOptions: {
+					baseUrl: "https://api.example.com/v1",
+					apiKey: "test-api-key",
+				},
+				qdrantUrl: "http://localhost:6333",
+				qdrantApiKey: "test-key",
+			}
+			mockConfigManager.getConfig.mockReturnValue(testConfig as any)
+			mockGetModelDimension.mockReturnValue(modelDimension) // This should be used
+
+			// Act
+			factory.createVectorStore()
+
+			// Assert
+			expect(mockGetModelDimension).toHaveBeenCalledWith("openai-compatible", testModelId)
+			expect(MockedQdrantVectorStore).toHaveBeenCalledWith(
+				"/test/workspace",
+				"http://localhost:6333",
+				modelDimension, // Should use model's built-in dimension, not manual
+				"test-key",
+			)
+		})
+
+		it("should use manual modelDimension only when model has no built-in dimension", () => {
+			// Arrange
+			const testModelId = "unknown-model"
 			const manualDimension = 1024
 			const testConfig = {
 				embedderProvider: "openai-compatible",
@@ -409,17 +468,17 @@ describe("CodeIndexServiceFactory", () => {
 				qdrantApiKey: "test-key",
 			}
 			mockConfigManager.getConfig.mockReturnValue(testConfig as any)
-			mockGetModelDimension.mockReturnValue(768) // This should be ignored
+			mockGetModelDimension.mockReturnValue(undefined) // Model has no built-in dimension
 
 			// Act
 			factory.createVectorStore()
 
 			// Assert
-			expect(mockGetModelDimension).not.toHaveBeenCalled()
+			expect(mockGetModelDimension).toHaveBeenCalledWith("openai-compatible", testModelId)
 			expect(MockedQdrantVectorStore).toHaveBeenCalledWith(
 				"/test/workspace",
 				"http://localhost:6333",
-				manualDimension,
+				manualDimension, // Should use manual dimension as fallback
 				"test-key",
 			)
 		})
@@ -498,26 +557,51 @@ describe("CodeIndexServiceFactory", () => {
 			)
 		})
 
-		it("should use fixed dimension 768 for Gemini provider", () => {
+		it("should use model-specific dimension for Gemini provider", () => {
 			// Arrange
 			const testConfig = {
 				embedderProvider: "gemini",
-				modelId: "text-embedding-004", // This is ignored by Gemini
+				modelId: "gemini-embedding-001",
 				qdrantUrl: "http://localhost:6333",
 				qdrantApiKey: "test-key",
 			}
 			mockConfigManager.getConfig.mockReturnValue(testConfig as any)
+			mockGetModelDimension.mockReturnValue(3072)
 
 			// Act
 			factory.createVectorStore()
 
 			// Assert
-			// getModelDimension should not be called for Gemini
-			expect(mockGetModelDimension).not.toHaveBeenCalled()
+			expect(mockGetModelDimension).toHaveBeenCalledWith("gemini", "gemini-embedding-001")
 			expect(MockedQdrantVectorStore).toHaveBeenCalledWith(
 				"/test/workspace",
 				"http://localhost:6333",
-				768, // Fixed dimension for Gemini
+				3072,
+				"test-key",
+			)
+		})
+
+		it("should use default model dimension for Gemini when modelId not specified", () => {
+			// Arrange
+			const testConfig = {
+				embedderProvider: "gemini",
+				qdrantUrl: "http://localhost:6333",
+				qdrantApiKey: "test-key",
+			}
+			mockConfigManager.getConfig.mockReturnValue(testConfig as any)
+			mockGetDefaultModelId.mockReturnValue("gemini-embedding-001")
+			mockGetModelDimension.mockReturnValue(3072)
+
+			// Act
+			factory.createVectorStore()
+
+			// Assert
+			expect(mockGetDefaultModelId).toHaveBeenCalledWith("gemini")
+			expect(mockGetModelDimension).toHaveBeenCalledWith("gemini", "gemini-embedding-001")
+			expect(MockedQdrantVectorStore).toHaveBeenCalledWith(
+				"/test/workspace",
+				"http://localhost:6333",
+				3072,
 				"test-key",
 			)
 		})

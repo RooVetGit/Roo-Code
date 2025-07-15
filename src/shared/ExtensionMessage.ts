@@ -187,6 +187,7 @@ export type ExtensionState = Pick<
 	| "alwaysAllowExecute"
 	| "alwaysAllowUpdateTodoList"
 	| "allowedCommands"
+	| "deniedCommands"
 	| "allowedMaxRequests"
 	| "browserToolEnabled"
 	| "browserViewportSize"
@@ -383,6 +384,7 @@ export interface ClineApiReqInfo {
 	cost?: number
 	cancelReason?: ClineApiReqCancelReason
 	streamingFailedMessage?: string
+	apiProtocol?: "anthropic" | "openai"
 }
 
 export type ClineApiReqCancelReason = "streaming_failed" | "user_cancelled"

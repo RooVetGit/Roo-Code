@@ -39,7 +39,7 @@
 	"codeIndex": {
 		"title": "Codebase indexering",
 		"enableLabel": "Codebase indexering inschakelen",
-		"enableDescription": "<0>Codebase indexering</0> is een experimentele functie die een semantische zoekindex van je project creëert met behulp van AI-embeddings. Dit stelt Roo Code in staat om grote codebases beter te begrijpen en te navigeren door relevante code te vinden op basis van betekenis in plaats van alleen trefwoorden.",
+		"enableDescription": "Code-indexering inschakelen voor verbeterde zoekresultaten en contextbegrip",
 		"providerLabel": "Embeddings provider",
 		"selectProviderPlaceholder": "Selecteer provider",
 		"openaiProvider": "OpenAI",
@@ -175,8 +175,12 @@
 			"description": "Automatisch toegestane terminalcommando's uitvoeren zonder goedkeuring",
 			"allowedCommands": "Toegestane automatisch uit te voeren commando's",
 			"allowedCommandsDescription": "Commando-prefixen die automatisch kunnen worden uitgevoerd als 'Altijd goedkeuren voor uitvoeren' is ingeschakeld. Voeg * toe om alle commando's toe te staan (gebruik met voorzichtigheid).",
+			"deniedCommands": "Geweigerde commando's",
+			"deniedCommandsDescription": "Commando-prefixen die automatisch worden geweigerd zonder om goedkeuring te vragen. Bij conflicten met toegestane commando's heeft de langste prefixovereenkomst voorrang. Voeg * toe om alle commando's te weigeren.",
 			"commandPlaceholder": "Voer commando-prefix in (bijv. 'git ')",
-			"addButton": "Toevoegen"
+			"deniedCommandPlaceholder": "Voer te weigeren commando-prefix in (bijv. 'rm -rf')",
+			"addButton": "Toevoegen",
+			"autoDenied": "Commando's met het prefix `{{prefix}}` zijn verboden door de gebruiker. Omzeil deze beperking niet door een ander commando uit te voeren."
 		},
 		"updateTodoList": {
 			"label": "Todo",
@@ -373,7 +377,9 @@
 		"claudeCode": {
 			"pathLabel": "Claude Code Pad",
 			"description": "Optioneel pad naar uw Claude Code CLI. Standaard 'claude' als niet ingesteld.",
-			"placeholder": "Standaard: claude"
+			"placeholder": "Standaard: claude",
+			"maxTokensLabel": "Max Output Tokens",
+			"maxTokensDescription": "Maximaal aantal output-tokens voor Claude Code-reacties. Standaard is 8000."
 		}
 	},
 	"browser": {

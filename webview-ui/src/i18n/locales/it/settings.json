@@ -39,7 +39,7 @@
 	"codeIndex": {
 		"title": "Indicizzazione del codice",
 		"enableLabel": "Abilita indicizzazione del codice",
-		"enableDescription": "<0>L'indicizzazione del codice</0> è una funzionalità sperimentale che crea un indice di ricerca semantica del tuo progetto utilizzando embedding AI. Questo permette a Roo Code di comprendere meglio e navigare grandi basi di codice trovando codice rilevante basato sul significato piuttosto che solo su parole chiave.",
+		"enableDescription": "Abilita l'indicizzazione del codice per una ricerca e una comprensione del contesto migliorate",
 		"providerLabel": "Fornitore di embedding",
 		"selectProviderPlaceholder": "Seleziona fornitore",
 		"openaiProvider": "OpenAI",
@@ -175,8 +175,12 @@
 			"description": "Esegui automaticamente i comandi del terminale consentiti senza richiedere approvazione",
 			"allowedCommands": "Comandi di auto-esecuzione consentiti",
 			"allowedCommandsDescription": "Prefissi di comando che possono essere auto-eseguiti quando \"Approva sempre operazioni di esecuzione\" è abilitato. Aggiungi * per consentire tutti i comandi (usare con cautela).",
+			"deniedCommands": "Comandi negati",
+			"deniedCommandsDescription": "Prefissi di comandi che verranno automaticamente negati senza richiedere approvazione. In caso di conflitti con comandi consentiti, la corrispondenza del prefisso più lungo ha la precedenza. Aggiungi * per negare tutti i comandi.",
 			"commandPlaceholder": "Inserisci prefisso comando (es. 'git ')",
-			"addButton": "Aggiungi"
+			"deniedCommandPlaceholder": "Inserisci prefisso comando da negare (es. 'rm -rf')",
+			"addButton": "Aggiungi",
+			"autoDenied": "I comandi con il prefisso `{{prefix}}` sono stati vietati dall'utente. Non aggirare questa restrizione eseguendo un altro comando."
 		},
 		"updateTodoList": {
 			"label": "Todo",
@@ -373,7 +377,9 @@
 		"claudeCode": {
 			"pathLabel": "Percorso Claude Code",
 			"description": "Percorso facoltativo per la tua CLI Claude Code. Predefinito 'claude' se non impostato.",
-			"placeholder": "Predefinito: claude"
+			"placeholder": "Predefinito: claude",
+			"maxTokensLabel": "Token di output massimi",
+			"maxTokensDescription": "Numero massimo di token di output per le risposte di Claude Code. Il valore predefinito è 8000."
 		}
 	},
 	"browser": {

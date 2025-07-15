@@ -1,5 +1,50 @@
 # Roo Code Changelog
 
+## [3.23.12] - 2025-07-15
+
+- Update the max-token calculation in model-params to better support Kimi K2 and others
+
+## [3.23.11] - 2025-07-14
+
+- Add Kimi K2 model to Groq along with fixes to context condensing math
+- Add Cmd+Shift+. keyboard shortcut for previous mode switching
+
+## [3.23.10] - 2025-07-14
+
+- Prioritize built-in model dimensions over custom dimensions (thanks @daniel-lxs!)
+- Add padding to the index model options
+
+## [3.23.9] - 2025-07-14
+
+- Enable Claude Code provider to run natively on Windows (thanks @SannidhyaSah!)
+- Add gemini-embedding-001 model to code-index service (thanks @daniel-lxs!)
+- Resolve vector dimension mismatch error when switching embedding models
+- Return the cwd in the exec tool's response so that the model is not lost after subsequent calls (thanks @chris-garrett!)
+- Add configurable timeout for command execution in VS Code settings
+
+## [3.23.8] - 2025-07-13
+
+- Add enable/disable toggle for code indexing (thanks @daniel-lxs!)
+- Add a command auto-deny list to auto-approve settings
+- Add navigation link to history tab in HistoryPreview
+
+## [3.23.7] - 2025-07-11
+
+- Fix Mermaid syntax warning (thanks @MuriloFP!)
+- Expand Vertex AI region config to include all available regions in GCP Vertex AI (thanks @shubhamgupta731!)
+- Handle Qdrant vector dimension mismatch when switching embedding models (thanks @daniel-lxs!)
+- Fix typos in comment & document (thanks @noritaka1166!)
+- Improve the display of codebase search results
+- Correct translation fallback logic for embedding errors (thanks @daniel-lxs!)
+- Clean up MCP tool disabling
+- Link to marketplace from modes and MCP tab
+- Fix TTS button display (thanks @sensei-woo!)
+- Add Devstral Medium model support
+- Add comprehensive error telemetry to code-index service (thanks @daniel-lxs!)
+- Exclude cache tokens from context window calculation (thanks @daniel-lxs!)
+- Enable dynamic tool selection in architect mode for context discovery
+- Add configurable max output tokens setting for claude-code
+
 ## [3.23.6] - 2025-07-10
 
 - Grok 4

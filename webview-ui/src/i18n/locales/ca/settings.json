@@ -39,7 +39,7 @@
 	"codeIndex": {
 		"title": "Indexació de codi",
 		"enableLabel": "Habilitar indexació de codi",
-		"enableDescription": "<0>Indexació de codi</0> és una característica experimental que crea un índex de cerca semàntica del vostre projecte utilitzant embeddings d'IA. Això permet a Roo Code entendre millor i navegar per grans bases de codi trobant codi rellevant basat en significat en lloc de només paraules clau.",
+		"enableDescription": "Habilita la indexació de codi per millorar la cerca i la comprensió del context",
 		"providerLabel": "Proveïdor d'embeddings",
 		"selectProviderPlaceholder": "Seleccionar proveïdor",
 		"openaiProvider": "OpenAI",
@@ -175,8 +175,12 @@
 			"description": "Executar automàticament comandes de terminal permeses sense requerir aprovació",
 			"allowedCommands": "Comandes d'auto-execució permeses",
 			"allowedCommandsDescription": "Prefixos de comandes que poden ser executats automàticament quan \"Aprovar sempre operacions d'execució\" està habilitat. Afegeix * per permetre totes les comandes (usar amb precaució).",
+			"deniedCommands": "Comandes denegades",
+			"deniedCommandsDescription": "Prefixos de comandes que es rebutjaran automàticament sense requerir aprovació. En cas de conflicte amb comandes permeses, la coincidència de prefix més llarga té prioritat. Afegeix * per denegar totes les comandes.",
 			"commandPlaceholder": "Introduïu prefix de comanda (ex. 'git ')",
-			"addButton": "Afegir"
+			"deniedCommandPlaceholder": "Introduïu prefix de comanda a denegar (ex. 'rm -rf')",
+			"addButton": "Afegir",
+			"autoDenied": "Les comandes amb el prefix `{{prefix}}` han estat prohibides per l'usuari. No eludeixis aquesta restricció executant una altra comanda."
 		},
 		"updateTodoList": {
 			"label": "Todo",
@@ -373,7 +377,9 @@
 		"claudeCode": {
 			"pathLabel": "Ruta del Codi Claude",
 			"description": "Ruta opcional al teu CLI de Claude Code. Per defecte, 'claude' si no s'estableix.",
-			"placeholder": "Per defecte: claude"
+			"placeholder": "Per defecte: claude",
+			"maxTokensLabel": "Tokens màxims de sortida",
+			"maxTokensDescription": "Nombre màxim de tokens de sortida per a les respostes de Claude Code. El valor per defecte és 8000."
 		}
 	},
 	"browser": {
