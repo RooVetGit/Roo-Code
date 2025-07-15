@@ -85,7 +85,6 @@ export async function diagnosticsToProblemsString(
 	const documents = new Map<vscode.Uri, vscode.TextDocument>()
 	const fileStats = new Map<vscode.Uri, vscode.FileStat>()
 	let result = ""
-	let diagnosticCount = 0
 
 	// If we have a limit, we need to collect all diagnostics first, sort by severity, then limit
 	if (maxDiagnosticMessages && maxDiagnosticMessages > 0) {
@@ -213,7 +212,6 @@ export async function diagnosticsToProblemsString(
 					} catch {
 						result += `\n- [${source}${label}] ${line} | (unavailable) : ${diagnostic.message}`
 					}
-					diagnosticCount++
 				}
 			}
 		}
