@@ -125,17 +125,23 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 						// Select all text first
 						textarea.select()
 
-						// Use execCommand to replace text while preserving undo history
-						if (document.execCommand) {
-							document.execCommand("insertText", false, message.text)
-						} else {
-							// Fallback for browsers that don't support execCommand
-							// This approach also preserves undo history in modern browsers
-							textarea.setRangeText(message.text, 0, textarea.value.length, "select")
+						try {
+							// Use execCommand to replace text while preserving undo history
+							if (document.execCommand) {
+								document.execCommand("insertText", false, message.text)
+							} else {
+								// Fallback for browsers that don't support execCommand
+								// This approach also preserves undo history in modern browsers
+								textarea.setRangeText(message.text, 0, textarea.value.length, "select")
 
-							// Trigger input event to notify React of the change
-							const inputEvent = new Event("input", { bubbles: true })
-							textarea.dispatchEvent(inputEvent)
+								// Trigger input event to notify React of the change
+								const inputEvent = new Event("input", { bubbles: true })
+								textarea.dispatchEvent(inputEvent)
+							}
+						} catch (error) {
+							// Fallback to direct value assignment if native methods fail
+							console.warn("Native text replacement failed, falling back to direct assignment:", error)
+							setInputValue(message.text)
 						}
 					}
 
