@@ -2,6 +2,7 @@ import { Anthropic } from "@anthropic-ai/sdk"
 import { parseMentions } from "./index"
 import { UrlContentFetcher } from "../../services/browser/UrlContentFetcher"
 import { FileContextTracker } from "../context-tracking/FileContextTracker"
+import { DEFAULT_MAX_DIAGNOSTIC_MESSAGES } from "../constants/diagnosticSettings"
 
 /**
  * Process mentions in user content, specifically within task and feedback tags
@@ -14,7 +15,7 @@ export async function processUserContentMentions({
 	rooIgnoreController,
 	showRooIgnoredFiles = true,
 	includeDiagnosticMessages = true,
-	maxDiagnosticMessages = 5,
+	maxDiagnosticMessages = DEFAULT_MAX_DIAGNOSTIC_MESSAGES,
 }: {
 	userContent: Anthropic.Messages.ContentBlockParam[]
 	cwd: string
