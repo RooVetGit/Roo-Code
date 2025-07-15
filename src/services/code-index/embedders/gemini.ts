@@ -47,11 +47,15 @@ export class GeminiEmbedder implements IEmbedder {
 	 * @param model Optional model identifier (uses constructor model if not provided)
 	 * @returns Promise resolving to embedding response
 	 */
-	async createEmbeddings(texts: string[], model?: string): Promise<EmbeddingResponse> {
+	async createEmbeddings(
+		texts: string[],
+		model?: string,
+		options?: { dimension?: number },
+	): Promise<EmbeddingResponse> {
 		try {
 			// Use the provided model or fall back to the instance's model
 			const modelToUse = model || this.modelId
-			return await this.openAICompatibleEmbedder.createEmbeddings(texts, modelToUse)
+			return await this.openAICompatibleEmbedder.createEmbeddings(texts, modelToUse, options)
 		} catch (error) {
 			TelemetryService.instance.captureEvent(TelemetryEventName.CODE_INDEX_ERROR, {
 				error: error instanceof Error ? error.message : String(error),
