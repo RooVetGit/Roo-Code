@@ -222,7 +222,7 @@ describe("ChatTextArea", () => {
 			expect(mockExecCommand).toHaveBeenCalledWith("insertText", false, "Enhanced test prompt")
 		})
 
-		it("should fallback to setRangeText when execCommand is not available", () => {
+		it("should fallback to setInputValue when execCommand is not available", () => {
 			const setInputValue = vi.fn()
 
 			// Mock document.execCommand to be undefined (not available)
@@ -231,23 +231,7 @@ describe("ChatTextArea", () => {
 				writable: true,
 			})
 
-			const { container } = render(
-				<ChatTextArea {...defaultProps} setInputValue={setInputValue} inputValue="Original prompt" />,
-			)
-
-			const textarea = container.querySelector("textarea")!
-
-			// Mock textarea methods
-			const mockSelect = vi.fn()
-			const mockFocus = vi.fn()
-			const mockSetRangeText = vi.fn()
-			const mockDispatchEvent = vi.fn()
-
-			textarea.select = mockSelect
-			textarea.focus = mockFocus
-			textarea.setRangeText = mockSetRangeText
-			textarea.dispatchEvent = mockDispatchEvent
-			textarea.value = "Original prompt"
+			render(<ChatTextArea {...defaultProps} setInputValue={setInputValue} inputValue="Original prompt" />)
 
 			// Simulate receiving enhanced prompt message
 			window.dispatchEvent(
@@ -259,10 +243,8 @@ describe("ChatTextArea", () => {
 				}),
 			)
 
-			// Verify fallback methods were used
-			expect(mockFocus).toHaveBeenCalled()
-			expect(mockSetRangeText).toHaveBeenCalledWith("Enhanced test prompt", 0, 15, "select") // 15 is length of "Original prompt"
-			expect(mockDispatchEvent).toHaveBeenCalledWith(expect.any(Event))
+			// Verify fallback to setInputValue was used
+			expect(setInputValue).toHaveBeenCalledWith("Enhanced test prompt")
 		})
 
 		it("should not crash when textarea ref is not available", () => {
