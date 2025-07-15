@@ -490,12 +490,14 @@
 		},
 		"diagnostics": {
 			"includeMessages": {
-				"label": "Diagnosenachrichten in den Kontext aufnehmen",
-				"description": "Wenn aktiviert, werden Diagnosenachrichten (Fehler, Warnungen) bei der Verwendung von @problems oder beim Lesen von Dateien mit Diagnosen eingeschlossen."
+				"label": "Diagnosen automatisch in den Kontext aufnehmen",
+				"description": "Wenn aktiviert, werden Diagnosenachrichten (Fehler) aus bearbeiteten Dateien automatisch in den Kontext aufgenommen. Sie können jederzeit alle Workspace-Diagnosen manuell mit @problems einbeziehen."
 			},
 			"maxMessages": {
 				"label": "Maximale Anzahl von Diagnosenachrichten",
-				"description": "Maximale Anzahl von Diagnosenachrichten, die pro Datei eingeschlossen werden sollen. Höhere Werte bieten mehr Kontext, erhöhen aber den Token-Verbrauch."
+				"description": "Maximale Anzahl von Diagnosenachrichten, die pro Datei eingeschlossen werden. Dieses Limit gilt sowohl für die automatische Einbeziehung (wenn das Kontrollkästchen aktiviert ist) als auch für manuelle @problems-Erwähnungen. Höhere Werte bieten mehr Kontext, erhöhen aber den Token-Verbrauch.",
+				"resetTooltip": "Auf Standardwert zurücksetzen (50)",
+				"unlimited": "Unbegrenzte Diagnosenachrichten"
 			}
 		},
 		"condensingThreshold": {

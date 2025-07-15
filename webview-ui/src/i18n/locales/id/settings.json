@@ -472,12 +472,14 @@
 		},
 		"diagnostics": {
 			"includeMessages": {
-				"label": "Sertakan pesan diagnostik dalam konteks",
-				"description": "Jika diaktifkan, pesan diagnostik (error, peringatan) akan disertakan saat menggunakan @problems atau saat membaca file dengan diagnostik."
+				"label": "Secara otomatis sertakan diagnostik dalam konteks",
+				"description": "Ketika diaktifkan, pesan diagnostik (error) dari file yang diedit akan secara otomatis disertakan dalam konteks. Kamu selalu dapat menyertakan semua diagnostik workspace secara manual menggunakan @problems."
 			},
 			"maxMessages": {
 				"label": "Pesan diagnostik maksimum",
-				"description": "Jumlah maksimum pesan diagnostik yang akan disertakan per file. Nilai yang lebih tinggi memberikan lebih banyak konteks tetapi meningkatkan penggunaan token."
+				"description": "Jumlah maksimum pesan diagnostik yang akan disertakan per file. Batas ini berlaku untuk penyertaan otomatis (ketika checkbox diaktifkan) dan penyebutan manual @problems. Nilai yang lebih tinggi memberikan lebih banyak konteks tetapi meningkatkan penggunaan token.",
+				"resetTooltip": "Reset ke nilai default (50)",
+				"unlimited": "Pesan diagnostik tidak terbatas"
 			}
 		},
 		"condensingThreshold": {

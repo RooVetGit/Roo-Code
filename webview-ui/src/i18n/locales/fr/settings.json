@@ -490,12 +490,14 @@
 		},
 		"diagnostics": {
 			"includeMessages": {
-				"label": "Inclure les messages de diagnostic dans le contexte",
-				"description": "Lorsque cette option est activée, les messages de diagnostic (erreurs, avertissements) seront inclus lors de l'utilisation de @problems ou de la lecture de fichiers contenant des diagnostics."
+				"label": "Inclure automatiquement les diagnostics dans le contexte",
+				"description": "Lorsque cette option est activée, les messages de diagnostic (erreurs) des fichiers modifiés seront automatiquement inclus dans le contexte. Vous pouvez toujours inclure manuellement tous les diagnostics de l'espace de travail en utilisant @problems."
 			},
 			"maxMessages": {
 				"label": "Nombre maximum de messages de diagnostic",
-				"description": "Nombre maximum de messages de diagnostic à inclure par fichier. Des valeurs plus élevées fournissent plus de contexte mais augmentent l'utilisation des jetons."
+				"description": "Nombre maximum de messages de diagnostic à inclure par fichier. Cette limite s'applique à la fois à l'inclusion automatique (lorsque la case est cochée) et aux mentions manuelles @problems. Des valeurs plus élevées fournissent plus de contexte mais augmentent l'utilisation des jetons.",
+				"resetTooltip": "Réinitialiser à la valeur par défaut (50)",
+				"unlimited": "Messages de diagnostic illimités"
 			}
 		},
 		"condensingThreshold": {

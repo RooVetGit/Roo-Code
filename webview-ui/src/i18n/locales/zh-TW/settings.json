@@ -490,12 +490,14 @@
 		},
 		"diagnostics": {
 			"includeMessages": {
-				"label": "在上下文中包含診斷訊息",
-				"description": "啟用後，在使用 @problems 或讀取包含診斷資訊的檔案時，將包含診斷訊息（錯誤、警告）。"
+				"label": "自動在上下文中包含診斷",
+				"description": "啟用後，來自已編輯檔案的診斷訊息（錯誤）將自動包含在上下文中。您隨時可以使用 @problems 手動包含所有工作區診斷。"
 			},
 			"maxMessages": {
 				"label": "最大診斷訊息數",
-				"description": "每個檔案包含的最大診斷訊息數。較高的值提供更多上下文，但會增加權杖使用量。"
+				"description": "每個檔案包含的最大診斷訊息數。此限制適用於自動包含（當核取方塊啟用時）和手動 @problems 提及。較高的值提供更多上下文，但會增加權杖使用量。",
+				"resetTooltip": "重設為預設值 (50)",
+				"unlimited": "無限制診斷訊息"
 			}
 		},
 		"condensingThreshold": {

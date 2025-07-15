@@ -490,12 +490,14 @@
 		},
 		"diagnostics": {
 			"includeMessages": {
-				"label": "Incluir mensajes de diagnóstico en el contexto",
-				"description": "Cuando está habilitado, los mensajes de diagnóstico (errores, advertencias) se incluirán al usar @problems o al leer archivos con diagnósticos."
+				"label": "Incluir automáticamente diagnósticos en el contexto",
+				"description": "Cuando está habilitado, los mensajes de diagnóstico (errores) de los archivos editados se incluirán automáticamente en el contexto. Siempre puedes incluir manualmente todos los diagnósticos del espacio de trabajo usando @problems."
 			},
 			"maxMessages": {
 				"label": "Máximo de mensajes de diagnóstico",
-				"description": "Número máximo de mensajes de diagnóstico a incluir por archivo. Valores más altos proporcionan más contexto pero aumentan el uso de tokens."
+				"description": "Número máximo de mensajes de diagnóstico a incluir por archivo. Este límite se aplica tanto a la inclusión automática (cuando la casilla está habilitada) como a las menciones manuales de @problems. Valores más altos proporcionan más contexto pero aumentan el uso de tokens.",
+				"resetTooltip": "Restablecer al valor predeterminado (50)",
+				"unlimited": "Mensajes de diagnóstico ilimitados"
 			}
 		},
 		"condensingThreshold": {

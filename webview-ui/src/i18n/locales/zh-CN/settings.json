@@ -490,12 +490,14 @@
 		},
 		"diagnostics": {
 			"includeMessages": {
-				"label": "在上下文中包含诊断消息",
-				"description": "启用后，在使用 @problems 或读取包含诊断信息的文件时，将包含诊断消息（错误、警告）。"
+				"label": "自动在上下文中包含诊断",
+				"description": "启用后，来自已编辑文件的诊断消息（错误）将自动包含在上下文中。您始终可以使用 @problems 手动包含所有工作区诊断。"
 			},
 			"maxMessages": {
 				"label": "最大诊断消息数",
-				"description": "每个文件包含的最大诊断消息数。较高的值提供更多上下文，但会增加令牌使用量。"
+				"description": "每个文件包含的最大诊断消息数。此限制适用于自动包含（启用复选框时）和手动 @problems 提及。较高的值提供更多上下文，但会增加令牌使用量。",
+				"resetTooltip": "重置为默认值 (50)",
+				"unlimited": "无限制诊断消息"
 			}
 		},
 		"condensingThreshold": {

@@ -490,12 +490,14 @@
 		},
 		"diagnostics": {
 			"includeMessages": {
-				"label": "Include diagnostic messages in context",
-				"description": "When enabled, diagnostic messages (errors, warnings) will be included when using @problems or when files with diagnostics are read."
+				"label": "Automatically include diagnostics in context",
+				"description": "When enabled, diagnostic messages (errors) from edited files will be automatically included in the context. You can always manually include all workspace diagnostics using @problems."
 			},
 			"maxMessages": {
 				"label": "Maximum diagnostic messages",
-				"description": "Maximum number of diagnostic messages to include per file when using @problems or when automatic inclusion is enabled. Higher values provide more context but increase token usage."
+				"description": "Maximum number of diagnostic messages to include per file. This limit applies to both automatic inclusion (when checkbox is enabled) and manual @problems mentions. Higher values provide more context but increase token usage.",
+				"resetTooltip": "Reset to default value (50)",
+				"unlimited": "Unlimited diagnostic messages"
 			}
 		},
 		"condensingThreshold": {

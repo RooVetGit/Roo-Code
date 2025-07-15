@@ -490,12 +490,14 @@
 		},
 		"diagnostics": {
 			"includeMessages": {
-				"label": "Inclou missatges de diagnòstic al context",
-				"description": "Quan estigui activat, els missatges de diagnòstic (errors, advertències) s'inclouran en utilitzar @problems o en llegir fitxers amb diagnòstics."
+				"label": "Inclou automàticament diagnòstics al context",
+				"description": "Quan està activat, els missatges de diagnòstic (errors) dels fitxers editats s'inclouran automàticament al context. Sempre pots incloure manualment tots els diagnòstics de l'espai de treball utilitzant @problems."
 			},
 			"maxMessages": {
 				"label": "Màxim de missatges de diagnòstic",
-				"description": "Nombre màxim de missatges de diagnòstic a incloure per fitxer. Valors més alts proporcionen més context però augmenten l'ús de tokens."
+				"description": "Nombre màxim de missatges de diagnòstic a incloure per fitxer. Aquest límit s'aplica tant a la inclusió automàtica (quan la casella està activada) com a les mencions manuals de @problems. Valors més alts proporcionen més context però augmenten l'ús de tokens.",
+				"resetTooltip": "Restablir al valor per defecte (50)",
+				"unlimited": "Missatges de diagnòstic il·limitats"
 			}
 		},
 		"condensingThreshold": {

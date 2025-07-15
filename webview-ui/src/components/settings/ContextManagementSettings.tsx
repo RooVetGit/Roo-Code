@@ -229,8 +229,30 @@ export const ContextManagementSettings = ({
 							value={[maxDiagnosticMessages ?? 50]}
 							onValueChange={([value]) => setCachedStateField("maxDiagnosticMessages", value)}
 							data-testid="max-diagnostic-messages-slider"
+							disabled={maxDiagnosticMessages === -1}
 						/>
-						<span className="w-10">{maxDiagnosticMessages ?? 50}</span>
+						<span className="w-10">
+							{maxDiagnosticMessages === -1 ? "∞" : (maxDiagnosticMessages ?? 50)}
+						</span>
+						<Button
+							variant="ghost"
+							size="sm"
+							onClick={() => setCachedStateField("maxDiagnosticMessages", 50)}
+							title={t("settings:contextManagement.diagnostics.maxMessages.resetTooltip")}
+							className="p-1 h-6 w-6"
+							disabled={maxDiagnosticMessages === 50}>
+							<span className="codicon codicon-discard" />
+						</Button>
+					</div>
+					<div className="flex items-center gap-2 mt-2">
+						<VSCodeCheckbox
+							checked={maxDiagnosticMessages === -1}
+							onChange={(e: any) =>
+								setCachedStateField("maxDiagnosticMessages", e.target.checked ? -1 : 50)
+							}
+							data-testid="max-diagnostic-messages-unlimited-checkbox">
+							{t("settings:contextManagement.diagnostics.maxMessages.unlimited")}
+						</VSCodeCheckbox>
 					</div>
 					<div className="text-vscode-descriptionForeground text-sm mt-1">
 						{t("settings:contextManagement.diagnostics.maxMessages.description")}
