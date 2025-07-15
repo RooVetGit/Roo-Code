@@ -231,7 +231,7 @@ export const CodeIndexPopover: React.FC<CodeIndexPopoverProps> = ({
 			// Request secret status to check if secrets exist
 			vscode.postMessage({ type: "requestCodeIndexSecretStatus" })
 		}
-	}, [codebaseIndexConfig])
+	}, [codebaseIndexConfig, currentSettings.codebaseIndexEmbedderModelDimension])
 
 	// Request initial indexing status
 	useEffect(() => {
