@@ -18,6 +18,7 @@ import { arePathsEqual } from "../../utils/path"
 import { formatResponse } from "../prompts/responses"
 
 import { Task } from "../task/Task"
+import { formatReminderSection } from "./reminder"
 
 export async function getEnvironmentDetails(cline: Task, includeFileDetails: boolean = false) {
 	let details = ""
@@ -232,16 +233,6 @@ export async function getEnvironmentDetails(cline: Task, includeFileDetails: boo
 		}
 	}
 
-	// Add warning if not in code mode.
-	if (
-		!isToolAllowedForMode("write_to_file", currentMode, customModes ?? [], { apply_diff: cline.diffEnabled }) &&
-		!isToolAllowedForMode("apply_diff", currentMode, customModes ?? [], { apply_diff: cline.diffEnabled })
-	) {
-		const currentModeName = getModeBySlug(currentMode, customModes)?.name ?? currentMode
-		const defaultModeName = getModeBySlug(defaultModeSlug, customModes)?.name ?? defaultModeSlug
-		details += `\n\nNOTE: You are currently in '${currentModeName}' mode, which does not allow write operations. To write files, the user will need to switch to a mode that supports file writing, such as '${defaultModeName}' mode.`
-	}
-
 	if (includeFileDetails) {
 		details += `\n\n# Current Workspace Directory (${cline.cwd.toPosix()}) Files\n`
 		const isDesktop = arePathsEqual(cline.cwd, path.join(os.homedir(), "Desktop"))
@@ -273,5 +264,6 @@ export async function getEnvironmentDetails(cline: Task, includeFileDetails: boo
 		}
 	}
 
-	return `<environment_details>\n${details.trim()}\n</environment_details>`
+	const reminderSection = formatReminderSection(cline.todoList)
+	return `<environment_details>\n${details.trim()}\n${reminderSection}\n</environment_details>`
 }

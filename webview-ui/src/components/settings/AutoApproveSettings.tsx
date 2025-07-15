@@ -26,8 +26,10 @@ type AutoApproveSettingsProps = HTMLAttributes<HTMLDivElement> & {
 	alwaysAllowSubtasks?: boolean
 	alwaysAllowExecute?: boolean
 	alwaysAllowFollowupQuestions?: boolean
+	alwaysAllowUpdateTodoList?: boolean
 	followupAutoApproveTimeoutMs?: number
 	allowedCommands?: string[]
+	deniedCommands?: string[]
 	setCachedStateField: SetCachedStateField<
 		| "alwaysAllowReadOnly"
 		| "alwaysAllowReadOnlyOutsideWorkspace"
@@ -45,6 +47,8 @@ type AutoApproveSettingsProps = HTMLAttributes<HTMLDivElement> & {
 		| "alwaysAllowFollowupQuestions"
 		| "followupAutoApproveTimeoutMs"
 		| "allowedCommands"
+		| "deniedCommands"
+		| "alwaysAllowUpdateTodoList"
 	>
 }
 
@@ -64,12 +68,15 @@ export const AutoApproveSettings = ({
 	alwaysAllowExecute,
 	alwaysAllowFollowupQuestions,
 	followupAutoApproveTimeoutMs = 60000,
+	alwaysAllowUpdateTodoList,
 	allowedCommands,
+	deniedCommands,
 	setCachedStateField,
 	...props
 }: AutoApproveSettingsProps) => {
 	const { t } = useAppTranslation()
 	const [commandInput, setCommandInput] = useState("")
+	const [deniedCommandInput, setDeniedCommandInput] = useState("")
 
 	const handleAddCommand = () => {
 		const currentCommands = allowedCommands ?? []
@@ -79,6 +86,17 @@ export const AutoApproveSettings = ({
 			setCachedStateField("allowedCommands", newCommands)
 			setCommandInput("")
 			vscode.postMessage({ type: "allowedCommands", commands: newCommands })
+		}
+	}
+
+	const handleAddDeniedCommand = () => {
+		const currentCommands = deniedCommands ?? []
+
+		if (deniedCommandInput && !currentCommands.includes(deniedCommandInput)) {
+			const newCommands = [...currentCommands, deniedCommandInput]
+			setCachedStateField("deniedCommands", newCommands)
+			setDeniedCommandInput("")
+			vscode.postMessage({ type: "deniedCommands", commands: newCommands })
 		}
 	}
 
@@ -102,6 +120,7 @@ export const AutoApproveSettings = ({
 					alwaysAllowSubtasks={alwaysAllowSubtasks}
 					alwaysAllowExecute={alwaysAllowExecute}
 					alwaysAllowFollowupQuestions={alwaysAllowFollowupQuestions}
+					alwaysAllowUpdateTodoList={alwaysAllowUpdateTodoList}
 					onToggle={(key, value) => setCachedStateField(key, value)}
 				/>
 
@@ -281,6 +300,57 @@ export const AutoApproveSettings = ({
 										const newCommands = (allowedCommands ?? []).filter((_, i) => i !== index)
 										setCachedStateField("allowedCommands", newCommands)
 										vscode.postMessage({ type: "allowedCommands", commands: newCommands })
+									}}>
+									<div className="flex flex-row items-center gap-1">
+										<div>{cmd}</div>
+										<X className="text-foreground scale-75" />
+									</div>
+								</Button>
+							))}
+						</div>
+
+						{/* Denied Commands Section */}
+						<div className="mt-6">
+							<label className="block font-medium mb-1" data-testid="denied-commands-heading">
+								{t("settings:autoApprove.execute.deniedCommands")}
+							</label>
+							<div className="text-vscode-descriptionForeground text-sm mt-1">
+								{t("settings:autoApprove.execute.deniedCommandsDescription")}
+							</div>
+						</div>
+
+						<div className="flex gap-2">
+							<Input
+								value={deniedCommandInput}
+								onChange={(e: any) => setDeniedCommandInput(e.target.value)}
+								onKeyDown={(e: any) => {
+									if (e.key === "Enter") {
+										e.preventDefault()
+										handleAddDeniedCommand()
+									}
+								}}
+								placeholder={t("settings:autoApprove.execute.deniedCommandPlaceholder")}
+								className="grow"
+								data-testid="denied-command-input"
+							/>
+							<Button
+								className="h-8"
+								onClick={handleAddDeniedCommand}
+								data-testid="add-denied-command-button">
+								{t("settings:autoApprove.execute.addButton")}
+							</Button>
+						</div>
+
+						<div className="flex flex-wrap gap-2">
+							{(deniedCommands ?? []).map((cmd, index) => (
+								<Button
+									key={index}
+									variant="secondary"
+									data-testid={`remove-denied-command-${index}`}
+									onClick={() => {
+										const newCommands = (deniedCommands ?? []).filter((_, i) => i !== index)
+										setCachedStateField("deniedCommands", newCommands)
+										vscode.postMessage({ type: "deniedCommands", commands: newCommands })
 									}}>
 									<div className="flex flex-row items-center gap-1">
 										<div>{cmd}</div>

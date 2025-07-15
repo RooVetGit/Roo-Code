@@ -1,5 +1,112 @@
 # Roo Code Changelog
 
+## [3.23.12] - 2025-07-15
+
+- Update the max-token calculation in model-params to better support Kimi K2 and others
+
+## [3.23.11] - 2025-07-14
+
+- Add Kimi K2 model to Groq along with fixes to context condensing math
+- Add Cmd+Shift+. keyboard shortcut for previous mode switching
+
+## [3.23.10] - 2025-07-14
+
+- Prioritize built-in model dimensions over custom dimensions (thanks @daniel-lxs!)
+- Add padding to the index model options
+
+## [3.23.9] - 2025-07-14
+
+- Enable Claude Code provider to run natively on Windows (thanks @SannidhyaSah!)
+- Add gemini-embedding-001 model to code-index service (thanks @daniel-lxs!)
+- Resolve vector dimension mismatch error when switching embedding models
+- Return the cwd in the exec tool's response so that the model is not lost after subsequent calls (thanks @chris-garrett!)
+- Add configurable timeout for command execution in VS Code settings
+
+## [3.23.8] - 2025-07-13
+
+- Add enable/disable toggle for code indexing (thanks @daniel-lxs!)
+- Add a command auto-deny list to auto-approve settings
+- Add navigation link to history tab in HistoryPreview
+
+## [3.23.7] - 2025-07-11
+
+- Fix Mermaid syntax warning (thanks @MuriloFP!)
+- Expand Vertex AI region config to include all available regions in GCP Vertex AI (thanks @shubhamgupta731!)
+- Handle Qdrant vector dimension mismatch when switching embedding models (thanks @daniel-lxs!)
+- Fix typos in comment & document (thanks @noritaka1166!)
+- Improve the display of codebase search results
+- Correct translation fallback logic for embedding errors (thanks @daniel-lxs!)
+- Clean up MCP tool disabling
+- Link to marketplace from modes and MCP tab
+- Fix TTS button display (thanks @sensei-woo!)
+- Add Devstral Medium model support
+- Add comprehensive error telemetry to code-index service (thanks @daniel-lxs!)
+- Exclude cache tokens from context window calculation (thanks @daniel-lxs!)
+- Enable dynamic tool selection in architect mode for context discovery
+- Add configurable max output tokens setting for claude-code
+
+## [3.23.6] - 2025-07-10
+
+- Grok 4
+
+## [3.23.5] - 2025-07-09
+
+- Fix: use decodeURIComponent in openFile (thanks @vivekfyi!)
+- Fix(embeddings): Translate error messages before sending to UI (thanks @daniel-lxs!)
+- Make account tab visible
+
+## [3.23.4] - 2025-07-09
+
+- Update chat area icons for better discoverability & consistency
+- Fix a bug that allowed `list_files` to return directory results that should be excluded by .gitignore
+- Add an overflow header menu to make the UI a little tidier (thanks @dlab-anton)
+- Fix a bug the issue where null custom modes configuration files cause a 'Cannot read properties of null' error (thanks @daniel-lxs!)
+- Replace native title attributes with StandardTooltip component for consistency (thanks @daniel-lxs!)
+
+## [3.23.3] - 2025-07-09
+
+- Remove erroneous line from announcement modal
+
+## [3.23.2] - 2025-07-09
+
+- Fix bug where auto-approval was intermittently failing
+
+## [3.23.1] - 2025-07-09
+
+- Always show the code indexing dot under the chat text area
+
+## [3.23.0] - 2025-07-08
+
+- Move codebase indexing out of experimental (thanks @daniel-lxs and @MuriloFP!)
+- Add todo list tool (thanks @qdaxb!)
+- Fix code index secret persistence and improve settings UX (thanks @daniel-lxs!)
+- Add Gemini embedding provider for codebase indexing (thanks @SannidhyaSah!)
+- Support full endpoint URLs in OpenAI Compatible provider (thanks @SannidhyaSah!)
+- Add markdown support to codebase indexing (thanks @MuriloFP!)
+- Add Search/Filter Functionality to API Provider Selection in Settings (thanks @GOODBOY008!)
+- Add configurable max search results (thanks @MuriloFP!)
+- Add copy prompt button to task actions (thanks @Juice10 and @vultrnerd!)
+- Fix insertContentTool to create new files with content (thanks @Ruakij!)
+- Fix typescript compiler watch path inconsistency (thanks @bbenshalom!)
+- Use actual max_completion_tokens from OpenRouter API (thanks @shariqriazz!)
+- Prevent completion sound from replaying when reopening completed tasks (thanks @SannidhyaSah!)
+- Fix access_mcp_resource fails to handle images correctly (thanks @s97712!)
+- Prevent chatbox focus loss during automated file editing (thanks @hannesrudolph!)
+- Resolve intermittent hangs and lack of clear error feedback in apply_diff tool (thanks @lhish!)
+- Resolve Go duplicate references in tree-sitter queries (thanks @MuriloFP!)
+- Chat UI consistency and layout shifts (thanks @seedlord!)
+- Chat index UI enhancements (thanks @MuriloFP!)
+- Fix model search being prefilled on dropdown (thanks @kevinvandijk!)
+- Improve chat UI - add camera icon margin and make placeholder non-selectable (thanks @MuriloFP!)
+- Delete .roo/rules-{mode} folder when custom mode is deleted
+- Enforce file restrictions for all edit tools in architect mode
+- Add User-Agent header to API providers
+- Fix auto question timer unmount (thanks @liwilliam2021!)
+- Fix new_task tool streaming issue
+- Optimize file listing when maxWorkspaceFiles is 0 (thanks @daniel-lxs!)
+- Correct export/import of OpenAI Compatible codebase indexing settings (thanks @MuriloFP!)
+- Resolve workspace path inconsistency in code indexing for multi-workspace scenarios
+
 ## [3.22.6] - 2025-07-02
 
 - Add timer-based auto approve for follow up questions (thanks @liwilliam2021!)
@@ -321,7 +428,7 @@
 - Fix vscode-material-icons in the filer picker
 - Fix global settings export
 - Respect user-configured terminal integration timeout (thanks @KJ7LNW)
-- Contex condensing enhancements (thanks @SannidhyaSah)
+- Context condensing enhancements (thanks @SannidhyaSah)
 
 ## [3.18.1] - 2025-05-22
 
@@ -833,7 +940,7 @@
 
 ## [3.10.1] - 2025-03-20
 
-- Make the suggested responses optional to not break overriden system prompts
+- Make the suggested responses optional to not break overridden system prompts
 
 ## [3.10.0] - 2025-03-20
 

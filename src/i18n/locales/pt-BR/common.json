@@ -23,8 +23,10 @@
 		"delete_config_profile": "Tem certeza de que deseja excluir este perfil de configuração?",
 		"delete_custom_mode_with_rules": "Tem certeza de que deseja excluir este modo {scope}?\n\nIsso também excluirá a pasta de regras associada em:\n{rulesFolderPath}",
 		"delete_message": "O que você gostaria de excluir?",
-		"just_this_message": "Apenas esta mensagem",
-		"this_and_subsequent": "Esta e todas as mensagens subsequentes"
+		"delete_just_this_message": "Apenas esta mensagem",
+		"delete_this_and_subsequent": "Esta e todas as mensagens subsequentes",
+		"edit_warning": "Editar esta mensagem excluirá todas as mensagens subsequentes na conversa. Deseja continuar?",
+		"proceed": "Continuar"
 	},
 	"errors": {
 		"invalid_data_uri": "Formato de URI de dados inválido",
@@ -56,7 +58,7 @@
 		"cannot_access_path": "Não é possível acessar o caminho {{path}}: {{error}}",
 		"settings_import_failed": "Falha ao importar configurações: {{error}}",
 		"mistake_limit_guidance": "Isso pode indicar uma falha no processo de pensamento do modelo ou incapacidade de usar uma ferramenta adequadamente, o que pode ser mitigado com orientação do usuário (ex. \"Tente dividir a tarefa em etapas menores\").",
-		"violated_organization_allowlist": "Falha ao executar a tarefa: o perfil atual viola as configurações da sua organização",
+		"violated_organization_allowlist": "Falha ao executar a tarefa: o perfil atual não é compatível com as configurações da sua organização",
 		"condense_failed": "Falha ao condensar o contexto",
 		"condense_not_enough_messages": "Não há mensagens suficientes para condensar o contexto",
 		"condensed_recently": "O contexto foi condensado recentemente; pulando esta tentativa",
@@ -69,6 +71,7 @@
 		"url_page_not_found": "A página não foi encontrada. Verifique se a URL está correta.",
 		"url_fetch_failed": "Falha ao buscar conteúdo da URL: {{error}}",
 		"url_fetch_error_with_url": "Erro ao buscar conteúdo para {{url}}: {{error}}",
+		"command_timeout": "A execução do comando excedeu o tempo limite após {{seconds}} segundos",
 		"share_task_failed": "Falha ao compartilhar tarefa",
 		"share_no_active_task": "Nenhuma tarefa ativa para compartilhar",
 		"share_auth_required": "Autenticação necessária. Faça login para compartilhar tarefas.",
@@ -108,9 +111,12 @@
 	"answers": {
 		"yes": "Sim",
 		"no": "Não",
-		"cancel": "Cancelar",
 		"remove": "Remover",
 		"keep": "Manter"
+	},
+	"buttons": {
+		"save": "Salvar",
+		"edit": "Editar"
 	},
 	"tasks": {
 		"canceled": "Erro na tarefa: Foi interrompida e cancelada pelo usuário.",
@@ -163,7 +169,6 @@
 			"title": "Excluir Modo Personalizado",
 			"description": "Tem certeza de que deseja excluir este modo {{scope}}? Isso também excluirá a pasta de regras associada em: {{rulesFolderPath}}",
 			"descriptionNoRules": "Tem certeza de que deseja excluir este modo personalizado?",
-			"cancel": "Cancelar",
 			"confirm": "Excluir"
 		}
 	}

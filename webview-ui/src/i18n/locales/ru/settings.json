@@ -39,7 +39,7 @@
 	"codeIndex": {
 		"title": "Индексация кодовой базы",
 		"enableLabel": "Включить индексацию кодовой базы",
-		"enableDescription": "<0>Индексация кодовой базы</0> — это экспериментальная функция, которая создает семантический поисковый индекс вашего проекта с использованием ИИ-эмбеддингов. Это позволяет Roo Code лучше понимать и навигировать по большим кодовым базам, находя релевантный код на основе смысла, а не только ключевых слов.",
+		"enableDescription": "Включите индексацию кода для улучшения поиска и понимания контекста",
 		"providerLabel": "Провайдер эмбеддингов",
 		"selectProviderPlaceholder": "Выберите провайдера",
 		"openaiProvider": "OpenAI",
@@ -81,6 +81,7 @@
 		"ollamaBaseUrlLabel": "Базовый URL Ollama",
 		"qdrantApiKeyLabel": "API-ключ Qdrant",
 		"qdrantApiKeyPlaceholder": "Введите ваш API-ключ Qdrant (необязательно)",
+		"setupConfigLabel": "Настройка",
 		"ollamaUrlPlaceholder": "http://localhost:11434",
 		"openAiCompatibleBaseUrlPlaceholder": "https://api.example.com",
 		"modelDimensionPlaceholder": "1536",
@@ -97,6 +98,21 @@
 			"error": "Ошибка"
 		},
 		"close": "Закрыть",
+		"validation": {
+			"invalidQdrantUrl": "Неверный URL Qdrant",
+			"invalidOllamaUrl": "Неверный URL Ollama",
+			"invalidBaseUrl": "Неверный базовый URL",
+			"qdrantUrlRequired": "Требуется URL Qdrant",
+			"openaiApiKeyRequired": "Требуется ключ API OpenAI",
+			"modelSelectionRequired": "Требуется выбор модели",
+			"apiKeyRequired": "Требуется ключ API",
+			"modelIdRequired": "Требуется идентификатор модели",
+			"modelDimensionRequired": "Требуется размерность модели",
+			"geminiApiKeyRequired": "Требуется ключ API Gemini",
+			"ollamaBaseUrlRequired": "Требуется базовый URL Ollama",
+			"baseUrlRequired": "Требуется базовый URL",
+			"modelDimensionMinValue": "Размерность модели должна быть больше 0"
+		},
 		"advancedConfigLabel": "Расширенная конфигурация",
 		"searchMinScoreLabel": "Порог оценки поиска",
 		"searchMinScoreDescription": "Минимальный балл сходства (0.0-1.0), необходимый для результатов поиска. Более низкие значения возвращают больше результатов, но они могут быть менее релевантными. Более высокие значения возвращают меньше результатов, но более релевантных.",
@@ -159,8 +175,16 @@
 			"description": "Автоматически выполнять разрешённые команды терминала без необходимости одобрения",
 			"allowedCommands": "Разрешённые авто-выполняемые команды",
 			"allowedCommandsDescription": "Префиксы команд, которые могут быть автоматически выполнены при включённом параметре \"Всегда одобрять выполнение операций\". Добавьте * для разрешения всех команд (используйте с осторожностью).",
+			"deniedCommands": "Запрещенные команды",
+			"deniedCommandsDescription": "Префиксы команд, которые будут автоматически отклонены без запроса одобрения. В случае конфликтов с разрешенными командами, приоритет имеет самое длинное совпадение префикса. Добавьте * чтобы запретить все команды.",
 			"commandPlaceholder": "Введите префикс команды (например, 'git ')",
-			"addButton": "Добавить"
+			"deniedCommandPlaceholder": "Введите префикс команды для запрета (например, 'rm -rf')",
+			"addButton": "Добавить",
+			"autoDenied": "Команды с префиксом `{{prefix}}` были запрещены пользователем. Не обходи это ограничение, выполняя другую команду."
+		},
+		"updateTodoList": {
+			"label": "Todo",
+			"description": "Список дел обновляется автоматически без подтверждения"
 		},
 		"apiRequestLimit": {
 			"title": "Максимум запросов",
@@ -186,6 +210,8 @@
 		"createProfile": "Создать профиль",
 		"cannotDeleteOnlyProfile": "Нельзя удалить единственный профиль",
 		"searchPlaceholder": "Поиск профилей",
+		"searchProviderPlaceholder": "Поиск провайдеров",
+		"noProviderMatchFound": "Провайдеры не найдены",
 		"noMatchFound": "Совпадений не найдено",
 		"vscodeLmDescription": "API языковой модели VS Code позволяет запускать модели, предоставляемые другими расширениями VS Code (включая, но не ограничиваясь GitHub Copilot). Для начала установите расширения Copilot и Copilot Chat из VS Code Marketplace.",
 		"awsCustomArnUse": "Введите действительный Amazon Bedrock ARN для используемой модели. Примеры формата:",
@@ -351,7 +377,9 @@
 		"claudeCode": {
 			"pathLabel": "Путь к Claude Code",
 			"description": "Необязательный путь к вашему Claude Code CLI. По умолчанию используется 'claude', если не установлено.",
-			"placeholder": "По умолчанию: claude"
+			"placeholder": "По умолчанию: claude",
+			"maxTokensLabel": "Макс. выходных токенов",
+			"maxTokensDescription": "Максимальное количество выходных токенов для ответов Claude Code. По умолчанию 8000."
 		}
 	},
 	"browser": {
