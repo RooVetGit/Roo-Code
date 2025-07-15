@@ -32,7 +32,17 @@ import { useRouterModels } from "@src/components/ui/hooks/useRouterModels"
 import { useSelectedModel } from "@src/components/ui/hooks/useSelectedModel"
 import { useExtensionState } from "@src/context/ExtensionStateContext"
 import { filterProviders, filterModels } from "./utils/organizationFilters"
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem, SearchableSelect } from "@src/components/ui"
+import {
+	Select,
+	SelectTrigger,
+	SelectValue,
+	SelectContent,
+	SelectItem,
+	SearchableSelect,
+	Collapsible,
+	CollapsibleTrigger,
+	CollapsibleContent,
+} from "@src/components/ui"
 
 import {
 	Anthropic,
@@ -121,6 +131,7 @@ const ApiOptions = ({
 	)
 
 	const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false)
+	const [isAdvancedSettingsOpen, setIsAdvancedSettingsOpen] = useState(false)
 
 	const handleInputChange = useCallback(
 		<K extends keyof ProviderSettings, E>(
@@ -534,30 +545,36 @@ const ApiOptions = ({
 			/>
 
 			{!fromWelcomeView && (
-				<>
-					<DiffSettingsControl
-						diffEnabled={apiConfiguration.diffEnabled}
-						fuzzyMatchThreshold={apiConfiguration.fuzzyMatchThreshold}
-						onChange={(field, value) => setApiConfigurationField(field, value)}
-					/>
-					<TemperatureControl
-						value={apiConfiguration.modelTemperature}
-						onChange={handleInputChange("modelTemperature", noTransform)}
-						maxValue={2}
-					/>
-					<RateLimitSecondsControl
-						value={apiConfiguration.rateLimitSeconds || 0}
-						onChange={(value) => setApiConfigurationField("rateLimitSeconds", value)}
-					/>
-					<ConsecutiveMistakeLimitControl
-						value={
-							apiConfiguration.consecutiveMistakeLimit !== undefined
-								? apiConfiguration.consecutiveMistakeLimit
-								: DEFAULT_CONSECUTIVE_MISTAKE_LIMIT
-						}
-						onChange={(value) => setApiConfigurationField("consecutiveMistakeLimit", value)}
-					/>
-				</>
+				<Collapsible open={isAdvancedSettingsOpen} onOpenChange={setIsAdvancedSettingsOpen}>
+					<CollapsibleTrigger className="flex items-center gap-1 w-full cursor-pointer hover:opacity-80 mb-2">
+						<span className={`codicon codicon-chevron-${isAdvancedSettingsOpen ? "down" : "right"}`}></span>
+						<span className="font-medium">{t("settings:advancedSettings.title")}</span>
+					</CollapsibleTrigger>
+					<CollapsibleContent className="space-y-3">
+						<DiffSettingsControl
+							diffEnabled={apiConfiguration.diffEnabled}
+							fuzzyMatchThreshold={apiConfiguration.fuzzyMatchThreshold}
+							onChange={(field, value) => setApiConfigurationField(field, value)}
+						/>
+						<TemperatureControl
+							value={apiConfiguration.modelTemperature}
+							onChange={handleInputChange("modelTemperature", noTransform)}
+							maxValue={2}
+						/>
+						<RateLimitSecondsControl
+							value={apiConfiguration.rateLimitSeconds || 0}
+							onChange={(value) => setApiConfigurationField("rateLimitSeconds", value)}
+						/>
+						<ConsecutiveMistakeLimitControl
+							value={
+								apiConfiguration.consecutiveMistakeLimit !== undefined
+									? apiConfiguration.consecutiveMistakeLimit
+									: DEFAULT_CONSECUTIVE_MISTAKE_LIMIT
+							}
+							onChange={(value) => setApiConfigurationField("consecutiveMistakeLimit", value)}
+						/>
+					</CollapsibleContent>
+				</Collapsible>
 			)}
 		</div>
 	)
