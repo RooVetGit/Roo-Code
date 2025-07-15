@@ -4,6 +4,8 @@ import * as path from "path"
 import { listFiles } from "../../services/glob/list-files"
 import { ClineProvider } from "../../core/webview/ClineProvider"
 import { toRelativePath, getWorkspacePath } from "../../utils/path"
+import { executeRipgrepForFiles, FileResult } from "../../services/search/file-search"
+import { isPathInIgnoredDirectory } from "../../services/glob/ignore-utils"
 
 const MAX_INITIAL_FILES = 1_000
 
@@ -16,12 +18,103 @@ class WorkspaceTracker {
 	private prevWorkSpacePath: string | undefined
 	private resetTimer: NodeJS.Timeout | null = null
 
+	// Ripgrep cache related properties
+	private ripgrepFileCache: FileResult[] | null = null
+	private ripgrepCacheWorkspacePath: string | undefined = undefined
+	private ripgrepOperationPromise: Promise<FileResult[]> | null = null
+
 	get cwd() {
 		return getWorkspacePath()
 	}
+
 	constructor(provider: ClineProvider) {
 		this.providerRef = new WeakRef(provider)
 		this.registerListeners()
+	}
+
+	/**
+	 * Get ripgrep extra options based on VSCode search configuration
+	 */
+	private getRipgrepExtraOptions(): string[] {
+		const config = vscode.workspace.getConfiguration("search")
+		const extraOptions: string[] = []
+
+		const useIgnoreFiles = config.get<boolean>("useIgnoreFiles", true)
+
+		if (!useIgnoreFiles) {
+			extraOptions.push("--no-ignore")
+		} else {
+			const useGlobalIgnoreFiles = config.get<boolean>("useGlobalIgnoreFiles", true)
+			const useParentIgnoreFiles = config.get<boolean>("useParentIgnoreFiles", true)
+
+			if (!useGlobalIgnoreFiles) {
+				extraOptions.push("--no-ignore-global")
+			}
+
+			if (!useParentIgnoreFiles) {
+				extraOptions.push("--no-ignore-parent")
+			}
+		}
+
+		return extraOptions
+	}
+
+	/**
+	 * Get comprehensive file list using ripgrep with caching
+	 * This provides a more complete file list than the limited filePaths set
+	 */
+	async getRipgrepFileList(): Promise<FileResult[]> {
+		const currentWorkspacePath = this.cwd
+
+		if (!currentWorkspacePath) {
+			return []
+		}
+
+		// Return cached results if available and workspace hasn't changed
+		if (this.ripgrepFileCache && this.ripgrepCacheWorkspacePath === currentWorkspacePath) {
+			return this.ripgrepFileCache
+		}
+
+		// If there's an ongoing operation, wait for it
+		if (this.ripgrepOperationPromise) {
+			try {
+				return await this.ripgrepOperationPromise
+			} catch (error) {
+				// If the ongoing operation failed, we'll start a new one below
+				this.ripgrepOperationPromise = null
+			}
+		}
+
+		try {
+			// Start new operation and store the promise
+			this.ripgrepOperationPromise = executeRipgrepForFiles(
+				currentWorkspacePath,
+				500000,
+				this.getRipgrepExtraOptions(),
+			)
+			const fileResults = await this.ripgrepOperationPromise
+
+			// Cache the results and clear the operation promise
+			this.ripgrepFileCache = fileResults
+			this.ripgrepCacheWorkspacePath = currentWorkspacePath
+			this.ripgrepOperationPromise = null
+
+			return fileResults
+		} catch (error) {
+			console.error("Error getting ripgrep file list:", error)
+			this.ripgrepOperationPromise = null
+			return []
+		}
+	}
+
+	/**
+	 * Clear the ripgrep file cache
+	 * Called when workspace changes or files are modified
+	 */
+	private clearRipgrepCache() {
+		this.ripgrepFileCache = null
+		this.ripgrepCacheWorkspacePath = undefined
+		this.ripgrepOperationPromise = null
 	}
 
 	async initializeFilePaths() {
@@ -36,6 +129,9 @@ class WorkspaceTracker {
 		}
 		files.slice(0, MAX_INITIAL_FILES).forEach((file) => this.filePaths.add(this.normalizeFilePath(file)))
 		this.workspaceDidUpdate()
+
+		// preheat filelist
+		this.getRipgrepFileList()
 	}
 
 	private registerListeners() {
@@ -43,6 +139,9 @@ class WorkspaceTracker {
 		this.prevWorkSpacePath = this.cwd
 		this.disposables.push(
 			watcher.onDidCreate(async (uri) => {
+				if (!isPathInIgnoredDirectory(uri.fsPath)) {
+					this.clearRipgrepCache()
+				}
 				await this.addFilePath(uri.fsPath)
 				this.workspaceDidUpdate()
 			}),
@@ -51,6 +150,9 @@ class WorkspaceTracker {
 		// Renaming files triggers a delete and create event
 		this.disposables.push(
 			watcher.onDidDelete(async (uri) => {
+				if (!isPathInIgnoredDirectory(uri.fsPath)) {
+					this.clearRipgrepCache()
+				}
 				if (await this.removeFilePath(uri.fsPath)) {
 					this.workspaceDidUpdate()
 				}
@@ -68,6 +170,20 @@ class WorkspaceTracker {
 				} else {
 					// Otherwise just update
 					this.workspaceDidUpdate()
+				}
+			}),
+		)
+
+		// Listen for VSCode configuration changes
+		this.disposables.push(
+			vscode.workspace.onDidChangeConfiguration((event: vscode.ConfigurationChangeEvent) => {
+				// Clear cache when search-related configuration changes
+				if (
+					event.affectsConfiguration("search.useIgnoreFiles") ||
+					event.affectsConfiguration("search.useGlobalIgnoreFiles") ||
+					event.affectsConfiguration("search.useParentIgnoreFiles")
+				) {
+					this.clearRipgrepCache()
 				}
 			}),
 		)
@@ -97,6 +213,8 @@ class WorkspaceTracker {
 		}
 		this.resetTimer = setTimeout(async () => {
 			if (this.prevWorkSpacePath !== this.cwd) {
+				// Clear cache when workspace changes
+				this.clearRipgrepCache()
 				await this.providerRef.deref()?.postMessageToWebview({
 					type: "workspaceUpdated",
 					filePaths: [],

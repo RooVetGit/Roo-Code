@@ -88,11 +88,13 @@ export async function executeRipgrep({
 export async function executeRipgrepForFiles(
 	workspacePath: string,
 	limit: number = 5000,
-): Promise<{ path: string; type: "file" | "folder"; label?: string }[]> {
+	extraOptions: string[] = [],
+): Promise<FileResult[]> {
 	const args = [
 		"--files",
 		"--follow",
 		"--hidden",
+		...extraOptions,
 		"-g",
 		"!**/node_modules/**",
 		"-g",
@@ -110,11 +112,12 @@ export async function executeRipgrepForFiles(
 export async function searchWorkspaceFiles(
 	query: string,
 	workspacePath: string,
+	workspaceFiles: FileResult[],
 	limit: number = 20,
 ): Promise<{ path: string; type: "file" | "folder"; label?: string }[]> {
 	try {
-		// Get all files and directories (from our modified function)
-		const allItems = await executeRipgrepForFiles(workspacePath, 5000)
+		// Use the provided workspace files
+		const allItems = workspaceFiles
 
 		// If no query, just return the top items
 		if (!query.trim()) {

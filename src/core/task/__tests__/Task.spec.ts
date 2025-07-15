@@ -116,6 +116,7 @@ vi.mock("vscode", () => {
 				stat: vi.fn().mockResolvedValue({ type: 1 }), // FileType.File = 1
 			},
 			onDidSaveTextDocument: vi.fn(() => mockDisposable),
+			onDidChangeConfiguration: vi.fn(() => mockDisposable),
 			getConfiguration: vi.fn(() => ({ get: (key: string, defaultValue: any) => defaultValue })),
 		},
 		env: {
