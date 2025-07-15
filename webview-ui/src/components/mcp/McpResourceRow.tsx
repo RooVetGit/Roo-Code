@@ -8,16 +8,9 @@ type McpResourceRowProps = {
 	serverName?: string
 	serverSource?: "global" | "project"
 	alwaysAllowMcp?: boolean
-	isInChatContext?: boolean
 }
 
-const McpResourceRow = ({
-	item,
-	serverName,
-	serverSource,
-	alwaysAllowMcp,
-	isInChatContext = false,
-}: McpResourceRowProps) => {
+const McpResourceRow = ({ item, serverName, serverSource, alwaysAllowMcp }: McpResourceRowProps) => {
 	const { t } = useAppTranslation()
 	const hasUri = "uri" in item
 	const uri = hasUri ? item.uri : item.uriTemplate
@@ -43,7 +36,7 @@ const McpResourceRow = ({
 				</div>
 
 				{/* Controls section */}
-				{serverName && alwaysAllowMcp && !isInChatContext && (
+				{serverName && alwaysAllowMcp && (
 					<div className="flex items-center flex-shrink-0">
 						<VSCodeCheckbox
 							checked={item.alwaysAllow}

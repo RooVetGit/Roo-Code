@@ -1249,6 +1249,8 @@ export const ChatRowContent = ({
 											// Always use the actual URI from the request
 											uri: useMcpServer.uri || "",
 										}}
+										serverName={useMcpServer.serverName}
+										alwaysAllowMcp={alwaysAllowMcp}
 									/>
 								)}
 								{useMcpServer.type === "use_mcp_tool" && (
