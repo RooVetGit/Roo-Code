@@ -367,6 +367,12 @@
 			"label": "Giới hạn tốc độ",
 			"description": "Thời gian tối thiểu giữa các yêu cầu API."
 		},
+		"consecutiveMistakeLimit": {
+			"label": "Giới hạn lỗi liên tiếp",
+			"description": "Số lỗi liên tiếp trước khi hiển thị hộp thoại 'Tiếp tục dù sao'. Hiện tại: {{value}}",
+			"unlimitedDescription": "Đã bật thử lại không giới hạn (tự động tiếp tục). Hộp thoại sẽ không bao giờ xuất hiện.",
+			"warning": "⚠️ Đặt thành 0 cho phép thử lại không giới hạn, có thể tiêu tốn mức sử dụng API đáng kể"
+		},
 		"reasoningEffort": {
 			"label": "Nỗ lực suy luận của mô hình",
 			"high": "Cao",

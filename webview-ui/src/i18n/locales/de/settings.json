@@ -367,6 +367,12 @@
 			"label": "Ratenbegrenzung",
 			"description": "Minimale Zeit zwischen API-Anfragen."
 		},
+		"consecutiveMistakeLimit": {
+			"label": "Limit für aufeinanderfolgende Fehler",
+			"description": "Anzahl der aufeinanderfolgenden Fehler, bevor der Dialog 'Trotzdem fortfahren' angezeigt wird. Aktuell: {{value}}",
+			"unlimitedDescription": "Unbegrenzte Wiederholungen aktiviert (automatisches Fortfahren). Der Dialog wird nie angezeigt.",
+			"warning": "⚠️ Das Setzen auf 0 erlaubt unbegrenzte Wiederholungen, was zu einem erheblichen API-Verbrauch führen kann"
+		},
 		"reasoningEffort": {
 			"label": "Modell-Denkaufwand",
 			"high": "Hoch",

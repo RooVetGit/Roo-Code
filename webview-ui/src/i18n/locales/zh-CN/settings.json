@@ -367,6 +367,12 @@
 			"label": "API 请求频率限制",
 			"description": "设置API请求的最小间隔时间"
 		},
+		"consecutiveMistakeLimit": {
+			"label": "连续错误上限",
+			"description": "“强制继续”对话框出现前允许的连续错误次数。当前: {{value}}",
+			"unlimitedDescription": "已启用无限制重试（自动继续），对话框将不再出现。",
+			"warning": "⚠️ 设置为 0 将允许无限制重试，可能消耗大量 API"
+		},
 		"reasoningEffort": {
 			"label": "模型推理强度",
 			"high": "高",

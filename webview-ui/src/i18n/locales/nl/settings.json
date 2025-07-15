@@ -367,6 +367,12 @@
 			"label": "Snelheidslimiet",
 			"description": "Minimale tijd tussen API-verzoeken."
 		},
+		"consecutiveMistakeLimit": {
+			"label": "Limiet voor opeenvolgende fouten",
+			"description": "Aantal opeenvolgende fouten voordat het dialoogvenster 'Toch doorgaan' wordt weergegeven. Huidig: {{value}}",
+			"unlimitedDescription": "Onbeperkt aantal nieuwe pogingen ingeschakeld (automatisch doorgaan). Het dialoogvenster verschijnt nooit.",
+			"warning": "⚠️ Instellen op 0 staat onbeperkte nieuwe pogingen toe, wat aanzienlijk API-gebruik kan verbruiken"
+		},
 		"reasoningEffort": {
 			"label": "Model redeneervermogen",
 			"high": "Hoog",

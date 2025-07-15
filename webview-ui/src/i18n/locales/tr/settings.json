@@ -367,6 +367,12 @@
 			"label": "Hız sınırı",
 			"description": "API istekleri arasındaki minimum süre."
 		},
+		"consecutiveMistakeLimit": {
+			"label": "Ardışık Hata Limiti",
+			"description": "'Yine de Devam Et' iletişim kutusunu göstermeden önceki ardışık hata sayısı. Mevcut: {{value}}",
+			"unlimitedDescription": "Sınırsız yeniden deneme etkin (otomatik devam et). İletişim kutusu asla görünmez.",
+			"warning": "⚠️ 0'a ayarlamak, önemli API kullanımına neden olabilecek sınırsız yeniden denemeye izin verir"
+		},
 		"reasoningEffort": {
 			"label": "Model Akıl Yürütme Çabası",
 			"high": "Yüksek",

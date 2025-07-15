@@ -367,6 +367,12 @@
 			"label": "Límit de freqüència",
 			"description": "Temps mínim entre sol·licituds d'API."
 		},
+		"consecutiveMistakeLimit": {
+			"label": "Límit d'errors consecutius",
+			"description": "Nombre d'errors consecutius abans de mostrar el diàleg 'Continua igualment'. Actual: {{value}}",
+			"unlimitedDescription": "Reintents il·limitats activats (continuació automàtica). El diàleg no apareixerà mai.",
+			"warning": "⚠️ Establir-ho a 0 permet reintents il·limitats que poden consumir un ús significatiu de l'API"
+		},
 		"reasoningEffort": {
 			"label": "Esforç de raonament del model",
 			"high": "Alt",

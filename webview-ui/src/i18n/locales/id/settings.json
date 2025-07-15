@@ -371,6 +371,12 @@
 			"label": "Rate limit",
 			"description": "Waktu minimum antara permintaan API."
 		},
+		"consecutiveMistakeLimit": {
+			"label": "Batas Kesalahan Berturut-turut",
+			"description": "Jumlah kesalahan berturut-turut sebelum menampilkan dialog 'Lanjutkan Saja'. Saat ini: {{value}}",
+			"unlimitedDescription": "Coba lagi tanpa batas diaktifkan (lanjutkan otomatis). Dialog tidak akan pernah muncul.",
+			"warning": "⚠️ Mengatur ke 0 memungkinkan coba lagi tanpa batas yang dapat menghabiskan penggunaan API yang signifikan"
+		},
 		"reasoningEffort": {
 			"label": "Upaya Reasoning Model",
 			"high": "Tinggi",

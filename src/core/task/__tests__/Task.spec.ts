@@ -320,6 +320,56 @@ describe("Cline", () => {
 			expect(cline.diffStrategy).toBeDefined()
 		})
 
+		it("should use default consecutiveMistakeLimit when not provided", () => {
+			const cline = new Task({
+				provider: mockProvider,
+				apiConfiguration: mockApiConfig,
+				task: "test task",
+				startTask: false,
+			})
+
+			expect(cline.consecutiveMistakeLimit).toBe(3)
+		})
+
+		it("should respect provided consecutiveMistakeLimit", () => {
+			const cline = new Task({
+				provider: mockProvider,
+				apiConfiguration: mockApiConfig,
+				consecutiveMistakeLimit: 5,
+				task: "test task",
+				startTask: false,
+			})
+
+			expect(cline.consecutiveMistakeLimit).toBe(5)
+		})
+
+		it("should convert consecutiveMistakeLimit of 0 to Infinity", () => {
+			const cline = new Task({
+				provider: mockProvider,
+				apiConfiguration: mockApiConfig,
+				consecutiveMistakeLimit: 0,
+				task: "test task",
+				startTask: false,
+			})
+
+			expect(cline.consecutiveMistakeLimit).toBe(Infinity)
+		})
+
+		it("should pass correct value to ToolRepetitionDetector when limit is Infinity", () => {
+			const cline = new Task({
+				provider: mockProvider,
+				apiConfiguration: mockApiConfig,
+				consecutiveMistakeLimit: 0,
+				task: "test task",
+				startTask: false,
+			})
+
+			// The toolRepetitionDetector should be initialized with MAX_SAFE_INTEGER when limit is Infinity
+			expect(cline.toolRepetitionDetector).toBeDefined()
+			// We can't directly check the internal state, but we can verify the limit was converted
+			expect(cline.consecutiveMistakeLimit).toBe(Infinity)
+		})
+
 		it("should require either task or historyItem", () => {
 			expect(() => {
 				new Task({ provider: mockProvider, apiConfiguration: mockApiConfig })

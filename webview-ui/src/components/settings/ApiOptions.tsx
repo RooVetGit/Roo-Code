@@ -64,6 +64,7 @@ import { ThinkingBudget } from "./ThinkingBudget"
 import { DiffSettingsControl } from "./DiffSettingsControl"
 import { TemperatureControl } from "./TemperatureControl"
 import { RateLimitSecondsControl } from "./RateLimitSecondsControl"
+import { ConsecutiveMistakeLimitControl } from "./ConsecutiveMistakeLimitControl"
 import { BedrockCustomArn } from "./providers/BedrockCustomArn"
 import { buildDocLink } from "@src/utils/docLinks"
 
@@ -546,6 +547,10 @@ const ApiOptions = ({
 					<RateLimitSecondsControl
 						value={apiConfiguration.rateLimitSeconds || 0}
 						onChange={(value) => setApiConfigurationField("rateLimitSeconds", value)}
+					/>
+					<ConsecutiveMistakeLimitControl
+						value={apiConfiguration.consecutiveMistakeLimit ?? 3}
+						onChange={(value) => setApiConfigurationField("consecutiveMistakeLimit", value)}
 					/>
 				</>
 			)}
