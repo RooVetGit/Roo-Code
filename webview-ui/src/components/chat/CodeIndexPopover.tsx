@@ -198,40 +198,44 @@ export const CodeIndexPopover: React.FC<CodeIndexPopoverProps> = ({
 		setIndexingStatus(externalIndexingStatus)
 	}, [externalIndexingStatus])
 
-	// Initialize settings from global state
+	// Initializes the settings from the global state when it changes
 	useEffect(() => {
 		if (codebaseIndexConfig) {
+			const provider = codebaseIndexConfig.codebaseIndexEmbedderProvider || "openai"
+			const modelId = codebaseIndexConfig.codebaseIndexEmbedderModelId || ""
+			const modelProfile = codebaseIndexModels?.[provider]?.[modelId]
+
 			const settings = {
 				codebaseIndexEnabled: codebaseIndexConfig.codebaseIndexEnabled ?? true,
 				codebaseIndexQdrantUrl: codebaseIndexConfig.codebaseIndexQdrantUrl || "",
-				codebaseIndexEmbedderProvider: codebaseIndexConfig.codebaseIndexEmbedderProvider || "openai",
+				codebaseIndexEmbedderProvider: provider,
 				codebaseIndexEmbedderBaseUrl: codebaseIndexConfig.codebaseIndexEmbedderBaseUrl || "",
-				codebaseIndexEmbedderModelId: codebaseIndexConfig.codebaseIndexEmbedderModelId || "",
+				codebaseIndexEmbedderModelId: modelId,
+				// Determines the dimension exclusively from the global configuration and model profiles.
+				// The local 'currentSettings' state is no longer read here.
 				codebaseIndexEmbedderModelDimension:
-					// This order is critical to prevent a UI race condition. After saving,
-					// the component's local `currentSettings` is updated immediately, while
-					// the global `codebaseIndexConfig` might still be stale. Prioritizing
-					// `currentSettings` ensures the UI reflects the saved value instantly.
-					currentSettings.codebaseIndexEmbedderModelDimension ||
-					codebaseIndexConfig.codebaseIndexEmbedderModelDimension ||
-					undefined,
+					codebaseIndexConfig.codebaseIndexEmbedderModelDimension || modelProfile?.defaultDimension,
 				codebaseIndexSearchMaxResults:
-					codebaseIndexConfig.codebaseIndexSearchMaxResults ?? CODEBASE_INDEX_DEFAULTS.DEFAULT_SEARCH_RESULTS,
+					codebaseIndexConfig.codebaseIndexSearchMaxResults ??
+					CODEBASE_INDEX_DEFAULTS.DEFAULT_SEARCH_RESULTS,
 				codebaseIndexSearchMinScore:
-					codebaseIndexConfig.codebaseIndexSearchMinScore ?? CODEBASE_INDEX_DEFAULTS.DEFAULT_SEARCH_MIN_SCORE,
+					codebaseIndexConfig.codebaseIndexSearchMinScore ??
+					CODEBASE_INDEX_DEFAULTS.DEFAULT_SEARCH_MIN_SCORE,
+				// Keys are initially set to empty and populated by a separate effect.
 				codeIndexOpenAiKey: "",
 				codeIndexQdrantApiKey: "",
-				codebaseIndexOpenAiCompatibleBaseUrl: codebaseIndexConfig.codebaseIndexOpenAiCompatibleBaseUrl || "",
+				codebaseIndexOpenAiCompatibleBaseUrl:
+					codebaseIndexConfig.codebaseIndexOpenAiCompatibleBaseUrl || "",
 				codebaseIndexOpenAiCompatibleApiKey: "",
 				codebaseIndexGeminiApiKey: "",
 			}
 			setInitialSettings(settings)
 			setCurrentSettings(settings)
 
-			// Request secret status to check if secrets exist
+			// Requests the status of the secrets to display placeholders correctly.
 			vscode.postMessage({ type: "requestCodeIndexSecretStatus" })
 		}
-	}, [codebaseIndexConfig, currentSettings.codebaseIndexEmbedderModelDimension])
+	}, [codebaseIndexConfig, codebaseIndexModels]) // Dependencies are now correct and complete.
 
 	// Request initial indexing status
 	useEffect(() => {
@@ -371,6 +375,27 @@ export const CodeIndexPopover: React.FC<CodeIndexPopoverProps> = ({
 				return newErrors
 			})
 		}
+	}
+
+	// Handles model changes, ensuring dimension is reset correctly
+	const handleModelChange = (newModelId: string) => {
+		const provider = currentSettings.codebaseIndexEmbedderProvider
+		const modelProfile = codebaseIndexModels?.[provider]?.[newModelId]
+		const defaultDimension = modelProfile?.defaultDimension
+
+		setCurrentSettings((prev) => ({
+			...prev,
+			codebaseIndexEmbedderModelId: newModelId,
+			codebaseIndexEmbedderModelDimension: defaultDimension,
+		}))
+
+		// Clear validation errors for model and dimension
+		setFormErrors((prev) => {
+			const newErrors = { ...prev }
+			delete newErrors.codebaseIndexEmbedderModelId
+			delete newErrors.codebaseIndexEmbedderModelDimension
+			return newErrors
+		})
 	}
 
 	// Validation function
@@ -910,9 +935,7 @@ export const CodeIndexPopover: React.FC<CodeIndexPopoverProps> = ({
 												</label>
 												<VSCodeDropdown
 													value={currentSettings.codebaseIndexEmbedderModelId}
-													onChange={(e: any) =>
-														updateSetting("codebaseIndexEmbedderModelId", e.target.value)
-													}
+													onChange={(e: any) => handleModelChange(e.target.value)}
 													className={cn("w-full", {
 														"border-red-500": formErrors.codebaseIndexEmbedderModelId,
 													})}>
