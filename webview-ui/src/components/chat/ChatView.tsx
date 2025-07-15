@@ -1580,8 +1580,14 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 					switchToNextMode()
 				}
 			}
+
+			// Check for Command/Ctrl + L to start a new task
+			if ((event.metaKey || event.ctrlKey) && event.code === "KeyL") {
+				event.preventDefault() // Prevent default browser behavior
+				startNewTask()
+			}
 		},
-		[switchToNextMode, switchToPreviousMode],
+		[switchToNextMode, switchToPreviousMode, startNewTask],
 	)
 
 	// Add event listener
