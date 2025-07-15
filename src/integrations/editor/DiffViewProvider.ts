@@ -36,14 +36,13 @@ export class DiffViewProvider {
 	private activeLineController?: DecorationController
 	private streamedLines: string[] = []
 	private preDiagnostics: [vscode.Uri, vscode.Diagnostic[]][] = []
-	private includeDiagnosticMessages: boolean = true
-	private maxDiagnosticMessages?: number
+	private taskRef: WeakRef<Task>
 
-	constructor(private cwd: string) {}
-
-	updateDiagnosticSettings(includeDiagnosticMessages: boolean, maxDiagnosticMessages?: number): void {
-		this.includeDiagnosticMessages = includeDiagnosticMessages
-		this.maxDiagnosticMessages = maxDiagnosticMessages
+	constructor(
+		private cwd: string,
+		task: Task,
+	) {
+		this.taskRef = new WeakRef(task)
 	}
 
 	async open(relPath: string): Promise<void> {
@@ -241,14 +240,20 @@ export class DiffViewProvider {
 			
 			const postDiagnostics = vscode.languages.getDiagnostics()
 
+			// Get diagnostic settings from state
+			const task = this.taskRef.deref()
+			const state = await task?.providerRef.deref()?.getState()
+			const includeDiagnosticMessages = state?.includeDiagnosticMessages ?? true
+			const maxDiagnosticMessages = state?.maxDiagnosticMessages ?? 50
+
 			const newProblems = await diagnosticsToProblemsString(
 				getNewDiagnostics(this.preDiagnostics, postDiagnostics),
 				[
 					vscode.DiagnosticSeverity.Error, // only including errors since warnings can be distracting (if user wants to fix warnings they can use the @problems mention)
 				],
 				this.cwd,
-				this.includeDiagnosticMessages,
-				this.maxDiagnosticMessages,
+				includeDiagnosticMessages,
+				maxDiagnosticMessages,
 			) // Will be empty string if no errors.
 
 			newProblemsMessage =

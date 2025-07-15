@@ -236,6 +236,20 @@ export const ContextManagementSettings = ({
 								setCachedStateField("maxDiagnosticMessages", value === 100 ? -1 : value)
 							}}
 							data-testid="max-diagnostic-messages-slider"
+							aria-label={t("settings:contextManagement.diagnostics.maxMessages.label")}
+							aria-valuemin={1}
+							aria-valuemax={100}
+							aria-valuenow={
+								maxDiagnosticMessages !== undefined && maxDiagnosticMessages <= 0
+									? 100
+									: (maxDiagnosticMessages ?? 50)
+							}
+							aria-valuetext={
+								(maxDiagnosticMessages !== undefined && maxDiagnosticMessages <= 0) ||
+								maxDiagnosticMessages === 100
+									? t("settings:contextManagement.diagnostics.maxMessages.unlimitedLabel")
+									: `${maxDiagnosticMessages ?? 50} ${t("settings:contextManagement.diagnostics.maxMessages.label")}`
+							}
 						/>
 						<span className="w-20 text-sm font-medium">
 							{(maxDiagnosticMessages !== undefined && maxDiagnosticMessages <= 0) ||

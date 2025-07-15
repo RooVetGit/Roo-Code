@@ -71,7 +71,6 @@ import { WebviewMessage } from "../../shared/WebviewMessage"
 import { EMBEDDING_MODEL_PROFILES } from "../../shared/embeddingModels"
 import { ProfileValidator } from "../../shared/ProfileValidator"
 import { getWorkspaceGitInfo } from "../../utils/git"
-import { DEFAULT_INCLUDE_DIAGNOSTIC_MESSAGES, DEFAULT_MAX_DIAGNOSTIC_MESSAGES } from "../constants/diagnosticSettings"
 
 /**
  * https://github.com/microsoft/vscode-webview-ui-toolkit-samples/blob/main/default/weather-webview/src/providers/WeatherViewProvider.ts
@@ -1562,8 +1561,8 @@ export class ClineProvider
 			hasOpenedModeSelector: this.getGlobalState("hasOpenedModeSelector") ?? false,
 			alwaysAllowFollowupQuestions: alwaysAllowFollowupQuestions ?? false,
 			followupAutoApproveTimeoutMs: followupAutoApproveTimeoutMs ?? 60000,
-			includeDiagnosticMessages: includeDiagnosticMessages ?? DEFAULT_INCLUDE_DIAGNOSTIC_MESSAGES,
-			maxDiagnosticMessages: maxDiagnosticMessages ?? DEFAULT_MAX_DIAGNOSTIC_MESSAGES,
+			includeDiagnosticMessages: includeDiagnosticMessages ?? true,
+			maxDiagnosticMessages: maxDiagnosticMessages ?? 5,
 		}
 	}
 
@@ -1730,8 +1729,8 @@ export class ClineProvider
 			},
 			profileThresholds: stateValues.profileThresholds ?? {},
 			// Add diagnostic message settings
-			includeDiagnosticMessages: stateValues.includeDiagnosticMessages ?? DEFAULT_INCLUDE_DIAGNOSTIC_MESSAGES,
-			maxDiagnosticMessages: stateValues.maxDiagnosticMessages ?? DEFAULT_MAX_DIAGNOSTIC_MESSAGES,
+			includeDiagnosticMessages: stateValues.includeDiagnosticMessages ?? true,
+			maxDiagnosticMessages: stateValues.maxDiagnosticMessages ?? 5,
 		}
 
 		// Return the same structure as before
@@ -1824,8 +1823,8 @@ export class ClineProvider
 			},
 			profileThresholds: stateValues.profileThresholds ?? {},
 			// Add diagnostic message settings
-			includeDiagnosticMessages: stateValues.includeDiagnosticMessages ?? DEFAULT_INCLUDE_DIAGNOSTIC_MESSAGES,
-			maxDiagnosticMessages: stateValues.maxDiagnosticMessages ?? DEFAULT_MAX_DIAGNOSTIC_MESSAGES,
+			includeDiagnosticMessages: stateValues.includeDiagnosticMessages ?? true,
+			maxDiagnosticMessages: stateValues.maxDiagnosticMessages ?? 5,
 		}
 	}
 

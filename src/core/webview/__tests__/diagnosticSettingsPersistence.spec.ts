@@ -1,11 +1,11 @@
 import { describe, it, expect, beforeEach, vi } from "vitest"
 import { ClineProvider } from "../ClineProvider"
 import { ContextProxy } from "../../config/ContextProxy"
-import {
-	DEFAULT_INCLUDE_DIAGNOSTIC_MESSAGES,
-	DEFAULT_MAX_DIAGNOSTIC_MESSAGES,
-} from "../../constants/diagnosticSettings"
 import { TelemetryService } from "@roo-code/telemetry"
+
+// Default values for diagnostic settings
+const DEFAULT_INCLUDE_DIAGNOSTIC_MESSAGES = true
+const DEFAULT_MAX_DIAGNOSTIC_MESSAGES = 5
 
 // Mock fs/promises to avoid file system operations
 vi.mock("fs/promises", () => ({

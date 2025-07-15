@@ -19,8 +19,6 @@ import { FileContextTracker } from "../context-tracking/FileContextTracker"
 
 import { RooIgnoreController } from "../ignore/RooIgnoreController"
 
-import { DEFAULT_MAX_DIAGNOSTIC_MESSAGES } from "../constants/diagnosticSettings"
-
 import { t } from "../../i18n"
 
 function getUrlErrorMessage(error: unknown): string {
@@ -83,7 +81,7 @@ export async function parseMentions(
 	rooIgnoreController?: RooIgnoreController,
 	showRooIgnoredFiles: boolean = true,
 	includeDiagnosticMessages: boolean = true,
-	maxDiagnosticMessages: number = DEFAULT_MAX_DIAGNOSTIC_MESSAGES,
+	maxDiagnosticMessages: number = 50,
 ): Promise<string> {
 	const mentions: Set<string> = new Set()
 	let parsedText = text.replace(mentionRegexGlobal, (match, mention) => {
@@ -293,7 +291,7 @@ async function getFileOrFolderContent(
 async function getWorkspaceProblems(
 	cwd: string,
 	includeDiagnosticMessages: boolean = true,
-	maxDiagnosticMessages: number = DEFAULT_MAX_DIAGNOSTIC_MESSAGES,
+	maxDiagnosticMessages: number = 50,
 ): Promise<string> {
 	const diagnostics = vscode.languages.getDiagnostics()
 	const result = await diagnosticsToProblemsString(

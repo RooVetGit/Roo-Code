@@ -11,7 +11,6 @@ import { RecordSource } from "../context-tracking/FileContextTrackerTypes"
 import { fileExistsAtPath } from "../../utils/fs"
 import { insertGroups } from "../diff/insert-groups"
 import { DEFAULT_WRITE_DELAY_MS } from "@roo-code/types"
-import { getDiagnosticSettings } from "./helpers/diagnosticSettings"
 
 export async function insertContentTool(
 	cline: Task,
@@ -100,11 +99,6 @@ export async function insertContentTool(
 		cline.diffViewProvider.editType = fileExists ? "modify" : "create"
 		cline.diffViewProvider.originalContent = fileContent
 
-		// Get diagnostic settings
-		const { includeDiagnosticMessages, maxDiagnosticMessages } = await getDiagnosticSettings(cline)
-
-		// Update DiffViewProvider with diagnostic settings
-		cline.diffViewProvider.updateDiagnosticSettings(includeDiagnosticMessages, maxDiagnosticMessages)
 		const lines = fileExists ? fileContent.split("\n") : []
 
 		const updatedContent = insertGroups(lines, [

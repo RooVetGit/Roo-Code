@@ -12,7 +12,6 @@ import { getReadablePath } from "../../utils/path"
 import { fileExistsAtPath } from "../../utils/fs"
 import { RecordSource } from "../context-tracking/FileContextTrackerTypes"
 import { DEFAULT_WRITE_DELAY_MS } from "@roo-code/types"
-import { getDiagnosticSettings } from "./helpers/diagnosticSettings"
 
 /**
  * Tool for performing search and replace operations on files
@@ -191,12 +190,6 @@ export async function searchAndReplaceTool(
 		// Initialize diff view
 		cline.diffViewProvider.editType = "modify"
 		cline.diffViewProvider.originalContent = fileContent
-
-		// Get diagnostic settings
-		const { includeDiagnosticMessages, maxDiagnosticMessages } = await getDiagnosticSettings(cline)
-
-		// Update DiffViewProvider with diagnostic settings
-		cline.diffViewProvider.updateDiagnosticSettings(includeDiagnosticMessages, maxDiagnosticMessages)
 
 		// Generate and validate diff
 		const diff = formatResponse.createPrettyPatch(validRelPath, fileContent, newContent)
