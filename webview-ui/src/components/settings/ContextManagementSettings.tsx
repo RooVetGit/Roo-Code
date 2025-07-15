@@ -240,7 +240,7 @@ export const ContextManagementSettings = ({
 						<span className="w-20 text-sm font-medium">
 							{(maxDiagnosticMessages !== undefined && maxDiagnosticMessages <= 0) ||
 							maxDiagnosticMessages === 100
-								? t("settings:contextManagement.diagnostics.maxMessages.unlimitedLabel") || "Unlimited"
+								? t("settings:contextManagement.diagnostics.maxMessages.unlimitedLabel")
 								: (maxDiagnosticMessages ?? 50)}
 						</span>
 						<Button

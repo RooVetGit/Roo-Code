@@ -480,8 +480,7 @@
 				"description": "Jumlah maksimum pesan diagnostik yang akan disertakan per file. Batas ini berlaku untuk penyertaan otomatis (ketika checkbox diaktifkan) dan penyebutan manual @problems. Nilai yang lebih tinggi memberikan lebih banyak konteks tetapi meningkatkan penggunaan token.",
 				"resetTooltip": "Reset ke nilai default (50)",
 				"unlimited": "Pesan diagnostik tidak terbatas",
-				"unlimitedLabel": "Tak terbatas",
-				"unlimitedDescription": "Semua pesan diagnostik akan disertakan. Gunakan dengan hati-hati karena ini dapat meningkatkan penggunaan token secara signifikan."
+				"unlimitedLabel": "Tak terbatas"
 			}
 		},
 		"condensingThreshold": {

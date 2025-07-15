@@ -498,8 +498,7 @@
 				"description": "파일당 포함할 최대 진단 메시지 수입니다. 이 제한은 자동 포함(체크박스가 활성화된 경우)과 수동 @problems 언급 모두에 적용됩니다. 값이 높을수록 더 많은 컨텍스트를 제공하지만 토큰 사용량이 증가합니다.",
 				"resetTooltip": "기본값(50)으로 재설정",
 				"unlimited": "무제한 진단 메시지",
-				"unlimitedLabel": "무제한",
-				"unlimitedDescription": "모든 진단 메시지가 포함됩니다. 토큰 사용량이 크게 증가할 수 있으므로 주의해서 사용하세요."
+				"unlimitedLabel": "무제한"
 			}
 		},
 		"condensingThreshold": {

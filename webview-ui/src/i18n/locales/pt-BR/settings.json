@@ -498,8 +498,7 @@
 				"description": "Número máximo de mensagens de diagnóstico a serem incluídas por arquivo. Este limite se aplica tanto à inclusão automática (quando a caixa de seleção está ativada) quanto às menções manuais de @problems. Valores mais altos fornecem mais contexto, mas aumentam o uso de tokens.",
 				"resetTooltip": "Redefinir para o valor padrão (50)",
 				"unlimited": "Mensagens de diagnóstico ilimitadas",
-				"unlimitedLabel": "Ilimitado",
-				"unlimitedDescription": "Todas as mensagens de diagnóstico serão incluídas. Use com cautela, pois isso pode aumentar significativamente o uso de tokens."
+				"unlimitedLabel": "Ilimitado"
 			}
 		},
 		"condensingThreshold": {

@@ -497,8 +497,7 @@
 				"label": "Maximale Anzahl von Diagnosenachrichten",
 				"description": "Maximale Anzahl von Diagnosenachrichten, die pro Datei eingeschlossen werden. Dieses Limit gilt sowohl für die automatische Einbeziehung (wenn das Kontrollkästchen aktiviert ist) als auch für manuelle @problems-Erwähnungen. Höhere Werte bieten mehr Kontext, erhöhen aber den Token-Verbrauch.",
 				"resetTooltip": "Auf Standardwert zurücksetzen (50)",
-				"unlimitedLabel": "Unbegrenzt",
-				"unlimitedDescription": "Alle Diagnosenachrichten werden einbezogen. Mit Vorsicht verwenden, da dies den Token-Verbrauch erheblich erhöhen kann."
+				"unlimitedLabel": "Unbegrenzt"
 			}
 		},
 		"condensingThreshold": {
