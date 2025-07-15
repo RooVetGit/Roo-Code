@@ -402,7 +402,6 @@ function isDirectoryExplicitlyIgnored(dirName: string): boolean {
 	return false
 }
 
-
 /**
  * Combine file and directory results and format them properly
  */
@@ -416,16 +415,6 @@ function formatAndCombineResults(files: string[], directories: string[], limit: 
 
 	// Sort to ensure directories come first, followed by files
 	uniquePaths.sort((a: string, b: string) => {
-		// Remove trailing slash for depth calculation
-		const aPath = a.endsWith("/") ? a.slice(0, -1) : a
-		const bPath = b.endsWith("/") ? b.slice(0, -1) : b
-		const aDepth = aPath.split("/").length
-		const bDepth = bPath.split("/").length
-
-		if (aDepth !== bDepth) {
-			return aDepth - bDepth
-		}
-
 		const aIsDir = a.endsWith("/")
 		const bIsDir = b.endsWith("/")
 
