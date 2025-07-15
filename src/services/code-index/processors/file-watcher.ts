@@ -5,6 +5,7 @@ import {
 	BATCH_SEGMENT_THRESHOLD,
 	MAX_BATCH_RETRIES,
 	INITIAL_RETRY_DELAY_MS,
+	EMBEDDING_CALL_DELAY_MS,
 } from "../constants"
 import { createHash } from "crypto"
 import { RooIgnoreController } from "../../../core/ignore/RooIgnoreController"
@@ -542,6 +543,9 @@ export class FileWatcher implements IFileWatcher {
 			if (this.embedder && blocks.length > 0) {
 				const texts = blocks.map((block) => block.content)
 				const { embeddings } = await this.embedder.createEmbeddings(texts)
+				
+				// Add pause between embedding calls to prevent rate limiting
+				await new Promise(resolve => setTimeout(resolve, EMBEDDING_CALL_DELAY_MS))
 
 				pointsToUpsert = blocks.map((block, index) => {
 					const normalizedAbsolutePath = generateNormalizedAbsolutePath(block.file_path, this.workspacePath)

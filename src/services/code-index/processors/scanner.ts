@@ -23,6 +23,7 @@ import {
 	INITIAL_RETRY_DELAY_MS,
 	PARSING_CONCURRENCY,
 	BATCH_PROCESSING_CONCURRENCY,
+	EMBEDDING_CALL_DELAY_MS,
 } from "../constants"
 import { isPathInIgnoredDirectory } from "../../glob/ignore-utils"
 import { TelemetryService } from "@roo-code/telemetry"
@@ -344,6 +345,9 @@ export class DirectoryScanner implements IDirectoryScanner {
 
 				// Create embeddings for batch
 				const { embeddings } = await this.embedder.createEmbeddings(batchTexts)
+				
+				// Add pause between embedding calls to prevent rate limiting
+				await new Promise(resolve => setTimeout(resolve, EMBEDDING_CALL_DELAY_MS))
 
 				// Prepare points for Qdrant
 				const points = batchBlocks.map((block, index) => {

@@ -28,3 +28,6 @@ export const BATCH_PROCESSING_CONCURRENCY = 10
 
 /**Gemini Embedder */
 export const GEMINI_MAX_ITEM_TOKENS = 2048
+
+/**Embedding Rate Limiting */
+export const EMBEDDING_CALL_DELAY_MS = 100 // Pause between embedding API calls to prevent rate limiting
