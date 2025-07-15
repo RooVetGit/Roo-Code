@@ -83,7 +83,7 @@ const num: number = "string"
 
 		assert.ok(problemMessages.length > 0, "Should have workspace diagnostics message")
 
-		const diagnosticsContent = problemMessages[0].text
+		const diagnosticsContent = problemMessages[0]?.text
 		assert.ok(
 			!diagnosticsContent?.includes("Type 'string' is not assignable to type 'number'") &&
 				!diagnosticsContent?.includes("unusedVar") &&
@@ -145,7 +145,7 @@ const num: number = "string"
 
 		assert.ok(problemMessages.length > 0, "Should have workspace diagnostics message")
 
-		const diagnosticsContent = problemMessages[0].text || ""
+		const diagnosticsContent = problemMessages[0]?.text || ""
 
 		// Count the number of diagnostic entries
 		const diagnosticMatches = diagnosticsContent.match(/error\d+:/g) || []
@@ -209,7 +209,7 @@ const num: number = "string"
 
 		assert.ok(problemMessages.length > 0, "Should have workspace diagnostics message")
 
-		const diagnosticsContent = problemMessages[0].text || ""
+		const diagnosticsContent = problemMessages[0]?.text || ""
 
 		// Should include diagnostics from all 3 files
 		for (let i = 0; i < 3; i++) {
@@ -259,7 +259,7 @@ const num: number = "string"
 
 		assert.ok(problemMessages.length > 0, "Should have workspace diagnostics message")
 
-		const diagnosticsContent = problemMessages[0].text || ""
+		const diagnosticsContent = problemMessages[0]?.text || ""
 
 		// Default includeDiagnosticMessages is true, so should include details
 		assert.ok(
