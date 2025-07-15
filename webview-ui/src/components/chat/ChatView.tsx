@@ -1567,15 +1567,18 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 	// Add keyboard event handler
 	const handleKeyDown = useCallback(
 		(event: KeyboardEvent) => {
-			// Check for Command + . (period) for next mode
-			if ((event.metaKey || event.ctrlKey) && !event.shiftKey && event.key === ".") {
+			// Check for Command/Ctrl + Period (with or without Shift)
+			// Using event.code for better cross-platform compatibility
+			if ((event.metaKey || event.ctrlKey) && event.code === "Period") {
 				event.preventDefault() // Prevent default browser behavior
-				switchToNextMode()
-			}
-			// Check for Command + Shift + . (period) for previous mode
-			else if ((event.metaKey || event.ctrlKey) && event.shiftKey && event.key === ">") {
-				event.preventDefault() // Prevent default browser behavior
-				switchToPreviousMode()
+
+				if (event.shiftKey) {
+					// Shift + Period = Previous mode
+					switchToPreviousMode()
+				} else {
+					// Just Period = Next mode
+					switchToNextMode()
+				}
 			}
 		},
 		[switchToNextMode, switchToPreviousMode],
