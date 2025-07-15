@@ -74,11 +74,11 @@ export async function diagnosticsToProblemsString(
 	diagnostics: [vscode.Uri, vscode.Diagnostic[]][],
 	severities: vscode.DiagnosticSeverity[],
 	cwd: string,
-	includeDiagnostics: boolean = true,
-	maxDiagnostics?: number,
+	includeDiagnosticMessages: boolean = true,
+	maxDiagnosticMessages?: number,
 ): Promise<string> {
 	// If diagnostics are disabled, return empty string
-	if (!includeDiagnostics) {
+	if (!includeDiagnosticMessages) {
 		return ""
 	}
 
@@ -88,7 +88,7 @@ export async function diagnosticsToProblemsString(
 	let diagnosticCount = 0
 
 	// If we have a limit, we need to collect all diagnostics first, sort by severity, then limit
-	if (maxDiagnostics && maxDiagnostics > 0) {
+	if (maxDiagnosticMessages && maxDiagnosticMessages > 0) {
 		// Flatten all diagnostics with their URIs
 		const allDiagnostics: { uri: vscode.Uri; diagnostic: vscode.Diagnostic }[] = []
 		for (const [uri, fileDiagnostics] of diagnostics) {
@@ -105,8 +105,8 @@ export async function diagnosticsToProblemsString(
 			return a.diagnostic.range.start.line - b.diagnostic.range.start.line
 		})
 
-		// Take only the first maxDiagnostics
-		const limitedDiagnostics = allDiagnostics.slice(0, maxDiagnostics)
+		// Take only the first maxDiagnosticMessages
+		const limitedDiagnostics = allDiagnostics.slice(0, maxDiagnosticMessages)
 
 		// Group back by URI for processing
 		const groupedDiagnostics = new Map<string, { uri: vscode.Uri; diagnostics: vscode.Diagnostic[] }>()
@@ -165,8 +165,8 @@ export async function diagnosticsToProblemsString(
 		}
 
 		// Add a note if we hit the limit
-		if (allDiagnostics.length > maxDiagnostics) {
-			result += `\n\n(Showing ${maxDiagnostics} of ${allDiagnostics.length} total diagnostics)`
+		if (allDiagnostics.length > maxDiagnosticMessages) {
+			result += `\n\n(Showing ${maxDiagnosticMessages} of ${allDiagnostics.length} total diagnostics)`
 		}
 	} else {
 		// No limit, process all diagnostics as before
