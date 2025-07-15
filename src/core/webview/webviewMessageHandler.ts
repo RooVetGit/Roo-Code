@@ -1255,7 +1255,9 @@ export const webviewMessageHandler = async (
 			await provider.postStateToWebview()
 			break
 		case "includeDiagnosticMessages":
-			await updateGlobalState("includeDiagnosticMessages", message.bool ?? true)
+			// Only apply default if the value is truly undefined (not false)
+			const includeValue = message.bool !== undefined ? message.bool : true
+			await updateGlobalState("includeDiagnosticMessages", includeValue)
 			await provider.postStateToWebview()
 			break
 		case "maxDiagnosticMessages":
