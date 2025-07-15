@@ -1004,13 +1004,14 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 
 				if (mcpServerUse.type === "access_mcp_resource") {
 					const server = mcpServers?.find((s: McpServer) => s.name === mcpServerUse.serverName)
-					const resource = server?.resources?.find((r: McpResource) => r.uri === mcpServerUse.uri)
 
+					// First check exact resource match
+					const resource = server?.resources?.find((r: McpResource) => r.uri === mcpServerUse.uri)
 					if (resource?.alwaysAllow) {
 						return true
 					}
 
-					// Check resource templates
+					// Then check resource templates
 					if (server?.resourceTemplates && mcpServerUse.uri) {
 						// Validate URI format first
 						if (!isValidUriFormat(mcpServerUse.uri)) {
@@ -1018,6 +1019,11 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 						}
 
 						for (const template of server.resourceTemplates) {
+							// Check if template has alwaysAllow set
+							if (!template.alwaysAllow) {
+								continue
+							}
+
 							try {
 								// Convert template pattern to regex with more restrictive matching
 								const pattern = template.uriTemplate
@@ -1035,7 +1041,7 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 									return false
 								}
 
-								if (matches && template.alwaysAllow) {
+								if (matches) {
 									return true
 								}
 							} catch (error) {
