@@ -301,5 +301,16 @@ describe("ToolRepetitionDetector", () => {
 			expect(result3.allowExecution).toBe(false)
 			expect(result3.askUser).toBeDefined()
 		})
+
+		it("should never block when limit is 0 (unlimited)", () => {
+			const detector = new ToolRepetitionDetector(0)
+
+			// Try many identical calls
+			for (let i = 0; i < 10; i++) {
+				const result = detector.check(createToolUse("tool", "tool-name"))
+				expect(result.allowExecution).toBe(true)
+				expect(result.askUser).toBeUndefined()
+			}
+		})
 	})
 })

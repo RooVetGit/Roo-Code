@@ -368,9 +368,9 @@
 			"description": "Tempo minimo tra le richieste API."
 		},
 		"consecutiveMistakeLimit": {
-			"label": "Limite di errori consecutivi",
-			"description": "Numero di errori consecutivi prima di mostrare la finestra di dialogo 'Procedi comunque'. Attuale: {{value}}",
-			"unlimitedDescription": "Ripetizioni illimitate abilitate (procedi automaticamente). La finestra di dialogo non apparirà mai.",
+			"label": "Limite di errori e ripetizioni",
+			"description": "Numero di errori consecutivi o azioni ripetute prima di mostrare la finestra di dialogo 'Roo sta riscontrando problemi'",
+			"unlimitedDescription": "Tentativi illimitati abilitati (procedi automaticamente). La finestra di dialogo non verrà mai visualizzata.",
 			"warning": "⚠️ L'impostazione a 0 consente tentativi illimitati che possono consumare un notevole utilizzo dell'API"
 		},
 		"reasoningEffort": {

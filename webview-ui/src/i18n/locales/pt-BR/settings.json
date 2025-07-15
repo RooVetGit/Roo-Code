@@ -368,9 +368,9 @@
 			"description": "Tempo mínimo entre requisições de API."
 		},
 		"consecutiveMistakeLimit": {
-			"label": "Limite de erros consecutivos",
-			"description": "Número de erros consecutivos antes de exibir a caixa de diálogo 'Prosseguir mesmo assim'. Atual: {{value}}",
-			"unlimitedDescription": "Tentativas ilimitadas ativadas (prosseguimento automático). A caixa de diálogo nunca aparecerá.",
+			"label": "Limite de Erros e Repetições",
+			"description": "Número de erros consecutivos ou ações repetidas antes de exibir o diálogo 'Roo está com problemas'",
+			"unlimitedDescription": "Tentativas ilimitadas ativadas (prosseguimento automático). O diálogo nunca aparecerá.",
 			"warning": "⚠️ Definir como 0 permite tentativas ilimitadas, o que pode consumir um uso significativo da API"
 		},
 		"reasoningEffort": {

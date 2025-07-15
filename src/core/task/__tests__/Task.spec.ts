@@ -364,10 +364,24 @@ describe("Cline", () => {
 				startTask: false,
 			})
 
-			// The toolRepetitionDetector should be initialized with MAX_SAFE_INTEGER when limit is Infinity
+			// The toolRepetitionDetector should be initialized with 0 when limit is Infinity (unlimited)
 			expect(cline.toolRepetitionDetector).toBeDefined()
 			// We can't directly check the internal state, but we can verify the limit was converted
 			expect(cline.consecutiveMistakeLimit).toBe(Infinity)
+		})
+
+		it("should pass consecutiveMistakeLimit to ToolRepetitionDetector", () => {
+			const cline = new Task({
+				provider: mockProvider,
+				apiConfiguration: mockApiConfig,
+				consecutiveMistakeLimit: 5,
+				task: "test task",
+				startTask: false,
+			})
+
+			// The toolRepetitionDetector should be initialized with the same limit
+			expect(cline.toolRepetitionDetector).toBeDefined()
+			expect(cline.consecutiveMistakeLimit).toBe(5)
 		})
 
 		it("should require either task or historyItem", () => {

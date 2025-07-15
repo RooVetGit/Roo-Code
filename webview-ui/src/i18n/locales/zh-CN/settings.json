@@ -368,10 +368,10 @@
 			"description": "设置API请求的最小间隔时间"
 		},
 		"consecutiveMistakeLimit": {
-			"label": "连续错误上限",
-			"description": "“强制继续”对话框出现前允许的连续错误次数。当前: {{value}}",
-			"unlimitedDescription": "已启用无限制重试（自动继续），对话框将不再出现。",
-			"warning": "⚠️ 设置为 0 将允许无限制重试，可能消耗大量 API"
+			"label": "错误和重复限制",
+			"description": "在显示“Roo遇到问题”对话框前允许的连续错误或重复操作次数",
+			"unlimitedDescription": "已启用无限重试（自动继续）。对话框将永远不会出现。",
+			"warning": "⚠️ 设置为 0 允许无限重试，这可能会消耗大量 API 使用量"
 		},
 		"reasoningEffort": {
 			"label": "模型推理强度",

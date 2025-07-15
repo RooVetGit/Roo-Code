@@ -368,9 +368,9 @@
 			"description": "API 요청 간 최소 시간."
 		},
 		"consecutiveMistakeLimit": {
-			"label": "연속 실수 제한",
-			"description": "'계속 진행' 대화 상자를 표시하기 전의 연속 실수 횟수. 현재: {{value}}",
-			"unlimitedDescription": "무제한 재시도 활성화됨(자동 진행). 대화 상자가 표시되지 않습니다.",
+			"label": "오류 및 반복 제한",
+			"description": "'Roo에 문제가 발생했습니다' 대화 상자를 표시하기 전의 연속 오류 또는 반복 작업 수",
+			"unlimitedDescription": "무제한 재시도 활성화 (자동 진행). 대화 상자가 나타나지 않습니다.",
 			"warning": "⚠️ 0으로 설정하면 무제한 재시도가 허용되어 상당한 API 사용량이 발생할 수 있습니다"
 		},
 		"reasoningEffort": {

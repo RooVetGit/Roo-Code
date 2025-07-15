@@ -368,9 +368,9 @@
 			"description": "API istekleri arasındaki minimum süre."
 		},
 		"consecutiveMistakeLimit": {
-			"label": "Ardışık Hata Limiti",
-			"description": "'Yine de Devam Et' iletişim kutusunu göstermeden önceki ardışık hata sayısı. Mevcut: {{value}}",
-			"unlimitedDescription": "Sınırsız yeniden deneme etkin (otomatik devam et). İletişim kutusu asla görünmez.",
+			"label": "Hata ve Tekrar Limiti",
+			"description": "'Roo sorun yaşıyor' iletişim kutusunu göstermeden önceki ardışık hata veya tekrarlanan eylem sayısı",
+			"unlimitedDescription": "Sınırsız yeniden deneme etkin (otomatik devam et). Diyalog asla görünmeyecek.",
 			"warning": "⚠️ 0'a ayarlamak, önemli API kullanımına neden olabilecek sınırsız yeniden denemeye izin verir"
 		},
 		"reasoningEffort": {

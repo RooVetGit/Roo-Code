@@ -368,10 +368,10 @@
 			"description": "API 請求間的最短時間"
 		},
 		"consecutiveMistakeLimit": {
-			"label": "連續錯誤上限",
-			"description": "「強制繼續」對話方塊出現前允許的連續錯誤次數。目前: {{value}}",
-			"unlimitedDescription": "已啟用無限制重試（自動繼續），對話方塊將不再出現。",
-			"warning": "⚠️ 設定為 0 將允許無限制重試，可能消耗大量 API"
+			"label": "錯誤和重複限制",
+			"description": "在顯示「Roo 遇到問題」對話方塊前允許的連續錯誤或重複操作次數",
+			"unlimitedDescription": "已啟用無限重試（自動繼續）。對話方塊將永遠不會出現。",
+			"warning": "⚠️ 設定為 0 允許無限重試，這可能會消耗大量 API 使用量"
 		},
 		"reasoningEffort": {
 			"label": "模型推理強度",

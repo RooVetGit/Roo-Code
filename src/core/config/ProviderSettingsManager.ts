@@ -240,9 +240,13 @@ export class ProviderSettingsManager {
 
 	private async migrateConsecutiveMistakeLimit(providerProfiles: ProviderProfiles) {
 		try {
-			for (const [_name, apiConfig] of Object.entries(providerProfiles.apiConfigs)) {
+			for (const [name, apiConfig] of Object.entries(providerProfiles.apiConfigs)) {
 				if (apiConfig.consecutiveMistakeLimit == null) {
 					apiConfig.consecutiveMistakeLimit = DEFAULT_CONSECUTIVE_MISTAKE_LIMIT
+				} else {
+					console.log(
+						`[ProviderSettingsManager] Profile ${name} already has consecutiveMistakeLimit: ${apiConfig.consecutiveMistakeLimit}`,
+					)
 				}
 			}
 		} catch (error) {
