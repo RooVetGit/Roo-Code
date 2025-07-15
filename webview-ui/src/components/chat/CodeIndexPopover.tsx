@@ -128,6 +128,20 @@ const createValidationSchema = (provider: EmbedderProvider, t: any, models: any)
 				.refine(
 					(data) => {
 						const model = models?.gemini?.[data.codebaseIndexEmbedderModelId || ""]
+						// If the model supports variable dimensions, a dimension must be provided.
+						if (model?.minDimension && !data.codebaseIndexEmbedderModelDimension) {
+							return false // Fails validation if dimension is required but not provided
+						}
+						return true
+					},
+					{
+						message: t("settings:codeIndex.validation.modelDimensionRequired"),
+						path: ["codebaseIndexEmbedderModelDimension"],
+					},
+				)
+				.refine(
+					(data) => {
+						const model = models?.gemini?.[data.codebaseIndexEmbedderModelId || ""]
 						if (model?.minDimension && model?.maxDimension && data.codebaseIndexEmbedderModelDimension) {
 							return (
 								data.codebaseIndexEmbedderModelDimension >= model.minDimension &&
@@ -136,9 +150,15 @@ const createValidationSchema = (provider: EmbedderProvider, t: any, models: any)
 						}
 						return true
 					},
-					{
-						message: t("settings:codeIndex.validation.invalidDimension"),
-						path: ["codebaseIndexEmbedderModelDimension"],
+					(data) => {
+						const model = models?.gemini?.[data.codebaseIndexEmbedderModelId || ""]
+						return {
+							message: t("settings:codeIndex.validation.invalidDimension", {
+								min: model?.minDimension,
+								max: model?.maxDimension,
+							}),
+							path: ["codebaseIndexEmbedderModelDimension"],
+						}
 					},
 				)
 
@@ -216,16 +236,13 @@ export const CodeIndexPopover: React.FC<CodeIndexPopoverProps> = ({
 				codebaseIndexEmbedderModelDimension:
 					codebaseIndexConfig.codebaseIndexEmbedderModelDimension || modelProfile?.defaultDimension,
 				codebaseIndexSearchMaxResults:
-					codebaseIndexConfig.codebaseIndexSearchMaxResults ??
-					CODEBASE_INDEX_DEFAULTS.DEFAULT_SEARCH_RESULTS,
+					codebaseIndexConfig.codebaseIndexSearchMaxResults ?? CODEBASE_INDEX_DEFAULTS.DEFAULT_SEARCH_RESULTS,
 				codebaseIndexSearchMinScore:
-					codebaseIndexConfig.codebaseIndexSearchMinScore ??
-					CODEBASE_INDEX_DEFAULTS.DEFAULT_SEARCH_MIN_SCORE,
+					codebaseIndexConfig.codebaseIndexSearchMinScore ?? CODEBASE_INDEX_DEFAULTS.DEFAULT_SEARCH_MIN_SCORE,
 				// Keys are initially set to empty and populated by a separate effect.
 				codeIndexOpenAiKey: "",
 				codeIndexQdrantApiKey: "",
-				codebaseIndexOpenAiCompatibleBaseUrl:
-					codebaseIndexConfig.codebaseIndexOpenAiCompatibleBaseUrl || "",
+				codebaseIndexOpenAiCompatibleBaseUrl: codebaseIndexConfig.codebaseIndexOpenAiCompatibleBaseUrl || "",
 				codebaseIndexOpenAiCompatibleApiKey: "",
 				codebaseIndexGeminiApiKey: "",
 			}
@@ -971,55 +988,35 @@ export const CodeIndexPopover: React.FC<CodeIndexPopoverProps> = ({
 														currentSettings.codebaseIndexEmbedderModelId
 													]
 
-												// Conditionally render the dimension slider only for Gemini models
-												// that explicitly define a min and max dimension in their profile.
 												if (
 													selectedModelProfile?.minDimension &&
 													selectedModelProfile?.maxDimension
 												) {
 													return (
 														<div className="space-y-2">
-															<div className="flex items-center gap-2">
-																<label className="text-sm font-medium">
-																	{t("settings:codeIndex.modelDimensionLabel")}
-																</label>
-															</div>
-															<div className="flex items-center gap-2">
-																<Slider
-																	min={selectedModelProfile.minDimension}
-																	max={selectedModelProfile.maxDimension}
-																	step={1}
-																	value={[
-																		currentSettings.codebaseIndexEmbedderModelDimension ??
-																			selectedModelProfile.defaultDimension ??
-																			selectedModelProfile.minDimension,
-																	]}
-																	onValueChange={(values) =>
-																		updateSetting(
-																			"codebaseIndexEmbedderModelDimension",
-																			values[0],
-																		)
-																	}
-																	className="flex-1"
-																	data-testid="model-dimension-slider"
-																/>
-																<span className="w-12 text-center">
-																	{currentSettings.codebaseIndexEmbedderModelDimension ??
-																		selectedModelProfile.defaultDimension ??
-																		selectedModelProfile.minDimension}
-																</span>
-																<VSCodeButton
-																	appearance="icon"
-																	title={t("settings:codeIndex.resetToDefault")}
-																	onClick={() =>
-																		updateSetting(
-																			"codebaseIndexEmbedderModelDimension",
-																			selectedModelProfile.defaultDimension,
-																		)
-																	}>
-																	<span className="codicon codicon-discard" />
-																</VSCodeButton>
-															</div>
+															<label htmlFor="gemini-dimension" className="text-sm">
+																{t("settings:codeIndex.modelDimensionLabel")}{" "}
+																{t("settings:codeIndex.dimensionRange", {
+																	min: selectedModelProfile.minDimension,
+																	max: selectedModelProfile.maxDimension,
+																})}
+															</label>
+															<VSCodeTextField
+																id="gemini-dimension"
+																value={
+																	currentSettings.codebaseIndexEmbedderModelDimension?.toString() ||
+																	""
+																}
+																onInput={(e: any) =>
+																	updateSetting(
+																		"codebaseIndexEmbedderModelDimension",
+																		e.target.value
+																			? parseInt(e.target.value, 10)
+																			: undefined,
+																	)
+																}
+																className="w-full"
+															/>
 															{formErrors.codebaseIndexEmbedderModelDimension && (
 																<p className="text-xs text-vscode-errorForeground mt-1 mb-0">
 																	{formErrors.codebaseIndexEmbedderModelDimension}
