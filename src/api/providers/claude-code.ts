@@ -1,5 +1,5 @@
 import type { Anthropic } from "@anthropic-ai/sdk"
-import { claudeCodeDefaultModelId, type ClaudeCodeModelId, claudeCodeModels, type ModelInfo } from "@roo-code/types"
+import { claudeCodeDefaultModelId, type ClaudeCodeModelId, claudeCodeModels, type ModelInfo, getClaudeCodeModelId } from "@roo-code/types"
 import { type ApiHandler } from ".."
 import { ApiStreamUsageChunk, type ApiStream } from "../transform/stream"
 import { runClaudeCode } from "../../integrations/claude-code/run"
@@ -20,11 +20,12 @@ export class ClaudeCodeHandler extends BaseProvider implements ApiHandler {
 		// Filter out image blocks since Claude Code doesn't support them
 		const filteredMessages = filterMessagesForClaudeCode(messages)
 
+		const useVertex = process.env.CLAUDE_CODE_USE_VERTEX === "true"
 		const claudeProcess = runClaudeCode({
 			systemPrompt,
 			messages: filteredMessages,
 			path: this.options.claudeCodePath,
-			modelId: this.getModel().id,
+			modelId: getClaudeCodeModelId(this.getModel().id as ClaudeCodeModelId, useVertex),
 			maxOutputTokens: this.options.claudeCodeMaxOutputTokens,
 		})
 
