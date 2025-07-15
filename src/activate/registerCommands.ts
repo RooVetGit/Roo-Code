@@ -218,6 +218,52 @@ const getCommandsMap = ({ context, outputChannel, provider }: RegisterCommandOpt
 
 		visibleProvider.postMessageToWebview({ type: "acceptInput" })
 	},
+	toggleSilentMode: async () => {
+		const visibleProvider = getVisibleProviderOrLog(outputChannel)
+
+		if (!visibleProvider) {
+			return
+		}
+
+		const state = await visibleProvider.getState()
+		const currentSilentMode = state?.silentMode ?? false
+		const newSilentMode = !currentSilentMode
+
+		// Update the silent mode setting using contextProxy
+		await visibleProvider.contextProxy.setValue("silentMode", newSilentMode)
+		await visibleProvider.postStateToWebview()
+
+		// Show status message
+		const statusMessage = newSilentMode
+			? `$(loading~spin) Silent Mode enabled - Roo will work in the background`
+			: `$(check) Silent Mode disabled - Roo will use interactive mode`
+
+		vscode.window.setStatusBarMessage(statusMessage, 3000)
+	},
+	enableSilentMode: async () => {
+		const visibleProvider = getVisibleProviderOrLog(outputChannel)
+
+		if (!visibleProvider) {
+			return
+		}
+
+		await visibleProvider.contextProxy.setValue("silentMode", true)
+		await visibleProvider.postStateToWebview()
+
+		vscode.window.setStatusBarMessage(`$(loading~spin) Silent Mode enabled - Roo will work in the background`, 3000)
+	},
+	disableSilentMode: async () => {
+		const visibleProvider = getVisibleProviderOrLog(outputChannel)
+
+		if (!visibleProvider) {
+			return
+		}
+
+		await visibleProvider.contextProxy.setValue("silentMode", false)
+		await visibleProvider.postStateToWebview()
+
+		vscode.window.setStatusBarMessage(`$(check) Silent Mode disabled - Roo will use interactive mode`, 3000)
+	},
 })
 
 export const openClineInNewTab = async ({ context, outputChannel }: Omit<RegisterCommandOptions, "provider">) => {

@@ -118,6 +118,9 @@ export interface ExtensionMessage {
 		| "didBecomeVisible"
 		| "focusInput"
 		| "switchTab"
+		| "playSilentModeCompletionSound"
+		| "showSilentModeReview"
+		| "applySilentModeChanges"
 	invoke?: "newChat" | "sendMessage" | "primaryButtonClick" | "secondaryButtonClick" | "setChatBoxMessage"
 	state?: ExtensionState
 	images?: string[]
@@ -182,6 +185,7 @@ export type ExtensionState = Pick<
 	| "alwaysAllowSubtasks"
 	| "alwaysAllowExecute"
 	| "alwaysAllowUpdateTodoList"
+	| "silentMode"
 	| "allowedCommands"
 	| "deniedCommands"
 	| "allowedMaxRequests"

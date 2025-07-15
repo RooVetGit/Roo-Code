@@ -382,6 +382,39 @@ export const webviewMessageHandler = async (
 			await updateGlobalState("alwaysAllowUpdateTodoList", message.bool)
 			await provider.postStateToWebview()
 			break
+		case "silentMode":
+			await updateGlobalState("silentMode", message.bool)
+			await provider.postStateToWebview()
+			break
+		case "playSilentModeCompletionSound":
+			// Send sound notification to webview for Silent Mode completion
+			await provider.postMessageToWebview({
+				type: "action",
+				action: "playSilentModeCompletionSound",
+			})
+			break
+		case "showSilentModeReview":
+			// Handle Silent Mode review interface trigger
+			await provider.postMessageToWebview({
+				type: "action",
+				action: "showSilentModeReview",
+				values: {
+					summary: message.summary,
+					fileCount: message.fileCount,
+				},
+			})
+			break
+		case "applySilentModeChanges":
+			// Handle Silent Mode changes application
+			await provider.postMessageToWebview({
+				type: "action",
+				action: "applySilentModeChanges",
+				values: {
+					applyAll: message.applyAll,
+					summary: message.summary,
+				},
+			})
+			break
 		case "askResponse":
 			provider.getCurrentCline()?.handleWebviewAskResponse(message.askResponse!, message.text, message.images)
 			break

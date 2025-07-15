@@ -50,6 +50,13 @@ Our roadmap guides the project's direction. Align your contributions with these 
 - Make it easy for everyone to easily run and interpret these evals.
 - Ship improvements that demonstrate clear increases in eval scores.
 
+### Silent Mode Innovation
+
+- Improve background processing capabilities and memory management.
+- Enhance the change review interface and user experience.
+- Expand Silent Mode compatibility with more file types and operations.
+- Optimize performance for large-scale refactoring tasks.
+
 Mention alignment with these areas in your PRs.
 
 ### 3. Join the Roo Code Community

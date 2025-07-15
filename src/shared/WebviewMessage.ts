@@ -45,6 +45,7 @@ export interface WebviewMessage {
 		| "alwaysAllowExecute"
 		| "alwaysAllowFollowupQuestions"
 		| "alwaysAllowUpdateTodoList"
+		| "silentMode"
 		| "followupAutoApproveTimeoutMs"
 		| "webviewDidLaunch"
 		| "newTask"
@@ -194,6 +195,15 @@ export interface WebviewMessage {
 		| "checkRulesDirectoryResult"
 		| "saveCodeIndexSettingsAtomic"
 		| "requestCodeIndexSecretStatus"
+		| "showSilentModeReview"
+		| "applySilentModeChanges"
+		| "silentModeTaskCompleted"
+		| "playSilentModeCompletionSound"
+		| "silentModeActivated"
+		| "silentModeDeactivated"
+		| "silentModeError"
+		| "silentModeWarning"
+		| "silentModeProgress"
 	text?: string
 	editedMessageContent?: string
 	tab?: "settings" | "history" | "mcp" | "modes" | "chat" | "marketplace" | "account"
@@ -234,7 +244,14 @@ export interface WebviewMessage {
 	config?: Record<string, any> // Add config to the payload
 	visibility?: ShareVisibility // For share visibility
 	hasContent?: boolean // For checkRulesDirectoryResult
-	checkOnly?: boolean // For deleteCustomMode check
+	checkOnly?: boolean
+	// Silent Mode fields
+	summary?: any // ChangeSummary type
+	applyAll?: boolean
+	error?: string
+	warning?: string
+	message?: string
+	fileCount?: number // For deleteCustomMode check
 	codeIndexSettings?: {
 		// Global state settings
 		codebaseIndexEnabled: boolean

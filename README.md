@@ -49,12 +49,13 @@ Check out the [CHANGELOG](CHANGELOG.md) for detailed updates and fixes.
 
 ---
 
-## 🎉 Roo Code 3.23 Released
+## 🎉 Roo Code 3.24 Coming Soon
 
-Roo Code 3.23 brings powerful new features and significant improvements to enhance your development workflow!
+Roo Code 3.24 will introduce revolutionary workflow improvements and enhanced development capabilities!
 
-- **Codebase Indexing Graduated from Experimental** - Full codebase indexing is now stable and ready for production use with improved search and context understanding.
-- **New Todo List Feature** - Keep your tasks on track with integrated todo management that helps you stay organized and focused on your development goals.
+- **Silent Mode** - Revolutionary background processing that lets Roo work without interrupting your current tasks, with comprehensive change review before applying modifications.
+- **Enhanced Integration Testing** - Comprehensive test coverage for Silent Mode and improved reliability across all features.
+- **Improved Performance** - Optimized memory usage and faster response times for large codebases.
 
 ---
 
@@ -66,6 +67,7 @@ Roo Code 3.23 brings powerful new features and significant improvements to enhan
 - 🤔 **Answer Questions** about your codebase
 - 🔄 **Automate** repetitive tasks
 - 🏗️ **Create** new files and projects
+- 🔇 **Work Silently** in the background without interrupting your workflow
 
 ## Quick Start
 
@@ -95,6 +97,18 @@ Roo Code comes with powerful [tools](https://docs.roocode.com/basic-usage/how-to
 - Use external tools via [MCP (Model Context Protocol)](https://docs.roocode.com/advanced-usage/mcp)
 
 MCP extends Roo Code's capabilities by allowing you to add unlimited custom tools. Integrate with external APIs, connect to databases, or create specialized development tools - MCP provides the framework to expand Roo Code's functionality to meet your specific needs.
+
+### Silent Mode
+
+[Silent Mode](DOCS-TEMP-silent-mode.md) revolutionizes your development workflow by letting Roo work in the background:
+
+- **Zero Interruption**: Continue coding while Roo works on other files
+- **Background Processing**: All changes buffered in memory until you're ready
+- **Smart Activation**: Automatically detects when files aren't being actively edited
+- **Comprehensive Review**: See all changes in a unified interface before applying
+- **Graceful Fallback**: Seamlessly switches to interactive mode when needed
+
+Perfect for large refactoring tasks, creating multiple related files, or any work where you want to maintain focus on your current task.
 
 ### Customization
 

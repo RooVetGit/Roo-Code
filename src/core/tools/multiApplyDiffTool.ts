@@ -14,6 +14,7 @@ import { unescapeHtmlEntities } from "../../utils/text-normalization"
 import { parseXml } from "../../utils/xml"
 import { EXPERIMENT_IDS, experiments } from "../../shared/experiments"
 import { applyDiffToolLegacy } from "./applyDiffTool"
+import { SilentToolWrapper } from "../silent-mode"
 
 interface DiffOperation {
 	path: string
@@ -72,6 +73,45 @@ export async function applyDiffTool(
 		}
 	}
 
+	// Try to execute using Silent Mode wrapper first
+	const silentResult = await SilentToolWrapper.wrapDiffTool(applyDiffToolCore, cline, {
+		block,
+		cline,
+		askApproval,
+		handleError,
+		pushToolResult,
+		removeClosingTag,
+	})
+
+	// Check if the result indicates silent mode was used
+	if (silentResult && silentResult.silent) {
+		// Operation was handled in silent mode
+		pushToolResult(silentResult.message || "Diff operations completed in silent mode")
+		return
+	}
+
+	// If not handled in silent mode, the wrapper already executed the normal operation
+	// No need for additional fallback
+}
+
+/**
+ * Core applyDiff implementation that can be called directly or via Silent Mode wrapper
+ */
+async function applyDiffToolCore({
+	block,
+	cline,
+	askApproval,
+	handleError,
+	pushToolResult,
+	removeClosingTag,
+}: {
+	block: ToolUse
+	cline: Task
+	askApproval: AskApproval
+	handleError: HandleError
+	pushToolResult: PushToolResult
+	removeClosingTag: RemoveClosingTag
+}) {
 	// Otherwise, continue with new multi-file implementation
 	const argsXmlTag: string | undefined = block.params.args
 	const legacyPath: string | undefined = block.params.path

@@ -25,6 +25,9 @@
 	"command.terminal.fixCommand.title": "Fix This Command",
 	"command.terminal.explainCommand.title": "Explain This Command",
 	"command.acceptInput.title": "Accept Input/Suggestion",
+	"command.toggleSilentMode.title": "Toggle Silent Mode",
+	"command.enableSilentMode.title": "Enable Silent Mode",
+	"command.disableSilentMode.title": "Disable Silent Mode",
 	"configuration.title": "Roo Code",
 	"commands.allowedCommands.description": "Commands that can be auto-executed when 'Always approve execute operations' is enabled",
 	"commands.deniedCommands.description": "Command prefixes that will be automatically denied without asking for approval. In case of conflicts with allowed commands, the longest prefix match takes precedence. Add * to deny all commands.",
@@ -34,5 +37,6 @@
 	"settings.vsCodeLmModelSelector.family.description": "The family of the language model (e.g. gpt-4)",
 	"settings.customStoragePath.description": "Custom storage path. Leave empty to use the default location. Supports absolute paths (e.g. 'D:\\RooCodeStorage')",
 	"settings.enableCodeActions.description": "Enable Roo Code quick fixes",
+	"settings.silentMode.description": "Enable Silent Mode - Roo works in background without opening files or switching tabs",
 	"settings.autoImportSettingsPath.description": "Path to a RooCode configuration file to automatically import on extension startup. Supports absolute paths and paths relative to the home directory (e.g. '~/Documents/roo-code-settings.json'). Leave empty to disable auto-import."
 }

@@ -13,6 +13,7 @@ import { getReadablePath } from "../../utils/path"
 import { isPathOutsideWorkspace } from "../../utils/pathUtils"
 import { detectCodeOmission } from "../../integrations/editor/detect-omission"
 import { unescapeHtmlEntities } from "../../utils/text-normalization"
+import { SilentToolWrapper } from "../silent-mode"
 
 export async function writeToFileTool(
 	cline: Task,
@@ -48,6 +49,54 @@ export async function writeToFileTool(
 		return
 	}
 
+	// Try to execute using Silent Mode wrapper
+	const silentResult = await SilentToolWrapper.wrapFileWriteTool(writeToFileToolCore, cline, {
+		relPath,
+		newContent,
+		predictedLineCount,
+		block,
+		cline,
+		askApproval,
+		handleError,
+		pushToolResult,
+		removeClosingTag,
+	})
+
+	// Check if the result indicates silent mode was used
+	if (silentResult && silentResult.silent) {
+		// Operation was handled in silent mode
+		pushToolResult(silentResult.message || "File operation completed in silent mode")
+		return
+	}
+
+	// If not handled in silent mode, the wrapper already executed the normal operation
+	// No need for additional fallback
+}
+
+/**
+ * Core writeToFile implementation that can be called directly or via Silent Mode wrapper
+ */
+async function writeToFileToolCore({
+	relPath,
+	newContent,
+	predictedLineCount,
+	block,
+	cline,
+	askApproval,
+	handleError,
+	pushToolResult,
+	removeClosingTag,
+}: {
+	relPath: string
+	newContent: string
+	predictedLineCount?: number
+	block: ToolUse
+	cline: Task
+	askApproval: AskApproval
+	handleError: HandleError
+	pushToolResult: PushToolResult
+	removeClosingTag: RemoveClosingTag
+}) {
 	const accessAllowed = cline.rooIgnoreController?.validateAccess(relPath)
 
 	if (!accessAllowed) {

@@ -88,6 +88,7 @@ import { ApiMessage } from "../task-persistence/apiMessages"
 import { getMessagesSinceLastSummary, summarizeConversation } from "../condense"
 import { maybeRemoveImageBlocks } from "../../api/transform/image-cleaning"
 import { restoreTodoListForTask } from "../tools/updateTodoListTool"
+import { SilentModeController, ChangeTracker, NotificationService } from "../silent-mode"
 
 // Constants
 const MAX_EXPONENTIAL_BACKOFF_SECONDS = 600 // 10 minutes
@@ -209,6 +210,11 @@ export class Task extends EventEmitter<ClineEvents> {
 	didAlreadyUseTool = false
 	didCompleteReadingStream = false
 
+	// Silent Mode
+	private silentModeController?: SilentModeController
+	private changeTracker?: ChangeTracker
+	private notificationService?: NotificationService
+
 	constructor({
 		provider,
 		apiConfiguration,
@@ -291,6 +297,9 @@ export class Task extends EventEmitter<ClineEvents> {
 		this.toolRepetitionDetector = new ToolRepetitionDetector(this.consecutiveMistakeLimit)
 
 		onCreated?.(this)
+
+		// Initialize Silent Mode components
+		this.initializeSilentMode()
 
 		if (startTask) {
 			if (task || images) {
@@ -1939,5 +1948,101 @@ export class Task extends EventEmitter<ClineEvents> {
 
 	public get cwd() {
 		return this.workspacePath
+	}
+
+	// Silent Mode Support
+
+	/**
+	 * Initialize Silent Mode components for this task
+	 */
+	private async initializeSilentMode(): Promise<void> {
+		try {
+			const provider = this.providerRef.deref()
+			if (!provider) return
+
+			const state = await provider.getState()
+			const silentModeSettings = { silentMode: state?.silentMode ?? false }
+
+			if (silentModeSettings.silentMode) {
+				// Create webview messaging callback
+				const postMessageToWebview = async (message: any) => {
+					await provider.postMessageToWebview(message)
+				}
+
+				this.silentModeController = new SilentModeController(this, silentModeSettings, postMessageToWebview)
+				this.changeTracker = new ChangeTracker()
+				this.notificationService = new NotificationService(postMessageToWebview)
+			}
+		} catch (error) {
+			console.error(`Failed to initialize Silent Mode for task ${this.taskId}:`, error)
+		}
+	}
+
+	/**
+	 * Check if this task has changes tracked in Silent Mode
+	 */
+	public hasSilentModeChanges(): boolean {
+		return this.changeTracker?.hasChanges(this.taskId) ?? false
+	}
+
+	/**
+	 * Get Silent Mode changes for this task
+	 */
+	public getSilentModeChanges() {
+		return this.changeTracker?.getChangesForTask(this.taskId) ?? []
+	}
+
+	/**
+	 * Get the Silent Mode controller for this task
+	 */
+	public getSilentModeController(): SilentModeController | null {
+		return this.silentModeController || null
+	}
+
+	/**
+	 * Check for Silent Mode completion and show review if needed
+	 */
+	public async checkForSilentModeCompletion(): Promise<void> {
+		if (!this.silentModeController || !this.changeTracker) {
+			return
+		}
+
+		if (this.hasSilentModeChanges()) {
+			await this.showSilentModeCompletion()
+		}
+	}
+
+	/**
+	 * Show Silent Mode completion notification and review interface
+	 */
+	private async showSilentModeCompletion(): Promise<void> {
+		try {
+			if (!this.silentModeController || !this.notificationService) {
+				return
+			}
+
+			// Generate summary of changes
+			const changeSummary = this.changeTracker?.generateSummary(this.taskId)
+
+			// Show notification
+			if (changeSummary) {
+				await this.notificationService.showTaskCompletion(changeSummary)
+			}
+
+			// Send completion notification to webview
+			const provider = this.providerRef.deref()
+			if (provider) {
+				// Use the existing say method to show completion
+				await this.say(
+					"completion_result",
+					`Silent Mode task completed with ${changeSummary?.filesChanged || 0} files changed.`,
+				)
+
+				// Emit task completion event with silent mode flag
+				this.emit("taskCompleted", this.taskId, this.getTokenUsage(), this.toolUsage)
+			}
+		} catch (error) {
+			console.error(`Failed to show Silent Mode completion for task ${this.taskId}:`, error)
+		}
 	}
 }

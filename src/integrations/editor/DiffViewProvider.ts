@@ -11,6 +11,7 @@ import { formatResponse } from "../../core/prompts/responses"
 import { diagnosticsToProblemsString, getNewDiagnostics } from "../diagnostics"
 import { ClineSayTool } from "../../shared/ExtensionMessage"
 import { Task } from "../../core/task/Task"
+import { SilentModeController, BufferManager, ChangeTracker } from "../../core/silent-mode"
 
 import { DecorationController } from "./DecorationController"
 
@@ -35,14 +36,75 @@ export class DiffViewProvider {
 	private streamedLines: string[] = []
 	private preDiagnostics: [vscode.Uri, vscode.Diagnostic[]][] = []
 
+	// Silent mode support
+	private silentModeController?: SilentModeController
+	private bufferManager?: BufferManager
+	private changeTracker?: ChangeTracker
+
 	constructor(private cwd: string) {}
 
-	async open(relPath: string): Promise<void> {
+	/**
+	 * Initialize silent mode components for this diff provider
+	 */
+	private async initializeSilentMode(task: Task): Promise<void> {
+		// Get silent mode settings from the task's provider
+		const provider = task.providerRef.deref()
+		const state = await provider?.getState()
+		const silentModeSettings = { silentMode: state?.silentMode ?? false }
+
+		this.silentModeController = new SilentModeController(task, silentModeSettings)
+		this.bufferManager = new BufferManager()
+		this.changeTracker = new ChangeTracker()
+	}
+
+	/**
+	 * Check if we should operate in silent mode for the current task
+	 */
+	private shouldOperateInSilentMode(task: Task, filePath: string): boolean {
+		if (!this.silentModeController) {
+			this.initializeSilentMode(task)
+		}
+
+		const fileOperation = {
+			type: this.editType === "create" ? "create" : "modify",
+			filePath,
+			content: this.newContent || "",
+		} as const
+
+		return this.silentModeController?.shouldOperateInSilentMode(fileOperation) ?? false
+	}
+
+	async open(relPath: string, task?: Task): Promise<void> {
 		this.relPath = relPath
 		const fileExists = this.editType === "modify"
 		const absolutePath = path.resolve(this.cwd, relPath)
 		this.isEditing = true
 
+		// Initialize silent mode components if task is provided
+		if (task) {
+			this.initializeSilentMode(task)
+		}
+
+		// Check if we should operate in silent mode
+		const isSilentMode = task && this.shouldOperateInSilentMode(task, absolutePath)
+
+		if (isSilentMode) {
+			// In silent mode, we don't open diff views but still track the operation
+			if (fileExists) {
+				this.originalContent = await fs.readFile(absolutePath, "utf-8")
+			} else {
+				this.originalContent = ""
+			}
+
+			// For new files, create any necessary directories
+			if (!fileExists) {
+				this.createdDirs = await createDirectoriesForFile(absolutePath)
+			}
+
+			return // Exit early for silent mode
+		}
+
+		// Existing non-silent mode logic
 		// If the file is already open, ensure it's not dirty before getting its
 		// contents.
 		if (fileExists) {
@@ -102,12 +164,35 @@ export class DiffViewProvider {
 		this.streamedLines = []
 	}
 
-	async update(accumulatedContent: string, isFinal: boolean) {
-		if (!this.relPath || !this.activeLineController || !this.fadedOverlayController) {
+	async update(accumulatedContent: string, isFinal: boolean, task?: Task) {
+		if (!this.relPath) {
 			throw new Error("Required values not set")
 		}
 
 		this.newContent = accumulatedContent
+
+		// Check if we should operate in silent mode
+		const absolutePath = path.resolve(this.cwd, this.relPath)
+		const isSilentMode = task && this.shouldOperateInSilentMode(task, absolutePath)
+
+		if (isSilentMode) {
+			// In silent mode, buffer the content instead of updating UI
+			if (this.bufferManager && this.relPath) {
+				const operation = {
+					type: this.editType === "create" ? "create" : "modify",
+					filePath: absolutePath,
+					content: accumulatedContent,
+				} as const
+				await this.bufferManager.bufferFileOperation(absolutePath, operation)
+			}
+			return // Exit early for silent mode
+		}
+
+		// Existing non-silent mode logic
+		if (!this.activeLineController || !this.fadedOverlayController) {
+			throw new Error("Required values not set")
+		}
+
 		const accumulatedLines = accumulatedContent.split("\n")
 
 		if (!isFinal) {
@@ -179,16 +264,48 @@ export class DiffViewProvider {
 		}
 	}
 
-	async saveChanges(): Promise<{
+	async saveChanges(task?: Task): Promise<{
 		newProblemsMessage: string | undefined
 		userEdits: string | undefined
 		finalContent: string | undefined
 	}> {
-		if (!this.relPath || !this.newContent || !this.activeDiffEditor) {
+		if (!this.relPath || !this.newContent) {
 			return { newProblemsMessage: undefined, userEdits: undefined, finalContent: undefined }
 		}
 
 		const absolutePath = path.resolve(this.cwd, this.relPath)
+
+		// Check if we should operate in silent mode
+		const isSilentMode = task && this.shouldOperateInSilentMode(task, absolutePath)
+
+		if (isSilentMode) {
+			// In silent mode, track the change without applying it immediately
+			if (this.changeTracker && task) {
+				const operation =
+					this.editType === "create" ? "create" : this.editType === "modify" ? "modify" : "modify"
+
+				this.changeTracker.trackChange(task.taskId, {
+					filePath: this.relPath,
+					operation,
+					originalContent: this.originalContent,
+					newContent: this.newContent,
+					timestamp: Date.now(),
+				})
+			}
+
+			// Return the content without applying changes to filesystem
+			return {
+				newProblemsMessage: undefined,
+				userEdits: undefined,
+				finalContent: this.newContent,
+			}
+		}
+
+		// Existing non-silent mode logic
+		if (!this.activeDiffEditor) {
+			return { newProblemsMessage: undefined, userEdits: undefined, finalContent: undefined }
+		}
+
 		const updatedDocument = this.activeDiffEditor.document
 		const editedContent = updatedDocument.getText()
 

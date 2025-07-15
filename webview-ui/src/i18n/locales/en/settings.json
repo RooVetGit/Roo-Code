@@ -186,6 +186,10 @@
 			"label": "Todo",
 			"description": "Automatically update the to-do list without requiring approval"
 		},
+		"silentMode": {
+			"label": "Silent",
+			"description": "Work in background without opening files or switching tabs"
+		},
 		"apiRequestLimit": {
 			"title": "Max Requests",
 			"description": "Automatically make this many API requests before asking for approval to continue with the task.",

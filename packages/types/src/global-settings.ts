@@ -48,6 +48,8 @@ export const globalSettingsSchema = z.object({
 	alwaysAllowFollowupQuestions: z.boolean().optional(),
 	followupAutoApproveTimeoutMs: z.number().optional(),
 	alwaysAllowUpdateTodoList: z.boolean().optional(),
+
+	silentMode: z.boolean().optional(),
 	allowedCommands: z.array(z.string()).optional(),
 	deniedCommands: z.array(z.string()).optional(),
 	allowedMaxRequests: z.number().nullish(),
@@ -200,6 +202,8 @@ export const EVALS_SETTINGS: RooCodeSettings = {
 	alwaysAllowUpdateTodoList: true,
 	followupAutoApproveTimeoutMs: 0,
 	allowedCommands: ["*"],
+
+	silentMode: false,
 
 	browserToolEnabled: false,
 	browserViewportSize: "900x600",
