@@ -53,11 +53,10 @@
 		}
 	},
 	"confirmation": {
-		"delete_message": "Eliminar mensaje",
-		"delete_warning": "Eliminar este mensaje eliminará todos los mensajes posteriores en la conversación. ¿Deseas continuar?",
-		"edit_message": "Editar mensaje",
-		"edit_warning": "Editar este mensaje eliminará todos los mensajes posteriores en la conversación. ¿Deseas continuar?",
-		"proceed": "Continuar",
-		"dont_show_again": "No mostrar esto de nuevo"
+		"deleteMessage": "Eliminar mensaje",
+		"deleteWarning": "Eliminar este mensaje eliminará todos los mensajes posteriores en la conversación. ¿Deseas continuar?",
+		"editMessage": "Editar mensaje",
+		"editWarning": "Editar este mensaje eliminará todos los mensajes posteriores en la conversación. ¿Deseas continuar?",
+		"proceed": "Continuar"
 	}
 }

@@ -27,8 +27,8 @@ export const MessageModificationConfirmationDialog: React.FC<MessageModification
 	const { t } = useAppTranslation()
 
 	const isEdit = type === "edit"
-	const title = isEdit ? t("common:confirmation.edit_message") : t("common:confirmation.delete_message")
-	const description = isEdit ? t("common:confirmation.edit_warning") : t("common:confirmation.delete_warning")
+	const title = isEdit ? t("common:confirmation.editMessage") : t("common:confirmation.deleteMessage")
+	const description = isEdit ? t("common:confirmation.editWarning") : t("common:confirmation.deleteWarning")
 
 	return (
 		<AlertDialog open={open} onOpenChange={onOpenChange}>

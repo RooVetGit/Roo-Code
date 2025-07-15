@@ -53,11 +53,10 @@
 		}
 	},
 	"confirmation": {
-		"delete_message": "删除消息",
-		"delete_warning": "删除此消息将删除对话中的所有后续消息。是否继续？",
-		"edit_message": "编辑消息",
-		"edit_warning": "编辑此消息将删除对话中的所有后续消息。是否继续？",
-		"proceed": "继续",
-		"dont_show_again": "不再显示"
+		"deleteMessage": "删除消息",
+		"deleteWarning": "删除此消息将删除对话中的所有后续消息。是否继续？",
+		"editMessage": "编辑消息",
+		"editWarning": "编辑此消息将删除对话中的所有后续消息。是否继续？",
+		"proceed": "继续"
 	}
 }

@@ -53,11 +53,10 @@
 		}
 	},
 	"confirmation": {
-		"delete_message": "Mesajı Sil",
-		"delete_warning": "Bu mesajı silmek, konuşmadaki sonraki tüm mesajları da silecektir. Devam etmek istiyor musun?",
-		"edit_message": "Mesajı Düzenle",
-		"edit_warning": "Bu mesajı düzenlemek, konuşmadaki sonraki tüm mesajları da silecektir. Devam etmek istiyor musun?",
-		"proceed": "Devam Et",
-		"dont_show_again": "Tekrar gösterme"
+		"deleteMessage": "Mesajı Sil",
+		"deleteWarning": "Bu mesajı silmek, konuşmadaki sonraki tüm mesajları da silecektir. Devam etmek istiyor musun?",
+		"editMessage": "Mesajı Düzenle",
+		"editWarning": "Bu mesajı düzenlemek, konuşmadaki sonraki tüm mesajları da silecektir. Devam etmek istiyor musun?",
+		"proceed": "Devam Et"
 	}
 }

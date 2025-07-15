@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState, useMemo } from "react"
+import React, { useCallback, useEffect, useRef, useState, useMemo } from "react"
 import { useEvent } from "react-use"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 
@@ -25,6 +25,29 @@ import { TooltipProvider } from "./components/ui/tooltip"
 import { STANDARD_TOOLTIP_DELAY } from "./components/ui/standard-tooltip"
 
 type Tab = "settings" | "history" | "mcp" | "modes" | "chat" | "marketplace" | "account"
+
+interface HumanRelayDialogState {
+	isOpen: boolean
+	requestId: string
+	promptText: string
+}
+
+interface DeleteMessageDialogState {
+	isOpen: boolean
+	messageTs: number
+}
+
+interface EditMessageDialogState {
+	isOpen: boolean
+	messageTs: number
+	text: string
+	images?: string[]
+}
+
+// Memoize dialog components to prevent unnecessary re-renders
+const MemoizedDeleteMessageDialog = React.memo(DeleteMessageDialog)
+const MemoizedEditMessageDialog = React.memo(EditMessageDialog)
+const MemoizedHumanRelayDialog = React.memo(HumanRelayDialog)
 
 const tabsByMessageAction: Partial<Record<NonNullable<ExtensionMessage["action"]>, Tab>> = {
 	chatButtonClicked: "chat",
@@ -57,30 +80,18 @@ const App = () => {
 	const [showAnnouncement, setShowAnnouncement] = useState(false)
 	const [tab, setTab] = useState<Tab>("chat")
 
-	const [humanRelayDialogState, setHumanRelayDialogState] = useState<{
-		isOpen: boolean
-		requestId: string
-		promptText: string
-	}>({
+	const [humanRelayDialogState, setHumanRelayDialogState] = useState<HumanRelayDialogState>({
 		isOpen: false,
 		requestId: "",
 		promptText: "",
 	})
 
-	const [deleteMessageDialogState, setDeleteMessageDialogState] = useState<{
-		isOpen: boolean
-		messageTs: number
-	}>({
+	const [deleteMessageDialogState, setDeleteMessageDialogState] = useState<DeleteMessageDialogState>({
 		isOpen: false,
 		messageTs: 0,
 	})
 
-	const [editMessageDialogState, setEditMessageDialogState] = useState<{
-		isOpen: boolean
-		messageTs: number
-		text: string
-		images?: string[]
-	}>({
+	const [editMessageDialogState, setEditMessageDialogState] = useState<EditMessageDialogState>({
 		isOpen: false,
 		messageTs: 0,
 		text: "",
@@ -233,7 +244,7 @@ const App = () => {
 				showAnnouncement={showAnnouncement}
 				hideAnnouncement={() => setShowAnnouncement(false)}
 			/>
-			<HumanRelayDialog
+			<MemoizedHumanRelayDialog
 				isOpen={humanRelayDialogState.isOpen}
 				requestId={humanRelayDialogState.requestId}
 				promptText={humanRelayDialogState.promptText}
@@ -241,7 +252,7 @@ const App = () => {
 				onSubmit={(requestId, text) => vscode.postMessage({ type: "humanRelayResponse", requestId, text })}
 				onCancel={(requestId) => vscode.postMessage({ type: "humanRelayCancel", requestId })}
 			/>
-			<DeleteMessageDialog
+			<MemoizedDeleteMessageDialog
 				open={deleteMessageDialogState.isOpen}
 				onOpenChange={(open) => setDeleteMessageDialogState((prev) => ({ ...prev, isOpen: open }))}
 				onConfirm={() => {
@@ -252,7 +263,7 @@ const App = () => {
 					setDeleteMessageDialogState((prev) => ({ ...prev, isOpen: false }))
 				}}
 			/>
-			<EditMessageDialog
+			<MemoizedEditMessageDialog
 				open={editMessageDialogState.isOpen}
 				onOpenChange={(open) => setEditMessageDialogState((prev) => ({ ...prev, isOpen: open }))}
 				onConfirm={() => {

@@ -53,11 +53,10 @@
 		}
 	},
 	"confirmation": {
-		"delete_message": "Eliminar missatge",
-		"delete_warning": "Eliminar aquest missatge eliminarà tots els missatges posteriors de la conversa. Vols continuar?",
-		"edit_message": "Editar missatge",
-		"edit_warning": "Editar aquest missatge eliminarà tots els missatges posteriors de la conversa. Vols continuar?",
-		"proceed": "Continuar",
-		"dont_show_again": "No tornis a mostrar això"
+		"deleteMessage": "Eliminar missatge",
+		"deleteWarning": "Eliminar aquest missatge eliminarà tots els missatges posteriors de la conversa. Vols continuar?",
+		"editMessage": "Editar missatge",
+		"editWarning": "Editar aquest missatge eliminarà tots els missatges posteriors de la conversa. Vols continuar?",
+		"proceed": "Continuar"
 	}
 }

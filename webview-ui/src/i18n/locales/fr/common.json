@@ -53,11 +53,10 @@
 		}
 	},
 	"confirmation": {
-		"delete_message": "Supprimer le message",
-		"delete_warning": "Supprimer ce message supprimera tous les messages suivants dans la conversation. Voulez-vous continuer ?",
-		"edit_message": "Modifier le message",
-		"edit_warning": "Modifier ce message supprimera tous les messages suivants dans la conversation. Voulez-vous continuer ?",
-		"proceed": "Continuer",
-		"dont_show_again": "Ne plus afficher ceci"
+		"deleteMessage": "Supprimer le message",
+		"deleteWarning": "Supprimer ce message supprimera tous les messages suivants dans la conversation. Voulez-vous continuer ?",
+		"editMessage": "Modifier le message",
+		"editWarning": "Modifier ce message supprimera tous les messages suivants dans la conversation. Voulez-vous continuer ?",
+		"proceed": "Continuer"
 	}
 }

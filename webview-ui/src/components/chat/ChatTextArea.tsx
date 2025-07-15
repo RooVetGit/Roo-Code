@@ -29,6 +29,7 @@ import { VolumeX, Pin, Check, Image, WandSparkles, SendHorizontal } from "lucide
 import { IndexingStatusBadge } from "./IndexingStatusBadge"
 import { cn } from "@/lib/utils"
 import { usePromptHistory } from "./hooks/usePromptHistory"
+import { EditModeControls } from "./EditModeControls"
 
 interface ChatTextAreaProps {
 	inputValue: string
@@ -806,77 +807,6 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 			/>
 		)
 
-		// Helper function to render edit mode controls
-		const renderEditModeControls = () => (
-			<div
-				className={cn(
-					"flex",
-					"items-center",
-					"justify-between",
-					"absolute",
-					"bottom-2",
-					"left-2",
-					"right-2",
-					"z-30",
-				)}>
-				<div className={cn("flex", "items-center", "gap-1", "flex-1", "min-w-0")}>
-					<div className="shrink-0">{renderModeSelector()}</div>
-				</div>
-				<div className={cn("flex", "items-center", "gap-0.5", "shrink-0", "ml-2")}>
-					<Button
-						variant="secondary"
-						size="sm"
-						onClick={onCancel}
-						disabled={sendingDisabled}
-						className="text-xs bg-vscode-toolbar-hoverBackground hover:bg-vscode-button-secondaryBackground text-vscode-button-secondaryForeground">
-						Cancel
-					</Button>
-					<StandardTooltip content={t("chat:addImages")}>
-						<button
-							aria-label={t("chat:addImages")}
-							disabled={shouldDisableImages}
-							onClick={!shouldDisableImages ? onSelectImages : undefined}
-							className={cn(
-								"relative inline-flex items-center justify-center",
-								"bg-transparent border-none p-1.5",
-								"rounded-md min-w-[28px] min-h-[28px]",
-								"opacity-60 hover:opacity-100 text-vscode-descriptionForeground hover:text-vscode-foreground",
-								"transition-all duration-150",
-								"hover:bg-[rgba(255,255,255,0.03)] hover:border-[rgba(255,255,255,0.15)]",
-								"focus:outline-none focus-visible:ring-1 focus-visible:ring-vscode-focusBorder",
-								"active:bg-[rgba(255,255,255,0.1)]",
-								!shouldDisableImages && "cursor-pointer",
-								shouldDisableImages &&
-									"opacity-40 cursor-not-allowed grayscale-[30%] hover:bg-transparent hover:border-[rgba(255,255,255,0.08)] active:bg-transparent",
-							)}>
-							<Image className="w-4 h-4" />
-						</button>
-					</StandardTooltip>
-					<StandardTooltip content={t("chat:save.tooltip")}>
-						<button
-							aria-label={t("chat:save.tooltip")}
-							disabled={sendingDisabled}
-							onClick={!sendingDisabled ? onSend : undefined}
-							className={cn(
-								"relative inline-flex items-center justify-center",
-								"bg-transparent border-none p-1.5",
-								"rounded-md min-w-[28px] min-h-[28px]",
-								"opacity-60 hover:opacity-100 text-vscode-descriptionForeground hover:text-vscode-foreground",
-								"transition-all duration-150",
-								"hover:bg-[rgba(255,255,255,0.03)] hover:border-[rgba(255,255,255,0.15)]",
-								"focus:outline-none focus-visible:ring-1 focus-visible:ring-vscode-focusBorder",
-								"active:bg-[rgba(255,255,255,0.1)]",
-								!sendingDisabled && "cursor-pointer",
-								sendingDisabled &&
-									"opacity-40 cursor-not-allowed grayscale-[30%] hover:bg-transparent hover:border-[rgba(255,255,255,0.08)] active:bg-transparent",
-							)}>
-							<SendHorizontal className="w-4 h-4" />
-						</button>
-					</StandardTooltip>
-				</div>
-			</div>
-		)
-
 		// Helper function to get API config dropdown options
 		const getApiConfigOptions = useMemo(() => {
 			const pinnedConfigs = (listApiConfigMeta || [])
@@ -1305,7 +1235,20 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 						{renderTextAreaSection()}
 					</div>
 
-					{isEditMode && renderEditModeControls()}
+					{isEditMode && (
+						<EditModeControls
+							mode={mode}
+							onModeChange={handleModeChange}
+							modeShortcutText={modeShortcutText}
+							customModes={customModes}
+							customModePrompts={customModePrompts}
+							onCancel={onCancel}
+							onSend={onSend}
+							onSelectImages={onSelectImages}
+							sendingDisabled={sendingDisabled}
+							shouldDisableImages={shouldDisableImages}
+						/>
+					)}
 				</div>
 
 				{selectedImages.length > 0 && (

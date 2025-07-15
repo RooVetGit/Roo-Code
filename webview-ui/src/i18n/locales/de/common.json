@@ -53,11 +53,10 @@
 		}
 	},
 	"confirmation": {
-		"delete_message": "Nachricht löschen",
-		"delete_warning": "Das Löschen dieser Nachricht wird alle nachfolgenden Nachrichten in der Unterhaltung löschen. Möchtest du fortfahren?",
-		"edit_message": "Nachricht bearbeiten",
-		"edit_warning": "Das Bearbeiten dieser Nachricht wird alle nachfolgenden Nachrichten in der Unterhaltung löschen. Möchtest du fortfahren?",
-		"proceed": "Fortfahren",
-		"dont_show_again": "Nicht mehr anzeigen"
+		"deleteMessage": "Nachricht löschen",
+		"deleteWarning": "Das Löschen dieser Nachricht wird alle nachfolgenden Nachrichten in der Unterhaltung löschen. Möchtest du fortfahren?",
+		"editMessage": "Nachricht bearbeiten",
+		"editWarning": "Das Bearbeiten dieser Nachricht wird alle nachfolgenden Nachrichten in der Unterhaltung löschen. Möchtest du fortfahren?",
+		"proceed": "Fortfahren"
 	}
 }

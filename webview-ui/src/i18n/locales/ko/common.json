@@ -53,11 +53,10 @@
 		}
 	},
 	"confirmation": {
-		"delete_message": "메시지 삭제",
-		"delete_warning": "이 메시지를 삭제하면 대화의 모든 후속 메시지가 삭제됩니다. 계속하시겠습니까?",
-		"edit_message": "메시지 편집",
-		"edit_warning": "이 메시지를 편집하면 대화의 모든 후속 메시지가 삭제됩니다. 계속하시겠습니까?",
-		"proceed": "계속",
-		"dont_show_again": "다시 표시하지 않음"
+		"deleteMessage": "메시지 삭제",
+		"deleteWarning": "이 메시지를 삭제하면 대화의 모든 후속 메시지가 삭제됩니다. 계속하시겠습니까?",
+		"editMessage": "메시지 편집",
+		"editWarning": "이 메시지를 편집하면 대화의 모든 후속 메시지가 삭제됩니다. 계속하시겠습니까?",
+		"proceed": "계속"
 	}
 }

@@ -53,11 +53,10 @@
 		}
 	},
 	"confirmation": {
-		"delete_message": "Hapus Pesan",
-		"delete_warning": "Menghapus pesan ini akan menghapus semua pesan selanjutnya dalam percakapan. Apakah kamu ingin melanjutkan?",
-		"edit_message": "Edit Pesan",
-		"edit_warning": "Mengedit pesan ini akan menghapus semua pesan selanjutnya dalam percakapan. Apakah kamu ingin melanjutkan?",
-		"proceed": "Lanjutkan",
-		"dont_show_again": "Jangan tampilkan lagi"
+		"deleteMessage": "Hapus Pesan",
+		"deleteWarning": "Menghapus pesan ini akan menghapus semua pesan selanjutnya dalam percakapan. Apakah kamu ingin melanjutkan?",
+		"editMessage": "Edit Pesan",
+		"editWarning": "Mengedit pesan ini akan menghapus semua pesan selanjutnya dalam percakapan. Apakah kamu ingin melanjutkan?",
+		"proceed": "Lanjutkan"
 	}
 }

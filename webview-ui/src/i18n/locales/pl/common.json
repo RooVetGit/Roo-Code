@@ -53,11 +53,10 @@
 		}
 	},
 	"confirmation": {
-		"delete_message": "Usuń Wiadomość",
-		"delete_warning": "Usunięcie tej wiadomości spowoduje usunięcie wszystkich kolejnych wiadomości w rozmowie. Czy chcesz kontynuować?",
-		"edit_message": "Edytuj Wiadomość",
-		"edit_warning": "Edycja tej wiadomości spowoduje usunięcie wszystkich kolejnych wiadomości w rozmowie. Czy chcesz kontynuować?",
-		"proceed": "Kontynuuj",
-		"dont_show_again": "Nie pokazuj ponownie"
+		"deleteMessage": "Usuń Wiadomość",
+		"deleteWarning": "Usunięcie tej wiadomości spowoduje usunięcie wszystkich kolejnych wiadomości w rozmowie. Czy chcesz kontynuować?",
+		"editMessage": "Edytuj Wiadomość",
+		"editWarning": "Edycja tej wiadomości spowoduje usunięcie wszystkich kolejnych wiadomości w rozmowie. Czy chcesz kontynuować?",
+		"proceed": "Kontynuuj"
 	}
 }

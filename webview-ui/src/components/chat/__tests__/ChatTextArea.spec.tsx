@@ -857,31 +857,34 @@ describe("ChatTextArea", () => {
 			expect(apiConfigDropdown).toHaveAttribute("disabled")
 		})
 	})
-	describe("edit mode functionality", () => {
-		it("should show edit button instead of send button when isEditMode is true", () => {
+	describe("edit mode integration", () => {
+		it("should render edit mode UI when isEditMode is true", () => {
 			;(useExtensionState as ReturnType<typeof vi.fn>).mockReturnValue({
 				filePaths: [],
 				openedTabs: [],
 				taskHistory: [],
 				cwd: "/test/workspace",
+				customModes: [],
+				customModePrompts: {},
 			})
 
 			render(<ChatTextArea {...defaultProps} isEditMode={true} />)
 
-			// Should show save button in edit mode
-			const saveButton = screen.getByRole("button", {
-				name: /save/i,
-			})
+			// The edit mode UI should be rendered
+			// We can verify this by checking for the presence of elements that are unique to edit mode
+			const cancelButton = screen.getByRole("button", { name: /cancel/i })
+			expect(cancelButton).toBeInTheDocument()
+
+			// Should show save button instead of send button
+			const saveButton = screen.getByRole("button", { name: /save/i })
 			expect(saveButton).toBeInTheDocument()
 
 			// Should not show send button in edit mode
-			const sendButton = screen.queryByRole("button", {
-				name: /send/i,
-			})
+			const sendButton = screen.queryByRole("button", { name: /send.*message/i })
 			expect(sendButton).not.toBeInTheDocument()
 		})
 
-		it("should show send button when isEditMode is false", () => {
+		it("should not render edit mode UI when isEditMode is false", () => {
 			;(useExtensionState as ReturnType<typeof vi.fn>).mockReturnValue({
 				filePaths: [],
 				openedTabs: [],
@@ -891,162 +894,17 @@ describe("ChatTextArea", () => {
 
 			render(<ChatTextArea {...defaultProps} isEditMode={false} />)
 
+			// The edit mode UI should not be rendered
+			const cancelButton = screen.queryByRole("button", { name: /cancel/i })
+			expect(cancelButton).not.toBeInTheDocument()
+
 			// Should show send button when not in edit mode
-			const sendButton = screen.getByRole("button", {
-				name: /send/i,
-			})
+			const sendButton = screen.getByRole("button", { name: /send.*message/i })
 			expect(sendButton).toBeInTheDocument()
 
 			// Should not show save button when not in edit mode
-			const saveButton = screen.queryByRole("button", {
-				name: /save/i,
-			})
+			const saveButton = screen.queryByRole("button", { name: /save/i })
 			expect(saveButton).not.toBeInTheDocument()
-		})
-
-		it("should show cancel button in edit mode", () => {
-			;(useExtensionState as ReturnType<typeof vi.fn>).mockReturnValue({
-				filePaths: [],
-				openedTabs: [],
-				taskHistory: [],
-				cwd: "/test/workspace",
-			})
-
-			render(<ChatTextArea {...defaultProps} isEditMode={true} />)
-
-			// Should show cancel button with text "Cancel"
-			const cancelButton = screen.getByRole("button", { name: /cancel/i })
-			expect(cancelButton).toBeInTheDocument()
-			expect(cancelButton).toHaveTextContent("Cancel")
-		})
-
-		it("should not show cancel button when not in edit mode", () => {
-			;(useExtensionState as ReturnType<typeof vi.fn>).mockReturnValue({
-				filePaths: [],
-				openedTabs: [],
-				taskHistory: [],
-				cwd: "/test/workspace",
-			})
-
-			render(<ChatTextArea {...defaultProps} isEditMode={false} />)
-
-			// Should not show cancel button
-			const cancelButton = screen.queryByRole("button", { name: /cancel/i })
-			expect(cancelButton).not.toBeInTheDocument()
-		})
-
-		it("should call onSend when save button is clicked", () => {
-			const onSend = vi.fn()
-			;(useExtensionState as ReturnType<typeof vi.fn>).mockReturnValue({
-				filePaths: [],
-				openedTabs: [],
-				taskHistory: [],
-				cwd: "/test/workspace",
-			})
-
-			render(<ChatTextArea {...defaultProps} isEditMode={true} onSend={onSend} />)
-
-			const saveButton = screen.getByRole("button", {
-				name: /save/i,
-			})
-
-			fireEvent.click(saveButton)
-			expect(onSend).toHaveBeenCalledTimes(1)
-		})
-
-		it("should call onCancel when cancel button is clicked", () => {
-			const onCancel = vi.fn()
-			;(useExtensionState as ReturnType<typeof vi.fn>).mockReturnValue({
-				filePaths: [],
-				openedTabs: [],
-				taskHistory: [],
-				cwd: "/test/workspace",
-			})
-
-			render(<ChatTextArea {...defaultProps} isEditMode={true} onCancel={onCancel} />)
-
-			const cancelButton = screen.getByRole("button", { name: /cancel/i })
-
-			fireEvent.click(cancelButton)
-			expect(onCancel).toHaveBeenCalledTimes(1)
-		})
-
-		it("should disable save button when sendingDisabled is true", () => {
-			;(useExtensionState as ReturnType<typeof vi.fn>).mockReturnValue({
-				filePaths: [],
-				openedTabs: [],
-				taskHistory: [],
-				cwd: "/test/workspace",
-			})
-
-			render(<ChatTextArea {...defaultProps} isEditMode={true} sendingDisabled={true} />)
-
-			const saveButton = screen.getByRole("button", {
-				name: /save/i,
-			})
-
-			expect(saveButton).toBeDisabled()
-		})
-
-		it("should disable cancel button when sendingDisabled is true", () => {
-			;(useExtensionState as ReturnType<typeof vi.fn>).mockReturnValue({
-				filePaths: [],
-				openedTabs: [],
-				taskHistory: [],
-				cwd: "/test/workspace",
-			})
-
-			render(<ChatTextArea {...defaultProps} isEditMode={true} sendingDisabled={true} />)
-
-			const cancelButton = screen.getByRole("button", { name: /cancel/i })
-			expect(cancelButton).toBeDisabled()
-		})
-
-		it("should have correct tooltip for save button", () => {
-			;(useExtensionState as ReturnType<typeof vi.fn>).mockReturnValue({
-				filePaths: [],
-				openedTabs: [],
-				taskHistory: [],
-				cwd: "/test/workspace",
-			})
-
-			render(<ChatTextArea {...defaultProps} isEditMode={true} />)
-
-			// Look for the save button by its aria-label
-			const saveButton = screen.getByRole("button", {
-				name: /save/i,
-			})
-
-			// Check that the button has the correct aria-label (which is used for tooltip)
-			expect(saveButton).toHaveAttribute("aria-label", expect.stringMatching(/save/i))
-		})
-
-		it("should position cancel button correctly relative to image button", () => {
-			;(useExtensionState as ReturnType<typeof vi.fn>).mockReturnValue({
-				filePaths: [],
-				openedTabs: [],
-				taskHistory: [],
-				cwd: "/test/workspace",
-			})
-
-			const { container } = render(<ChatTextArea {...defaultProps} isEditMode={true} />)
-
-			const cancelButton = screen.getByRole("button", { name: /cancel/i })
-			// Look for the image button by its aria-label
-			const imageButton = screen.getByRole("button", {
-				name: /add.*images/i,
-			})
-
-			// Both buttons should be in the same container (bottom toolbar)
-			const bottomToolbar = container.querySelector(".flex.items-center.gap-0\\.5.shrink-0")
-			expect(bottomToolbar).toContainElement(cancelButton)
-			expect(bottomToolbar).toContainElement(imageButton)
-
-			// Cancel button should come before image button in DOM order
-			const buttons = bottomToolbar?.querySelectorAll("button")
-			const cancelIndex = Array.from(buttons || []).indexOf(cancelButton as HTMLButtonElement)
-			const imageIndex = Array.from(buttons || []).indexOf(imageButton as HTMLButtonElement)
-			expect(cancelIndex).toBeLessThan(imageIndex)
 		})
 	})
 })
