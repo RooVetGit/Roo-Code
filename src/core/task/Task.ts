@@ -290,9 +290,7 @@ export class Task extends EventEmitter<ClineEvents> {
 			})
 		}
 
-		this.toolRepetitionDetector = new ToolRepetitionDetector(
-			this.consecutiveMistakeLimit === Infinity ? Number.MAX_SAFE_INTEGER : this.consecutiveMistakeLimit,
-		)
+		this.toolRepetitionDetector = new ToolRepetitionDetector(3)
 
 		onCreated?.(this)
 
