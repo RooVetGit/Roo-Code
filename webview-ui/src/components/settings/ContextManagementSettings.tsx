@@ -254,8 +254,7 @@ export const ContextManagementSettings = ({
 						</Button>
 					</div>
 					<div className="text-vscode-descriptionForeground text-sm mt-1">
-						{(maxDiagnosticMessages !== undefined && maxDiagnosticMessages <= 0) ||
-						maxDiagnosticMessages === 100
+						{maxDiagnosticMessages !== undefined && maxDiagnosticMessages <= 0
 							? t("settings:contextManagement.diagnostics.maxMessages.unlimitedDescription") ||
 								"All diagnostic messages will be included. Use with caution as this may significantly increase token usage."
 							: t("settings:contextManagement.diagnostics.maxMessages.description")}
