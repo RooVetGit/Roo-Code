@@ -1,5 +1,5 @@
 import { describe, test, expect } from "vitest"
-import { convertModelNameForVertex, getClaudeCodeModelId } from "../claude-code"
+import { convertModelNameForVertex, getClaudeCodeModelId } from "../claude-code.js"
 
 describe("convertModelNameForVertex", () => {
 	test("should convert hyphen-date format to @date format", () => {
