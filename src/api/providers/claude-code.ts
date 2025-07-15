@@ -27,11 +27,16 @@ export class ClaudeCodeHandler extends BaseProvider implements ApiHandler {
 		const filteredMessages = filterMessagesForClaudeCode(messages)
 
 		const useVertex = process.env.CLAUDE_CODE_USE_VERTEX?.toLowerCase() === "true"
+		const model = this.getModel()
+
+		// Validate that the model ID is a valid ClaudeCodeModelId
+		const modelId = model.id in claudeCodeModels ? (model.id as ClaudeCodeModelId) : claudeCodeDefaultModelId
+
 		const claudeProcess = runClaudeCode({
 			systemPrompt,
 			messages: filteredMessages,
 			path: this.options.claudeCodePath,
-			modelId: getClaudeCodeModelId(this.getModel().id as ClaudeCodeModelId, useVertex),
+			modelId: getClaudeCodeModelId(modelId, useVertex),
 			maxOutputTokens: this.options.claudeCodeMaxOutputTokens,
 		})
 
