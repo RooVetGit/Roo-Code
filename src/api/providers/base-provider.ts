@@ -97,7 +97,7 @@ export abstract class BaseProvider implements ApiHandler {
 				return apiCount
 			} catch (error) {
 				const localEstimate = await localCountTokens(content, { useWorker: true })
-				return localEstimate * this.tokenComparator.getSafetyFactor()
+				return localEstimate
 			}
 		}
 
@@ -131,6 +131,6 @@ export abstract class BaseProvider implements ApiHandler {
 			}
 		}
 
-		return localEstimate * this.tokenComparator.getSafetyFactor()
+		return localEstimate
 	}
 }
