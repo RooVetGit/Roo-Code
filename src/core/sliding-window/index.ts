@@ -3,6 +3,7 @@ import { Anthropic } from "@anthropic-ai/sdk"
 import { TelemetryService } from "@roo-code/telemetry"
 
 import { ApiHandler } from "../../api"
+import { getAllowedTokens, isSafetyNetTriggered } from "../../api/utils/context-safety"
 import { MAX_CONDENSE_THRESHOLD, MIN_CONDENSE_THRESHOLD, summarizeConversation, SummarizeResponse } from "../condense"
 import { ApiMessage } from "../task-persistence/apiMessages"
 
@@ -16,14 +17,21 @@ export const TOKEN_BUFFER_PERCENTAGE = 0.1
  *
  * @param {Array<Anthropic.Messages.ContentBlockParam>} content - The content to count tokens for
  * @param {ApiHandler} apiHandler - The API handler to use for token counting
+ * @param {number | null | undefined} maxTokens - The maximum number of tokens allowed for the response
+ * @param {number | undefined} effectiveThreshold - The condensation threshold percentage
  * @returns {Promise<number>} A promise resolving to the token count
  */
 export async function estimateTokenCount(
 	content: Array<Anthropic.Messages.ContentBlockParam>,
 	apiHandler: ApiHandler,
+	options: {
+		maxTokens?: number | null
+		effectiveThreshold?: number
+		totalTokens: number
+	},
 ): Promise<number> {
 	if (!content || content.length === 0) return 0
-	return apiHandler.countTokens(content)
+	return apiHandler.countTokens(content, options)
 }
 
 /**
@@ -104,22 +112,6 @@ export async function truncateConversationIfNeeded({
 }: TruncateOptions): Promise<TruncateResponse> {
 	let error: string | undefined
 	let cost = 0
-	// Calculate the maximum tokens reserved for response
-	const reservedTokens = maxTokens || contextWindow * 0.2
-
-	// Estimate tokens for the last message (which is always a user message)
-	const lastMessage = messages[messages.length - 1]
-	const lastMessageContent = lastMessage.content
-	const lastMessageTokens = Array.isArray(lastMessageContent)
-		? await estimateTokenCount(lastMessageContent, apiHandler)
-		: await estimateTokenCount([{ type: "text", text: lastMessageContent as string }], apiHandler)
-
-	// Calculate total effective tokens (totalTokens never includes the last message)
-	const prevContextTokens = totalTokens + lastMessageTokens
-
-	// Calculate available tokens for conversation history
-	// Truncate if we're within TOKEN_BUFFER_PERCENTAGE of the context window
-	const allowedTokens = contextWindow * (1 - TOKEN_BUFFER_PERCENTAGE) - reservedTokens
 
 	// Determine the effective threshold to use
 	let effectiveThreshold = autoCondenseContextPercent
@@ -139,18 +131,38 @@ export async function truncateConversationIfNeeded({
 			effectiveThreshold = autoCondenseContextPercent
 		}
 	}
-	// If no specific threshold is found for the profile, fall back to global setting
+
+	// Estimate tokens for the last message (which is always a user message)
+	const lastMessage = messages[messages.length - 1]
+	const lastMessageContent = lastMessage.content
+	const lastMessageTokens = Array.isArray(lastMessageContent)
+		? await estimateTokenCount(lastMessageContent, apiHandler, { totalTokens, maxTokens, effectiveThreshold })
+		: await estimateTokenCount([{ type: "text", text: lastMessageContent as string }], apiHandler, {
+				totalTokens,
+				maxTokens,
+				effectiveThreshold,
+			})
+
+	// Calculate total effective tokens (totalTokens never includes the last message)
+	const projectedTokens = totalTokens + lastMessageTokens
+	const allowedTokens = getAllowedTokens(contextWindow, maxTokens)
 
 	if (autoCondenseContext) {
-		const contextPercent = (100 * prevContextTokens) / contextWindow
-		if (contextPercent >= effectiveThreshold || prevContextTokens > allowedTokens) {
+		if (
+			isSafetyNetTriggered({
+				projectedTokens,
+				contextWindow,
+				effectiveThreshold,
+				allowedTokens,
+			})
+		) {
 			// Attempt to intelligently condense the context
 			const result = await summarizeConversation(
 				messages,
 				apiHandler,
 				systemPrompt,
 				taskId,
-				prevContextTokens,
+				projectedTokens,
 				true, // automatic trigger
 				customCondensingPrompt,
 				condensingApiHandler,
@@ -159,16 +171,16 @@ export async function truncateConversationIfNeeded({
 				error = result.error
 				cost = result.cost
 			} else {
-				return { ...result, prevContextTokens }
+				return { ...result, prevContextTokens: projectedTokens }
 			}
 		}
 	}
 
 	// Fall back to sliding window truncation if needed
-	if (prevContextTokens > allowedTokens) {
+	if (projectedTokens > allowedTokens) {
 		const truncatedMessages = truncateConversation(messages, 0.5, taskId)
-		return { messages: truncatedMessages, prevContextTokens, summary: "", cost, error }
+		return { messages: truncatedMessages, prevContextTokens: projectedTokens, summary: "", cost, error }
 	}
 	// No truncation or condensation needed
-	return { messages, summary: "", cost, prevContextTokens, error }
+	return { messages, summary: "", cost, prevContextTokens: projectedTokens, error }
 }

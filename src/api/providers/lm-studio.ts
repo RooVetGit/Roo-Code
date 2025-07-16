@@ -64,7 +64,11 @@ export class LmStudioHandler extends BaseProvider implements SingleCompletionHan
 
 		let inputTokens = 0
 		try {
-			inputTokens = await this.countTokens([{ type: "text", text: systemPrompt }, ...toContentBlocks(messages)])
+			inputTokens = await this.countTokens([{ type: "text", text: systemPrompt }, ...toContentBlocks(messages)], {
+				totalTokens: 0,
+				maxTokens: null,
+				effectiveThreshold: undefined,
+			})
 		} catch (err) {
 			console.error("[LmStudio] Failed to count input tokens:", err)
 			inputTokens = 0
@@ -112,7 +116,11 @@ export class LmStudioHandler extends BaseProvider implements SingleCompletionHan
 
 			let outputTokens = 0
 			try {
-				outputTokens = await this.countTokens([{ type: "text", text: assistantText }])
+				outputTokens = await this.countTokens([{ type: "text", text: assistantText }], {
+					totalTokens: 0,
+					maxTokens: null,
+					effectiveThreshold: undefined,
+				})
 			} catch (err) {
 				console.error("[LmStudio] Failed to count output tokens:", err)
 				outputTokens = 0

@@ -198,7 +198,13 @@ export async function summarizeConversation(
 		typeof message.content === "string" ? [{ text: message.content, type: "text" as const }] : message.content,
 	)
 
-	const newContextTokens = outputTokens + (await apiHandler.countTokens(contextBlocks))
+	const newContextTokens =
+		outputTokens +
+		(await apiHandler.countTokens(contextBlocks, {
+			totalTokens: 0,
+			maxTokens: null,
+			effectiveThreshold: undefined,
+		}))
 	if (newContextTokens >= prevContextTokens) {
 		const error = t("common:errors.condense_context_grew")
 		return { ...response, cost, error }

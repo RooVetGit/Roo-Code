@@ -25,7 +25,6 @@ type GeminiHandlerOptions = ApiHandlerOptions & {
 
 export class GeminiHandler extends BaseProvider implements SingleCompletionHandler {
 	protected options: ApiHandlerOptions
-
 	private client: GoogleGenAI
 
 	constructor({ isVertex, ...options }: GeminiHandlerOptions) {
@@ -167,26 +166,18 @@ export class GeminiHandler extends BaseProvider implements SingleCompletionHandl
 		}
 	}
 
-	override async countTokens(content: Array<Anthropic.Messages.ContentBlockParam>): Promise<number> {
-		try {
-			return await super.countTokens(content)
-		} catch (error) {
-			console.warn("Gemini local token counting failed, falling back to remote API", error)
-			try {
-				const { id: model } = this.getModel()
-				const response = await this.client.models.countTokens({
-					model,
-					contents: convertAnthropicContentToGemini(content),
-				})
-				if (response.totalTokens !== undefined) {
-					return response.totalTokens
-				}
-				console.warn("Gemini remote token counting returned undefined, falling back to 0")
-			} catch (remoteError) {
-				console.warn("Gemini remote token counting failed, falling back to 0", remoteError)
-			}
-			return 0
+	protected override async apiBasedTokenCount(content: Array<Anthropic.Messages.ContentBlockParam>): Promise<number> {
+		const { id: model } = this.getModel()
+		const response = await this.client.models.countTokens({
+			model,
+			contents: convertAnthropicContentToGemini(content),
+		})
+
+		if (response.totalTokens === undefined) {
+			throw new Error("Gemini API returned undefined token count")
 		}
+
+		return response.totalTokens
 	}
 
 	public calculateCost({
