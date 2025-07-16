@@ -49,6 +49,7 @@ import { getModels, flushModels } from "../../api/providers/fetchers/modelCache"
 import { GetModelsOptions } from "../../shared/api"
 import { generateSystemPrompt } from "./generateSystemPrompt"
 import { getCommand } from "../../utils/commands"
+import { mermaidFixPrompt } from "../prompts/utilities/mermaid"
 
 const ALLOWED_VSCODE_SETTINGS = new Set(["terminal.integrated.inheritEnv"])
 
@@ -2124,6 +2125,34 @@ export const webviewMessageHandler = async (
 			}
 			break
 		}
+		case "fixMermaidSyntax":
+			if (message.text && message.requestId) {
+				try {
+					const { apiConfiguration } = await provider.getState()
+
+					const prompt = mermaidFixPrompt(message.values?.error || "Unknown syntax error", message.text)
+
+					const fixedCode = await singleCompletionHandler(apiConfiguration, prompt)
+
+					provider.postMessageToWebview({
+						type: "mermaidFixResponse",
+						requestId: message.requestId,
+						success: true,
+						fixedCode: fixedCode?.trim() || null,
+					})
+				} catch (error) {
+					const errorMessage = error instanceof Error ? error.message : "Failed to fix Mermaid syntax"
+					provider.log(`Error fixing Mermaid syntax: ${errorMessage}`)
+
+					provider.postMessageToWebview({
+						type: "mermaidFixResponse",
+						requestId: message.requestId,
+						success: false,
+						error: errorMessage,
+					})
+				}
+			}
+			break
 		case "focusPanelRequest": {
 			// Execute the focusPanel command to focus the WebView
 			await vscode.commands.executeCommand(getCommand("focusPanel"))

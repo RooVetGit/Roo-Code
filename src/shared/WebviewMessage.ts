@@ -174,6 +174,8 @@ export interface WebviewMessage {
 		| "focusPanelRequest"
 		| "profileThresholds"
 		| "setHistoryPreviewCollapsed"
+		| "fixMermaidSyntax"
+		| "mermaidFixResponse"
 		| "openExternal"
 		| "filterMarketplaceItems"
 		| "marketplaceButtonClicked"

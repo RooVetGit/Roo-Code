@@ -5,8 +5,10 @@ import { useDebounceEffect } from "@src/utils/useDebounceEffect"
 import { vscode } from "@src/utils/vscode"
 import { useAppTranslation } from "@src/i18n/TranslationContext"
 import { useCopyToClipboard } from "@src/utils/clipboard"
+import { MermaidSyntaxFixer } from "@src/services/mermaidSyntaxFixer"
 import CodeBlock from "./CodeBlock"
 import { MermaidButton } from "@/components/common/MermaidButton"
+import { MermaidFixButton } from "@/components/common/MermaidFixButton"
 
 // Removed previous attempts at static imports for individual diagram types
 // as the paths were incorrect for Mermaid v11.4.1 and caused errors.
@@ -92,6 +94,9 @@ export default function MermaidBlock({ code }: MermaidBlockProps) {
 	const [isLoading, setIsLoading] = useState(false)
 	const [error, setError] = useState<string | null>(null)
 	const [isErrorExpanded, setIsErrorExpanded] = useState(false)
+	const [svgContent, setSvgContent] = useState<string>("")
+	const [isFixing, setIsFixing] = useState(false)
+	const [currentCode, setCurrentCode] = useState("")
 	const { showCopyFeedback, copyWithFeedback } = useCopyToClipboard()
 	const { t } = useAppTranslation()
 
@@ -99,36 +104,57 @@ export default function MermaidBlock({ code }: MermaidBlockProps) {
 	useEffect(() => {
 		setIsLoading(true)
 		setError(null)
+		setCurrentCode(code)
+		setIsFixing(false)
 	}, [code])
 
+	const handleSyntaxFix = async () => {
+		if (isFixing) return
+
+		setIsLoading(true)
+		setIsFixing(true)
+		const result = await MermaidSyntaxFixer.autoFixSyntax(currentCode)
+		if (result.fixedCode) {
+			// Use the improved code even if not completely successful
+			setCurrentCode(result.fixedCode)
+		}
+
+		if (!result.success) {
+			setError(result.error || t("common:mermaid.errors.fix_failed"))
+		}
+
+		setIsFixing(false)
+		setIsLoading(false)
+	}
+
 	// 2) Debounce the actual parse/render
+	// the LLM is still 'typing', and we do not want to start rendering and/or autofixing before it is fully done.
 	useDebounceEffect(
 		() => {
-			if (containerRef.current) {
-				containerRef.current.innerHTML = ""
-			}
+			if (isFixing) return
+			setIsLoading(true)
 
 			mermaid
-				.parse(code)
+				.parse(currentCode)
 				.then(() => {
 					const id = `mermaid-${Math.random().toString(36).substring(2)}`
-					return mermaid.render(id, code)
+					return mermaid.render(id, currentCode)
 				})
 				.then(({ svg }) => {
-					if (containerRef.current) {
-						containerRef.current.innerHTML = svg
-					}
+					setError(null)
+					setSvgContent(svg)
 				})
 				.catch((err) => {
 					console.warn("Mermaid parse/render failed:", err)
-					setError(err.message || "Failed to render Mermaid diagram")
+					const errorMessage = err instanceof Error ? err.message : t("common:mermaid.render_error")
+					setError(errorMessage)
 				})
 				.finally(() => {
 					setIsLoading(false)
 				})
 		},
 		500, // Delay 500ms
-		[code], // Dependencies for scheduling
+		[currentCode, isFixing, code, t], // Dependencies for scheduling
 	)
 
 	/**
@@ -155,7 +181,11 @@ export default function MermaidBlock({ code }: MermaidBlockProps) {
 
 	return (
 		<MermaidBlockContainer>
-			{isLoading && <LoadingMessage>{t("common:mermaid.loading")}</LoadingMessage>}
+			{isLoading && (
+				<LoadingMessage>
+					{isFixing ? t("common:mermaid.fixing_syntax") : t("common:mermaid.loading")}
+				</LoadingMessage>
+			)}
 
 			{error ? (
 				<div style={{ marginTop: "0px", overflow: "hidden", marginBottom: "8px" }}>
@@ -189,10 +219,21 @@ export default function MermaidBlock({ code }: MermaidBlockProps) {
 							<span style={{ fontWeight: "bold" }}>{t("common:mermaid.render_error")}</span>
 						</div>
 						<div style={{ display: "flex", alignItems: "center" }}>
+							{!!error && (
+								<MermaidFixButton
+									onClick={(e) => {
+										e.stopPropagation()
+										handleSyntaxFix()
+									}}
+									disabled={isFixing}
+									title={t("common:mermaid.fix_syntax_button")}>
+									<span className={`codicon codicon-${isFixing ? "loading" : "wand"}`}></span>
+								</MermaidFixButton>
+							)}
 							<CopyButton
 								onClick={(e) => {
 									e.stopPropagation()
-									const combinedContent = `Error: ${error}\n\n\`\`\`mermaid\n${code}\n\`\`\``
+									const combinedContent = `Error: ${error}\n\n\`\`\`mermaid\n${currentCode}\n\`\`\``
 									copyWithFeedback(combinedContent, e)
 								}}>
 								<span className={`codicon codicon-${showCopyFeedback ? "check" : "copy"}`}></span>
@@ -210,13 +251,26 @@ export default function MermaidBlock({ code }: MermaidBlockProps) {
 							<div style={{ marginBottom: "8px", color: "var(--vscode-descriptionForeground)" }}>
 								{error}
 							</div>
-							<CodeBlock language="mermaid" source={code} />
+							<CodeBlock language="mermaid" source={currentCode} />
+							{currentCode !== code && (
+								<div style={{ marginTop: "8px" }}>
+									<div style={{ marginBottom: "4px", fontSize: "0.9em", fontWeight: "bold" }}>
+										{t("common:mermaid.original_code")}
+									</div>
+									<CodeBlock language="mermaid" source={code} />
+								</div>
+							)}
 						</div>
 					)}
 				</div>
 			) : (
-				<MermaidButton containerRef={containerRef} code={code} isLoading={isLoading} svgToPng={svgToPng}>
-					<SvgContainer onClick={handleClick} ref={containerRef} $isLoading={isLoading}></SvgContainer>
+				<MermaidButton containerRef={containerRef} code={currentCode} isLoading={isLoading} svgToPng={svgToPng}>
+					<SvgContainer
+						onClick={handleClick}
+						ref={containerRef}
+						$isLoading={isLoading}
+						dangerouslySetInnerHTML={{ __html: svgContent }}
+					/>
 				</MermaidButton>
 			)}
 		</MermaidBlockContainer>
