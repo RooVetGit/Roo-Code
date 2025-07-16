@@ -89,7 +89,7 @@ describe("OpenRouterHandler", () => {
 			expect(result.info.supportsPromptCache).toBe(true)
 		})
 
-		it("honors custom maxTokens for thinking models", async () => {
+		it("honors custom maxTokens for all models", async () => {
 			const handler = new OpenRouterHandler({
 				openRouterApiKey: "test-key",
 				openRouterModelId: "anthropic/claude-3.7-sonnet:thinking",
@@ -98,12 +98,12 @@ describe("OpenRouterHandler", () => {
 			})
 
 			const result = await handler.fetchModel()
-			expect(result.maxTokens).toBe(128000) // Use actual implementation value
+			expect(result.maxTokens).toBe(32_768) // Should use custom maxTokens
 			expect(result.reasoningBudget).toBeUndefined() // Use actual implementation value
 			expect(result.temperature).toBe(0) // Use actual implementation value
 		})
 
-		it("does not honor custom maxTokens for non-thinking models", async () => {
+		it("honors custom maxTokens for non-thinking models", async () => {
 			const handler = new OpenRouterHandler({
 				...mockOptions,
 				modelMaxTokens: 32_768,
@@ -111,7 +111,7 @@ describe("OpenRouterHandler", () => {
 			})
 
 			const result = await handler.fetchModel()
-			expect(result.maxTokens).toBe(8192)
+			expect(result.maxTokens).toBe(32_768)
 			expect(result.reasoningBudget).toBeUndefined()
 			expect(result.temperature).toBe(0)
 		})

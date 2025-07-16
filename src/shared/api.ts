@@ -70,7 +70,7 @@ export const getModelMaxOutputTokens = ({
 		return settings.claudeCodeMaxOutputTokens || CLAUDE_CODE_DEFAULT_MAX_OUTPUT_TOKENS
 	}
 
-	// Check for user-configured modelMaxTokens FIRST (new logic)
+	// Check for user-configured modelMaxTokens
 	if (settings?.modelMaxTokens && settings.modelMaxTokens > 0) {
 		return settings.modelMaxTokens
 	}
