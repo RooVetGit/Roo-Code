@@ -17,19 +17,25 @@ import { t } from "../../../i18n"
 import {
 	QDRANT_CODE_BLOCK_NAMESPACE,
 	MAX_FILE_SIZE_BYTES,
+	MAX_SWIFT_FILE_SIZE_BYTES,
 	MAX_LIST_FILES_LIMIT,
 	BATCH_SEGMENT_THRESHOLD,
 	MAX_BATCH_RETRIES,
 	INITIAL_RETRY_DELAY_MS,
 	PARSING_CONCURRENCY,
 	BATCH_PROCESSING_CONCURRENCY,
+	MEMORY_CHECK_INTERVAL_FILES,
 } from "../constants"
+import { MemoryMonitor } from "../utils/memoryMonitor"
 import { isPathInIgnoredDirectory } from "../../glob/ignore-utils"
 import { TelemetryService } from "@roo-code/telemetry"
 import { TelemetryEventName } from "@roo-code/types"
 import { sanitizeErrorMessage } from "../shared/validation-helpers"
 
 export class DirectoryScanner implements IDirectoryScanner {
+	private memoryMonitor = MemoryMonitor.getInstance()
+	private filesProcessed = 0
+
 	constructor(
 		private readonly embedder: IEmbedder,
 		private readonly qdrantClient: IVectorStore,
@@ -107,9 +113,35 @@ export class DirectoryScanner implements IDirectoryScanner {
 		const parsePromises = supportedPaths.map((filePath) =>
 			parseLimiter(async () => {
 				try {
-					// Check file size
+					// Periodic memory monitoring
+					this.filesProcessed++
+					if (this.filesProcessed % MEMORY_CHECK_INTERVAL_FILES === 0) {
+						const isHighMemory = this.memoryMonitor.checkAndCleanup()
+						if (isHighMemory) {
+							console.warn(
+								`High memory usage detected (${this.memoryMonitor.getMemoryUsageMB()}MB) during directory scan after ${this.filesProcessed} files`,
+							)
+						}
+					}
+
+					// Check if memory pressure should stop processing
+					if (this.memoryMonitor.isMemoryPressure()) {
+						console.warn(
+							`Skipping file ${filePath} due to memory pressure (${this.memoryMonitor.getMemoryUsageMB()}MB used)`,
+						)
+						skippedCount++
+						return
+					}
+
+					// Check file size with Swift-specific limits
 					const stats = await stat(filePath)
-					if (stats.size > MAX_FILE_SIZE_BYTES) {
+					const ext = path.extname(filePath).toLowerCase()
+					const maxSize = ext === ".swift" ? MAX_SWIFT_FILE_SIZE_BYTES : MAX_FILE_SIZE_BYTES
+
+					if (stats.size > maxSize) {
+						console.warn(
+							`Skipping large ${ext} file ${filePath} (${Math.round(stats.size / 1024)}KB > ${Math.round(maxSize / 1024)}KB limit)`,
+						)
 						skippedCount++ // Skip large files
 						return
 					}
@@ -148,6 +180,34 @@ export class DirectoryScanner implements IDirectoryScanner {
 								const release = await mutex.acquire()
 								totalBlockCount += fileBlockCount
 								try {
+									// Check memory before adding to batch
+									if (this.memoryMonitor.isMemoryPressure()) {
+										console.warn(
+											`Memory pressure detected, forcing batch processing early (${currentBatchBlocks.length} blocks)`,
+										)
+										// Force process current batch before adding more
+										if (currentBatchBlocks.length > 0) {
+											const batchBlocks = [...currentBatchBlocks]
+											const batchTexts = [...currentBatchTexts]
+											const batchFileInfos = [...currentBatchFileInfos]
+											currentBatchBlocks = []
+											currentBatchTexts = []
+											currentBatchFileInfos = []
+
+											const batchPromise = batchLimiter(() =>
+												this.processBatch(
+													batchBlocks,
+													batchTexts,
+													batchFileInfos,
+													scanWorkspace,
+													onError,
+													onBlocksIndexed,
+												),
+											)
+											activeBatchPromises.push(batchPromise)
+										}
+									}
+
 									currentBatchBlocks.push(block)
 									currentBatchTexts.push(trimmedContent)
 									addedBlocksFromFile = true
@@ -160,8 +220,11 @@ export class DirectoryScanner implements IDirectoryScanner {
 										})
 									}
 
-									// Check if batch threshold is met
-									if (currentBatchBlocks.length >= BATCH_SEGMENT_THRESHOLD) {
+									// Check if batch threshold is met or memory pressure
+									if (
+										currentBatchBlocks.length >= BATCH_SEGMENT_THRESHOLD ||
+										this.memoryMonitor.isMemoryPressure()
+									) {
 										// Copy current batch data and clear accumulators
 										const batchBlocks = [...currentBatchBlocks]
 										const batchTexts = [...currentBatchTexts]

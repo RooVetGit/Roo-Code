@@ -13,6 +13,8 @@ export const DEFAULT_MAX_SEARCH_RESULTS = CODEBASE_INDEX_DEFAULTS.DEFAULT_SEARCH
 /**File Watcher */
 export const QDRANT_CODE_BLOCK_NAMESPACE = "f47ac10b-58cc-4372-a567-0e02b2c3d479"
 export const MAX_FILE_SIZE_BYTES = 1 * 1024 * 1024 // 1MB
+export const MAX_SWIFT_FILE_SIZE_BYTES = 512 * 1024 // 512KB - Swift files can be memory intensive
+export const MEMORY_CHECK_INTERVAL_FILES = 10 // Check memory every N files
 
 /**Directory Scanner */
 export const MAX_LIST_FILES_LIMIT = 3_000
