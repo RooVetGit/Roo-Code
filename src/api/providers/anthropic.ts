@@ -273,7 +273,6 @@ export class AnthropicHandler extends BaseProvider implements SingleCompletionHa
 
 	protected override async apiBasedTokenCount(content: Array<Anthropic.Messages.ContentBlockParam>): Promise<number> {
 		const { id: model } = this.getModel()
-		console.log(`API-BASED COUNTINNNNG`)
 		const response = await this.client.messages.countTokens({
 			model,
 			messages: [{ role: "user", content }],
