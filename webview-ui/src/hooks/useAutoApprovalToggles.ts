@@ -14,6 +14,7 @@ export function useAutoApprovalToggles() {
 		alwaysAllowMcp,
 		alwaysAllowModeSwitch,
 		alwaysAllowSubtasks,
+		alwaysApproveResubmit,
 		alwaysAllowFollowupQuestions,
 		alwaysAllowUpdateTodoList,
 	} = useExtensionState()
@@ -27,6 +28,7 @@ export function useAutoApprovalToggles() {
 			alwaysAllowMcp,
 			alwaysAllowModeSwitch,
 			alwaysAllowSubtasks,
+			alwaysApproveResubmit,
 			alwaysAllowFollowupQuestions,
 			alwaysAllowUpdateTodoList,
 		}),
@@ -38,6 +40,7 @@ export function useAutoApprovalToggles() {
 			alwaysAllowMcp,
 			alwaysAllowModeSwitch,
 			alwaysAllowSubtasks,
+			alwaysApproveResubmit,
 			alwaysAllowFollowupQuestions,
 			alwaysAllowUpdateTodoList,
 		],

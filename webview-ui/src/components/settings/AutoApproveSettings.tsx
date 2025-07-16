@@ -1,4 +1,4 @@
-import { HTMLAttributes, useState, useMemo } from "react"
+import { HTMLAttributes, useState } from "react"
 import { X } from "lucide-react"
 
 import { useAppTranslation } from "@/i18n/TranslationContext"
@@ -12,6 +12,7 @@ import { Section } from "./Section"
 import { AutoApproveToggle } from "./AutoApproveToggle"
 import { useExtensionState } from "@/context/ExtensionStateContext"
 import { useAutoApprovalState } from "@/hooks/useAutoApprovalState"
+import { useAutoApprovalToggles } from "@/hooks/useAutoApprovalToggles"
 
 type AutoApproveSettingsProps = HTMLAttributes<HTMLDivElement> & {
 	alwaysAllowReadOnly?: boolean
@@ -81,32 +82,7 @@ export const AutoApproveSettings = ({
 	const [deniedCommandInput, setDeniedCommandInput] = useState("")
 	const { autoApprovalEnabled, setAutoApprovalEnabled } = useExtensionState()
 
-	const toggles = useMemo(
-		() => ({
-			alwaysAllowReadOnly,
-			alwaysAllowWrite,
-			alwaysAllowExecute,
-			alwaysAllowBrowser,
-			alwaysAllowMcp,
-			alwaysAllowModeSwitch,
-			alwaysAllowSubtasks,
-			alwaysApproveResubmit,
-			alwaysAllowFollowupQuestions,
-			alwaysAllowUpdateTodoList,
-		}),
-		[
-			alwaysAllowReadOnly,
-			alwaysAllowWrite,
-			alwaysAllowExecute,
-			alwaysAllowBrowser,
-			alwaysAllowMcp,
-			alwaysAllowModeSwitch,
-			alwaysAllowSubtasks,
-			alwaysApproveResubmit,
-			alwaysAllowFollowupQuestions,
-			alwaysAllowUpdateTodoList,
-		],
-	)
+	const toggles = useAutoApprovalToggles()
 
 	const { hasEnabledOptions, effectiveAutoApprovalEnabled } = useAutoApprovalState(toggles, autoApprovalEnabled)
 
