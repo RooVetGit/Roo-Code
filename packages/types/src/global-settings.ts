@@ -85,6 +85,7 @@ export const globalSettingsSchema = z.object({
 	maxReadFileLine: z.number().optional(),
 
 	terminalOutputLineLimit: z.number().optional(),
+	terminalOutputCharacterLimit: z.number().optional(),
 	terminalShellIntegrationTimeout: z.number().optional(),
 	terminalShellIntegrationDisabled: z.boolean().optional(),
 	terminalCommandDelay: z.number().optional(),
@@ -227,6 +228,7 @@ export const EVALS_SETTINGS: RooCodeSettings = {
 	soundVolume: 0.5,
 
 	terminalOutputLineLimit: 500,
+	terminalOutputCharacterLimit: 100000,
 	terminalShellIntegrationTimeout: 30000,
 	terminalCommandDelay: 0,
 	terminalPowershellCounter: false,

@@ -306,6 +306,108 @@ describe("truncateOutput", () => {
 		const expectedLines = ["line1", "", "[...10 lines omitted...]", "", "line12", "line13", "line14", "line15"]
 		expect(resultLines).toEqual(expectedLines)
 	})
+
+	describe("character limit functionality", () => {
+		it("returns original content when no character limit provided", () => {
+			const content = "a".repeat(1000)
+			expect(truncateOutput(content, undefined, undefined)).toBe(content)
+		})
+
+		it("returns original content when characters are under limit", () => {
+			const content = "a".repeat(100)
+			expect(truncateOutput(content, undefined, 200)).toBe(content)
+		})
+
+		it("truncates content by character limit with 20/80 split", () => {
+			// Create content with 1000 characters
+			const content = "a".repeat(1000)
+
+			// Set character limit to 100
+			const result = truncateOutput(content, undefined, 100)
+
+			// Should keep:
+			// - First 20 characters (20% of 100)
+			// - Last 80 characters (80% of 100)
+			// - Omission indicator in between
+			const expectedStart = "a".repeat(20)
+			const expectedEnd = "a".repeat(80)
+			const expected = expectedStart + "\n[...900 characters omitted...]\n" + expectedEnd
+
+			expect(result).toBe(expected)
+		})
+
+		it("prioritizes character limit over line limit", () => {
+			// Create content with few lines but many characters per line
+			const longLine = "a".repeat(500)
+			const content = `${longLine}\n${longLine}\n${longLine}`
+
+			// Set both limits - character limit should take precedence
+			const result = truncateOutput(content, 10, 100)
+
+			// Should truncate by character limit, not line limit
+			const expectedStart = "a".repeat(20)
+			const expectedEnd = "a".repeat(80)
+			// Total content: 1502 chars, limit: 100, so 1402 chars omitted
+			const expected = expectedStart + "\n[...1402 characters omitted...]\n" + expectedEnd
+
+			expect(result).toBe(expected)
+		})
+
+		it("falls back to line limit when character limit is satisfied", () => {
+			// Create content with many short lines
+			const lines = Array.from({ length: 25 }, (_, i) => `line${i + 1}`)
+			const content = lines.join("\n")
+
+			// Character limit is high enough, so line limit should apply
+			const result = truncateOutput(content, 10, 10000)
+
+			// Should truncate by line limit
+			const expectedLines = [
+				"line1",
+				"line2",
+				"",
+				"[...15 lines omitted...]",
+				"",
+				"line18",
+				"line19",
+				"line20",
+				"line21",
+				"line22",
+				"line23",
+				"line24",
+				"line25",
+			]
+			expect(result).toBe(expectedLines.join("\n"))
+		})
+
+		it("handles edge case where character limit equals content length", () => {
+			const content = "exactly100chars".repeat(6) + "1234" // exactly 100 chars
+			const result = truncateOutput(content, undefined, 100)
+			expect(result).toBe(content)
+		})
+
+		it("handles very small character limits", () => {
+			const content = "a".repeat(1000)
+			const result = truncateOutput(content, undefined, 10)
+
+			// 20% of 10 = 2, 80% of 10 = 8
+			const expected = "aa\n[...990 characters omitted...]\n" + "a".repeat(8)
+			expect(result).toBe(expected)
+		})
+
+		it("handles character limit with mixed content", () => {
+			const content = "Hello world! This is a test with mixed content including numbers 123 and symbols @#$%"
+			const result = truncateOutput(content, undefined, 50)
+
+			// 20% of 50 = 10, 80% of 50 = 40
+			const expectedStart = content.slice(0, 10) // "Hello worl"
+			const expectedEnd = content.slice(-40) // last 40 chars
+			const omittedChars = content.length - 50
+			const expected = expectedStart + `\n[...${omittedChars} characters omitted...]\n` + expectedEnd
+
+			expect(result).toBe(expected)
+		})
+	})
 })
 
 describe("applyRunLengthEncoding", () => {

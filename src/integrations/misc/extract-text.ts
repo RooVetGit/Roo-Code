@@ -136,16 +136,41 @@ export function stripLineNumbers(content: string, aggressive: boolean = false): 
  * with a clear indicator of how many lines were omitted in between.
  *
  * @param content The multi-line string to truncate
- * @param lineLimit Optional maximum number of lines to keep. If not provided or 0, returns the original content
- * @returns The truncated string with an indicator of omitted lines, or the original content if no truncation needed
+ * @param lineLimit Optional maximum number of lines to keep. If not provided or 0, no line limit is applied
+ * @param characterLimit Optional maximum number of characters to keep. If not provided or 0, no character limit is applied
+ * @returns The truncated string with an indicator of omitted content, or the original content if no truncation needed
  *
  * @example
  * // With 10 line limit on 25 lines of content:
  * // - Keeps first 2 lines (20% of 10)
  * // - Keeps last 8 lines (80% of 10)
  * // - Adds "[...15 lines omitted...]" in between
+ *
+ * @example
+ * // With character limit on long single line:
+ * // - Keeps first 20% of characters
+ * // - Keeps last 80% of characters
+ * // - Adds "[...X characters omitted...]" in between
  */
-export function truncateOutput(content: string, lineLimit?: number): string {
+export function truncateOutput(content: string, lineLimit?: number, characterLimit?: number): string {
+	// If no limits are specified, return original content
+	if (!lineLimit && !characterLimit) {
+		return content
+	}
+
+	// Character limit takes priority over line limit
+	if (characterLimit && content.length > characterLimit) {
+		const beforeLimit = Math.floor(characterLimit * 0.2) // 20% of characters before
+		const afterLimit = characterLimit - beforeLimit // remaining 80% after
+
+		const startSection = content.slice(0, beforeLimit)
+		const endSection = content.slice(-afterLimit)
+		const omittedChars = content.length - characterLimit
+
+		return startSection + `\n[...${omittedChars} characters omitted...]\n` + endSection
+	}
+
+	// If character limit is not exceeded or not specified, check line limit
 	if (!lineLimit) {
 		return content
 	}

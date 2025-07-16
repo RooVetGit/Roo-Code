@@ -63,7 +63,11 @@ export async function executeCommandTool(
 			const executionId = cline.lastMessageTs?.toString() ?? Date.now().toString()
 			const clineProvider = await cline.providerRef.deref()
 			const clineProviderState = await clineProvider?.getState()
-			const { terminalOutputLineLimit = 500, terminalShellIntegrationDisabled = false } = clineProviderState ?? {}
+			const {
+				terminalOutputLineLimit = 500,
+				terminalOutputCharacterLimit = 100000,
+				terminalShellIntegrationDisabled = false,
+			} = clineProviderState ?? {}
 
 			// Get command execution timeout from VSCode configuration (in seconds)
 			const commandExecutionTimeoutSeconds = vscode.workspace
@@ -87,6 +91,7 @@ export async function executeCommandTool(
 				customCwd,
 				terminalShellIntegrationDisabled,
 				terminalOutputLineLimit,
+				terminalOutputCharacterLimit,
 				commandExecutionTimeout,
 			}
 
@@ -133,6 +138,7 @@ export type ExecuteCommandOptions = {
 	customCwd?: string
 	terminalShellIntegrationDisabled?: boolean
 	terminalOutputLineLimit?: number
+	terminalOutputCharacterLimit?: number
 	commandExecutionTimeout?: number
 }
 
@@ -144,6 +150,7 @@ export async function executeCommand(
 		customCwd,
 		terminalShellIntegrationDisabled = false,
 		terminalOutputLineLimit = 500,
+		terminalOutputCharacterLimit = 100000,
 		commandExecutionTimeout = 0,
 	}: ExecuteCommandOptions,
 ): Promise<[boolean, ToolResponse]> {
@@ -179,7 +186,11 @@ export async function executeCommand(
 	const callbacks: RooTerminalCallbacks = {
 		onLine: async (lines: string, process: RooTerminalProcess) => {
 			accumulatedOutput += lines
-			const compressedOutput = Terminal.compressTerminalOutput(accumulatedOutput, terminalOutputLineLimit)
+			const compressedOutput = Terminal.compressTerminalOutput(
+				accumulatedOutput,
+				terminalOutputLineLimit,
+				terminalOutputCharacterLimit,
+			)
 			const status: CommandExecutionStatus = { executionId, status: "output", output: compressedOutput }
 			clineProvider?.postMessageToWebview({ type: "commandExecutionStatus", text: JSON.stringify(status) })
 
@@ -198,7 +209,11 @@ export async function executeCommand(
 			} catch (_error) {}
 		},
 		onCompleted: (output: string | undefined) => {
-			result = Terminal.compressTerminalOutput(output ?? "", terminalOutputLineLimit)
+			result = Terminal.compressTerminalOutput(
+				output ?? "",
+				terminalOutputLineLimit,
+				terminalOutputCharacterLimit,
+			)
 			cline.say("command_output", result)
 			completed = true
 		},

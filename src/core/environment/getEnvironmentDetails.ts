@@ -25,7 +25,11 @@ export async function getEnvironmentDetails(cline: Task, includeFileDetails: boo
 
 	const clineProvider = cline.providerRef.deref()
 	const state = await clineProvider?.getState()
-	const { terminalOutputLineLimit = 500, maxWorkspaceFiles = 200 } = state ?? {}
+	const {
+		terminalOutputLineLimit = 500,
+		terminalOutputCharacterLimit = 100000,
+		maxWorkspaceFiles = 200,
+	} = state ?? {}
 
 	// It could be useful for cline to know if the user went from one or no
 	// file to another between messages, so we always include this context.
@@ -111,7 +115,11 @@ export async function getEnvironmentDetails(cline: Task, includeFileDetails: boo
 			let newOutput = TerminalRegistry.getUnretrievedOutput(busyTerminal.id)
 
 			if (newOutput) {
-				newOutput = Terminal.compressTerminalOutput(newOutput, terminalOutputLineLimit)
+				newOutput = Terminal.compressTerminalOutput(
+					newOutput,
+					terminalOutputLineLimit,
+					terminalOutputCharacterLimit,
+				)
 				terminalDetails += `\n### New Output\n${newOutput}`
 			}
 		}
@@ -139,7 +147,11 @@ export async function getEnvironmentDetails(cline: Task, includeFileDetails: boo
 				let output = process.getUnretrievedOutput()
 
 				if (output) {
-					output = Terminal.compressTerminalOutput(output, terminalOutputLineLimit)
+					output = Terminal.compressTerminalOutput(
+						output,
+						terminalOutputLineLimit,
+						terminalOutputCharacterLimit,
+					)
 					terminalOutputs.push(`Command: \`${process.command}\`\n${output}`)
 				}
 			}

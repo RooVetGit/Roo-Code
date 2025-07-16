@@ -262,11 +262,13 @@ export abstract class BaseTerminal implements RooTerminal {
 	}
 
 	/**
-	 * Compresses terminal output by applying run-length encoding and truncating to line limit
+	 * Compresses terminal output by applying run-length encoding and truncating to line and character limits
 	 * @param input The terminal output to compress
+	 * @param lineLimit Maximum number of lines to keep
+	 * @param characterLimit Optional maximum number of characters to keep (defaults to 100,000)
 	 * @returns The compressed terminal output
 	 */
-	public static compressTerminalOutput(input: string, lineLimit: number): string {
+	public static compressTerminalOutput(input: string, lineLimit: number, characterLimit?: number): string {
 		let processedInput = input
 
 		if (BaseTerminal.compressProgressBar) {
@@ -274,7 +276,10 @@ export abstract class BaseTerminal implements RooTerminal {
 			processedInput = processBackspaces(processedInput)
 		}
 
-		return truncateOutput(applyRunLengthEncoding(processedInput), lineLimit)
+		// Default character limit to prevent context window explosion
+		const effectiveCharLimit = characterLimit ?? 100_000
+
+		return truncateOutput(applyRunLengthEncoding(processedInput), lineLimit, effectiveCharLimit)
 	}
 
 	/**
