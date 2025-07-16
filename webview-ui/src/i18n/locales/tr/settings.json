@@ -391,7 +391,7 @@
 			"label": "Maksimum Çıktı Belirteci",
 			"description": "Model çıktısı için ayrılacak maksimum belirteç sayısı. Varsayılan 8192'dir.",
 			"validation": {
-				"tooHigh": "Değer, modelin maksimum {{max}} belirtecini aşıyor",
+				"tooHigh": "Değer, modelin maksimum {{max}} belirteçini aşıyor",
 				"tooLow": "Değer en az {{min}} belirteç olmalıdır"
 			},
 			"modelSupports": "Bu model {{max}} belirtece kadar destekler"
