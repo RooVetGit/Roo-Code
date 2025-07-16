@@ -13,8 +13,8 @@ import { countTokens as localCountTokens } from "../../utils/countTokens"
  */
 class TokenCountComparator {
 	private static readonly MAX_SAMPLES = 20
-	private static readonly DEFAULT_SAFETY_FACTOR = 1.2
-	private static readonly ADDITIONAL_SAFETY_FACTOR = 1.0
+	private static readonly DEFAULT_SAFETY_FACTOR = 1.1
+	private static readonly ADDITIONAL_SAFETY_FACTOR = 1.05
 
 	private samples: Array<{ local: number; api: number }> = []
 	private safetyFactor = TokenCountComparator.DEFAULT_SAFETY_FACTOR
@@ -41,7 +41,7 @@ class TokenCountComparator {
 
 		const totalRatio = this.samples.reduce((sum, sample) => sum + sample.api / sample.local, 0)
 		const averageRatio = totalRatio / this.samples.length
-		this.safetyFactor = Math.max(1, averageRatio) * TokenCountComparator.ADDITIONAL_SAFETY_FACTOR
+		this.safetyFactor = averageRatio * TokenCountComparator.ADDITIONAL_SAFETY_FACTOR
 	}
 
 	public getSampleCount(): number {
@@ -59,7 +59,7 @@ class TokenCountComparator {
  * Base class for API providers that implements common functionality
  */
 export abstract class BaseProvider implements ApiHandler {
-	protected isFirstRequest = true
+	protected requestCount = 0
 	protected tokenComparator = new TokenCountComparator()
 
 	abstract createMessage(
@@ -87,10 +87,8 @@ export abstract class BaseProvider implements ApiHandler {
 			return 0
 		}
 
-		const providerName = this.constructor.name
-
-		if (this.isFirstRequest) {
-			this.isFirstRequest = false
+		if (this.requestCount < 3) {
+			this.requestCount++
 			try {
 				const apiCount = await this.apiBasedTokenCount(content)
 				const localEstimate = await localCountTokens(content, { useWorker: true })
@@ -110,7 +108,13 @@ export abstract class BaseProvider implements ApiHandler {
 		const allowedTokens = getAllowedTokens(contextWindow, options.maxTokens)
 		const projectedTokens = options.totalTokens + localEstimate * this.tokenComparator.getSafetyFactor()
 
+		// Checking if we're at 90% of effective threshold for earlier API-based counting
+		const effectiveThreshold = options.effectiveThreshold ?? 100
+		const contextPercent = (100 * projectedTokens) / contextWindow
+		const shouldUseApiCountingEarly = contextPercent >= effectiveThreshold * 0.9
+
 		if (
+			shouldUseApiCountingEarly ||
 			isSafetyNetTriggered({
 				projectedTokens,
 				contextWindow,
