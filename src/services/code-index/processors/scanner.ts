@@ -51,7 +51,7 @@ export class DirectoryScanner implements IDirectoryScanner {
 		onError?: (error: Error) => void,
 		onBlocksIndexed?: (indexedCount: number) => void,
 		onFileParsed?: (fileBlockCount: number) => void,
-	): Promise<{ codeBlocks: CodeBlock[]; stats: { processed: number; skipped: number }; totalBlockCount: number }> {
+	): Promise<{ stats: { processed: number; skipped: number }; totalBlockCount: number }> {
 		const directoryPath = directory
 		// Capture workspace context at scan start
 		const scanWorkspace = getWorkspacePathForContext(directoryPath)
@@ -279,7 +279,6 @@ export class DirectoryScanner implements IDirectoryScanner {
 		}
 
 		return {
-			codeBlocks: [], // Return empty array to prevent memory accumulation
 			stats: {
 				processed: processedCount,
 				skipped: skippedCount,

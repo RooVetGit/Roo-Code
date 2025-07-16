@@ -195,7 +195,6 @@ describe("DirectoryScanner", () => {
 			;(mockCodeParser.parseFile as any).mockResolvedValue(mockBlocks)
 
 			const result = await scannerNoEmbeddings.scanDirectory("/test")
-			expect(result.codeBlocks).toEqual([]) // Now returns empty array for memory optimization
 			expect(result.stats.processed).toBe(1)
 		})
 
@@ -332,9 +331,7 @@ describe("DirectoryScanner", () => {
 			expect(mockCodeParser.parseFile).toHaveBeenCalledWith("test/app.js", expect.any(Object))
 			expect(mockCodeParser.parseFile).toHaveBeenCalledWith("docs/guide.markdown", expect.any(Object))
 
-			// Verify codeBlocks is empty (memory optimization) but processing still works
-			expect(result.codeBlocks).toEqual([])
-
+			// Verify processing still works without codeBlocks accumulation
 			expect(result.stats.processed).toBe(3)
 		})
 
