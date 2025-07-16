@@ -97,7 +97,7 @@ export class DirectoryScanner implements IDirectoryScanner {
 		let currentBatchBlocks: CodeBlock[] = []
 		let currentBatchTexts: string[] = []
 		let currentBatchFileInfos: { filePath: string; fileHash: string; isNew: boolean }[] = []
-		const activeBatchPromises: Promise<void>[] = []
+		const activeBatchPromises = new Set<Promise<void>>()
 
 		// Initialize block counter
 		let totalBlockCount = 0
@@ -171,7 +171,12 @@ export class DirectoryScanner implements IDirectoryScanner {
 												onBlocksIndexed,
 											),
 										)
-										activeBatchPromises.push(batchPromise)
+										activeBatchPromises.add(batchPromise)
+
+										// Clean up completed promises to prevent memory accumulation
+										batchPromise.finally(() => {
+											activeBatchPromises.delete(batchPromise)
+										})
 									}
 								} finally {
 									release()
@@ -237,7 +242,12 @@ export class DirectoryScanner implements IDirectoryScanner {
 				const batchPromise = batchLimiter(() =>
 					this.processBatch(batchBlocks, batchTexts, batchFileInfos, scanWorkspace, onError, onBlocksIndexed),
 				)
-				activeBatchPromises.push(batchPromise)
+				activeBatchPromises.add(batchPromise)
+
+				// Clean up completed promises to prevent memory accumulation
+				batchPromise.finally(() => {
+					activeBatchPromises.delete(batchPromise)
+				})
 			} finally {
 				release()
 			}
