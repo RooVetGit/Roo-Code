@@ -39,6 +39,7 @@ import RooHero from "@src/components/welcome/RooHero"
 import RooTips from "@src/components/welcome/RooTips"
 import { StandardTooltip } from "@src/components/ui"
 import { useAutoApprovalState } from "@src/hooks/useAutoApprovalState"
+import { useAutoApprovalToggles } from "@src/hooks/useAutoApprovalToggles"
 
 import TelemetryBanner from "../common/TelemetryBanner"
 import VersionIndicator from "../common/VersionIndicator"
@@ -961,30 +962,7 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 	)
 
 	// Create toggles object for useAutoApprovalState hook
-	const autoApprovalToggles = useMemo(
-		() => ({
-			alwaysAllowReadOnly,
-			alwaysAllowWrite,
-			alwaysAllowExecute,
-			alwaysAllowBrowser,
-			alwaysAllowMcp,
-			alwaysAllowModeSwitch,
-			alwaysAllowSubtasks,
-			alwaysAllowFollowupQuestions,
-			alwaysAllowUpdateTodoList,
-		}),
-		[
-			alwaysAllowReadOnly,
-			alwaysAllowWrite,
-			alwaysAllowExecute,
-			alwaysAllowBrowser,
-			alwaysAllowMcp,
-			alwaysAllowModeSwitch,
-			alwaysAllowSubtasks,
-			alwaysAllowFollowupQuestions,
-			alwaysAllowUpdateTodoList,
-		],
-	)
+	const autoApprovalToggles = useAutoApprovalToggles()
 
 	const { hasEnabledOptions } = useAutoApprovalState(autoApprovalToggles, autoApprovalEnabled)
 

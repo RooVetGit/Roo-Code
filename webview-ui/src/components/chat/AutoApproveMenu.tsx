@@ -8,6 +8,7 @@ import { useAppTranslation } from "@src/i18n/TranslationContext"
 import { AutoApproveToggle, AutoApproveSetting, autoApproveSettingsConfig } from "../settings/AutoApproveToggle"
 import { StandardTooltip } from "@src/components/ui"
 import { useAutoApprovalState } from "@src/hooks/useAutoApprovalState"
+import { useAutoApprovalToggles } from "@src/hooks/useAutoApprovalToggles"
 
 interface AutoApproveMenuProps {
 	style?: React.CSSProperties
@@ -19,16 +20,7 @@ const AutoApproveMenu = ({ style }: AutoApproveMenuProps) => {
 	const {
 		autoApprovalEnabled,
 		setAutoApprovalEnabled,
-		alwaysAllowReadOnly,
-		alwaysAllowWrite,
-		alwaysAllowExecute,
-		alwaysAllowBrowser,
-		alwaysAllowMcp,
-		alwaysAllowModeSwitch,
-		alwaysAllowSubtasks,
 		alwaysApproveResubmit,
-		alwaysAllowFollowupQuestions,
-		alwaysAllowUpdateTodoList,
 		allowedMaxRequests,
 		setAlwaysAllowReadOnly,
 		setAlwaysAllowWrite,
@@ -45,31 +37,15 @@ const AutoApproveMenu = ({ style }: AutoApproveMenuProps) => {
 
 	const { t } = useAppTranslation()
 
+	const baseToggles = useAutoApprovalToggles()
+
+	// AutoApproveMenu needs alwaysApproveResubmit in addition to the base toggles
 	const toggles = useMemo(
 		() => ({
-			alwaysAllowReadOnly: alwaysAllowReadOnly,
-			alwaysAllowWrite: alwaysAllowWrite,
-			alwaysAllowExecute: alwaysAllowExecute,
-			alwaysAllowBrowser: alwaysAllowBrowser,
-			alwaysAllowMcp: alwaysAllowMcp,
-			alwaysAllowModeSwitch: alwaysAllowModeSwitch,
-			alwaysAllowSubtasks: alwaysAllowSubtasks,
+			...baseToggles,
 			alwaysApproveResubmit: alwaysApproveResubmit,
-			alwaysAllowFollowupQuestions: alwaysAllowFollowupQuestions,
-			alwaysAllowUpdateTodoList: alwaysAllowUpdateTodoList,
 		}),
-		[
-			alwaysAllowReadOnly,
-			alwaysAllowWrite,
-			alwaysAllowExecute,
-			alwaysAllowBrowser,
-			alwaysAllowMcp,
-			alwaysAllowModeSwitch,
-			alwaysAllowSubtasks,
-			alwaysApproveResubmit,
-			alwaysAllowFollowupQuestions,
-			alwaysAllowUpdateTodoList,
-		],
+		[baseToggles, alwaysApproveResubmit],
 	)
 
 	const { hasEnabledOptions, effectiveAutoApprovalEnabled } = useAutoApprovalState(toggles, autoApprovalEnabled)
@@ -198,30 +174,26 @@ const AutoApproveMenu = ({ style }: AutoApproveMenuProps) => {
 				}}
 				onClick={toggleExpanded}>
 				<div onClick={(e) => e.stopPropagation()}>
-					{!hasEnabledOptions ? (
-						<StandardTooltip content={t("chat:autoApprove.selectOptionsFirst")}>
-							<VSCodeCheckbox
-								checked={effectiveAutoApprovalEnabled}
-								disabled={isCheckboxDisabled}
-								aria-label={t("chat:autoApprove.disabledAriaLabel")}
-								onChange={() => {
-									// Show a message or do nothing
-									return
-								}}
-							/>
-						</StandardTooltip>
-					) : (
+					<StandardTooltip
+						content={!hasEnabledOptions ? t("chat:autoApprove.selectOptionsFirst") : undefined}>
 						<VSCodeCheckbox
 							checked={effectiveAutoApprovalEnabled}
 							disabled={isCheckboxDisabled}
-							aria-label={t("chat:autoApprove.toggleAriaLabel")}
+							aria-label={
+								hasEnabledOptions
+									? t("chat:autoApprove.toggleAriaLabel")
+									: t("chat:autoApprove.disabledAriaLabel")
+							}
 							onChange={() => {
-								const newValue = !(autoApprovalEnabled ?? false)
-								setAutoApprovalEnabled(newValue)
-								vscode.postMessage({ type: "autoApprovalEnabled", bool: newValue })
+								if (hasEnabledOptions) {
+									const newValue = !(autoApprovalEnabled ?? false)
+									setAutoApprovalEnabled(newValue)
+									vscode.postMessage({ type: "autoApprovalEnabled", bool: newValue })
+								}
+								// If no options enabled, do nothing
 							}}
 						/>
-					)}
+					</StandardTooltip>
 				</div>
 				<div
 					style={{
