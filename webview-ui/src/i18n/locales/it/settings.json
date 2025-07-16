@@ -367,6 +367,12 @@
 			"label": "Limite di frequenza",
 			"description": "Tempo minimo tra le richieste API."
 		},
+		"consecutiveMistakeLimit": {
+			"label": "Limite di errori e ripetizioni",
+			"description": "Numero di errori consecutivi o azioni ripetute prima di mostrare la finestra di dialogo 'Roo sta riscontrando problemi'",
+			"unlimitedDescription": "Tentativi illimitati abilitati (procedi automaticamente). La finestra di dialogo non verrà mai visualizzata.",
+			"warning": "⚠️ L'impostazione a 0 consente tentativi illimitati che possono consumare un notevole utilizzo dell'API"
+		},
 		"reasoningEffort": {
 			"label": "Sforzo di ragionamento del modello",
 			"high": "Alto",
@@ -535,6 +541,9 @@
 			"label": "Eredita variabili d'ambiente",
 			"description": "Quando abilitato, il terminale eredita le variabili d'ambiente dal processo padre di VSCode, come le impostazioni di integrazione della shell definite nel profilo utente. Questo attiva direttamente l'impostazione globale di VSCode `terminal.integrated.inheritEnv`. <0>Scopri di più</0>"
 		}
+	},
+	"advancedSettings": {
+		"title": "Impostazioni avanzate"
 	},
 	"advanced": {
 		"diff": {

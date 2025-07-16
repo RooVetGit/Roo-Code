@@ -367,6 +367,12 @@
 			"label": "Hız sınırı",
 			"description": "API istekleri arasındaki minimum süre."
 		},
+		"consecutiveMistakeLimit": {
+			"label": "Hata ve Tekrar Limiti",
+			"description": "'Roo sorun yaşıyor' iletişim kutusunu göstermeden önceki ardışık hata veya tekrarlanan eylem sayısı",
+			"unlimitedDescription": "Sınırsız yeniden deneme etkin (otomatik devam et). Diyalog asla görünmeyecek.",
+			"warning": "⚠️ 0'a ayarlamak, önemli API kullanımına neden olabilecek sınırsız yeniden denemeye izin verir"
+		},
 		"reasoningEffort": {
 			"label": "Model Akıl Yürütme Çabası",
 			"high": "Yüksek",
@@ -535,6 +541,9 @@
 			"label": "Ortam değişkenlerini devral",
 			"description": "Etkinleştirildiğinde, terminal VSCode üst işleminden ortam değişkenlerini devralır, örneğin kullanıcı profilinde tanımlanan kabuk entegrasyon ayarları gibi. Bu, VSCode'un global ayarı olan `terminal.integrated.inheritEnv` değerini doğrudan değiştirir. <0>Daha fazla bilgi</0>"
 		}
+	},
+	"advancedSettings": {
+		"title": "Gelişmiş ayarlar"
 	},
 	"advanced": {
 		"diff": {

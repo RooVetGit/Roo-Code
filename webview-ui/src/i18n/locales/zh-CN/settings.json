@@ -367,6 +367,12 @@
 			"label": "API 请求频率限制",
 			"description": "设置API请求的最小间隔时间"
 		},
+		"consecutiveMistakeLimit": {
+			"label": "错误和重复限制",
+			"description": "在显示“Roo遇到问题”对话框前允许的连续错误或重复操作次数",
+			"unlimitedDescription": "已启用无限重试（自动继续）。对话框将永远不会出现。",
+			"warning": "⚠️ 设置为 0 允许无限重试，这可能会消耗大量 API 使用量"
+		},
 		"reasoningEffort": {
 			"label": "模型推理强度",
 			"high": "高",
@@ -535,6 +541,9 @@
 			"label": "继承环境变量",
 			"description": "启用后，终端将从 VSCode 父进程继承环境变量，如用户配置文件中定义的 shell 集成设置。这直接切换 VSCode 全局设置 `terminal.integrated.inheritEnv`。 <0>了解更多</0>"
 		}
+	},
+	"advancedSettings": {
+		"title": "高级设置"
 	},
 	"advanced": {
 		"diff": {

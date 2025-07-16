@@ -367,6 +367,12 @@
 			"label": "Snelheidslimiet",
 			"description": "Minimale tijd tussen API-verzoeken."
 		},
+		"consecutiveMistakeLimit": {
+			"label": "Fout- & Herhalingslimiet",
+			"description": "Aantal opeenvolgende fouten of herhaalde acties voordat het dialoogvenster 'Roo ondervindt problemen' wordt weergegeven",
+			"unlimitedDescription": "Onbeperkt aantal nieuwe pogingen ingeschakeld (automatisch doorgaan). Het dialoogvenster zal nooit verschijnen.",
+			"warning": "⚠️ Instellen op 0 staat onbeperkte nieuwe pogingen toe, wat aanzienlijk API-gebruik kan verbruiken"
+		},
 		"reasoningEffort": {
 			"label": "Model redeneervermogen",
 			"high": "Hoog",
@@ -535,6 +541,9 @@
 			"label": "Omgevingsvariabelen overnemen",
 			"description": "Indien ingeschakeld, neemt de terminal omgevingsvariabelen over van het bovenliggende VSCode-proces, zoals shell-integratie-instellingen uit het gebruikersprofiel. Dit schakelt direct de VSCode-instelling `terminal.integrated.inheritEnv` om. <0>Meer informatie</0>"
 		}
+	},
+	"advancedSettings": {
+		"title": "Geavanceerde instellingen"
 	},
 	"advanced": {
 		"diff": {
