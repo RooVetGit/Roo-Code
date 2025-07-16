@@ -51,16 +51,22 @@ export class DirectoryScanner implements IDirectoryScanner {
 		onError?: (error: Error) => void,
 		onBlocksIndexed?: (indexedCount: number) => void,
 		onFileParsed?: (fileBlockCount: number) => void,
+		onProgressUpdate?: (message: string) => void,
 	): Promise<{ codeBlocks: CodeBlock[]; stats: { processed: number; skipped: number }; totalBlockCount: number }> {
 		const directoryPath = directory
 		// Capture workspace context at scan start
 		const scanWorkspace = getWorkspacePathForContext(directoryPath)
+
+		// Report file discovery progress
+		onProgressUpdate?.("Discovering files in workspace...")
 
 		// Get all files recursively (handles .gitignore automatically)
 		const [allPaths, _] = await listFiles(directoryPath, true, MAX_LIST_FILES_LIMIT)
 
 		// Filter out directories (marked with trailing '/')
 		const filePaths = allPaths.filter((p) => !p.endsWith("/"))
+
+		onProgressUpdate?.(`Found ${filePaths.length} files. Applying filters...`)
 
 		// Initialize RooIgnoreController if not provided
 		const ignoreController = new RooIgnoreController(directoryPath)
@@ -82,6 +88,20 @@ export class DirectoryScanner implements IDirectoryScanner {
 
 			return scannerExtensions.includes(ext) && !this.ignoreInstance.ignores(relativeFilePath)
 		})
+
+		onProgressUpdate?.(
+			`Found ${supportedPaths.length} supported files to scan (filtered from ${filePaths.length} total files).`,
+		)
+
+		// Early return if no files to process
+		if (supportedPaths.length === 0) {
+			onProgressUpdate?.("No supported files found to scan.")
+			return {
+				codeBlocks: [],
+				stats: { processed: 0, skipped: 0 },
+				totalBlockCount: 0,
+			}
+		}
 
 		// Initialize tracking variables
 		const processedFiles = new Set<string>()

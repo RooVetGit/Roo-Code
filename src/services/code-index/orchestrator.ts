@@ -127,6 +127,7 @@ export class CodeIndexOrchestrator {
 			let cumulativeBlocksIndexed = 0
 			let cumulativeBlocksFoundSoFar = 0
 			let batchErrors: Error[] = []
+			let scanStartTime = Date.now()
 
 			const handleFileParsed = (fileBlockCount: number) => {
 				cumulativeBlocksFoundSoFar += fileBlockCount
@@ -136,6 +137,13 @@ export class CodeIndexOrchestrator {
 			const handleBlocksIndexed = (indexedCount: number) => {
 				cumulativeBlocksIndexed += indexedCount
 				this.stateManager.reportBlockIndexingProgress(cumulativeBlocksIndexed, cumulativeBlocksFoundSoFar)
+			}
+
+			// Report initial scanning progress
+			this.stateManager.setSystemState("Indexing", "Discovering files to scan...")
+
+			const handleProgressUpdate = (message: string) => {
+				this.stateManager.setSystemState("Indexing", message)
 			}
 
 			const result = await this.scanner.scanDirectory(
@@ -149,6 +157,7 @@ export class CodeIndexOrchestrator {
 				},
 				handleBlocksIndexed,
 				handleFileParsed,
+				handleProgressUpdate,
 			)
 
 			if (!result) {
@@ -156,6 +165,24 @@ export class CodeIndexOrchestrator {
 			}
 
 			const { stats } = result
+			const scanDuration = Date.now() - scanStartTime
+
+			// Validate that actual scanning work was performed
+			const totalFilesProcessed = stats.processed + stats.skipped
+			const hasActualWork = totalFilesProcessed > 0
+
+			// If no files were found to process, this might indicate a configuration issue
+			if (!hasActualWork) {
+				this.stateManager.setSystemState("Indexed", "No supported files found in workspace. Index is empty.")
+				await this._startWatcher()
+				return
+			}
+
+			// Report scanning completion with meaningful progress
+			this.stateManager.setSystemState(
+				"Indexing",
+				`Scanned ${totalFilesProcessed} files (${stats.processed} processed, ${stats.skipped} cached). Processing code blocks...`,
+			)
 
 			// Check if any blocks were actually indexed successfully
 			// If no blocks were indexed but blocks were found, it means all batches failed
@@ -172,7 +199,10 @@ export class CodeIndexOrchestrator {
 			}
 
 			// Check for partial failures - if a significant portion of blocks failed
-			const failureRate = (cumulativeBlocksFoundSoFar - cumulativeBlocksIndexed) / cumulativeBlocksFoundSoFar
+			const failureRate =
+				cumulativeBlocksFoundSoFar > 0
+					? (cumulativeBlocksFoundSoFar - cumulativeBlocksIndexed) / cumulativeBlocksFoundSoFar
+					: 0
 			if (batchErrors.length > 0 && failureRate > 0.1) {
 				// More than 10% of blocks failed to index
 				const firstError = batchErrors[0]
@@ -196,9 +226,22 @@ export class CodeIndexOrchestrator {
 				)
 			}
 
+			// Provide meaningful completion message based on what was actually done
+			let completionMessage: string
+			if (stats.processed === 0 && stats.skipped > 0) {
+				// All files were cached - no actual processing needed
+				completionMessage = `Index up-to-date. All ${stats.skipped} files were already cached (no changes detected).`
+			} else if (cumulativeBlocksIndexed > 0) {
+				// Some blocks were actually indexed
+				completionMessage = `Indexing complete. Processed ${stats.processed} files and indexed ${cumulativeBlocksIndexed} code blocks in ${Math.round(scanDuration / 1000)}s.`
+			} else {
+				// No blocks found to index
+				completionMessage = `Scan complete. No code blocks found in ${totalFilesProcessed} files.`
+			}
+
 			await this._startWatcher()
 
-			this.stateManager.setSystemState("Indexed", "File watcher started.")
+			this.stateManager.setSystemState("Indexed", completionMessage)
 		} catch (error: any) {
 			console.error("[CodeIndexOrchestrator] Error during indexing:", error)
 			TelemetryService.instance.captureEvent(TelemetryEventName.CODE_INDEX_ERROR, {
