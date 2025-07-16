@@ -97,7 +97,7 @@ export abstract class BaseProvider implements ApiHandler {
 				return apiCount
 			} catch (error) {
 				const localEstimate = await localCountTokens(content, { useWorker: true })
-				return localEstimate
+				return Math.ceil(localEstimate * this.tokenComparator.getSafetyFactor())
 			}
 		}
 
@@ -106,7 +106,7 @@ export abstract class BaseProvider implements ApiHandler {
 		const { info } = this.getModel()
 		const contextWindow = info.contextWindow
 		const allowedTokens = getAllowedTokens(contextWindow, options.maxTokens)
-		const projectedTokens = options.totalTokens + localEstimate * this.tokenComparator.getSafetyFactor()
+		const projectedTokens = options.totalTokens + Math.ceil(localEstimate * this.tokenComparator.getSafetyFactor())
 
 		// Checking if we're at 90% of effective threshold for earlier API-based counting
 		const effectiveThreshold = options.effectiveThreshold ?? 100
@@ -131,6 +131,6 @@ export abstract class BaseProvider implements ApiHandler {
 			}
 		}
 
-		return localEstimate
+		return Math.ceil(localEstimate * this.tokenComparator.getSafetyFactor())
 	}
 }
