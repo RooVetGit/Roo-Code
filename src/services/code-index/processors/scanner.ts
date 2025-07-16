@@ -124,6 +124,7 @@ export class DirectoryScanner implements IDirectoryScanner {
 
 					// Check against cache
 					const cachedFileHash = this.cacheManager.getHash(filePath)
+					const isNewFile = !cachedFileHash
 					if (cachedFileHash === currentFileHash) {
 						// File is unchanged
 						skippedCount++
@@ -180,12 +181,17 @@ export class DirectoryScanner implements IDirectoryScanner {
 
 						// Add file info once per file (outside the block loop)
 						if (addedBlocksFromFile) {
-							totalBlockCount += fileBlockCount
-							currentBatchFileInfos.push({
-								filePath,
-								fileHash: currentFileHash,
-								isNew: !this.cacheManager.getHash(filePath),
-							})
+							const release = await mutex.acquire()
+							try {
+								totalBlockCount += fileBlockCount
+								currentBatchFileInfos.push({
+									filePath,
+									fileHash: currentFileHash,
+									isNew: isNewFile,
+								})
+							} finally {
+								release()
+							}
 						}
 					} else {
 						// Only update hash if not being processed in a batch
