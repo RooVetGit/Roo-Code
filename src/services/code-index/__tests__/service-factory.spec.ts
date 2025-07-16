@@ -143,6 +143,32 @@ describe("CodeIndexServiceFactory", () => {
 			})
 		})
 
+		it("should pass timeout parameters to Ollama embedder when configured", () => {
+			// Arrange
+			const testModelId = "nomic-embed-text:latest"
+			const testConfig = {
+				embedderProvider: "ollama",
+				modelId: testModelId,
+				ollamaOptions: {
+					ollamaBaseUrl: "http://localhost:11434",
+					embeddingTimeoutMs: 45000,
+					validationTimeoutMs: 15000,
+				},
+			}
+			mockConfigManager.getConfig.mockReturnValue(testConfig as any)
+
+			// Act
+			factory.createEmbedder()
+
+			// Assert
+			expect(MockedCodeIndexOllamaEmbedder).toHaveBeenCalledWith({
+				ollamaBaseUrl: "http://localhost:11434",
+				ollamaModelId: testModelId,
+				embeddingTimeoutMs: 45000,
+				validationTimeoutMs: 15000,
+			})
+		})
+
 		it("should throw error when OpenAI API key is missing", () => {
 			// Arrange
 			const testConfig = {

@@ -1,7 +1,7 @@
 import { ApiHandlerOptions } from "../../shared/api"
 import { ContextProxy } from "../../core/config/ContextProxy"
 import { EmbedderProvider } from "./interfaces/manager"
-import { CodeIndexConfig, PreviousConfigSnapshot } from "./interfaces/config"
+import { CodeIndexConfig, PreviousConfigSnapshot, OllamaConfigOptions } from "./interfaces/config"
 import { DEFAULT_SEARCH_MIN_SCORE, DEFAULT_MAX_SEARCH_RESULTS } from "./constants"
 import { getDefaultModelId, getModelDimension, getModelScoreThreshold } from "../../shared/embeddingModels"
 
@@ -15,7 +15,7 @@ export class CodeIndexConfigManager {
 	private modelId?: string
 	private modelDimension?: number
 	private openAiOptions?: ApiHandlerOptions
-	private ollamaOptions?: ApiHandlerOptions
+	private ollamaOptions?: OllamaConfigOptions
 	private openAiCompatibleOptions?: { baseUrl: string; apiKey: string }
 	private geminiOptions?: { apiKey: string }
 	private qdrantUrl?: string = "http://localhost:6333"
@@ -68,6 +68,10 @@ export class CodeIndexConfigManager {
 		const openAiCompatibleApiKey = this.contextProxy?.getSecret("codebaseIndexOpenAiCompatibleApiKey") ?? ""
 		const geminiApiKey = this.contextProxy?.getSecret("codebaseIndexGeminiApiKey") ?? ""
 
+		// Get Ollama timeout settings from global state
+		const ollamaEmbeddingTimeoutMs = this.contextProxy?.getGlobalState("codebaseIndexOllamaEmbeddingTimeoutMs")
+		const ollamaValidationTimeoutMs = this.contextProxy?.getGlobalState("codebaseIndexOllamaValidationTimeoutMs")
+
 		// Update instance variables with configuration
 		this.codebaseIndexEnabled = codebaseIndexEnabled ?? true
 		this.qdrantUrl = codebaseIndexQdrantUrl
@@ -108,6 +112,9 @@ export class CodeIndexConfigManager {
 
 		this.ollamaOptions = {
 			ollamaBaseUrl: codebaseIndexEmbedderBaseUrl,
+			ollamaModelId: codebaseIndexEmbedderModelId,
+			embeddingTimeoutMs: ollamaEmbeddingTimeoutMs,
+			validationTimeoutMs: ollamaValidationTimeoutMs,
 		}
 
 		this.openAiCompatibleOptions =
@@ -132,7 +139,7 @@ export class CodeIndexConfigManager {
 			modelId?: string
 			modelDimension?: number
 			openAiOptions?: ApiHandlerOptions
-			ollamaOptions?: ApiHandlerOptions
+			ollamaOptions?: OllamaConfigOptions
 			openAiCompatibleOptions?: { baseUrl: string; apiKey: string }
 			geminiOptions?: { apiKey: string }
 			qdrantUrl?: string

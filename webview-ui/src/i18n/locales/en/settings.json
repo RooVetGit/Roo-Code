@@ -119,7 +119,14 @@
 			"ollamaBaseUrlRequired": "Ollama base URL is required",
 			"baseUrlRequired": "Base URL is required",
 			"modelDimensionMinValue": "Model dimension must be greater than 0"
-		}
+		},
+		"ollamaTimeoutSettings": "Ollama Timeout Settings",
+		"ollamaEmbeddingTimeoutLabel": "Embedding Timeout (ms)",
+		"ollamaEmbeddingTimeoutDescription": "Maximum time to wait for embedding requests to complete. Increase this value if you experience timeout errors with large code blocks.",
+		"ollamaEmbeddingTimeoutHelp": "Range: 1000-300000ms (1-300 seconds). Default: 30000ms (30 seconds)",
+		"ollamaValidationTimeoutLabel": "Validation Timeout (ms)",
+		"ollamaValidationTimeoutDescription": "Maximum time to wait for model validation requests to complete. This is used to test if the Ollama model is available.",
+		"ollamaValidationTimeoutHelp": "Range: 1000-60000ms (1-60 seconds). Default: 10000ms (10 seconds)"
 	},
 	"autoApprove": {
 		"description": "Allow Roo to automatically perform operations without requiring approval. Enable these settings only if you fully trust the AI and understand the associated security risks.",

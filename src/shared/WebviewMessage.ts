@@ -247,6 +247,10 @@ export interface WebviewMessage {
 		codebaseIndexSearchMaxResults?: number
 		codebaseIndexSearchMinScore?: number
 
+		// Ollama timeout settings
+		codebaseIndexOllamaEmbeddingTimeoutMs?: number
+		codebaseIndexOllamaValidationTimeoutMs?: number
+
 		// Secret settings
 		codeIndexOpenAiKey?: string
 		codeIndexQdrantApiKey?: string

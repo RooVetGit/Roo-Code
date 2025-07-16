@@ -62,6 +62,10 @@ interface LocalCodeIndexSettings {
 	codebaseIndexSearchMaxResults?: number
 	codebaseIndexSearchMinScore?: number
 
+	// Ollama timeout settings
+	codebaseIndexOllamaEmbeddingTimeoutMs?: number
+	codebaseIndexOllamaValidationTimeoutMs?: number
+
 	// Secret settings (start empty, will be loaded separately)
 	codeIndexOpenAiKey?: string
 	codeIndexQdrantApiKey?: string
@@ -160,6 +164,8 @@ export const CodeIndexPopover: React.FC<CodeIndexPopoverProps> = ({
 		codebaseIndexEmbedderModelDimension: undefined,
 		codebaseIndexSearchMaxResults: CODEBASE_INDEX_DEFAULTS.DEFAULT_SEARCH_RESULTS,
 		codebaseIndexSearchMinScore: CODEBASE_INDEX_DEFAULTS.DEFAULT_SEARCH_MIN_SCORE,
+		codebaseIndexOllamaEmbeddingTimeoutMs: 30000, // 30 seconds default
+		codebaseIndexOllamaValidationTimeoutMs: 10000, // 10 seconds default
 		codeIndexOpenAiKey: "",
 		codeIndexQdrantApiKey: "",
 		codebaseIndexOpenAiCompatibleBaseUrl: "",
@@ -193,6 +199,10 @@ export const CodeIndexPopover: React.FC<CodeIndexPopoverProps> = ({
 					codebaseIndexConfig.codebaseIndexSearchMaxResults ?? CODEBASE_INDEX_DEFAULTS.DEFAULT_SEARCH_RESULTS,
 				codebaseIndexSearchMinScore:
 					codebaseIndexConfig.codebaseIndexSearchMinScore ?? CODEBASE_INDEX_DEFAULTS.DEFAULT_SEARCH_MIN_SCORE,
+				codebaseIndexOllamaEmbeddingTimeoutMs:
+					codebaseIndexConfig.codebaseIndexOllamaEmbeddingTimeoutMs ?? 30000,
+				codebaseIndexOllamaValidationTimeoutMs:
+					codebaseIndexConfig.codebaseIndexOllamaValidationTimeoutMs ?? 10000,
 				codeIndexOpenAiKey: "",
 				codeIndexQdrantApiKey: "",
 				codebaseIndexOpenAiCompatibleBaseUrl: codebaseIndexConfig.codebaseIndexOpenAiCompatibleBaseUrl || "",
@@ -742,6 +752,77 @@ export const CodeIndexPopover: React.FC<CodeIndexPopoverProps> = ({
 														{formErrors.codebaseIndexEmbedderModelId}
 													</p>
 												)}
+											</div>
+
+											{/* Ollama Timeout Settings */}
+											<div className="space-y-4 mt-4 p-3 border border-vscode-dropdown-border rounded">
+												<h5 className="text-sm font-medium mb-2">
+													{t("settings:codeIndex.ollamaTimeoutSettings")}
+												</h5>
+
+												<div className="space-y-2">
+													<div className="flex items-center gap-2">
+														<label className="text-sm font-medium">
+															{t("settings:codeIndex.ollamaEmbeddingTimeoutLabel")}
+														</label>
+														<StandardTooltip
+															content={t(
+																"settings:codeIndex.ollamaEmbeddingTimeoutDescription",
+															)}>
+															<span className="codicon codicon-info text-xs text-vscode-descriptionForeground cursor-help" />
+														</StandardTooltip>
+													</div>
+													<VSCodeTextField
+														value={
+															currentSettings.codebaseIndexOllamaEmbeddingTimeoutMs?.toString() ||
+															"30000"
+														}
+														onInput={(e: any) => {
+															const value = parseInt(e.target.value) || 30000
+															updateSetting(
+																"codebaseIndexOllamaEmbeddingTimeoutMs",
+																Math.max(1000, Math.min(300000, value)),
+															)
+														}}
+														placeholder="30000"
+														className="w-full"
+													/>
+													<p className="text-xs text-vscode-descriptionForeground">
+														{t("settings:codeIndex.ollamaEmbeddingTimeoutHelp")}
+													</p>
+												</div>
+
+												<div className="space-y-2">
+													<div className="flex items-center gap-2">
+														<label className="text-sm font-medium">
+															{t("settings:codeIndex.ollamaValidationTimeoutLabel")}
+														</label>
+														<StandardTooltip
+															content={t(
+																"settings:codeIndex.ollamaValidationTimeoutDescription",
+															)}>
+															<span className="codicon codicon-info text-xs text-vscode-descriptionForeground cursor-help" />
+														</StandardTooltip>
+													</div>
+													<VSCodeTextField
+														value={
+															currentSettings.codebaseIndexOllamaValidationTimeoutMs?.toString() ||
+															"10000"
+														}
+														onInput={(e: any) => {
+															const value = parseInt(e.target.value) || 10000
+															updateSetting(
+																"codebaseIndexOllamaValidationTimeoutMs",
+																Math.max(1000, Math.min(60000, value)),
+															)
+														}}
+														placeholder="10000"
+														className="w-full"
+													/>
+													<p className="text-xs text-vscode-descriptionForeground">
+														{t("settings:codeIndex.ollamaValidationTimeoutHelp")}
+													</p>
+												</div>
 											</div>
 										</>
 									)}

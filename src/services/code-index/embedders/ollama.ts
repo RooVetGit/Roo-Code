@@ -6,6 +6,12 @@ import { t } from "../../../i18n"
 import { withValidationErrorHandling, sanitizeErrorMessage } from "../shared/validation-helpers"
 import { TelemetryService } from "@roo-code/telemetry"
 import { TelemetryEventName } from "@roo-code/types"
+import { OllamaConfigOptions } from "../interfaces/config"
+
+export interface OllamaEmbedderOptions extends ApiHandlerOptions {
+	embeddingTimeoutMs?: number
+	validationTimeoutMs?: number
+}
 
 /**
  * Implements the IEmbedder interface using a local Ollama instance.
@@ -13,11 +19,16 @@ import { TelemetryEventName } from "@roo-code/types"
 export class CodeIndexOllamaEmbedder implements IEmbedder {
 	private readonly baseUrl: string
 	private readonly defaultModelId: string
+	private readonly embeddingTimeoutMs: number
+	private readonly validationTimeoutMs: number
 
-	constructor(options: ApiHandlerOptions) {
+	constructor(options: OllamaEmbedderOptions) {
 		// Ensure ollamaBaseUrl and ollamaModelId exist on ApiHandlerOptions or add defaults
 		this.baseUrl = options.ollamaBaseUrl || "http://localhost:11434"
 		this.defaultModelId = options.ollamaModelId || "nomic-embed-text:latest"
+		// Default timeouts: 30s for embedding (3x original), 10s for validation (2x original)
+		this.embeddingTimeoutMs = options.embeddingTimeoutMs || 30000
+		this.validationTimeoutMs = options.validationTimeoutMs || 10000
 	}
 
 	/**
@@ -61,7 +72,7 @@ export class CodeIndexOllamaEmbedder implements IEmbedder {
 
 			// Add timeout to prevent indefinite hanging
 			const controller = new AbortController()
-			const timeoutId = setTimeout(() => controller.abort(), 10000) // 10 second timeout
+			const timeoutId = setTimeout(() => controller.abort(), this.embeddingTimeoutMs)
 
 			const response = await fetch(url, {
 				method: "POST",
@@ -140,7 +151,7 @@ export class CodeIndexOllamaEmbedder implements IEmbedder {
 
 				// Add timeout to prevent indefinite hanging
 				const controller = new AbortController()
-				const timeoutId = setTimeout(() => controller.abort(), 5000) // 5 second timeout
+				const timeoutId = setTimeout(() => controller.abort(), this.validationTimeoutMs)
 
 				const modelsResponse = await fetch(modelsUrl, {
 					method: "GET",
@@ -197,7 +208,7 @@ export class CodeIndexOllamaEmbedder implements IEmbedder {
 
 				// Add timeout for test request too
 				const testController = new AbortController()
-				const testTimeoutId = setTimeout(() => testController.abort(), 5000)
+				const testTimeoutId = setTimeout(() => testController.abort(), this.validationTimeoutMs)
 
 				const testResponse = await fetch(testUrl, {
 					method: "POST",

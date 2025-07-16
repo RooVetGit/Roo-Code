@@ -223,6 +223,8 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 			codebaseIndexEmbedderModelId: "",
 			codebaseIndexSearchMaxResults: undefined,
 			codebaseIndexSearchMinScore: undefined,
+			codebaseIndexOllamaEmbeddingTimeoutMs: 30000,
+			codebaseIndexOllamaValidationTimeoutMs: 10000,
 		},
 		codebaseIndexModels: { ollama: {}, openai: {} },
 		alwaysAllowUpdateTodoList: true,

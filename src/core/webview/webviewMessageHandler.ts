@@ -1966,6 +1966,20 @@ export const webviewMessageHandler = async (
 					codebaseIndexSearchMinScore: settings.codebaseIndexSearchMinScore,
 				}
 
+				// Save Ollama timeout settings to global state
+				if (settings.codebaseIndexOllamaEmbeddingTimeoutMs !== undefined) {
+					await updateGlobalState(
+						"codebaseIndexOllamaEmbeddingTimeoutMs",
+						settings.codebaseIndexOllamaEmbeddingTimeoutMs,
+					)
+				}
+				if (settings.codebaseIndexOllamaValidationTimeoutMs !== undefined) {
+					await updateGlobalState(
+						"codebaseIndexOllamaValidationTimeoutMs",
+						settings.codebaseIndexOllamaValidationTimeoutMs,
+					)
+				}
+
 				// Save global state first
 				await updateGlobalState("codebaseIndexConfig", globalStateConfig)
 
