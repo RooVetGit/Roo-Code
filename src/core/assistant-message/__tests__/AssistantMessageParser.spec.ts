@@ -325,6 +325,62 @@ describe("AssistantMessageParser (streaming)", () => {
 		})
 	})
 
+	describe("size limit handling", () => {
+		it("should throw an error when MAX_ACCUMULATOR_SIZE is exceeded", () => {
+			// Create a message that exceeds 1MB (MAX_ACCUMULATOR_SIZE)
+			const largeMessage = "x".repeat(1024 * 1024 + 1) // 1MB + 1 byte
+
+			expect(() => {
+				parser.processChunk(largeMessage)
+			}).toThrow("Assistant message exceeds maximum allowed size")
+		})
+
+		it("should gracefully handle a parameter that exceeds MAX_PARAM_LENGTH", () => {
+			// Create a parameter value that exceeds 100KB (MAX_PARAM_LENGTH)
+			const largeParamValue = "x".repeat(1024 * 100 + 1) // 100KB + 1 byte
+			const message = `<write_to_file><path>test.txt</path><content>${largeParamValue}</content></write_to_file>After tool`
+
+			// Process the message in chunks to simulate streaming
+			let result: AssistantMessageContent[] = []
+			let error: Error | null = null
+
+			try {
+				// Process the opening tags
+				result = parser.processChunk("<write_to_file><path>test.txt</path><content>")
+
+				// Process the large parameter value in chunks
+				const chunkSize = 1000
+				for (let i = 0; i < largeParamValue.length; i += chunkSize) {
+					const chunk = largeParamValue.slice(i, i + chunkSize)
+					result = parser.processChunk(chunk)
+				}
+
+				// Process the closing tags and text after
+				result = parser.processChunk("</content></write_to_file>After tool")
+			} catch (e) {
+				error = e as Error
+			}
+
+			// Should not throw an error
+			expect(error).toBeNull()
+
+			// Should have processed the content
+			expect(result.length).toBeGreaterThan(0)
+
+			// The tool use should exist but the content parameter should be reset/empty
+			const toolUse = result.find((block) => block.type === "tool_use") as ToolUse
+			expect(toolUse).toBeDefined()
+			expect(toolUse.name).toBe("write_to_file")
+			expect(toolUse.params.path).toBe("test.txt")
+
+			// The text after the tool should still be parsed
+			const textAfter = result.find(
+				(block) => block.type === "text" && (block as TextContent).content.includes("After tool"),
+			)
+			expect(textAfter).toBeDefined()
+		})
+	})
+
 	describe("finalizeContentBlocks", () => {
 		it("should mark all partial blocks as complete", () => {
 			const message = "<read_file><path>src/file.ts"
