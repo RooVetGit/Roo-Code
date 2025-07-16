@@ -21,6 +21,7 @@ import { ShareButton } from "./ShareButton"
 import { ContextWindowProgress } from "./ContextWindowProgress"
 import { Mention } from "./Mention"
 import { TodoListDisplay } from "./TodoListDisplay"
+import FilesChangedOverview from "../file-changes/FilesChangedOverview"
 
 export interface TaskHeaderProps {
 	task: ClineMessage
@@ -220,6 +221,7 @@ const TaskHeader = ({
 					</>
 				)}
 			</div>
+			<FilesChangedOverview />
 			<TodoListDisplay todos={todos ?? (task as any)?.tool?.todos ?? []} />
 		</div>
 	)
