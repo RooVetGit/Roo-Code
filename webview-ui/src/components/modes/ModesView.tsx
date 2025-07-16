@@ -729,9 +729,12 @@ const ModesView = ({ onDone }: ModesViewProps) => {
 										onChange={(e) => {
 											const customMode = findModeBySlug(visualMode, customModes)
 											if (customMode) {
+												const newName = e.target.value.trim()
+												// Allow users to type freely, including emptying the field
+												// The backend validation will handle empty names and show errors
 												updateCustomMode(visualMode, {
 													...customMode,
-													name: e.target.value,
+													name: newName,
 													source: customMode.source || "global",
 												})
 											}

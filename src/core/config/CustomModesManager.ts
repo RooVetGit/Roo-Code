@@ -401,6 +401,18 @@ export class CustomModesManager {
 
 	public async updateCustomMode(slug: string, config: ModeConfig): Promise<void> {
 		try {
+			// Validate the mode configuration before saving
+			const validationResult = modeConfigSchema.safeParse(config)
+			if (!validationResult.success) {
+				const errorMessages = validationResult.error.errors
+					.map((err) => `${err.path.join(".")}: ${err.message}`)
+					.join(", ")
+				const errorMessage = `Invalid mode configuration: ${errorMessages}`
+				logger.error("Mode validation failed", { slug, errors: validationResult.error.errors })
+				vscode.window.showErrorMessage(t("common:customModes.errors.updateFailed", { error: errorMessage }))
+				return
+			}
+
 			const isProjectMode = config.source === "project"
 			let targetPath: string
 
