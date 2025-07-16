@@ -17,7 +17,7 @@ import { t } from "../../../i18n"
 import {
 	QDRANT_CODE_BLOCK_NAMESPACE,
 	MAX_FILE_SIZE_BYTES,
-	MAX_LIST_FILES_LIMIT,
+	MAX_LIST_FILES_LIMIT_CODE_INDEX,
 	BATCH_SEGMENT_THRESHOLD,
 	MAX_BATCH_RETRIES,
 	INITIAL_RETRY_DELAY_MS,
@@ -57,7 +57,7 @@ export class DirectoryScanner implements IDirectoryScanner {
 		const scanWorkspace = getWorkspacePathForContext(directoryPath)
 
 		// Get all files recursively (handles .gitignore automatically)
-		const [allPaths, _] = await listFiles(directoryPath, true, MAX_LIST_FILES_LIMIT)
+		const [allPaths, _] = await listFiles(directoryPath, true, MAX_LIST_FILES_LIMIT_CODE_INDEX)
 
 		// Filter out directories (marked with trailing '/')
 		const filePaths = allPaths.filter((p) => !p.endsWith("/"))
