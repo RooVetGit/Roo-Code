@@ -154,6 +154,70 @@ describe("getModelMaxOutputTokens", () => {
 
 		expect(getModelMaxOutputTokens({ modelId: "test", model, settings })).toBe(16_384)
 	})
+
+	test("should use user-configured modelMaxTokens for non-reasoning models", () => {
+		const settings: ProviderSettings = {
+			modelMaxTokens: 16000,
+		}
+
+		const result = getModelMaxOutputTokens({
+			modelId: "gpt-4",
+			model: mockModel,
+			settings,
+		})
+
+		expect(result).toBe(16000)
+	})
+
+	test("should ignore modelMaxTokens when it's 0 or negative", () => {
+		const settings: ProviderSettings = {
+			modelMaxTokens: 0,
+		}
+
+		const result = getModelMaxOutputTokens({
+			modelId: "claude-3-5-sonnet",
+			model: mockModel,
+			settings,
+		})
+
+		// Should fall back to model's maxTokens
+		expect(result).toBe(8192)
+	})
+
+	test("should prioritize user-configured modelMaxTokens over model's default", () => {
+		const modelWithHighMaxTokens: ModelInfo = {
+			maxTokens: 64000,
+			contextWindow: 200000,
+			supportsPromptCache: true,
+		}
+
+		const settings: ProviderSettings = {
+			modelMaxTokens: 32000,
+		}
+
+		const result = getModelMaxOutputTokens({
+			modelId: "some-model",
+			model: modelWithHighMaxTokens,
+			settings,
+		})
+
+		expect(result).toBe(32000)
+	})
+
+	test("should use modelMaxTokens even for Anthropic models when configured", () => {
+		const settings: ProviderSettings = {
+			modelMaxTokens: 20000,
+		}
+
+		const result = getModelMaxOutputTokens({
+			modelId: "claude-3-5-sonnet",
+			model: mockModel,
+			settings,
+			format: "anthropic",
+		})
+
+		expect(result).toBe(20000)
+	})
 })
 
 describe("shouldUseReasoningBudget", () => {

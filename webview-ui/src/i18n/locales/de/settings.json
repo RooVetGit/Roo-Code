@@ -386,6 +386,15 @@
 			"placeholder": "Standard: claude",
 			"maxTokensLabel": "Maximale Ausgabe-Tokens",
 			"maxTokensDescription": "Maximale Anzahl an Ausgabe-Tokens für Claude Code-Antworten. Standard ist 8000."
+		},
+		"maxOutputTokens": {
+			"label": "Maximale Ausgabe-Token",
+			"description": "Maximale Anzahl von Token, die für die Modellausgabe reserviert werden sollen. Standard ist 8192.",
+			"validation": {
+				"tooHigh": "Wert überschreitet das Maximum des Modells von {{max}} Token",
+				"tooLow": "Wert muss mindestens {{min}} Token betragen"
+			},
+			"modelSupports": "Dieses Modell unterstützt bis zu {{max}} Token"
 		}
 	},
 	"browser": {

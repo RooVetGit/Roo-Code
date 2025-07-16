@@ -386,6 +386,15 @@
 			"placeholder": "デフォルト：claude",
 			"maxTokensLabel": "最大出力トークン",
 			"maxTokensDescription": "Claude Codeレスポンスの最大出力トークン数。デフォルトは8000です。"
+		},
+		"maxOutputTokens": {
+			"label": "最大出力トークン",
+			"description": "モデル出力用に予約するトークンの最大数。デフォルトは8192です。",
+			"validation": {
+				"tooHigh": "値がモデルの最大値{{max}}トークンを超えています",
+				"tooLow": "値は最低{{min}}トークンである必要があります"
+			},
+			"modelSupports": "このモデルは最大{{max}}トークンをサポートします"
 		}
 	},
 	"browser": {

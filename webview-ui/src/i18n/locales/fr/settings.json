@@ -386,6 +386,15 @@
 			"placeholder": "Défaut : claude",
 			"maxTokensLabel": "Jetons de sortie max",
 			"maxTokensDescription": "Nombre maximum de jetons de sortie pour les réponses de Claude Code. La valeur par défaut est 8000."
+		},
+		"maxOutputTokens": {
+			"label": "Tokens de sortie maximum",
+			"description": "Nombre maximum de tokens à réserver pour la sortie du modèle. La valeur par défaut est 8192.",
+			"validation": {
+				"tooHigh": "La valeur dépasse le maximum du modèle de {{max}} tokens",
+				"tooLow": "La valeur doit être d'au moins {{min}} tokens"
+			},
+			"modelSupports": "Ce modèle prend en charge jusqu'à {{max}} tokens"
 		}
 	},
 	"browser": {

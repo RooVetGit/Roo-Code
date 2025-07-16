@@ -70,8 +70,14 @@ export const getModelMaxOutputTokens = ({
 		return settings.claudeCodeMaxOutputTokens || CLAUDE_CODE_DEFAULT_MAX_OUTPUT_TOKENS
 	}
 
+	// Check for user-configured modelMaxTokens FIRST (new logic)
+	if (settings?.modelMaxTokens && settings.modelMaxTokens > 0) {
+		return settings.modelMaxTokens
+	}
+
+	// Existing reasoning budget logic
 	if (shouldUseReasoningBudget({ model, settings })) {
-		return settings?.modelMaxTokens || DEFAULT_HYBRID_REASONING_MODEL_MAX_TOKENS
+		return DEFAULT_HYBRID_REASONING_MODEL_MAX_TOKENS
 	}
 
 	const isAnthropicContext =

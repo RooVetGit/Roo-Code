@@ -390,6 +390,15 @@
 			"placeholder": "Default: claude",
 			"maxTokensLabel": "Token Output Maks",
 			"maxTokensDescription": "Jumlah maksimum token output untuk respons Claude Code. Default adalah 8000."
+		},
+		"maxOutputTokens": {
+			"label": "Token Output Maksimum",
+			"description": "Jumlah maksimum token yang akan dipesan untuk output model. Default adalah 8192.",
+			"validation": {
+				"tooHigh": "Nilai melebihi maksimum model {{max}} token",
+				"tooLow": "Nilai harus minimal {{min}} token"
+			},
+			"modelSupports": "Model ini mendukung hingga {{max}} token"
 		}
 	},
 	"browser": {

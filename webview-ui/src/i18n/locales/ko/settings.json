@@ -386,6 +386,15 @@
 			"placeholder": "기본값: claude",
 			"maxTokensLabel": "최대 출력 토큰",
 			"maxTokensDescription": "Claude Code 응답의 최대 출력 토큰 수. 기본값은 8000입니다."
+		},
+		"maxOutputTokens": {
+			"label": "최대 출력 토큰",
+			"description": "모델 출력을 위해 예약할 최대 토큰 수입니다. 기본값은 8192입니다.",
+			"validation": {
+				"tooHigh": "값이 모델의 최대값 {{max}} 토큰을 초과합니다",
+				"tooLow": "값은 최소 {{min}} 토큰이어야 합니다"
+			},
+			"modelSupports": "이 모델은 최대 {{max}} 토큰을 지원합니다"
 		}
 	},
 	"browser": {

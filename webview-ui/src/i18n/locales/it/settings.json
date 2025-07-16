@@ -386,6 +386,15 @@
 			"placeholder": "Predefinito: claude",
 			"maxTokensLabel": "Token di output massimi",
 			"maxTokensDescription": "Numero massimo di token di output per le risposte di Claude Code. Il valore predefinito è 8000."
+		},
+		"maxOutputTokens": {
+			"label": "Token di output massimi",
+			"description": "Numero massimo di token da riservare per l'output del modello. Il valore predefinito è 8192.",
+			"validation": {
+				"tooHigh": "Il valore supera il massimo del modello di {{max}} token",
+				"tooLow": "Il valore deve essere almeno {{min}} token"
+			},
+			"modelSupports": "Questo modello supporta fino a {{max}} token"
 		}
 	},
 	"browser": {

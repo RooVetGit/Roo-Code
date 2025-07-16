@@ -386,6 +386,15 @@
 			"placeholder": "Mặc định: claude",
 			"maxTokensLabel": "Số token đầu ra tối đa",
 			"maxTokensDescription": "Số lượng token đầu ra tối đa cho các phản hồi của Claude Code. Mặc định là 8000."
+		},
+		"maxOutputTokens": {
+			"label": "Token đầu ra tối đa",
+			"description": "Số lượng token tối đa để dành cho đầu ra của mô hình. Mặc định là 8192.",
+			"validation": {
+				"tooHigh": "Giá trị vượt quá tối đa của mô hình là {{max}} token",
+				"tooLow": "Giá trị phải ít nhất {{min}} token"
+			},
+			"modelSupports": "Mô hình này hỗ trợ tối đa {{max}} token"
 		}
 	},
 	"browser": {

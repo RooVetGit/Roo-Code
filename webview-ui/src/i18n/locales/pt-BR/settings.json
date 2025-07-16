@@ -386,6 +386,15 @@
 			"placeholder": "Padrão: claude",
 			"maxTokensLabel": "Tokens de saída máximos",
 			"maxTokensDescription": "Número máximo de tokens de saída para respostas do Claude Code. O padrão é 8000."
+		},
+		"maxOutputTokens": {
+			"label": "Tokens máximos de saída",
+			"description": "Número máximo de tokens a reservar para a saída do modelo. O padrão é 8192.",
+			"validation": {
+				"tooHigh": "O valor excede o máximo do modelo de {{max}} tokens",
+				"tooLow": "O valor deve ser pelo menos {{min}} tokens"
+			},
+			"modelSupports": "Este modelo suporta até {{max}} tokens"
 		}
 	},
 	"browser": {

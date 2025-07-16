@@ -386,6 +386,15 @@
 			"placeholder": "默认：claude",
 			"maxTokensLabel": "最大输出 Token",
 			"maxTokensDescription": "Claude Code 响应的最大输出 Token 数量。默认为 8000。"
+		},
+		"maxOutputTokens": {
+			"label": "最大输出令牌",
+			"description": "为模型输出保留的最大令牌数。默认值为 8192。",
+			"validation": {
+				"tooHigh": "值超过模型的最大值 {{max}} 个令牌",
+				"tooLow": "值必须至少为 {{min}} 个令牌"
+			},
+			"modelSupports": "此模型支持最多 {{max}} 个令牌"
 		}
 	},
 	"browser": {
