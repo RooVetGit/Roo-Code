@@ -116,7 +116,25 @@ export async function searchWorkspaceFiles(
 			label: path.basename(result.item.path),
 		}))
 
-		return fzfResults
+		// Verify types of the shortest results
+		const verifiedResults = await Promise.all(
+			fzfResults.map(async (result) => {
+				const fullPath = path.join(workspacePath, result.path)
+				// Verify if the path exists and is actually a directory
+				if (fs.existsSync(fullPath)) {
+					const isDirectory = fs.lstatSync(fullPath).isDirectory()
+					return {
+						...result,
+						path: result.path.toPosix(),
+						type: isDirectory ? ("folder" as const) : ("file" as const),
+					}
+				}
+				// If path doesn't exist, keep original type
+				return result
+			}),
+		)
+
+		return verifiedResults
 	} catch (error) {
 		console.error("Error in searchWorkspaceFiles:", error)
 		return []

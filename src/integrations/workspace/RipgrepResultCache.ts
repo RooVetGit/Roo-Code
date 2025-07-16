@@ -1,5 +1,5 @@
 import { spawn } from "child_process"
-import { dirname, resolve as pathResolve, relative } from "path"
+import { dirname, resolve as pathResolve, relative, sep } from "path"
 
 // Simplified tree structure - files represented by true, directories by nested objects
 export type SimpleTreeNode = {
@@ -21,7 +21,7 @@ export class RipgrepResultCache {
 
 	constructor(rgPath: string, targetPath: string, rgArgs: string[] = [], fileLimit: number = 5000) {
 		this.rgPath = rgPath
-		this._targetPath = pathResolve(targetPath)
+		this._targetPath = pathResolve(targetPath).split(sep).join("/")
 		this.fileLimit = fileLimit
 		this.rgArgs = rgArgs.length > 0 ? rgArgs : ["--files"]
 	}
@@ -99,7 +99,10 @@ export class RipgrepResultCache {
 	}
 
 	private fileAddedOrRemoved(filePath: string): void {
-		const relativePath = relative(this._targetPath, pathResolve(this._targetPath, filePath))
+		const normalizedFilePath = filePath.split(sep).join("/")
+		const normalizedTargetPath = this._targetPath
+
+		const relativePath = relative(normalizedTargetPath, pathResolve(normalizedTargetPath, normalizedFilePath))
 		const parentDir = dirname(relativePath)
 
 		if (parentDir !== "." && parentDir !== "") {
@@ -230,8 +233,9 @@ export class RipgrepResultCache {
 				args.push(...targetPaths)
 			}
 
+			const originalPath = this._targetPath.split("/").join(sep)
 			const child = spawn(this.rgPath, args, {
-				cwd: this._targetPath,
+				cwd: originalPath,
 				stdio: ["pipe", "pipe", "pipe"],
 			})
 
@@ -327,19 +331,27 @@ export class RipgrepResultCache {
 
 	/**
 	 * In-place merge two simplified tree nodes (optimized version, reduces object creation)
+	 * Uses Object.hasOwn for safe property checks to prevent prototype pollution
 	 */
 	private mergeSimpleTreeNodesInPlace(existing: SimpleTreeNode, newTree: SimpleTreeNode): void {
-		for (const [key, value] of Object.entries(newTree)) {
+		for (const key of Object.keys(newTree)) {
+			// skip inherited properties
+			if (!Object.hasOwn(newTree, key)) {
+				continue
+			}
+
+			// skip dangerous property names
+			if (key === "__proto__" || key === "constructor" || key === "prototype") {
+				continue
+			}
+
+			const value = newTree[key]
 			if (value === true) {
-				// New node is file, overwrite directly
 				existing[key] = true
 			} else {
-				// New node is directory
 				if (!existing[key] || existing[key] === true) {
-					// Original doesn't exist or is file, replace with directory directly
 					existing[key] = value
 				} else {
-					// Original is also directory, merge recursively
 					this.mergeSimpleTreeNodesInPlace(existing[key] as SimpleTreeNode, value)
 				}
 			}
