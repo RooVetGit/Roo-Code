@@ -156,8 +156,9 @@ describe("Sliding Window", () => {
 					totalTokens: 0,
 				}),
 			).toBe(0)
-			// @ts-ignore - Testing with undefined
+
 			expect(
+				// @ts-ignore - Testing with undefined
 				await estimateTokenCount(undefined, mockApiHandler, {
 					effectiveThreshold: undefined,
 					maxTokens: null,
