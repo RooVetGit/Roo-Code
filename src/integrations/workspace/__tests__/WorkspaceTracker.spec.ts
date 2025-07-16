@@ -4,7 +4,7 @@ import WorkspaceTracker from "../WorkspaceTracker"
 import { ClineProvider } from "../../../core/webview/ClineProvider"
 import { listFiles } from "../../../services/glob/list-files"
 import { getWorkspacePath } from "../../../utils/path"
-import { executeRipgrepForFiles } from "../../../services/search/file-search"
+import { RipgrepResultCache } from "../RipgrepResultCache"
 
 // Mock functions - must be defined before vitest.mock calls
 const mockOnDidCreate = vitest.fn()
@@ -29,14 +29,24 @@ vitest.mock("../../../utils/path", () => ({
 	}),
 }))
 
-// Mock executeRipgrepForFiles function
-vitest.mock("../../../services/search/file-search", () => ({
-	executeRipgrepForFiles: vitest.fn(),
-}))
-
 // Mock ignore utils
 vitest.mock("../../../services/glob/ignore-utils", () => ({
 	isPathInIgnoredDirectory: vitest.fn().mockReturnValue(false),
+}))
+
+// Mock RipgrepResultCache
+vitest.mock("../RipgrepResultCache", () => ({
+	RipgrepResultCache: vitest.fn().mockImplementation(() => ({
+		getTree: vitest.fn().mockResolvedValue({}),
+		fileAdded: vitest.fn(),
+		fileRemoved: vitest.fn(),
+		targetPath: "/test/workspace",
+	})),
+}))
+
+// Mock ripgrep getBinPath
+vitest.mock("../../../services/ripgrep", () => ({
+	getBinPath: vitest.fn().mockResolvedValue("/usr/local/bin/rg"),
 }))
 
 // Mock watcher - must be defined after mockDispose but before vitest.mock("vscode")
@@ -57,6 +67,9 @@ vitest.mock("vscode", () => ({
 			all: [],
 		},
 		onDidChangeActiveTextEditor: vitest.fn(() => ({ dispose: vitest.fn() })),
+	},
+	env: {
+		appRoot: "/test/vscode",
 	},
 	workspace: {
 		workspaceFolders: [
@@ -86,7 +99,6 @@ vitest.mock("../../../services/glob/list-files", () => ({
 describe("WorkspaceTracker", () => {
 	let workspaceTracker: WorkspaceTracker
 	let mockProvider: ClineProvider
-	let mockExecuteRipgrepForFiles: Mock
 
 	beforeEach(() => {
 		vitest.clearAllMocks()
@@ -99,13 +111,6 @@ describe("WorkspaceTracker", () => {
 		// Reset workspace path mock
 		;(getWorkspacePath as Mock).mockReturnValue("/test/workspace")
 
-		// Setup executeRipgrepForFiles mock
-		mockExecuteRipgrepForFiles = executeRipgrepForFiles as Mock
-		mockExecuteRipgrepForFiles.mockResolvedValue([
-			{ path: "src/test1.ts", type: "file", label: "test1.ts" },
-			{ path: "src/test2.ts", type: "file", label: "test2.ts" },
-		])
-
 		// Setup workspace configuration mock
 		const mockConfig = {
 			get: vitest.fn((key: string, defaultValue?: any) => {
@@ -116,6 +121,8 @@ describe("WorkspaceTracker", () => {
 						return true
 					case "useParentIgnoreFiles":
 						return true
+					case "maximumIndexedFilesForFileSearch":
+						return 200000
 					default:
 						return defaultValue
 				}
@@ -394,88 +401,96 @@ describe("WorkspaceTracker", () => {
 		expect(mockProvider.postMessageToWebview).not.toHaveBeenCalled()
 	})
 
-	describe("ripgrep file list caching", () => {
-		it("should fetch and cache ripgrep file list", async () => {
-			const expectedFiles = [
-				{ path: "src/component.tsx", type: "file", label: "component.tsx" },
-				{ path: "src/utils.ts", type: "file", label: "utils.ts" },
-			]
-			mockExecuteRipgrepForFiles.mockResolvedValueOnce(expectedFiles)
+	describe("RipgrepCache integration", () => {
+		let mockRipgrepCache: any
+		let createCallback: any
+		let deleteCallback: any
 
-			const result = await workspaceTracker.getRipgrepFileList()
+		beforeEach(async () => {
+			// Setup mock before creating WorkspaceTracker
+			mockRipgrepCache = {
+				getTree: vitest.fn().mockResolvedValue({}),
+				fileAdded: vitest.fn(),
+				fileRemoved: vitest.fn(),
+				targetPath: "/test/workspace",
+				isMock: true,
+			}
+			;(RipgrepResultCache as Mock).mockImplementation(() => mockRipgrepCache)
 
-			expect(mockExecuteRipgrepForFiles).toHaveBeenCalledWith("/test/workspace", 500000, [])
-			expect(result).toEqual(expectedFiles)
-
-			// Second call should return cached results
-			mockExecuteRipgrepForFiles.mockClear()
-			const cachedResult = await workspaceTracker.getRipgrepFileList()
-
-			expect(mockExecuteRipgrepForFiles).not.toHaveBeenCalled()
-			expect(cachedResult).toEqual(expectedFiles)
+			// Get the callbacks before clearing mocks
+			createCallback = mockOnDidCreate.mock.calls[0][0]
+			deleteCallback = mockOnDidDelete.mock.calls[0][0]
 		})
 
-		it("should clear cache when workspace path changes", async () => {
-			// First fetch file list
-			const initialFiles = [{ path: "src/file1.ts", type: "file", label: "file1.ts" }]
-			mockExecuteRipgrepForFiles.mockResolvedValueOnce(initialFiles)
-			await workspaceTracker.getRipgrepFileList()
-
-			// Change workspace path
-			;(getWorkspacePath as Mock).mockReturnValue("/test/new-workspace")
-			const newFiles = [{ path: "src/file2.ts", type: "file", label: "file2.ts" }]
-			mockExecuteRipgrepForFiles.mockResolvedValueOnce(newFiles)
-
-			const result = await workspaceTracker.getRipgrepFileList()
-
-			expect(mockExecuteRipgrepForFiles).toHaveBeenCalledWith("/test/new-workspace", 500000, [])
-			expect(result).toEqual(newFiles)
+		it("should provide getRipgrepFileTree method", () => {
+			expect(typeof workspaceTracker.getRipgrepFileTree).toBe("function")
 		})
 
-		it("should handle ripgrep execution errors", async () => {
-			mockExecuteRipgrepForFiles.mockRejectedValueOnce(new Error("ripgrep execution failed"))
-
-			const result = await workspaceTracker.getRipgrepFileList()
-
-			expect(result).toEqual([])
-		})
-
-		it("should wait for ongoing ripgrep operations", async () => {
-			let resolveFirst: (value: any) => void
-			const firstPromise = new Promise((resolve) => {
-				resolveFirst = resolve
-			})
-
-			mockExecuteRipgrepForFiles.mockImplementationOnce(() => firstPromise)
-
-			// Start first operation
-			const firstCall = workspaceTracker.getRipgrepFileList()
-
-			// Start second operation (should wait for first)
-			const secondCall = workspaceTracker.getRipgrepFileList()
-
-			// Resolve first promise
-			const expectedFiles = [{ path: "src/test.ts", type: "file", label: "test.ts" }]
-			resolveFirst!(expectedFiles)
-
-			const [firstResult, secondResult] = await Promise.all([firstCall, secondCall])
-
-			expect(firstResult).toEqual(expectedFiles)
-			expect(secondResult).toEqual(expectedFiles)
-			expect(mockExecuteRipgrepForFiles).toHaveBeenCalledTimes(1)
-		})
-
-		it("should return empty array when no workspace path", async () => {
+		it("should return empty tree when no workspace path", async () => {
 			;(getWorkspacePath as Mock).mockReturnValue(undefined)
 
-			const result = await workspaceTracker.getRipgrepFileList()
+			const result = await workspaceTracker.getRipgrepFileTree()
 
-			expect(result).toEqual([])
-			expect(mockExecuteRipgrepForFiles).not.toHaveBeenCalled()
+			expect(result).toEqual({})
+		})
+
+		it("should notify ripgrep cache when non-ignored file is added", async () => {
+			const testPath = "/test/workspace/src/file.ts"
+
+			;(workspaceTracker as any).ripgrepCache = mockRipgrepCache
+
+			await createCallback({ fsPath: testPath })
+
+			// Verify the cache method was called
+			expect(mockRipgrepCache.fileAdded).toHaveBeenCalledWith(testPath)
+		})
+
+		it("should not notify ripgrep cache when ignored file is added", async () => {
+			const testPath = "/test/workspace/node_modules/file.ts"
+
+			;(workspaceTracker as any).ripgrepCache = mockRipgrepCache
+
+			await createCallback({ fsPath: testPath })
+
+			// Since the file is ignored, fileAdded should not be called
+			expect(mockRipgrepCache.fileAdded).not.toHaveBeenCalled()
+		})
+
+		it("should notify ripgrep cache when non-ignored file is deleted", async () => {
+			const testPath = "/test/workspace/src/file.ts"
+
+			;(workspaceTracker as any).ripgrepCache = mockRipgrepCache
+
+			await deleteCallback({ fsPath: testPath })
+
+			// Verify the cache method was called
+			expect(mockRipgrepCache.fileRemoved).toHaveBeenCalledWith(testPath)
+		})
+
+		it("should not notify ripgrep cache when ignored file is deleted", async () => {
+			const testPath = "/test/workspace/node_modules/file.ts"
+
+			;(workspaceTracker as any).ripgrepCache = mockRipgrepCache
+
+			await deleteCallback({ fsPath: testPath })
+
+			// Since the file is ignored, fileRemoved should not be called
+			expect(mockRipgrepCache.fileRemoved).not.toHaveBeenCalled()
 		})
 	})
 
-	describe("VSCode search configuration options", () => {
+	describe("VSCode configuration support", () => {
+		beforeEach(async () => {
+			// Setup mock before creating WorkspaceTracker
+			const mockRipgrepCache = {
+				getTree: vitest.fn().mockResolvedValue({}),
+				fileAdded: vitest.fn(),
+				fileRemoved: vitest.fn(),
+				targetPath: "/test/workspace",
+			}
+			;(RipgrepResultCache as Mock).mockImplementation(() => mockRipgrepCache)
+		})
+
 		it("should generate correct ripgrep options based on useIgnoreFiles config", async () => {
 			const mockConfig = {
 				get: vitest.fn((key: string, defaultValue?: any) => {
@@ -485,9 +500,9 @@ describe("WorkspaceTracker", () => {
 			}
 			;(vscode.workspace.getConfiguration as Mock).mockReturnValue(mockConfig)
 
-			await workspaceTracker.getRipgrepFileList()
+			let args = await (workspaceTracker as any).getRipgrepArgs()
 
-			expect(mockExecuteRipgrepForFiles).toHaveBeenCalledWith("/test/workspace", 500000, ["--no-ignore"])
+			expect(args.includes("--no-ignore")).toBe(true)
 		})
 
 		it("should generate correct ripgrep options based on useGlobalIgnoreFiles config", async () => {
@@ -507,9 +522,9 @@ describe("WorkspaceTracker", () => {
 			}
 			;(vscode.workspace.getConfiguration as Mock).mockReturnValue(mockConfig)
 
-			await workspaceTracker.getRipgrepFileList()
+			let args = await (workspaceTracker as any).getRipgrepArgs()
 
-			expect(mockExecuteRipgrepForFiles).toHaveBeenCalledWith("/test/workspace", 500000, ["--no-ignore-global"])
+			expect(args.includes("--no-ignore-global")).toBe(true)
 		})
 
 		it("should generate correct ripgrep options based on useParentIgnoreFiles config", async () => {
@@ -529,9 +544,9 @@ describe("WorkspaceTracker", () => {
 			}
 			;(vscode.workspace.getConfiguration as Mock).mockReturnValue(mockConfig)
 
-			await workspaceTracker.getRipgrepFileList()
+			let args = await (workspaceTracker as any).getRipgrepArgs()
 
-			expect(mockExecuteRipgrepForFiles).toHaveBeenCalledWith("/test/workspace", 500000, ["--no-ignore-parent"])
+			expect(args.includes("--no-ignore-parent")).toBe(true)
 		})
 
 		it("should combine multiple ignore options", async () => {
@@ -551,163 +566,247 @@ describe("WorkspaceTracker", () => {
 			}
 			;(vscode.workspace.getConfiguration as Mock).mockReturnValue(mockConfig)
 
-			await workspaceTracker.getRipgrepFileList()
+			let args = await (workspaceTracker as any).getRipgrepArgs()
 
-			expect(mockExecuteRipgrepForFiles).toHaveBeenCalledWith("/test/workspace", 500000, ["--no-ignore"])
+			expect(args.includes("--no-ignore")).toBe(true)
 		})
-	})
 
-	describe("configuration change listeners", () => {
+		it("should clear ripgrep cache when roo-cline configuration changes", async () => {
+			// Initialize cache by calling getRipgrepFileTree to trigger cache creation
+			await workspaceTracker.getRipgrepFileTree()
+			expect(RipgrepResultCache).toHaveBeenCalledTimes(1)
+
+			// Simulate configuration change event for roo-cline config
+			const mockEvent = {
+				affectsConfiguration: vitest.fn(
+					(section: string) => section === "roo-cline.maximumIndexedFilesForFileSearch",
+				),
+			}
+
+			// This should trigger cache clearing
+			registeredConfigChangeCallback!(mockEvent)
+
+			// Verify all related configurations were checked
+			expect(mockEvent.affectsConfiguration).toHaveBeenCalledWith("search.useIgnoreFiles")
+			expect(mockEvent.affectsConfiguration).toHaveBeenCalledWith("search.useGlobalIgnoreFiles")
+			expect(mockEvent.affectsConfiguration).toHaveBeenCalledWith("search.useParentIgnoreFiles")
+			expect(mockEvent.affectsConfiguration).toHaveBeenCalledWith("roo-cline.maximumIndexedFilesForFileSearch")
+
+			// Call getRipgrepFileTree again to trigger new cache creation
+			await workspaceTracker.getRipgrepFileTree()
+			expect(RipgrepResultCache).toHaveBeenCalledTimes(2)
+		})
+
 		it("should clear ripgrep cache when search configuration changes", async () => {
-			// First get and cache file list
-			const initialFiles = [{ path: "src/test.ts", type: "file", label: "test.ts" }]
-			mockExecuteRipgrepForFiles.mockResolvedValueOnce(initialFiles)
-			await workspaceTracker.getRipgrepFileList()
+			// Initialize cache by calling getRipgrepFileTree to trigger cache creation
+			await workspaceTracker.getRipgrepFileTree()
+			expect(RipgrepResultCache).toHaveBeenCalledTimes(1)
 
-			// Simulate configuration change event
+			// Simulate configuration change event for search config
+			// Note: the OR condition will short-circuit on the first true result
 			const mockEvent = {
 				affectsConfiguration: vitest.fn((section: string) => section === "search.useIgnoreFiles"),
 			}
 
+			// This should trigger cache clearing
 			registeredConfigChangeCallback!(mockEvent)
 
-			// After configuration change should re-call executeRipgrepForFiles
-			const newFiles = [{ path: "src/newtest.ts", type: "file", label: "newtest.ts" }]
-			mockExecuteRipgrepForFiles.mockResolvedValueOnce(newFiles)
+			// Since OR conditions short-circuit, only the first matching config is checked
+			expect(mockEvent.affectsConfiguration).toHaveBeenCalledWith("search.useIgnoreFiles")
+			// The following calls won't happen due to short-circuit evaluation
+			// expect(mockEvent.affectsConfiguration).toHaveBeenCalledWith("search.useGlobalIgnoreFiles")
+			// expect(mockEvent.affectsConfiguration).toHaveBeenCalledWith("search.useParentIgnoreFiles")
+			// expect(mockEvent.affectsConfiguration).toHaveBeenCalledWith("roo-cline.maximumIndexedFilesForFileSearch")
 
-			const result = await workspaceTracker.getRipgrepFileList()
-
-			expect(mockExecuteRipgrepForFiles).toHaveBeenCalledTimes(2)
-			expect(result).toEqual(newFiles)
-		})
-
-		it("should clear cache when useGlobalIgnoreFiles configuration changes", async () => {
-			// First get file list to establish cache
-			await workspaceTracker.getRipgrepFileList()
-
-			const mockEvent = {
-				affectsConfiguration: vitest.fn((section: string) => section === "search.useGlobalIgnoreFiles"),
-			}
-
-			registeredConfigChangeCallback!(mockEvent)
-
-			// Next fetch should re-call executeRipgrepForFiles
-			mockExecuteRipgrepForFiles.mockClear()
-			await workspaceTracker.getRipgrepFileList()
-
-			expect(mockExecuteRipgrepForFiles).toHaveBeenCalled()
-		})
-
-		it("should clear cache when useParentIgnoreFiles configuration changes", async () => {
-			// First get file list to establish cache
-			await workspaceTracker.getRipgrepFileList()
-
-			const mockEvent = {
-				affectsConfiguration: vitest.fn((section: string) => section === "search.useParentIgnoreFiles"),
-			}
-
-			registeredConfigChangeCallback!(mockEvent)
-
-			// Next fetch should re-call executeRipgrepForFiles
-			mockExecuteRipgrepForFiles.mockClear()
-			await workspaceTracker.getRipgrepFileList()
-
-			expect(mockExecuteRipgrepForFiles).toHaveBeenCalled()
+			// Call getRipgrepFileTree again to trigger new cache creation
+			await workspaceTracker.getRipgrepFileTree()
+			expect(RipgrepResultCache).toHaveBeenCalledTimes(2)
 		})
 
 		it("should not clear cache for non-search related configuration changes", async () => {
-			// First get file list to establish cache
-			await workspaceTracker.getRipgrepFileList()
+			// Initialize cache by calling getRipgrepFileTree to trigger cache creation
+			await workspaceTracker.getRipgrepFileTree()
+			expect(RipgrepResultCache).toHaveBeenCalledTimes(1)
 
+			// Simulate configuration change event for non-search config
 			const mockEvent = {
 				affectsConfiguration: vitest.fn((section: string) => section === "editor.fontSize"),
 			}
 
+			// This should not trigger cache clearing
 			registeredConfigChangeCallback!(mockEvent)
 
-			// Next fetch should use cache, not re-call
-			mockExecuteRipgrepForFiles.mockClear()
-			await workspaceTracker.getRipgrepFileList()
+			// All related configurations should be checked since none match
+			expect(mockEvent.affectsConfiguration).toHaveBeenCalledWith("search.useIgnoreFiles")
+			expect(mockEvent.affectsConfiguration).toHaveBeenCalledWith("search.useGlobalIgnoreFiles")
+			expect(mockEvent.affectsConfiguration).toHaveBeenCalledWith("search.useParentIgnoreFiles")
+			expect(mockEvent.affectsConfiguration).toHaveBeenCalledWith("roo-cline.maximumIndexedFilesForFileSearch")
 
-			expect(mockExecuteRipgrepForFiles).not.toHaveBeenCalled()
+			// Call getRipgrepFileTree again - should not create new cache
+			await workspaceTracker.getRipgrepFileTree()
+			expect(RipgrepResultCache).toHaveBeenCalledTimes(1) // No additional calls
+		})
+
+		it("should handle configuration change during ripgrep tree building", async () => {
+			let triggersConfigChange = true
+
+			const mockDelayedRipgrepCache = {
+				getTree: vitest.fn().mockImplementation(() => {
+					if (triggersConfigChange) {
+						// Trigger configuration change while ripgrep is building
+						const mockEvent = {
+							affectsConfiguration: vitest.fn((section: string) => section === "search.useIgnoreFiles"),
+						}
+						registeredConfigChangeCallback!(mockEvent)
+					}
+					return { src: { "file1.ts": true } }
+				}),
+				fileAdded: vitest.fn(),
+				fileRemoved: vitest.fn(),
+				targetPath: "/test/workspace",
+			}
+			;(RipgrepResultCache as Mock).mockImplementation(() => mockDelayedRipgrepCache)
+
+			// Start getRipgrepFileTree (this will hang until we resolve it)
+			const result = await workspaceTracker.getRipgrepFileTree()
+
+			// Should return the result from the ongoing build
+			expect(result).toEqual({ src: { "file1.ts": true } })
+			expect(RipgrepResultCache).toHaveBeenCalledTimes(1)
+
+			// Next call should create a new cache because config changed
+			await workspaceTracker.getRipgrepFileTree()
+			expect(RipgrepResultCache).toHaveBeenCalledTimes(2)
+		})
+
+		it("should create new cache after configuration change even if old cache exists", async () => {
+			// Initialize first cache
+			await workspaceTracker.getRipgrepFileTree()
+			expect(RipgrepResultCache).toHaveBeenCalledTimes(1)
+
+			// Simulate configuration change
+			const mockEvent = {
+				affectsConfiguration: vitest.fn(
+					(section: string) => section === "roo-cline.maximumIndexedFilesForFileSearch",
+				),
+			}
+			registeredConfigChangeCallback!(mockEvent)
+
+			// Verify cache was cleared (access private property for testing)
+			expect((workspaceTracker as any).ripgrepCache).toBeNull()
+
+			// Next call should create new cache
+			await workspaceTracker.getRipgrepFileTree()
+			expect(RipgrepResultCache).toHaveBeenCalledTimes(2)
 		})
 	})
 
-	describe("cache invalidation on file changes", () => {
-		it("should clear ripgrep cache when files are created", async () => {
-			// First get file list to establish cache
-			await workspaceTracker.getRipgrepFileList()
-			mockExecuteRipgrepForFiles.mockClear()
-
-			// Trigger file creation event
-			const [[createCallback]] = mockOnDidCreate.mock.calls
-			await createCallback({ fsPath: "/test/workspace/newfile.ts" })
-
-			// Next fetch should re-call executeRipgrepForFiles
-			await workspaceTracker.getRipgrepFileList()
-
-			expect(mockExecuteRipgrepForFiles).toHaveBeenCalled()
+	describe("isPathIgnoredByRipgrep", () => {
+		beforeEach(() => {
+			// Reset mocks for clean test state
+			vitest.clearAllMocks()
+			mockProvider = {
+				postMessageToWebview: vitest.fn().mockResolvedValue(undefined),
+			} as unknown as ClineProvider & { postMessageToWebview: Mock }
+			workspaceTracker = new WorkspaceTracker(mockProvider)
 		})
 
-		it("should clear ripgrep cache when files are deleted", async () => {
-			// First get file list to establish cache
-			await workspaceTracker.getRipgrepFileList()
-			mockExecuteRipgrepForFiles.mockClear()
+		it("should ignore node_modules directory", async () => {
+			const testPaths = [
+				"/test/workspace/node_modules/package/file.js",
+				"/test/workspace/src/node_modules/file.ts",
+				"/test/workspace/deep/nested/node_modules/lib/index.js",
+			]
 
-			// Trigger file deletion event
-			const [[deleteCallback]] = mockOnDidDelete.mock.calls
-			await deleteCallback({ fsPath: "/test/workspace/oldfile.ts" })
-
-			// Next fetch should re-call executeRipgrepForFiles
-			await workspaceTracker.getRipgrepFileList()
-
-			expect(mockExecuteRipgrepForFiles).toHaveBeenCalled()
+			for (const path of testPaths) {
+				const isIgnored = (workspaceTracker as any).isPathIgnoredByRipgrep(path)
+				expect(isIgnored).toBe(true)
+			}
 		})
 
-		it("should clear ripgrep cache when workspace resets", async () => {
-			// First get file list to establish cache
-			await workspaceTracker.getRipgrepFileList()
+		it("should ignore .git directory", async () => {
+			const testPaths = [
+				"/test/workspace/.git/config",
+				"/test/workspace/subproject/.git/hooks/pre-commit",
+				"/test/workspace/nested/.git/objects/abc123",
+			]
 
-			// Change workspace path and trigger reset
-			;(getWorkspacePath as Mock).mockReturnValue("/test/new-workspace")
-			await registeredTabChangeCallback!()
-
-			// Advance reset timer
-			vitest.advanceTimersByTime(300)
-
-			// Next fetch should use new workspace path
-			mockExecuteRipgrepForFiles.mockClear()
-			await workspaceTracker.getRipgrepFileList()
-
-			expect(mockExecuteRipgrepForFiles).toHaveBeenCalledWith("/test/new-workspace", 500000, [])
-		})
-	})
-
-	describe("file list preheating", () => {
-		it("should preheat ripgrep file list during initialization", async () => {
-			const mockFiles = [["/test/workspace/file1.ts", "/test/workspace/file2.ts"], false]
-			;(listFiles as Mock).mockResolvedValue(mockFiles)
-
-			await workspaceTracker.initializeFilePaths()
-
-			// Should have called getRipgrepFileList to preheat cache
-			expect(mockExecuteRipgrepForFiles).toHaveBeenCalled()
-		})
-	})
-
-	describe("public getRipgrepFileList method", () => {
-		it("should be accessible as a public method", () => {
-			expect(typeof workspaceTracker.getRipgrepFileList).toBe("function")
+			for (const path of testPaths) {
+				const isIgnored = (workspaceTracker as any).isPathIgnoredByRipgrep(path)
+				expect(isIgnored).toBe(true)
+			}
 		})
 
-		it("should return a promise that resolves to FileResult array", async () => {
-			const expectedFiles = [{ path: "src/test.ts", type: "file", label: "test.ts" }]
-			mockExecuteRipgrepForFiles.mockResolvedValueOnce(expectedFiles)
+		it("should ignore out and dist directories", async () => {
+			const testPaths = [
+				"/test/workspace/out/main.js",
+				"/test/workspace/dist/bundle.js",
+				"/test/workspace/packages/lib/out/index.js",
+				"/test/workspace/apps/web/dist/assets/main.css",
+			]
 
-			const result = await workspaceTracker.getRipgrepFileList()
+			for (const path of testPaths) {
+				const isIgnored = (workspaceTracker as any).isPathIgnoredByRipgrep(path)
+				expect(isIgnored).toBe(true)
+			}
+		})
 
-			expect(Array.isArray(result)).toBe(true)
-			expect(result).toEqual(expectedFiles)
+		it("should not ignore files with ignored directory names in filename", async () => {
+			const testPaths = [
+				"/test/workspace/src/node_modules.ts", // file named node_modules
+				"/test/workspace/git_utils.js", // file containing git
+				"/test/workspace/output.txt", // file containing out
+				"/test/workspace/distant.js", // file containing dist
+			]
+
+			for (const path of testPaths) {
+				const isIgnored = (workspaceTracker as any).isPathIgnoredByRipgrep(path)
+				expect(isIgnored).toBe(false)
+			}
+		})
+
+		it("should handle Windows-style paths correctly", async () => {
+			const testPaths = [
+				"C:\\test\\workspace\\node_modules\\package\\file.js",
+				"C:\\test\\workspace\\src\\.git\\config",
+				"C:\\test\\workspace\\out\\main.js",
+			]
+
+			for (const path of testPaths) {
+				const isIgnored = (workspaceTracker as any).isPathIgnoredByRipgrep(path)
+				expect(isIgnored).toBe(true)
+			}
+		})
+
+		it("should not ignore legitimate paths", async () => {
+			const testPaths = [
+				"/test/workspace/src/components/Button.tsx",
+				"/test/workspace/lib/utils/helper.ts",
+				"/test/workspace/docs/README.md",
+				"/test/workspace/tests/unit/parser.spec.ts",
+				"/test/workspace/scripts/build.sh",
+			]
+
+			for (const path of testPaths) {
+				const isIgnored = (workspaceTracker as any).isPathIgnoredByRipgrep(path)
+				expect(isIgnored).toBe(false)
+			}
+		})
+
+		it("should handle edge cases correctly", async () => {
+			const testCases = [
+				{ path: "/test/workspace/node_modules", expected: false }, // directory itself, not inside
+				{ path: "/test/workspace/.git", expected: false }, // directory itself, not inside
+				{ path: "/test/workspace/", expected: false }, // root workspace
+				{ path: "", expected: false }, // empty path
+				{ path: "/test/workspace/node_modules/", expected: true }, // with trailing slash
+				{ path: "/test/workspace/.git/", expected: true }, // with trailing slash
+			]
+
+			for (const testCase of testCases) {
+				const isIgnored = (workspaceTracker as any).isPathIgnoredByRipgrep(testCase.path)
+				expect(isIgnored).toBe(testCase.expected)
+			}
 		})
 	})
 })

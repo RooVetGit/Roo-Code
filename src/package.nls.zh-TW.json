@@ -34,5 +34,6 @@
 	"settings.vsCodeLmModelSelector.family.description": "語言模型系列（例如：gpt-4）",
 	"settings.customStoragePath.description": "自訂儲存路徑。留空以使用預設位置。支援絕對路徑（例如：'D:\\RooCodeStorage'）",
 	"settings.enableCodeActions.description": "啟用 Roo Code 快速修復。",
-	"settings.autoImportSettingsPath.description": "RooCode 設定檔案的路徑，用於在擴充功能啟動時自動匯入。支援絕對路徑和相對於主目錄的路徑（例如 '~/Documents/roo-code-settings.json'）。留空以停用自動匯入。"
+	"settings.autoImportSettingsPath.description": "RooCode 設定檔案的路徑，用於在擴充功能啟動時自動匯入。支援絕對路徑和相對於主目錄的路徑（例如 '~/Documents/roo-code-settings.json'）。留空以停用自動匯入。",
+	"settings.maximumIndexedFilesForFileSearch.description": "指定為輸入框的檔案搜尋功能建立索引時，最多索引的檔案個數，數量越大在大專案中的搜尋效果越好，但可能佔用更多記憶體。"
 }

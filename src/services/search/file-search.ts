@@ -5,6 +5,7 @@ import * as childProcess from "child_process"
 import * as readline from "readline"
 import { byLengthAsc, Fzf } from "fzf"
 import { getBinPath } from "../ripgrep"
+import { SimpleTreeNode } from "../../integrations/workspace/RipgrepResultCache"
 
 export type FileResult = { path: string; type: "file" | "folder"; label?: string }
 
@@ -85,80 +86,37 @@ export async function executeRipgrep({
 	})
 }
 
-export async function executeRipgrepForFiles(
-	workspacePath: string,
-	limit: number = 5000,
-	extraOptions: string[] = [],
-): Promise<FileResult[]> {
-	const args = [
-		"--files",
-		"--follow",
-		"--hidden",
-		...extraOptions,
-		"-g",
-		"!**/node_modules/**",
-		"-g",
-		"!**/.git/**",
-		"-g",
-		"!**/out/**",
-		"-g",
-		"!**/dist/**",
-		workspacePath,
-	]
-
-	return executeRipgrep({ args, workspacePath, limit })
-}
-
 export async function searchWorkspaceFiles(
 	query: string,
 	workspacePath: string,
-	workspaceFiles: FileResult[],
+	workspaceList: FileResult[],
 	limit: number = 20,
 ): Promise<{ path: string; type: "file" | "folder"; label?: string }[]> {
 	try {
-		// Use the provided workspace files
-		const allItems = workspaceFiles
+		const allItems = workspaceList
 
 		// If no query, just return the top items
 		if (!query.trim()) {
-			return allItems.slice(0, limit)
+			return allItems.slice(0, limit).map((item) => ({
+				...item,
+				label: path.basename(item.path),
+			}))
 		}
 
-		// Create search items for all files AND directories
-		const searchItems = allItems.map((item) => ({
-			original: item,
-			searchStr: `${item.path} ${item.label || ""}`,
-		}))
-
 		// Run fzf search on all items
-		const fzf = new Fzf(searchItems, {
-			selector: (item) => item.searchStr,
+		const fzf = new Fzf(allItems, {
+			selector: (item) => item.path,
 			tiebreakers: [byLengthAsc],
 			limit: limit,
 		})
 
-		// Get all matching results from fzf
-		const fzfResults = fzf.find(query).map((result) => result.item.original)
+		// Get all matching results from fzf and generate labels
+		const fzfResults = fzf.find(query).map((result) => ({
+			...result.item,
+			label: path.basename(result.item.path),
+		}))
 
-		// Verify types of the shortest results
-		const verifiedResults = await Promise.all(
-			fzfResults.map(async (result) => {
-				const fullPath = path.join(workspacePath, result.path)
-				// Verify if the path exists and is actually a directory
-				if (fs.existsSync(fullPath)) {
-					const isDirectory = fs.lstatSync(fullPath).isDirectory()
-					return {
-						...result,
-						path: result.path.toPosix(),
-						type: isDirectory ? ("folder" as const) : ("file" as const),
-					}
-				}
-				// If path doesn't exist, keep original type
-				return result
-			}),
-		)
-
-		return verifiedResults
+		return fzfResults
 	} catch (error) {
 		console.error("Error in searchWorkspaceFiles:", error)
 		return []
