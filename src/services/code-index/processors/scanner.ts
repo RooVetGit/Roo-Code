@@ -85,7 +85,6 @@ export class DirectoryScanner implements IDirectoryScanner {
 
 		// Initialize tracking variables
 		const processedFiles = new Set<string>()
-		const codeBlocks: CodeBlock[] = []
 		let processedCount = 0
 		let skippedCount = 0
 
@@ -135,7 +134,6 @@ export class DirectoryScanner implements IDirectoryScanner {
 					const blocks = await this.codeParser.parseFile(filePath, { content, fileHash: currentFileHash })
 					const fileBlockCount = blocks.length
 					onFileParsed?.(fileBlockCount)
-					codeBlocks.push(...blocks)
 					processedCount++
 
 					// Process embeddings if configured
@@ -146,19 +144,10 @@ export class DirectoryScanner implements IDirectoryScanner {
 							const trimmedContent = block.content.trim()
 							if (trimmedContent) {
 								const release = await mutex.acquire()
-								totalBlockCount += fileBlockCount
 								try {
 									currentBatchBlocks.push(block)
 									currentBatchTexts.push(trimmedContent)
 									addedBlocksFromFile = true
-
-									if (addedBlocksFromFile) {
-										currentBatchFileInfos.push({
-											filePath,
-											fileHash: currentFileHash,
-											isNew: !this.cacheManager.getHash(filePath),
-										})
-									}
 
 									// Check if batch threshold is met
 									if (currentBatchBlocks.length >= BATCH_SEGMENT_THRESHOLD) {
@@ -187,6 +176,16 @@ export class DirectoryScanner implements IDirectoryScanner {
 									release()
 								}
 							}
+						}
+
+						// Add file info once per file (outside the block loop)
+						if (addedBlocksFromFile) {
+							totalBlockCount += fileBlockCount
+							currentBatchFileInfos.push({
+								filePath,
+								fileHash: currentFileHash,
+								isNew: !this.cacheManager.getHash(filePath),
+							})
 						}
 					} else {
 						// Only update hash if not being processed in a batch
@@ -280,7 +279,7 @@ export class DirectoryScanner implements IDirectoryScanner {
 		}
 
 		return {
-			codeBlocks,
+			codeBlocks: [], // Return empty array to prevent memory accumulation
 			stats: {
 				processed: processedCount,
 				skipped: skippedCount,
