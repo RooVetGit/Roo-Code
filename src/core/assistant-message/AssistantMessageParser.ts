@@ -159,10 +159,19 @@ export class AssistantMessageParser {
 
 			for (const toolUseOpeningTag of possibleToolUseOpeningTags) {
 				if (this.accumulator.endsWith(toolUseOpeningTag)) {
+					// Extract and validate the tool name
+					const extractedToolName = toolUseOpeningTag.slice(1, -1)
+
+					// Check if the extracted tool name is valid
+					if (!toolNames.includes(extractedToolName as ToolName)) {
+						// Invalid tool name, treat as plain text and continue
+						continue
+					}
+
 					// Start of a new tool use.
 					this.currentToolUse = {
 						type: "tool_use",
-						name: toolUseOpeningTag.slice(1, -1) as ToolName,
+						name: extractedToolName as ToolName,
 						params: {},
 						partial: true,
 					}
@@ -178,8 +187,6 @@ export class AssistantMessageParser {
 						this.currentTextContent.content = this.currentTextContent.content
 							.slice(0, -toolUseOpeningTag.slice(0, -1).length)
 							.trim()
-
-						this.currentTextContent.content = this.currentTextContent.content.trim()
 
 						// No need to push, currentTextContent is already in contentBlocks
 						this.currentTextContent = undefined
@@ -207,7 +214,7 @@ export class AssistantMessageParser {
 					// Create a new text content block and add it to contentBlocks
 					this.currentTextContent = {
 						type: "text",
-						content: this.accumulator.slice(this.currentTextContentStartIndex),
+						content: this.accumulator.slice(this.currentTextContentStartIndex).trim(),
 						partial: true,
 					}
 
@@ -216,7 +223,7 @@ export class AssistantMessageParser {
 					this.contentBlocks.push(this.currentTextContent)
 				} else {
 					// Update the existing text content
-					this.currentTextContent.content = this.accumulator.slice(this.currentTextContentStartIndex)
+					this.currentTextContent.content = this.accumulator.slice(this.currentTextContentStartIndex).trim()
 				}
 			}
 		}
