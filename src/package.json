@@ -373,6 +373,13 @@
 					"type": "string",
 					"default": "",
 					"description": "%settings.autoImportSettingsPath.description%"
+				},
+				"roo-cline.diagnosticsDelayAfterSave": {
+					"type": "number",
+					"default": 0,
+					"minimum": 0,
+					"maximum": 5000,
+					"description": "Delay (in milliseconds) after saving a file before checking for linting errors"
 				}
 			}
 		}

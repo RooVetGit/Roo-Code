@@ -214,6 +214,15 @@ export class DiffViewProvider {
 		// and can address them accordingly. If problems don't change immediately after
 		// applying a fix, won't be notified, which is generally fine since the
 		// initial fix is usually correct and it may just take time for linters to catch up.
+		
+		// Get the configured delay for diagnostics after save
+		const diagnosticsDelay = vscode.workspace.getConfiguration("roo-cline").get<number>("diagnosticsDelayAfterSave", 0)
+		
+		// Add a delay if configured to give linters time to process the file
+		if (diagnosticsDelay > 0) {
+			await new Promise((resolve) => setTimeout(resolve, diagnosticsDelay))
+		}
+		
 		const postDiagnostics = vscode.languages.getDiagnostics()
 
 		const newProblems = await diagnosticsToProblemsString(
