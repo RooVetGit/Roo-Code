@@ -98,7 +98,7 @@ describe("OpenRouterHandler", () => {
 			})
 
 			const result = await handler.fetchModel()
-			expect(result.maxTokens).toBe(32_768) // Should use custom maxTokens
+			expect(result.maxTokens).toBe(32_768) // Not capped since model supports 128000
 			expect(result.reasoningBudget).toBeUndefined() // Use actual implementation value
 			expect(result.temperature).toBe(0) // Use actual implementation value
 		})
@@ -111,7 +111,7 @@ describe("OpenRouterHandler", () => {
 			})
 
 			const result = await handler.fetchModel()
-			expect(result.maxTokens).toBe(32_768)
+			expect(result.maxTokens).toBe(8192) // Capped to model's actual maxTokens
 			expect(result.reasoningBudget).toBeUndefined()
 			expect(result.temperature).toBe(0)
 		})

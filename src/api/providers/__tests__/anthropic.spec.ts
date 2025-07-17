@@ -260,7 +260,7 @@ describe("AnthropicHandler", () => {
 			})
 
 			const result = handler.getModel()
-			expect(result.maxTokens).toBe(32_768)
+			expect(result.maxTokens).toBe(8192) // Capped to model's actual maxTokens
 			expect(result.reasoningBudget).toBeUndefined()
 			expect(result.temperature).toBe(0)
 		})
