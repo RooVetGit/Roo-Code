@@ -43,6 +43,37 @@ class MockApiHandler extends BaseProvider {
 			},
 		}
 	}
+
+	// Override countTokens to use the count without factors
+	override async countTokens(
+		content: any[],
+		options: {
+			maxTokens?: number | null
+			effectiveThreshold?: number
+			totalTokens: number
+		},
+	): Promise<number> {
+		if (content.length === 0) {
+			return 0
+		}
+
+		const { countTokens: localCountTokens } = await import("../../../utils/countTokens")
+
+		let totalTokens = 0
+		for (const block of content) {
+			if (block.type === "text") {
+				if (block.text === "") {
+					continue
+				}
+				totalTokens += await localCountTokens([block], { useWorker: true })
+			} else if (block.type === "image") {
+				const dataLength = block.source.data.length
+				totalTokens += Math.ceil(Math.sqrt(dataLength)) * 1.5
+			}
+		}
+
+		return totalTokens
+	}
 }
 
 // Create a singleton instance for tests
