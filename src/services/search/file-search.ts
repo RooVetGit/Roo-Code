@@ -5,7 +5,6 @@ import * as childProcess from "child_process"
 import * as readline from "readline"
 import { byLengthAsc, Fzf } from "fzf"
 import { getBinPath } from "../ripgrep"
-import { SimpleTreeNode } from "../../integrations/workspace/RipgrepResultCache"
 
 export type FileResult = { path: string; type: "file" | "folder"; label?: string }
 

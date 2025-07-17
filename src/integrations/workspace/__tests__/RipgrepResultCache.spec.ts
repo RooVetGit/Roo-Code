@@ -2,11 +2,41 @@ import type { Mock } from "vitest"
 import { RipgrepResultCache, type SimpleTreeNode } from "../RipgrepResultCache"
 import { spawn } from "child_process"
 import { EventEmitter } from "events"
+import { sep, join, resolve } from "path"
 
 // Mock child_process spawn
 vitest.mock("child_process", () => ({
 	spawn: vitest.fn(),
 }))
+
+// Platform-specific path utilities
+const isWindows = process.platform === "win32"
+
+// Test constants
+const TEST_PATHS = {
+	workspace: isWindows ? "C:\\test\\workspace" : "/test/workspace",
+	rgExecutable: isWindows ? "C:\\tools\\rg.exe" : "/usr/bin/rg",
+	relativeWorkspace: "test/workspace"
+}
+
+// Path utility functions
+const createTestPath = (...parts: string[]) => {
+	return isWindows ? parts.join("\\") : parts.join("/")
+}
+
+const createAbsolutePath = (workspace: string, ...parts: string[]) => {
+	return join(workspace, ...parts)
+}
+
+// Mock ripgrep output helper
+const createMockRipgrepOutput = (files: string[]) => {
+	// Convert file paths to platform-specific format for ripgrep output
+	const platformFiles = files.map(file => {
+		// ripgrep outputs relative paths with platform-specific separators
+		return file.replace(/[\/\\]/g, sep)
+	})
+	return platformFiles.join("\n") + (platformFiles.length > 0 ? "\n" : "")
+}
 
 // Mock process for testing
 class MockChildProcess extends EventEmitter {
@@ -33,42 +63,46 @@ describe("RipgrepResultCache", () => {
 
 	describe("constructor", () => {
 		it("should initialize with default parameters", () => {
-			const cache = new RipgrepResultCache("/usr/bin/rg", "/test/workspace")
+			const cache = new RipgrepResultCache(TEST_PATHS.rgExecutable, TEST_PATHS.workspace)
 
-			expect(cache.targetPath).toBe("/test/workspace")
+			expect(cache.targetPath).toBe(resolve(TEST_PATHS.workspace))
 		})
 
 		it("should resolve target path", () => {
-			const cache = new RipgrepResultCache("/usr/bin/rg", "test/workspace")
+			const cache = new RipgrepResultCache(TEST_PATHS.rgExecutable, TEST_PATHS.relativeWorkspace)
 
-			expect(cache.targetPath).toContain("test/workspace")
+			expect(cache.targetPath).toContain("test" + sep + "workspace")
 		})
 
 		it("should use custom file limit", () => {
-			const cache = new RipgrepResultCache("/usr/bin/rg", "/test/workspace", [], 10000)
+			const cache = new RipgrepResultCache(TEST_PATHS.rgExecutable, TEST_PATHS.workspace, [], 10000)
 
-			expect(cache.targetPath).toBe("/test/workspace")
+			expect(cache.targetPath).toBe(resolve(TEST_PATHS.workspace))
 			expect((cache as any).fileLimit).toBe(10000)
 		})
 	})
 
 	describe("getTree", () => {
 		it("should build tree on first call", async () => {
-			const cache = new RipgrepResultCache("/usr/bin/rg", "/test/workspace")
+			const cache = new RipgrepResultCache(TEST_PATHS.rgExecutable, TEST_PATHS.workspace)
 
 			// Simulate successful ripgrep output
 			const treePromise = cache.getTree()
 
 			// Simulate ripgrep output
 			setTimeout(() => {
-				mockChildProcess.stdout.emit("data", Buffer.from("src/file1.ts\nsrc/file2.ts\n"))
+				const mockOutput = createMockRipgrepOutput([
+					"src/file1.ts",
+					"src/file2.ts"
+				])
+				mockChildProcess.stdout.emit("data", Buffer.from(mockOutput))
 				mockChildProcess.emit("close", 0)
 			}, 10)
 
 			const result = await treePromise
 
-			expect(mockSpawn).toHaveBeenCalledWith("/usr/bin/rg", ["--files"], {
-				cwd: "/test/workspace",
+			expect(mockSpawn).toHaveBeenCalledWith(TEST_PATHS.rgExecutable, ["--files"], {
+				cwd: resolve(TEST_PATHS.workspace),
 				stdio: ["pipe", "pipe", "pipe"],
 			})
 			expect(result).toEqual({
@@ -80,12 +114,13 @@ describe("RipgrepResultCache", () => {
 		})
 
 		it("should return cached tree on subsequent calls", async () => {
-			const cache = new RipgrepResultCache("/usr/bin/rg", "/test/workspace")
+			const cache = new RipgrepResultCache(TEST_PATHS.rgExecutable, TEST_PATHS.workspace)
 
 			// First call
 			const firstPromise = cache.getTree()
 			setTimeout(() => {
-				mockChildProcess.stdout.emit("data", Buffer.from("src/file1.ts\n"))
+				const mockOutput = createMockRipgrepOutput(["src/file1.ts"])
+				mockChildProcess.stdout.emit("data", Buffer.from(mockOutput))
 				mockChildProcess.emit("close", 0)
 			}, 10)
 			await firstPromise
@@ -103,7 +138,7 @@ describe("RipgrepResultCache", () => {
 		})
 
 		it("should wait for ongoing build if already building", async () => {
-			const cache = new RipgrepResultCache("/usr/bin/rg", "/test/workspace")
+			const cache = new RipgrepResultCache(TEST_PATHS.rgExecutable, TEST_PATHS.workspace)
 
 			// Start first build
 			const firstPromise = cache.getTree()
@@ -113,7 +148,8 @@ describe("RipgrepResultCache", () => {
 
 			// Complete the build
 			setTimeout(() => {
-				mockChildProcess.stdout.emit("data", Buffer.from("src/file1.ts\n"))
+				const mockOutput = createMockRipgrepOutput(["src/file1.ts"])
+				mockChildProcess.stdout.emit("data", Buffer.from(mockOutput))
 				mockChildProcess.emit("close", 0)
 			}, 10)
 
@@ -125,7 +161,7 @@ describe("RipgrepResultCache", () => {
 		})
 
 		it("should handle ripgrep errors gracefully", async () => {
-			const cache = new RipgrepResultCache("/usr/bin/rg", "/test/workspace")
+			const cache = new RipgrepResultCache(TEST_PATHS.rgExecutable, TEST_PATHS.workspace)
 
 			const treePromise = cache.getTree()
 
@@ -138,13 +174,19 @@ describe("RipgrepResultCache", () => {
 		})
 
 		it("should respect file limit", async () => {
-			const cache = new RipgrepResultCache("/usr/bin/rg", "/test/workspace", [], 2)
+			const cache = new RipgrepResultCache(TEST_PATHS.rgExecutable, TEST_PATHS.workspace, [], 2)
 
 			const treePromise = cache.getTree()
 
 			setTimeout(() => {
 				// Send more files than the limit
-				mockChildProcess.stdout.emit("data", Buffer.from("file1.ts\nfile2.ts\nfile3.ts\nfile4.ts\n"))
+				const mockOutput = createMockRipgrepOutput([
+					"file1.ts",
+					"file2.ts",
+					"file3.ts",
+					"file4.ts"
+				])
+				mockChildProcess.stdout.emit("data", Buffer.from(mockOutput))
 				// Process should be killed when limit reached
 				expect(mockChildProcess.killed).toBe(true)
 			}, 10)
@@ -161,12 +203,16 @@ describe("RipgrepResultCache", () => {
 		let cache: RipgrepResultCache
 
 		beforeEach(async () => {
-			cache = new RipgrepResultCache("/usr/bin/rg", "/test/workspace")
+			cache = new RipgrepResultCache(TEST_PATHS.rgExecutable, TEST_PATHS.workspace)
 
 			// Build initial tree
 			const treePromise = cache.getTree()
 			setTimeout(() => {
-				mockChildProcess.stdout.emit("data", Buffer.from("src/file1.ts\nsrc/utils/helper.ts\n"))
+				const mockOutput = createMockRipgrepOutput([
+					"src/file1.ts",
+					"src/utils/helper.ts"
+				])
+				mockChildProcess.stdout.emit("data", Buffer.from(mockOutput))
 				mockChildProcess.emit("close", 0)
 			}, 10)
 			await treePromise
@@ -176,12 +222,18 @@ describe("RipgrepResultCache", () => {
 			// Clear spawn mock to detect new calls
 			mockSpawn.mockClear()
 
-			cache.fileAdded("/test/workspace/src/newfile.ts")
+			const newFilePath = createAbsolutePath(TEST_PATHS.workspace, "src", "newfile.ts")
+			cache.fileAdded(newFilePath)
 
 			// Next getTree call should trigger rebuild
 			const treePromise = cache.getTree()
 			setTimeout(() => {
-				mockChildProcess.stdout.emit("data", Buffer.from("src/file1.ts\nsrc/newfile.ts\nsrc/utils/helper.ts\n"))
+				const mockOutput = createMockRipgrepOutput([
+					"src/file1.ts",
+					"src/newfile.ts",
+					"src/utils/helper.ts"
+				])
+				mockChildProcess.stdout.emit("data", Buffer.from(mockOutput))
 				mockChildProcess.emit("close", 0)
 			}, 10)
 
@@ -195,12 +247,14 @@ describe("RipgrepResultCache", () => {
 			// Clear spawn mock to detect new calls
 			mockSpawn.mockClear()
 
-			cache.fileRemoved("/test/workspace/src/file1.ts")
+			const removedFilePath = createAbsolutePath(TEST_PATHS.workspace, "src", "file1.ts")
+			cache.fileRemoved(removedFilePath)
 
 			// Next getTree call should trigger rebuild
 			const treePromise = cache.getTree()
 			setTimeout(() => {
-				mockChildProcess.stdout.emit("data", Buffer.from("src/utils/helper.ts\n"))
+				const mockOutput = createMockRipgrepOutput(["src/utils/helper.ts"])
+				mockChildProcess.stdout.emit("data", Buffer.from(mockOutput))
 				mockChildProcess.emit("close", 0)
 			}, 10)
 
@@ -219,7 +273,11 @@ describe("RipgrepResultCache", () => {
 			// Next getTree call should trigger rebuild
 			const treePromise = cache.getTree()
 			setTimeout(() => {
-				mockChildProcess.stdout.emit("data", Buffer.from("src/file1.ts\nsrc/relative.ts\n"))
+				const mockOutput = createMockRipgrepOutput([
+					"src/file1.ts",
+					"src/relative.ts"
+				])
+				mockChildProcess.stdout.emit("data", Buffer.from(mockOutput))
 				mockChildProcess.emit("close", 0)
 			}, 10)
 
@@ -233,15 +291,17 @@ describe("RipgrepResultCache", () => {
 		let cache: RipgrepResultCache
 
 		beforeEach(async () => {
-			cache = new RipgrepResultCache("/usr/bin/rg", "/test/workspace")
+			cache = new RipgrepResultCache(TEST_PATHS.rgExecutable, TEST_PATHS.workspace)
 
 			// Build initial tree
 			const treePromise = cache.getTree()
 			setTimeout(() => {
-				mockChildProcess.stdout.emit(
-					"data",
-					Buffer.from("src/file1.ts\nsrc/components/Button.tsx\nutils/helper.ts\n"),
-				)
+				const mockOutput = createMockRipgrepOutput([
+					"src/file1.ts",
+					"src/components/Button.tsx",
+					"utils/helper.ts"
+				])
+				mockChildProcess.stdout.emit("data", Buffer.from(mockOutput))
 				mockChildProcess.emit("close", 0)
 			}, 10)
 			await treePromise
@@ -249,16 +309,19 @@ describe("RipgrepResultCache", () => {
 
 		it("should perform incremental update for invalidated directories", async () => {
 			// Add file to invalidate src directory
-			cache.fileAdded("/test/workspace/src/newfile.ts")
+			const newFilePath = createAbsolutePath(TEST_PATHS.workspace, "src", "newfile.ts")
+			cache.fileAdded(newFilePath)
 			mockSpawn.mockClear()
 
 			// Mock incremental update response (only for src directory)
 			const treePromise = cache.getTree()
 			setTimeout(() => {
-				mockChildProcess.stdout.emit(
-					"data",
-					Buffer.from("src/file1.ts\nsrc/newfile.ts\nsrc/components/Button.tsx\n"),
-				)
+				const mockOutput = createMockRipgrepOutput([
+					"src/file1.ts",
+					"src/newfile.ts",
+					"src/components/Button.tsx"
+				])
+				mockChildProcess.stdout.emit("data", Buffer.from(mockOutput))
 				mockChildProcess.emit("close", 0)
 			}, 10)
 
@@ -280,15 +343,17 @@ describe("RipgrepResultCache", () => {
 
 		it("should handle nested directory invalidation correctly", async () => {
 			// Add file to nested directory
-			cache.fileAdded("/test/workspace/src/components/Icon.tsx")
+			const newFilePath = createAbsolutePath(TEST_PATHS.workspace, "src", "components", "Icon.tsx")
+			cache.fileAdded(newFilePath)
 			mockSpawn.mockClear()
 
 			const treePromise = cache.getTree()
 			setTimeout(() => {
-				mockChildProcess.stdout.emit(
-					"data",
-					Buffer.from("src/components/Button.tsx\nsrc/components/Icon.tsx\n"),
-				)
+				const mockOutput = createMockRipgrepOutput([
+					"src/components/Button.tsx",
+					"src/components/Icon.tsx"
+				])
+				mockChildProcess.stdout.emit("data", Buffer.from(mockOutput))
 				mockChildProcess.emit("close", 0)
 			}, 10)
 
@@ -299,21 +364,24 @@ describe("RipgrepResultCache", () => {
 
 		it("should avoid duplicate invalidation for parent directories", async () => {
 			// First invalidate parent directory
-			cache.fileAdded("/test/workspace/src/newfile.ts")
+			const parentFilePath = createAbsolutePath(TEST_PATHS.workspace, "src", "newfile.ts")
+			cache.fileAdded(parentFilePath)
 
 			// Then try to invalidate child directory (should be ignored)
-			cache.fileAdded("/test/workspace/src/components/NewComponent.tsx")
+			const childFilePath = createAbsolutePath(TEST_PATHS.workspace, "src", "components", "NewComponent.tsx")
+			cache.fileAdded(childFilePath)
 
 			mockSpawn.mockClear()
 
 			const treePromise = cache.getTree()
 			setTimeout(() => {
-				mockChildProcess.stdout.emit(
-					"data",
-					Buffer.from(
-						"src/file1.ts\nsrc/newfile.ts\nsrc/components/Button.tsx\nsrc/components/NewComponent.tsx\n",
-					),
-				)
+				const mockOutput = createMockRipgrepOutput([
+					"src/file1.ts",
+					"src/newfile.ts",
+					"src/components/Button.tsx",
+					"src/components/NewComponent.tsx"
+				])
+				mockChildProcess.stdout.emit("data", Buffer.from(mockOutput))
 				mockChildProcess.emit("close", 0)
 			}, 10)
 
@@ -325,28 +393,35 @@ describe("RipgrepResultCache", () => {
 
 		it("should handle multiple directory invalidations in single incremental update", async () => {
 			// Invalidate multiple independent directories
-			cache.fileAdded("/test/workspace/src/newfile.ts")
-			cache.fileAdded("/test/workspace/utils/newutil.ts")
-			cache.fileAdded("/test/workspace/lib/helper.ts")
+			cache.fileAdded(createAbsolutePath(TEST_PATHS.workspace, "src", "newfile.ts"))
+			cache.fileAdded(createAbsolutePath(TEST_PATHS.workspace, "utils", "newutil.ts"))
+			cache.fileAdded(createAbsolutePath(TEST_PATHS.workspace, "lib", "helper.ts"))
 
 			mockSpawn.mockClear()
 
 			// Mock incremental update response for all invalidated directories
 			const treePromise = cache.getTree()
 			setTimeout(() => {
-				mockChildProcess.stdout.emit(
-					"data",
-					Buffer.from(
-						"src/file1.ts\nsrc/newfile.ts\nsrc/components/Button.tsx\nutils/helper.ts\nutils/newutil.ts\nlib/helper.ts\n",
-					),
-				)
+				const mockOutput = createMockRipgrepOutput([
+					"src/file1.ts",
+					"src/newfile.ts",
+					"src/components/Button.tsx",
+					"utils/helper.ts",
+					"utils/newutil.ts",
+					"lib/helper.ts"
+				])
+				mockChildProcess.stdout.emit("data", Buffer.from(mockOutput))
 				mockChildProcess.emit("close", 0)
 			}, 10)
 
 			const result = await treePromise
 
 			// Should have called spawn for incremental update
-			expect(mockSpawn).toHaveBeenCalled()
+			const expectedPaths = ["src", "utils", "lib"].map(p => isWindows ? p : p)
+			expect(mockSpawn).toHaveBeenCalledWith(TEST_PATHS.rgExecutable, ["--files", ...expectedPaths], {
+				cwd: resolve(TEST_PATHS.workspace),
+				stdio: ["pipe", "pipe", "pipe"],
+			})
 
 			// Verify all directories are updated correctly
 			expect(result).toEqual({
@@ -369,22 +444,26 @@ describe("RipgrepResultCache", () => {
 
 		it("should handle multiple nested directory invalidations with parent-child relationships", async () => {
 			// Invalidate multiple directories with parent-child relationships
-			cache.fileAdded("/test/workspace/src/newfile.ts") // Parent directory
-			cache.fileAdded("/test/workspace/src/components/NewComponent.tsx") // Child directory
-			cache.fileAdded("/test/workspace/src/components/ui/Button.tsx") // Grandchild directory
-			cache.fileAdded("/test/workspace/utils/newutil.ts") // Independent directory
+			cache.fileAdded(createAbsolutePath(TEST_PATHS.workspace, "src", "newfile.ts")) // Parent directory
+			cache.fileAdded(createAbsolutePath(TEST_PATHS.workspace, "src", "components", "NewComponent.tsx")) // Child directory
+			cache.fileAdded(createAbsolutePath(TEST_PATHS.workspace, "src", "components", "ui", "Button.tsx")) // Grandchild directory
+			cache.fileAdded(createAbsolutePath(TEST_PATHS.workspace, "utils", "newutil.ts")) // Independent directory
 
 			mockSpawn.mockClear()
 
 			// Mock incremental update response for all invalidated directories
 			const treePromise = cache.getTree()
 			setTimeout(() => {
-				mockChildProcess.stdout.emit(
-					"data",
-					Buffer.from(
-						"src/file1.ts\nsrc/newfile.ts\nsrc/components/Button.tsx\nsrc/components/NewComponent.tsx\nsrc/components/ui/Button.tsx\nutils/helper.ts\nutils/newutil.ts\n",
-					),
-				)
+				const mockOutput = createMockRipgrepOutput([
+					"src/file1.ts",
+					"src/newfile.ts",
+					"src/components/Button.tsx",
+					"src/components/NewComponent.tsx",
+					"src/components/ui/Button.tsx",
+					"utils/helper.ts",
+					"utils/newutil.ts"
+				])
+				mockChildProcess.stdout.emit("data", Buffer.from(mockOutput))
 				mockChildProcess.emit("close", 0)
 			}, 10)
 
@@ -415,22 +494,26 @@ describe("RipgrepResultCache", () => {
 
 		it("should trigger only one ripgrep call when multiple directories are invalidated", async () => {
 			// Invalidate multiple directories in sequence
-			cache.fileAdded("/test/workspace/src/newfile.ts")
-			cache.fileAdded("/test/workspace/utils/newutil.ts")
-			cache.fileAdded("/test/workspace/lib/helper.ts")
-			cache.fileAdded("/test/workspace/tests/test.ts")
+			cache.fileAdded(createAbsolutePath(TEST_PATHS.workspace, "src", "newfile.ts"))
+			cache.fileAdded(createAbsolutePath(TEST_PATHS.workspace, "utils", "newutil.ts"))
+			cache.fileAdded(createAbsolutePath(TEST_PATHS.workspace, "lib", "helper.ts"))
+			cache.fileAdded(createAbsolutePath(TEST_PATHS.workspace, "tests", "test.ts"))
 
 			mockSpawn.mockClear()
 
 			// Call getTree - should trigger only one ripgrep process
 			const treePromise = cache.getTree()
 			setTimeout(() => {
-				mockChildProcess.stdout.emit(
-					"data",
-					Buffer.from(
-						"src/file1.ts\nsrc/newfile.ts\nsrc/components/Button.tsx\nutils/helper.ts\nutils/newutil.ts\nlib/helper.ts\ntests/test.ts\n",
-					),
-				)
+				const mockOutput = createMockRipgrepOutput([
+					"src/file1.ts",
+					"src/newfile.ts",
+					"src/components/Button.tsx",
+					"utils/helper.ts",
+					"utils/newutil.ts",
+					"lib/helper.ts",
+					"tests/test.ts"
+				])
+				mockChildProcess.stdout.emit("data", Buffer.from(mockOutput))
 				mockChildProcess.emit("close", 0)
 			}, 10)
 
@@ -444,35 +527,37 @@ describe("RipgrepResultCache", () => {
 	describe("ripgrep arguments", () => {
 		it("should use custom ripgrep arguments", async () => {
 			const customArgs = ["--files", "--follow", "--hidden", "--no-ignore"]
-			const cache = new RipgrepResultCache("/usr/bin/rg", "/test/workspace", customArgs)
+			const cache = new RipgrepResultCache(TEST_PATHS.rgExecutable, TEST_PATHS.workspace, customArgs)
 
 			const treePromise = cache.getTree()
 			setTimeout(() => {
-				mockChildProcess.stdout.emit("data", Buffer.from("src/file1.ts\n"))
+				const mockOutput = createMockRipgrepOutput(["src/file1.ts"])
+				mockChildProcess.stdout.emit("data", Buffer.from(mockOutput))
 				mockChildProcess.emit("close", 0)
 			}, 10)
 
 			await treePromise
 
-			expect(mockSpawn).toHaveBeenCalledWith("/usr/bin/rg", customArgs, {
-				cwd: "/test/workspace",
+			expect(mockSpawn).toHaveBeenCalledWith(TEST_PATHS.rgExecutable, customArgs, {
+				cwd: resolve(TEST_PATHS.workspace),
 				stdio: ["pipe", "pipe", "pipe"],
 			})
 		})
 
 		it("should use default --files argument when no args provided", async () => {
-			const cache = new RipgrepResultCache("/usr/bin/rg", "/test/workspace", [])
+			const cache = new RipgrepResultCache(TEST_PATHS.rgExecutable, TEST_PATHS.workspace, [])
 
 			const treePromise = cache.getTree()
 			setTimeout(() => {
-				mockChildProcess.stdout.emit("data", Buffer.from("src/file1.ts\n"))
+				const mockOutput = createMockRipgrepOutput(["src/file1.ts"])
+				mockChildProcess.stdout.emit("data", Buffer.from(mockOutput))
 				mockChildProcess.emit("close", 0)
 			}, 10)
 
 			await treePromise
 
-			expect(mockSpawn).toHaveBeenCalledWith("/usr/bin/rg", ["--files"], {
-				cwd: "/test/workspace",
+			expect(mockSpawn).toHaveBeenCalledWith(TEST_PATHS.rgExecutable, ["--files"], {
+				cwd: resolve(TEST_PATHS.workspace),
 				stdio: ["pipe", "pipe", "pipe"],
 			})
 		})
@@ -480,12 +565,13 @@ describe("RipgrepResultCache", () => {
 
 	describe("clearCache", () => {
 		it("should clear all cached data", async () => {
-			const cache = new RipgrepResultCache("/usr/bin/rg", "/test/workspace")
+			const cache = new RipgrepResultCache(TEST_PATHS.rgExecutable, TEST_PATHS.workspace)
 
 			// Build initial cache
 			const treePromise = cache.getTree()
 			setTimeout(() => {
-				mockChildProcess.stdout.emit("data", Buffer.from("src/file1.ts\n"))
+				const mockOutput = createMockRipgrepOutput(["src/file1.ts"])
+				mockChildProcess.stdout.emit("data", Buffer.from(mockOutput))
 				mockChildProcess.emit("close", 0)
 			}, 10)
 			await treePromise
@@ -497,7 +583,8 @@ describe("RipgrepResultCache", () => {
 			mockSpawn.mockClear()
 			const newTreePromise = cache.getTree()
 			setTimeout(() => {
-				mockChildProcess.stdout.emit("data", Buffer.from("src/file1.ts\n"))
+				const mockOutput = createMockRipgrepOutput(["src/file1.ts"])
+				mockChildProcess.stdout.emit("data", Buffer.from(mockOutput))
 				mockChildProcess.emit("close", 0)
 			}, 10)
 
@@ -509,7 +596,7 @@ describe("RipgrepResultCache", () => {
 
 	describe("edge cases", () => {
 		it("should handle empty ripgrep output", async () => {
-			const cache = new RipgrepResultCache("/usr/bin/rg", "/test/workspace")
+			const cache = new RipgrepResultCache(TEST_PATHS.rgExecutable, TEST_PATHS.workspace)
 
 			const treePromise = cache.getTree()
 			setTimeout(() => {
@@ -522,11 +609,14 @@ describe("RipgrepResultCache", () => {
 		})
 
 		it("should handle ripgrep output with empty lines", async () => {
-			const cache = new RipgrepResultCache("/usr/bin/rg", "/test/workspace")
+			const cache = new RipgrepResultCache(TEST_PATHS.rgExecutable, TEST_PATHS.workspace)
 
 			const treePromise = cache.getTree()
 			setTimeout(() => {
-				mockChildProcess.stdout.emit("data", Buffer.from("src/file1.ts\n\n\nsrc/file2.ts\n"))
+				const mockOutput = createMockRipgrepOutput(["src/file1.ts", "", "", "src/file2.ts"])
+				// Add some empty lines to simulate real ripgrep output
+				const outputWithEmptyLines = "\n" + mockOutput + "\n\n"
+				mockChildProcess.stdout.emit("data", Buffer.from(outputWithEmptyLines))
 				mockChildProcess.emit("close", 0)
 			}, 10)
 
@@ -541,11 +631,15 @@ describe("RipgrepResultCache", () => {
 		})
 
 		it("should handle file paths with special characters", async () => {
-			const cache = new RipgrepResultCache("/usr/bin/rg", "/test/workspace")
+			const cache = new RipgrepResultCache(TEST_PATHS.rgExecutable, TEST_PATHS.workspace)
 
 			const treePromise = cache.getTree()
 			setTimeout(() => {
-				mockChildProcess.stdout.emit("data", Buffer.from("src/file-with-dash.ts\nsrc/file with spaces.ts\n"))
+				const mockOutput = createMockRipgrepOutput([
+					"src/file-with-dash.ts",
+					"src/file with spaces.ts"
+				])
+				mockChildProcess.stdout.emit("data", Buffer.from(mockOutput))
 				mockChildProcess.emit("close", 0)
 			}, 10)
 
@@ -560,11 +654,12 @@ describe("RipgrepResultCache", () => {
 		})
 
 		it("should handle deeply nested directory structures", async () => {
-			const cache = new RipgrepResultCache("/usr/bin/rg", "/test/workspace")
+			const cache = new RipgrepResultCache(TEST_PATHS.rgExecutable, TEST_PATHS.workspace)
 
 			const treePromise = cache.getTree()
 			setTimeout(() => {
-				mockChildProcess.stdout.emit("data", Buffer.from("a/b/c/d/e/f/deep.ts\n"))
+				const mockOutput = createMockRipgrepOutput(["a/b/c/d/e/f/deep.ts"])
+				mockChildProcess.stdout.emit("data", Buffer.from(mockOutput))
 				mockChildProcess.emit("close", 0)
 			}, 10)
 
@@ -588,11 +683,15 @@ describe("RipgrepResultCache", () => {
 		})
 
 		it("should handle mixed files and directories with same names", async () => {
-			const cache = new RipgrepResultCache("/usr/bin/rg", "/test/workspace")
+			const cache = new RipgrepResultCache(TEST_PATHS.rgExecutable, TEST_PATHS.workspace)
 
 			const treePromise = cache.getTree()
 			setTimeout(() => {
-				mockChildProcess.stdout.emit("data", Buffer.from("src/utils.ts\nsrc/utils/helper.ts\n"))
+				const mockOutput = createMockRipgrepOutput([
+					"src/utils.ts",
+					"src/utils/helper.ts"
+				])
+				mockChildProcess.stdout.emit("data", Buffer.from(mockOutput))
 				mockChildProcess.emit("close", 0)
 			}, 10)
 
@@ -611,14 +710,20 @@ describe("RipgrepResultCache", () => {
 
 	describe("streaming buffer handling", () => {
 		it("should handle partial data chunks correctly", async () => {
-			const cache = new RipgrepResultCache("/usr/bin/rg", "/test/workspace")
+			const cache = new RipgrepResultCache(TEST_PATHS.rgExecutable, TEST_PATHS.workspace)
 
 			const treePromise = cache.getTree()
 			setTimeout(() => {
-				// Send data in partial chunks
-				mockChildProcess.stdout.emit("data", Buffer.from("src/fi"))
-				mockChildProcess.stdout.emit("data", Buffer.from("le1.ts\nsrc/file"))
-				mockChildProcess.stdout.emit("data", Buffer.from("2.ts\n"))
+				// Send data in partial chunks - using platform-specific separators
+				const file1 = createTestPath("src", "file1.ts")
+				const file2 = createTestPath("src", "file2.ts")
+				const part1 = file1.substring(0, file1.length - 3)  // "src/fi" or "src\\fi"
+				const part2 = file1.substring(file1.length - 3) + "\n" + file2.substring(0, file2.length - 3)  // "le1.ts\nsrc/file" or "le1.ts\nsrc\\file"
+				const part3 = file2.substring(file2.length - 3) + "\n"  // "2.ts\n"
+				
+				mockChildProcess.stdout.emit("data", Buffer.from(part1))
+				mockChildProcess.stdout.emit("data", Buffer.from(part2))
+				mockChildProcess.stdout.emit("data", Buffer.from(part3))
 				mockChildProcess.emit("close", 0)
 			}, 10)
 
@@ -633,11 +738,14 @@ describe("RipgrepResultCache", () => {
 		})
 
 		it("should handle final buffer content without newline", async () => {
-			const cache = new RipgrepResultCache("/usr/bin/rg", "/test/workspace")
+			const cache = new RipgrepResultCache(TEST_PATHS.rgExecutable, TEST_PATHS.workspace)
 
 			const treePromise = cache.getTree()
 			setTimeout(() => {
-				mockChildProcess.stdout.emit("data", Buffer.from("src/file1.ts\nsrc/file2.ts"))
+				const file1 = createTestPath("src", "file1.ts")
+				const file2 = createTestPath("src", "file2.ts")
+				const outputWithoutFinalNewline = file1 + "\n" + file2  // No trailing newline
+				mockChildProcess.stdout.emit("data", Buffer.from(outputWithoutFinalNewline))
 				mockChildProcess.emit("close", 0)
 			}, 10)
 
@@ -661,7 +769,7 @@ describe("RipgrepResultCache", () => {
 
 		it("should handle multiple concurrent successful calls", async () => {
 			mockSpawn.mockReturnValue(mockChildProcess)
-			const cache = new RipgrepResultCache("/usr/bin/rg", "/test/workspace")
+			const cache = new RipgrepResultCache(TEST_PATHS.rgExecutable, TEST_PATHS.workspace)
 
 			// Start multiple concurrent getTree calls
 			const promise1 = cache.getTree()
@@ -673,7 +781,12 @@ describe("RipgrepResultCache", () => {
 
 			// Simulate successful ripgrep output
 			setTimeout(() => {
-				mockChildProcess.stdout.emit("data", Buffer.from("src/file1.ts\nsrc/file2.ts\nlib/utils.ts\n"))
+				const mockOutput = createMockRipgrepOutput([
+					"src/file1.ts",
+					"src/file2.ts",
+					"lib/utils.ts"
+				])
+				mockChildProcess.stdout.emit("data", Buffer.from(mockOutput))
 				mockChildProcess.emit("close", 0)
 			}, 10)
 
@@ -700,7 +813,7 @@ describe("RipgrepResultCache", () => {
 
 		it("should handle multiple concurrent calls when first fails", async () => {
 			mockSpawn.mockReturnValue(mockChildProcess)
-			const cache = new RipgrepResultCache("/usr/bin/rg", "/test/workspace")
+			const cache = new RipgrepResultCache(TEST_PATHS.rgExecutable, TEST_PATHS.workspace)
 
 			// Start multiple concurrent getTree calls
 			const promise1 = cache.getTree()
@@ -728,7 +841,8 @@ describe("RipgrepResultCache", () => {
 
 			const retryPromise = cache.getTree()
 			setTimeout(() => {
-				mockChildProcess.stdout.emit("data", Buffer.from("src/file1.ts\n"))
+				const mockOutput = createMockRipgrepOutput(["src/file1.ts"])
+				mockChildProcess.stdout.emit("data", Buffer.from(mockOutput))
 				mockChildProcess.emit("close", 0)
 			}, 10)
 
@@ -737,13 +851,14 @@ describe("RipgrepResultCache", () => {
 		})
 
 		it("should handle concurrent calls after invalidation", async () => {
-			const cache = new RipgrepResultCache("/usr/bin/rg", "/test/workspace")
+			const cache = new RipgrepResultCache(TEST_PATHS.rgExecutable, TEST_PATHS.workspace)
 
 			// Build initial cache
 			mockSpawn.mockReturnValue(mockChildProcess)
 			const initialPromise = cache.getTree()
 			setTimeout(() => {
-				mockChildProcess.stdout.emit("data", Buffer.from("src/file1.ts\n"))
+				const mockOutput = createMockRipgrepOutput(["src/file1.ts"])
+				mockChildProcess.stdout.emit("data", Buffer.from(mockOutput))
 				mockChildProcess.emit("close", 0)
 			}, 10)
 			await initialPromise
@@ -754,7 +869,8 @@ describe("RipgrepResultCache", () => {
 			mockSpawn.mockReturnValue(mockChildProcess)
 
 			// Invalidate cache
-			cache.fileAdded("/test/workspace/src/newfile.ts")
+			const newFilePath = createAbsolutePath(TEST_PATHS.workspace, "src", "newfile.ts")
+			cache.fileAdded(newFilePath)
 
 			// Start multiple concurrent calls after invalidation
 			const promise1 = cache.getTree()
@@ -765,7 +881,11 @@ describe("RipgrepResultCache", () => {
 			expect(mockSpawn).toHaveBeenCalledTimes(1)
 
 			setTimeout(() => {
-				mockChildProcess.stdout.emit("data", Buffer.from("src/file1.ts\nsrc/newfile.ts\n"))
+				const mockOutput = createMockRipgrepOutput([
+					"src/file1.ts",
+					"src/newfile.ts"
+				])
+				mockChildProcess.stdout.emit("data", Buffer.from(mockOutput))
 				mockChildProcess.emit("close", 0)
 			}, 10)
 
@@ -786,7 +906,7 @@ describe("RipgrepResultCache", () => {
 
 	describe("large file set performance and memory", () => {
 		it("should handle 500k files efficiently", async () => {
-			const cache = new RipgrepResultCache("/usr/bin/rg", "/test/workspace", [], 500000)
+			const cache = new RipgrepResultCache(TEST_PATHS.rgExecutable, TEST_PATHS.workspace, [], 500000)
 
 			mockSpawn.mockReturnValue(mockChildProcess)
 
@@ -811,12 +931,12 @@ describe("RipgrepResultCache", () => {
 				}
 
 				const files = generateLargeFileSet()
-				const fileData = files.join("\n") + "\n"
+				const mockOutput = createMockRipgrepOutput(files)
 
 				// Emit data in chunks to simulate real ripgrep behavior
 				const chunkSize = 10000
-				for (let i = 0; i < fileData.length; i += chunkSize) {
-					const chunk = fileData.slice(i, i + chunkSize)
+				for (let i = 0; i < mockOutput.length; i += chunkSize) {
+					const chunk = mockOutput.slice(i, i + chunkSize)
 					mockChildProcess.stdout.emit("data", Buffer.from(chunk))
 				}
 
@@ -859,7 +979,7 @@ describe("RipgrepResultCache", () => {
 		})
 
 		it("should handle extreme case with deep nesting", async () => {
-			const cache = new RipgrepResultCache("/usr/bin/rg", "/test/workspace", [], 10000)
+			const cache = new RipgrepResultCache(TEST_PATHS.rgExecutable, TEST_PATHS.workspace, [], 10000)
 
 			mockSpawn.mockReturnValue(mockChildProcess)
 
@@ -891,8 +1011,8 @@ describe("RipgrepResultCache", () => {
 					}
 				}
 
-				const fileData = deepPaths.join("\n") + "\n"
-				mockChildProcess.stdout.emit("data", Buffer.from(fileData))
+				const mockOutput = createMockRipgrepOutput(deepPaths)
+				mockChildProcess.stdout.emit("data", Buffer.from(mockOutput))
 				mockChildProcess.emit("close", 0)
 			}, 10)
 
@@ -919,7 +1039,7 @@ describe("RipgrepResultCache", () => {
 
 		it("should respect file limit and stop processing when reached", async () => {
 			const fileLimit = 1000
-			const cache = new RipgrepResultCache("/usr/bin/rg", "/test/workspace", [], fileLimit)
+			const cache = new RipgrepResultCache(TEST_PATHS.rgExecutable, TEST_PATHS.workspace, [], fileLimit)
 
 			mockSpawn.mockReturnValue(mockChildProcess)
 
@@ -928,10 +1048,10 @@ describe("RipgrepResultCache", () => {
 			setTimeout(() => {
 				// Generate more files than the limit
 				const files = Array.from({ length: 2000 }, (_, i) => `file${i}.ts`)
-				const fileData = files.join("\n") + "\n"
+				const mockOutput = createMockRipgrepOutput(files)
 
 				// Emit all data at once
-				mockChildProcess.stdout.emit("data", Buffer.from(fileData))
+				mockChildProcess.stdout.emit("data", Buffer.from(mockOutput))
 
 				// Process should be killed when limit is reached
 				expect(mockChildProcess.killed).toBe(true)
@@ -957,7 +1077,7 @@ describe("RipgrepResultCache", () => {
 		})
 
 		it("should handle memory-intensive file name patterns", async () => {
-			const cache = new RipgrepResultCache("/usr/bin/rg", "/test/workspace", [], 50000)
+			const cache = new RipgrepResultCache(TEST_PATHS.rgExecutable, TEST_PATHS.workspace, [], 50000)
 
 			mockSpawn.mockReturnValue(mockChildProcess)
 
@@ -985,8 +1105,8 @@ describe("RipgrepResultCache", () => {
 					memoryIntensivePaths.push(`unicode/${char}${i}.ts`)
 				}
 
-				const fileData = memoryIntensivePaths.join("\n") + "\n"
-				mockChildProcess.stdout.emit("data", Buffer.from(fileData))
+				const mockOutput = createMockRipgrepOutput(memoryIntensivePaths)
+				mockChildProcess.stdout.emit("data", Buffer.from(mockOutput))
 				mockChildProcess.emit("close", 0)
 			}, 10)
 

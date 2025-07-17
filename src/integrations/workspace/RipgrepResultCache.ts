@@ -21,7 +21,7 @@ export class RipgrepResultCache {
 
 	constructor(rgPath: string, targetPath: string, rgArgs: string[] = [], fileLimit: number = 5000) {
 		this.rgPath = rgPath
-		this._targetPath = pathResolve(targetPath).split(sep).join("/")
+		this._targetPath = pathResolve(targetPath)
 		this.fileLimit = fileLimit
 		this.rgArgs = rgArgs.length > 0 ? rgArgs : ["--files"]
 	}
@@ -99,10 +99,7 @@ export class RipgrepResultCache {
 	}
 
 	private fileAddedOrRemoved(filePath: string): void {
-		const normalizedFilePath = filePath.split(sep).join("/")
-		const normalizedTargetPath = this._targetPath
-
-		const relativePath = relative(normalizedTargetPath, pathResolve(normalizedTargetPath, normalizedFilePath))
+		const relativePath = relative(this._targetPath, pathResolve(this._targetPath, filePath))
 		const parentDir = dirname(relativePath)
 
 		if (parentDir !== "." && parentDir !== "") {
@@ -207,7 +204,7 @@ export class RipgrepResultCache {
 
 		try {
 			// Stream build subtrees for all invalid directories (pass directory paths directly)
-			const invalidDirectories = Array.from(this.invalidatedDirectories)
+			const invalidDirectories = Array.from(this.invalidatedDirectories).map((dir) => dir.split("/").join(sep))
 			const subtree = await this.buildTreeStreaming(invalidDirectories)
 
 			// Merge subtrees into main tree (replace original invalid parts)
@@ -233,9 +230,8 @@ export class RipgrepResultCache {
 				args.push(...targetPaths)
 			}
 
-			const originalPath = this._targetPath.split("/").join(sep)
 			const child = spawn(this.rgPath, args, {
-				cwd: originalPath,
+				cwd: this._targetPath,
 				stdio: ["pipe", "pipe", "pipe"],
 			})
 
@@ -246,7 +242,7 @@ export class RipgrepResultCache {
 			// Stream add file paths to simplified tree structure
 			const addFileToTree = (filePath: string) => {
 				// ripgrep output is already relative path, use directly
-				const parts = filePath.split("/").filter(Boolean)
+				const parts = filePath.split(sep).filter(Boolean)
 				let currentNode: SimpleTreeNode = tree
 
 				for (let i = 0; i < parts.length; i++) {
