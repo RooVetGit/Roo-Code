@@ -73,7 +73,8 @@ describe("getModelMaxOutputTokens", () => {
 			settings,
 		})
 
-		expect(result).toBe(32000)
+		// Should cap to model's maxTokens (8192) even though user set 32000
+		expect(result).toBe(8192)
 	})
 
 	test("should return default of 8192 when maxTokens is undefined", () => {
@@ -166,7 +167,8 @@ describe("getModelMaxOutputTokens", () => {
 			settings,
 		})
 
-		expect(result).toBe(16000)
+		// Should cap to model's maxTokens (8192) even though user set 16000
+		expect(result).toBe(8192)
 	})
 
 	test("should ignore modelMaxTokens when it's 0 or negative", () => {
@@ -216,7 +218,29 @@ describe("getModelMaxOutputTokens", () => {
 			format: "anthropic",
 		})
 
-		expect(result).toBe(20000)
+		// Should cap to model's maxTokens (8192) even though user set 20000
+		expect(result).toBe(8192)
+	})
+
+	test("should cap modelMaxTokens to model's actual max when user sets higher value", () => {
+		const model: ModelInfo = {
+			maxTokens: 16000,
+			contextWindow: 100000,
+			supportsPromptCache: true,
+		}
+
+		const settings: ProviderSettings = {
+			modelMaxTokens: 32000, // Higher than model's max
+		}
+
+		const result = getModelMaxOutputTokens({
+			modelId: "some-model",
+			model,
+			settings,
+		})
+
+		// Should cap at model's max
+		expect(result).toBe(16000)
 	})
 })
 

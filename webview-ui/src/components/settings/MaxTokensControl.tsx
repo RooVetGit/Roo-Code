@@ -17,7 +17,7 @@ export const MaxTokensControl: React.FC<MaxTokensControlProps> = ({
 	onChange,
 	modelInfo,
 	minValue = 1000,
-	maxValue = 200000,
+	maxValue,
 	className,
 }) => {
 	const { t } = useAppTranslation()
@@ -35,8 +35,8 @@ export const MaxTokensControl: React.FC<MaxTokensControlProps> = ({
 		}
 	}
 
-	const effectiveMaxValue = modelInfo?.maxTokens || maxValue
-	const displayValue = value ?? 8192
+	const effectiveMaxValue = modelInfo?.maxTokens || maxValue || 100000
+	const displayValue = value ?? modelInfo?.maxTokens ?? 8192
 
 	const isValueTooHigh = displayValue > effectiveMaxValue
 	const isValueTooLow = displayValue < minValue
