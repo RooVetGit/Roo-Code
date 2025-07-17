@@ -132,7 +132,7 @@ export class API extends EventEmitter<RooCodeEvents> implements RooCodeAPI {
 					.update("deniedCommands", configuration.deniedCommands, vscode.ConfigurationTarget.Global)
 			}
 
-			if (configuration.commandExecutionTimeout) {
+			if (configuration.commandExecutionTimeout !== undefined) {
 				await vscode.workspace
 					.getConfiguration(Package.name)
 					.update(
