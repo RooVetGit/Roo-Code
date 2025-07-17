@@ -741,7 +741,7 @@ export const CodeIndexPopover: React.FC<CodeIndexPopoverProps> = ({
 													}
 													onInput={(e: any) => {
 														const value = e.target.value
-															? parseInt(e.target.value)
+															? parseInt(e.target.value, 10) || undefined
 															: undefined
 														updateSetting("codebaseIndexEmbedderModelDimension", value)
 													}}
@@ -849,7 +849,7 @@ export const CodeIndexPopover: React.FC<CodeIndexPopoverProps> = ({
 													}
 													onInput={(e: any) => {
 														const value = e.target.value
-															? parseInt(e.target.value)
+															? parseInt(e.target.value, 10) || undefined
 															: undefined
 														updateSetting("codebaseIndexEmbedderModelDimension", value)
 													}}
