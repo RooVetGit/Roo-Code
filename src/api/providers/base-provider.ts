@@ -87,6 +87,8 @@ export abstract class BaseProvider implements ApiHandler {
 			return 0
 		}
 
+		// First three requests, we will be using APi-based token counting to have a good start
+		// and estimate the accuracy by collecting samples
 		if (this.requestCount < 3) {
 			this.requestCount++
 			try {
@@ -97,7 +99,7 @@ export abstract class BaseProvider implements ApiHandler {
 				return apiCount
 			} catch (error) {
 				const localEstimate = await localCountTokens(content, { useWorker: true })
-				return localEstimate
+				return Math.ceil(localEstimate * this.tokenComparator.getSafetyFactor())
 			}
 		}
 
@@ -131,6 +133,6 @@ export abstract class BaseProvider implements ApiHandler {
 			}
 		}
 
-		return localEstimate
+		return Math.ceil(localEstimate * this.tokenComparator.getSafetyFactor())
 	}
 }
