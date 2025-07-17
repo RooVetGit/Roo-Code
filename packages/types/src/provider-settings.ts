@@ -310,8 +310,13 @@ export const getApiProtocol = (provider: ProviderName | undefined, modelId?: str
 		return "anthropic"
 	}
 
-	// Then check if the model ID contains "claude" (case-insensitive)
-	if (modelId && modelId.toLowerCase().includes("claude")) {
+	// For vertex and bedrock providers, check if the model ID contains "claude" (case-insensitive)
+	if (
+		provider &&
+		(provider === "vertex" || provider === "bedrock") &&
+		modelId &&
+		modelId.toLowerCase().includes("claude")
+	) {
 		return "anthropic"
 	}
 
