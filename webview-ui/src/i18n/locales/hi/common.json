@@ -51,5 +51,12 @@
 		"success": {
 			"imageDataUriCopied": "इमेज डेटा URI क्लिपबोर्ड में कॉपी हो गया"
 		}
+	},
+	"errorBoundary": {
+		"title": "Something went wrong",
+		"componentError": "Error in {{componentName}} component",
+		"description": "An error occurred in this part of the interface. You can try to recover by clicking the button below.",
+		"showDetails": "Show error details",
+		"retry": "Try again"
 	}
 }

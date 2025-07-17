@@ -51,5 +51,12 @@
 		"success": {
 			"imageDataUriCopied": "Afbeelding data-URI gekopieerd naar klembord"
 		}
+	},
+	"errorBoundary": {
+		"title": "Something went wrong",
+		"componentError": "Error in {{componentName}} component",
+		"description": "An error occurred in this part of the interface. You can try to recover by clicking the button below.",
+		"showDetails": "Show error details",
+		"retry": "Try again"
 	}
 }

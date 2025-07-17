@@ -51,5 +51,12 @@
 		"success": {
 			"imageDataUriCopied": "Bild-Daten-URI in die Zwischenablage kopiert"
 		}
+	},
+	"errorBoundary": {
+		"title": "Etwas ist schiefgelaufen",
+		"componentError": "Fehler in der {{componentName}} Komponente",
+		"description": "In diesem Teil der Benutzeroberfläche ist ein Fehler aufgetreten. Sie können versuchen, sich zu erholen, indem Sie auf die Schaltfläche unten klicken.",
+		"showDetails": "Fehlerdetails anzeigen",
+		"retry": "Erneut versuchen"
 	}
 }

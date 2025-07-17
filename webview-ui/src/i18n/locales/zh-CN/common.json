@@ -51,5 +51,12 @@
 		"success": {
 			"imageDataUriCopied": "图片数据 URI 已复制到剪贴板"
 		}
+	},
+	"errorBoundary": {
+		"title": "出现错误",
+		"componentError": "{{componentName}} 组件出错",
+		"description": "界面的这一部分发生了错误。您可以尝试点击下面的按钮来恢复。",
+		"showDetails": "显示错误详情",
+		"retry": "重试"
 	}
 }

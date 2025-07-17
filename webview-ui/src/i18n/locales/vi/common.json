@@ -51,5 +51,12 @@
 		"success": {
 			"imageDataUriCopied": "URI dữ liệu hình ảnh đã được sao chép vào clipboard"
 		}
+	},
+	"errorBoundary": {
+		"title": "Something went wrong",
+		"componentError": "Error in {{componentName}} component",
+		"description": "An error occurred in this part of the interface. You can try to recover by clicking the button below.",
+		"showDetails": "Show error details",
+		"retry": "Try again"
 	}
 }

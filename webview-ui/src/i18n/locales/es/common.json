@@ -51,5 +51,12 @@
 		"success": {
 			"imageDataUriCopied": "URI de datos de imagen copiada al portapapeles"
 		}
+	},
+	"errorBoundary": {
+		"title": "Algo salió mal",
+		"componentError": "Error en el componente {{componentName}}",
+		"description": "Ocurrió un error en esta parte de la interfaz. Puedes intentar recuperarte haciendo clic en el botón de abajo.",
+		"showDetails": "Mostrar detalles del error",
+		"retry": "Intentar de nuevo"
 	}
 }

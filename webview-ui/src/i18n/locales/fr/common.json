@@ -51,5 +51,12 @@
 		"success": {
 			"imageDataUriCopied": "URI de données d'image copiée dans le presse-papiers"
 		}
+	},
+	"errorBoundary": {
+		"title": "Quelque chose s'est mal passé",
+		"componentError": "Erreur dans le composant {{componentName}}",
+		"description": "Une erreur s'est produite dans cette partie de l'interface. Vous pouvez essayer de récupérer en cliquant sur le bouton ci-dessous.",
+		"showDetails": "Afficher les détails de l'erreur",
+		"retry": "Réessayer"
 	}
 }

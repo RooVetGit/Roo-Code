@@ -51,5 +51,12 @@
 		"success": {
 			"imageDataUriCopied": "URI dati immagine copiato negli appunti"
 		}
+	},
+	"errorBoundary": {
+		"title": "Qualcosa è andato storto",
+		"componentError": "Errore nel componente {{componentName}}",
+		"description": "Si è verificato un errore in questa parte dell'interfaccia. Puoi provare a recuperare cliccando il pulsante qui sotto.",
+		"showDetails": "Mostra dettagli errore",
+		"retry": "Riprova"
 	}
 }

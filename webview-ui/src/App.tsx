@@ -22,6 +22,7 @@ import { AccountView } from "./components/account/AccountView"
 import { useAddNonInteractiveClickListener } from "./components/ui/hooks/useNonInteractiveClick"
 import { TooltipProvider } from "./components/ui/tooltip"
 import { STANDARD_TOOLTIP_DELAY } from "./components/ui/standard-tooltip"
+import { ErrorBoundary } from "./components/common/ErrorBoundary"
 
 type Tab = "settings" | "history" | "mcp" | "modes" | "chat" | "marketplace" | "account"
 
@@ -169,44 +170,68 @@ const App = () => {
 	// Do not conditionally load ChatView, it's expensive and there's state we
 	// don't want to lose (user input, disableInput, askResponse promise, etc.)
 	return showWelcome ? (
-		<WelcomeView />
+		<ErrorBoundary componentName="WelcomeView">
+			<WelcomeView />
+		</ErrorBoundary>
 	) : (
 		<>
-			{tab === "modes" && <ModesView onDone={() => switchTab("chat")} />}
-			{tab === "mcp" && <McpView onDone={() => switchTab("chat")} />}
-			{tab === "history" && <HistoryView onDone={() => switchTab("chat")} />}
+			{tab === "modes" && (
+				<ErrorBoundary componentName="ModesView">
+					<ModesView onDone={() => switchTab("chat")} />
+				</ErrorBoundary>
+			)}
+			{tab === "mcp" && (
+				<ErrorBoundary componentName="McpView">
+					<McpView onDone={() => switchTab("chat")} />
+				</ErrorBoundary>
+			)}
+			{tab === "history" && (
+				<ErrorBoundary componentName="HistoryView">
+					<HistoryView onDone={() => switchTab("chat")} />
+				</ErrorBoundary>
+			)}
 			{tab === "settings" && (
-				<SettingsView ref={settingsRef} onDone={() => setTab("chat")} targetSection={currentSection} />
+				<ErrorBoundary componentName="SettingsView">
+					<SettingsView ref={settingsRef} onDone={() => setTab("chat")} targetSection={currentSection} />
+				</ErrorBoundary>
 			)}
 			{tab === "marketplace" && (
-				<MarketplaceView
-					stateManager={marketplaceStateManager}
-					onDone={() => switchTab("chat")}
-					targetTab={currentMarketplaceTab as "mcp" | "mode" | undefined}
-				/>
+				<ErrorBoundary componentName="MarketplaceView">
+					<MarketplaceView
+						stateManager={marketplaceStateManager}
+						onDone={() => switchTab("chat")}
+						targetTab={currentMarketplaceTab as "mcp" | "mode" | undefined}
+					/>
+				</ErrorBoundary>
 			)}
 			{tab === "account" && (
-				<AccountView
-					userInfo={cloudUserInfo}
-					isAuthenticated={cloudIsAuthenticated}
-					cloudApiUrl={cloudApiUrl}
-					onDone={() => switchTab("chat")}
-				/>
+				<ErrorBoundary componentName="AccountView">
+					<AccountView
+						userInfo={cloudUserInfo}
+						isAuthenticated={cloudIsAuthenticated}
+						cloudApiUrl={cloudApiUrl}
+						onDone={() => switchTab("chat")}
+					/>
+				</ErrorBoundary>
 			)}
-			<ChatView
-				ref={chatViewRef}
-				isHidden={tab !== "chat"}
-				showAnnouncement={showAnnouncement}
-				hideAnnouncement={() => setShowAnnouncement(false)}
-			/>
-			<HumanRelayDialog
-				isOpen={humanRelayDialogState.isOpen}
-				requestId={humanRelayDialogState.requestId}
-				promptText={humanRelayDialogState.promptText}
-				onClose={() => setHumanRelayDialogState((prev) => ({ ...prev, isOpen: false }))}
-				onSubmit={(requestId, text) => vscode.postMessage({ type: "humanRelayResponse", requestId, text })}
-				onCancel={(requestId) => vscode.postMessage({ type: "humanRelayCancel", requestId })}
-			/>
+			<ErrorBoundary componentName="ChatView">
+				<ChatView
+					ref={chatViewRef}
+					isHidden={tab !== "chat"}
+					showAnnouncement={showAnnouncement}
+					hideAnnouncement={() => setShowAnnouncement(false)}
+				/>
+			</ErrorBoundary>
+			<ErrorBoundary componentName="HumanRelayDialog">
+				<HumanRelayDialog
+					isOpen={humanRelayDialogState.isOpen}
+					requestId={humanRelayDialogState.requestId}
+					promptText={humanRelayDialogState.promptText}
+					onClose={() => setHumanRelayDialogState((prev) => ({ ...prev, isOpen: false }))}
+					onSubmit={(requestId, text) => vscode.postMessage({ type: "humanRelayResponse", requestId, text })}
+					onCancel={(requestId) => vscode.postMessage({ type: "humanRelayCancel", requestId })}
+				/>
+			</ErrorBoundary>
 		</>
 	)
 }
@@ -214,15 +239,17 @@ const App = () => {
 const queryClient = new QueryClient()
 
 const AppWithProviders = () => (
-	<ExtensionStateContextProvider>
-		<TranslationProvider>
-			<QueryClientProvider client={queryClient}>
-				<TooltipProvider delayDuration={STANDARD_TOOLTIP_DELAY}>
-					<App />
-				</TooltipProvider>
-			</QueryClientProvider>
-		</TranslationProvider>
-	</ExtensionStateContextProvider>
+	<ErrorBoundary componentName="App">
+		<ExtensionStateContextProvider>
+			<TranslationProvider>
+				<QueryClientProvider client={queryClient}>
+					<TooltipProvider delayDuration={STANDARD_TOOLTIP_DELAY}>
+						<App />
+					</TooltipProvider>
+				</QueryClientProvider>
+			</TranslationProvider>
+		</ExtensionStateContextProvider>
+	</ErrorBoundary>
 )
 
 export default AppWithProviders

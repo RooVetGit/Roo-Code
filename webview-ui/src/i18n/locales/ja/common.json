@@ -51,5 +51,12 @@
 		"success": {
 			"imageDataUriCopied": "画像データURIをクリップボードにコピーしました"
 		}
+	},
+	"errorBoundary": {
+		"title": "問題が発生しました",
+		"componentError": "{{componentName}}コンポーネントでエラーが発生しました",
+		"description": "インターフェースのこの部分でエラーが発生しました。下のボタンをクリックして回復を試すことができます。",
+		"showDetails": "エラーの詳細を表示",
+		"retry": "再試行"
 	}
 }

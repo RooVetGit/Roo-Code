@@ -11,6 +11,9 @@ export default defineConfig({
 		environment: "jsdom",
 		include: ["src/**/*.spec.ts", "src/**/*.spec.tsx"],
 	},
+	define: {
+		"process.env.NODE_ENV": '"development"',
+	},
 	resolve: {
 		alias: {
 			"@": path.resolve(__dirname, "./src"),

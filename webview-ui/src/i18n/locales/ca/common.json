@@ -51,5 +51,12 @@
 		"success": {
 			"imageDataUriCopied": "URI de dades de la imatge copiada al porta-retalls"
 		}
+	},
+	"errorBoundary": {
+		"title": "Alguna cosa ha anat malament",
+		"componentError": "Error al component {{componentName}}",
+		"description": "S'ha produït un error en aquesta part de la interfície. Podeu intentar recuperar-vos fent clic al botó de sota.",
+		"showDetails": "Mostrar detalls de l'error",
+		"retry": "Tornar a intentar"
 	}
 }
