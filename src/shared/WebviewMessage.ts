@@ -102,6 +102,7 @@ export interface WebviewMessage {
 		| "restartMcpServer"
 		| "refreshAllMcpServers"
 		| "toggleToolAlwaysAllow"
+		| "toggleResourceAlwaysAllow"
 		| "toggleToolEnabledForPrompt"
 		| "toggleMcpServer"
 		| "updateMcpTimeout"
@@ -208,6 +209,7 @@ export interface WebviewMessage {
 	audioType?: AudioType
 	serverName?: string
 	toolName?: string
+	resourceUri?: string
 	alwaysAllow?: boolean
 	isEnabled?: boolean
 	mode?: Mode

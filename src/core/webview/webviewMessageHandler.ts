@@ -881,6 +881,40 @@ export const webviewMessageHandler = async (
 			}
 			break
 		}
+		case "toggleResourceAlwaysAllow": {
+			try {
+				// Validate required parameters
+				if (!message.serverName) {
+					throw new Error("Server name is required")
+				}
+				if (!message.resourceUri) {
+					throw new Error("Resource URI is required")
+				}
+				if (!message.source || !["global", "project"].includes(message.source)) {
+					throw new Error("Valid source (global or project) is required")
+				}
+				if (message.alwaysAllow === undefined || message.alwaysAllow === null) {
+					throw new Error("alwaysAllow flag is required")
+				}
+
+				const mcpHub = provider.getMcpHub()
+				if (!mcpHub) {
+					throw new Error("MCP Hub is not available")
+				}
+
+				await mcpHub.toggleResourceAlwaysAllow(
+					message.serverName,
+					message.source as "global" | "project",
+					message.resourceUri,
+					Boolean(message.alwaysAllow),
+				)
+			} catch (error) {
+				provider.log(
+					`Failed to toggle auto-approve for resource ${message.resourceUri}: ${JSON.stringify(error, Object.getOwnPropertyNames(error), 2)}`,
+				)
+			}
+			break
+		}
 		case "toggleToolEnabledForPrompt": {
 			try {
 				await provider

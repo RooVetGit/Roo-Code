@@ -22,6 +22,9 @@
 		"noDescription": "无描述",
 		"togglePromptInclusion": "切换在提示中的包含"
 	},
+	"resource": {
+		"alwaysAllow": "始终允许"
+	},
 	"tabs": {
 		"tools": "工具",
 		"resources": "资源",

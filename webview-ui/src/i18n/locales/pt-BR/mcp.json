@@ -22,6 +22,9 @@
 		"noDescription": "Sem descrição",
 		"togglePromptInclusion": "Alternar inclusão no prompt"
 	},
+	"resource": {
+		"alwaysAllow": "Sempre permitir"
+	},
 	"tabs": {
 		"tools": "Ferramentas",
 		"resources": "Recursos",

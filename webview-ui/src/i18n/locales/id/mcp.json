@@ -23,6 +23,9 @@
 		"noDescription": "Tidak ada deskripsi",
 		"togglePromptInclusion": "Aktifkan daya untuk meminta"
 	},
+	"resource": {
+		"alwaysAllow": "Selalu izinkan"
+	},
 	"tabs": {
 		"tools": "Tools",
 		"resources": "Resources",

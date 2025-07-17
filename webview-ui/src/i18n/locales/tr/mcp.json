@@ -22,6 +22,9 @@
 		"noDescription": "Açıklama yok",
 		"togglePromptInclusion": "Komut isteminde dahil etmeyi aç/kapat"
 	},
+	"resource": {
+		"alwaysAllow": "Her zaman izin ver"
+	},
 	"tabs": {
 		"tools": "Araçlar",
 		"resources": "Kaynaklar",

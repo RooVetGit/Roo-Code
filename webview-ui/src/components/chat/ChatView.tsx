@@ -13,7 +13,7 @@ import { useDebounceEffect } from "@src/utils/useDebounceEffect"
 import type { ClineAsk, ClineMessage } from "@roo-code/types"
 
 import { ClineSayBrowserAction, ClineSayTool, ExtensionMessage } from "@roo/ExtensionMessage"
-import { McpServer, McpTool } from "@roo/mcp"
+import { McpServer, McpTool, McpResource } from "@roo/mcp"
 import { findLast } from "@roo/array"
 import { FollowUpData, SuggestionItem } from "@roo-code/types"
 import { combineApiRequests } from "@roo/combineApiRequests"
@@ -69,6 +69,32 @@ export interface ChatViewRef {
 export const MAX_IMAGES_PER_MESSAGE = 20 // Anthropic limits to 20 images
 
 const isMac = navigator.platform.toUpperCase().indexOf("MAC") >= 0
+
+// Helper function to validate URI format for security
+const isValidUriFormat = (uri: string): boolean => {
+	// Basic URI validation - must be reasonable length and contain valid characters
+	if (!uri || uri.length > 2048) {
+		return false
+	}
+
+	// Must contain only safe characters (alphanumeric, common URI chars)
+	const validUriPattern = /^[a-zA-Z][a-zA-Z0-9+.-]*:[a-zA-Z0-9._~:/?#[\]@!$&'()*+,;=-]+$/
+	if (!validUriPattern.test(uri)) {
+		return false
+	}
+
+	// Prevent common attack patterns
+	const dangerousPatterns = [
+		/javascript:/i,
+		/data:/i,
+		/vbscript:/i,
+		/file:/i,
+		/\.\.\//, // Path traversal
+		/%2e%2e%2f/i, // URL encoded path traversal
+	]
+
+	return !dangerousPatterns.some((pattern) => pattern.test(uri))
+}
 
 const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewProps> = (
 	{ isHidden, showAnnouncement, hideAnnouncement },
@@ -897,27 +923,6 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 		return false
 	}, [])
 
-	const isMcpToolAlwaysAllowed = useCallback(
-		(message: ClineMessage | undefined) => {
-			if (message?.type === "ask" && message.ask === "use_mcp_server") {
-				if (!message.text) {
-					return true
-				}
-
-				const mcpServerUse = JSON.parse(message.text) as { type: string; serverName: string; toolName: string }
-
-				if (mcpServerUse.type === "use_mcp_tool") {
-					const server = mcpServers?.find((s: McpServer) => s.name === mcpServerUse.serverName)
-					const tool = server?.tools?.find((t: McpTool) => t.name === mcpServerUse.toolName)
-					return tool?.alwaysAllow || false
-				}
-			}
-
-			return false
-		},
-		[mcpServers],
-	)
-
 	// Get the command decision using unified validation logic
 	const getCommandDecisionForMessage = useCallback(
 		(message: ClineMessage | undefined): CommandDecision => {
@@ -987,7 +992,84 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 			}
 
 			if (message.ask === "use_mcp_server") {
-				return alwaysAllowMcp && isMcpToolAlwaysAllowed(message)
+				if (!alwaysAllowMcp) {
+					return false
+				}
+
+				// If no text, allow it
+				if (!message.text) {
+					return true
+				}
+
+				// Parse the MCP server use
+				const mcpServerUse = JSON.parse(message.text) as {
+					type: string
+					serverName: string
+					toolName?: string
+					uri?: string
+				}
+
+				if (mcpServerUse.type === "use_mcp_tool") {
+					const server = mcpServers?.find((s: McpServer) => s.name === mcpServerUse.serverName)
+					const tool = server?.tools?.find((t: McpTool) => t.name === mcpServerUse.toolName)
+					return tool?.alwaysAllow || false
+				}
+
+				if (mcpServerUse.type === "access_mcp_resource") {
+					const server = mcpServers?.find((s: McpServer) => s.name === mcpServerUse.serverName)
+
+					// First check exact resource match
+					const resource = server?.resources?.find((r: McpResource) => r.uri === mcpServerUse.uri)
+					if (resource?.alwaysAllow) {
+						return true
+					}
+
+					// Then check resource templates
+					if (server?.resourceTemplates && mcpServerUse.uri) {
+						// Validate URI format first
+						if (!isValidUriFormat(mcpServerUse.uri)) {
+							return false
+						}
+
+						for (const template of server.resourceTemplates) {
+							// Check if template has alwaysAllow set
+							if (!template.alwaysAllow) {
+								continue
+							}
+
+							try {
+								// Convert template pattern to regex with more restrictive matching
+								const pattern = template.uriTemplate
+									.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") // Escape special regex chars
+									.replace(/\\\{[^}]+\\\}/g, "[a-zA-Z0-9._-]+") // More restrictive: alphanumeric, dots, underscores, hyphens only
+
+								// Add timeout protection for regex execution
+								const regex = new RegExp(`^${pattern}$`)
+								const startTime = Date.now()
+								const matches = regex.test(mcpServerUse.uri)
+
+								// Check for regex timeout (prevent ReDoS attacks)
+								if (Date.now() - startTime > 100) {
+									console.warn("URI pattern matching timeout, rejecting for security")
+									return false
+								}
+
+								if (matches) {
+									return true
+								}
+							} catch (error) {
+								console.warn("Invalid regex pattern in resource template:", error)
+								continue
+							}
+						}
+					}
+
+					// Resource not found or not allowed
+					return false
+				}
+
+				// Unknown type, don't auto-approve
+				return false
 			}
 
 			if (message.ask === "command") {
@@ -1063,7 +1145,7 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 			alwaysAllowExecute,
 			isAllowedCommand,
 			alwaysAllowMcp,
-			isMcpToolAlwaysAllowed,
+			mcpServers,
 			alwaysAllowModeSwitch,
 			alwaysAllowFollowupQuestions,
 			alwaysAllowSubtasks,
@@ -1536,6 +1618,7 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 		clineAsk,
 		enableButtons,
 		handlePrimaryButtonClick,
+		autoApprovalEnabled,
 		alwaysAllowBrowser,
 		alwaysAllowReadOnly,
 		alwaysAllowReadOnlyOutsideWorkspace,
@@ -1544,10 +1627,10 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 		alwaysAllowExecute,
 		followupAutoApproveTimeoutMs,
 		alwaysAllowMcp,
+		mcpServers,
 		messages,
 		allowedCommands,
 		deniedCommands,
-		mcpServers,
 		isAutoApproved,
 		lastMessage,
 		writeDelayMs,

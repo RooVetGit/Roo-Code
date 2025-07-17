@@ -23,6 +23,9 @@
 		"noDescription": "No description",
 		"togglePromptInclusion": "Toggle inclusion in prompt"
 	},
+	"resource": {
+		"alwaysAllow": "Always allow"
+	},
 	"tabs": {
 		"tools": "Tools",
 		"resources": "Resources",

@@ -6,6 +6,7 @@ import deepEqual from "fast-deep-equal"
 import { VSCodeBadge, VSCodeButton } from "@vscode/webview-ui-toolkit/react"
 
 import type { ClineMessage } from "@roo-code/types"
+import type { McpResource, McpResourceTemplate } from "../../../../src/shared/mcp"
 
 import { ClineApiReqInfo, ClineAskUseMcpServer, ClineSayTool } from "@roo/ExtensionMessage"
 import { COMMAND_OUTPUT_STRING } from "@roo/combineCommandSequences"
@@ -14,7 +15,6 @@ import { FollowUpData, SuggestionItem } from "@roo-code/types"
 
 import { useCopyToClipboard } from "@src/utils/clipboard"
 import { useExtensionState } from "@src/context/ExtensionStateContext"
-import { findMatchingResourceOrTemplate } from "@src/utils/mcp"
 import { vscode } from "@src/utils/vscode"
 import { removeLeadingNonAlphanumeric } from "@src/utils/removeLeadingNonAlphanumeric"
 import { getLanguageFromPath } from "@src/utils/getLanguageFromPath"
@@ -1233,24 +1233,68 @@ export const ChatRowContent = ({
 								{title}
 							</div>
 							<div className="w-full bg-vscode-editor-background border border-vscode-border rounded-xs p-2 mt-2">
-								{useMcpServer.type === "access_mcp_resource" && (
-									<McpResourceRow
-										item={{
-											// Use the matched resource/template details, with fallbacks
-											...(findMatchingResourceOrTemplate(
-												useMcpServer.uri || "",
-												server?.resources,
-												server?.resourceTemplates,
-											) || {
-												name: "",
-												mimeType: "",
-												description: "",
-											}),
-											// Always use the actual URI from the request
-											uri: useMcpServer.uri || "",
-										}}
-									/>
-								)}
+								{useMcpServer.type === "access_mcp_resource" &&
+									(() => {
+										// Find the exact resource match first
+										const exactResource = server?.resources?.find(
+											(r: McpResource) => r.uri === useMcpServer.uri,
+										)
+										if (exactResource) {
+											return (
+												<McpResourceRow
+													item={exactResource}
+													serverName={useMcpServer.serverName}
+													serverSource={server?.source || "global"}
+													alwaysAllowMcp={alwaysAllowMcp}
+												/>
+											)
+										}
+
+										// If no exact match, check templates
+										const matchedTemplate = server?.resourceTemplates?.find(
+											(template: McpResourceTemplate) => {
+												try {
+													const pattern = template.uriTemplate
+														.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+														.replace(/\\\{[^}]+\\\}/g, "[^/]+")
+													const regex = new RegExp(`^${pattern}$`)
+													return regex.test(useMcpServer.uri || "")
+												} catch {
+													return false
+												}
+											},
+										)
+
+										if (matchedTemplate) {
+											return (
+												<McpResourceRow
+													item={{
+														...matchedTemplate,
+														uri: useMcpServer.uri || "",
+													}}
+													serverName={useMcpServer.serverName}
+													serverSource={server?.source || "global"}
+													alwaysAllowMcp={alwaysAllowMcp}
+												/>
+											)
+										}
+
+										// Fallback if no match found
+										return (
+											<McpResourceRow
+												item={{
+													uri: useMcpServer.uri || "",
+													name: "",
+													mimeType: "",
+													description: "",
+													alwaysAllow: false,
+												}}
+												serverName={useMcpServer.serverName}
+												serverSource={server?.source || "global"}
+												alwaysAllowMcp={alwaysAllowMcp}
+											/>
+										)
+									})()}
 								{useMcpServer.type === "use_mcp_tool" && (
 									<McpExecution
 										executionId={message.ts.toString()}

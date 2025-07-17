@@ -22,6 +22,9 @@
 		"noDescription": "Keine Beschreibung",
 		"togglePromptInclusion": "Einbeziehung in Prompt umschalten"
 	},
+	"resource": {
+		"alwaysAllow": "Immer erlauben"
+	},
 	"tabs": {
 		"tools": "Tools",
 		"resources": "Ressourcen",

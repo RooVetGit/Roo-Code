@@ -22,6 +22,9 @@
 		"noDescription": "説明なし",
 		"togglePromptInclusion": "プロンプトへの含有を切り替える"
 	},
+	"resource": {
+		"alwaysAllow": "常に許可"
+	},
 	"tabs": {
 		"tools": "ツール",
 		"resources": "リソース",

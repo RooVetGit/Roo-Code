@@ -33,6 +33,7 @@ export type McpResource = {
 	name: string
 	mimeType?: string
 	description?: string
+	alwaysAllow?: boolean
 }
 
 export type McpResourceTemplate = {
@@ -40,6 +41,7 @@ export type McpResourceTemplate = {
 	name: string
 	description?: string
 	mimeType?: string
+	alwaysAllow?: boolean
 }
 
 export type McpResourceResponse = {
