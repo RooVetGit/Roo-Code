@@ -57,6 +57,7 @@ import { CheckpointWarning } from "./CheckpointWarning"
 import QueuedMessages from "./QueuedMessages"
 import { getLatestTodo } from "@roo/todo"
 import { QueuedMessage } from "@roo-code/types"
+import { ShareButton } from "./ShareButton"
 
 export interface ChatViewProps {
 	isHidden: boolean
@@ -1911,11 +1912,21 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 											<VSCodeButton
 												appearance="primary"
 												disabled={!enableButtons}
-												className={secondaryButtonText ? "flex-1 mr-[6px]" : "flex-[2] mr-0"}
-												onClick={() => handlePrimaryButtonClick()}>
+												className={
+													primaryButtonText === t("chat:startNewTask.title") &&
+													currentTaskItem?.id
+														? "flex-1 mr-[6px]"
+														: secondaryButtonText
+															? "flex-1 mr-[6px]"
+															: "flex-[2] mr-0"
+												}
+												onClick={() => handlePrimaryButtonClick(inputValue, selectedImages)}>
 												{primaryButtonText}
 											</VSCodeButton>
 										</StandardTooltip>
+									)}
+									{primaryButtonText === t("chat:startNewTask.title") && currentTaskItem?.id && (
+										<ShareButton item={currentTaskItem} disabled={!enableButtons} />
 									)}
 									{(secondaryButtonText || isStreaming) && (
 										<StandardTooltip

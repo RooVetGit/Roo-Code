@@ -61,6 +61,17 @@ vi.mock("../AutoApproveMenu", () => ({
 	default: () => null,
 }))
 
+// Mock ShareButton component
+vi.mock("../ShareButton", () => ({
+	ShareButton: function MockShareButton({ item: _item, disabled }: { item: any; disabled: boolean }) {
+		return (
+			<button data-testid="share-button" disabled={disabled} className="share-button">
+				Share
+			</button>
+		)
+	},
+}))
+
 // Mock VersionIndicator - returns null by default to prevent rendering in tests
 vi.mock("../../common/VersionIndicator", () => ({
 	default: vi.fn(() => null),
@@ -1491,5 +1502,163 @@ describe("ChatView - Message Queueing Tests", () => {
 		const chatTextArea = getByTestId("chat-textarea")
 		const input = chatTextArea.querySelector("input")!
 		expect(input.getAttribute("data-sending-disabled")).toBe("false")
+	})
+})
+
+describe("ChatView - Share Button Tests", () => {
+	beforeEach(() => vi.clearAllMocks())
+
+	it("displays share button next to Start New Task button when task has completed", async () => {
+		const { queryAllByTestId, queryByText } = renderChatView()
+
+		// Mock a completed task state with currentTaskItem having an ID
+		mockPostMessage({
+			currentTaskItem: {
+				id: "task-123",
+				task: "Test task",
+				ts: Date.now(),
+			},
+			clineMessages: [
+				{
+					type: "say",
+					say: "task",
+					ts: Date.now() - 2000,
+					text: "Initial task",
+				},
+				{
+					type: "ask",
+					ask: "completion_result",
+					ts: Date.now(),
+					text: "Task completed successfully",
+					partial: false,
+				},
+			],
+		})
+
+		// Wait for the UI to update
+		await waitFor(() => {
+			// Check that Start New Task button is present
+			const startNewTaskButton = queryByText("chat:startNewTask.title")
+			expect(startNewTaskButton).toBeInTheDocument()
+
+			// Check that share buttons are present (one in header, one next to Start New Task)
+			const shareButtons = queryAllByTestId("share-button")
+			expect(shareButtons.length).toBeGreaterThan(0)
+		})
+	})
+
+	it("does not display share button next to Start New Task when currentTaskItem has no ID", async () => {
+		const { container, queryByText } = renderChatView()
+
+		// Mock a completed task state without currentTaskItem ID
+		mockPostMessage({
+			currentTaskItem: null,
+			clineMessages: [
+				{
+					type: "say",
+					say: "task",
+					ts: Date.now() - 2000,
+					text: "Initial task",
+				},
+				{
+					type: "ask",
+					ask: "completion_result",
+					ts: Date.now(),
+					text: "Task completed successfully",
+					partial: false,
+				},
+			],
+		})
+
+		// Wait for the UI to update
+		await waitFor(() => {
+			// Check that Start New Task button is present
+			const startNewTaskButton = queryByText("chat:startNewTask.title")
+			expect(startNewTaskButton).toBeInTheDocument()
+
+			// Check that share button is NOT present next to Start New Task button
+			// Look specifically in the button area, not the header
+			const buttonArea = container.querySelector(".flex.h-9.items-center.mb-1")
+			const shareButtonInButtonArea = buttonArea?.querySelector('[data-testid="share-button"]')
+			expect(shareButtonInButtonArea).toBeFalsy()
+		})
+	})
+
+	it("share button respects enableButtons state", async () => {
+		const { container } = renderChatView()
+
+		// Mock a state where buttons should be disabled
+		mockPostMessage({
+			currentTaskItem: {
+				id: "task-123",
+				task: "Test task",
+				ts: Date.now(),
+			},
+			clineMessages: [
+				{
+					type: "say",
+					say: "task",
+					ts: Date.now() - 2000,
+					text: "Initial task",
+				},
+				{
+					type: "ask",
+					ask: "completion_result",
+					ts: Date.now(),
+					text: "Task completed successfully",
+					partial: true, // partial: true should disable buttons
+				},
+			],
+		})
+
+		// Wait for the UI to update
+		await waitFor(() => {
+			// Check that share button in button area is present but disabled
+			const buttonArea = container.querySelector(".flex.h-9.items-center.mb-1")
+			const shareButtonInButtonArea = buttonArea?.querySelector('[data-testid="share-button"]')
+			expect(shareButtonInButtonArea).toBeTruthy()
+			expect(shareButtonInButtonArea).toBeDisabled()
+		})
+	})
+
+	it("share button only appears when primary button is Start New Task", async () => {
+		const { container, queryByText } = renderChatView()
+
+		// Mock a state where primary button is NOT Start New Task
+		mockPostMessage({
+			currentTaskItem: {
+				id: "task-123",
+				task: "Test task",
+				ts: Date.now(),
+			},
+			clineMessages: [
+				{
+					type: "say",
+					say: "task",
+					ts: Date.now() - 2000,
+					text: "Initial task",
+				},
+				{
+					type: "ask",
+					ask: "api_req_failed",
+					ts: Date.now(),
+					text: "API request failed",
+					partial: false,
+				},
+			],
+		})
+
+		// Wait for the UI to update
+		await waitFor(() => {
+			// Check that Retry button is present (not Start New Task)
+			const retryButton = queryByText("chat:retry.title")
+			expect(retryButton).toBeInTheDocument()
+
+			// Check that share button is NOT present next to the primary button
+			// Look specifically in the button area, not the header
+			const buttonArea = container.querySelector(".flex.h-9.items-center.mb-1")
+			const shareButtonInButtonArea = buttonArea?.querySelector('[data-testid="share-button"]')
+			expect(shareButtonInButtonArea).not.toBeInTheDocument()
+		})
 	})
 })
