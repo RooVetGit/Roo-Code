@@ -28,6 +28,9 @@ vi.mock("vscode", () => ({
 		fs: {
 			stat: vi.fn(),
 		},
+		getConfiguration: vi.fn().mockReturnValue({
+			get: vi.fn().mockImplementation((key, defaultValue) => defaultValue),
+		}),
 	},
 	window: {
 		createTextEditorDecorationType: vi.fn(),
@@ -44,6 +47,12 @@ vi.mock("vscode", () => ({
 	},
 	languages: {
 		getDiagnostics: vi.fn(() => []),
+	},
+	DiagnosticSeverity: {
+		Error: 0,
+		Warning: 1,
+		Information: 2,
+		Hint: 3,
 	},
 	WorkspaceEdit: vi.fn().mockImplementation(() => ({
 		replace: vi.fn(),
@@ -337,18 +346,18 @@ describe("DiffViewProvider", () => {
 						return 1000 // 1 second delay
 					}
 					return defaultValue
-				})
+				}),
 			})
-			
+
 			// Save original implementation
 			const originalGetConfiguration = vscode.workspace.getConfiguration
-			
+
 			// Replace with our mock
 			Object.defineProperty(vscode.workspace, "getConfiguration", {
 				value: mockGetConfiguration,
-				configurable: true
+				configurable: true,
 			})
-			
+
 			// Mock setTimeout to track if it was called
 			const originalSetTimeout = global.setTimeout
 			const mockSetTimeout = vi.fn().mockImplementation((callback, delay) => {
@@ -357,7 +366,7 @@ describe("DiffViewProvider", () => {
 				return 1 // Return a timeout ID
 			})
 			global.setTimeout = mockSetTimeout as any
-			
+
 			// Setup the diffViewProvider for testing
 			;(diffViewProvider as any).relPath = "test.txt"
 			;(diffViewProvider as any).newContent = "Test content"
@@ -371,31 +380,31 @@ describe("DiffViewProvider", () => {
 				isDirty: false,
 				save: vi.fn().mockResolvedValue(undefined),
 			}
-			
+
 			// Mock getDiagnostics to track when it's called
 			const mockGetDiagnostics = vi.fn().mockReturnValue([])
 			const originalGetDiagnostics = vscode.languages.getDiagnostics
 			vscode.languages.getDiagnostics = mockGetDiagnostics
-			
+
 			// Mock showTextDocument
 			vi.mocked(vscode.window.showTextDocument).mockResolvedValue({} as any)
-			
+
 			// Execute saveChanges
 			await diffViewProvider.saveChanges()
-			
+
 			// Verify that getConfiguration was called with "roo-cline"
 			expect(mockGetConfiguration).toHaveBeenCalledWith("roo-cline")
-			
+
 			// Verify that setTimeout was called with the correct delay
 			expect(mockSetTimeout).toHaveBeenCalledWith(expect.any(Function), 1000)
-			
+
 			// Verify that getDiagnostics was called after the delay
 			expect(mockGetDiagnostics).toHaveBeenCalled()
-			
+
 			// Restore original implementations
 			Object.defineProperty(vscode.workspace, "getConfiguration", {
 				value: originalGetConfiguration,
-				configurable: true
+				configurable: true,
 			})
 			global.setTimeout = originalSetTimeout
 			vscode.languages.getDiagnostics = originalGetDiagnostics
