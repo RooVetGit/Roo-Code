@@ -687,14 +687,20 @@ export class CustomModesManager {
 				}
 			}
 
-			// Get workspace path
-			const workspacePath = getWorkspacePath()
-			if (!workspacePath) {
-				return { success: false, error: "No workspace found" }
+			// Determine the correct rules directory based on mode source
+			let modeRulesDir: string
+			if (mode.source === "global") {
+				// For global modes, check the global .roo directory
+				const globalRooDir = getGlobalRooDirectory()
+				modeRulesDir = path.join(globalRooDir, `rules-${slug}`)
+			} else {
+				// For project modes, check the workspace .roo directory
+				const workspacePath = getWorkspacePath()
+				if (!workspacePath) {
+					return { success: false, error: "No workspace found" }
+				}
+				modeRulesDir = path.join(workspacePath, ".roo", `rules-${slug}`)
 			}
-
-			// Check for .roo/rules-{slug}/ directory
-			const modeRulesDir = path.join(workspacePath, ".roo", `rules-${slug}`)
 
 			let rulesFiles: RuleFile[] = []
 			try {
@@ -709,8 +715,19 @@ export class CustomModesManager {
 							const filePath = path.join(modeRulesDir, entry.name)
 							const content = await fs.readFile(filePath, "utf-8")
 							if (content.trim()) {
-								// Calculate relative path from .roo directory
-								const relativePath = path.relative(path.join(workspacePath, ".roo"), filePath)
+								// Calculate relative path from .roo directory based on mode source
+								let relativePath: string
+								if (mode.source === "global") {
+									const globalRooDir = getGlobalRooDirectory()
+									relativePath = path.relative(globalRooDir, filePath)
+								} else {
+									const workspacePath = getWorkspacePath()
+									if (workspacePath) {
+										relativePath = path.relative(path.join(workspacePath, ".roo"), filePath)
+									} else {
+										relativePath = path.relative(".", filePath)
+									}
+								}
 								rulesFiles.push({ relativePath, content: content.trim() })
 							}
 						}
