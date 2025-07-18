@@ -88,6 +88,7 @@ describe("insertContentTool", () => {
 					finalContent: "final content",
 				}),
 				scrollToFirstDiff: vi.fn(),
+				updateDiagnosticSettings: vi.fn(),
 				pushToolWriteResult: vi.fn().mockImplementation(async function (
 					this: any,
 					task: any,
