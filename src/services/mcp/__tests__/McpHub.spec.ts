@@ -570,6 +570,96 @@ describe("McpHub", () => {
 				'Server "disabled-server" is disabled',
 			)
 		})
+
+		it("should not connect to disabled servers during updateServerConnections", async () => {
+			const mockConfig = {
+				mcpServers: {
+					"disabled-server": {
+						type: "stdio",
+						command: "node",
+						args: ["test.js"],
+						disabled: true,
+					},
+				},
+			}
+
+			// Mock reading initial config
+			vi.mocked(fs.readFile).mockResolvedValueOnce(JSON.stringify(mockConfig))
+
+			// Ensure no connections exist initially
+			mcpHub.connections = []
+
+			// Mock the connectToServer method to track if it's called
+			const connectToServerSpy = vi.spyOn(mcpHub as any, "connectToServer")
+
+			// Update server connections with disabled server
+			await mcpHub.updateServerConnections(mockConfig.mcpServers, "global", false)
+
+			// Verify that connectToServer was never called for the disabled server
+			expect(connectToServerSpy).not.toHaveBeenCalled()
+
+			// Verify no connections were created
+			expect(mcpHub.connections.length).toBe(0)
+		})
+
+		it("should disconnect server when it becomes disabled", async () => {
+			// First, set up an enabled server
+			const enabledConfig = {
+				mcpServers: {
+					"test-server": {
+						type: "stdio",
+						command: "node",
+						args: ["test.js"],
+						disabled: false,
+					},
+				},
+			}
+
+			// Mock reading initial config
+			vi.mocked(fs.readFile).mockResolvedValueOnce(JSON.stringify(enabledConfig))
+
+			// Set up existing connection
+			const mockConnection: McpConnection = {
+				server: {
+					name: "test-server",
+					config: JSON.stringify(enabledConfig.mcpServers["test-server"]),
+					status: "connected",
+					disabled: false,
+					source: "global",
+				},
+				client: {
+					close: vi.fn().mockResolvedValue(undefined),
+				} as any,
+				transport: {
+					close: vi.fn().mockResolvedValue(undefined),
+				} as any,
+			}
+			mcpHub.connections = [mockConnection]
+
+			// Now update with disabled config
+			const disabledConfig = {
+				mcpServers: {
+					"test-server": {
+						type: "stdio",
+						command: "node",
+						args: ["test.js"],
+						disabled: true,
+					},
+				},
+			}
+
+			// Mock reading disabled config
+			vi.mocked(fs.readFile).mockResolvedValueOnce(JSON.stringify(disabledConfig))
+
+			// Mock the deleteConnection method to track if it's called
+			const deleteConnectionSpy = vi.spyOn(mcpHub as any, "deleteConnection")
+
+			// Update server connections with disabled server
+			await mcpHub.updateServerConnections(disabledConfig.mcpServers, "global", false)
+
+			// Verify that deleteConnection was called to disconnect the server
+			expect(deleteConnectionSpy).toHaveBeenCalledWith("test-server", "global")
+		})
 	})
 
 	describe("callTool", () => {

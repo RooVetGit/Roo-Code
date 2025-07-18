@@ -974,20 +974,31 @@ export class McpHub {
 
 			if (!currentConnection) {
 				// New server
-				try {
-					this.setupFileWatcher(name, validatedConfig, source)
-					await this.connectToServer(name, validatedConfig, source)
-				} catch (error) {
-					this.showErrorMessage(`Failed to connect to new MCP server ${name}`, error)
+				if (!validatedConfig.disabled) {
+					try {
+						this.setupFileWatcher(name, validatedConfig, source)
+						await this.connectToServer(name, validatedConfig, source)
+					} catch (error) {
+						this.showErrorMessage(`Failed to connect to new MCP server ${name}`, error)
+					}
 				}
 			} else if (!deepEqual(JSON.parse(currentConnection.server.config), config)) {
 				// Existing server with changed config
-				try {
-					this.setupFileWatcher(name, validatedConfig, source)
-					await this.deleteConnection(name, source)
-					await this.connectToServer(name, validatedConfig, source)
-				} catch (error) {
-					this.showErrorMessage(`Failed to reconnect MCP server ${name}`, error)
+				if (!validatedConfig.disabled) {
+					try {
+						this.setupFileWatcher(name, validatedConfig, source)
+						await this.deleteConnection(name, source)
+						await this.connectToServer(name, validatedConfig, source)
+					} catch (error) {
+						this.showErrorMessage(`Failed to reconnect MCP server ${name}`, error)
+					}
+				} else {
+					// Server is now disabled, disconnect it
+					try {
+						await this.deleteConnection(name, source)
+					} catch (error) {
+						this.showErrorMessage(`Failed to disconnect disabled MCP server ${name}`, error)
+					}
 				}
 			}
 			// If server exists with same config, do nothing
