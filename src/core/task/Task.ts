@@ -998,6 +998,15 @@ export class Task extends EventEmitter<ClineEvents> {
 			newUserContent.push(...formatResponse.imageBlocks(responseImages))
 		}
 
+		// Ensure we have at least some content to send to the API
+		// If newUserContent is empty, add a minimal resumption message
+		if (newUserContent.length === 0) {
+			newUserContent.push({
+				type: "text",
+				text: "[TASK RESUMPTION] Resuming task...",
+			})
+		}
+
 		await this.overwriteApiConversationHistory(modifiedApiConversationHistory)
 
 		console.log(`[subtasks] task ${this.taskId}.${this.instanceId} resuming from history item`)
