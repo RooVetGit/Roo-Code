@@ -25,7 +25,7 @@ import Thumbnails from "../common/Thumbnails"
 import ModeSelector from "./ModeSelector"
 import { MAX_IMAGES_PER_MESSAGE } from "./ChatView"
 import ContextMenu from "./ContextMenu"
-import { VolumeX, Pin, Check, Image, WandSparkles, SendHorizontal } from "lucide-react"
+import { VolumeX, Pin, Check, Image, WandSparkles, SendHorizontal, Paperclip } from "lucide-react"
 import { IndexingStatusBadge } from "./IndexingStatusBadge"
 import { cn } from "@/lib/utils"
 import { usePromptHistory } from "./hooks/usePromptHistory"
@@ -41,6 +41,7 @@ interface ChatTextAreaProps {
 	setSelectedImages: React.Dispatch<React.SetStateAction<string[]>>
 	onSend: () => void
 	onSelectImages: () => void
+	onSelectFiles?: () => void
 	shouldDisableImages: boolean
 	onHeightChange?: (height: number) => void
 	mode: Mode
@@ -63,6 +64,7 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 			setSelectedImages,
 			onSend,
 			onSelectImages,
+			onSelectFiles,
 			shouldDisableImages,
 			onHeightChange,
 			mode,
@@ -984,11 +986,11 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 						</StandardTooltip>
 					)}
 					<IndexingStatusBadge />
-					<StandardTooltip content={t("chat:addImages")}>
+					<StandardTooltip content={t("chat:attachFiles")}>
 						<button
-							aria-label={t("chat:addImages")}
+							aria-label={t("chat:attachFiles")}
 							disabled={shouldDisableImages}
-							onClick={!shouldDisableImages ? onSelectImages : undefined}
+							onClick={!shouldDisableImages ? (onSelectFiles || onSelectImages) : undefined}
 							className={cn(
 								"relative inline-flex items-center justify-center",
 								"bg-transparent border-none p-1.5",
@@ -1003,7 +1005,7 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 									"opacity-40 cursor-not-allowed grayscale-[30%] hover:bg-transparent hover:border-[rgba(255,255,255,0.08)] active:bg-transparent",
 								"mr-1",
 							)}>
-							<Image className="w-4 h-4" />
+							<Paperclip className="w-4 h-4" />
 						</button>
 					</StandardTooltip>
 				</div>

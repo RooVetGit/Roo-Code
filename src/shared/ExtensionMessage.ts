@@ -54,6 +54,7 @@ export interface ExtensionMessage {
 		| "action"
 		| "state"
 		| "selectedImages"
+		| "selectedFiles"
 		| "theme"
 		| "workspaceUpdated"
 		| "invoke"
@@ -123,6 +124,7 @@ export interface ExtensionMessage {
 	invoke?: "newChat" | "sendMessage" | "primaryButtonClick" | "secondaryButtonClick" | "setChatBoxMessage"
 	state?: ExtensionState
 	images?: string[]
+	files?: any[] // ProcessedFile array from process-files.ts
 	filePaths?: string[]
 	openedTabs?: Array<{
 		label: string

@@ -701,6 +701,7 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 	const { info: model } = useSelectedModel(apiConfiguration)
 
 	const selectImages = useCallback(() => vscode.postMessage({ type: "selectImages" }), [])
+	const selectFiles = useCallback(() => vscode.postMessage({ type: "selectFiles" }), [])
 
 	const shouldDisableImages =
 		!model?.supportsImages || sendingDisabled || selectedImages.length >= MAX_IMAGES_PER_MESSAGE
@@ -1858,6 +1859,7 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 				setSelectedImages={setSelectedImages}
 				onSend={() => handleSendMessage(inputValue, selectedImages)}
 				onSelectImages={selectImages}
+				onSelectFiles={selectFiles}
 				shouldDisableImages={shouldDisableImages}
 				onHeightChange={() => {
 					if (isAtBottom) {

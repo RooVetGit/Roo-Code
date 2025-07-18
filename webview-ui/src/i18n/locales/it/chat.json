@@ -104,6 +104,7 @@
 	"selectApiConfig": "Seleziona la configurazione API",
 	"enhancePrompt": "Migliora prompt con contesto aggiuntivo",
 	"addImages": "Aggiungi immagini al messaggio",
+	"attachFiles": "Attach files to message",
 	"sendMessage": "Invia messaggio",
 	"stopTts": "Interrompi sintesi vocale",
 	"typeMessage": "Scrivi un messaggio...",
