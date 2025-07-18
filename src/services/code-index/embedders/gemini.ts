@@ -1,6 +1,13 @@
 import { OpenAICompatibleEmbedder } from "./openai-compatible"
 import { IEmbedder, EmbeddingResponse, EmbedderInfo } from "../interfaces/embedder"
-import { GEMINI_MAX_ITEM_TOKENS } from "../constants"
+import {
+	GEMINI_MAX_ITEM_TOKENS,
+	GEMINI_EMBEDDING_001_MAX_BATCH_TOKENS,
+	GEMINI_EMBEDDING_001_RETRY_DELAY_MS,
+	GEMINI_EMBEDDING_001_MAX_BATCH_SIZE,
+	MAX_BATCH_TOKENS,
+	INITIAL_RETRY_DELAY_MS,
+} from "../constants"
 import { t } from "../../../i18n"
 import { TelemetryEventName } from "@roo-code/types"
 import { TelemetryService } from "@roo-code/telemetry"
@@ -32,12 +39,21 @@ export class GeminiEmbedder implements IEmbedder {
 		// Use provided model or default
 		this.modelId = modelId || GeminiEmbedder.DEFAULT_MODEL
 
+		// Get model-specific configuration for gemini-embedding-001
+		const isGeminiEmbedding001 = this.modelId === "gemini-embedding-001"
+		const maxBatchTokens = isGeminiEmbedding001 ? GEMINI_EMBEDDING_001_MAX_BATCH_TOKENS : MAX_BATCH_TOKENS
+		const retryDelayMs = isGeminiEmbedding001 ? GEMINI_EMBEDDING_001_RETRY_DELAY_MS : INITIAL_RETRY_DELAY_MS
+		const maxBatchSize = isGeminiEmbedding001 ? GEMINI_EMBEDDING_001_MAX_BATCH_SIZE : undefined
+
 		// Create an OpenAI Compatible embedder with Gemini's configuration
 		this.openAICompatibleEmbedder = new OpenAICompatibleEmbedder(
 			GeminiEmbedder.GEMINI_BASE_URL,
 			apiKey,
 			this.modelId,
 			GEMINI_MAX_ITEM_TOKENS,
+			maxBatchTokens,
+			retryDelayMs,
+			maxBatchSize,
 		)
 	}
 

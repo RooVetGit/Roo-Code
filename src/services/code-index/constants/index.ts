@@ -28,3 +28,6 @@ export const BATCH_PROCESSING_CONCURRENCY = 10
 
 /**Gemini Embedder */
 export const GEMINI_MAX_ITEM_TOKENS = 2048
+export const GEMINI_EMBEDDING_001_MAX_BATCH_TOKENS = 20000 // Reduced batch size for gemini-embedding-001
+export const GEMINI_EMBEDDING_001_RETRY_DELAY_MS = 2000 // Longer delay for gemini-embedding-001
+export const GEMINI_EMBEDDING_001_MAX_BATCH_SIZE = 10 // Smaller batch size for gemini-embedding-001

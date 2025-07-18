@@ -38,6 +38,9 @@ describe("GeminiEmbedder", () => {
 				apiKey,
 				"gemini-embedding-001",
 				2048,
+				20000, // GEMINI_EMBEDDING_001_MAX_BATCH_TOKENS
+				2000, // GEMINI_EMBEDDING_001_RETRY_DELAY_MS
+				10, // GEMINI_EMBEDDING_001_MAX_BATCH_SIZE
 			)
 		})
 
@@ -55,6 +58,9 @@ describe("GeminiEmbedder", () => {
 				apiKey,
 				"text-embedding-004",
 				2048,
+				100000, // MAX_BATCH_TOKENS (default for text-embedding-004)
+				500, // INITIAL_RETRY_DELAY_MS (default for text-embedding-004)
+				undefined, // maxBatchSize (undefined for text-embedding-004)
 			)
 		})
 

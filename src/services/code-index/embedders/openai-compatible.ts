@@ -37,6 +37,9 @@ export class OpenAICompatibleEmbedder implements IEmbedder {
 	private readonly apiKey: string
 	private readonly isFullUrl: boolean
 	private readonly maxItemTokens: number
+	private readonly maxBatchTokens: number
+	private readonly retryDelayMs: number
+	private readonly maxBatchSize?: number
 
 	/**
 	 * Creates a new OpenAI Compatible embedder
@@ -44,8 +47,19 @@ export class OpenAICompatibleEmbedder implements IEmbedder {
 	 * @param apiKey The API key for authentication
 	 * @param modelId Optional model identifier (defaults to "text-embedding-3-small")
 	 * @param maxItemTokens Optional maximum tokens per item (defaults to MAX_ITEM_TOKENS)
+	 * @param maxBatchTokens Optional maximum tokens per batch (defaults to MAX_BATCH_TOKENS)
+	 * @param retryDelayMs Optional initial retry delay in milliseconds (defaults to INITIAL_DELAY_MS)
+	 * @param maxBatchSize Optional maximum number of items per batch
 	 */
-	constructor(baseUrl: string, apiKey: string, modelId?: string, maxItemTokens?: number) {
+	constructor(
+		baseUrl: string,
+		apiKey: string,
+		modelId?: string,
+		maxItemTokens?: number,
+		maxBatchTokens?: number,
+		retryDelayMs?: number,
+		maxBatchSize?: number,
+	) {
 		if (!baseUrl) {
 			throw new Error(t("embeddings:validation.baseUrlRequired"))
 		}
@@ -63,6 +77,9 @@ export class OpenAICompatibleEmbedder implements IEmbedder {
 		// Cache the URL type check for performance
 		this.isFullUrl = this.isFullEndpointUrl(baseUrl)
 		this.maxItemTokens = maxItemTokens || MAX_ITEM_TOKENS
+		this.maxBatchTokens = maxBatchTokens || MAX_BATCH_TOKENS
+		this.retryDelayMs = retryDelayMs || INITIAL_DELAY_MS
+		this.maxBatchSize = maxBatchSize
 	}
 
 	/**
@@ -124,7 +141,10 @@ export class OpenAICompatibleEmbedder implements IEmbedder {
 					continue
 				}
 
-				if (currentBatchTokens + itemTokens <= MAX_BATCH_TOKENS) {
+				if (
+					currentBatchTokens + itemTokens <= this.maxBatchTokens &&
+					(!this.maxBatchSize || currentBatch.length < this.maxBatchSize)
+				) {
 					currentBatch.push(text)
 					currentBatchTokens += itemTokens
 					processedIndices.push(i)
@@ -143,6 +163,12 @@ export class OpenAICompatibleEmbedder implements IEmbedder {
 				allEmbeddings.push(...batchResult.embeddings)
 				usage.promptTokens += batchResult.usage.promptTokens
 				usage.totalTokens += batchResult.usage.totalTokens
+
+				// Add delay between batches if there are more batches to process
+				// This helps with rate limiting, especially for gemini-embedding-001
+				if (remainingTexts.length > 0 && this.retryDelayMs > INITIAL_DELAY_MS) {
+					await new Promise((resolve) => setTimeout(resolve, this.retryDelayMs / 4))
+				}
 			}
 		}
 
@@ -299,7 +325,7 @@ export class OpenAICompatibleEmbedder implements IEmbedder {
 				// Check if it's a rate limit error
 				const httpError = error as HttpError
 				if (httpError?.status === 429 && hasMoreAttempts) {
-					const delayMs = INITIAL_DELAY_MS * Math.pow(2, attempts)
+					const delayMs = this.retryDelayMs * Math.pow(2, attempts)
 					console.warn(
 						t("embeddings:rateLimitRetry", {
 							delayMs,
