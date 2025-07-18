@@ -1865,6 +1865,119 @@ export const webviewMessageHandler = async (
 				})
 			}
 			break
+		case "generateRules":
+			// Generate rules for the current workspace by spawning a new task
+			try {
+				const workspacePath = getWorkspacePath()
+				if (!workspacePath) {
+					vscode.window.showErrorMessage("No workspace folder open. Please open a folder to generate rules.")
+					break
+				}
+
+				// Import the rules generation service
+				const { createRulesGenerationTaskMessage } = await import("../../services/rules/rulesGenerator")
+
+				// Get selected rule types and options from the message
+				const selectedRuleTypes = message.selectedRuleTypes || ["general"]
+				const addToGitignore = message.addToGitignore || false
+				const alwaysAllowWriteProtected = message.alwaysAllowWriteProtected || false
+				const apiConfigName = message.apiConfigName
+				const includeCustomRules = message.includeCustomRules || false
+				const customRulesText = message.customRulesText || ""
+
+				// Switch to the selected API config if provided
+				if (apiConfigName) {
+					const currentApiConfig = getGlobalState("currentApiConfigName")
+					if (apiConfigName !== currentApiConfig) {
+						await updateGlobalState("currentApiConfigName", apiConfigName)
+						await provider.activateProviderProfile({ name: apiConfigName })
+					}
+				}
+
+				// Create a comprehensive message for the rules generation task using existing analysis logic
+				const rulesGenerationMessage = await createRulesGenerationTaskMessage(
+					workspacePath,
+					selectedRuleTypes,
+					addToGitignore,
+					alwaysAllowWriteProtected,
+					includeCustomRules,
+					customRulesText,
+				)
+
+				// Spawn a new task in code mode to generate the rules
+				await provider.initClineWithTask(rulesGenerationMessage)
+
+				// Automatically navigate to the chat tab to show the new task
+				await provider.postMessageToWebview({
+					type: "action",
+					action: "switchTab",
+					tab: "chat",
+				})
+			} catch (error) {
+				// Show error message to user
+				const errorMessage = error instanceof Error ? error.message : String(error)
+				vscode.window.showErrorMessage(`Failed to generate rules: ${errorMessage}`)
+			}
+			break
+		case "checkExistingRuleFiles":
+			// Check which rule files already exist and count source files
+			try {
+				const workspacePath = getWorkspacePath()
+				if (!workspacePath) {
+					break
+				}
+
+				const { fileExistsAtPath } = await import("../../utils/fs")
+				const path = await import("path")
+				const fs = await import("fs/promises")
+
+				const ruleTypeToPath: Record<string, string> = {
+					general: path.join(workspacePath, ".roo", "rules", "coding-standards.md"),
+					code: path.join(workspacePath, ".roo", "rules-code", "implementation-rules.md"),
+					architect: path.join(workspacePath, ".roo", "rules-architect", "architecture-rules.md"),
+					debug: path.join(workspacePath, ".roo", "rules-debug", "debugging-rules.md"),
+					"docs-extractor": path.join(
+						workspacePath,
+						".roo",
+						"rules-docs-extractor",
+						"documentation-rules.md",
+					),
+				}
+
+				const existingFiles: string[] = []
+				for (const [type, filePath] of Object.entries(ruleTypeToPath)) {
+					if (await fileExistsAtPath(filePath)) {
+						existingFiles.push(type)
+					}
+				}
+
+				// Count all files in the workspace
+				let sourceFileCount = 0
+				try {
+					// Use VS Code API to count all files
+					const vscode = await import("vscode")
+
+					// Find all files (excluding common non-project files)
+					const pattern = "**/*"
+					const excludePattern =
+						"**/node_modules/**,**/.git/**,**/dist/**,**/build/**,**/.next/**,**/.nuxt/**,**/coverage/**,**/.cache/**"
+
+					const files = await vscode.workspace.findFiles(pattern, excludePattern)
+					sourceFileCount = files.length
+				} catch (error) {
+					// If counting fails, set to -1 to indicate unknown
+					sourceFileCount = -1
+				}
+
+				await provider.postMessageToWebview({
+					type: "existingRuleFiles",
+					files: existingFiles,
+					sourceFileCount,
+				})
+			} catch (error) {
+				// Silently fail - not critical
+			}
+			break
 		case "humanRelayResponse":
 			if (message.requestId && message.text) {
 				vscode.commands.executeCommand(getCommand("handleHumanRelayResponse"), {
