@@ -17,6 +17,7 @@ interface CodeAccordianProps {
 	isFeedback?: boolean
 	onToggleExpand: () => void
 	header?: string
+	onJumpToFile?: () => void
 }
 
 const CodeAccordian = ({
@@ -29,6 +30,7 @@ const CodeAccordian = ({
 	isFeedback,
 	onToggleExpand,
 	header,
+	onJumpToFile,
 }: CodeAccordianProps) => {
 	const inferredLanguage = useMemo(() => language ?? (path ? getLanguageFromPath(path) : "txt"), [path, language])
 	const source = useMemo(() => code.trim(), [code])
@@ -67,6 +69,16 @@ const CodeAccordian = ({
 								{progressStatus.text}
 							</span>
 						</>
+					)}
+					{onJumpToFile && path && (
+						<span
+							className="codicon codicon-link-external mr-2 cursor-pointer"
+							style={{ fontSize: 13.5, margin: "1px 0" }}
+							onClick={(e) => {
+								e.stopPropagation()
+								onJumpToFile()
+							}}
+						/>
 					)}
 					<span className={`codicon codicon-chevron-${isExpanded ? "up" : "down"}`}></span>
 				</ToolUseBlockHeader>
