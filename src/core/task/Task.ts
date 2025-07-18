@@ -987,12 +987,12 @@ export class Task extends EventEmitter<ClineEvents> {
 			return "just now"
 		})()
 
-		newUserContent.push({
-			type: "text",
-			text: responseText
-				? `\n\nNew instructions for task continuation:\n<user_message>\n${responseText}\n</user_message>`
-				: "",
-		})
+		if (responseText) {
+			newUserContent.push({
+				type: "text",
+				text: `\n\nNew instructions for task continuation:\n<user_message>\n${responseText}\n</user_message>`,
+			})
+		}
 
 		if (responseImages && responseImages.length > 0) {
 			newUserContent.push(...formatResponse.imageBlocks(responseImages))
