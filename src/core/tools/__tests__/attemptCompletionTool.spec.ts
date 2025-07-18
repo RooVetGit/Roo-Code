@@ -76,13 +76,6 @@ describe("attemptCompletionTool", () => {
 
 			mockTask.todoList = undefined
 
-			// Mock the formatResponse to avoid import issues
-			vi.doMock("../../prompts/responses", () => ({
-				formatResponse: {
-					toolError: vi.fn((msg) => `Error: ${msg}`),
-				},
-			}))
-
 			await attemptCompletionTool(
 				mockTask as Task,
 				block,
@@ -169,6 +162,16 @@ describe("attemptCompletionTool", () => {
 
 			mockTask.todoList = todosWithPending
 
+			// Enable the setting to prevent completion with open todos
+			mockGetConfiguration.mockReturnValue({
+				get: vi.fn((key: string, defaultValue: any) => {
+					if (key === "preventCompletionWithOpenTodos") {
+						return true // Setting is enabled
+					}
+					return defaultValue
+				}),
+			})
+
 			await attemptCompletionTool(
 				mockTask as Task,
 				block,
@@ -201,6 +204,16 @@ describe("attemptCompletionTool", () => {
 			]
 
 			mockTask.todoList = todosWithInProgress
+
+			// Enable the setting to prevent completion with open todos
+			mockGetConfiguration.mockReturnValue({
+				get: vi.fn((key: string, defaultValue: any) => {
+					if (key === "preventCompletionWithOpenTodos") {
+						return true // Setting is enabled
+					}
+					return defaultValue
+				}),
+			})
 
 			await attemptCompletionTool(
 				mockTask as Task,
@@ -235,6 +248,16 @@ describe("attemptCompletionTool", () => {
 			]
 
 			mockTask.todoList = mixedTodos
+
+			// Enable the setting to prevent completion with open todos
+			mockGetConfiguration.mockReturnValue({
+				get: vi.fn((key: string, defaultValue: any) => {
+					if (key === "preventCompletionWithOpenTodos") {
+						return true // Setting is enabled
+					}
+					return defaultValue
+				}),
+			})
 
 			await attemptCompletionTool(
 				mockTask as Task,
