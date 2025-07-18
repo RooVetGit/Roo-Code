@@ -126,6 +126,10 @@ export class OpenAiEmbedder extends OpenAiNativeHandler implements IEmbedder {
 		batchTexts: string[],
 		model: string,
 	): Promise<{ embeddings: number[][]; usage: { promptTokens: number; totalTokens: number } }> {
+		// Use longer delays for text-embedding-3-large model due to stricter rate limits
+		const isLargeModel = model.includes("text-embedding-3-large")
+		const baseDelayMs = isLargeModel ? INITIAL_DELAY_MS * 4 : INITIAL_DELAY_MS // 2 seconds for large model
+		
 		for (let attempts = 0; attempts < MAX_RETRIES; attempts++) {
 			try {
 				const response = await this.embeddingsClient.embeddings.create({
@@ -143,16 +147,45 @@ export class OpenAiEmbedder extends OpenAiNativeHandler implements IEmbedder {
 			} catch (error: any) {
 				const hasMoreAttempts = attempts < MAX_RETRIES - 1
 
-				// Check if it's a rate limit error
+				// Enhanced rate limit detection
 				const httpError = error as HttpError
-				if (httpError?.status === 429 && hasMoreAttempts) {
-					const delayMs = INITIAL_DELAY_MS * Math.pow(2, attempts)
+				const isRateLimit = httpError?.status === 429 ||
+					(error?.message && (
+						error.message.includes("rate limit") ||
+						error.message.includes("Rate limit") ||
+						error.message.includes("too many requests") ||
+						error.message.includes("quota exceeded")
+					))
+
+				if (isRateLimit && hasMoreAttempts) {
+					// Use longer exponential backoff for large models and rate limit errors
+					const multiplier = isLargeModel ? 3 : 2
+					const delayMs = baseDelayMs * Math.pow(multiplier, attempts)
+					
 					console.warn(
 						t("embeddings:rateLimitRetry", {
 							delayMs,
 							attempt: attempts + 1,
 							maxRetries: MAX_RETRIES,
 						}),
+					)
+					
+					// Add jitter to prevent thundering herd
+					const jitter = Math.random() * 1000
+					await new Promise((resolve) => setTimeout(resolve, delayMs + jitter))
+					continue
+				}
+
+				// Check for other retryable errors (network issues, timeouts)
+				const isRetryableError = error?.code === 'ECONNRESET' ||
+					error?.code === 'ETIMEDOUT' ||
+					error?.code === 'ENOTFOUND' ||
+					(httpError?.status && httpError.status >= 500)
+
+				if (isRetryableError && hasMoreAttempts) {
+					const delayMs = baseDelayMs * Math.pow(2, attempts)
+					console.warn(
+						`Retrying OpenAI request due to ${error?.code || httpError?.status} (attempt ${attempts + 1}/${MAX_RETRIES}) after ${delayMs}ms`,
 					)
 					await new Promise((resolve) => setTimeout(resolve, delayMs))
 					continue
@@ -164,13 +197,24 @@ export class OpenAiEmbedder extends OpenAiNativeHandler implements IEmbedder {
 					stack: error instanceof Error ? error.stack : undefined,
 					location: "OpenAiEmbedder:_embedBatchWithRetries",
 					attempt: attempts + 1,
+					model: model,
+					batchSize: batchTexts.length,
+					isRateLimit,
+					isRetryableError,
 				})
 
 				// Log the error for debugging
 				console.error(`OpenAI embedder error (attempt ${attempts + 1}/${MAX_RETRIES}):`, error)
 
-				// Format and throw the error
-				throw formatEmbeddingError(error, MAX_RETRIES)
+				// Format and throw the error with more context
+				const formattedError = formatEmbeddingError(error, MAX_RETRIES)
+				
+				// Add model-specific context to error message
+				if (isLargeModel && isRateLimit) {
+					throw new Error(`${formattedError.message} Note: text-embedding-3-large has stricter rate limits. Consider using text-embedding-3-small for large codebases.`)
+				}
+				
+				throw formattedError
 			}
 		}
 
