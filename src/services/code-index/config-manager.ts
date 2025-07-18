@@ -10,12 +10,13 @@ import { getDefaultModelId, getModelDimension, getModelScoreThreshold } from "..
  * Handles loading, validating, and providing access to configuration values.
  */
 export class CodeIndexConfigManager {
-	private isEnabled: boolean = false
+	private codebaseIndexEnabled: boolean = true
 	private embedderProvider: EmbedderProvider = "openai"
 	private modelId?: string
+	private modelDimension?: number
 	private openAiOptions?: ApiHandlerOptions
 	private ollamaOptions?: ApiHandlerOptions
-	private openAiCompatibleOptions?: { baseUrl: string; apiKey: string; modelDimension?: number }
+	private openAiCompatibleOptions?: { baseUrl: string; apiKey: string }
 	private geminiOptions?: { apiKey: string }
 	private qdrantUrl?: string = "http://localhost:6333"
 	private qdrantApiKey?: string
@@ -41,7 +42,7 @@ export class CodeIndexConfigManager {
 	private _loadAndSetConfiguration(): void {
 		// Load configuration from storage
 		const codebaseIndexConfig = this.contextProxy?.getGlobalState("codebaseIndexConfig") ?? {
-			codebaseIndexEnabled: false,
+			codebaseIndexEnabled: true,
 			codebaseIndexQdrantUrl: "http://localhost:6333",
 			codebaseIndexEmbedderProvider: "openai",
 			codebaseIndexEmbedderBaseUrl: "",
@@ -65,17 +66,31 @@ export class CodeIndexConfigManager {
 		// Fix: Read OpenAI Compatible settings from the correct location within codebaseIndexConfig
 		const openAiCompatibleBaseUrl = codebaseIndexConfig.codebaseIndexOpenAiCompatibleBaseUrl ?? ""
 		const openAiCompatibleApiKey = this.contextProxy?.getSecret("codebaseIndexOpenAiCompatibleApiKey") ?? ""
-		const openAiCompatibleModelDimension = codebaseIndexConfig.codebaseIndexOpenAiCompatibleModelDimension as
-			| number
-			| undefined
 		const geminiApiKey = this.contextProxy?.getSecret("codebaseIndexGeminiApiKey") ?? ""
 
 		// Update instance variables with configuration
-		this.isEnabled = codebaseIndexEnabled || false
+		this.codebaseIndexEnabled = codebaseIndexEnabled ?? true
 		this.qdrantUrl = codebaseIndexQdrantUrl
 		this.qdrantApiKey = qdrantApiKey ?? ""
 		this.searchMinScore = codebaseIndexSearchMinScore
 		this.searchMaxResults = codebaseIndexSearchMaxResults
+
+		// Validate and set model dimension
+		const rawDimension = codebaseIndexConfig.codebaseIndexEmbedderModelDimension
+		if (rawDimension !== undefined && rawDimension !== null) {
+			const dimension = Number(rawDimension)
+			if (!isNaN(dimension) && dimension > 0) {
+				this.modelDimension = dimension
+			} else {
+				console.warn(
+					`Invalid codebaseIndexEmbedderModelDimension value: ${rawDimension}. Must be a positive number.`,
+				)
+				this.modelDimension = undefined
+			}
+		} else {
+			this.modelDimension = undefined
+		}
+
 		this.openAiOptions = { openAiNativeApiKey: openAiKey }
 
 		// Set embedder provider with support for openai-compatible
@@ -100,7 +115,6 @@ export class CodeIndexConfigManager {
 				? {
 						baseUrl: openAiCompatibleBaseUrl,
 						apiKey: openAiCompatibleApiKey,
-						modelDimension: openAiCompatibleModelDimension,
 					}
 				: undefined
 
@@ -113,10 +127,10 @@ export class CodeIndexConfigManager {
 	public async loadConfiguration(): Promise<{
 		configSnapshot: PreviousConfigSnapshot
 		currentConfig: {
-			isEnabled: boolean
 			isConfigured: boolean
 			embedderProvider: EmbedderProvider
 			modelId?: string
+			modelDimension?: number
 			openAiOptions?: ApiHandlerOptions
 			ollamaOptions?: ApiHandlerOptions
 			openAiCompatibleOptions?: { baseUrl: string; apiKey: string }
@@ -129,15 +143,15 @@ export class CodeIndexConfigManager {
 	}> {
 		// Capture the ACTUAL previous state before loading new configuration
 		const previousConfigSnapshot: PreviousConfigSnapshot = {
-			enabled: this.isEnabled,
+			enabled: this.codebaseIndexEnabled,
 			configured: this.isConfigured(),
 			embedderProvider: this.embedderProvider,
 			modelId: this.modelId,
+			modelDimension: this.modelDimension,
 			openAiKey: this.openAiOptions?.openAiNativeApiKey ?? "",
 			ollamaBaseUrl: this.ollamaOptions?.ollamaBaseUrl ?? "",
 			openAiCompatibleBaseUrl: this.openAiCompatibleOptions?.baseUrl ?? "",
 			openAiCompatibleApiKey: this.openAiCompatibleOptions?.apiKey ?? "",
-			openAiCompatibleModelDimension: this.openAiCompatibleOptions?.modelDimension,
 			geminiApiKey: this.geminiOptions?.apiKey ?? "",
 			qdrantUrl: this.qdrantUrl ?? "",
 			qdrantApiKey: this.qdrantApiKey ?? "",
@@ -154,10 +168,10 @@ export class CodeIndexConfigManager {
 		return {
 			configSnapshot: previousConfigSnapshot,
 			currentConfig: {
-				isEnabled: this.isEnabled,
 				isConfigured: this.isConfigured(),
 				embedderProvider: this.embedderProvider,
 				modelId: this.modelId,
+				modelDimension: this.modelDimension,
 				openAiOptions: this.openAiOptions,
 				ollamaOptions: this.ollamaOptions,
 				openAiCompatibleOptions: this.openAiCompatibleOptions,
@@ -225,73 +239,74 @@ export class CodeIndexConfigManager {
 		const prevOllamaBaseUrl = prev?.ollamaBaseUrl ?? ""
 		const prevOpenAiCompatibleBaseUrl = prev?.openAiCompatibleBaseUrl ?? ""
 		const prevOpenAiCompatibleApiKey = prev?.openAiCompatibleApiKey ?? ""
-		const prevOpenAiCompatibleModelDimension = prev?.openAiCompatibleModelDimension
+		const prevModelDimension = prev?.modelDimension
 		const prevGeminiApiKey = prev?.geminiApiKey ?? ""
 		const prevQdrantUrl = prev?.qdrantUrl ?? ""
 		const prevQdrantApiKey = prev?.qdrantApiKey ?? ""
 
-		// 1. Transition from disabled/unconfigured to enabled+configured
-		if ((!prevEnabled || !prevConfigured) && this.isEnabled && nowConfigured) {
+		// 1. Transition from disabled/unconfigured to enabled/configured
+		if ((!prevEnabled || !prevConfigured) && this.codebaseIndexEnabled && nowConfigured) {
 			return true
 		}
 
-		// 2. If was disabled and still is, no restart needed
-		if (!prevEnabled && !this.isEnabled) {
-			return false
+		// 2. Transition from enabled to disabled
+		if (prevEnabled && !this.codebaseIndexEnabled) {
+			return true
 		}
 
 		// 3. If wasn't ready before and isn't ready now, no restart needed
-		if (!prevConfigured && !nowConfigured) {
+		if ((!prevEnabled || !prevConfigured) && (!this.codebaseIndexEnabled || !nowConfigured)) {
 			return false
 		}
 
 		// 4. CRITICAL CHANGES - Always restart for these
-		if (this.isEnabled || prevEnabled) {
-			// Provider change
-			if (prevProvider !== this.embedderProvider) {
-				return true
-			}
+		// Only check for critical changes if feature is enabled
+		if (!this.codebaseIndexEnabled) {
+			return false
+		}
 
-			// Authentication changes (API keys)
-			const currentOpenAiKey = this.openAiOptions?.openAiNativeApiKey ?? ""
-			const currentOllamaBaseUrl = this.ollamaOptions?.ollamaBaseUrl ?? ""
-			const currentOpenAiCompatibleBaseUrl = this.openAiCompatibleOptions?.baseUrl ?? ""
-			const currentOpenAiCompatibleApiKey = this.openAiCompatibleOptions?.apiKey ?? ""
-			const currentOpenAiCompatibleModelDimension = this.openAiCompatibleOptions?.modelDimension
-			const currentGeminiApiKey = this.geminiOptions?.apiKey ?? ""
-			const currentQdrantUrl = this.qdrantUrl ?? ""
-			const currentQdrantApiKey = this.qdrantApiKey ?? ""
+		// Provider change
+		if (prevProvider !== this.embedderProvider) {
+			return true
+		}
 
-			if (prevOpenAiKey !== currentOpenAiKey) {
-				return true
-			}
+		// Authentication changes (API keys)
+		const currentOpenAiKey = this.openAiOptions?.openAiNativeApiKey ?? ""
+		const currentOllamaBaseUrl = this.ollamaOptions?.ollamaBaseUrl ?? ""
+		const currentOpenAiCompatibleBaseUrl = this.openAiCompatibleOptions?.baseUrl ?? ""
+		const currentOpenAiCompatibleApiKey = this.openAiCompatibleOptions?.apiKey ?? ""
+		const currentModelDimension = this.modelDimension
+		const currentGeminiApiKey = this.geminiOptions?.apiKey ?? ""
+		const currentQdrantUrl = this.qdrantUrl ?? ""
+		const currentQdrantApiKey = this.qdrantApiKey ?? ""
 
-			if (prevOllamaBaseUrl !== currentOllamaBaseUrl) {
-				return true
-			}
+		if (prevOpenAiKey !== currentOpenAiKey) {
+			return true
+		}
 
-			if (
-				prevOpenAiCompatibleBaseUrl !== currentOpenAiCompatibleBaseUrl ||
-				prevOpenAiCompatibleApiKey !== currentOpenAiCompatibleApiKey
-			) {
-				return true
-			}
+		if (prevOllamaBaseUrl !== currentOllamaBaseUrl) {
+			return true
+		}
 
-			// Check for OpenAI Compatible modelDimension changes
-			if (this.embedderProvider === "openai-compatible" || prevProvider === "openai-compatible") {
-				if (prevOpenAiCompatibleModelDimension !== currentOpenAiCompatibleModelDimension) {
-					return true
-				}
-			}
+		if (
+			prevOpenAiCompatibleBaseUrl !== currentOpenAiCompatibleBaseUrl ||
+			prevOpenAiCompatibleApiKey !== currentOpenAiCompatibleApiKey
+		) {
+			return true
+		}
 
-			if (prevQdrantUrl !== currentQdrantUrl || prevQdrantApiKey !== currentQdrantApiKey) {
-				return true
-			}
+		// Check for model dimension changes (generic for all providers)
+		if (prevModelDimension !== currentModelDimension) {
+			return true
+		}
 
-			// Vector dimension changes (still important for compatibility)
-			if (this._hasVectorDimensionChanged(prevProvider, prev?.modelId)) {
-				return true
-			}
+		if (prevQdrantUrl !== currentQdrantUrl || prevQdrantApiKey !== currentQdrantApiKey) {
+			return true
+		}
+
+		// Vector dimension changes (still important for compatibility)
+		if (this._hasVectorDimensionChanged(prevProvider, prev?.modelId)) {
+			return true
 		}
 
 		return false
@@ -328,10 +343,10 @@ export class CodeIndexConfigManager {
 	 */
 	public getConfig(): CodeIndexConfig {
 		return {
-			isEnabled: this.isEnabled,
 			isConfigured: this.isConfigured(),
 			embedderProvider: this.embedderProvider,
 			modelId: this.modelId,
+			modelDimension: this.modelDimension,
 			openAiOptions: this.openAiOptions,
 			ollamaOptions: this.ollamaOptions,
 			openAiCompatibleOptions: this.openAiCompatibleOptions,
@@ -347,7 +362,7 @@ export class CodeIndexConfigManager {
 	 * Gets whether the code indexing feature is enabled
 	 */
 	public get isFeatureEnabled(): boolean {
-		return this.isEnabled
+		return this.codebaseIndexEnabled
 	}
 
 	/**
@@ -379,6 +394,23 @@ export class CodeIndexConfigManager {
 	 */
 	public get currentModelId(): string | undefined {
 		return this.modelId
+	}
+
+	/**
+	 * Gets the current model dimension being used for embeddings.
+	 * Returns the model's built-in dimension if available, otherwise falls back to custom dimension.
+	 */
+	public get currentModelDimension(): number | undefined {
+		// First try to get the model-specific dimension
+		const modelId = this.modelId ?? getDefaultModelId(this.embedderProvider)
+		const modelDimension = getModelDimension(this.embedderProvider, modelId)
+
+		// Only use custom dimension if model doesn't have a built-in dimension
+		if (!modelDimension && this.modelDimension && this.modelDimension > 0) {
+			return this.modelDimension
+		}
+
+		return modelDimension
 	}
 
 	/**

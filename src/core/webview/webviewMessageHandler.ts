@@ -6,9 +6,16 @@ import pWaitFor from "p-wait-for"
 import * as vscode from "vscode"
 import * as yaml from "yaml"
 
-import { type Language, type ProviderSettings, type GlobalState, TelemetryEventName } from "@roo-code/types"
+import {
+	type Language,
+	type ProviderSettings,
+	type GlobalState,
+	type ClineMessage,
+	TelemetryEventName,
+} from "@roo-code/types"
 import { CloudService } from "@roo-code/cloud"
 import { TelemetryService } from "@roo-code/telemetry"
+import { type ApiMessage } from "../task-persistence/apiMessages"
 
 import { ClineProvider } from "./ClineProvider"
 import { changeLanguage, t } from "../../i18n"
@@ -57,6 +64,149 @@ export const webviewMessageHandler = async (
 	const getGlobalState = <K extends keyof GlobalState>(key: K) => provider.contextProxy.getValue(key)
 	const updateGlobalState = async <K extends keyof GlobalState>(key: K, value: GlobalState[K]) =>
 		await provider.contextProxy.setValue(key, value)
+
+	/**
+	 * Shared utility to find message indices based on timestamp
+	 */
+	const findMessageIndices = (messageTs: number, currentCline: any) => {
+		const timeCutoff = messageTs - 1000 // 1 second buffer before the message
+		const messageIndex = currentCline.clineMessages.findIndex((msg: ClineMessage) => msg.ts && msg.ts >= timeCutoff)
+		const apiConversationHistoryIndex = currentCline.apiConversationHistory.findIndex(
+			(msg: ApiMessage) => msg.ts && msg.ts >= timeCutoff,
+		)
+		return { messageIndex, apiConversationHistoryIndex }
+	}
+
+	/**
+	 * Removes the target message and all subsequent messages
+	 */
+	const removeMessagesThisAndSubsequent = async (
+		currentCline: any,
+		messageIndex: number,
+		apiConversationHistoryIndex: number,
+	) => {
+		// Delete this message and all that follow
+		await currentCline.overwriteClineMessages(currentCline.clineMessages.slice(0, messageIndex))
+
+		if (apiConversationHistoryIndex !== -1) {
+			await currentCline.overwriteApiConversationHistory(
+				currentCline.apiConversationHistory.slice(0, apiConversationHistoryIndex),
+			)
+		}
+	}
+
+	/**
+	 * Handles message deletion operations with user confirmation
+	 */
+	const handleDeleteOperation = async (messageTs: number): Promise<void> => {
+		// Send message to webview to show delete confirmation dialog
+		await provider.postMessageToWebview({
+			type: "showDeleteMessageDialog",
+			messageTs,
+		})
+	}
+
+	/**
+	 * Handles confirmed message deletion from webview dialog
+	 */
+	const handleDeleteMessageConfirm = async (messageTs: number): Promise<void> => {
+		// Only proceed if we have a current cline
+		if (provider.getCurrentCline()) {
+			const currentCline = provider.getCurrentCline()!
+			const { messageIndex, apiConversationHistoryIndex } = findMessageIndices(messageTs, currentCline)
+
+			if (messageIndex !== -1) {
+				try {
+					const { historyItem } = await provider.getTaskWithId(currentCline.taskId)
+
+					// Delete this message and all subsequent messages
+					await removeMessagesThisAndSubsequent(currentCline, messageIndex, apiConversationHistoryIndex)
+
+					// Initialize with history item after deletion
+					await provider.initClineWithHistoryItem(historyItem)
+				} catch (error) {
+					console.error("Error in delete message:", error)
+					vscode.window.showErrorMessage(
+						`Error deleting message: ${error instanceof Error ? error.message : String(error)}`,
+					)
+				}
+			}
+		}
+	}
+
+	/**
+	 * Handles message editing operations with user confirmation
+	 */
+	const handleEditOperation = async (messageTs: number, editedContent: string, images?: string[]): Promise<void> => {
+		// Send message to webview to show edit confirmation dialog
+		await provider.postMessageToWebview({
+			type: "showEditMessageDialog",
+			messageTs,
+			text: editedContent,
+			images,
+		})
+	}
+
+	/**
+	 * Handles confirmed message editing from webview dialog
+	 */
+	const handleEditMessageConfirm = async (
+		messageTs: number,
+		editedContent: string,
+		images?: string[],
+	): Promise<void> => {
+		// Only proceed if we have a current cline
+		if (provider.getCurrentCline()) {
+			const currentCline = provider.getCurrentCline()!
+
+			// Use findMessageIndices to find messages based on timestamp
+			const { messageIndex, apiConversationHistoryIndex } = findMessageIndices(messageTs, currentCline)
+
+			if (messageIndex !== -1) {
+				try {
+					// Edit this message and delete subsequent
+					await removeMessagesThisAndSubsequent(currentCline, messageIndex, apiConversationHistoryIndex)
+
+					// Process the edited message as a regular user message
+					// This will add it to the conversation and trigger an AI response
+					webviewMessageHandler(provider, {
+						type: "askResponse",
+						askResponse: "messageResponse",
+						text: editedContent,
+						images,
+					})
+
+					// Don't initialize with history item for edit operations
+					// The webviewMessageHandler will handle the conversation state
+				} catch (error) {
+					console.error("Error in edit message:", error)
+					vscode.window.showErrorMessage(
+						`Error editing message: ${error instanceof Error ? error.message : String(error)}`,
+					)
+				}
+			}
+		}
+	}
+
+	/**
+	 * Handles message modification operations (delete or edit) with confirmation dialog
+	 * @param messageTs Timestamp of the message to operate on
+	 * @param operation Type of operation ('delete' or 'edit')
+	 * @param editedContent New content for edit operations
+	 * @returns Promise<void>
+	 */
+	const handleMessageModificationsOperation = async (
+		messageTs: number,
+		operation: "delete" | "edit",
+		editedContent?: string,
+		images?: string[],
+	): Promise<void> => {
+		if (operation === "delete") {
+			await handleDeleteOperation(messageTs)
+		} else if (operation === "edit" && editedContent) {
+			await handleEditOperation(messageTs, editedContent, images)
+		}
+	}
 
 	switch (message.type) {
 		case "webviewDidLaunch":
@@ -224,7 +374,12 @@ export const webviewMessageHandler = async (
 			break
 		case "selectImages":
 			const images = await selectImages()
-			await provider.postMessageToWebview({ type: "selectedImages", images })
+			await provider.postMessageToWebview({
+				type: "selectedImages",
+				images,
+				context: message.context,
+				messageTs: message.messageTs,
+			})
 			break
 		case "exportCurrentTask":
 			const currentTaskId = provider.getCurrentCline()?.taskId
@@ -581,6 +736,22 @@ export const webviewMessageHandler = async (
 			await vscode.workspace
 				.getConfiguration(Package.name)
 				.update("allowedCommands", validCommands, vscode.ConfigurationTarget.Global)
+
+			break
+		}
+		case "deniedCommands": {
+			// Validate and sanitize the commands array
+			const commands = message.commands ?? []
+			const validCommands = Array.isArray(commands)
+				? commands.filter((cmd) => typeof cmd === "string" && cmd.trim().length > 0)
+				: []
+
+			await updateGlobalState("deniedCommands", validCommands)
+
+			// Also update workspace settings.
+			await vscode.workspace
+				.getConfiguration(Package.name)
+				.update("deniedCommands", validCommands, vscode.ConfigurationTarget.Global)
 
 			break
 		}
@@ -989,108 +1160,24 @@ export const webviewMessageHandler = async (
 			}
 			break
 		case "deleteMessage": {
-			const answer = await vscode.window.showInformationMessage(
-				t("common:confirmation.delete_message"),
-				{ modal: true },
-				t("common:confirmation.just_this_message"),
-				t("common:confirmation.this_and_subsequent"),
-			)
-
+			if (provider.getCurrentCline() && typeof message.value === "number" && message.value) {
+				await handleMessageModificationsOperation(message.value, "delete")
+			}
+			break
+		}
+		case "submitEditedMessage": {
 			if (
-				(answer === t("common:confirmation.just_this_message") ||
-					answer === t("common:confirmation.this_and_subsequent")) &&
 				provider.getCurrentCline() &&
 				typeof message.value === "number" &&
-				message.value
+				message.value &&
+				message.editedMessageContent
 			) {
-				const timeCutoff = message.value - 1000 // 1 second buffer before the message to delete
-
-				const messageIndex = provider
-					.getCurrentCline()!
-					.clineMessages.findIndex((msg) => msg.ts && msg.ts >= timeCutoff)
-
-				const apiConversationHistoryIndex = provider
-					.getCurrentCline()
-					?.apiConversationHistory.findIndex((msg) => msg.ts && msg.ts >= timeCutoff)
-
-				if (messageIndex !== -1) {
-					const { historyItem } = await provider.getTaskWithId(provider.getCurrentCline()!.taskId)
-
-					if (answer === t("common:confirmation.just_this_message")) {
-						// Find the next user message first
-						const nextUserMessage = provider
-							.getCurrentCline()!
-							.clineMessages.slice(messageIndex + 1)
-							.find((msg) => msg.type === "say" && msg.say === "user_feedback")
-
-						// Handle UI messages
-						if (nextUserMessage) {
-							// Find absolute index of next user message
-							const nextUserMessageIndex = provider
-								.getCurrentCline()!
-								.clineMessages.findIndex((msg) => msg === nextUserMessage)
-
-							// Keep messages before current message and after next user message
-							await provider
-								.getCurrentCline()!
-								.overwriteClineMessages([
-									...provider.getCurrentCline()!.clineMessages.slice(0, messageIndex),
-									...provider.getCurrentCline()!.clineMessages.slice(nextUserMessageIndex),
-								])
-						} else {
-							// If no next user message, keep only messages before current message
-							await provider
-								.getCurrentCline()!
-								.overwriteClineMessages(
-									provider.getCurrentCline()!.clineMessages.slice(0, messageIndex),
-								)
-						}
-
-						// Handle API messages
-						if (apiConversationHistoryIndex !== -1) {
-							if (nextUserMessage && nextUserMessage.ts) {
-								// Keep messages before current API message and after next user message
-								await provider
-									.getCurrentCline()!
-									.overwriteApiConversationHistory([
-										...provider
-											.getCurrentCline()!
-											.apiConversationHistory.slice(0, apiConversationHistoryIndex),
-										...provider
-											.getCurrentCline()!
-											.apiConversationHistory.filter(
-												(msg) => msg.ts && msg.ts >= nextUserMessage.ts,
-											),
-									])
-							} else {
-								// If no next user message, keep only messages before current API message
-								await provider
-									.getCurrentCline()!
-									.overwriteApiConversationHistory(
-										provider
-											.getCurrentCline()!
-											.apiConversationHistory.slice(0, apiConversationHistoryIndex),
-									)
-							}
-						}
-					} else if (answer === t("common:confirmation.this_and_subsequent")) {
-						// Delete this message and all that follow
-						await provider
-							.getCurrentCline()!
-							.overwriteClineMessages(provider.getCurrentCline()!.clineMessages.slice(0, messageIndex))
-						if (apiConversationHistoryIndex !== -1) {
-							await provider
-								.getCurrentCline()!
-								.overwriteApiConversationHistory(
-									provider
-										.getCurrentCline()!
-										.apiConversationHistory.slice(0, apiConversationHistoryIndex),
-								)
-						}
-					}
-
-					await provider.initClineWithHistoryItem(historyItem)
-				}
+				await handleMessageModificationsOperation(
+					message.value,
+					"edit",
+					message.editedMessageContent,
+					message.images,
+				)
 			}
 			break
 		}
@@ -1118,21 +1205,6 @@ export const webviewMessageHandler = async (
 			break
 		case "browserToolEnabled":
 			await updateGlobalState("browserToolEnabled", message.bool ?? true)
-			await provider.postStateToWebview()
-			break
-		case "codebaseIndexEnabled":
-			// Update the codebaseIndexConfig with the new enabled state
-			const currentCodebaseConfig = getGlobalState("codebaseIndexConfig") || {}
-			await updateGlobalState("codebaseIndexConfig", {
-				...currentCodebaseConfig,
-				codebaseIndexEnabled: message.bool ?? false,
-			})
-
-			// Notify the code index manager about the change
-			if (provider.codeIndexManager) {
-				await provider.codeIndexManager.handleSettingsChange()
-			}
-
 			await provider.postStateToWebview()
 			break
 		case "language":
@@ -1436,6 +1508,16 @@ export const webviewMessageHandler = async (
 
 					vscode.window.showErrorMessage(t("common:errors.delete_api_config"))
 				}
+			}
+			break
+		case "deleteMessageConfirm":
+			if (message.messageTs) {
+				await handleDeleteMessageConfirm(message.messageTs)
+			}
+			break
+		case "editMessageConfirm":
+			if (message.messageTs && message.text) {
+				await handleEditMessageConfirm(message.messageTs, message.text, message.images)
 			}
 			break
 		case "getListApiConfiguration":
@@ -1848,15 +1930,16 @@ export const webviewMessageHandler = async (
 				const embedderProviderChanged =
 					currentConfig.codebaseIndexEmbedderProvider !== settings.codebaseIndexEmbedderProvider
 
-				// Save global state settings atomically (without codebaseIndexEnabled which is now in global settings)
+				// Save global state settings atomically
 				const globalStateConfig = {
 					...currentConfig,
+					codebaseIndexEnabled: settings.codebaseIndexEnabled,
 					codebaseIndexQdrantUrl: settings.codebaseIndexQdrantUrl,
 					codebaseIndexEmbedderProvider: settings.codebaseIndexEmbedderProvider,
 					codebaseIndexEmbedderBaseUrl: settings.codebaseIndexEmbedderBaseUrl,
 					codebaseIndexEmbedderModelId: settings.codebaseIndexEmbedderModelId,
+					codebaseIndexEmbedderModelDimension: settings.codebaseIndexEmbedderModelDimension, // Generic dimension
 					codebaseIndexOpenAiCompatibleBaseUrl: settings.codebaseIndexOpenAiCompatibleBaseUrl,
-					codebaseIndexOpenAiCompatibleModelDimension: settings.codebaseIndexOpenAiCompatibleModelDimension,
 					codebaseIndexSearchMaxResults: settings.codebaseIndexSearchMaxResults,
 					codebaseIndexSearchMinScore: settings.codebaseIndexSearchMinScore,
 				}

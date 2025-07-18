@@ -123,6 +123,7 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 		alwaysAllowReadOnly,
 		alwaysAllowReadOnlyOutsideWorkspace,
 		allowedCommands,
+		deniedCommands,
 		allowedMaxRequests,
 		language,
 		alwaysAllowBrowser,
@@ -170,11 +171,10 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 		maxConcurrentFileReads,
 		condensingApiConfigId,
 		customCondensingPrompt,
-		codebaseIndexConfig,
-		codebaseIndexModels,
 		customSupportPrompts,
 		profileThresholds,
 		alwaysAllowFollowupQuestions,
+		alwaysAllowUpdateTodoList,
 		followupAutoApproveTimeoutMs,
 	} = cachedState
 
@@ -218,7 +218,15 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 					return prevState
 				}
 
-				setChangeDetected(true)
+				const previousValue = prevState.apiConfiguration?.[field]
+
+				// Don't treat initial sync from undefined to a defined value as a user change
+				// This prevents the dirty state when the component initializes and auto-syncs the model ID
+				const isInitialSync = previousValue === undefined && value !== undefined
+
+				if (!isInitialSync) {
+					setChangeDetected(true)
+				}
 				return { ...prevState, apiConfiguration: { ...prevState.apiConfiguration, [field]: value } }
 			})
 		},
@@ -275,6 +283,7 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 			vscode.postMessage({ type: "alwaysAllowBrowser", bool: alwaysAllowBrowser })
 			vscode.postMessage({ type: "alwaysAllowMcp", bool: alwaysAllowMcp })
 			vscode.postMessage({ type: "allowedCommands", commands: allowedCommands ?? [] })
+			vscode.postMessage({ type: "deniedCommands", commands: deniedCommands ?? [] })
 			vscode.postMessage({ type: "allowedMaxRequests", value: allowedMaxRequests ?? undefined })
 			vscode.postMessage({ type: "autoCondenseContext", bool: autoCondenseContext })
 			vscode.postMessage({ type: "autoCondenseContextPercent", value: autoCondenseContextPercent })
@@ -314,15 +323,13 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 			vscode.postMessage({ type: "alwaysAllowModeSwitch", bool: alwaysAllowModeSwitch })
 			vscode.postMessage({ type: "alwaysAllowSubtasks", bool: alwaysAllowSubtasks })
 			vscode.postMessage({ type: "alwaysAllowFollowupQuestions", bool: alwaysAllowFollowupQuestions })
+			vscode.postMessage({ type: "alwaysAllowUpdateTodoList", bool: alwaysAllowUpdateTodoList })
 			vscode.postMessage({ type: "followupAutoApproveTimeoutMs", value: followupAutoApproveTimeoutMs })
 			vscode.postMessage({ type: "condensingApiConfigId", text: condensingApiConfigId || "" })
 			vscode.postMessage({ type: "updateCondensingPrompt", text: customCondensingPrompt || "" })
 			vscode.postMessage({ type: "updateSupportPrompt", values: customSupportPrompts || {} })
 			vscode.postMessage({ type: "upsertApiConfiguration", text: currentApiConfigName, apiConfiguration })
 			vscode.postMessage({ type: "telemetrySetting", text: telemetrySetting })
-			if (codebaseIndexConfig) {
-				vscode.postMessage({ type: "codebaseIndexEnabled", bool: codebaseIndexConfig.codebaseIndexEnabled })
-			}
 			vscode.postMessage({ type: "profileThresholds", values: profileThresholds })
 			setChangeDetected(false)
 		}
@@ -606,8 +613,10 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 							alwaysAllowSubtasks={alwaysAllowSubtasks}
 							alwaysAllowExecute={alwaysAllowExecute}
 							alwaysAllowFollowupQuestions={alwaysAllowFollowupQuestions}
+							alwaysAllowUpdateTodoList={alwaysAllowUpdateTodoList}
 							followupAutoApproveTimeoutMs={followupAutoApproveTimeoutMs}
 							allowedCommands={allowedCommands}
+							deniedCommands={deniedCommands}
 							setCachedStateField={setCachedStateField}
 						/>
 					)}
@@ -688,14 +697,7 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 
 					{/* Experimental Section */}
 					{activeTab === "experimental" && (
-						<ExperimentalSettings
-							setExperimentEnabled={setExperimentEnabled}
-							experiments={experiments}
-							codebaseIndexModels={codebaseIndexModels}
-							codebaseIndexConfig={codebaseIndexConfig}
-							codebaseIndexEnabled={codebaseIndexConfig?.codebaseIndexEnabled}
-							setCachedStateField={setCachedStateField}
-						/>
+						<ExperimentalSettings setExperimentEnabled={setExperimentEnabled} experiments={experiments} />
 					)}
 
 					{/* Language Section */}

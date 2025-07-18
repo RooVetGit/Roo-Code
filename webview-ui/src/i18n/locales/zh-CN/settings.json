@@ -41,7 +41,7 @@
 		"description": "配置代码库索引设置以启用项目的语义搜索。<0>了解更多</0>",
 		"statusTitle": "状态",
 		"enableLabel": "启用代码库索引",
-		"enableDescription": "<0>代码库索引</0>是一个实验性功能，使用 AI 嵌入为您的项目创建语义搜索索引。这使 Roo Code 能够通过基于含义而非仅仅关键词来查找相关代码，从而更好地理解和导航大型代码库。",
+		"enableDescription": "启用代码索引以改进搜索和上下文理解",
 		"settingsTitle": "索引设置",
 		"disabledMessage": "代码库索引当前已禁用。在全局设置中启用它以配置索引选项。",
 		"providerLabel": "嵌入提供商",
@@ -72,6 +72,7 @@
 		"qdrantKeyLabel": "Qdrant 密钥：",
 		"qdrantApiKeyLabel": "Qdrant API 密钥",
 		"qdrantApiKeyPlaceholder": "输入你的 Qdrant API 密钥（可选）",
+		"setupConfigLabel": "设置",
 		"startIndexingButton": "开始",
 		"clearIndexDataButton": "清除索引",
 		"unsavedSettingsMessage": "请先保存设置再开始索引过程。",
@@ -97,6 +98,21 @@
 			"error": "错误"
 		},
 		"close": "关闭",
+		"validation": {
+			"invalidQdrantUrl": "无效的 Qdrant URL",
+			"invalidOllamaUrl": "无效的 Ollama URL",
+			"invalidBaseUrl": "无效的基础 URL",
+			"qdrantUrlRequired": "需要 Qdrant URL",
+			"openaiApiKeyRequired": "需要 OpenAI API 密钥",
+			"modelSelectionRequired": "需要选择模型",
+			"apiKeyRequired": "需要 API 密钥",
+			"modelIdRequired": "需要模型 ID",
+			"modelDimensionRequired": "需要模型维度",
+			"geminiApiKeyRequired": "需要 Gemini API 密钥",
+			"ollamaBaseUrlRequired": "需要 Ollama 基础 URL",
+			"baseUrlRequired": "需要基础 URL",
+			"modelDimensionMinValue": "模型维度必须大于 0"
+		},
 		"advancedConfigLabel": "高级配置",
 		"searchMinScoreLabel": "搜索分数阈值",
 		"searchMinScoreDescription": "搜索结果所需的最低相似度分数（0.0-1.0）。较低的值返回更多结果，但可能不太相关。较高的值返回较少但更相关的结果。",
@@ -107,6 +123,8 @@
 	},
 	"autoApprove": {
 		"description": "允许 Roo 自动执行操作而无需批准。只有在您完全信任 AI 并了解相关安全风险的情况下才启用这些设置。",
+		"toggleAriaLabel": "切换自动批准",
+		"disabledAriaLabel": "自动批准已禁用 - 请先选择选项",
 		"readOnly": {
 			"label": "读取",
 			"description": "启用后，Roo 将自动浏览目录和读取文件内容，无需人工确认。",
@@ -159,8 +177,12 @@
 			"description": "自动执行白名单中的命令而无需批准",
 			"allowedCommands": "命令白名单",
 			"allowedCommandsDescription": "当\"自动批准命令行操作\"启用时可以自动执行的命令前缀。添加 * 以允许所有命令（谨慎使用）。",
+			"deniedCommands": "拒绝的命令",
+			"deniedCommandsDescription": "将自动拒绝的命令前缀，无需用户批准。与允许命令冲突时，最长前缀匹配优先。添加 * 拒绝所有命令。",
 			"commandPlaceholder": "输入命令前缀（例如 'git '）",
-			"addButton": "添加"
+			"deniedCommandPlaceholder": "输入要拒绝的命令前缀（例如 'rm -rf'）",
+			"addButton": "添加",
+			"autoDenied": "前缀为 `{{prefix}}` 的命令已被用户禁止。不要通过运行其他命令来绕过此限制。"
 		},
 		"updateTodoList": {
 			"label": "待办",
@@ -170,7 +192,8 @@
 			"title": "最大请求数",
 			"description": "在请求批准以继续执行任务之前，自动发出此数量的 API 请求。",
 			"unlimited": "无限制"
-		}
+		},
+		"selectOptionsFirst": "请至少选择以下一个选项以启用自动批准"
 	},
 	"providers": {
 		"providerDocumentation": "{{provider}} 文档",
@@ -190,6 +213,8 @@
 		"createProfile": "创建配置",
 		"cannotDeleteOnlyProfile": "无法删除唯一的配置文件",
 		"searchPlaceholder": "搜索配置文件",
+		"searchProviderPlaceholder": "搜索提供商",
+		"noProviderMatchFound": "未找到提供商",
 		"noMatchFound": "未找到匹配的配置文件",
 		"vscodeLmDescription": "VS Code 语言模型 API 允许您运行由其他 VS Code 扩展（包括但不限于 GitHub Copilot）提供的模型。最简单的方法是从 VS Code 市场安装 Copilot 和 Copilot Chat 扩展。",
 		"awsCustomArnUse": "请输入有效的 Amazon Bedrock ARN（Amazon资源名称），格式示例：",
@@ -345,6 +370,12 @@
 			"label": "API 请求频率限制",
 			"description": "设置API请求的最小间隔时间"
 		},
+		"consecutiveMistakeLimit": {
+			"label": "错误和重复限制",
+			"description": "在显示“Roo遇到问题”对话框前允许的连续错误或重复操作次数",
+			"unlimitedDescription": "已启用无限重试（自动继续）。对话框将永远不会出现。",
+			"warning": "⚠️ 设置为 0 允许无限重试，这可能会消耗大量 API 使用量"
+		},
 		"reasoningEffort": {
 			"label": "模型推理强度",
 			"high": "高",
@@ -355,7 +386,9 @@
 		"claudeCode": {
 			"pathLabel": "Claude Code 路径",
 			"description": "您的 Claude Code CLI 的可选路径。如果未设置，则默认为 “claude”。",
-			"placeholder": "默认：claude"
+			"placeholder": "默认：claude",
+			"maxTokensLabel": "最大输出 Token",
+			"maxTokensDescription": "Claude Code 响应的最大输出 Token 数量。默认为 8000。"
 		}
 	},
 	"browser": {
@@ -511,6 +544,9 @@
 			"label": "继承环境变量",
 			"description": "启用后，终端将从 VSCode 父进程继承环境变量，如用户配置文件中定义的 shell 集成设置。这直接切换 VSCode 全局设置 `terminal.integrated.inheritEnv`。 <0>了解更多</0>"
 		}
+	},
+	"advancedSettings": {
+		"title": "高级设置"
 	},
 	"advanced": {
 		"diff": {

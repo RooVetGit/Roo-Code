@@ -5,6 +5,15 @@ import { CodeIndexOllamaEmbedder } from "../ollama"
 // Mock fetch
 global.fetch = vitest.fn() as MockedFunction<typeof fetch>
 
+// Mock TelemetryService
+vitest.mock("@roo-code/telemetry", () => ({
+	TelemetryService: {
+		instance: {
+			captureEvent: vitest.fn(),
+		},
+	},
+}))
+
 // Mock i18n
 vitest.mock("../../../../i18n", () => ({
 	t: (key: string, params?: Record<string, any>) => {
@@ -127,7 +136,7 @@ describe("CodeIndexOllamaEmbedder", () => {
 			const result = await embedder.validateConfiguration()
 
 			expect(result.valid).toBe(false)
-			expect(result.error).toBe("Connection to Ollama timed out at http://localhost:11434")
+			expect(result.error).toBe("embeddings:ollama.serviceNotRunning")
 		})
 
 		it("should fail validation when tags endpoint returns 404", async () => {
@@ -141,9 +150,7 @@ describe("CodeIndexOllamaEmbedder", () => {
 			const result = await embedder.validateConfiguration()
 
 			expect(result.valid).toBe(false)
-			expect(result.error).toBe(
-				"Ollama service is not running at http://localhost:11434. Please start Ollama first.",
-			)
+			expect(result.error).toBe("embeddings:ollama.serviceNotRunning")
 		})
 
 		it("should fail validation when tags endpoint returns other error", async () => {
@@ -157,7 +164,7 @@ describe("CodeIndexOllamaEmbedder", () => {
 			const result = await embedder.validateConfiguration()
 
 			expect(result.valid).toBe(false)
-			expect(result.error).toBe("Ollama service is unavailable at http://localhost:11434. HTTP status: 500")
+			expect(result.error).toBe("embeddings:ollama.serviceUnavailable")
 		})
 
 		it("should fail validation when model does not exist", async () => {
@@ -176,9 +183,7 @@ describe("CodeIndexOllamaEmbedder", () => {
 			const result = await embedder.validateConfiguration()
 
 			expect(result.valid).toBe(false)
-			expect(result.error).toBe(
-				"Model 'nomic-embed-text' not found. Available models: llama2:latest, mistral:latest",
-			)
+			expect(result.error).toBe("embeddings:ollama.modelNotFound")
 		})
 
 		it("should fail validation when model exists but doesn't support embeddings", async () => {
@@ -205,7 +210,7 @@ describe("CodeIndexOllamaEmbedder", () => {
 			const result = await embedder.validateConfiguration()
 
 			expect(result.valid).toBe(false)
-			expect(result.error).toBe("Model 'nomic-embed-text' is not embedding capable")
+			expect(result.error).toBe("embeddings:ollama.modelNotEmbeddingCapable")
 		})
 
 		it("should handle ECONNREFUSED errors", async () => {
@@ -214,7 +219,7 @@ describe("CodeIndexOllamaEmbedder", () => {
 			const result = await embedder.validateConfiguration()
 
 			expect(result.valid).toBe(false)
-			expect(result.error).toBe("Connection to Ollama timed out at http://localhost:11434")
+			expect(result.error).toBe("embeddings:ollama.serviceNotRunning")
 		})
 
 		it("should handle ENOTFOUND errors", async () => {
@@ -223,7 +228,7 @@ describe("CodeIndexOllamaEmbedder", () => {
 			const result = await embedder.validateConfiguration()
 
 			expect(result.valid).toBe(false)
-			expect(result.error).toBe("Ollama host not found: http://localhost:11434")
+			expect(result.error).toBe("embeddings:ollama.hostNotFound")
 		})
 
 		it("should handle generic network errors", async () => {

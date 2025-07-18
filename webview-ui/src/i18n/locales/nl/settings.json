@@ -39,7 +39,7 @@
 	"codeIndex": {
 		"title": "Codebase indexering",
 		"enableLabel": "Codebase indexering inschakelen",
-		"enableDescription": "<0>Codebase indexering</0> is een experimentele functie die een semantische zoekindex van je project creëert met behulp van AI-embeddings. Dit stelt Roo Code in staat om grote codebases beter te begrijpen en te navigeren door relevante code te vinden op basis van betekenis in plaats van alleen trefwoorden.",
+		"enableDescription": "Code-indexering inschakelen voor verbeterde zoekresultaten en contextbegrip",
 		"providerLabel": "Embeddings provider",
 		"selectProviderPlaceholder": "Selecteer provider",
 		"openaiProvider": "OpenAI",
@@ -81,6 +81,7 @@
 		"ollamaBaseUrlLabel": "Ollama Basis-URL",
 		"qdrantApiKeyLabel": "Qdrant API-sleutel",
 		"qdrantApiKeyPlaceholder": "Voer je Qdrant API-sleutel in (optioneel)",
+		"setupConfigLabel": "Instellen",
 		"ollamaUrlPlaceholder": "http://localhost:11434",
 		"openAiCompatibleBaseUrlPlaceholder": "https://api.example.com",
 		"modelDimensionPlaceholder": "1536",
@@ -97,6 +98,21 @@
 			"error": "Fout"
 		},
 		"close": "Sluiten",
+		"validation": {
+			"invalidQdrantUrl": "Ongeldige Qdrant URL",
+			"invalidOllamaUrl": "Ongeldige Ollama URL",
+			"invalidBaseUrl": "Ongeldige basis-URL",
+			"qdrantUrlRequired": "Qdrant URL is vereist",
+			"openaiApiKeyRequired": "OpenAI API-sleutel is vereist",
+			"modelSelectionRequired": "Modelselectie is vereist",
+			"apiKeyRequired": "API-sleutel is vereist",
+			"modelIdRequired": "Model-ID is vereist",
+			"modelDimensionRequired": "Modelafmeting is vereist",
+			"geminiApiKeyRequired": "Gemini API-sleutel is vereist",
+			"ollamaBaseUrlRequired": "Ollama basis-URL is vereist",
+			"baseUrlRequired": "Basis-URL is vereist",
+			"modelDimensionMinValue": "Modelafmeting moet groter zijn dan 0"
+		},
 		"advancedConfigLabel": "Geavanceerde configuratie",
 		"searchMinScoreLabel": "Zoekscore drempel",
 		"searchMinScoreDescription": "Minimale overeenkomstscore (0.0-1.0) vereist voor zoekresultaten. Lagere waarden leveren meer resultaten op, maar zijn mogelijk minder relevant. Hogere waarden leveren minder, maar relevantere resultaten op.",
@@ -107,6 +123,8 @@
 	},
 	"autoApprove": {
 		"description": "Sta Roo toe om automatisch handelingen uit te voeren zonder goedkeuring. Schakel deze instellingen alleen in als je de AI volledig vertrouwt en de bijbehorende beveiligingsrisico's begrijpt.",
+		"toggleAriaLabel": "Automatisch goedkeuren in-/uitschakelen",
+		"disabledAriaLabel": "Automatisch goedkeuren uitgeschakeld - selecteer eerst opties",
 		"readOnly": {
 			"label": "Lezen",
 			"description": "Indien ingeschakeld, bekijkt Roo automatisch de inhoud van mappen en leest bestanden zonder dat je op de Goedkeuren-knop hoeft te klikken.",
@@ -159,8 +177,12 @@
 			"description": "Automatisch toegestane terminalcommando's uitvoeren zonder goedkeuring",
 			"allowedCommands": "Toegestane automatisch uit te voeren commando's",
 			"allowedCommandsDescription": "Commando-prefixen die automatisch kunnen worden uitgevoerd als 'Altijd goedkeuren voor uitvoeren' is ingeschakeld. Voeg * toe om alle commando's toe te staan (gebruik met voorzichtigheid).",
+			"deniedCommands": "Geweigerde commando's",
+			"deniedCommandsDescription": "Commando-prefixen die automatisch worden geweigerd zonder om goedkeuring te vragen. Bij conflicten met toegestane commando's heeft de langste prefixovereenkomst voorrang. Voeg * toe om alle commando's te weigeren.",
 			"commandPlaceholder": "Voer commando-prefix in (bijv. 'git ')",
-			"addButton": "Toevoegen"
+			"deniedCommandPlaceholder": "Voer te weigeren commando-prefix in (bijv. 'rm -rf')",
+			"addButton": "Toevoegen",
+			"autoDenied": "Commando's met het prefix `{{prefix}}` zijn verboden door de gebruiker. Omzeil deze beperking niet door een ander commando uit te voeren."
 		},
 		"updateTodoList": {
 			"label": "Todo",
@@ -170,7 +192,8 @@
 			"title": "Maximale verzoeken",
 			"description": "Voer automatisch dit aantal API-verzoeken uit voordat om goedkeuring wordt gevraagd om door te gaan met de taak.",
 			"unlimited": "Onbeperkt"
-		}
+		},
+		"selectOptionsFirst": "Selecteer ten minste één optie hieronder om automatische goedkeuring in te schakelen"
 	},
 	"providers": {
 		"providerDocumentation": "{{provider}} documentatie",
@@ -190,6 +213,8 @@
 		"createProfile": "Profiel aanmaken",
 		"cannotDeleteOnlyProfile": "Kan het enige profiel niet verwijderen",
 		"searchPlaceholder": "Zoek profielen",
+		"searchProviderPlaceholder": "Zoek providers",
+		"noProviderMatchFound": "Geen providers gevonden",
 		"noMatchFound": "Geen overeenkomende profielen gevonden",
 		"vscodeLmDescription": "De VS Code Language Model API stelt je in staat modellen te draaien die door andere VS Code-extensies worden geleverd (waaronder GitHub Copilot). De eenvoudigste manier om te beginnen is door de Copilot- en Copilot Chat-extensies te installeren vanuit de VS Code Marketplace.",
 		"awsCustomArnUse": "Voer een geldige Amazon Bedrock ARN in voor het model dat je wilt gebruiken. Voorbeeldformaten:",
@@ -345,6 +370,12 @@
 			"label": "Snelheidslimiet",
 			"description": "Minimale tijd tussen API-verzoeken."
 		},
+		"consecutiveMistakeLimit": {
+			"label": "Fout- & Herhalingslimiet",
+			"description": "Aantal opeenvolgende fouten of herhaalde acties voordat het dialoogvenster 'Roo ondervindt problemen' wordt weergegeven",
+			"unlimitedDescription": "Onbeperkt aantal nieuwe pogingen ingeschakeld (automatisch doorgaan). Het dialoogvenster zal nooit verschijnen.",
+			"warning": "⚠️ Instellen op 0 staat onbeperkte nieuwe pogingen toe, wat aanzienlijk API-gebruik kan verbruiken"
+		},
 		"reasoningEffort": {
 			"label": "Model redeneervermogen",
 			"high": "Hoog",
@@ -355,7 +386,9 @@
 		"claudeCode": {
 			"pathLabel": "Claude Code Pad",
 			"description": "Optioneel pad naar uw Claude Code CLI. Standaard 'claude' als niet ingesteld.",
-			"placeholder": "Standaard: claude"
+			"placeholder": "Standaard: claude",
+			"maxTokensLabel": "Max Output Tokens",
+			"maxTokensDescription": "Maximaal aantal output-tokens voor Claude Code-reacties. Standaard is 8000."
 		}
 	},
 	"browser": {
@@ -511,6 +544,9 @@
 			"label": "Omgevingsvariabelen overnemen",
 			"description": "Indien ingeschakeld, neemt de terminal omgevingsvariabelen over van het bovenliggende VSCode-proces, zoals shell-integratie-instellingen uit het gebruikersprofiel. Dit schakelt direct de VSCode-instelling `terminal.integrated.inheritEnv` om. <0>Meer informatie</0>"
 		}
+	},
+	"advancedSettings": {
+		"title": "Geavanceerde instellingen"
 	},
 	"advanced": {
 		"diff": {

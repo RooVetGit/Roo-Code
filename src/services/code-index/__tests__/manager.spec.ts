@@ -29,6 +29,15 @@ vi.mock("../state-manager", () => ({
 	})),
 }))
 
+// Mock TelemetryService
+vi.mock("@roo-code/telemetry", () => ({
+	TelemetryService: {
+		instance: {
+			captureEvent: vi.fn(),
+		},
+	},
+}))
+
 vi.mock("../service-factory")
 const MockedCodeIndexServiceFactory = CodeIndexServiceFactory as MockedClass<typeof CodeIndexServiceFactory>
 
@@ -81,7 +90,6 @@ describe("CodeIndexManager - handleSettingsChange regression", () => {
 				isFeatureConfigured: true,
 				isFeatureEnabled: true,
 				getConfig: vi.fn().mockReturnValue({
-					isEnabled: true,
 					isConfigured: true,
 					embedderProvider: "openai",
 					modelId: "text-embedding-3-small",
@@ -149,7 +157,6 @@ describe("CodeIndexManager - handleSettingsChange regression", () => {
 				isFeatureConfigured: true,
 				isFeatureEnabled: true,
 				getConfig: vi.fn().mockReturnValue({
-					isEnabled: true,
 					isConfigured: true,
 					embedderProvider: "openai",
 					modelId: "text-embedding-3-small",
@@ -276,7 +283,6 @@ describe("CodeIndexManager - handleSettingsChange regression", () => {
 				isFeatureConfigured: true,
 				isFeatureEnabled: true,
 				getConfig: vitest.fn().mockReturnValue({
-					isEnabled: true,
 					isConfigured: true,
 					embedderProvider: "openai",
 					modelId: "text-embedding-3-small",

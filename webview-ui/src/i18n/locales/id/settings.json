@@ -39,7 +39,7 @@
 	"codeIndex": {
 		"title": "Pengindeksan Codebase",
 		"enableLabel": "Aktifkan Pengindeksan Codebase",
-		"enableDescription": "<0>Pengindeksan Codebase</0> adalah fitur eksperimental yang membuat indeks pencarian semantik dari proyek kamu menggunakan AI embeddings. Ini memungkinkan Roo Code untuk lebih memahami dan menavigasi codebase besar dengan menemukan kode yang relevan berdasarkan makna daripada hanya kata kunci.",
+		"enableDescription": "Aktifkan pengindeksan kode untuk pencarian dan pemahaman konteks yang lebih baik",
 		"providerLabel": "Provider Embeddings",
 		"selectProviderPlaceholder": "Pilih provider",
 		"openaiProvider": "OpenAI",
@@ -81,6 +81,7 @@
 		"ollamaBaseUrlLabel": "URL Dasar Ollama",
 		"qdrantApiKeyLabel": "Kunci API Qdrant",
 		"qdrantApiKeyPlaceholder": "Masukkan kunci API Qdrant kamu (opsional)",
+		"setupConfigLabel": "Pengaturan",
 		"ollamaUrlPlaceholder": "http://localhost:11434",
 		"openAiCompatibleBaseUrlPlaceholder": "https://api.example.com",
 		"modelDimensionPlaceholder": "1536",
@@ -97,6 +98,21 @@
 			"error": "Error"
 		},
 		"close": "Tutup",
+		"validation": {
+			"invalidQdrantUrl": "URL Qdrant tidak valid",
+			"invalidOllamaUrl": "URL Ollama tidak valid",
+			"invalidBaseUrl": "URL dasar tidak valid",
+			"qdrantUrlRequired": "URL Qdrant diperlukan",
+			"openaiApiKeyRequired": "Kunci API OpenAI diperlukan",
+			"modelSelectionRequired": "Pemilihan model diperlukan",
+			"apiKeyRequired": "Kunci API diperlukan",
+			"modelIdRequired": "ID Model diperlukan",
+			"modelDimensionRequired": "Dimensi model diperlukan",
+			"geminiApiKeyRequired": "Kunci API Gemini diperlukan",
+			"ollamaBaseUrlRequired": "URL dasar Ollama diperlukan",
+			"baseUrlRequired": "URL dasar diperlukan",
+			"modelDimensionMinValue": "Dimensi model harus lebih besar dari 0"
+		},
 		"advancedConfigLabel": "Konfigurasi Lanjutan",
 		"searchMinScoreLabel": "Ambang Batas Skor Pencarian",
 		"searchMinScoreDescription": "Skor kesamaan minimum (0.0-1.0) yang diperlukan untuk hasil pencarian. Nilai yang lebih rendah mengembalikan lebih banyak hasil tetapi mungkin kurang relevan. Nilai yang lebih tinggi mengembalikan lebih sedikit hasil tetapi lebih relevan.",
@@ -107,6 +123,8 @@
 	},
 	"autoApprove": {
 		"description": "Izinkan Roo untuk secara otomatis melakukan operasi tanpa memerlukan persetujuan. Aktifkan pengaturan ini hanya jika kamu sepenuhnya mempercayai AI dan memahami risiko keamanan yang terkait.",
+		"toggleAriaLabel": "Beralih persetujuan otomatis",
+		"disabledAriaLabel": "Persetujuan otomatis dinonaktifkan - pilih opsi terlebih dahulu",
 		"readOnly": {
 			"label": "Baca",
 			"description": "Ketika diaktifkan, Roo akan secara otomatis melihat konten direktori dan membaca file tanpa memerlukan kamu mengklik tombol Setujui.",
@@ -159,8 +177,12 @@
 			"description": "Secara otomatis mengeksekusi perintah terminal yang diizinkan tanpa memerlukan persetujuan",
 			"allowedCommands": "Perintah Auto-Execute yang Diizinkan",
 			"allowedCommandsDescription": "Prefix perintah yang dapat di-auto-execute ketika \"Selalu setujui operasi eksekusi\" diaktifkan. Tambahkan * untuk mengizinkan semua perintah (gunakan dengan hati-hati).",
+			"deniedCommands": "Perintah yang ditolak",
+			"deniedCommandsDescription": "Prefix perintah yang akan ditolak secara otomatis tanpa memerlukan persetujuan. Dalam kasus konflik dengan perintah yang diizinkan, pencocokan prefix terpanjang diprioritaskan. Tambahkan * untuk menolak semua perintah.",
 			"commandPlaceholder": "Masukkan prefix perintah (misalnya, 'git ')",
-			"addButton": "Tambah"
+			"deniedCommandPlaceholder": "Masukkan prefix perintah untuk ditolak (misalnya, 'rm -rf')",
+			"addButton": "Tambah",
+			"autoDenied": "Perintah dengan awalan `{{prefix}}` telah dilarang oleh pengguna. Jangan menghindari pembatasan ini dengan menjalankan perintah lain."
 		},
 		"showMenu": {
 			"label": "Tampilkan menu auto-approve di tampilan chat",
@@ -174,7 +196,8 @@
 			"title": "Permintaan Maks",
 			"description": "Secara otomatis membuat sejumlah permintaan API ini sebelum meminta persetujuan untuk melanjutkan tugas.",
 			"unlimited": "Tidak terbatas"
-		}
+		},
+		"selectOptionsFirst": "Pilih setidaknya satu opsi di bawah ini untuk mengaktifkan persetujuan otomatis"
 	},
 	"providers": {
 		"providerDocumentation": "Dokumentasi {{provider}}",
@@ -194,6 +217,8 @@
 		"createProfile": "Buat Profil",
 		"cannotDeleteOnlyProfile": "Tidak dapat menghapus satu-satunya profil",
 		"searchPlaceholder": "Cari profil",
+		"searchProviderPlaceholder": "Cari penyedia",
+		"noProviderMatchFound": "Tidak ada penyedia ditemukan",
 		"noMatchFound": "Tidak ada profil yang cocok ditemukan",
 		"vscodeLmDescription": " API Model Bahasa VS Code memungkinkan kamu menjalankan model yang disediakan oleh ekstensi VS Code lainnya (termasuk namun tidak terbatas pada GitHub Copilot). Cara termudah untuk memulai adalah menginstal ekstensi Copilot dan Copilot Chat dari VS Code Marketplace.",
 		"awsCustomArnUse": "Masukkan ARN Amazon Bedrock yang valid untuk model yang ingin kamu gunakan. Contoh format:",
@@ -349,6 +374,12 @@
 			"label": "Rate limit",
 			"description": "Waktu minimum antara permintaan API."
 		},
+		"consecutiveMistakeLimit": {
+			"label": "Batas Kesalahan & Pengulangan",
+			"description": "Jumlah kesalahan berturut-turut atau tindakan berulang sebelum menampilkan dialog 'Roo mengalami masalah'",
+			"unlimitedDescription": "Percobaan ulang tak terbatas diaktifkan (lanjut otomatis). Dialog tidak akan pernah muncul.",
+			"warning": "⚠️ Mengatur ke 0 memungkinkan percobaan ulang tak terbatas yang dapat menghabiskan penggunaan API yang signifikan"
+		},
 		"reasoningEffort": {
 			"label": "Upaya Reasoning Model",
 			"high": "Tinggi",
@@ -359,7 +390,9 @@
 		"claudeCode": {
 			"pathLabel": "Jalur Kode Claude",
 			"description": "Jalur opsional ke Claude Code CLI Anda. Defaultnya adalah 'claude' jika tidak diatur.",
-			"placeholder": "Default: claude"
+			"placeholder": "Default: claude",
+			"maxTokensLabel": "Token Output Maks",
+			"maxTokensDescription": "Jumlah maksimum token output untuk respons Claude Code. Default adalah 8000."
 		}
 	},
 	"browser": {
@@ -515,6 +548,9 @@
 			"label": "Warisi variabel environment",
 			"description": "Ketika diaktifkan, terminal akan mewarisi variabel environment dari proses parent VSCode, seperti pengaturan integrasi shell yang didefinisikan user-profile. Ini secara langsung mengalihkan pengaturan global VSCode `terminal.integrated.inheritEnv`. <0>Pelajari lebih lanjut</0>"
 		}
+	},
+	"advancedSettings": {
+		"title": "Pengaturan lanjutan"
 	},
 	"advanced": {
 		"diff": {

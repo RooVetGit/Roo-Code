@@ -179,22 +179,12 @@ export async function getEnvironmentDetails(cline: Task, includeFileDetails: boo
 	// Add current time information with timezone.
 	const now = new Date()
 
-	const formatter = new Intl.DateTimeFormat(undefined, {
-		year: "numeric",
-		month: "numeric",
-		day: "numeric",
-		hour: "numeric",
-		minute: "numeric",
-		second: "numeric",
-		hour12: true,
-	})
-
-	const timeZone = formatter.resolvedOptions().timeZone
+	const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone
 	const timeZoneOffset = -now.getTimezoneOffset() / 60 // Convert to hours and invert sign to match conventional notation
 	const timeZoneOffsetHours = Math.floor(Math.abs(timeZoneOffset))
 	const timeZoneOffsetMinutes = Math.abs(Math.round((Math.abs(timeZoneOffset) - timeZoneOffsetHours) * 60))
 	const timeZoneOffsetStr = `${timeZoneOffset >= 0 ? "+" : "-"}${timeZoneOffsetHours}:${timeZoneOffsetMinutes.toString().padStart(2, "0")}`
-	details += `\n\n# Current Time\n${formatter.format(now)} (${timeZone}, UTC${timeZoneOffsetStr})`
+	details += `\n\n# Current Time\nCurrent time in ISO 8601 UTC format: ${now.toISOString()}\nUser time zone: ${timeZone}, UTC${timeZoneOffsetStr}`
 
 	// Add context tokens information.
 	const { contextTokens, totalCost } = getApiMetrics(cline.clineMessages)
@@ -231,16 +221,6 @@ export async function getEnvironmentDetails(cline: Task, includeFileDetails: boo
 		if (modeDetails.customInstructions) {
 			details += `<custom_instructions>${modeDetails.customInstructions}</custom_instructions>\n`
 		}
-	}
-
-	// Add warning if not in code mode.
-	if (
-		!isToolAllowedForMode("write_to_file", currentMode, customModes ?? [], { apply_diff: cline.diffEnabled }) &&
-		!isToolAllowedForMode("apply_diff", currentMode, customModes ?? [], { apply_diff: cline.diffEnabled })
-	) {
-		const currentModeName = getModeBySlug(currentMode, customModes)?.name ?? currentMode
-		const defaultModeName = getModeBySlug(defaultModeSlug, customModes)?.name ?? defaultModeSlug
-		details += `\n\nNOTE: You are currently in '${currentModeName}' mode, which does not allow write operations. To write files, the user will need to switch to a mode that supports file writing, such as '${defaultModeName}' mode.`
 	}
 
 	if (includeFileDetails) {
