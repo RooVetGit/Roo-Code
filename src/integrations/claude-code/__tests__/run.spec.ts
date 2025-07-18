@@ -289,4 +289,176 @@ describe("runClaudeCode", () => {
 		consoleErrorSpy.mockRestore()
 		await generator.return(undefined)
 	})
+
+	test("should handle ENOENT errors during process spawn with helpful error message", async () => {
+		const { runClaudeCode } = await import("../run")
+		
+		// Mock execa to throw ENOENT error
+		const enoentError = new Error("spawn claude ENOENT")
+		;(enoentError as any).code = "ENOENT"
+		mockExeca.mockImplementationOnce(() => {
+			throw enoentError
+		})
+
+		const options = {
+			systemPrompt: "You are a helpful assistant",
+			messages: [{ role: "user" as const, content: "Hello" }],
+		}
+
+		const generator = runClaudeCode(options)
+
+		// Should throw enhanced ENOENT error
+		await expect(generator.next()).rejects.toThrow(/Claude Code executable 'claude' not found/)
+		await expect(generator.next()).rejects.toThrow(/Please install Claude Code CLI/)
+		await expect(generator.next()).rejects.toThrow(/Original error: spawn claude ENOENT/)
+	})
+
+	test("should handle ENOENT errors during process execution with helpful error message", async () => {
+		const { runClaudeCode } = await import("../run")
+		
+		// Create a mock process that emits ENOENT error
+		const mockProcessWithError = createMockProcess()
+		const enoentError = new Error("spawn claude ENOENT")
+		;(enoentError as any).code = "ENOENT"
+		
+		mockProcessWithError.on = vi.fn((event, callback) => {
+			if (event === "error") {
+				// Emit ENOENT error
+				setTimeout(() => callback(enoentError), 5)
+			} else if (event === "close") {
+				// Don't emit close event in this test
+			}
+		})
+
+		mockExeca.mockReturnValueOnce(mockProcessWithError)
+
+		const options = {
+			systemPrompt: "You are a helpful assistant",
+			messages: [{ role: "user" as const, content: "Hello" }],
+		}
+
+		const generator = runClaudeCode(options)
+
+		// Should throw enhanced ENOENT error
+		await expect(generator.next()).rejects.toThrow(/Claude Code executable 'claude' not found/)
+		await expect(generator.next()).rejects.toThrow(/Please install Claude Code CLI/)
+		await expect(generator.next()).rejects.toThrow(/Original error: spawn claude ENOENT/)
+	})
+
+	test("should handle ENOENT errors with custom claude path", async () => {
+		const { runClaudeCode } = await import("../run")
+		
+		const customPath = "/custom/path/to/claude"
+		const enoentError = new Error(`spawn ${customPath} ENOENT`)
+		;(enoentError as any).code = "ENOENT"
+		mockExeca.mockImplementationOnce(() => {
+			throw enoentError
+		})
+
+		const options = {
+			systemPrompt: "You are a helpful assistant",
+			messages: [{ role: "user" as const, content: "Hello" }],
+			path: customPath,
+		}
+
+		const generator = runClaudeCode(options)
+
+		// Should throw enhanced ENOENT error with custom path
+		await expect(generator.next()).rejects.toThrow(`Claude Code executable '${customPath}' not found`)
+	})
+
+	test("should preserve non-ENOENT errors during process spawn", async () => {
+		const { runClaudeCode } = await import("../run")
+		
+		// Mock execa to throw non-ENOENT error
+		const otherError = new Error("Permission denied")
+		mockExeca.mockImplementationOnce(() => {
+			throw otherError
+		})
+
+		const options = {
+			systemPrompt: "You are a helpful assistant",
+			messages: [{ role: "user" as const, content: "Hello" }],
+		}
+
+		const generator = runClaudeCode(options)
+
+		// Should throw original error, not enhanced ENOENT error
+		await expect(generator.next()).rejects.toThrow("Permission denied")
+		await expect(generator.next()).rejects.not.toThrow(/Claude Code executable/)
+	})
+
+	test("should preserve non-ENOENT errors during process execution", async () => {
+		const { runClaudeCode } = await import("../run")
+		
+		// Create a mock process that emits non-ENOENT error
+		const mockProcessWithError = createMockProcess()
+		const otherError = new Error("Permission denied")
+		
+		mockProcessWithError.on = vi.fn((event, callback) => {
+			if (event === "error") {
+				// Emit non-ENOENT error
+				setTimeout(() => callback(otherError), 5)
+			} else if (event === "close") {
+				// Don't emit close event in this test
+			}
+		})
+
+		mockExeca.mockReturnValueOnce(mockProcessWithError)
+
+		const options = {
+			systemPrompt: "You are a helpful assistant",
+			messages: [{ role: "user" as const, content: "Hello" }],
+		}
+
+		const generator = runClaudeCode(options)
+
+		// Should throw original error, not enhanced ENOENT error
+		await expect(generator.next()).rejects.toThrow("Permission denied")
+		await expect(generator.next()).rejects.not.toThrow(/Claude Code executable/)
+	})
+
+	test("should prioritize ClaudeCodeNotFoundError over generic exit code errors", async () => {
+		const { runClaudeCode } = await import("../run")
+		
+		// Create a mock process that emits ENOENT error and then exits with non-zero code
+		const mockProcessWithError = createMockProcess()
+		const enoentError = new Error("spawn claude ENOENT")
+		;(enoentError as any).code = "ENOENT"
+		
+		let resolveProcess: (value: { exitCode: number }) => void
+		const processPromise = new Promise<{ exitCode: number }>((resolve) => {
+			resolveProcess = resolve
+		})
+
+		mockProcessWithError.on = vi.fn((event, callback) => {
+			if (event === "error") {
+				// Emit ENOENT error
+				setTimeout(() => callback(enoentError), 5)
+			} else if (event === "close") {
+				// Emit non-zero exit code
+				setTimeout(() => {
+					callback(1)
+					resolveProcess({ exitCode: 1 })
+				}, 10)
+			}
+		})
+
+		mockProcessWithError.then = processPromise.then.bind(processPromise)
+		mockProcessWithError.catch = processPromise.catch.bind(processPromise)
+		mockProcessWithError.finally = processPromise.finally.bind(processPromise)
+
+		mockExeca.mockReturnValueOnce(mockProcessWithError)
+
+		const options = {
+			systemPrompt: "You are a helpful assistant",
+			messages: [{ role: "user" as const, content: "Hello" }],
+		}
+
+		const generator = runClaudeCode(options)
+
+		// Should throw ClaudeCodeNotFoundError, not generic exit code error
+		await expect(generator.next()).rejects.toThrow(/Claude Code executable 'claude' not found/)
+		await expect(generator.next()).rejects.not.toThrow(/process exited with code/)
+	})
 })

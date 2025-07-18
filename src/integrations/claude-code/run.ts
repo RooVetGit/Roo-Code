@@ -25,6 +25,7 @@ type ProcessState = {
 export async function* runClaudeCode(
 	options: ClaudeCodeOptions & { maxOutputTokens?: number },
 ): AsyncGenerator<ClaudeCodeMessage | string> {
+	const claudePath = options.path || "claude"
 	const process = runProcess(options)
 
 	const rl = readline.createInterface({
@@ -248,27 +249,21 @@ function attemptParseChunk(data: string): ClaudeCodeMessage | null {
  * Creates a user-friendly error message for Claude Code ENOENT errors
  */
 function createClaudeCodeNotFoundError(claudePath: string, originalError: Error): Error {
-	const platform = os.platform()
-	
-	let suggestion: string
-	switch (platform) {
-		case "darwin": // macOS
-		case "win32": // Windows
-		case "linux":
-		default:
-			suggestion = "Please install Claude Code CLI:\n" +
-				"1. Visit https://claude.ai/download to download Claude Code\n" +
-				"2. Follow the installation instructions for your operating system\n" +
-				"3. Ensure the 'claude' command is available in your PATH\n" +
-				"4. Alternatively, configure a custom path in Roo settings under 'Claude Code Path'"
-			break
-	}
+	const suggestion = [
+		"Please install Claude Code CLI:",
+		"1. Visit https://claude.ai/download to download Claude Code",
+		"2. Follow the installation instructions for your operating system",
+		"3. Ensure the 'claude' command is available in your PATH",
+		"4. Alternatively, configure a custom path in Roo settings under 'Claude Code Path'"
+	].join("\n")
 
-	const errorMessage = `Claude Code executable '${claudePath}' not found.
-
-${suggestion}
-
-Original error: ${originalError.message}`
+	const errorMessage = [
+		`Claude Code executable '${claudePath}' not found.`,
+		"",
+		suggestion,
+		"",
+		`Original error: ${originalError.message}`
+	].join("\n")
 
 	const error = new Error(errorMessage)
 	error.name = "ClaudeCodeNotFoundError"
