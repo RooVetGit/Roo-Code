@@ -405,4 +405,10 @@ export const BEDROCK_REGIONS = [
 	{ value: "sa-east-1", label: "sa-east-1" },
 	{ value: "us-gov-east-1", label: "us-gov-east-1" },
 	{ value: "us-gov-west-1", label: "us-gov-west-1" },
-].sort((a, b) => a.value.localeCompare(b.value))
+	{ value: "custom", label: "Custom region..." },
+].sort((a, b) => {
+	// Keep 'custom' option at the end
+	if (a.value === "custom") return 1;
+	if (b.value === "custom") return -1;
+	return a.value.localeCompare(b.value);
+})

@@ -18,11 +18,21 @@ type BedrockProps = {
 export const Bedrock = ({ apiConfiguration, setApiConfigurationField, selectedModelInfo }: BedrockProps) => {
 	const { t } = useAppTranslation()
 	const [awsEndpointSelected, setAwsEndpointSelected] = useState(!!apiConfiguration?.awsBedrockEndpointEnabled)
+	const [isCustomRegion, setIsCustomRegion] = useState(
+		apiConfiguration?.awsRegion && !BEDROCK_REGIONS.some(region => region.value === apiConfiguration.awsRegion)
+	)
 
 	// Update the endpoint enabled state when the configuration changes
 	useEffect(() => {
 		setAwsEndpointSelected(!!apiConfiguration?.awsBedrockEndpointEnabled)
 	}, [apiConfiguration?.awsBedrockEndpointEnabled])
+
+	// Update custom region state when the configuration changes
+	useEffect(() => {
+		const hasCustomRegion = apiConfiguration?.awsRegion && 
+			!BEDROCK_REGIONS.some((region: { value: string; label: string }) => region.value === apiConfiguration.awsRegion && region.value !== "custom")
+		setIsCustomRegion(!!hasCustomRegion)
+	}, [apiConfiguration?.awsRegion])
 
 	const handleInputChange = useCallback(
 		<K extends keyof ProviderSettings, E>(
@@ -88,8 +98,16 @@ export const Bedrock = ({ apiConfiguration, setApiConfigurationField, selectedMo
 			<div>
 				<label className="block font-medium mb-1">{t("settings:providers.awsRegion")}</label>
 				<Select
-					value={apiConfiguration?.awsRegion || ""}
-					onValueChange={(value) => setApiConfigurationField("awsRegion", value)}>
+					value={isCustomRegion ? "custom" : (apiConfiguration?.awsRegion || "")}
+					onValueChange={(value) => {
+						if (value === "custom") {
+							setIsCustomRegion(true)
+							setApiConfigurationField("awsRegion", "")
+						} else {
+							setIsCustomRegion(false)
+							setApiConfigurationField("awsRegion", value)
+						}
+					}}>
 					<SelectTrigger className="w-full">
 						<SelectValue placeholder={t("settings:common.select")} />
 					</SelectTrigger>
@@ -101,6 +119,17 @@ export const Bedrock = ({ apiConfiguration, setApiConfigurationField, selectedMo
 						))}
 					</SelectContent>
 				</Select>
+				{isCustomRegion && (
+					<div className="mt-2">
+						<VSCodeTextField
+							value={apiConfiguration?.awsRegion || ""}
+							onInput={handleInputChange("awsRegion")}
+							placeholder="Enter custom region (e.g., us-west-3)"
+							className="w-full">
+							<label className="block font-medium mb-1">Custom Region</label>
+						</VSCodeTextField>
+					</div>
+				)}
 			</div>
 			<Checkbox
 				checked={apiConfiguration?.awsUseCrossRegionInference || false}
