@@ -19,7 +19,7 @@ export const Bedrock = ({ apiConfiguration, setApiConfigurationField, selectedMo
 	const { t } = useAppTranslation()
 	const [awsEndpointSelected, setAwsEndpointSelected] = useState(!!apiConfiguration?.awsBedrockEndpointEnabled)
 	const [isCustomRegion, setIsCustomRegion] = useState(
-		apiConfiguration?.awsRegion && !BEDROCK_REGIONS.some(region => region.value === apiConfiguration.awsRegion)
+		apiConfiguration?.awsRegion && !BEDROCK_REGIONS.some((region) => region.value === apiConfiguration.awsRegion),
 	)
 
 	// Update the endpoint enabled state when the configuration changes
@@ -27,12 +27,17 @@ export const Bedrock = ({ apiConfiguration, setApiConfigurationField, selectedMo
 		setAwsEndpointSelected(!!apiConfiguration?.awsBedrockEndpointEnabled)
 	}, [apiConfiguration?.awsBedrockEndpointEnabled])
 
-	// Update custom region state when the configuration changes
+	// Initialize custom region state on component mount
 	useEffect(() => {
-		const hasCustomRegion = apiConfiguration?.awsRegion && 
-			!BEDROCK_REGIONS.some((region: { value: string; label: string }) => region.value === apiConfiguration.awsRegion && region.value !== "custom")
-		setIsCustomRegion(!!hasCustomRegion)
-	}, [apiConfiguration?.awsRegion])
+		if (apiConfiguration?.awsRegion) {
+			const isStandardRegion = BEDROCK_REGIONS.some(
+				(region: { value: string; label: string }) =>
+					region.value === apiConfiguration.awsRegion && region.value !== "custom",
+			)
+			setIsCustomRegion(!isStandardRegion)
+		}
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, []) // Only run on mount - deliberately ignoring apiConfiguration dependency to avoid conflicts
 
 	const handleInputChange = useCallback(
 		<K extends keyof ProviderSettings, E>(
@@ -98,7 +103,7 @@ export const Bedrock = ({ apiConfiguration, setApiConfigurationField, selectedMo
 			<div>
 				<label className="block font-medium mb-1">{t("settings:providers.awsRegion")}</label>
 				<Select
-					value={isCustomRegion ? "custom" : (apiConfiguration?.awsRegion || "")}
+					value={isCustomRegion ? "custom" : apiConfiguration?.awsRegion || ""}
 					onValueChange={(value) => {
 						if (value === "custom") {
 							setIsCustomRegion(true)
