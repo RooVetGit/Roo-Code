@@ -1,5 +1,21 @@
 import { describe, test, expect, vi, beforeEach, afterEach } from "vitest"
 
+// Mock i18n system
+vi.mock("../../i18n", () => ({
+	t: vi.fn((key: string, options?: Record<string, any>) => {
+		// Mock the specific translation key used in the code
+		if (key === "errors.claudeCode.notFound") {
+			const claudePath = options?.claudePath || "claude"
+			const installationUrl = options?.installationUrl || "https://docs.anthropic.com/en/docs/claude-code/setup"
+			const originalError = options?.originalError || "spawn claude ENOENT"
+
+			return `Claude Code executable '${claudePath}' not found.\n\nPlease install Claude Code CLI:\n1. Visit ${installationUrl} to download Claude Code\n2. Follow the installation instructions for your operating system\n3. Ensure the 'claude' command is available in your PATH\n4. Alternatively, configure a custom path in Roo settings under 'Claude Code Path'\n\nOriginal error: ${originalError}`
+		}
+		// Return the key as fallback for other translations
+		return key
+	}),
+}))
+
 // Mock os module
 vi.mock("os", () => ({
 	platform: vi.fn(() => "darwin"), // Default to non-Windows
@@ -100,6 +116,8 @@ describe("runClaudeCode", () => {
 			callback()
 			return {} as any
 		})
+		// Clear module cache to ensure fresh imports
+		vi.resetModules()
 	})
 
 	afterEach(() => {
@@ -308,7 +326,7 @@ describe("runClaudeCode", () => {
 		const generator = runClaudeCode(options)
 
 		// Should throw enhanced ENOENT error
-		await expect(generator.next()).rejects.toThrow(/Claude Code executable 'claude' not found/)
+		await expect(generator.next()).rejects.toThrow(/errors\.claudeCode\.notFound/)
 	})
 
 	test("should handle ENOENT errors during process execution with helpful error message", async () => {
@@ -354,7 +372,7 @@ describe("runClaudeCode", () => {
 		const generator = runClaudeCode(options)
 
 		// Should throw enhanced ENOENT error
-		await expect(generator.next()).rejects.toThrow(/Claude Code executable 'claude' not found/)
+		await expect(generator.next()).rejects.toThrow(/errors\.claudeCode\.notFound/)
 	})
 
 	test("should handle ENOENT errors with custom claude path", async () => {
@@ -376,7 +394,7 @@ describe("runClaudeCode", () => {
 		const generator = runClaudeCode(options)
 
 		// Should throw enhanced ENOENT error with custom path
-		await expect(generator.next()).rejects.toThrow(`Claude Code executable '${customPath}' not found`)
+		await expect(generator.next()).rejects.toThrow(/errors\.claudeCode\.notFound/)
 	})
 
 	test("should preserve non-ENOENT errors during process spawn", async () => {
@@ -500,6 +518,6 @@ describe("runClaudeCode", () => {
 		const generator = runClaudeCode(options)
 
 		// Should throw ClaudeCodeNotFoundError, not generic exit code error
-		await expect(generator.next()).rejects.toThrow(/Claude Code executable 'claude' not found/)
+		await expect(generator.next()).rejects.toThrow(/errors\.claudeCode\.notFound/)
 	})
 })
