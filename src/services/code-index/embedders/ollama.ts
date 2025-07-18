@@ -26,13 +26,14 @@ export class CodeIndexOllamaEmbedder implements IEmbedder {
 
 	/**
 	 * Creates embeddings for the given texts using the specified Ollama model.
+	 * Ollama's /api/embed endpoint processes one text at a time, so we make sequential calls.
 	 * @param texts - An array of strings to embed.
 	 * @param model - Optional model ID to override the default.
 	 * @returns A promise that resolves to an EmbeddingResponse containing the embeddings and usage data.
 	 */
 	async createEmbeddings(texts: string[], model?: string): Promise<EmbeddingResponse> {
 		const modelToUse = model || this.defaultModelId
-		const url = `${this.baseUrl}/api/embed` // Endpoint as specified
+		const url = `${this.baseUrl}/api/embed`
 
 		// Apply model-specific query prefix if required
 		const queryPrefix = getModelQueryPrefix("ollama", modelToUse)
@@ -60,48 +61,55 @@ export class CodeIndexOllamaEmbedder implements IEmbedder {
 			: texts
 
 		try {
-			// Note: Standard Ollama API uses 'prompt' for single text, not 'input' for array.
-			// Implementing based on user's specific request structure.
+			const embeddings: number[][] = []
 
-			// Add timeout to prevent indefinite hanging
-			const controller = new AbortController()
-			const timeoutId = setTimeout(() => controller.abort(), OLLAMA_EMBEDDING_TIMEOUT_MS)
+			// Process each text individually since Ollama's /api/embed endpoint
+			// expects a single 'prompt' field, not an array of inputs
+			for (let i = 0; i < processedTexts.length; i++) {
+				const text = processedTexts[i]
 
-			const response = await fetch(url, {
-				method: "POST",
-				headers: {
-					"Content-Type": "application/json",
-				},
-				body: JSON.stringify({
-					model: modelToUse,
-					input: processedTexts, // Using 'input' as requested
-				}),
-				signal: controller.signal,
-			})
-			clearTimeout(timeoutId)
+				// Add timeout to prevent indefinite hanging
+				const controller = new AbortController()
+				const timeoutId = setTimeout(() => controller.abort(), OLLAMA_EMBEDDING_TIMEOUT_MS)
 
-			if (!response.ok) {
-				let errorBody = t("embeddings:ollama.couldNotReadErrorBody")
-				try {
-					errorBody = await response.text()
-				} catch (e) {
-					// Ignore error reading body
-				}
-				throw new Error(
-					t("embeddings:ollama.requestFailed", {
-						status: response.status,
-						statusText: response.statusText,
-						errorBody,
+				const response = await fetch(url, {
+					method: "POST",
+					headers: {
+						"Content-Type": "application/json",
+					},
+					body: JSON.stringify({
+						model: modelToUse,
+						prompt: text, // Ollama expects 'prompt', not 'input'
 					}),
-				)
-			}
+					signal: controller.signal,
+				})
+				clearTimeout(timeoutId)
 
-			const data = await response.json()
+				if (!response.ok) {
+					let errorBody = t("embeddings:ollama.couldNotReadErrorBody")
+					try {
+						errorBody = await response.text()
+					} catch (e) {
+						// Ignore error reading body
+					}
+					throw new Error(
+						t("embeddings:ollama.requestFailed", {
+							status: response.status,
+							statusText: response.statusText,
+							errorBody,
+						}),
+					)
+				}
 
-			// Extract embeddings using 'embeddings' key as requested
-			const embeddings = data.embeddings
-			if (!embeddings || !Array.isArray(embeddings)) {
-				throw new Error(t("embeddings:ollama.invalidResponseStructure"))
+				const data = await response.json()
+
+				// Ollama returns 'embedding' (singular), not 'embeddings' (plural)
+				const embedding = data.embedding
+				if (!embedding || !Array.isArray(embedding)) {
+					throw new Error(t("embeddings:ollama.invalidResponseStructure"))
+				}
+
+				embeddings.push(embedding)
 			}
 
 			return {
@@ -210,7 +218,7 @@ export class CodeIndexOllamaEmbedder implements IEmbedder {
 					},
 					body: JSON.stringify({
 						model: this.defaultModelId,
-						input: ["test"],
+						prompt: "test", // Use 'prompt' instead of 'input' array
 					}),
 					signal: testController.signal,
 				})

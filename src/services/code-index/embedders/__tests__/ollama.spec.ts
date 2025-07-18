@@ -103,7 +103,7 @@ describe("CodeIndexOllamaEmbedder", () => {
 					status: 200,
 					json: () =>
 						Promise.resolve({
-							embeddings: [[0.1, 0.2, 0.3]],
+							embedding: [0.1, 0.2, 0.3],
 						}),
 				} as Response),
 			)
@@ -126,7 +126,7 @@ describe("CodeIndexOllamaEmbedder", () => {
 			expect(secondCall[0]).toBe("http://localhost:11434/api/embed")
 			expect(secondCall[1]?.method).toBe("POST")
 			expect(secondCall[1]?.headers).toEqual({ "Content-Type": "application/json" })
-			expect(secondCall[1]?.body).toBe(JSON.stringify({ model: "nomic-embed-text", input: ["test"] }))
+			expect(secondCall[1]?.body).toBe(JSON.stringify({ model: "nomic-embed-text", prompt: "test" }))
 			expect(secondCall[1]?.signal).toBeDefined() // AbortSignal for timeout
 		})
 
@@ -238,6 +238,96 @@ describe("CodeIndexOllamaEmbedder", () => {
 
 			expect(result.valid).toBe(false)
 			expect(result.error).toBe("Network timeout")
+		})
+	})
+
+	describe("createEmbeddings", () => {
+		it("should create embeddings for multiple texts using sequential calls", async () => {
+			// Mock successful responses for each individual text
+			mockFetch
+				.mockImplementationOnce(() =>
+					Promise.resolve({
+						ok: true,
+						status: 200,
+						json: () =>
+							Promise.resolve({
+								embedding: [0.1, 0.2, 0.3],
+							}),
+					} as Response),
+				)
+				.mockImplementationOnce(() =>
+					Promise.resolve({
+						ok: true,
+						status: 200,
+						json: () =>
+							Promise.resolve({
+								embedding: [0.4, 0.5, 0.6],
+							}),
+					} as Response),
+				)
+
+			const result = await embedder.createEmbeddings(["text1", "text2"])
+
+			expect(result.embeddings).toEqual([
+				[0.1, 0.2, 0.3],
+				[0.4, 0.5, 0.6],
+			])
+			expect(mockFetch).toHaveBeenCalledTimes(2)
+
+			// Check first call
+			const firstCall = mockFetch.mock.calls[0]
+			expect(firstCall[0]).toBe("http://localhost:11434/api/embed")
+			expect(firstCall[1]?.method).toBe("POST")
+			expect(firstCall[1]?.headers).toEqual({ "Content-Type": "application/json" })
+			expect(firstCall[1]?.body).toBe(JSON.stringify({ model: "nomic-embed-text", prompt: "text1" }))
+			expect(firstCall[1]?.signal).toBeDefined()
+
+			// Check second call
+			const secondCall = mockFetch.mock.calls[1]
+			expect(secondCall[0]).toBe("http://localhost:11434/api/embed")
+			expect(secondCall[1]?.method).toBe("POST")
+			expect(secondCall[1]?.headers).toEqual({ "Content-Type": "application/json" })
+			expect(secondCall[1]?.body).toBe(JSON.stringify({ model: "nomic-embed-text", prompt: "text2" }))
+			expect(secondCall[1]?.signal).toBeDefined()
+		})
+
+		it("should handle errors during embedding creation", async () => {
+			mockFetch.mockRejectedValueOnce(new Error("ECONNREFUSED"))
+
+			await expect(embedder.createEmbeddings(["test"])).rejects.toThrow(
+				"embeddings:ollama.serviceNotRunning",
+			)
+		})
+
+		it("should handle invalid response structure", async () => {
+			mockFetch.mockImplementationOnce(() =>
+				Promise.resolve({
+					ok: true,
+					status: 200,
+					json: () =>
+						Promise.resolve({
+							// Missing 'embedding' field
+							invalid: "response",
+						}),
+				} as Response),
+			)
+
+			await expect(embedder.createEmbeddings(["test"])).rejects.toThrow(
+				"embeddings:ollama.invalidResponseStructure",
+			)
+		})
+
+		it("should handle HTTP error responses", async () => {
+			mockFetch.mockImplementationOnce(() =>
+				Promise.resolve({
+					ok: false,
+					status: 500,
+					statusText: "Internal Server Error",
+					text: () => Promise.resolve("Server error details"),
+				} as Response),
+			)
+
+			await expect(embedder.createEmbeddings(["test"])).rejects.toThrow("embeddings:ollama.requestFailed")
 		})
 	})
 })
