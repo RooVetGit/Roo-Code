@@ -5,8 +5,12 @@ import { ClaudeCodeMessage } from "./types"
 import readline from "readline"
 import { CLAUDE_CODE_DEFAULT_MAX_OUTPUT_TOKENS } from "@roo-code/types"
 import * as os from "os"
+import { t } from "../../i18n"
 
 const cwd = vscode.workspace.workspaceFolders?.map((folder) => folder.uri.fsPath).at(0)
+
+// Claude Code installation URL - can be easily updated if needed
+const CLAUDE_CODE_INSTALLATION_URL = "https://docs.anthropic.com/en/docs/claude-code/setup"
 
 type ClaudeCodeOptions = {
 	systemPrompt: string
@@ -256,21 +260,11 @@ function attemptParseChunk(data: string): ClaudeCodeMessage | null {
  * Creates a user-friendly error message for Claude Code ENOENT errors
  */
 function createClaudeCodeNotFoundError(claudePath: string, originalError: Error): Error {
-	const suggestion = [
-		"Please install Claude Code CLI:",
-		"1. Visit https://claude.ai/download to download Claude Code",
-		"2. Follow the installation instructions for your operating system",
-		"3. Ensure the 'claude' command is available in your PATH",
-		"4. Alternatively, configure a custom path in Roo settings under 'Claude Code Path'",
-	].join("\n")
-
-	const errorMessage = [
-		`Claude Code executable '${claudePath}' not found.`,
-		"",
-		suggestion,
-		"",
-		`Original error: ${originalError.message}`,
-	].join("\n")
+	const errorMessage = t("errors.claudeCode.notFound", {
+		claudePath,
+		installationUrl: CLAUDE_CODE_INSTALLATION_URL,
+		originalError: originalError.message,
+	})
 
 	const error = new Error(errorMessage)
 	error.name = "ClaudeCodeNotFoundError"
