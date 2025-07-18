@@ -9,8 +9,25 @@ vi.mock("../../prompts/responses", () => ({
 	},
 }))
 
+// Mock vscode module
+vi.mock("vscode", () => ({
+	workspace: {
+		getConfiguration: vi.fn(() => ({
+			get: vi.fn(),
+		})),
+	},
+}))
+
+// Mock Package module
+vi.mock("../../../shared/package", () => ({
+	Package: {
+		name: "roo-cline",
+	},
+}))
+
 import { attemptCompletionTool } from "../attemptCompletionTool"
 import { Task } from "../../task/Task"
+import * as vscode from "vscode"
 
 describe("attemptCompletionTool", () => {
 	let mockTask: Partial<Task>
@@ -20,6 +37,7 @@ describe("attemptCompletionTool", () => {
 	let mockRemoveClosingTag: ReturnType<typeof vi.fn>
 	let mockToolDescription: ReturnType<typeof vi.fn>
 	let mockAskFinishSubTaskApproval: ReturnType<typeof vi.fn>
+	let mockGetConfiguration: ReturnType<typeof vi.fn>
 
 	beforeEach(() => {
 		mockPushToolResult = vi.fn()
@@ -28,6 +46,17 @@ describe("attemptCompletionTool", () => {
 		mockRemoveClosingTag = vi.fn()
 		mockToolDescription = vi.fn()
 		mockAskFinishSubTaskApproval = vi.fn()
+		mockGetConfiguration = vi.fn(() => ({
+			get: vi.fn((key: string, defaultValue: any) => {
+				if (key === "preventCompletionWithOpenTodos") {
+					return defaultValue // Default to false unless overridden in test
+				}
+				return defaultValue
+			}),
+		}))
+
+		// Setup vscode mock
+		vi.mocked(vscode.workspace.getConfiguration).mockImplementation(mockGetConfiguration)
 
 		mockTask = {
 			consecutiveMistakeCount: 0,
@@ -221,6 +250,138 @@ describe("attemptCompletionTool", () => {
 			expect(mockTask.consecutiveMistakeCount).toBe(1)
 			expect(mockTask.recordToolError).toHaveBeenCalledWith("attempt_completion")
 			expect(mockPushToolResult).toHaveBeenCalledWith(
+				expect.stringContaining("Cannot complete task while there are incomplete todos"),
+			)
+		})
+
+		it("should allow completion when setting is disabled even with incomplete todos", async () => {
+			const block: AttemptCompletionToolUse = {
+				type: "tool_use",
+				name: "attempt_completion",
+				params: { result: "Task completed successfully" },
+				partial: false,
+			}
+
+			const todosWithPending: TodoItem[] = [
+				{ id: "1", content: "First task", status: "completed" },
+				{ id: "2", content: "Second task", status: "pending" },
+			]
+
+			mockTask.todoList = todosWithPending
+
+			// Ensure the setting is disabled (default behavior)
+			mockGetConfiguration.mockReturnValue({
+				get: vi.fn((key: string, defaultValue: any) => {
+					if (key === "preventCompletionWithOpenTodos") {
+						return false // Setting is disabled
+					}
+					return defaultValue
+				}),
+			})
+
+			await attemptCompletionTool(
+				mockTask as Task,
+				block,
+				mockAskApproval,
+				mockHandleError,
+				mockPushToolResult,
+				mockRemoveClosingTag,
+				mockToolDescription,
+				mockAskFinishSubTaskApproval,
+			)
+
+			// Should not prevent completion when setting is disabled
+			expect(mockTask.consecutiveMistakeCount).toBe(0)
+			expect(mockTask.recordToolError).not.toHaveBeenCalled()
+			expect(mockPushToolResult).not.toHaveBeenCalledWith(
+				expect.stringContaining("Cannot complete task while there are incomplete todos"),
+			)
+		})
+
+		it("should prevent completion when setting is enabled with incomplete todos", async () => {
+			const block: AttemptCompletionToolUse = {
+				type: "tool_use",
+				name: "attempt_completion",
+				params: { result: "Task completed successfully" },
+				partial: false,
+			}
+
+			const todosWithPending: TodoItem[] = [
+				{ id: "1", content: "First task", status: "completed" },
+				{ id: "2", content: "Second task", status: "pending" },
+			]
+
+			mockTask.todoList = todosWithPending
+
+			// Enable the setting
+			mockGetConfiguration.mockReturnValue({
+				get: vi.fn((key: string, defaultValue: any) => {
+					if (key === "preventCompletionWithOpenTodos") {
+						return true // Setting is enabled
+					}
+					return defaultValue
+				}),
+			})
+
+			await attemptCompletionTool(
+				mockTask as Task,
+				block,
+				mockAskApproval,
+				mockHandleError,
+				mockPushToolResult,
+				mockRemoveClosingTag,
+				mockToolDescription,
+				mockAskFinishSubTaskApproval,
+			)
+
+			// Should prevent completion when setting is enabled and there are incomplete todos
+			expect(mockTask.consecutiveMistakeCount).toBe(1)
+			expect(mockTask.recordToolError).toHaveBeenCalledWith("attempt_completion")
+			expect(mockPushToolResult).toHaveBeenCalledWith(
+				expect.stringContaining("Cannot complete task while there are incomplete todos"),
+			)
+		})
+
+		it("should allow completion when setting is enabled but all todos are completed", async () => {
+			const block: AttemptCompletionToolUse = {
+				type: "tool_use",
+				name: "attempt_completion",
+				params: { result: "Task completed successfully" },
+				partial: false,
+			}
+
+			const completedTodos: TodoItem[] = [
+				{ id: "1", content: "First task", status: "completed" },
+				{ id: "2", content: "Second task", status: "completed" },
+			]
+
+			mockTask.todoList = completedTodos
+
+			// Enable the setting
+			mockGetConfiguration.mockReturnValue({
+				get: vi.fn((key: string, defaultValue: any) => {
+					if (key === "preventCompletionWithOpenTodos") {
+						return true // Setting is enabled
+					}
+					return defaultValue
+				}),
+			})
+
+			await attemptCompletionTool(
+				mockTask as Task,
+				block,
+				mockAskApproval,
+				mockHandleError,
+				mockPushToolResult,
+				mockRemoveClosingTag,
+				mockToolDescription,
+				mockAskFinishSubTaskApproval,
+			)
+
+			// Should allow completion when setting is enabled but all todos are completed
+			expect(mockTask.consecutiveMistakeCount).toBe(0)
+			expect(mockTask.recordToolError).not.toHaveBeenCalled()
+			expect(mockPushToolResult).not.toHaveBeenCalledWith(
 				expect.stringContaining("Cannot complete task while there are incomplete todos"),
 			)
 		})

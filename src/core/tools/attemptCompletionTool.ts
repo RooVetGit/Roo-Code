@@ -1,4 +1,5 @@
 import Anthropic from "@anthropic-ai/sdk"
+import * as vscode from "vscode"
 
 import { TelemetryService } from "@roo-code/telemetry"
 
@@ -14,6 +15,7 @@ import {
 	AskFinishSubTaskApproval,
 } from "../../shared/tools"
 import { formatResponse } from "../prompts/responses"
+import { Package } from "../../shared/package"
 
 export async function attemptCompletionTool(
 	cline: Task,
@@ -28,10 +30,15 @@ export async function attemptCompletionTool(
 	const result: string | undefined = block.params.result
 	const command: string | undefined = block.params.command
 
-	// Check if there are incomplete todos
+	// Get the setting for preventing completion with open todos from VSCode configuration
+	const preventCompletionWithOpenTodos = vscode.workspace
+		.getConfiguration(Package.name)
+		.get<boolean>("preventCompletionWithOpenTodos", false)
+
+	// Check if there are incomplete todos (only if the setting is enabled)
 	const hasIncompleteTodos = cline.todoList && cline.todoList.some((todo) => todo.status !== "completed")
 
-	if (hasIncompleteTodos) {
+	if (preventCompletionWithOpenTodos && hasIncompleteTodos) {
 		cline.consecutiveMistakeCount++
 		cline.recordToolError("attempt_completion")
 		pushToolResult(
