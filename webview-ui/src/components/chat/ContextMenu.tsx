@@ -208,7 +208,11 @@ const ContextMenu: React.FC<ContextMenuProps> = ({
 			}}
 			onMouseDown={onMouseDown}>
 			<div
+				id="context-menu"
 				ref={menuRef}
+				role="listbox"
+				aria-label="File insertion menu"
+				aria-activedescendant={selectedIndex >= 0 ? `context-menu-option-${selectedIndex}` : undefined}
 				style={{
 					backgroundColor: "var(--vscode-dropdown-background)",
 					border: "1px solid var(--vscode-editorGroup-border)",
@@ -224,6 +228,10 @@ const ContextMenu: React.FC<ContextMenuProps> = ({
 					filteredOptions.map((option, index) => (
 						<div
 							key={`${option.type}-${option.value || index}`}
+							id={`context-menu-option-${index}`}
+							role="option"
+							aria-selected={index === selectedIndex && isOptionSelectable(option)}
+							aria-disabled={!isOptionSelectable(option)}
 							onClick={() => isOptionSelectable(option) && onSelect(option.type, option.value)}
 							style={{
 								padding: "4px 6px",

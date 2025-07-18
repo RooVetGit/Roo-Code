@@ -180,6 +180,7 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 		const contextMenuContainerRef = useRef<HTMLDivElement>(null)
 		const [isEnhancingPrompt, setIsEnhancingPrompt] = useState(false)
 		const [isFocused, setIsFocused] = useState(false)
+		const [screenReaderAnnouncement, setScreenReaderAnnouncement] = useState("")
 
 		// Use custom hook for prompt history navigation
 		const { handleHistoryNavigation, resetHistoryNavigation, resetOnInputChange } = usePromptHistory({
@@ -500,7 +501,15 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 				setCursorPosition(newCursorPosition)
 
 				const showMenu = shouldShowContextMenu(newValue, newCursorPosition)
+				const wasMenuVisible = showContextMenu
 				setShowContextMenu(showMenu)
+
+				// Announce menu state changes for screen readers
+				if (showMenu && !wasMenuVisible) {
+					setScreenReaderAnnouncement("File insertion menu opened")
+				} else if (!showMenu && wasMenuVisible) {
+					setScreenReaderAnnouncement("File insertion menu closed")
+				}
 
 				if (showMenu) {
 					if (newValue.startsWith("/")) {
@@ -550,7 +559,7 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 					setFileSearchResults([]) // Clear file search results.
 				}
 			},
-			[setInputValue, setSearchRequestId, setFileSearchResults, setSearchLoading, resetOnInputChange],
+			[setInputValue, setSearchRequestId, setFileSearchResults, setSearchLoading, resetOnInputChange, showContextMenu],
 		)
 
 		useEffect(() => {
@@ -558,6 +567,48 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 				setSelectedType(null)
 			}
 		}, [showContextMenu])
+
+		// Announce selected menu item for screen readers
+		useEffect(() => {
+			if (showContextMenu && selectedMenuIndex >= 0) {
+				const options = getContextMenuOptions(
+					searchQuery,
+					inputValue,
+					selectedType,
+					queryItems,
+					fileSearchResults,
+					allModes,
+				)
+				const selectedOption = options[selectedMenuIndex]
+				if (selectedOption && selectedOption.type !== ContextMenuOptionType.NoResults) {
+					let announcement = ""
+					switch (selectedOption.type) {
+						case ContextMenuOptionType.File:
+						case ContextMenuOptionType.OpenedFile:
+							announcement = `File: ${selectedOption.value || selectedOption.label}, ${selectedMenuIndex + 1} of ${options.length}`
+							break
+						case ContextMenuOptionType.Folder:
+							announcement = `Folder: ${selectedOption.value || selectedOption.label}, ${selectedMenuIndex + 1} of ${options.length}`
+							break
+						case ContextMenuOptionType.Problems:
+							announcement = `Problems, ${selectedMenuIndex + 1} of ${options.length}`
+							break
+						case ContextMenuOptionType.Terminal:
+							announcement = `Terminal, ${selectedMenuIndex + 1} of ${options.length}`
+							break
+						case ContextMenuOptionType.Git:
+							announcement = `Git: ${selectedOption.label || selectedOption.value}, ${selectedMenuIndex + 1} of ${options.length}`
+							break
+						case ContextMenuOptionType.Mode:
+							announcement = `Mode: ${selectedOption.label}, ${selectedMenuIndex + 1} of ${options.length}`
+							break
+						default:
+							announcement = `${selectedOption.label || selectedOption.value}, ${selectedMenuIndex + 1} of ${options.length}`
+					}
+					setScreenReaderAnnouncement(announcement)
+				}
+			}
+		}, [showContextMenu, selectedMenuIndex, searchQuery, inputValue, selectedType, queryItems, fileSearchResults, allModes])
 
 		const handleBlur = useCallback(() => {
 			// Only hide the context menu if the user didn't click on it.
@@ -1076,6 +1127,10 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 					minRows={3}
 					maxRows={15}
 					autoFocus={true}
+					aria-expanded={showContextMenu}
+					aria-haspopup="listbox"
+					aria-controls={showContextMenu ? "context-menu" : undefined}
+					aria-describedby="context-menu-instructions"
 					className={cn(
 						"w-full",
 						"text-vscode-input-foreground",
@@ -1248,6 +1303,26 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 								/>
 							</div>
 						)}
+
+						{/* Live region for screen reader announcements */}
+						<div
+							aria-live="polite"
+							aria-atomic="true"
+							className="sr-only"
+							style={{
+								position: "absolute",
+								left: "-10000px",
+								width: "1px",
+								height: "1px",
+								overflow: "hidden",
+							}}>
+							{screenReaderAnnouncement}
+						</div>
+
+						{/* Instructions for screen readers */}
+						<div id="context-menu-instructions" className="sr-only">
+							Type @ to open file insertion menu. Use arrow keys to navigate, Enter to select, Escape to close.
+						</div>
 
 						{renderTextAreaSection()}
 					</div>
