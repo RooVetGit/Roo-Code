@@ -38,18 +38,43 @@ export const Bedrock = ({ apiConfiguration, setApiConfigurationField, selectedMo
 	return (
 		<>
 			<VSCodeRadioGroup
-				value={apiConfiguration?.awsUseProfile ? "profile" : "credentials"}
-				onChange={handleInputChange(
-					"awsUseProfile",
-					(e) => (e.target as HTMLInputElement).value === "profile",
-				)}>
+				value={
+					apiConfiguration?.awsUseApiKey
+						? "apikey"
+						: apiConfiguration?.awsUseProfile
+							? "profile"
+							: "credentials"
+				}
+				onChange={(e) => {
+					const value = (e.target as HTMLInputElement).value
+					if (value === "apikey") {
+						setApiConfigurationField("awsUseApiKey", true)
+						setApiConfigurationField("awsUseProfile", false)
+					} else if (value === "profile") {
+						setApiConfigurationField("awsUseApiKey", false)
+						setApiConfigurationField("awsUseProfile", true)
+					} else {
+						setApiConfigurationField("awsUseApiKey", false)
+						setApiConfigurationField("awsUseProfile", false)
+					}
+				}}>
 				<VSCodeRadio value="credentials">{t("settings:providers.awsCredentials")}</VSCodeRadio>
 				<VSCodeRadio value="profile">{t("settings:providers.awsProfile")}</VSCodeRadio>
+				<VSCodeRadio value="apikey">{t("settings:providers.awsApiKey")}</VSCodeRadio>
 			</VSCodeRadioGroup>
 			<div className="text-sm text-vscode-descriptionForeground -mt-3">
 				{t("settings:providers.apiKeyStorageNotice")}
 			</div>
-			{apiConfiguration?.awsUseProfile ? (
+			{apiConfiguration?.awsUseApiKey ? (
+				<VSCodeTextField
+					value={apiConfiguration?.awsApiKey || ""}
+					type="password"
+					onInput={handleInputChange("awsApiKey")}
+					placeholder={t("settings:placeholders.apiKey")}
+					className="w-full">
+					<label className="block font-medium mb-1">{t("settings:providers.awsApiKey")}</label>
+				</VSCodeTextField>
+			) : apiConfiguration?.awsUseProfile ? (
 				<VSCodeTextField
 					value={apiConfiguration?.awsProfile || ""}
 					onInput={handleInputChange("awsProfile")}
