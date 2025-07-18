@@ -36,13 +36,13 @@ vi.mock("@src/utils/vscode", () => ({
 	},
 }))
 
-// Mock use-sound hook
+// Mock use-sound hook - must be defined before any imports that use it
 const mockPlayFunction = vi.fn()
-vi.mock("use-sound", () => ({
-	default: vi.fn().mockImplementation(() => {
-		return [mockPlayFunction]
-	}),
-}))
+vi.mock("use-sound", () => {
+	return {
+		default: vi.fn(() => [mockPlayFunction, { stop: vi.fn(), pause: vi.fn() }]),
+	}
+})
 
 // Mock components that use ESM dependencies
 vi.mock("../BrowserSessionRow", () => ({
@@ -107,6 +107,7 @@ vi.mock("react-i18next", () => ({
 interface ChatTextAreaProps {
 	onSend: (value: string) => void
 	inputValue?: string
+	setInputValue?: (value: string) => void
 	sendingDisabled?: boolean
 	placeholderText?: string
 	selectedImages?: string[]
@@ -123,16 +124,28 @@ vi.mock("../ChatTextArea", () => {
 	return {
 		default: mockReact.forwardRef(function MockChatTextArea(
 			props: ChatTextAreaProps,
-			ref: React.ForwardedRef<{ focus: () => void }>,
+			ref: React.ForwardedRef<HTMLTextAreaElement>,
 		) {
-			// Use useImperativeHandle to expose the mock focus method
-			React.useImperativeHandle(ref, () => ({
-				focus: mockFocus,
-			}))
+			// Create a mock textarea element with focus method
+			mockReact.useImperativeHandle(
+				ref,
+				() => ({
+					focus: mockFocus,
+					blur: vi.fn(),
+					value: props.inputValue || "",
+				}),
+				[props.inputValue],
+			)
 
 			return (
-				<div data-testid="chat-textarea">
-					<input ref={mockInputRef} type="text" onChange={(e) => props.onSend(e.target.value)} />
+				<div data-testid="chat-textarea" data-sending-disabled={props.sendingDisabled}>
+					<input
+						ref={mockInputRef}
+						type="text"
+						value={props.inputValue || ""}
+						onChange={(e) => props.setInputValue?.(e.target.value)}
+						disabled={props.sendingDisabled}
+					/>
 				</div>
 			)
 		}),
@@ -191,6 +204,8 @@ const mockPostMessage = (state: Partial<ExtensionState>) => {
 				shouldShowAnnouncement: false,
 				allowedCommands: [],
 				alwaysAllowExecute: false,
+				soundEnabled: true,
+				soundVolume: 0.5,
 				...state,
 			},
 		},
@@ -215,6 +230,77 @@ const renderChatView = (props: Partial<ChatViewProps> = {}) => {
 		</ExtensionStateContextProvider>,
 	)
 }
+
+describe("ChatView - Window Focus Tests", () => {
+	beforeEach(() => {
+		vi.clearAllMocks()
+		// Reset focus mock
+		mockFocus.mockClear()
+	})
+
+	afterEach(() => {
+		// Clean up any event listeners
+		vi.restoreAllMocks()
+	})
+
+	it("should set up and clean up window focus event listener", () => {
+		const addEventListenerSpy = vi.spyOn(window, "addEventListener")
+		const removeEventListenerSpy = vi.spyOn(window, "removeEventListener")
+
+		const { unmount } = renderChatView({ isHidden: false })
+
+		// Check that the event listener was added
+		expect(addEventListenerSpy).toHaveBeenCalledWith("focus", expect.any(Function))
+
+		// Unmount the component
+		unmount()
+
+		// Check that the event listener was removed
+		expect(removeEventListenerSpy).toHaveBeenCalledWith("focus", expect.any(Function))
+
+		addEventListenerSpy.mockRestore()
+		removeEventListenerSpy.mockRestore()
+	})
+
+	it("should restore focus when window regains focus and conditions are met", async () => {
+		renderChatView({ isHidden: false })
+
+		// Hydrate state to enable the text area
+		mockPostMessage({
+			clineMessages: [
+				{
+					type: "say",
+					say: "text",
+					ts: Date.now(),
+					text: "Hello",
+				},
+			],
+		})
+
+		// Wait for initial render
+		await waitFor(() => {
+			expect(document.querySelector('[data-testid="chat-textarea"]')).toBeInTheDocument()
+		})
+
+		// Wait for any initial focus calls to complete
+		await act(async () => {
+			await new Promise((resolve) => setTimeout(resolve, 100))
+		})
+
+		// Clear the mock to test only the window focus event
+		mockFocus.mockClear()
+
+		// Simulate window focus event
+		await act(async () => {
+			window.dispatchEvent(new Event("focus"))
+			// Wait for the setTimeout in the focus handler
+			await new Promise((resolve) => setTimeout(resolve, 10))
+		})
+
+		// The focus should have been called
+		expect(mockFocus).toHaveBeenCalledTimes(1)
+	})
+})
 
 describe("ChatView - Auto Approval Tests", () => {
 	beforeEach(() => vi.clearAllMocks())

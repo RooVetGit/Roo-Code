@@ -792,6 +792,27 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 		[isHidden, sendingDisabled, enableButtons],
 	)
 
+	// Effect to restore focus to the text area when the window regains focus
+	useEffect(() => {
+		const handleWindowFocus = () => {
+			// Check if the view is visible and the text area should be focusable
+			if (!isHidden && !sendingDisabled && !enableButtons) {
+				// Use setTimeout to ensure focus happens after the event loop cycle
+				setTimeout(() => {
+					textAreaRef.current?.focus()
+				}, 0)
+			}
+		}
+
+		window.addEventListener("focus", handleWindowFocus)
+
+		// Cleanup listener on component unmount
+		return () => {
+			window.removeEventListener("focus", handleWindowFocus)
+		}
+		// Dependencies ensure the effect re-runs if these conditions change
+	}, [isHidden, sendingDisabled, enableButtons])
+
 	const visibleMessages = useMemo(() => {
 		const newVisibleMessages = modifiedMessages.filter((message) => {
 			if (everVisibleMessagesTsRef.current.has(message.ts)) {
