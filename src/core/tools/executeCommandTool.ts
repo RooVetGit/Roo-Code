@@ -76,9 +76,7 @@ export async function executeCommandTool(
 				.get<string[]>("commandTimeoutAllowlist", [])
 
 			// Check if command matches any prefix in the allowlist
-			const isCommandAllowlisted = commandTimeoutAllowlist.some(prefix =>
-				command.startsWith(prefix.trim())
-			)
+			const isCommandAllowlisted = commandTimeoutAllowlist.some((prefix) => command!.startsWith(prefix.trim()))
 
 			// Convert seconds to milliseconds for internal use, but skip timeout if command is allowlisted
 			const commandExecutionTimeout = isCommandAllowlisted ? 0 : commandExecutionTimeoutSeconds * 1000
