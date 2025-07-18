@@ -61,5 +61,12 @@
 		"running": "运行中",
 		"completed": "已完成",
 		"error": "错误"
+	},
+	"imageSettings": {
+		"maxImagesLabel": "每个响应的最大图像数",
+		"maxSizeLabel": "最大图像大小 (MB)",
+		"maxImagesDescription": "单个响应中可以发送的最大图像数。",
+		"maxSizeDescription": "每个图像的最大大小（以兆字节为单位）。",
+		"validationError": "请输入一个 1 到 100 之间的数字。"
 	}
 }

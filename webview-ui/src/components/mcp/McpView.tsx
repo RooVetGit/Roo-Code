@@ -7,6 +7,7 @@ import {
 	VSCodePanels,
 	VSCodePanelTab,
 	VSCodePanelView,
+	VSCodeTextField,
 } from "@vscode/webview-ui-toolkit/react"
 
 import { McpServer } from "@roo/mcp"
@@ -45,9 +46,15 @@ const McpView = ({ onDone }: McpViewProps) => {
 		mcpEnabled,
 		enableMcpServerCreation,
 		setEnableMcpServerCreation,
+		mcpMaxImagesPerResponse,
+		setMcpMaxImagesPerResponse,
+		mcpMaxImageSizeMB,
+		setMcpMaxImageSizeMB,
 	} = useExtensionState()
 
 	const { t } = useAppTranslation()
+	const [maxImagesError, setMaxImagesError] = useState("")
+	const [maxSizeError, setMaxSizeError] = useState("")
 
 	return (
 		<Tab>
@@ -104,6 +111,80 @@ const McpView = ({ onDone }: McpViewProps) => {
 									<strong>new</strong>
 								</Trans>
 								<p style={{ marginTop: "8px" }}>{t("mcp:enableServerCreation.hint")}</p>
+							</div>
+						</div>
+
+						<div style={{ marginBottom: 15 }}>
+							<div style={{ marginBottom: 10 }}>
+								<VSCodeTextField
+									value={mcpMaxImagesPerResponse.toString()}
+									onChange={(e: any) => {
+										const value = e.target.value
+										if (value === "") {
+											setMaxImagesError("")
+											return
+										}
+										const numValue = parseInt(value, 10)
+										if (isNaN(numValue) || numValue < 1 || numValue > 100) {
+											setMaxImagesError(t("mcp:imageSettings.validationError"))
+										} else {
+											setMaxImagesError("")
+											setMcpMaxImagesPerResponse(numValue)
+											vscode.postMessage({ type: "mcpMaxImagesPerResponse", value: numValue })
+										}
+									}}
+									style={{ width: "100px" }}>
+									{t("mcp:imageSettings.maxImagesLabel")}
+								</VSCodeTextField>
+								{maxImagesError && (
+									<div style={{ color: "red", fontSize: "12px", marginTop: "5px" }}>
+										{maxImagesError}
+									</div>
+								)}
+								<div
+									style={{
+										fontSize: "12px",
+										marginTop: "5px",
+										color: "var(--vscode-descriptionForeground)",
+									}}>
+									{t("mcp:imageSettings.maxImagesDescription")}
+								</div>
+							</div>
+
+							<div style={{ marginBottom: 10 }}>
+								<VSCodeTextField
+									value={mcpMaxImageSizeMB.toString()}
+									onChange={(e: any) => {
+										const value = e.target.value
+										if (value === "") {
+											setMaxSizeError("")
+											return
+										}
+										const numValue = parseFloat(value)
+										if (isNaN(numValue) || numValue < 1 || numValue > 100) {
+											setMaxSizeError(t("mcp:imageSettings.validationError"))
+										} else {
+											setMaxSizeError("")
+											setMcpMaxImageSizeMB(numValue)
+											vscode.postMessage({ type: "mcpMaxImageSizeMB", value: numValue })
+										}
+									}}
+									style={{ width: "100px" }}>
+									{t("mcp:imageSettings.maxSizeLabel")}
+								</VSCodeTextField>
+								{maxSizeError && (
+									<div style={{ color: "red", fontSize: "12px", marginTop: "5px" }}>
+										{maxSizeError}
+									</div>
+								)}
+								<div
+									style={{
+										fontSize: "12px",
+										marginTop: "5px",
+										color: "var(--vscode-descriptionForeground)",
+									}}>
+									{t("mcp:imageSettings.maxSizeDescription")}
+								</div>
 							</div>
 						</div>
 

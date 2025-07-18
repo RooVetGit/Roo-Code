@@ -92,6 +92,10 @@ export interface ExtensionStateContextType extends ExtensionState {
 	setMcpEnabled: (value: boolean) => void
 	enableMcpServerCreation: boolean
 	setEnableMcpServerCreation: (value: boolean) => void
+	mcpMaxImagesPerResponse: number
+	setMcpMaxImagesPerResponse: (value: number) => void
+	mcpMaxImageSizeMB: number
+	setMcpMaxImageSizeMB: (value: number) => void
 	alwaysApproveResubmit?: boolean
 	setAlwaysApproveResubmit: (value: boolean) => void
 	requestDelaySeconds: number
@@ -179,6 +183,8 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 		terminalShellIntegrationTimeout: 4000,
 		mcpEnabled: true,
 		enableMcpServerCreation: false,
+		mcpMaxImagesPerResponse: 20,
+		mcpMaxImageSizeMB: 10,
 		alwaysApproveResubmit: false,
 		requestDelaySeconds: 5,
 		currentApiConfigName: "default",
@@ -418,6 +424,9 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 		setMcpEnabled: (value) => setState((prevState) => ({ ...prevState, mcpEnabled: value })),
 		setEnableMcpServerCreation: (value) =>
 			setState((prevState) => ({ ...prevState, enableMcpServerCreation: value })),
+		setMcpMaxImagesPerResponse: (value) =>
+			setState((prevState) => ({ ...prevState, mcpMaxImagesPerResponse: value })),
+		setMcpMaxImageSizeMB: (value) => setState((prevState) => ({ ...prevState, mcpMaxImageSizeMB: value })),
 		setAlwaysApproveResubmit: (value) => setState((prevState) => ({ ...prevState, alwaysApproveResubmit: value })),
 		setRequestDelaySeconds: (value) => setState((prevState) => ({ ...prevState, requestDelaySeconds: value })),
 		setCurrentApiConfigName: (value) => setState((prevState) => ({ ...prevState, currentApiConfigName: value })),

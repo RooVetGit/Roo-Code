@@ -61,5 +61,12 @@
 		"running": "執行中",
 		"completed": "已完成",
 		"error": "錯誤"
+	},
+	"imageSettings": {
+		"maxImagesLabel": "每個回應的最大圖片數",
+		"maxSizeLabel": "最大圖片大小 (MB)",
+		"maxImagesDescription": "單一回應中可傳送的圖片數量上限。",
+		"maxSizeDescription": "每張圖片的大小上限（以 MB 為單位）。",
+		"validationError": "請輸入一個 1 到 100 之間的數字。"
 	}
 }

@@ -61,5 +61,12 @@
 		"running": "실행 중",
 		"completed": "완료됨",
 		"error": "오류"
+	},
+	"imageSettings": {
+		"maxImagesLabel": "응답당 최대 이미지 수",
+		"maxSizeLabel": "최대 이미지 크기 (MB)",
+		"maxImagesDescription": "단일 응답으로 보낼 수 있는 최대 이미지 수입니다.",
+		"maxSizeDescription": "각 이미지의 최대 크기(메가바이트)입니다.",
+		"validationError": "1에서 100 사이의 숫자를 입력하세요."
 	}
 }

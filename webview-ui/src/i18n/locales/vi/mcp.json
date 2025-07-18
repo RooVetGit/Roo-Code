@@ -61,5 +61,12 @@
 		"running": "Đang chạy",
 		"completed": "Hoàn thành",
 		"error": "Lỗi"
+	},
+	"imageSettings": {
+		"maxImagesLabel": "Số lượng hình ảnh tối đa mỗi phản hồi",
+		"maxSizeLabel": "Kích thước hình ảnh tối đa (MB)",
+		"maxImagesDescription": "Số lượng hình ảnh tối đa có thể được gửi trong một phản hồi duy nhất.",
+		"maxSizeDescription": "Kích thước tối đa của mỗi hình ảnh tính bằng megabyte.",
+		"validationError": "Vui lòng nhập một số từ 1 đến 100."
 	}
 }
