@@ -115,24 +115,40 @@ export class WebAuthService extends EventEmitter<AuthServiceEvents> implements A
 
 	private async handleCredentialsChange(): Promise<void> {
 		try {
+			this.log("[auth] Handling credentials change...")
 			const credentials = await this.loadCredentials()
 
 			if (credentials) {
+				this.log("[auth] Credentials found, checking if they changed")
 				if (
 					this.credentials === null ||
 					this.credentials.clientToken !== credentials.clientToken ||
 					this.credentials.sessionId !== credentials.sessionId
 				) {
+					this.log("[auth] Credentials changed, transitioning to attempting session")
 					this.transitionToAttemptingSession(credentials)
+				} else {
+					this.log("[auth] Credentials unchanged")
 				}
 			} else {
+				this.log("[auth] No credentials found")
 				if (this.state !== "logged-out") {
+					this.log("[auth] Transitioning to logged-out state")
 					this.transitionToLoggedOut()
 				}
 			}
 		} catch (error) {
 			this.log("[auth] Error handling credentials change:", error)
 		}
+	}
+
+	/**
+	 * Manually check for credential changes - used as fallback for Windsurf
+	 * where secrets.onDidChange might not work reliably
+	 */
+	private async checkCredentialsManually(): Promise<void> {
+		this.log("[auth] Manually checking credentials...")
+		await this.handleCredentialsChange()
 	}
 
 	private transitionToLoggedOut(): void {
@@ -191,26 +207,64 @@ export class WebAuthService extends EventEmitter<AuthServiceEvents> implements A
 			return
 		}
 
+		this.log("[auth] Initializing WebAuthService...")
+
 		await this.handleCredentialsChange()
 
-		this.context.subscriptions.push(
-			this.context.secrets.onDidChange((e) => {
-				if (e.key === this.authCredentialsKey) {
-					this.handleCredentialsChange()
-				}
-			}),
-		)
+		// Set up secrets change listener with error handling for Windsurf compatibility
+		try {
+			this.context.subscriptions.push(
+				this.context.secrets.onDidChange((e) => {
+					if (e.key === this.authCredentialsKey) {
+						this.log("[auth] Secrets changed, handling credentials change")
+						this.handleCredentialsChange()
+					}
+				}),
+			)
+			this.log("[auth] Secrets change listener registered successfully")
+		} catch (error) {
+			this.log("[auth] Warning: Failed to register secrets change listener:", error)
+			// Continue without the listener - we'll rely on manual credential checks
+		}
+
+		// Set up periodic credential check as fallback for Windsurf
+		const credentialCheckInterval = setInterval(async () => {
+			if (this.state === "initializing") {
+				return // Don't check during initialization
+			}
+			await this.checkCredentialsManually()
+		}, 5000) // Check every 5 seconds
+
+		// Clean up interval when context is disposed
+		this.context.subscriptions.push({
+			dispose: () => {
+				clearInterval(credentialCheckInterval)
+				this.log("[auth] Credential check interval cleared")
+			}
+		})
+
+		this.log("[auth] WebAuthService initialization complete")
 	}
 
 	private async storeCredentials(credentials: AuthCredentials): Promise<void> {
-		await this.context.secrets.store(this.authCredentialsKey, JSON.stringify(credentials))
+		try {
+			await this.context.secrets.store(this.authCredentialsKey, JSON.stringify(credentials))
+			this.log("[auth] Credentials stored successfully")
+		} catch (error) {
+			this.log("[auth] Error storing credentials:", error)
+			throw new Error(`Failed to store authentication credentials: ${error}`)
+		}
 	}
 
 	private async loadCredentials(): Promise<AuthCredentials | null> {
-		const credentialsJson = await this.context.secrets.get(this.authCredentialsKey)
-		if (!credentialsJson) return null
-
 		try {
+			const credentialsJson = await this.context.secrets.get(this.authCredentialsKey)
+			if (!credentialsJson) {
+				this.log("[auth] No credentials found in storage")
+				return null
+			}
+
+			this.log("[auth] Loading credentials from storage")
 			const parsedJson = JSON.parse(credentialsJson)
 			const credentials = authCredentialsSchema.parse(parsedJson)
 
@@ -221,12 +275,13 @@ export class WebAuthService extends EventEmitter<AuthServiceEvents> implements A
 				this.log("[auth] Migrated credentials with organizationId")
 			}
 
+			this.log("[auth] Credentials loaded successfully")
 			return credentials
 		} catch (error) {
 			if (error instanceof z.ZodError) {
 				this.log("[auth] Invalid credentials format:", error.errors)
 			} else {
-				this.log("[auth] Failed to parse stored credentials:", error)
+				this.log("[auth] Failed to load or parse stored credentials:", error)
 			}
 			return null
 		}
@@ -297,6 +352,14 @@ export class WebAuthService extends EventEmitter<AuthServiceEvents> implements A
 			credentials.organizationId = organizationId || null
 
 			await this.storeCredentials(credentials)
+
+			// Force credential reload and state transition for Windsurf compatibility
+			await this.handleCredentialsChange()
+
+			// Additional manual check after a short delay to ensure state transition
+			setTimeout(async () => {
+				await this.checkCredentialsManually()
+			}, 1000)
 
 			vscode.window.showInformationMessage("Successfully authenticated with Roo Code Cloud")
 			this.log("[auth] Successfully authenticated with Roo Code Cloud")
