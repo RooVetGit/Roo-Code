@@ -48,7 +48,12 @@ export async function* runClaudeCode(
 		})
 
 		process.on("error", (err) => {
-			processState.error = err
+			// Enhance ENOENT errors with helpful installation guidance
+			if (err.message.includes("ENOENT") || (err as any).code === "ENOENT") {
+				processState.error = createClaudeCodeNotFoundError(claudePath, err)
+			} else {
+				processState.error = err
+			}
 		})
 
 		for await (const line of rl) {
@@ -76,6 +81,12 @@ export async function* runClaudeCode(
 		const { exitCode } = await process
 		if (exitCode !== null && exitCode !== 0) {
 			const errorOutput = processState.error?.message || processState.stderrLogs?.trim()
+			
+			// If we have a specific ENOENT error, throw that instead
+			if (processState.error && processState.error.name === "ClaudeCodeNotFoundError") {
+				throw processState.error
+			}
+			
 			throw new Error(
 				`Claude Code process exited with code ${exitCode}.${errorOutput ? ` Error output: ${errorOutput}` : ""}`,
 			)
@@ -144,22 +155,31 @@ function runProcess({
 		args.push("--model", modelId)
 	}
 
-	const child = execa(claudePath, args, {
-		stdin: "pipe",
-		stdout: "pipe",
-		stderr: "pipe",
-		env: {
-			...process.env,
-			// Use the configured value, or the environment variable, or default to CLAUDE_CODE_DEFAULT_MAX_OUTPUT_TOKENS
-			CLAUDE_CODE_MAX_OUTPUT_TOKENS:
-				maxOutputTokens?.toString() ||
-				process.env.CLAUDE_CODE_MAX_OUTPUT_TOKENS ||
-				CLAUDE_CODE_DEFAULT_MAX_OUTPUT_TOKENS.toString(),
-		},
-		cwd,
-		maxBuffer: 1024 * 1024 * 1000,
-		timeout: CLAUDE_CODE_TIMEOUT,
-	})
+	let child
+	try {
+		child = execa(claudePath, args, {
+			stdin: "pipe",
+			stdout: "pipe",
+			stderr: "pipe",
+			env: {
+				...process.env,
+				// Use the configured value, or the environment variable, or default to CLAUDE_CODE_DEFAULT_MAX_OUTPUT_TOKENS
+				CLAUDE_CODE_MAX_OUTPUT_TOKENS:
+					maxOutputTokens?.toString() ||
+					process.env.CLAUDE_CODE_MAX_OUTPUT_TOKENS ||
+					CLAUDE_CODE_DEFAULT_MAX_OUTPUT_TOKENS.toString(),
+			},
+			cwd,
+			maxBuffer: 1024 * 1024 * 1000,
+			timeout: CLAUDE_CODE_TIMEOUT,
+		})
+	} catch (error: any) {
+		// Handle ENOENT errors immediately when spawning the process
+		if (error.code === "ENOENT" || error.message?.includes("ENOENT")) {
+			throw createClaudeCodeNotFoundError(claudePath, error)
+		}
+		throw error
+	}
 
 	// Prepare stdin data: Windows gets both system prompt & messages (avoids 8191 char limit),
 	// other platforms get messages only (avoids Linux E2BIG error from ~128KiB execve limit)
@@ -222,4 +242,35 @@ function attemptParseChunk(data: string): ClaudeCodeMessage | null {
 		console.error("Error parsing chunk:", error, data.length)
 		return null
 	}
+}
+
+/**
+ * Creates a user-friendly error message for Claude Code ENOENT errors
+ */
+function createClaudeCodeNotFoundError(claudePath: string, originalError: Error): Error {
+	const platform = os.platform()
+	
+	let suggestion: string
+	switch (platform) {
+		case "darwin": // macOS
+		case "win32": // Windows
+		case "linux":
+		default:
+			suggestion = "Please install Claude Code CLI:\n" +
+				"1. Visit https://claude.ai/download to download Claude Code\n" +
+				"2. Follow the installation instructions for your operating system\n" +
+				"3. Ensure the 'claude' command is available in your PATH\n" +
+				"4. Alternatively, configure a custom path in Roo settings under 'Claude Code Path'"
+			break
+	}
+
+	const errorMessage = `Claude Code executable '${claudePath}' not found.
+
+${suggestion}
+
+Original error: ${originalError.message}`
+
+	const error = new Error(errorMessage)
+	error.name = "ClaudeCodeNotFoundError"
+	return error
 }
