@@ -238,6 +238,7 @@ export class ClineProvider
 	// This is used when the user cancels a task that is not a subtask
 	async clearTask() {
 		await this.removeClineFromStack()
+		await this.postStateToWebview()
 	}
 
 	/*
