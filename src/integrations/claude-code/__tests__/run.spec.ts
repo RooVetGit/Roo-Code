@@ -330,9 +330,13 @@ describe("runClaudeCode", () => {
 
 		// Mock readline to not yield any data when there's an error
 		const mockReadlineForError = {
-			async *[Symbol.asyncIterator]() {
-				// Don't yield anything - simulate error before any output
-				return
+			[Symbol.asyncIterator]() {
+				return {
+					async next() {
+						// Don't yield anything - simulate error before any output
+						return { done: true, value: undefined }
+					},
+				}
 			},
 			close: vi.fn(),
 		}
@@ -413,9 +417,13 @@ describe("runClaudeCode", () => {
 
 		// Mock readline to not yield any data when there's an error
 		const mockReadlineForError = {
-			async *[Symbol.asyncIterator]() {
-				// Don't yield anything - simulate error before any output
-				return
+			[Symbol.asyncIterator]() {
+				return {
+					async next() {
+						// Don't yield anything - simulate error before any output
+						return { done: true, value: undefined }
+					},
+				}
 			},
 			close: vi.fn(),
 		}
@@ -468,9 +476,13 @@ describe("runClaudeCode", () => {
 
 		// Mock readline to not yield any data when there's an error
 		const mockReadlineForError = {
-			async *[Symbol.asyncIterator]() {
-				// Don't yield anything - simulate error before any output
-				return
+			[Symbol.asyncIterator]() {
+				return {
+					async next() {
+						// Don't yield anything - simulate error before any output
+						return { done: true, value: undefined }
+					},
+				}
 			},
 			close: vi.fn(),
 		}
