@@ -197,6 +197,18 @@
 			"description": "Secara otomatis membuat sejumlah permintaan API ini sebelum meminta persetujuan untuk melanjutkan tugas.",
 			"unlimited": "Tidak terbatas"
 		},
+		"timeout": {
+			"label": "Timeout",
+			"description": "Konfigurasi cara Roo menangani operasi tool yang melebihi batas waktu",
+			"timeoutFallbackEnabled": {
+				"label": "Aktifkan penanganan timeout",
+				"description": "Otomatis menghentikan operasi alat yang berjalan lama dan menyarankan opsi fallback."
+			},
+			"toolExecutionTimeoutMs": {
+				"label": "Timeout eksekusi tool (ms)",
+				"description": "Waktu tunggu maksimum untuk operasi tool sebelum memicu penanganan timeout (1000-1800000ms)"
+			}
+		},
 		"selectOptionsFirst": "Pilih setidaknya satu opsi di bawah ini untuk mengaktifkan persetujuan otomatis"
 	},
 	"providers": {

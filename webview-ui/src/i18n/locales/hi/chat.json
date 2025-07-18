@@ -243,6 +243,11 @@
 		"autoSelectCountdown": "{{count}}s में स्वचालित रूप से चयन हो रहा है",
 		"countdownDisplay": "{{count}}सेकंड"
 	},
+	"toolTimeout": {
+		"title": "उपयोगकर्ता द्वारा कॉन्फ़िगर किया गया टूल टाइमआउट:",
+		"subtitle": "विकल्प सुझा रहा है...",
+		"backgroundWarning": "नोट: ऑपरेशन अभी भी बैकग्राउंड में चल रहा हो सकता है"
+	},
 	"announcement": {
 		"title": "🎉 Roo Code {{version}} रिलीज़ हुआ",
 		"description": "Roo Code {{version}} आपके विकास वर्कफ़्लो को बेहतर बनाने के लिए शक्तिशाली नई सुविधाएं और महत्वपूर्ण सुधार लेकर आया है।",

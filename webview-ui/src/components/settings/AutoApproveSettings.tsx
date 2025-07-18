@@ -33,6 +33,8 @@ type AutoApproveSettingsProps = HTMLAttributes<HTMLDivElement> & {
 	followupAutoApproveTimeoutMs?: number
 	allowedCommands?: string[]
 	deniedCommands?: string[]
+	timeoutFallbackEnabled?: boolean
+	toolExecutionTimeoutMs?: number
 	setCachedStateField: SetCachedStateField<
 		| "alwaysAllowReadOnly"
 		| "alwaysAllowReadOnlyOutsideWorkspace"
@@ -52,6 +54,8 @@ type AutoApproveSettingsProps = HTMLAttributes<HTMLDivElement> & {
 		| "allowedCommands"
 		| "deniedCommands"
 		| "alwaysAllowUpdateTodoList"
+		| "timeoutFallbackEnabled"
+		| "toolExecutionTimeoutMs"
 	>
 }
 
@@ -74,6 +78,8 @@ export const AutoApproveSettings = ({
 	alwaysAllowUpdateTodoList,
 	allowedCommands,
 	deniedCommands,
+	timeoutFallbackEnabled,
+	toolExecutionTimeoutMs = 60000,
 	setCachedStateField,
 	...props
 }: AutoApproveSettingsProps) => {
@@ -393,6 +399,50 @@ export const AutoApproveSettings = ({
 						</div>
 					</div>
 				)}
+
+				{/* TIMEOUT SETTINGS */}
+				<div className="flex flex-col gap-3 pl-3 border-l-2 border-vscode-button-background">
+					<div className="flex items-center gap-4 font-bold">
+						<span className="codicon codicon-clock" />
+						<div>{t("settings:autoApprove.timeout.label")}</div>
+					</div>
+
+					{/* Enable timeout handling */}
+					<div>
+						<VSCodeCheckbox
+							checked={timeoutFallbackEnabled}
+							onChange={(e: any) => setCachedStateField("timeoutFallbackEnabled", e.target.checked)}
+							data-testid="timeout-fallback-enabled-checkbox">
+							<span className="font-medium">
+								{t("settings:autoApprove.timeout.timeoutFallbackEnabled.label")}
+							</span>
+						</VSCodeCheckbox>
+						<div className="text-vscode-descriptionForeground text-sm mt-1">
+							{t("settings:autoApprove.timeout.timeoutFallbackEnabled.description")}
+						</div>
+					</div>
+
+					{/* Tool execution timeout duration */}
+					<div>
+						<div className="font-medium mb-2">
+							{t("settings:autoApprove.timeout.toolExecutionTimeoutMs.label")}
+						</div>
+						<Input
+							type="number"
+							min="1000"
+							max="1800000"
+							step="1000"
+							value={toolExecutionTimeoutMs || 60000}
+							onChange={(e) => setCachedStateField("toolExecutionTimeoutMs", parseInt(e.target.value))}
+							disabled={!timeoutFallbackEnabled}
+							className="w-32"
+							data-testid="tool-execution-timeout-input"
+						/>
+						<div className="text-vscode-descriptionForeground text-sm mt-1">
+							{t("settings:autoApprove.timeout.toolExecutionTimeoutMs.description")}
+						</div>
+					</div>
+				</div>
 			</Section>
 		</div>
 	)

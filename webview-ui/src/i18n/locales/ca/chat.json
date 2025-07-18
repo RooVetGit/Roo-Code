@@ -243,6 +243,11 @@
 		"autoSelectCountdown": "Selecció automàtica en {{count}}s",
 		"countdownDisplay": "{{count}}s"
 	},
+	"toolTimeout": {
+		"title": "Temps d'espera d'eina configurat per l'usuari:",
+		"subtitle": "Suggerint alternatives...",
+		"backgroundWarning": "Nota: l'operació pot seguir executant-se en segon pla"
+	},
 	"announcement": {
 		"title": "🎉 Roo Code {{version}} Llançat",
 		"description": "Roo Code {{version}} porta noves funcions potents i millores significatives per millorar el vostre flux de treball de desenvolupament.",

@@ -193,6 +193,18 @@
 			"description": "在请求批准以继续执行任务之前，自动发出此数量的 API 请求。",
 			"unlimited": "无限制"
 		},
+		"timeout": {
+			"label": "超时",
+			"description": "配置 Roo 如何处理超过时间限制的工具操作",
+			"timeoutFallbackEnabled": {
+				"label": "启用超时处理",
+				"description": "自动终止长时间运行的工具操作并建议备用选项。"
+			},
+			"toolExecutionTimeoutMs": {
+				"label": "工具执行超时 (ms)",
+				"description": "触发超时处理前工具操作的最大等待时间 (1000-1800000ms)"
+			}
+		},
 		"selectOptionsFirst": "请至少选择以下一个选项以启用自动批准"
 	},
 	"providers": {

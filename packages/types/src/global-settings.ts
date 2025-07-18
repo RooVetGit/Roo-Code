@@ -87,6 +87,10 @@ export const globalSettingsSchema = z.object({
 	terminalZdotdir: z.boolean().optional(),
 	terminalCompressProgressBar: z.boolean().optional(),
 
+	// Timeout settings
+	toolExecutionTimeoutMs: z.number().min(1000).max(1800000).optional(), // 1s to 30min
+	timeoutFallbackEnabled: z.boolean().optional(),
+
 	rateLimitSeconds: z.number().optional(),
 	diffEnabled: z.boolean().optional(),
 	fuzzyMatchThreshold: z.number().optional(),
@@ -230,6 +234,10 @@ export const EVALS_SETTINGS: RooCodeSettings = {
 	fuzzyMatchThreshold: 1,
 
 	enableCheckpoints: false,
+
+	// Timeout settings
+	toolExecutionTimeoutMs: 60000, // 1 minute default
+	timeoutFallbackEnabled: false,
 
 	rateLimitSeconds: 0,
 	maxOpenTabsContext: 20,

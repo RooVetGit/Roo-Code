@@ -3,6 +3,7 @@ import * as path from "path"
 import * as diff from "diff"
 import { RooIgnoreController, LOCK_TEXT_SYMBOL } from "../ignore/RooIgnoreController"
 import { RooProtectedController } from "../protect/RooProtectedController"
+import type { ToolName } from "@roo-code/types"
 
 export const formatResponse = {
 	toolDenied: () => `The user denied this operation.`,
@@ -14,6 +15,27 @@ export const formatResponse = {
 		`The user approved this operation and provided the following context:\n<feedback>\n${feedback}\n</feedback>`,
 
 	toolError: (error?: string) => `The tool execution failed with the following error:\n<error>\n${error}\n</error>`,
+
+	toolTimeout: (toolName: string, timeoutMs: number, executionTimeMs: number) => {
+		// Determine if this tool might continue running in the background
+		const backgroundOperationTools = ["execute_command", "browser_action"]
+		const mightContinueInBackground = backgroundOperationTools.includes(toolName)
+
+		const backgroundWarning = mightContinueInBackground
+			? `\n\n**Important**: The ${toolName} operation may still be running in the background. You might see output or effects from this operation later.`
+			: ""
+
+		return `The ${toolName} operation timed out after ${Math.round(timeoutMs / 1000)} seconds and was automatically canceled.
+
+<timeout_details>
+Tool: ${toolName}
+Configured Timeout: ${Math.round(timeoutMs / 1000)}s
+Execution Time: ${Math.round(executionTimeMs / 1000)}s
+Status: Canceled
+</timeout_details>${backgroundWarning}
+
+The operation has been terminated to prevent system resource issues. Please consider one of the following approaches to complete your task.`
+	},
 
 	rooIgnoreError: (path: string) =>
 		`Access to ${path} is blocked by the .rooignore file settings. You must try to continue in the task without using this file, or ask the user to update the .rooignore file.`,
@@ -172,6 +194,141 @@ Otherwise, if you have not completed the task and do not need additional informa
 		const lines = patch.split("\n")
 		const prettyPatchLines = lines.slice(4)
 		return prettyPatchLines.join("\n")
+	},
+
+	/**
+	 * Generate contextual timeout fallback suggestions based on tool type and parameters
+	 */
+	timeoutFallbackSuggestions: {
+		generateContextualSuggestions: (
+			toolName: ToolName,
+			toolParams?: Record<string, any>,
+		): Array<{ text: string; mode?: string }> => {
+			switch (toolName) {
+				case "execute_command":
+					return formatResponse.timeoutFallbackSuggestions.generateCommandSuggestions(toolParams)
+				case "read_file":
+					return formatResponse.timeoutFallbackSuggestions.generateReadFileSuggestions(toolParams)
+				case "write_to_file":
+					return formatResponse.timeoutFallbackSuggestions.generateWriteFileSuggestions(toolParams)
+				case "browser_action":
+					return formatResponse.timeoutFallbackSuggestions.generateBrowserSuggestions(toolParams)
+				case "search_files":
+					return formatResponse.timeoutFallbackSuggestions.generateSearchSuggestions(toolParams)
+				default:
+					return formatResponse.timeoutFallbackSuggestions.generateGenericSuggestions(toolName)
+			}
+		},
+
+		generateCommandSuggestions: (params?: Record<string, any>): Array<{ text: string; mode?: string }> => {
+			const command = params?.command || "the command"
+
+			return [
+				{
+					text: `Check if "${command}" is still running in the background and wait for it to complete`,
+				},
+				{
+					text: `Break "${command}" into smaller, sequential steps that can complete faster`,
+				},
+				{
+					text: `Run "${command}" in the background using '&' or 'nohup' to avoid blocking`,
+				},
+				{
+					text: `Try an alternative approach or tool to accomplish the same goal`,
+				},
+			]
+		},
+
+		generateReadFileSuggestions: (params?: Record<string, any>): Array<{ text: string; mode?: string }> => {
+			const filePath = params?.path || "the file"
+
+			return [
+				{
+					text: `Read "${filePath}" in smaller chunks using line ranges`,
+				},
+				{
+					text: `Check if "${filePath}" is accessible and not locked by another process`,
+				},
+				{
+					text: `Use a different approach to access the file content`,
+				},
+				{
+					text: `Increase the timeout if this is a legitimately large file`,
+				},
+			]
+		},
+
+		generateWriteFileSuggestions: (params?: Record<string, any>): Array<{ text: string; mode?: string }> => {
+			const filePath = params?.path || "the file"
+
+			return [
+				{
+					text: `Write to "${filePath}" incrementally using insert_content instead`,
+				},
+				{
+					text: `Check if "${filePath}" is writable and not locked`,
+				},
+				{
+					text: `Use apply_diff for targeted changes instead of full file replacement`,
+				},
+				{
+					text: `Break the content into smaller write operations`,
+				},
+			]
+		},
+
+		generateBrowserSuggestions: (params?: Record<string, any>): Array<{ text: string; mode?: string }> => {
+			const action = params?.action || "browser action"
+
+			return [
+				{
+					text: `Check if the browser action is still processing in the background`,
+				},
+				{
+					text: `Simplify the "${action}" into smaller, more targeted steps`,
+				},
+				{
+					text: `Wait for specific elements to load before proceeding`,
+				},
+				{
+					text: `Reset the browser session and try again`,
+				},
+			]
+		},
+
+		generateSearchSuggestions: (params?: Record<string, any>): Array<{ text: string; mode?: string }> => {
+			return [
+				{
+					text: `Narrow the search scope to specific directories`,
+				},
+				{
+					text: `Use simpler search patterns or literal strings`,
+				},
+				{
+					text: `Apply file type filters to reduce search space`,
+				},
+				{
+					text: `Search incrementally in smaller batches`,
+				},
+			]
+		},
+
+		generateGenericSuggestions: (toolName: ToolName): Array<{ text: string; mode?: string }> => {
+			return [
+				{
+					text: `Break the ${toolName} operation into smaller steps`,
+				},
+				{
+					text: `Try an alternative approach to accomplish the same goal`,
+				},
+				{
+					text: `Check system resources and try again`,
+				},
+				{
+					text: `Increase the timeout setting for this operation`,
+				},
+			]
+		},
 	},
 }
 

@@ -15,8 +15,11 @@ import { unescapeHtmlEntities } from "../../utils/text-normalization"
 import { ExitCodeDetails, RooTerminalCallbacks, RooTerminalProcess } from "../../integrations/terminal/types"
 import { TerminalRegistry } from "../../integrations/terminal/TerminalRegistry"
 import { Terminal } from "../../integrations/terminal/Terminal"
+import { ToolExecutionWrapper, TimeoutFallbackHandler } from "../timeout"
 import { Package } from "../../shared/package"
 import { t } from "../../i18n"
+
+const DEFAULT_TOOL_EXECUTION_TIMEOUT_MS = 60000 // 1 minute default
 
 class ShellIntegrationError extends Error {}
 
@@ -63,7 +66,11 @@ export async function executeCommandTool(
 			const executionId = cline.lastMessageTs?.toString() ?? Date.now().toString()
 			const clineProvider = await cline.providerRef.deref()
 			const clineProviderState = await clineProvider?.getState()
-			const { terminalOutputLineLimit = 500, terminalShellIntegrationDisabled = false } = clineProviderState ?? {}
+			const {
+				terminalOutputLineLimit = 500,
+				terminalShellIntegrationDisabled = false,
+				toolExecutionTimeoutMs = 60000, // 1 minute default
+			} = clineProviderState ?? {}
 
 			// Get command execution timeout from VSCode configuration (in seconds)
 			const commandExecutionTimeoutSeconds = vscode.workspace
@@ -79,6 +86,7 @@ export async function executeCommandTool(
 				customCwd,
 				terminalShellIntegrationDisabled,
 				terminalOutputLineLimit,
+				timeoutMs: toolExecutionTimeoutMs,
 				commandExecutionTimeout,
 			}
 
@@ -125,6 +133,7 @@ export type ExecuteCommandOptions = {
 	customCwd?: string
 	terminalShellIntegrationDisabled?: boolean
 	terminalOutputLineLimit?: number
+	timeoutMs?: number
 	commandExecutionTimeout?: number
 }
 
@@ -136,8 +145,82 @@ export async function executeCommand(
 		customCwd,
 		terminalShellIntegrationDisabled = false,
 		terminalOutputLineLimit = 500,
+		timeoutMs,
 		commandExecutionTimeout = 0,
 	}: ExecuteCommandOptions,
+): Promise<[boolean, ToolResponse]> {
+	// Get timeout from settings if not provided
+	const clineProvider = await cline.providerRef.deref()
+	const clineProviderState = await clineProvider?.getState()
+	const defaultTimeoutMs = clineProviderState?.toolExecutionTimeoutMs ?? DEFAULT_TOOL_EXECUTION_TIMEOUT_MS
+	const actualTimeoutMs = timeoutMs ?? defaultTimeoutMs
+	const timeoutFallbackEnabled = clineProviderState?.timeoutFallbackEnabled ?? true
+
+	// Use the new timeout wrapper approach if timeoutMs is provided or fallback is enabled
+	if (actualTimeoutMs > 0 && timeoutFallbackEnabled) {
+		// Wrap the command execution with timeout
+		const timeoutResult = await ToolExecutionWrapper.execute(
+			async (signal: AbortSignal) => {
+				return executeCommandInternal(cline, {
+					executionId,
+					command,
+					customCwd,
+					terminalShellIntegrationDisabled,
+					terminalOutputLineLimit,
+					signal,
+					commandExecutionTimeout: 0, // Disable the old timeout when using new approach
+				})
+			},
+			{
+				toolName: "execute_command",
+				taskId: cline.taskId,
+				timeoutMs: actualTimeoutMs,
+				enableFallback: timeoutFallbackEnabled,
+			},
+			actualTimeoutMs,
+		)
+
+		// Handle timeout result
+		if (timeoutResult.timedOut && timeoutResult.fallbackTriggered) {
+			const fallbackResponse = await TimeoutFallbackHandler.createTimeoutResponse(
+				"execute_command",
+				actualTimeoutMs,
+				timeoutResult.executionTimeMs,
+				{ command },
+				cline,
+			)
+			return [false, fallbackResponse]
+		}
+
+		if (!timeoutResult.success) {
+			return [false, formatResponse.toolError(timeoutResult.error?.message)]
+		}
+
+		return timeoutResult.result!
+	} else {
+		// Use the legacy timeout approach
+		return executeCommandInternal(cline, {
+			executionId,
+			command,
+			customCwd,
+			terminalShellIntegrationDisabled,
+			terminalOutputLineLimit,
+			commandExecutionTimeout,
+		})
+	}
+}
+
+async function executeCommandInternal(
+	cline: Task,
+	{
+		executionId,
+		command,
+		customCwd,
+		terminalShellIntegrationDisabled = false,
+		terminalOutputLineLimit = 500,
+		signal,
+		commandExecutionTimeout = 0,
+	}: ExecuteCommandOptions & { signal?: AbortSignal },
 ): Promise<[boolean, ToolResponse]> {
 	// Convert milliseconds back to seconds for display purposes
 	const commandExecutionTimeoutSeconds = commandExecutionTimeout / 1000
@@ -227,8 +310,30 @@ export async function executeCommand(
 	const process = terminal.runCommand(command, callbacks)
 	cline.terminalProcess = process
 
-	// Implement command execution timeout (skip if timeout is 0)
-	if (commandExecutionTimeout > 0) {
+	// Handle abort signal for timeout cancellation (new approach)
+	if (signal) {
+		const abortHandler = () => {
+			if (process && typeof process.abort === "function") {
+				process.abort()
+			}
+			cline.terminalProcess = undefined
+		}
+
+		if (signal.aborted) {
+			abortHandler()
+			throw new Error("Command execution was cancelled due to timeout")
+		}
+
+		signal.addEventListener("abort", abortHandler)
+
+		try {
+			await process
+		} finally {
+			signal.removeEventListener("abort", abortHandler)
+			cline.terminalProcess = undefined
+		}
+	} else if (commandExecutionTimeout > 0) {
+		// Implement command execution timeout (legacy approach)
 		let timeoutId: NodeJS.Timeout | undefined
 		let isTimedOut = false
 

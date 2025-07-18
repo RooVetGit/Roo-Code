@@ -243,6 +243,11 @@
 		"autoSelectCountdown": "{{count}}s içinde otomatik seçilecek",
 		"countdownDisplay": "{{count}}sn"
 	},
+	"toolTimeout": {
+		"title": "Kullanıcı Tarafından Yapılandırılan Araç Zaman Aşımı:",
+		"subtitle": "Alternatifler öneriliyor...",
+		"backgroundWarning": "Not: işlem hala arka planda çalışıyor olabilir"
+	},
 	"announcement": {
 		"title": "🎉 Roo Code {{version}} Yayınlandı",
 		"description": "Roo Code {{version}}, geliştirme iş akışınızı geliştirmek için güçlü yeni özellikler ve önemli iyileştirmeler getiriyor.",

@@ -193,6 +193,18 @@
 			"description": "Tự động thực hiện số lượng API request này trước khi yêu cầu phê duyệt để tiếp tục với nhiệm vụ.",
 			"unlimited": "Không giới hạn"
 		},
+		"timeout": {
+			"label": "Thời gian chờ",
+			"description": "Cấu hình cách Roo xử lý các thao tác công cụ vượt quá giới hạn thời gian",
+			"timeoutFallbackEnabled": {
+				"label": "Bật xử lý thời gian chờ",
+				"description": "Tự động kết thúc các thao tác công cụ chạy lâu và đề xuất các tùy chọn dự phòng."
+			},
+			"toolExecutionTimeoutMs": {
+				"label": "Thời gian chờ thực thi công cụ (ms)",
+				"description": "Thời gian chờ tối đa cho các thao tác công cụ trước khi kích hoạt xử lý thời gian chờ (1000-1800000ms)"
+			}
+		},
 		"selectOptionsFirst": "Chọn ít nhất một tùy chọn bên dưới để bật tự động phê duyệt"
 	},
 	"providers": {

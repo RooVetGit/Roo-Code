@@ -193,6 +193,18 @@
 			"description": "Voer automatisch dit aantal API-verzoeken uit voordat om goedkeuring wordt gevraagd om door te gaan met de taak.",
 			"unlimited": "Onbeperkt"
 		},
+		"timeout": {
+			"label": "Timeout",
+			"description": "Configureer hoe Roo omgaat met tool-operaties die hun tijdslimieten overschrijden",
+			"timeoutFallbackEnabled": {
+				"label": "Timeout-afhandeling inschakelen",
+				"description": "Automatisch langlopende tool-operaties beëindigen en fallback-opties voorstellen."
+			},
+			"toolExecutionTimeoutMs": {
+				"label": "Tool-uitvoering timeout (ms)",
+				"description": "Maximale wachttijd voor tool-operaties voordat timeout-afhandeling wordt geactiveerd (1000-1800000ms)"
+			}
+		},
 		"selectOptionsFirst": "Selecteer ten minste één optie hieronder om automatische goedkeuring in te schakelen"
 	},
 	"providers": {

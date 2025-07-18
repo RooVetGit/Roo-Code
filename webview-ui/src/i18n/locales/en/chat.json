@@ -236,6 +236,11 @@
 		"hasQuestion": "Roo has a question:"
 	},
 	"taskCompleted": "Task Completed",
+	"toolTimeout": {
+		"title": "User Configured Tool Timeout:",
+		"subtitle": "Suggesting alternatives...",
+		"backgroundWarning": "Note operation may still be running in the background"
+	},
 	"error": "Error",
 	"diffError": {
 		"title": "Edit Unsuccessful"

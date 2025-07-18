@@ -36,6 +36,10 @@ describe("Command Execution Timeout Integration", () => {
 			providerRef: {
 				deref: vitest.fn().mockResolvedValue({
 					postMessageToWebview: vitest.fn(),
+					getState: vitest.fn().mockResolvedValue({
+						toolExecutionTimeoutMs: 60000,
+						timeoutFallbackEnabled: false, // Disable new timeout approach for legacy tests
+					}),
 				}),
 			},
 			say: vitest.fn().mockResolvedValue(undefined),

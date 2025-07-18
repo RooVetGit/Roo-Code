@@ -317,6 +317,29 @@ export const ChatRowContent = ({
 					/>,
 					<span style={{ color: normalColor, fontWeight: "bold" }}>{t("chat:questions.hasQuestion")}</span>,
 				]
+			case "tool_timeout":
+				let showBackgroundWarning = false
+				try {
+					const timeoutInfo = message.text ? JSON.parse(message.text) : null
+					showBackgroundWarning = timeoutInfo?.mightContinueInBackground || false
+				} catch (_e) {
+					// If parsing fails, don't show the warning
+				}
+				return [
+					<span className="codicon codicon-clock" style={{ color: errorColor, marginBottom: "-1.5px" }} />,
+					<span style={{ color: errorColor }}>
+						<span style={{ fontWeight: "bold" }}>{t("chat:toolTimeout.title")}</span>{" "}
+						<span style={{ fontStyle: "italic" }}>{t("chat:toolTimeout.subtitle")}</span>
+						{showBackgroundWarning && (
+							<>
+								<br />
+								<span style={{ fontSize: "0.9em", opacity: 0.8 }}>
+									{t("chat:toolTimeout.backgroundWarning")}
+								</span>
+							</>
+						)}
+					</span>,
+				]
 			default:
 				return [null, null]
 		}
@@ -1204,6 +1227,16 @@ export const ChatRowContent = ({
 				case "user_edit_todos":
 					return <UpdateTodoListToolBlock userEdited onChange={() => {}} />
 				default:
+					// Don't render message text for tool_timeout as it contains JSON metadata
+					if (message.say === "tool_timeout") {
+						return title ? (
+							<div style={headerStyle}>
+								{icon}
+								{title}
+							</div>
+						) : null
+					}
+
 					return (
 						<>
 							{title && (

@@ -193,6 +193,18 @@
 			"description": "Automatisch so viele API-Anfragen stellen, bevor du um die Erlaubnis gebeten wirst, mit der Aufgabe fortzufahren.",
 			"unlimited": "Unbegrenzt"
 		},
+		"timeout": {
+			"label": "Zeitüberschreitung",
+			"description": "Konfiguriere, wie Roo mit Tool-Operationen umgeht, die ihre Zeitlimits überschreiten",
+			"timeoutFallbackEnabled": {
+				"label": "Zeitüberschreitungsbehandlung aktivieren",
+				"description": "Automatisch lang laufende Tool-Operationen beenden und Fallback-Optionen vorschlagen."
+			},
+			"toolExecutionTimeoutMs": {
+				"label": "Tool-Ausführungszeitlimit (ms)",
+				"description": "Maximale Wartezeit für Tool-Operationen, bevor die Zeitüberschreitungsbehandlung ausgelöst wird (1000-1800000ms)"
+			}
+		},
 		"selectOptionsFirst": "Wähle mindestens eine Option unten aus, um die automatische Genehmigung zu aktivieren"
 	},
 	"providers": {

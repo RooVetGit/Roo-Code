@@ -193,6 +193,18 @@
 			"description": "Fes aquesta quantitat de sol·licituds API automàticament abans de demanar aprovació per continuar amb la tasca.",
 			"unlimited": "Il·limitat"
 		},
+		"timeout": {
+			"label": "Temps d'espera",
+			"description": "Configura com Roo gestiona les operacions d'eines que superen els seus límits de temps d'espera",
+			"timeoutFallbackEnabled": {
+				"label": "Habilitar gestió de temps d'espera",
+				"description": "Atura automàticament les operacions d'eines de llarga durada i suggereix opcions alternatives."
+			},
+			"toolExecutionTimeoutMs": {
+				"label": "Temps d'espera d'execució d'eines (ms)",
+				"description": "Temps màxim d'espera per a operacions d'eines abans d'activar la gestió de temps d'espera (1000-1800000ms)"
+			}
+		},
 		"selectOptionsFirst": "Seleccioneu almenys una opció a continuació per activar l'aprovació automàtica"
 	},
 	"providers": {

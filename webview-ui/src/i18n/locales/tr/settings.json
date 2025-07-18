@@ -193,6 +193,18 @@
 			"description": "Göreve devam etmek için onay istemeden önce bu sayıda API isteği otomatik olarak yap.",
 			"unlimited": "Sınırsız"
 		},
+		"timeout": {
+			"label": "Zaman Aşımı",
+			"description": "Roo'nun zaman sınırlarını aşan araç işlemlerini nasıl ele aldığını yapılandırın",
+			"timeoutFallbackEnabled": {
+				"label": "Zaman aşımı işlemeyi etkinleştir",
+				"description": "Uzun süren araç işlemlerini otomatik olarak sonlandır ve yedek seçenekler öner."
+			},
+			"toolExecutionTimeoutMs": {
+				"label": "Araç yürütme zaman aşımı (ms)",
+				"description": "Zaman aşımı işlemeyi tetiklemeden önce araç işlemleri için maksimum bekleme süresi (1000-1800000ms)"
+			}
+		},
 		"selectOptionsFirst": "Otomatik onayı etkinleştirmek için aşağıdan en az bir seçenek seçin"
 	},
 	"providers": {

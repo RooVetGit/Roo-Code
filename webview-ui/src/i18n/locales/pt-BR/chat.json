@@ -243,6 +243,11 @@
 		"autoSelectCountdown": "Seleção automática em {{count}}s",
 		"countdownDisplay": "{{count}}s"
 	},
+	"toolTimeout": {
+		"title": "Timeout de Ferramenta Configurado pelo Usuário:",
+		"subtitle": "Sugerindo alternativas...",
+		"backgroundWarning": "Nota: a operação pode ainda estar executando em segundo plano"
+	},
 	"announcement": {
 		"title": "🎉 Roo Code {{version}} Lançado",
 		"description": "Roo Code {{version}} traz novos recursos poderosos e melhorias significativas para aprimorar seu fluxo de trabalho de desenvolvimento.",

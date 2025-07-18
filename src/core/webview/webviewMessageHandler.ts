@@ -1048,6 +1048,14 @@ export const webviewMessageHandler = async (
 			await updateGlobalState("terminalOutputLineLimit", message.value)
 			await provider.postStateToWebview()
 			break
+		case "toolExecutionTimeoutMs":
+			await updateGlobalState("toolExecutionTimeoutMs", message.value)
+			await provider.postStateToWebview()
+			break
+		case "timeoutFallbackEnabled":
+			await updateGlobalState("timeoutFallbackEnabled", message.bool)
+			await provider.postStateToWebview()
+			break
 		case "terminalShellIntegrationTimeout":
 			await updateGlobalState("terminalShellIntegrationTimeout", message.value)
 			await provider.postStateToWebview()

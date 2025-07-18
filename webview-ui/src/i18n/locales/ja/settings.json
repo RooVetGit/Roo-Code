@@ -193,6 +193,18 @@
 			"description": "タスクを続行するための承認を求める前に、自動的にこの数のAPIリクエストを行います。",
 			"unlimited": "無制限"
 		},
+		"timeout": {
+			"label": "タイムアウト",
+			"description": "ツール操作が制限時間を超えた場合のRooの処理方法を設定",
+			"timeoutFallbackEnabled": {
+				"label": "タイムアウト処理を有効にする",
+				"description": "長時間実行されるツール操作を自動的に終了し、フォールバックオプションを提案します。"
+			},
+			"toolExecutionTimeoutMs": {
+				"label": "ツール実行タイムアウト（ms）",
+				"description": "タイムアウト処理をトリガーする前のツール操作の最大待機時間（1000-1800000ms）"
+			}
+		},
 		"selectOptionsFirst": "自動承認を有効にするには、以下のオプションを少なくとも1つ選択してください"
 	},
 	"providers": {

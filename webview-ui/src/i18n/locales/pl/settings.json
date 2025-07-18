@@ -193,6 +193,18 @@
 			"description": "Automatycznie wykonaj tyle żądań API przed poproszeniem o zgodę na kontynuowanie zadania.",
 			"unlimited": "Bez limitu"
 		},
+		"timeout": {
+			"label": "Timeout",
+			"description": "Skonfiguruj sposób obsługi przez Roo operacji narzędzi, które przekraczają swoje limity czasowe",
+			"timeoutFallbackEnabled": {
+				"label": "Włącz obsługę timeout",
+				"description": "Automatycznie kończ długotrwałe operacje narzędzi i sugeruj opcje fallback."
+			},
+			"toolExecutionTimeoutMs": {
+				"label": "Timeout wykonania narzędzia (ms)",
+				"description": "Maksymalny czas oczekiwania na operacje narzędzi przed uruchomieniem obsługi timeout (1000-1800000ms)"
+			}
+		},
 		"selectOptionsFirst": "Wybierz co najmniej jedną opcję poniżej, aby włączyć automatyczne zatwierdzanie"
 	},
 	"providers": {

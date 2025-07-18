@@ -193,6 +193,18 @@
 			"description": "在請求批准以繼續執行工作之前，自動發出此數量的 API 請求。",
 			"unlimited": "無限制"
 		},
+		"timeout": {
+			"label": "逾時",
+			"description": "設定 Roo 如何處理超過時間限制的工具操作",
+			"timeoutFallbackEnabled": {
+				"label": "啟用逾時處理",
+				"description": "自動終止長時間執行的工具操作並建議備用選項。"
+			},
+			"toolExecutionTimeoutMs": {
+				"label": "工具執行逾時 (ms)",
+				"description": "觸發逾時處理前工具操作的最大等待時間 (1000-1800000ms)"
+			}
+		},
 		"selectOptionsFirst": "請至少選擇以下一個選項以啟用自動核准"
 	},
 	"providers": {

@@ -193,6 +193,18 @@
 			"title": "Requêtes maximales",
 			"description": "Effectuer automatiquement ce nombre de requêtes API avant de demander l'approbation pour continuer la tâche.",
 			"unlimited": "Illimité"
+		},
+		"timeout": {
+			"label": "Délai d'attente",
+			"description": "Configurez la façon dont Roo gère les opérations d'outils qui dépassent leurs limites de temps",
+			"timeoutFallbackEnabled": {
+				"label": "Activer la gestion des délais d'attente",
+				"description": "Arrêter automatiquement les opérations d'outils de longue durée et suggérer des options de secours."
+			},
+			"toolExecutionTimeoutMs": {
+				"label": "Délai d'exécution des outils (ms)",
+				"description": "Temps d'attente maximal pour les opérations d'outils avant de déclencher la gestion des délais (1000-1800000ms)"
+			}
 		}
 	},
 	"providers": {

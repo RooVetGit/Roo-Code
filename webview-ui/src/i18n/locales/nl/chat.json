@@ -248,6 +248,11 @@
 		"errorHeader": "Context samenvatten mislukt",
 		"tokens": "tokens"
 	},
+	"toolTimeout": {
+		"title": "Door gebruiker geconfigureerde tool timeout:",
+		"subtitle": "Alternatieven voorstellen...",
+		"backgroundWarning": "Let op: de bewerking kan nog steeds op de achtergrond worden uitgevoerd"
+	},
 	"followUpSuggest": {
 		"copyToInput": "Kopiëren naar invoer (zelfde als shift + klik)",
 		"autoSelectCountdown": "Automatische selectie in {{count}}s",

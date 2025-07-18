@@ -243,6 +243,11 @@
 		"autoSelectCountdown": "{{count}}秒后自动选择",
 		"countdownDisplay": "{{count}}秒"
 	},
+	"toolTimeout": {
+		"title": "用户配置的工具超时:",
+		"subtitle": "正在建议替代方案...",
+		"backgroundWarning": "注意: 操作可能仍在后台运行"
+	},
 	"announcement": {
 		"title": "🎉 Roo Code {{version}} 已发布",
 		"description": "Roo Code {{version}} 带来强大的新功能和重大改进，提升您的开发工作流程。",

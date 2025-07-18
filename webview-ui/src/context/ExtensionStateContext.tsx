@@ -44,6 +44,10 @@ export interface ExtensionStateContextType extends ExtensionState {
 	setAlwaysAllowFollowupQuestions: (value: boolean) => void // Setter for the new property
 	followupAutoApproveTimeoutMs: number | undefined // Timeout in ms for auto-approving follow-up questions
 	setFollowupAutoApproveTimeoutMs: (value: number) => void // Setter for the timeout
+	timeoutFallbackEnabled?: boolean // New property for timeout fallback enabled
+	setTimeoutFallbackEnabled: (value: boolean) => void // Setter for timeout fallback enabled
+	toolExecutionTimeoutMs: number | undefined // New property for tool execution timeout
+	setToolExecutionTimeoutMs: (value: number) => void // Setter for tool execution timeout
 	condensingApiConfigId?: string
 	setCondensingApiConfigId: (value: string) => void
 	customCondensingPrompt?: string
@@ -226,6 +230,9 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 		},
 		codebaseIndexModels: { ollama: {}, openai: {} },
 		alwaysAllowUpdateTodoList: true,
+		// Timeout settings
+		timeoutFallbackEnabled: false, // Default to disabled
+		toolExecutionTimeoutMs: undefined, // Will be set from global settings
 	})
 
 	const [didHydrateState, setDidHydrateState] = useState(false)
@@ -239,6 +246,8 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 	const [marketplaceItems, setMarketplaceItems] = useState<any[]>([])
 	const [alwaysAllowFollowupQuestions, setAlwaysAllowFollowupQuestions] = useState(false) // Add state for follow-up questions auto-approve
 	const [followupAutoApproveTimeoutMs, setFollowupAutoApproveTimeoutMs] = useState<number | undefined>(undefined) // Will be set from global settings
+	const [timeoutFallbackEnabled, setTimeoutFallbackEnabledState] = useState(false) // Add state for timeout fallback enabled
+	const [toolExecutionTimeoutMs, setToolExecutionTimeoutMsState] = useState<number | undefined>(undefined) // Will be set from global settings
 	const [marketplaceInstalledMetadata, setMarketplaceInstalledMetadata] = useState<MarketplaceInstalledMetadata>({
 		project: {},
 		global: {},
@@ -275,6 +284,13 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 					// Update followupAutoApproveTimeoutMs if present in state message
 					if ((newState as any).followupAutoApproveTimeoutMs !== undefined) {
 						setFollowupAutoApproveTimeoutMs((newState as any).followupAutoApproveTimeoutMs)
+					}
+					// Update timeout settings if present in state message
+					if ((newState as any).timeoutFallbackEnabled !== undefined) {
+						setTimeoutFallbackEnabledState((newState as any).timeoutFallbackEnabled)
+					}
+					if ((newState as any).toolExecutionTimeoutMs !== undefined) {
+						setToolExecutionTimeoutMsState((newState as any).toolExecutionTimeoutMs)
 					}
 					// Handle marketplace data if present in state message
 					if (newState.marketplaceItems !== undefined) {
@@ -375,6 +391,8 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 		profileThresholds: state.profileThresholds ?? {},
 		alwaysAllowFollowupQuestions,
 		followupAutoApproveTimeoutMs,
+		timeoutFallbackEnabled,
+		toolExecutionTimeoutMs,
 		setExperimentEnabled: (id, enabled) =>
 			setState((prevState) => ({ ...prevState, experiments: { ...prevState.experiments, [id]: enabled } })),
 		setApiConfiguration,
@@ -468,6 +486,14 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 		alwaysAllowUpdateTodoList: state.alwaysAllowUpdateTodoList,
 		setAlwaysAllowUpdateTodoList: (value) => {
 			setState((prevState) => ({ ...prevState, alwaysAllowUpdateTodoList: value }))
+		},
+		setTimeoutFallbackEnabled: (value) => {
+			setState((prevState) => ({ ...prevState, timeoutFallbackEnabled: value }))
+			setTimeoutFallbackEnabledState(value)
+		},
+		setToolExecutionTimeoutMs: (value) => {
+			setState((prevState) => ({ ...prevState, toolExecutionTimeoutMs: value }))
+			setToolExecutionTimeoutMsState(value)
 		},
 	}
 

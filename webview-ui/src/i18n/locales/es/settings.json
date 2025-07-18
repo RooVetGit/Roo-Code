@@ -193,6 +193,18 @@
 			"description": "Realizar automáticamente esta cantidad de solicitudes a la API antes de pedir aprobación para continuar con la tarea.",
 			"unlimited": "Ilimitado"
 		},
+		"timeout": {
+			"label": "Tiempo de espera",
+			"description": "Configura cómo Roo maneja las operaciones de herramientas que exceden sus límites de tiempo",
+			"timeoutFallbackEnabled": {
+				"label": "Habilitar manejo de tiempo de espera",
+				"description": "Terminar automáticamente operaciones de herramientas de larga duración y sugerir opciones de respaldo."
+			},
+			"toolExecutionTimeoutMs": {
+				"label": "Tiempo de espera de ejecución de herramienta (ms)",
+				"description": "Tiempo máximo de espera para operaciones de herramientas antes de activar el manejo de tiempo de espera (1000-1800000ms)"
+			}
+		},
 		"selectOptionsFirst": "Selecciona al menos una opción a continuación para habilitar la aprobación automática"
 	},
 	"providers": {

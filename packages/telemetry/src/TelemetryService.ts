@@ -153,6 +153,23 @@ export class TelemetryService {
 	}
 
 	/**
+	 * Captures when a tool execution times out
+	 * @param taskId The task ID where the timeout occurred
+	 * @param toolName The name of the tool that timed out
+	 * @param timeoutMs The timeout duration in milliseconds
+	 * @param executionTimeMs The actual execution time before timeout
+	 */
+	public captureToolTimeout(taskId: string, toolName: string, timeoutMs: number, executionTimeMs: number): void {
+		this.captureEvent(TelemetryEventName.TOOL_TIMEOUT, {
+			taskId,
+			toolName,
+			timeoutMs,
+			executionTimeMs,
+			timeoutRatio: executionTimeMs / timeoutMs,
+		})
+	}
+
+	/**
 	 * Captures when a tab is shown due to user action
 	 * @param tab The tab that was shown
 	 */
