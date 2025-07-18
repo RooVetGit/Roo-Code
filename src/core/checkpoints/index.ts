@@ -7,6 +7,7 @@ import { Task } from "../task/Task"
 
 import { getWorkspacePath } from "../../utils/path"
 import { checkGitInstalled } from "../../utils/git"
+import { t } from "../../i18n"
 
 import { ClineApiReqInfo } from "../../shared/ExtensionMessage"
 import { getApiMetrics } from "../../shared/getApiMetrics"
@@ -81,12 +82,9 @@ export function getCheckpointService(cline: Task) {
 
 					// Show user-friendly notification
 					vscode.window
-						.showWarningMessage(
-							"Git is required for the checkpoints feature. Please install Git to enable checkpoints.",
-							"Learn More",
-						)
+						.showWarningMessage(t("common:errors.git_not_installed"), t("common:buttons.learn_more"))
 						.then((selection) => {
-							if (selection === "Learn More") {
+							if (selection === t("common:buttons.learn_more")) {
 								vscode.env.openExternal(vscode.Uri.parse("https://git-scm.com/downloads"))
 							}
 						})
