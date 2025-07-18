@@ -157,14 +157,36 @@ export class CodeIndexManager {
 
 	/**
 	 * Initiates the indexing process (initial scan and starts watcher).
+	 * Enhanced with error recovery to prevent users from needing to reload workspace.
 	 */
-
 	public async startIndexing(): Promise<void> {
 		if (!this.isFeatureEnabled) {
 			return
 		}
 		this.assertInitialized()
-		await this._orchestrator!.startIndexing()
+
+		// If we're in an error state, attempt to recover by resetting the state
+		if (this._stateManager.state === "Error") {
+			console.log("[CodeIndexManager] Attempting to recover from error state before starting indexing.")
+			this._stateManager.resetFromError()
+		}
+
+		try {
+			await this._orchestrator!.startIndexing()
+		} catch (error) {
+			// Enhanced error handling with recovery suggestions
+			const errorMessage = error instanceof Error ? error.message : String(error)
+			console.error("[CodeIndexManager] Failed to start indexing:", errorMessage)
+			
+			// Set a more informative error state that suggests recovery options
+			this._stateManager.setSystemState(
+				"Error",
+				`Failed to start indexing: ${errorMessage}. Try starting indexing again or check your configuration.`
+			)
+			
+			// Re-throw the error so callers can handle it appropriately
+			throw error
+		}
 	}
 
 	/**

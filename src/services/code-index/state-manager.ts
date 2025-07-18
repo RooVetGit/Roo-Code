@@ -55,6 +55,24 @@ export class CodeIndexStateManager {
 		}
 	}
 
+	/**
+	 * Resets the system from an error state to standby, allowing indexing to be restarted.
+	 * This method provides a clean recovery path from error states without requiring workspace reload.
+	 */
+	public resetFromError(): void {
+		if (this._systemStatus === "Error") {
+			this.setSystemState("Standby", "Ready to start indexing.")
+		}
+	}
+
+	/**
+	 * Checks if the system is in a state that allows starting indexing.
+	 * @returns true if indexing can be started, false otherwise
+	 */
+	public canStartIndexing(): boolean {
+		return this._systemStatus === "Standby" || this._systemStatus === "Error" || this._systemStatus === "Indexed"
+	}
+
 	public reportBlockIndexingProgress(processedItems: number, totalItems: number): void {
 		const progressChanged = processedItems !== this._processedItems || totalItems !== this._totalItems
 
