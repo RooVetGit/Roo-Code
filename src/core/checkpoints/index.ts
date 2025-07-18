@@ -6,6 +6,7 @@ import { TelemetryService } from "@roo-code/telemetry"
 import { Task } from "../task/Task"
 
 import { getWorkspacePath } from "../../utils/path"
+import { checkGitInstalled } from "../../utils/git"
 
 import { ClineApiReqInfo } from "../../shared/ExtensionMessage"
 import { getApiMetrics } from "../../shared/getApiMetrics"
@@ -70,25 +71,56 @@ export function getCheckpointService(cline: Task) {
 
 		cline.checkpointServiceInitializing = true
 
-		service.on("initialize", () => {
-			log("[Task#getCheckpointService] service initialized")
+		// Check if Git is installed before initializing the service
+		checkGitInstalled()
+			.then((gitInstalled) => {
+				if (!gitInstalled) {
+					log("[Task#getCheckpointService] Git is not installed, disabling checkpoints")
+					cline.enableCheckpoints = false
+					cline.checkpointServiceInitializing = false
 
-			try {
-				const isCheckpointNeeded =
-					typeof cline.clineMessages.find(({ say }) => say === "checkpoint_saved") === "undefined"
+					// Show user-friendly notification
+					vscode.window
+						.showWarningMessage(
+							"Git is required for the checkpoints feature. Please install Git to enable checkpoints.",
+							"Learn More",
+						)
+						.then((selection) => {
+							if (selection === "Learn More") {
+								vscode.env.openExternal(vscode.Uri.parse("https://git-scm.com/downloads"))
+							}
+						})
 
-				cline.checkpointService = service
-				cline.checkpointServiceInitializing = false
-
-				if (isCheckpointNeeded) {
-					log("[Task#getCheckpointService] no checkpoints found, saving initial checkpoint")
-					checkpointSave(cline)
+					return
 				}
-			} catch (err) {
-				log("[Task#getCheckpointService] caught error in on('initialize'), disabling checkpoints")
+
+				// Git is installed, proceed with initialization
+				service.on("initialize", () => {
+					log("[Task#getCheckpointService] service initialized")
+
+					try {
+						const isCheckpointNeeded =
+							typeof cline.clineMessages.find(({ say }) => say === "checkpoint_saved") === "undefined"
+
+						cline.checkpointService = service
+						cline.checkpointServiceInitializing = false
+
+						if (isCheckpointNeeded) {
+							log("[Task#getCheckpointService] no checkpoints found, saving initial checkpoint")
+							checkpointSave(cline)
+						}
+					} catch (err) {
+						log("[Task#getCheckpointService] caught error in on('initialize'), disabling checkpoints")
+						cline.enableCheckpoints = false
+					}
+				})
+			})
+			.catch((err) => {
+				log("[Task#getCheckpointService] error checking Git installation, disabling checkpoints")
+				console.error(err)
 				cline.enableCheckpoints = false
-			}
-		})
+				cline.checkpointServiceInitializing = false
+			})
 
 		service.on("checkpoint", ({ isFirst, fromHash: from, toHash: to }) => {
 			try {

@@ -210,7 +210,7 @@ async function checkGitRepo(cwd: string): Promise<boolean> {
 	}
 }
 
-async function checkGitInstalled(): Promise<boolean> {
+export async function checkGitInstalled(): Promise<boolean> {
 	try {
 		await execAsync("git --version")
 		return true
