@@ -51,6 +51,7 @@ export const globalSettingsSchema = z.object({
 	allowedCommands: z.array(z.string()).optional(),
 	deniedCommands: z.array(z.string()).optional(),
 	commandExecutionTimeout: z.number().optional(),
+	commandTimeoutAllowlist: z.array(z.string()).optional(),
 	preventCompletionWithOpenTodos: z.boolean().optional(),
 	allowedMaxRequests: z.number().nullish(),
 	autoCondenseContext: z.boolean().optional(),
@@ -203,6 +204,7 @@ export const EVALS_SETTINGS: RooCodeSettings = {
 	followupAutoApproveTimeoutMs: 0,
 	allowedCommands: ["*"],
 	commandExecutionTimeout: 30_000,
+	commandTimeoutAllowlist: [],
 	preventCompletionWithOpenTodos: false,
 
 	browserToolEnabled: false,

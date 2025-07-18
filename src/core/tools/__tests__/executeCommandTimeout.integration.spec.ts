@@ -186,4 +186,139 @@ describe("Command Execution Timeout Integration", () => {
 		expect(result[0]).toBe(false) // Not rejected
 		expect(result[1]).not.toContain("terminated after exceeding")
 	})
+
+	describe("Command Timeout Allowlist", () => {
+		beforeEach(() => {
+			// Reset mocks for allowlist tests
+			vitest.clearAllMocks()
+			;(fs.access as any).mockResolvedValue(undefined)
+			;(TerminalRegistry.getOrCreateTerminal as any).mockResolvedValue(mockTerminal)
+		})
+
+		it("should skip timeout for commands in allowlist", async () => {
+			// Mock VSCode configuration with timeout and allowlist
+			const mockGetConfiguration = vitest.fn().mockReturnValue({
+				get: vitest.fn().mockImplementation((key: string) => {
+					if (key === "commandExecutionTimeout") return 1 // 1 second timeout
+					if (key === "commandTimeoutAllowlist") return ["npm", "git"]
+					return undefined
+				}),
+			})
+			;(vscode.workspace.getConfiguration as any).mockReturnValue(mockGetConfiguration())
+
+			const options: ExecuteCommandOptions = {
+				executionId: "test-execution",
+				command: "npm install",
+				// Should be overridden to 0 due to allowlist
+			}
+
+			// Create a process that would timeout if not allowlisted
+			const longRunningProcess = new Promise((resolve) => {
+				setTimeout(resolve, 2000) // 2 seconds, longer than 1 second timeout
+			})
+			mockTerminal.runCommand.mockReturnValue(longRunningProcess)
+
+			const result = await executeCommand(mockTask as Task, options)
+
+			// Should complete successfully without timeout because "npm" is in allowlist
+			expect(result[0]).toBe(false) // Not rejected
+			expect(result[1]).not.toContain("terminated after exceeding")
+		}, 3000)
+
+		it("should apply timeout for commands not in allowlist", async () => {
+			// Mock VSCode configuration with timeout and allowlist
+			const mockGetConfiguration = vitest.fn().mockReturnValue({
+				get: vitest.fn().mockImplementation((key: string) => {
+					if (key === "commandExecutionTimeout") return 1 // 1 second timeout
+					if (key === "commandTimeoutAllowlist") return ["npm", "git"]
+					return undefined
+				}),
+			})
+			;(vscode.workspace.getConfiguration as any).mockReturnValue(mockGetConfiguration())
+
+			const options: ExecuteCommandOptions = {
+				executionId: "test-execution",
+				command: "sleep 10", // Not in allowlist
+			}
+
+			// Create a process that never resolves
+			const neverResolvingProcess = new Promise(() => {})
+			;(neverResolvingProcess as any).abort = vitest.fn()
+			mockTerminal.runCommand.mockReturnValue(neverResolvingProcess)
+
+			const result = await executeCommand(mockTask as Task, options)
+
+			// Should timeout because "sleep" is not in allowlist
+			expect(result[0]).toBe(false) // Not rejected by user
+			expect(result[1]).toContain("terminated after exceeding")
+		}, 3000)
+
+		it("should handle empty allowlist", async () => {
+			// Mock VSCode configuration with timeout and empty allowlist
+			const mockGetConfiguration = vitest.fn().mockReturnValue({
+				get: vitest.fn().mockImplementation((key: string) => {
+					if (key === "commandExecutionTimeout") return 1 // 1 second timeout
+					if (key === "commandTimeoutAllowlist") return []
+					return undefined
+				}),
+			})
+			;(vscode.workspace.getConfiguration as any).mockReturnValue(mockGetConfiguration())
+
+			const options: ExecuteCommandOptions = {
+				executionId: "test-execution",
+				command: "npm install",
+			}
+
+			// Create a process that never resolves
+			const neverResolvingProcess = new Promise(() => {})
+			;(neverResolvingProcess as any).abort = vitest.fn()
+			mockTerminal.runCommand.mockReturnValue(neverResolvingProcess)
+
+			const result = await executeCommand(mockTask as Task, options)
+
+			// Should timeout because allowlist is empty
+			expect(result[0]).toBe(false) // Not rejected by user
+			expect(result[1]).toContain("terminated after exceeding")
+		}, 3000)
+
+		it("should match command prefixes correctly", async () => {
+			// Mock VSCode configuration with timeout and allowlist
+			const mockGetConfiguration = vitest.fn().mockReturnValue({
+				get: vitest.fn().mockImplementation((key: string) => {
+					if (key === "commandExecutionTimeout") return 1 // 1 second timeout
+					if (key === "commandTimeoutAllowlist") return ["git log", "npm run"]
+					return undefined
+				}),
+			})
+			;(vscode.workspace.getConfiguration as any).mockReturnValue(mockGetConfiguration())
+
+			// Test exact prefix match
+			const options1: ExecuteCommandOptions = {
+				executionId: "test-execution-1",
+				command: "git log --oneline",
+			}
+
+			// Test partial prefix match (should not match)
+			const options2: ExecuteCommandOptions = {
+				executionId: "test-execution-2",
+				command: "git status", // "git" alone is not in allowlist, only "git log"
+			}
+
+			const longRunningProcess = new Promise((resolve) => {
+				setTimeout(resolve, 2000) // 2 seconds
+			})
+			const neverResolvingProcess = new Promise(() => {})
+			;(neverResolvingProcess as any).abort = vitest.fn()
+
+			// First command should not timeout (matches "git log" prefix)
+			mockTerminal.runCommand.mockReturnValueOnce(longRunningProcess)
+			const result1 = await executeCommand(mockTask as Task, options1)
+			expect(result1[1]).not.toContain("terminated after exceeding")
+
+			// Second command should timeout (doesn't match any prefix exactly)
+			mockTerminal.runCommand.mockReturnValueOnce(neverResolvingProcess)
+			const result2 = await executeCommand(mockTask as Task, options2)
+			expect(result2[1]).toContain("terminated after exceeding")
+		}, 5000)
+	})
 })
