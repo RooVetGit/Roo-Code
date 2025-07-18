@@ -11,7 +11,7 @@ import { ClineSayTool } from "../../shared/ExtensionMessage"
 import { getReadablePath } from "../../utils/path"
 import { fileExistsAtPath } from "../../utils/fs"
 import { RecordSource } from "../context-tracking/FileContextTrackerTypes"
-import { DEFAULT_WRITE_DELAY_MS } from "../../shared/constants"
+import { DEFAULT_WRITE_DELAY_MS } from "@roo-code/types"
 
 /**
  * Tool for performing search and replace operations on files
