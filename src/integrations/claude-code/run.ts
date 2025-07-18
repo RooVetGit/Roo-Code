@@ -26,7 +26,17 @@ export async function* runClaudeCode(
 	options: ClaudeCodeOptions & { maxOutputTokens?: number },
 ): AsyncGenerator<ClaudeCodeMessage | string> {
 	const claudePath = options.path || "claude"
-	const process = runProcess(options)
+	let process
+
+	try {
+		process = runProcess(options)
+	} catch (error: any) {
+		// Handle ENOENT errors immediately when spawning the process
+		if (error.code === "ENOENT" || error.message?.includes("ENOENT")) {
+			throw createClaudeCodeNotFoundError(claudePath, error)
+		}
+		throw error
+	}
 
 	const rl = readline.createInterface({
 		input: process.stdout,
@@ -55,6 +65,8 @@ export async function* runClaudeCode(
 			} else {
 				processState.error = err
 			}
+			// Close the readline interface to break out of the loop
+			rl.close()
 		})
 
 		for await (const line of rl) {
@@ -73,6 +85,11 @@ export async function* runClaudeCode(
 			}
 		}
 
+		// Check for errors that occurred during processing
+		if (processState.error) {
+			throw processState.error
+		}
+
 		// We rely on the assistant message. If the output was truncated, it's better having a poorly formatted message
 		// from which to extract something, than throwing an error/showing the model didn't return any messages.
 		if (processState.partialData && processState.partialData.startsWith(`{"type":"assistant"`)) {
@@ -81,13 +98,12 @@ export async function* runClaudeCode(
 
 		const { exitCode } = await process
 		if (exitCode !== null && exitCode !== 0) {
-			const errorOutput = processState.error?.message || processState.stderrLogs?.trim()
-			
 			// If we have a specific ENOENT error, throw that instead
-			if (processState.error && processState.error.name === "ClaudeCodeNotFoundError") {
+			if (processState.error && (processState.error as any).name === "ClaudeCodeNotFoundError") {
 				throw processState.error
 			}
-			
+
+			const errorOutput = (processState.error as any)?.message || processState.stderrLogs?.trim()
 			throw new Error(
 				`Claude Code process exited with code ${exitCode}.${errorOutput ? ` Error output: ${errorOutput}` : ""}`,
 			)
@@ -156,31 +172,22 @@ function runProcess({
 		args.push("--model", modelId)
 	}
 
-	let child
-	try {
-		child = execa(claudePath, args, {
-			stdin: "pipe",
-			stdout: "pipe",
-			stderr: "pipe",
-			env: {
-				...process.env,
-				// Use the configured value, or the environment variable, or default to CLAUDE_CODE_DEFAULT_MAX_OUTPUT_TOKENS
-				CLAUDE_CODE_MAX_OUTPUT_TOKENS:
-					maxOutputTokens?.toString() ||
-					process.env.CLAUDE_CODE_MAX_OUTPUT_TOKENS ||
-					CLAUDE_CODE_DEFAULT_MAX_OUTPUT_TOKENS.toString(),
-			},
-			cwd,
-			maxBuffer: 1024 * 1024 * 1000,
-			timeout: CLAUDE_CODE_TIMEOUT,
-		})
-	} catch (error: any) {
-		// Handle ENOENT errors immediately when spawning the process
-		if (error.code === "ENOENT" || error.message?.includes("ENOENT")) {
-			throw createClaudeCodeNotFoundError(claudePath, error)
-		}
-		throw error
-	}
+	const child = execa(claudePath, args, {
+		stdin: "pipe",
+		stdout: "pipe",
+		stderr: "pipe",
+		env: {
+			...process.env,
+			// Use the configured value, or the environment variable, or default to CLAUDE_CODE_DEFAULT_MAX_OUTPUT_TOKENS
+			CLAUDE_CODE_MAX_OUTPUT_TOKENS:
+				maxOutputTokens?.toString() ||
+				process.env.CLAUDE_CODE_MAX_OUTPUT_TOKENS ||
+				CLAUDE_CODE_DEFAULT_MAX_OUTPUT_TOKENS.toString(),
+		},
+		cwd,
+		maxBuffer: 1024 * 1024 * 1000,
+		timeout: CLAUDE_CODE_TIMEOUT,
+	})
 
 	// Prepare stdin data: Windows gets both system prompt & messages (avoids 8191 char limit),
 	// other platforms get messages only (avoids Linux E2BIG error from ~128KiB execve limit)
@@ -254,7 +261,7 @@ function createClaudeCodeNotFoundError(claudePath: string, originalError: Error)
 		"1. Visit https://claude.ai/download to download Claude Code",
 		"2. Follow the installation instructions for your operating system",
 		"3. Ensure the 'claude' command is available in your PATH",
-		"4. Alternatively, configure a custom path in Roo settings under 'Claude Code Path'"
+		"4. Alternatively, configure a custom path in Roo settings under 'Claude Code Path'",
 	].join("\n")
 
 	const errorMessage = [
@@ -262,7 +269,7 @@ function createClaudeCodeNotFoundError(claudePath: string, originalError: Error)
 		"",
 		suggestion,
 		"",
-		`Original error: ${originalError.message}`
+		`Original error: ${originalError.message}`,
 	].join("\n")
 
 	const error = new Error(errorMessage)
