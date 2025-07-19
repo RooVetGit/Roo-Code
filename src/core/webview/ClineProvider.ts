@@ -193,7 +193,7 @@ export class ClineProvider
 			try {
 				// Abort the running task and set isAbandoned to true so
 				// all running promises will exit as well.
-				await cline.abortTask(true)
+				await cline.abortTask(true, 'user')
 			} catch (e) {
 				this.log(
 					`[subtasks] encountered error while aborting task ${cline.taskId}.${cline.instanceId}: ${e.message}`,
@@ -975,7 +975,7 @@ export class ClineProvider
 		const rootTask = cline.rootTask
 		const parentTask = cline.parentTask
 
-		cline.abortTask()
+		cline.abortTask(false, 'user')
 
 		await pWaitFor(
 			() =>

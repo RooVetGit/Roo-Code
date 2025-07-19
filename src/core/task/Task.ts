@@ -140,6 +140,7 @@ export class Task extends EventEmitter<ClineEvents> {
 	providerRef: WeakRef<ClineProvider>
 	private readonly globalStoragePath: string
 	abort: boolean = false
+	abortReason: 'user' | 'api_failure' | null = null
 	didFinishAbortingStream = false
 	abandoned = false
 	isInitialized = false
@@ -1074,8 +1075,8 @@ export class Task extends EventEmitter<ClineEvents> {
 		}
 	}
 
-	public async abortTask(isAbandoned = false) {
-		console.log(`[subtasks] aborting task ${this.taskId}.${this.instanceId}`)
+	public async abortTask(isAbandoned = false, reason: 'user' | 'api_failure' = 'user') {
+		console.log(`[subtasks] aborting task ${this.taskId}.${this.instanceId} with reason: ${reason}`)
 
 		// Will stop any autonomously running promises.
 		if (isAbandoned) {
@@ -1083,6 +1084,7 @@ export class Task extends EventEmitter<ClineEvents> {
 		}
 
 		this.abort = true
+		this.abortReason = reason
 		this.emit("taskAborted")
 
 		try {
@@ -1442,13 +1444,12 @@ export class Task extends EventEmitter<ClineEvents> {
 					// could be in (i.e. could have streamed some tools the user
 					// may have executed), so we just resort to replicating a
 					// cancel task.
-					this.abortTask()
+					this.abortTask(false, 'api_failure')
 
-					// Check if this was a user-initiated cancellation
-					// If this.abort is true, it means the user clicked cancel, so we should
-					// treat this as "user_cancelled" rather than "streaming_failed"
-					const cancelReason = this.abort ? "user_cancelled" : "streaming_failed"
-					const streamingFailedMessage = this.abort
+					// Check if this was a user-initiated cancellation or an API failure
+					// Use the abortReason to properly distinguish between user cancellations and API failures
+					const cancelReason = this.abortReason === 'user' ? "user_cancelled" : "streaming_failed"
+					const streamingFailedMessage = this.abortReason === 'user'
 						? undefined
 						: (error.message ?? JSON.stringify(serializeError(error), null, 2))
 
