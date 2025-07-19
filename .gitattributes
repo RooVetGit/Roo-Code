@@ -9,43 +9,12 @@ src/assets/docs/demo.gif filter=lfs diff=lfs merge=lfs -text
 # Root locales directory (contains only non-English translations)
 locales/** linguist-generated=true
 
-# src/i18n/locales - all non-English translations
-src/i18n/locales/ca/** linguist-generated=true
-src/i18n/locales/de/** linguist-generated=true
-src/i18n/locales/es/** linguist-generated=true
-src/i18n/locales/fr/** linguist-generated=true
-src/i18n/locales/hi/** linguist-generated=true
-src/i18n/locales/id/** linguist-generated=true
-src/i18n/locales/it/** linguist-generated=true
-src/i18n/locales/ja/** linguist-generated=true
-src/i18n/locales/ko/** linguist-generated=true
-src/i18n/locales/nl/** linguist-generated=true
-src/i18n/locales/pl/** linguist-generated=true
-src/i18n/locales/pt-BR/** linguist-generated=true
-src/i18n/locales/ru/** linguist-generated=true
-src/i18n/locales/tr/** linguist-generated=true
-src/i18n/locales/vi/** linguist-generated=true
-src/i18n/locales/zh-CN/** linguist-generated=true
-src/i18n/locales/zh-TW/** linguist-generated=true
+# Mark all locale directories as generated first
+src/i18n/locales/** linguist-generated=true
+webview-ui/src/i18n/locales/** linguist-generated=true
 
-# webview-ui/src/i18n/locales - all non-English translations
-webview-ui/src/i18n/locales/ca/** linguist-generated=true
-webview-ui/src/i18n/locales/de/** linguist-generated=true
-webview-ui/src/i18n/locales/es/** linguist-generated=true
-webview-ui/src/i18n/locales/fr/** linguist-generated=true
-webview-ui/src/i18n/locales/hi/** linguist-generated=true
-webview-ui/src/i18n/locales/id/** linguist-generated=true
-webview-ui/src/i18n/locales/it/** linguist-generated=true
-webview-ui/src/i18n/locales/ja/** linguist-generated=true
-webview-ui/src/i18n/locales/ko/** linguist-generated=true
-webview-ui/src/i18n/locales/nl/** linguist-generated=true
-webview-ui/src/i18n/locales/pl/** linguist-generated=true
-webview-ui/src/i18n/locales/pt-BR/** linguist-generated=true
-webview-ui/src/i18n/locales/ru/** linguist-generated=true
-webview-ui/src/i18n/locales/tr/** linguist-generated=true
-webview-ui/src/i18n/locales/vi/** linguist-generated=true
-webview-ui/src/i18n/locales/zh-CN/** linguist-generated=true
-webview-ui/src/i18n/locales/zh-TW/** linguist-generated=true
+# Then explicitly mark English directories as NOT generated (override the above)
+src/i18n/locales/en/** linguist-generated=false
+webview-ui/src/i18n/locales/en/** linguist-generated=false
 
-# Future-proof pattern: any directory in i18n/locales that is not 'en' is linguist-generated
-# Note: gitattributes doesn't support negative patterns, so we list each locale explicitly above
+# This approach uses gitattributes' last-match-wins rule to exclude English while including all other locales
