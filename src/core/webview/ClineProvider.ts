@@ -229,10 +229,60 @@ export class ClineProvider
 	// this is used when a sub task is finished and the parent task needs to be resumed
 	async finishSubTask(lastMessage: string) {
 		console.log(`[subtasks] finishing subtask ${lastMessage}`)
-		// remove the last cline instance from the stack (this is the finished sub task)
-		await this.removeClineFromStack()
-		// resume the last cline instance in the stack (if it exists - this is the 'parent' calling task)
-		await this.getCurrentCline()?.resumePausedTask(lastMessage)
+		
+		try {
+			// remove the last cline instance from the stack (this is the finished sub task)
+			await this.removeClineFromStack()
+			// resume the last cline instance in the stack (if it exists - this is the 'parent' calling task)
+			await this.getCurrentCline()?.resumePausedTask(lastMessage)
+		} catch (error) {
+			console.error(`[ClineProvider.finishSubTask] Error during subtask completion: ${error}`)
+			
+			// Attempt to recover from gray state by ensuring we have a valid task state
+			await this.recoverFromGrayState(lastMessage)
+		}
+	}
+
+	/**
+	 * Attempts to recover from a gray state where the task is stuck with no valid UI state
+	 */
+	private async recoverFromGrayState(lastMessage: string) {
+		console.log(`[ClineProvider.recoverFromGrayState] Attempting recovery with message: ${lastMessage}`)
+		
+		try {
+			const currentTask = this.getCurrentCline()
+			
+			if (currentTask) {
+				// If we have a current task, try to force it into a valid state
+				console.log(`[ClineProvider.recoverFromGrayState] Found current task ${currentTask.taskId}, attempting to resume`)
+				
+				// Force the task to be unpaused and try to resume
+				currentTask.isPaused = false
+				
+				// Try to add a recovery message to the task
+				try {
+					await currentTask.say("subtask_result", `Recovery: ${lastMessage}`)
+				} catch (sayError) {
+					console.warn(`[ClineProvider.recoverFromGrayState] Failed to add recovery message: ${sayError}`)
+				}
+				
+				// Post state to webview to refresh UI
+				await this.postStateToWebview()
+			} else {
+				// No current task - this is a more severe gray state
+				console.log(`[ClineProvider.recoverFromGrayState] No current task found, clearing task state`)
+				await this.clearTask()
+			}
+		} catch (recoveryError) {
+			console.error(`[ClineProvider.recoverFromGrayState] Recovery failed: ${recoveryError}`)
+			
+			// Last resort: clear the task entirely
+			try {
+				await this.clearTask()
+			} catch (clearError) {
+				console.error(`[ClineProvider.recoverFromGrayState] Failed to clear task during recovery: ${clearError}`)
+			}
+		}
 	}
 
 	// Clear the current task without treating it as a subtask

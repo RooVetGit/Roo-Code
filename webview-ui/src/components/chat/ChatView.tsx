@@ -510,6 +510,30 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 		return false
 	}, [modifiedMessages, clineAsk, enableButtons, primaryButtonText])
 
+	// Gray state detection and recovery
+	const isInGrayState = useMemo(() => {
+		// Detect gray state: not streaming, no buttons enabled, but we have messages
+		const hasMessages = modifiedMessages.length > 0
+		const hasTask = !!task
+		
+		return hasTask && hasMessages && !isStreaming && !enableButtons && !clineAsk
+	}, [modifiedMessages.length, task, isStreaming, enableButtons, clineAsk])
+
+	// Effect to handle gray state recovery
+	useEffect(() => {
+		if (isInGrayState) {
+			console.warn("[ChatView] Detected gray state - attempting recovery")
+			
+			// Attempt to recover by posting a message to clear the task state
+			const timer = setTimeout(() => {
+				console.log("[ChatView] Gray state recovery: clearing task")
+				vscode.postMessage({ type: "clearTask" })
+			}, 2000) // Give a 2 second delay to avoid false positives
+			
+			return () => clearTimeout(timer)
+		}
+	}, [isInGrayState])
+
 	const markFollowUpAsAnswered = useCallback(() => {
 		const lastFollowUpMessage = messagesRef.current.findLast((msg) => msg.ask === "followup")
 		if (lastFollowUpMessage) {

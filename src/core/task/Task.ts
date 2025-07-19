@@ -780,7 +780,16 @@ export class Task extends EventEmitter<ClineEvents> {
 				.deref()
 				?.log(`Error failed to add reply from subtask into conversation of parent task, error: ${error}`)
 
-			throw error
+			// Don't throw the error - instead try to recover gracefully
+			// This prevents the task from getting stuck in a gray state
+			console.warn(`[Task.resumePausedTask] Recovered from error during subtask completion: ${error}`)
+			
+			// Ensure the task can continue by adding a fallback message
+			try {
+				await this.say("subtask_result", `Subtask completed with recovery: ${lastMessage}`)
+			} catch (fallbackError) {
+				console.error(`[Task.resumePausedTask] Failed to add fallback message: ${fallbackError}`)
+			}
 		}
 	}
 
@@ -1457,7 +1466,19 @@ export class Task extends EventEmitter<ClineEvents> {
 					const history = await provider?.getTaskWithId(this.taskId)
 
 					if (history) {
-						await provider?.initClineWithHistoryItem(history.historyItem)
+						try {
+							await provider?.initClineWithHistoryItem(history.historyItem)
+						} catch (recoveryError) {
+							// If recovery fails, ensure we don't leave the task in a gray state
+							console.error(`[Task.recursivelyMakeClineRequests] Recovery failed: ${recoveryError}`)
+							
+							// Force a clean state by clearing the task if recovery fails
+							try {
+								await provider?.clearTask()
+							} catch (clearError) {
+								console.error(`[Task.recursivelyMakeClineRequests] Failed to clear task during recovery: ${clearError}`)
+							}
+						}
 					}
 				}
 			} finally {
@@ -1731,7 +1752,7 @@ export class Task extends EventEmitter<ClineEvents> {
 			const contextWindow = modelInfo.contextWindow
 
 			const currentProfileId =
-				state?.listApiConfigMeta.find((profile) => profile.name === state?.currentApiConfigName)?.id ??
+				state?.listApiConfigMeta.find((profile: any) => profile.name === state?.currentApiConfigName)?.id ??
 				"default"
 
 			const truncateResult = await truncateConversationIfNeeded({
