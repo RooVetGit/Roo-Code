@@ -23,6 +23,11 @@ export function escapeSpaces(path: string): string {
  * @returns A mention-friendly path
  */
 export function convertToMentionPath(path: string, cwd?: string): string {
+	// If the path already starts with @, return it as-is to avoid double prefixing
+	if (path.startsWith("@")) {
+		return path
+	}
+
 	// Strip file:// or vscode-remote:// protocol if present
 	let pathWithoutProtocol = path
 

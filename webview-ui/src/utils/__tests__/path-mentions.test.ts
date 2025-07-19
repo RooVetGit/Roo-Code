@@ -102,5 +102,25 @@ describe("Path Mentions Utilities", () => {
 			const absPath = "/Users/test/project/src/file with spaces.ts"
 			expect(convertToMentionPath(absPath, undefined)).toBe("/Users/test/project/src/file with spaces.ts")
 		})
+
+		it("should return path as-is if it already starts with @", () => {
+			const mentionPath = "@/src/file.ts"
+			expect(convertToMentionPath(mentionPath, MOCK_CWD_POSIX)).toBe("@/src/file.ts")
+		})
+
+		it("should return path as-is if it already starts with @ even with spaces", () => {
+			const mentionPath = "@/src/file\\ with\\ spaces.ts"
+			expect(convertToMentionPath(mentionPath, MOCK_CWD_POSIX)).toBe("@/src/file\\ with\\ spaces.ts")
+		})
+
+		it("should return path as-is if it already starts with @ regardless of cwd", () => {
+			const mentionPath = "@/Logs/SCC_Engine_2025-07-18_18-29-42_0.log"
+			expect(convertToMentionPath(mentionPath, MOCK_CWD_POSIX)).toBe("@/Logs/SCC_Engine_2025-07-18_18-29-42_0.log")
+		})
+
+		it("should return path as-is if it already starts with @ even when cwd is undefined", () => {
+			const mentionPath = "@/some/path/file.txt"
+			expect(convertToMentionPath(mentionPath, undefined)).toBe("@/some/path/file.txt")
+		})
 	})
 })
