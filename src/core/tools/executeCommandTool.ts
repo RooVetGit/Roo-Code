@@ -4,7 +4,7 @@ import * as vscode from "vscode"
 
 import delay from "delay"
 
-import { CommandExecutionStatus } from "@roo-code/types"
+import { CommandExecutionStatus, DEFAULT_TERMINAL_OUTPUT_CHARACTER_LIMIT } from "@roo-code/types"
 import { TelemetryService } from "@roo-code/telemetry"
 
 import { Task } from "../task/Task"
@@ -65,7 +65,7 @@ export async function executeCommandTool(
 			const clineProviderState = await clineProvider?.getState()
 			const {
 				terminalOutputLineLimit = 500,
-				terminalOutputCharacterLimit = 100000,
+				terminalOutputCharacterLimit = DEFAULT_TERMINAL_OUTPUT_CHARACTER_LIMIT,
 				terminalShellIntegrationDisabled = false,
 			} = clineProviderState ?? {}
 
@@ -150,7 +150,7 @@ export async function executeCommand(
 		customCwd,
 		terminalShellIntegrationDisabled = false,
 		terminalOutputLineLimit = 500,
-		terminalOutputCharacterLimit = 100000,
+		terminalOutputCharacterLimit = DEFAULT_TERMINAL_OUTPUT_CHARACTER_LIMIT,
 		commandExecutionTimeout = 0,
 	}: ExecuteCommandOptions,
 ): Promise<[boolean, ToolResponse]> {

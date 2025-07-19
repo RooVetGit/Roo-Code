@@ -407,6 +407,91 @@ describe("truncateOutput", () => {
 
 			expect(result).toBe(expected)
 		})
+
+		describe("edge cases with very small character limits", () => {
+			it("handles character limit of 1", () => {
+				const content = "abcdefghijklmnopqrstuvwxyz"
+				const result = truncateOutput(content, undefined, 1)
+
+				// 20% of 1 = 0.2 (floor = 0), so beforeLimit = 0
+				// afterLimit = 1 - 0 = 1
+				// Should keep 0 chars from start and 1 char from end
+				const expected = "\n[...25 characters omitted...]\nz"
+				expect(result).toBe(expected)
+			})
+
+			it("handles character limit of 2", () => {
+				const content = "abcdefghijklmnopqrstuvwxyz"
+				const result = truncateOutput(content, undefined, 2)
+
+				// 20% of 2 = 0.4 (floor = 0), so beforeLimit = 0
+				// afterLimit = 2 - 0 = 2
+				// Should keep 0 chars from start and 2 chars from end
+				const expected = "\n[...24 characters omitted...]\nyz"
+				expect(result).toBe(expected)
+			})
+
+			it("handles character limit of 5", () => {
+				const content = "abcdefghijklmnopqrstuvwxyz"
+				const result = truncateOutput(content, undefined, 5)
+
+				// 20% of 5 = 1, so beforeLimit = 1
+				// afterLimit = 5 - 1 = 4
+				// Should keep 1 char from start and 4 chars from end
+				const expected = "a\n[...21 characters omitted...]\nwxyz"
+				expect(result).toBe(expected)
+			})
+
+			it("handles character limit with multi-byte characters", () => {
+				const content = "🚀🎉🔥💻🌟🎨🎯🎪🎭🎬" // 10 emojis, each is multi-byte
+				const result = truncateOutput(content, undefined, 10)
+
+				// Character limit works on string length, not byte count
+				// 20% of 10 = 2, 80% of 10 = 8
+				const expected = "🚀🎉\n[...10 characters omitted...]\n🎨🎯🎪🎭🎬"
+				expect(result).toBe(expected)
+			})
+
+			it("handles character limit with newlines in content", () => {
+				const content = "line1\nline2\nline3\nline4\nline5"
+				const result = truncateOutput(content, undefined, 15)
+
+				// Total length is 29 chars (including newlines)
+				// 20% of 15 = 3, 80% of 15 = 12
+				const expected = "lin\n[...14 characters omitted...]\ne3\nline4\nline5"
+				expect(result).toBe(expected)
+			})
+
+			it("handles character limit exactly matching content with omission message", () => {
+				// Edge case: when the omission message would make output longer than original
+				const content = "short"
+				const result = truncateOutput(content, undefined, 10)
+
+				// Content is 5 chars, limit is 10, so no truncation needed
+				expect(result).toBe(content)
+			})
+
+			it("handles character limit smaller than omission message", () => {
+				const content = "a".repeat(100)
+				const result = truncateOutput(content, undefined, 3)
+
+				// 20% of 3 = 0.6 (floor = 0), so beforeLimit = 0
+				// afterLimit = 3 - 0 = 3
+				const expected = "\n[...97 characters omitted...]\naaa"
+				expect(result).toBe(expected)
+			})
+
+			it("prioritizes character limit even with very high line limit", () => {
+				const content = "a".repeat(1000)
+				const result = truncateOutput(content, 999999, 50)
+
+				// Character limit should still apply despite high line limit
+				const expectedStart = "a".repeat(10) // 20% of 50
+				const expectedEnd = "a".repeat(40) // 80% of 50
+				const expected = expectedStart + "\n[...950 characters omitted...]\n" + expectedEnd
+				expect(result).toBe(expected)
+			})
+		})
 	})
 })
 

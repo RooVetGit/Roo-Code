@@ -23,6 +23,13 @@ import { languagesSchema } from "./vscode.js"
 export const DEFAULT_WRITE_DELAY_MS = 1000
 
 /**
+ * Default terminal output character limit constant.
+ * This provides a reasonable default that aligns with typical terminal usage
+ * while preventing context window explosions from extremely long lines.
+ */
+export const DEFAULT_TERMINAL_OUTPUT_CHARACTER_LIMIT = 50_000
+
+/**
  * GlobalSettings
  */
 
@@ -228,7 +235,7 @@ export const EVALS_SETTINGS: RooCodeSettings = {
 	soundVolume: 0.5,
 
 	terminalOutputLineLimit: 500,
-	terminalOutputCharacterLimit: 100000,
+	terminalOutputCharacterLimit: DEFAULT_TERMINAL_OUTPUT_CHARACTER_LIMIT,
 	terminalShellIntegrationTimeout: 30000,
 	terminalCommandDelay: 0,
 	terminalPowershellCounter: false,

@@ -6,6 +6,7 @@ import pWaitFor from "p-wait-for"
 import delay from "delay"
 
 import type { ExperimentId } from "@roo-code/types"
+import { DEFAULT_TERMINAL_OUTPUT_CHARACTER_LIMIT } from "@roo-code/types"
 
 import { EXPERIMENT_IDS, experiments as Experiments } from "../../shared/experiments"
 import { formatLanguage } from "../../shared/language"
@@ -27,7 +28,7 @@ export async function getEnvironmentDetails(cline: Task, includeFileDetails: boo
 	const state = await clineProvider?.getState()
 	const {
 		terminalOutputLineLimit = 500,
-		terminalOutputCharacterLimit = 100000,
+		terminalOutputCharacterLimit = DEFAULT_TERMINAL_OUTPUT_CHARACTER_LIMIT,
 		maxWorkspaceFiles = 200,
 	} = state ?? {}
 

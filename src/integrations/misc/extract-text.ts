@@ -135,6 +135,16 @@ export function stripLineNumbers(content: string, aggressive: boolean = false): 
  * When truncation is needed, it keeps 20% of the lines from the start and 80% from the end,
  * with a clear indicator of how many lines were omitted in between.
  *
+ * IMPORTANT: Character limit takes precedence over line limit. This is because:
+ * 1. Character limit provides a hard cap on memory usage and context window consumption
+ * 2. A single line with millions of characters could bypass line limits and cause issues
+ * 3. Character limit ensures consistent behavior regardless of line structure
+ *
+ * When both limits are specified:
+ * - If content exceeds character limit, character-based truncation is applied (regardless of line count)
+ * - If content is within character limit but exceeds line limit, line-based truncation is applied
+ * - This prevents edge cases where extremely long lines could consume excessive resources
+ *
  * @param content The multi-line string to truncate
  * @param lineLimit Optional maximum number of lines to keep. If not provided or 0, no line limit is applied
  * @param characterLimit Optional maximum number of characters to keep. If not provided or 0, no character limit is applied
@@ -151,6 +161,12 @@ export function stripLineNumbers(content: string, aggressive: boolean = false): 
  * // - Keeps first 20% of characters
  * // - Keeps last 80% of characters
  * // - Adds "[...X characters omitted...]" in between
+ *
+ * @example
+ * // Character limit takes precedence:
+ * // content = "A".repeat(50000) + "\n" + "B".repeat(50000) // 2 lines, 100,002 chars
+ * // truncateOutput(content, 10, 40000) // Uses character limit, not line limit
+ * // Result: First ~8000 chars + "[...60002 characters omitted...]" + Last ~32000 chars
  */
 export function truncateOutput(content: string, lineLimit?: number, characterLimit?: number): string {
 	// If no limits are specified, return original content
