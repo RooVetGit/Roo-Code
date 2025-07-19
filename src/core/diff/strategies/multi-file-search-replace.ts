@@ -532,6 +532,31 @@ Each file requires its own path, start_line, and diff elements.
 			let searchLines = searchContent === "" ? [] : searchContent.split(/\r?\n/)
 			let replaceLines = replaceContent === "" ? [] : replaceContent.split(/\r?\n/)
 
+			// Check for case sensitivity issues after identical content check
+			if (searchContent !== replaceContent && searchContent.toLowerCase() === replaceContent.toLowerCase()) {
+				// The content differs only by case - add this to debug info
+				const caseDifferences: string[] = []
+				const searchWords = searchContent.split(/\s+/)
+				const replaceWords = replaceContent.split(/\s+/)
+
+				for (let i = 0; i < Math.min(searchWords.length, replaceWords.length); i++) {
+					if (
+						searchWords[i] !== replaceWords[i] &&
+						searchWords[i].toLowerCase() === replaceWords[i].toLowerCase()
+					) {
+						caseDifferences.push(`"${searchWords[i]}" vs "${replaceWords[i]}"`)
+					}
+				}
+
+				if (caseDifferences.length > 0) {
+					console.log(`[apply_diff] Case sensitivity mismatch detected in search/replace content:`)
+					console.log(`  File: ${originalContent.substring(0, 50)}...`)
+					console.log(
+						`  Case differences: ${caseDifferences.slice(0, 3).join(", ")}${caseDifferences.length > 3 ? ` and ${caseDifferences.length - 3} more` : ""}`,
+					)
+				}
+			}
+
 			// Validate that search content is not empty
 			if (searchLines.length === 0) {
 				diffResults.push({
@@ -634,6 +659,25 @@ Each file requires its own path, start_line, and diff elements.
 
 					const lineRange = startLine ? ` at line: ${startLine}` : ""
 
+					// Check for potential case mismatches in the entire file
+					let caseMismatchInfo = ""
+					const searchLower = searchChunk.toLowerCase()
+					let caseMismatchCount = 0
+
+					for (let i = 0; i <= resultLines.length - searchLines.length; i++) {
+						const chunk = resultLines.slice(i, i + searchLines.length).join("\n")
+						if (chunk.toLowerCase() === searchLower && chunk !== searchChunk) {
+							caseMismatchCount++
+						}
+					}
+
+					if (caseMismatchCount > 0) {
+						caseMismatchInfo = `\n- 🔍 **Potential case mismatch**: Found ${caseMismatchCount} location(s) where content differs only by case`
+						console.log(
+							`[apply_diff] Case sensitivity issue detected: ${caseMismatchCount} potential matches with different casing`,
+						)
+					}
+
 					diffResults.push({
 						success: false,
 						error: `No sufficiently similar match found${lineRange} (${Math.floor(
@@ -644,7 +688,7 @@ Each file requires its own path, start_line, and diff elements.
 							bestMatchScore * 100,
 						)}%\n- Required Threshold: ${Math.floor(this.fuzzyThreshold * 100)}%\n- Search Range: ${
 							startLine ? `starting at line ${startLine}` : "start to end"
-						}\n- Tried both standard and aggressive line number stripping\n- Tip: Use the read_file tool to get the latest content of the file before attempting to use the apply_diff tool again, as the file content may have changed\n\nSearch Content:\n${searchChunk}${bestMatchSection}${originalContentSection}`,
+						}\n- Tried both standard and aggressive line number stripping${caseMismatchInfo}\n- Tip: Use the read_file tool to get the latest content of the file before attempting to use the apply_diff tool again, as the file content may have changed\n\nSearch Content:\n${searchChunk}${bestMatchSection}${originalContentSection}`,
 					})
 					continue
 				}

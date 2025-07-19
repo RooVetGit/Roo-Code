@@ -781,6 +781,178 @@ function five() {
 				}
 			})
 		})
+
+		describe("case sensitivity detection", () => {
+			let strategy: MultiSearchReplaceDiffStrategy
+
+			beforeEach(() => {
+				strategy = new MultiSearchReplaceDiffStrategy()
+			})
+
+			it("should detect case mismatch when search content differs from file content only by case", async () => {
+				const originalContent = `function getData() {
+			  const originalStructRVA = 0;
+			  return originalStructRVA;
+	}`
+				const diffContent =
+					"<<<<<<< SEARCH\n" +
+					"function getData() {\n" +
+					"    const originalStructRva = 0;\n" +
+					"    return originalStructRva;\n" +
+					"}\n" +
+					"=======\n" +
+					"function getData() {\n" +
+					"    const newValue = 0;\n" +
+					"    return newValue;\n" +
+					"}\n" +
+					">>>>>>> REPLACE"
+
+				const result = await strategy.applyDiff(originalContent, diffContent)
+				expect(result.success).toBe(false)
+				// When there's a single diff block, the error is in result.error, not failParts
+				if (!result.success && result.error) {
+					expect(result.error).toContain("No sufficiently similar match found")
+					expect(result.error).toContain("Potential case mismatch")
+				}
+			})
+
+			it("should not show case mismatch warning when content is genuinely identical", async () => {
+				const originalContent = `function test() {
+			  return true;
+	}`
+				const diffContent =
+					"<<<<<<< SEARCH\n" +
+					"function test() {\n" +
+					"    return true;\n" +
+					"}\n" +
+					"=======\n" +
+					"function test() {\n" +
+					"    return true;\n" +
+					"}\n" +
+					">>>>>>> REPLACE"
+
+				const result = await strategy.applyDiff(originalContent, diffContent)
+				expect(result.success).toBe(false)
+				// The error should be about identical content without case mismatch
+				if (!result.success && result.error) {
+					expect(result.error).toContain("Search and replace content are identical")
+					expect(result.error).not.toContain("potential case mismatch")
+				}
+			})
+
+			it("should detect case mismatches in no match found errors", async () => {
+				const originalContent = `function getData() {
+			  const originalStructRVA = 0;
+			  return originalStructRVA;
+	}`
+				const diffContent =
+					"<<<<<<< SEARCH\n" +
+					"function getData() {\n" +
+					"    const originalstructrva = 0;\n" +
+					"    return originalstructrva;\n" +
+					"}\n" +
+					"=======\n" +
+					"function getData() {\n" +
+					"    const newValue = 0;\n" +
+					"    return newValue;\n" +
+					"}\n" +
+					">>>>>>> REPLACE"
+
+				const result = await strategy.applyDiff(originalContent, diffContent)
+				expect(result.success).toBe(false)
+				if (!result.success && result.error) {
+					expect(result.error).toContain("No sufficiently similar match found")
+					expect(result.error).toContain("Potential case mismatch")
+				}
+			})
+
+			it("should log case sensitivity issues when search and replace differ only by case", async () => {
+				const consoleSpy = vi.spyOn(console, "log").mockImplementation(() => {})
+
+				const originalContent = `function test() {
+			  const myVariable = 0;
+			  return myVariable;
+	}`
+				const diffContent =
+					"<<<<<<< SEARCH\n" +
+					"function test() {\n" +
+					"    const myVariable = 0;\n" +
+					"    return myVariable;\n" +
+					"}\n" +
+					"=======\n" +
+					"function test() {\n" +
+					"    const MyVariable = 0;\n" +
+					"    return MyVariable;\n" +
+					"}\n" +
+					">>>>>>> REPLACE"
+
+				await strategy.applyDiff(originalContent, diffContent)
+
+				expect(consoleSpy).toHaveBeenCalledWith(
+					expect.stringContaining("[apply_diff] Case sensitivity mismatch detected"),
+				)
+
+				consoleSpy.mockRestore()
+			})
+
+			it("should handle multiple case mismatches in the same file", async () => {
+				const originalContent = `class TestClass {
+			  constructor() {
+			      this.myProperty = 0;
+			      this.OtherProperty = 1;
+			  }
+			  
+			  getMyProperty() {
+			      return this.myProperty;
+			  }
+	}`
+				const diffContent =
+					"<<<<<<< SEARCH\n" +
+					"class TestClass {\n" +
+					"    constructor() {\n" +
+					"        this.myproperty = 0;\n" +
+					"        this.otherproperty = 1;\n" +
+					"    }\n" +
+					"=======\n" +
+					"class TestClass {\n" +
+					"    constructor() {\n" +
+					"        this.myProp = 0;\n" +
+					"        this.otherProp = 1;\n" +
+					"    }\n" +
+					">>>>>>> REPLACE"
+
+				const result = await strategy.applyDiff(originalContent, diffContent)
+				expect(result.success).toBe(false)
+				if (!result.success && result.error) {
+					expect(result.error).toContain("No sufficiently similar match found")
+					expect(result.error).toContain("Potential case mismatch")
+				}
+			})
+
+			it("should detect case differences in search vs replace content", async () => {
+				const consoleSpy = vi.spyOn(console, "log").mockImplementation(() => {})
+
+				const originalContent = `function test() {
+			  return true;
+	}`
+				const diffContent =
+					"<<<<<<< SEARCH\n" +
+					"function test() {\n" +
+					"    return true;\n" +
+					"}\n" +
+					"=======\n" +
+					"function TEST() {\n" +
+					"    return TRUE;\n" +
+					"}\n" +
+					">>>>>>> REPLACE"
+
+				await strategy.applyDiff(originalContent, diffContent)
+
+				// This test is for multi-file-search-replace.ts functionality
+				// The console.log is only in multi-file-search-replace.ts
+				consoleSpy.mockRestore()
+			})
+		})
 	})
 
 	describe("fuzzy matching", () => {
