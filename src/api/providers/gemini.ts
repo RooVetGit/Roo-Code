@@ -79,10 +79,7 @@ export class GeminiHandler extends BaseProvider implements SingleCompletionHandl
 			systemInstruction,
 			httpOptions: this.options.googleGeminiBaseUrl ? { baseUrl: this.options.googleGeminiBaseUrl } : undefined,
 			thinkingConfig,
-			maxOutputTokens: this.options.maxOutputTokens ?? this.options.modelMaxTokens ?? maxTokens ?? undefined,
 			temperature: this.options.modelTemperature ?? 0,
-			topP: this.options.topP,
-			topK: this.options.topK,
 			...(tools.length > 0 ? { tools } : {}),
 		}
 		const config = rawConfig as unknown as GenerateContentConfig
@@ -215,9 +212,6 @@ export class GeminiHandler extends BaseProvider implements SingleCompletionHandl
 					? { baseUrl: this.options.googleGeminiBaseUrl }
 					: undefined,
 				temperature: this.options.modelTemperature ?? 0,
-				maxOutputTokens: this.options.maxOutputTokens ?? this.options.modelMaxTokens,
-				topP: this.options.topP,
-				topK: this.options.topK,
 				...(tools.length > 0 ? { tools } : {}),
 			}
 			const promptConfig = rawPromptConfig as unknown as GenerateContentConfig

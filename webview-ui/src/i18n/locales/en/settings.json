@@ -283,25 +283,7 @@
 		"cacheUsageNote": "Note: If you don't see cache usage, try selecting a different model and then selecting your desired model again.",
 		"vscodeLmModel": "Language Model",
 		"vscodeLmWarning": "Note: This is a very experimental integration and provider support will vary. If you get an error about a model not being supported, that's an issue on the provider's end.",
-		"geminiSections": {
-			"modelParameters": {
-				"title": "Output Controls",
-				"description": "Fine-tune topP, topK and maxOutputTokens"
-			}
-		},
 		"geminiParameters": {
-			"topK": {
-				"title": "Top K",
-				"description": "A low value makes the text more predictable, while a high value makes it more creative."
-			},
-			"topP": {
-				"title": "Top P",
-				"description": "A low value leads to more focused text, while a high value results in more diverse outcomes."
-			},
-			"maxOutputTokens": {
-				"title": "Max Output Tokens",
-				"description": "This parameter sets the maximum length of the response the model is allowed to generate."
-			},
 			"urlContext": {
 				"title": "Enable URL Context",
 				"description": "Lets Gemini read linked pages to extract, compare, and synthesize their content into informed responses."

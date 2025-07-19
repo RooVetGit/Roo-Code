@@ -21,20 +21,6 @@ vi.mock("vscrui", () => ({
 	),
 }))
 
-vi.mock("@src/components/ui", () => ({
-	Slider: ({ min, max, step, value, onValueChange, "data-testid": testId, _ }: any) => (
-		<input
-			data-testid={testId}
-			type="range"
-			min={min}
-			max={max}
-			step={step}
-			value={value[0]}
-			onChange={(e) => onValueChange([Number(e.target.value)])}
-		/>
-	),
-}))
-
 vi.mock("@src/i18n/TranslationContext", () => ({
 	useAppTranslation: () => ({ t: (key: string) => key }),
 }))
@@ -43,22 +29,102 @@ vi.mock("@src/components/common/VSCodeButtonLink", () => ({
 	VSCodeButtonLink: ({ children, href }: any) => <a href={href}>{children}</a>,
 }))
 
-describe("Gemini provider settings", () => {
-	it("renders sliders for topP, topK and maxOutputTokens after expanding", async () => {
-		const user = userEvent.setup()
-		const setApiField = vi.fn()
-		const config: ProviderSettings = {}
-		render(<Gemini apiConfiguration={config} setApiConfigurationField={setApiField} />)
+describe("Gemini", () => {
+	const defaultApiConfiguration: ProviderSettings = {
+		geminiApiKey: "",
+		enableUrlContext: false,
+		enableGrounding: false,
+	}
 
-		expect(screen.queryByTestId("slider-top-p")).not.toBeInTheDocument()
-		expect(screen.queryByTestId("slider-top-k")).not.toBeInTheDocument()
-		expect(screen.queryByTestId("slider-max-output-tokens")).not.toBeInTheDocument()
+	const mockSetApiConfigurationField = vi.fn()
 
-		const trigger = screen.getByText("settings:providers.geminiSections.modelParameters.title")
-		await user.click(trigger)
+	beforeEach(() => {
+		vi.clearAllMocks()
+	})
 
-		expect(screen.getByTestId("slider-top-p")).toBeInTheDocument()
-		expect(screen.getByTestId("slider-top-k")).toBeInTheDocument()
-		expect(screen.getByTestId("slider-max-output-tokens")).toBeInTheDocument()
+	describe("URL Context Checkbox", () => {
+		it("should render URL context checkbox unchecked by default", () => {
+			render(
+				<Gemini
+					apiConfiguration={defaultApiConfiguration}
+					setApiConfigurationField={mockSetApiConfigurationField}
+				/>,
+			)
+
+			const urlContextCheckbox = screen.getByTestId("checkbox-url-context")
+			const checkbox = urlContextCheckbox.querySelector("input[type='checkbox']") as HTMLInputElement
+			expect(checkbox.checked).toBe(false)
+		})
+
+		it("should render URL context checkbox checked when enableUrlContext is true", () => {
+			const apiConfiguration = { ...defaultApiConfiguration, enableUrlContext: true }
+			render(
+				<Gemini apiConfiguration={apiConfiguration} setApiConfigurationField={mockSetApiConfigurationField} />,
+			)
+
+			const urlContextCheckbox = screen.getByTestId("checkbox-url-context")
+			const checkbox = urlContextCheckbox.querySelector("input[type='checkbox']") as HTMLInputElement
+			expect(checkbox.checked).toBe(true)
+		})
+
+		it("should call setApiConfigurationField with correct parameters when URL context checkbox is toggled", async () => {
+			const user = userEvent.setup()
+			render(
+				<Gemini
+					apiConfiguration={defaultApiConfiguration}
+					setApiConfigurationField={mockSetApiConfigurationField}
+				/>,
+			)
+
+			const urlContextCheckbox = screen.getByTestId("checkbox-url-context")
+			const checkbox = urlContextCheckbox.querySelector("input[type='checkbox']") as HTMLInputElement
+
+			await user.click(checkbox)
+
+			expect(mockSetApiConfigurationField).toHaveBeenCalledWith("enableUrlContext", true)
+		})
+	})
+
+	describe("Grounding with Google Search Checkbox", () => {
+		it("should render grounding search checkbox unchecked by default", () => {
+			render(
+				<Gemini
+					apiConfiguration={defaultApiConfiguration}
+					setApiConfigurationField={mockSetApiConfigurationField}
+				/>,
+			)
+
+			const groundingCheckbox = screen.getByTestId("checkbox-grounding-search")
+			const checkbox = groundingCheckbox.querySelector("input[type='checkbox']") as HTMLInputElement
+			expect(checkbox.checked).toBe(false)
+		})
+
+		it("should render grounding search checkbox checked when enableGrounding is true", () => {
+			const apiConfiguration = { ...defaultApiConfiguration, enableGrounding: true }
+			render(
+				<Gemini apiConfiguration={apiConfiguration} setApiConfigurationField={mockSetApiConfigurationField} />,
+			)
+
+			const groundingCheckbox = screen.getByTestId("checkbox-grounding-search")
+			const checkbox = groundingCheckbox.querySelector("input[type='checkbox']") as HTMLInputElement
+			expect(checkbox.checked).toBe(true)
+		})
+
+		it("should call setApiConfigurationField with correct parameters when grounding search checkbox is toggled", async () => {
+			const user = userEvent.setup()
+			render(
+				<Gemini
+					apiConfiguration={defaultApiConfiguration}
+					setApiConfigurationField={mockSetApiConfigurationField}
+				/>,
+			)
+
+			const groundingCheckbox = screen.getByTestId("checkbox-grounding-search")
+			const checkbox = groundingCheckbox.querySelector("input[type='checkbox']") as HTMLInputElement
+
+			await user.click(checkbox)
+
+			expect(mockSetApiConfigurationField).toHaveBeenCalledWith("enableGrounding", true)
+		})
 	})
 })
