@@ -39,9 +39,9 @@ export const LMStudio = ({ apiConfiguration, setApiConfigurationField }: LMStudi
 		const message: ExtensionMessage = event.data
 
 		switch (message.type) {
-			case "lmStudioModels":
+			case "routerModels":
 				{
-					const newModels = message.lmStudioModels ?? []
+					const newModels = Object.keys(message.routerModels?.lmstudio || {})
 					setLmStudioModels(newModels)
 				}
 				break
@@ -53,7 +53,7 @@ export const LMStudio = ({ apiConfiguration, setApiConfigurationField }: LMStudi
 	// Refresh models on mount
 	useEffect(() => {
 		// Request fresh models - the handler now flushes cache automatically
-		vscode.postMessage({ type: "requestLmStudioModels" })
+		vscode.postMessage({ type: "requestRouterModels" })
 	}, [])
 
 	// Check if the selected model exists in the fetched models

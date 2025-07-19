@@ -190,12 +190,10 @@ const ApiOptions = ({
 					},
 				})
 			} else if (selectedProvider === "ollama") {
-				vscode.postMessage({ type: "requestOllamaModels" })
-			} else if (selectedProvider === "lmstudio") {
-				vscode.postMessage({ type: "requestLmStudioModels" })
+				vscode.postMessage({ type: "requestOllamaModels", text: apiConfiguration?.ollamaBaseUrl })
 			} else if (selectedProvider === "vscode-lm") {
 				vscode.postMessage({ type: "requestVsCodeLmModels" })
-			} else if (selectedProvider === "litellm") {
+			} else if (selectedProvider === "litellm" || selectedProvider === "lmstudio") {
 				vscode.postMessage({ type: "requestRouterModels" })
 			}
 		},

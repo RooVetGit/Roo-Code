@@ -1,8 +1,7 @@
 import { Anthropic } from "@anthropic-ai/sdk"
 import OpenAI from "openai"
-import axios from "axios"
 
-import { type ModelInfo, openAiModelInfoSaneDefaults, LMSTUDIO_DEFAULT_TEMPERATURE } from "@roo-code/types"
+import { LMSTUDIO_DEFAULT_TEMPERATURE, type ModelInfo, openAiModelInfoSaneDefaults } from "@roo-code/types"
 
 import type { ApiHandlerOptions } from "../../shared/api"
 
@@ -11,20 +10,30 @@ import { XmlMatcher } from "../../utils/xml-matcher"
 import { convertToOpenAiMessages } from "../transform/openai-format"
 import { ApiStream } from "../transform/stream"
 
+import type { ApiHandlerCreateMessageMetadata, SingleCompletionHandler } from "../index"
 import { BaseProvider } from "./base-provider"
-import type { SingleCompletionHandler, ApiHandlerCreateMessageMetadata } from "../index"
+import { flushModels, getModels } from "./fetchers/modelCache"
 
 export class LmStudioHandler extends BaseProvider implements SingleCompletionHandler {
 	protected options: ApiHandlerOptions
 	private client: OpenAI
+	private cachedModelInfo: ModelInfo = openAiModelInfoSaneDefaults
 
 	constructor(options: ApiHandlerOptions) {
 		super()
 		this.options = options
 		this.client = new OpenAI({
-			baseURL: (this.options.lmStudioBaseUrl || "http://localhost:1234") + "/v1",
+			baseURL: this.getBaseUrl() + "/v1",
 			apiKey: "noop",
 		})
+	}
+
+	private getBaseUrl(): string {
+		if (this.options.lmStudioBaseUrl && this.options.lmStudioBaseUrl.trim() !== "") {
+			return this.options.lmStudioBaseUrl.trim()
+		} else {
+			return "http://localhost:1234"
+		}
 	}
 
 	override async *createMessage(
@@ -118,6 +127,23 @@ export class LmStudioHandler extends BaseProvider implements SingleCompletionHan
 				outputTokens = 0
 			}
 
+			if (this.cachedModelInfo === openAiModelInfoSaneDefaults) {
+				// We need to fetch the model info every time we open a new session
+				// to ensure we have the latest context window and other details
+				// since LM Studio models can chance their context windows on reload
+				await flushModels("lmstudio")
+				const models = await getModels({ provider: "lmstudio", baseUrl: this.getBaseUrl() })
+				if (models && models[this.getModel().id]) {
+					this.cachedModelInfo = models[this.getModel().id]
+				} else {
+					// If model info is not found, use sane defaults
+					this.cachedModelInfo = {
+						...openAiModelInfoSaneDefaults,
+						description: "Fake description to avoid recache",
+					}
+				}
+			}
+
 			yield {
 				type: "usage",
 				inputTokens,
@@ -133,7 +159,7 @@ export class LmStudioHandler extends BaseProvider implements SingleCompletionHan
 	override getModel(): { id: string; info: ModelInfo } {
 		return {
 			id: this.options.lmStudioModelId || "",
-			info: openAiModelInfoSaneDefaults,
+			info: this.cachedModelInfo,
 		}
 	}
 
@@ -159,19 +185,5 @@ export class LmStudioHandler extends BaseProvider implements SingleCompletionHan
 				"Please check the LM Studio developer logs to debug what went wrong. You may need to load the model with a larger context length to work with Roo Code's prompts.",
 			)
 		}
-	}
-}
-
-export async function getLmStudioModels(baseUrl = "http://localhost:1234") {
-	try {
-		if (!URL.canParse(baseUrl)) {
-			return []
-		}
-
-		const response = await axios.get(`${baseUrl}/v1/models`)
-		const modelsArray = response.data?.data?.map((model: any) => model.id) || []
-		return [...new Set<string>(modelsArray)]
-	} catch (error) {
-		return []
 	}
 }

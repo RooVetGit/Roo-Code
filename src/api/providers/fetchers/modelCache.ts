@@ -1,22 +1,22 @@
-import * as path from "path"
 import fs from "fs/promises"
+import * as path from "path"
 
 import NodeCache from "node-cache"
 import { safeWriteJson } from "../../../utils/safeWriteJson"
 
 import { ContextProxy } from "../../../core/config/ContextProxy"
-import { getCacheDirectoryPath } from "../../../utils/storage"
-import { RouterName, ModelRecord } from "../../../shared/api"
+import { ModelRecord, RouterName } from "../../../shared/api"
 import { fileExistsAtPath } from "../../../utils/fs"
+import { getCacheDirectoryPath } from "../../../utils/storage"
 
+import { GetModelsOptions } from "../../../shared/api"
+import { getGlamaModels } from "./glama"
+import { getLiteLLMModels } from "./litellm"
+import { getLMStudioModels } from "./lmstudio"
+import { getOllamaModels } from "./ollama"
 import { getOpenRouterModels } from "./openrouter"
 import { getRequestyModels } from "./requesty"
-import { getGlamaModels } from "./glama"
 import { getUnboundModels } from "./unbound"
-import { getLiteLLMModels } from "./litellm"
-import { GetModelsOptions } from "../../../shared/api"
-import { getOllamaModels } from "./ollama"
-import { getLMStudioModels } from "./lmstudio"
 
 const memoryCache = new NodeCache({ stdTTL: 5 * 60, checkperiod: 5 * 60 })
 

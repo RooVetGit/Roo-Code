@@ -1,58 +1,56 @@
-import { safeWriteJson } from "../../utils/safeWriteJson"
-import * as path from "path"
-import * as os from "os"
 import * as fs from "fs/promises"
+import * as os from "os"
 import pWaitFor from "p-wait-for"
+import * as path from "path"
 import * as vscode from "vscode"
-import * as yaml from "yaml"
+import { safeWriteJson } from "../../utils/safeWriteJson"
 
-import {
-	type Language,
-	type ProviderSettings,
-	type GlobalState,
-	type ClineMessage,
-	TelemetryEventName,
-} from "@roo-code/types"
 import { CloudService } from "@roo-code/cloud"
 import { TelemetryService } from "@roo-code/telemetry"
+import {
+	type ClineMessage,
+	type GlobalState,
+	type Language,
+	type ProviderSettings,
+	TelemetryEventName,
+} from "@roo-code/types"
 import { type ApiMessage } from "../task-persistence/apiMessages"
 
-import { ClineProvider } from "./ClineProvider"
 import { changeLanguage, t } from "../../i18n"
+import { ModelRecord, RouterName, toRouterName } from "../../shared/api"
 import { Package } from "../../shared/package"
-import { RouterName, toRouterName, ModelRecord } from "../../shared/api"
 import { supportPrompt } from "../../shared/support-prompt"
+import { ClineProvider } from "./ClineProvider"
 
-import { checkoutDiffPayloadSchema, checkoutRestorePayloadSchema, WebviewMessage } from "../../shared/WebviewMessage"
-import { checkExistKey } from "../../shared/checkExistApiConfig"
-import { experimentDefault } from "../../shared/experiments"
-import { Terminal } from "../../integrations/terminal/Terminal"
-import { openFile } from "../../integrations/misc/open-file"
+import { flushModels, getModels } from "../../api/providers/fetchers/modelCache"
+import { getOpenAiModels } from "../../api/providers/openai"
+import { getVsCodeLmModels } from "../../api/providers/vscode-lm"
 import { openImage, saveImage } from "../../integrations/misc/image-handler"
+import { openFile } from "../../integrations/misc/open-file"
 import { selectImages } from "../../integrations/misc/process-images"
+import { Terminal } from "../../integrations/terminal/Terminal"
 import { getTheme } from "../../integrations/theme/getTheme"
 import { discoverChromeHostUrl, tryChromeHostUrl } from "../../services/browser/browserDiscovery"
 import { searchWorkspaceFiles } from "../../services/search/file-search"
-import { fileExistsAtPath } from "../../utils/fs"
-import { playTts, setTtsEnabled, setTtsSpeed, stopTts } from "../../utils/tts"
-import { singleCompletionHandler } from "../../utils/single-completion-handler"
-import { searchCommits } from "../../utils/git"
-import { exportSettings, importSettingsWithFeedback } from "../config/importExport"
-import { getOpenAiModels } from "../../api/providers/openai"
-import { getVsCodeLmModels } from "../../api/providers/vscode-lm"
-import { openMention } from "../mentions"
 import { TelemetrySetting } from "../../shared/TelemetrySetting"
-import { getWorkspacePath } from "../../utils/path"
-import { ensureSettingsDirectoryExists } from "../../utils/globalContext"
-import { Mode, defaultModeSlug } from "../../shared/modes"
-import { getModels, flushModels } from "../../api/providers/fetchers/modelCache"
+import { checkoutDiffPayloadSchema, checkoutRestorePayloadSchema, WebviewMessage } from "../../shared/WebviewMessage"
 import { GetModelsOptions } from "../../shared/api"
-import { generateSystemPrompt } from "./generateSystemPrompt"
+import { checkExistKey } from "../../shared/checkExistApiConfig"
+import { experimentDefault } from "../../shared/experiments"
+import { defaultModeSlug, Mode } from "../../shared/modes"
 import { getCommand } from "../../utils/commands"
+import { fileExistsAtPath } from "../../utils/fs"
+import { searchCommits } from "../../utils/git"
+import { getWorkspacePath } from "../../utils/path"
+import { singleCompletionHandler } from "../../utils/single-completion-handler"
+import { playTts, setTtsEnabled, setTtsSpeed, stopTts } from "../../utils/tts"
+import { exportSettings, importSettingsWithFeedback } from "../config/importExport"
+import { openMention } from "../mentions"
+import { generateSystemPrompt } from "./generateSystemPrompt"
 
 const ALLOWED_VSCODE_SETTINGS = new Set(["terminal.integrated.inheritEnv"])
 
-import { MarketplaceManager, MarketplaceItemType } from "../../services/marketplace"
+import { MarketplaceItemType, MarketplaceManager } from "../../services/marketplace"
 import { setPendingTodoList } from "../tools/updateTodoListTool"
 
 export const webviewMessageHandler = async (
@@ -555,6 +553,12 @@ export const webviewMessageHandler = async (
 				})
 			}
 
+			const lmStudioBaseUrl = apiConfiguration.lmStudioBaseUrl || message?.values?.lmStudioBaseUrl
+			modelFetchPromises.push({
+				key: "lmstudio",
+				options: { provider: "lmstudio", baseUrl: lmStudioBaseUrl },
+			})
+
 			const results = await Promise.allSettled(
 				modelFetchPromises.map(async ({ key, options }) => {
 					const models = await safeGetModels(options)
@@ -564,9 +568,8 @@ export const webviewMessageHandler = async (
 
 			const fetchedRouterModels: Partial<Record<RouterName, ModelRecord>> = {
 				...routerModels,
-				// Initialize ollama and lmstudio with empty objects since they use separate handlers
+				// Initialize ollama with empty objects since it uses separate handlers
 				ollama: {},
-				lmstudio: {},
 			}
 
 			results.forEach((result, index) => {
@@ -575,18 +578,14 @@ export const webviewMessageHandler = async (
 				if (result.status === "fulfilled") {
 					fetchedRouterModels[routerName] = result.value.models
 
-					// Ollama and LM Studio settings pages still need these events
+					// Ollama settings pages still need these events
 					if (routerName === "ollama" && Object.keys(result.value.models).length > 0) {
 						provider.postMessageToWebview({
 							type: "ollamaModels",
 							ollamaModels: Object.keys(result.value.models),
 						})
-					} else if (routerName === "lmstudio" && Object.keys(result.value.models).length > 0) {
-						provider.postMessageToWebview({
-							type: "lmStudioModels",
-							lmStudioModels: Object.keys(result.value.models),
-						})
 					}
+					// LM Studio models have moved to main router models message
 				} else {
 					// Handle rejection: Post a specific error message for this provider
 					const errorMessage = result.reason instanceof Error ? result.reason.message : String(result.reason)
@@ -630,30 +629,6 @@ export const webviewMessageHandler = async (
 			} catch (error) {
 				// Silently fail - user hasn't configured Ollama yet
 				console.debug("Ollama models fetch failed:", error)
-			}
-			break
-		}
-		case "requestLmStudioModels": {
-			// Specific handler for LM Studio models only
-			const { apiConfiguration: lmStudioApiConfig } = await provider.getState()
-			try {
-				// Flush cache first to ensure fresh models
-				await flushModels("lmstudio")
-
-				const lmStudioModels = await getModels({
-					provider: "lmstudio",
-					baseUrl: lmStudioApiConfig.lmStudioBaseUrl,
-				})
-
-				if (Object.keys(lmStudioModels).length > 0) {
-					provider.postMessageToWebview({
-						type: "lmStudioModels",
-						lmStudioModels: Object.keys(lmStudioModels),
-					})
-				}
-			} catch (error) {
-				// Silently fail - user hasn't configured LM Studio yet
-				console.debug("LM Studio models fetch failed:", error)
 			}
 			break
 		}
