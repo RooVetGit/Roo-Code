@@ -115,7 +115,7 @@ describe("DiffViewProvider", () => {
 		;(diffViewProvider as any).relPath = "test.txt"
 		;(diffViewProvider as any).activeDiffEditor = {
 			document: {
-				uri: { fsPath: `${mockCwd}/test.txt` },
+				uri: { fsPath: `${mockCwd}/test.txt`, scheme: DIFF_VIEW_URI_SCHEME },
 				getText: vi.fn(),
 				lineCount: 10,
 			},
@@ -170,7 +170,8 @@ describe("DiffViewProvider", () => {
 			// Setup
 			const mockEditor = {
 				document: {
-					uri: { fsPath: `${mockCwd}/test.md` },
+					uri: { fsPath: `${mockCwd}/test.md`, scheme: DIFF_VIEW_URI_SCHEME },
+					fileName: `test.md`,
 					getText: vi.fn().mockReturnValue(""),
 					lineCount: 0,
 				},
@@ -203,7 +204,7 @@ describe("DiffViewProvider", () => {
 			vi.mocked(vscode.workspace.onDidOpenTextDocument).mockImplementation((callback) => {
 				// Trigger the callback immediately with the document
 				setTimeout(() => {
-					callback({ uri: { fsPath: `${mockCwd}/test.md` } } as any)
+					callback(mockEditor.document as any)
 				}, 0)
 				return { dispose: vi.fn() }
 			})
@@ -218,13 +219,7 @@ describe("DiffViewProvider", () => {
 			await diffViewProvider.open("test.md")
 
 			// Verify that showTextDocument was called before executeCommand
-			expect(callOrder).toEqual(["showTextDocument", "executeCommand"])
-
-			// Verify that showTextDocument was called with preview: false and preserveFocus: true
-			expect(vscode.window.showTextDocument).toHaveBeenCalledWith(
-				expect.objectContaining({ fsPath: `${mockCwd}/test.md` }),
-				{ preview: false, viewColumn: vscode.ViewColumn.Active, preserveFocus: true },
-			)
+			expect(callOrder).toEqual(["executeCommand"])
 
 			// Verify that the diff command was executed
 			expect(vscode.commands.executeCommand).toHaveBeenCalledWith(
@@ -232,13 +227,13 @@ describe("DiffViewProvider", () => {
 				expect.any(Object),
 				expect.any(Object),
 				`test.md: ${DIFF_VIEW_LABEL_CHANGES} (Editable)`,
-				{ preserveFocus: true },
+				{ preview: false, preserveFocus: true, viewColumn: vscode.ViewColumn.Beside },
 			)
 		})
 
 		it("should handle showTextDocument failure", async () => {
 			// Mock showTextDocument to fail
-			vi.mocked(vscode.window.showTextDocument).mockRejectedValue(new Error("Cannot open file"))
+			vi.mocked(vscode.commands.executeCommand).mockRejectedValue(new Error("Cannot open file"))
 
 			// Mock workspace.onDidOpenTextDocument
 			vi.mocked(vscode.workspace.onDidOpenTextDocument).mockReturnValue({ dispose: vi.fn() })
