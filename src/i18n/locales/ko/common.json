@@ -75,7 +75,8 @@
 			"errorOutput": "오류 출력: {{output}}",
 			"processExitedWithError": "Claude Code 프로세스가 코드 {{exitCode}}로 종료되었습니다. 오류 출력: {{output}}",
 			"stoppedWithReason": "Claude Code가 다음 이유로 중지되었습니다: {{reason}}",
-			"apiKeyModelPlanMismatch": "API 키와 구독 플랜에서 다른 모델을 허용합니다. 선택한 모델이 플랜에 포함되어 있는지 확인하세요."
+			"apiKeyModelPlanMismatch": "API 키와 구독 플랜에서 다른 모델을 허용합니다. 선택한 모델이 플랜에 포함되어 있는지 확인하세요.",
+			"notFound": "Claude Code 실행 파일 '{{claudePath}}'을 찾을 수 없습니다.\n\nClaude Code CLI를 설치해주세요:\n1. {{installationUrl}}에 방문하여 Claude Code를 다운로드하세요\n2. 운영 체제의 설치 지침을 따르세요\n3. 'claude' 명령이 PATH에서 사용 가능한지 확인하세요\n4. 또는 Roo 설정의 'Claude Code 경로'에서 사용자 정의 경로를 구성하세요\n\n원본 오류: {{originalError}}"
 		}
 	},
 	"warnings": {

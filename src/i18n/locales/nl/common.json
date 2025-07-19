@@ -75,7 +75,8 @@
 			"errorOutput": "Foutuitvoer: {{output}}",
 			"processExitedWithError": "Claude Code proces beëindigd met code {{exitCode}}. Foutuitvoer: {{output}}",
 			"stoppedWithReason": "Claude Code gestopt om reden: {{reason}}",
-			"apiKeyModelPlanMismatch": "API-sleutels en abonnementsplannen staan verschillende modellen toe. Zorg ervoor dat het geselecteerde model is opgenomen in je plan."
+			"apiKeyModelPlanMismatch": "API-sleutels en abonnementsplannen staan verschillende modellen toe. Zorg ervoor dat het geselecteerde model is opgenomen in je plan.",
+			"notFound": "Claude Code uitvoerbaar bestand '{{claudePath}}' niet gevonden.\n\nInstalleer Claude Code CLI:\n1. Bezoek {{installationUrl}} om Claude Code te downloaden\n2. Volg de installatie-instructies voor je besturingssysteem\n3. Zorg ervoor dat het 'claude' commando beschikbaar is in je PATH\n4. Of configureer een aangepast pad in Roo instellingen onder 'Claude Code Pad'\n\nOriginele fout: {{originalError}}"
 		}
 	},
 	"warnings": {

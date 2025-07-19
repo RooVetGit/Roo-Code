@@ -75,7 +75,8 @@
 			"errorOutput": "Output di errore: {{output}}",
 			"processExitedWithError": "Il processo Claude Code è terminato con codice {{exitCode}}. Output di errore: {{output}}",
 			"stoppedWithReason": "Claude Code si è fermato per il motivo: {{reason}}",
-			"apiKeyModelPlanMismatch": "Le chiavi API e i piani di abbonamento consentono modelli diversi. Assicurati che il modello selezionato sia incluso nel tuo piano."
+			"apiKeyModelPlanMismatch": "Le chiavi API e i piani di abbonamento consentono modelli diversi. Assicurati che il modello selezionato sia incluso nel tuo piano.",
+			"notFound": "Eseguibile Claude Code '{{claudePath}}' non trovato.\n\nInstalla Claude Code CLI:\n1. Visita {{installationUrl}} per scaricare Claude Code\n2. Segui le istruzioni di installazione per il tuo sistema operativo\n3. Assicurati che il comando 'claude' sia disponibile nel tuo PATH\n4. In alternativa, configura un percorso personalizzato nelle impostazioni Roo sotto 'Percorso Claude Code'\n\nErrore originale: {{originalError}}"
 		}
 	},
 	"warnings": {

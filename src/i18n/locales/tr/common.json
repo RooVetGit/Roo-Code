@@ -75,7 +75,8 @@
 			"errorOutput": "Hata çıktısı: {{output}}",
 			"processExitedWithError": "Claude Code işlemi {{exitCode}} koduyla çıktı. Hata çıktısı: {{output}}",
 			"stoppedWithReason": "Claude Code şu nedenle durdu: {{reason}}",
-			"apiKeyModelPlanMismatch": "API anahtarları ve abonelik planları farklı modellere izin verir. Seçilen modelin planınıza dahil olduğundan emin olun."
+			"apiKeyModelPlanMismatch": "API anahtarları ve abonelik planları farklı modellere izin verir. Seçilen modelin planınıza dahil olduğundan emin olun.",
+			"notFound": "Claude Code çalıştırılabilir dosyası '{{claudePath}}' bulunamadı.\n\nClaude Code CLI'yi yükleyin:\n1. Claude Code'u indirmek için {{installationUrl}} adresini ziyaret edin\n2. İşletim sisteminiz için kurulum talimatlarını takip edin\n3. 'claude' komutunun PATH'inizde mevcut olduğundan emin olun\n4. Alternatif olarak, Roo ayarlarında 'Claude Code Yolu' altında özel bir yol yapılandırın\n\nOrijinal hata: {{originalError}}"
 		}
 	},
 	"warnings": {

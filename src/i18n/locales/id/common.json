@@ -75,7 +75,8 @@
 			"errorOutput": "Output error: {{output}}",
 			"processExitedWithError": "Proses Claude Code keluar dengan kode {{exitCode}}. Output error: {{output}}",
 			"stoppedWithReason": "Claude Code berhenti karena alasan: {{reason}}",
-			"apiKeyModelPlanMismatch": "Kunci API dan paket berlangganan memungkinkan model yang berbeda. Pastikan model yang dipilih termasuk dalam paket Anda."
+			"apiKeyModelPlanMismatch": "Kunci API dan paket berlangganan memungkinkan model yang berbeda. Pastikan model yang dipilih termasuk dalam paket Anda.",
+			"notFound": "File executable Claude Code '{{claudePath}}' tidak ditemukan.\n\nSilakan instal Claude Code CLI:\n1. Kunjungi {{installationUrl}} untuk mengunduh Claude Code\n2. Ikuti petunjuk instalasi untuk sistem operasi Anda\n3. Pastikan perintah 'claude' tersedia di PATH Anda\n4. Atau, konfigurasikan jalur kustom di pengaturan Roo di bawah 'Jalur Claude Code'\n\nError asli: {{originalError}}"
 		}
 	},
 	"warnings": {

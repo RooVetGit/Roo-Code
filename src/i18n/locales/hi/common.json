@@ -75,7 +75,8 @@
 			"errorOutput": "त्रुटि आउटपुट: {{output}}",
 			"processExitedWithError": "Claude Code प्रक्रिया कोड {{exitCode}} के साथ समाप्त हुई। त्रुटि आउटपुट: {{output}}",
 			"stoppedWithReason": "Claude Code इस कारण से रुका: {{reason}}",
-			"apiKeyModelPlanMismatch": "API कुंजी और सब्सक्रिप्शन प्लान अलग-अलग मॉडल की अनुमति देते हैं। सुनिश्चित करें कि चयनित मॉडल आपकी योजना में शामिल है।"
+			"apiKeyModelPlanMismatch": "API कुंजी और सब्सक्रिप्शन प्लान अलग-अलग मॉडल की अनुमति देते हैं। सुनिश्चित करें कि चयनित मॉडल आपकी योजना में शामिल है।",
+			"notFound": "Claude Code निष्पादन योग्य फ़ाइल '{{claudePath}}' नहीं मिली।\n\nकृपया Claude Code CLI इंस्टॉल करें:\n1. Claude Code डाउनलोड करने के लिए {{installationUrl}} पर जाएं\n2. अपने ऑपरेटिंग सिस्टम के लिए इंस्टॉलेशन निर्देशों का पालन करें\n3. सुनिश्चित करें कि 'claude' कमांड आपके PATH में उपलब्ध है\n4. वैकल्पिक रूप से, Roo सेटिंग्स में 'Claude Code Path' के तहत एक कस्टम पथ कॉन्फ़िगर करें\n\nमूल त्रुटि: {{originalError}}"
 		}
 	},
 	"warnings": {

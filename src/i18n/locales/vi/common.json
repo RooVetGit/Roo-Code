@@ -75,7 +75,8 @@
 			"errorOutput": "Đầu ra lỗi: {{output}}",
 			"processExitedWithError": "Tiến trình Claude Code thoát với mã {{exitCode}}. Đầu ra lỗi: {{output}}",
 			"stoppedWithReason": "Claude Code dừng lại vì lý do: {{reason}}",
-			"apiKeyModelPlanMismatch": "Khóa API và gói đăng ký cho phép các mô hình khác nhau. Đảm bảo rằng mô hình đã chọn được bao gồm trong gói của bạn."
+			"apiKeyModelPlanMismatch": "Khóa API và gói đăng ký cho phép các mô hình khác nhau. Đảm bảo rằng mô hình đã chọn được bao gồm trong gói của bạn.",
+			"notFound": "Không tìm thấy tệp thực thi Claude Code '{{claudePath}}'.\n\nVui lòng cài đặt Claude Code CLI:\n1. Truy cập {{installationUrl}} để tải xuống Claude Code\n2. Làm theo hướng dẫn cài đặt cho hệ điều hành của bạn\n3. Đảm bảo lệnh 'claude' có sẵn trong PATH của bạn\n4. Hoặc cấu hình đường dẫn tùy chỉnh trong cài đặt Roo dưới 'Đường dẫn Claude Code'\n\nLỗi gốc: {{originalError}}"
 		}
 	},
 	"warnings": {

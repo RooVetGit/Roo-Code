@@ -80,7 +80,8 @@
 			"errorOutput": "错误输出：{{output}}",
 			"processExitedWithError": "Claude Code 进程退出，退出码：{{exitCode}}。错误输出：{{output}}",
 			"stoppedWithReason": "Claude Code 停止，原因：{{reason}}",
-			"apiKeyModelPlanMismatch": "API 密钥和订阅计划支持不同的模型。请确保所选模型包含在您的计划中。"
+			"apiKeyModelPlanMismatch": "API 密钥和订阅计划支持不同的模型。请确保所选模型包含在您的计划中。",
+			"notFound": "未找到 Claude Code 可执行文件 '{{claudePath}}'。\n\n请安装 Claude Code CLI：\n1. 访问 {{installationUrl}} 下载 Claude Code\n2. 按照操作系统的安装说明进行操作\n3. 确保 'claude' 命令在 PATH 中可用\n4. 或者在 Roo 设置中的 'Claude Code 路径' 下配置自定义路径\n\n原始错误：{{originalError}}"
 		}
 	},
 	"warnings": {
