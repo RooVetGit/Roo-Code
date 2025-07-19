@@ -5,6 +5,7 @@ import * as path from "path"
 
 import * as vscode from "vscode"
 import { Anthropic } from "@anthropic-ai/sdk"
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest"
 
 import type { GlobalState, ProviderSettings, ModelInfo } from "@roo-code/types"
 import { TelemetryService } from "@roo-code/telemetry"
@@ -59,6 +60,7 @@ vi.mock("fs/promises", async (importOriginal) => {
 		}),
 		unlink: vi.fn().mockResolvedValue(undefined),
 		rmdir: vi.fn().mockResolvedValue(undefined),
+		access: vi.fn().mockResolvedValue(undefined),
 	}
 
 	return {
@@ -162,6 +164,10 @@ vi.mock("../../../utils/fs", () => ({
 	fileExistsAtPath: vi.fn().mockImplementation((filePath) => {
 		return filePath.includes("ui_messages.json") || filePath.includes("api_conversation_history.json")
 	}),
+}))
+
+vi.mock("../../../utils/safeWriteJson", () => ({
+	safeWriteJson: vi.fn().mockResolvedValue(undefined),
 }))
 
 const mockMessages = [
@@ -1037,6 +1043,16 @@ describe("Cline", () => {
 					startTask: false,
 				})
 
+				// Initialize child messages
+				child.clineMessages = [
+					{
+						ts: Date.now(),
+						type: "say",
+						say: "api_req_started",
+						text: "Preparing request...",
+					},
+				]
+
 				// Mock the child's API stream
 				const childMockStream = {
 					async *[Symbol.asyncIterator]() {
@@ -1169,6 +1185,16 @@ describe("Cline", () => {
 
 				vi.spyOn(child1.api, "createMessage").mockReturnValue(mockStream)
 
+				// Initialize with a starting message
+				child1.clineMessages = [
+					{
+						ts: Date.now(),
+						type: "say",
+						say: "api_req_started",
+						text: "Preparing request...",
+					},
+				]
+
 				// Make an API request with the first child task
 				const child1Iterator = child1.attemptApiRequest(0)
 				await child1Iterator.next()
@@ -1191,6 +1217,16 @@ describe("Cline", () => {
 				})
 
 				vi.spyOn(child2.api, "createMessage").mockReturnValue(mockStream)
+
+				// Initialize with a starting message
+				child2.clineMessages = [
+					{
+						ts: Date.now(),
+						type: "say",
+						say: "api_req_started",
+						text: "Preparing request...",
+					},
+				]
 
 				// Make an API request with the second child task
 				const child2Iterator = child2.attemptApiRequest(0)
