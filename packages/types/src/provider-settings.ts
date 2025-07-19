@@ -107,6 +107,7 @@ const bedrockSchema = apiModelIdProviderModelSchema.extend({
 	awsSecretKey: z.string().optional(),
 	awsSessionToken: z.string().optional(),
 	awsRegion: z.string().optional(),
+	awsCustomRegion: z.string().optional(),
 	awsUseCrossRegionInference: z.boolean().optional(),
 	awsUsePromptCache: z.boolean().optional(),
 	awsProfile: z.string().optional(),

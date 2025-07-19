@@ -18,11 +18,17 @@ type BedrockProps = {
 export const Bedrock = ({ apiConfiguration, setApiConfigurationField, selectedModelInfo }: BedrockProps) => {
 	const { t } = useAppTranslation()
 	const [awsEndpointSelected, setAwsEndpointSelected] = useState(!!apiConfiguration?.awsBedrockEndpointEnabled)
+	const [customRegionSelected, setCustomRegionSelected] = useState(apiConfiguration?.awsRegion === "custom")
 
 	// Update the endpoint enabled state when the configuration changes
 	useEffect(() => {
 		setAwsEndpointSelected(!!apiConfiguration?.awsBedrockEndpointEnabled)
 	}, [apiConfiguration?.awsBedrockEndpointEnabled])
+
+	// Update the custom region state when the configuration changes
+	useEffect(() => {
+		setCustomRegionSelected(apiConfiguration?.awsRegion === "custom")
+	}, [apiConfiguration?.awsRegion])
 
 	const handleInputChange = useCallback(
 		<K extends keyof ProviderSettings, E>(
@@ -89,7 +95,14 @@ export const Bedrock = ({ apiConfiguration, setApiConfigurationField, selectedMo
 				<label className="block font-medium mb-1">{t("settings:providers.awsRegion")}</label>
 				<Select
 					value={apiConfiguration?.awsRegion || ""}
-					onValueChange={(value) => setApiConfigurationField("awsRegion", value)}>
+					onValueChange={(value) => {
+						setApiConfigurationField("awsRegion", value)
+						setCustomRegionSelected(value === "custom")
+						// Clear custom region when switching to a standard region
+						if (value !== "custom") {
+							setApiConfigurationField("awsCustomRegion", "")
+						}
+					}}>
 					<SelectTrigger className="w-full">
 						<SelectValue placeholder={t("settings:common.select")} />
 					</SelectTrigger>
@@ -102,6 +115,23 @@ export const Bedrock = ({ apiConfiguration, setApiConfigurationField, selectedMo
 					</SelectContent>
 				</Select>
 			</div>
+			{customRegionSelected && (
+				<>
+					<VSCodeTextField
+						value={apiConfiguration?.awsCustomRegion || ""}
+						style={{ width: "100%", marginTop: 3, marginBottom: 5 }}
+						onInput={handleInputChange("awsCustomRegion")}
+						placeholder={t("settings:placeholders.customRegion")}
+						data-testid="custom-region-input"
+					/>
+					<div className="text-sm text-vscode-descriptionForeground ml-6 mt-1 mb-3">
+						{t("settings:providers.awsCustomRegion.examples")}
+						<div className="ml-2">• us-west-3</div>
+						<div className="ml-2">• eu-central-3</div>
+						<div className="ml-2">• ap-southeast-3</div>
+					</div>
+				</>
+			)}
 			<Checkbox
 				checked={apiConfiguration?.awsUseCrossRegionInference || false}
 				onChange={handleInputChange("awsUseCrossRegionInference", noTransform)}>

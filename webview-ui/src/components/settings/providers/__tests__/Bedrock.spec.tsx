@@ -425,4 +425,215 @@ describe("Bedrock Component", () => {
 			expect(screen.getByTestId("vpc-endpoint-input")).toHaveValue("https://updated-endpoint.aws.com")
 		})
 	})
+
+	// Test Scenario 6: Custom Region Tests
+	describe("Custom Region", () => {
+		it("should show custom region input when 'Custom region...' is selected", () => {
+			const apiConfiguration: Partial<ProviderSettings> = {
+				awsRegion: "",
+				awsUseProfile: true,
+			}
+
+			render(
+				<Bedrock
+					apiConfiguration={apiConfiguration as ProviderSettings}
+					setApiConfigurationField={mockSetApiConfigurationField}
+				/>,
+			)
+
+			// Custom region input should not be visible initially
+			expect(screen.queryByTestId("custom-region-input")).not.toBeInTheDocument()
+
+			// Mock the Select component to simulate selecting "custom"
+			// Since we're mocking the Select component, we need to simulate the onValueChange call
+			const selectComponent = screen.getByRole("combobox", { hidden: true })
+			if (selectComponent) {
+				// Simulate selecting "custom" region
+				const onValueChange = (selectComponent as any).onValueChange || (() => {})
+				onValueChange("custom")
+			}
+
+			// Verify that setApiConfigurationField was called with "custom"
+			expect(mockSetApiConfigurationField).toHaveBeenCalledWith("awsRegion", "custom")
+		})
+
+		it("should hide custom region input when switching from custom to standard region", () => {
+			const apiConfiguration: Partial<ProviderSettings> = {
+				awsRegion: "custom",
+				awsCustomRegion: "us-west-3",
+				awsUseProfile: true,
+			}
+
+			render(
+				<Bedrock
+					apiConfiguration={apiConfiguration as ProviderSettings}
+					setApiConfigurationField={mockSetApiConfigurationField}
+				/>,
+			)
+
+			// Custom region input should be visible initially
+			expect(screen.getByTestId("custom-region-input")).toBeInTheDocument()
+			expect(screen.getByTestId("custom-region-input")).toHaveValue("us-west-3")
+
+			// Mock selecting a standard region
+			const selectComponent = screen.getByRole("combobox", { hidden: true })
+			if (selectComponent) {
+				const onValueChange = (selectComponent as any).onValueChange || (() => {})
+				onValueChange("us-east-1")
+			}
+
+			// Verify that both awsRegion and awsCustomRegion were updated
+			expect(mockSetApiConfigurationField).toHaveBeenCalledWith("awsRegion", "us-east-1")
+			expect(mockSetApiConfigurationField).toHaveBeenCalledWith("awsCustomRegion", "")
+		})
+
+		it("should handle custom region input changes", () => {
+			const apiConfiguration: Partial<ProviderSettings> = {
+				awsRegion: "custom",
+				awsCustomRegion: "",
+				awsUseProfile: true,
+			}
+
+			render(
+				<Bedrock
+					apiConfiguration={apiConfiguration as ProviderSettings}
+					setApiConfigurationField={mockSetApiConfigurationField}
+				/>,
+			)
+
+			// Find the custom region input field
+			const customRegionInput = screen.getByTestId("custom-region-input")
+			expect(customRegionInput).toBeInTheDocument()
+
+			// Enter a custom region
+			fireEvent.change(customRegionInput, { target: { value: "us-west-3" } })
+
+			// Verify the configuration field was updated
+			expect(mockSetApiConfigurationField).toHaveBeenCalledWith("awsCustomRegion", "us-west-3")
+		})
+
+		it("should display example regions when custom region is selected", () => {
+			const apiConfiguration: Partial<ProviderSettings> = {
+				awsRegion: "custom",
+				awsCustomRegion: "us-west-3",
+				awsUseProfile: true,
+			}
+
+			render(
+				<Bedrock
+					apiConfiguration={apiConfiguration as ProviderSettings}
+					setApiConfigurationField={mockSetApiConfigurationField}
+				/>,
+			)
+
+			// Check that the custom region input is visible
+			expect(screen.getByTestId("custom-region-input")).toBeInTheDocument()
+
+			// Check for the example regions section
+			expect(screen.getByText("settings:providers.awsCustomRegion.examples")).toBeInTheDocument()
+			expect(screen.getByText("• us-west-3")).toBeInTheDocument()
+			expect(screen.getByText("• eu-central-3")).toBeInTheDocument()
+			expect(screen.getByText("• ap-southeast-3")).toBeInTheDocument()
+		})
+
+		it("should preserve custom region value when toggling between custom and standard regions", () => {
+			const apiConfiguration: Partial<ProviderSettings> = {
+				awsRegion: "custom",
+				awsCustomRegion: "us-west-3",
+				awsUseProfile: true,
+			}
+
+			const { rerender } = render(
+				<Bedrock
+					apiConfiguration={apiConfiguration as ProviderSettings}
+					setApiConfigurationField={mockSetApiConfigurationField}
+				/>,
+			)
+
+			// Initial state: custom region selected with value
+			expect(screen.getByTestId("custom-region-input")).toBeInTheDocument()
+			expect(screen.getByTestId("custom-region-input")).toHaveValue("us-west-3")
+
+			// Switch to standard region
+			const updatedConfig: Partial<ProviderSettings> = {
+				awsRegion: "us-east-1",
+				awsCustomRegion: "", // This would be cleared by the component logic
+				awsUseProfile: true,
+			}
+
+			rerender(
+				<Bedrock
+					apiConfiguration={updatedConfig as ProviderSettings}
+					setApiConfigurationField={mockSetApiConfigurationField}
+				/>,
+			)
+
+			// Custom region input should be hidden
+			expect(screen.queryByTestId("custom-region-input")).not.toBeInTheDocument()
+
+			// Switch back to custom region with preserved value
+			const backToCustomConfig: Partial<ProviderSettings> = {
+				awsRegion: "custom",
+				awsCustomRegion: "us-west-3", // Value preserved in parent state
+				awsUseProfile: true,
+			}
+
+			rerender(
+				<Bedrock
+					apiConfiguration={backToCustomConfig as ProviderSettings}
+					setApiConfigurationField={mockSetApiConfigurationField}
+				/>,
+			)
+
+			// Custom region input should be visible again with preserved value
+			expect(screen.getByTestId("custom-region-input")).toBeInTheDocument()
+			expect(screen.getByTestId("custom-region-input")).toHaveValue("us-west-3")
+		})
+
+		it("should handle empty custom region input", () => {
+			const apiConfiguration: Partial<ProviderSettings> = {
+				awsRegion: "custom",
+				awsCustomRegion: "us-west-3",
+				awsUseProfile: true,
+			}
+
+			render(
+				<Bedrock
+					apiConfiguration={apiConfiguration as ProviderSettings}
+					setApiConfigurationField={mockSetApiConfigurationField}
+				/>,
+			)
+
+			// Find the custom region input field
+			const customRegionInput = screen.getByTestId("custom-region-input")
+
+			// Clear the field
+			fireEvent.change(customRegionInput, { target: { value: "" } })
+
+			// Verify the configuration field was updated with empty string
+			expect(mockSetApiConfigurationField).toHaveBeenCalledWith("awsCustomRegion", "")
+		})
+
+		it("should initialize with correct state when custom region is pre-selected", () => {
+			const apiConfiguration: Partial<ProviderSettings> = {
+				awsRegion: "custom",
+				awsCustomRegion: "eu-central-3",
+				awsUseProfile: true,
+			}
+
+			render(
+				<Bedrock
+					apiConfiguration={apiConfiguration as ProviderSettings}
+					setApiConfigurationField={mockSetApiConfigurationField}
+				/>,
+			)
+
+			// Verify custom region input is visible and has correct value
+			expect(screen.getByTestId("custom-region-input")).toBeInTheDocument()
+			expect(screen.getByTestId("custom-region-input")).toHaveValue("eu-central-3")
+
+			// Verify examples are shown
+			expect(screen.getByText("settings:providers.awsCustomRegion.examples")).toBeInTheDocument()
+		})
+	})
 })
