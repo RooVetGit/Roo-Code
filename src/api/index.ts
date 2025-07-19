@@ -54,9 +54,17 @@ export interface ApiHandler {
 	 * but they can override this to use their native token counting endpoints
 	 *
 	 * @param content The content to count tokens for
+	 * @param options Additional options for token counting
 	 * @returns A promise resolving to the token count
 	 */
-	countTokens(content: Array<Anthropic.Messages.ContentBlockParam>): Promise<number>
+	countTokens(
+		content: Array<Anthropic.Messages.ContentBlockParam>,
+		options: {
+			maxTokens?: number | null
+			effectiveThreshold?: number
+			totalTokens: number
+		},
+	): Promise<number>
 }
 
 export function buildApiHandler(configuration: ProviderSettings): ApiHandler {
