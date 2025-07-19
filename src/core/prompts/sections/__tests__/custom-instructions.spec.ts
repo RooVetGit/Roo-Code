@@ -1033,6 +1033,63 @@ describe("Rules directory reading", () => {
 		expect(result).toContain("content of file3")
 	})
 
+	it("should return files in alphabetical order by filename", async () => {
+		// Simulate .roo/rules directory exists
+		statMock.mockResolvedValueOnce({
+			isDirectory: vi.fn().mockReturnValue(true),
+		} as any)
+
+		// Simulate listing files in non-alphabetical order to test sorting
+		readdirMock.mockResolvedValueOnce([
+			{ name: "zebra.txt", isFile: () => true, parentPath: "/fake/path/.roo/rules" },
+			{ name: "alpha.txt", isFile: () => true, parentPath: "/fake/path/.roo/rules" },
+			{ name: "Beta.txt", isFile: () => true, parentPath: "/fake/path/.roo/rules" }, // Test case-insensitive sorting
+		] as any)
+
+		statMock.mockImplementation((path) => {
+			return Promise.resolve({
+				isFile: vi.fn().mockReturnValue(true),
+			}) as any
+		})
+
+		readFileMock.mockImplementation((filePath: PathLike) => {
+			const pathStr = filePath.toString()
+			const normalizedPath = pathStr.replace(/\\/g, "/")
+			if (normalizedPath === "/fake/path/.roo/rules/zebra.txt") {
+				return Promise.resolve("zebra content")
+			}
+			if (normalizedPath === "/fake/path/.roo/rules/alpha.txt") {
+				return Promise.resolve("alpha content")
+			}
+			if (normalizedPath === "/fake/path/.roo/rules/Beta.txt") {
+				return Promise.resolve("beta content")
+			}
+			return Promise.reject({ code: "ENOENT" })
+		})
+
+		const result = await loadRuleFiles("/fake/path")
+
+		// Files should appear in alphabetical order: alpha.txt, Beta.txt, zebra.txt
+		const alphaIndex = result.indexOf("alpha content")
+		const betaIndex = result.indexOf("beta content")
+		const zebraIndex = result.indexOf("zebra content")
+
+		expect(alphaIndex).toBeLessThan(betaIndex)
+		expect(betaIndex).toBeLessThan(zebraIndex)
+
+		// Verify the expected file paths are in the result
+		const expectedAlphaPath =
+			process.platform === "win32" ? "\\fake\\path\\.roo\\rules\\alpha.txt" : "/fake/path/.roo/rules/alpha.txt"
+		const expectedBetaPath =
+			process.platform === "win32" ? "\\fake\\path\\.roo\\rules\\Beta.txt" : "/fake/path/.roo/rules/Beta.txt"
+		const expectedZebraPath =
+			process.platform === "win32" ? "\\fake\\path\\.roo\\rules\\zebra.txt" : "/fake/path/.roo/rules/zebra.txt"
+
+		expect(result).toContain(`# Rules from ${expectedAlphaPath}:`)
+		expect(result).toContain(`# Rules from ${expectedBetaPath}:`)
+		expect(result).toContain(`# Rules from ${expectedZebraPath}:`)
+	})
+
 	it("should handle empty file list gracefully", async () => {
 		// Simulate .roo/rules directory exists
 		statMock.mockResolvedValueOnce({
