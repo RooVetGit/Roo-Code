@@ -481,6 +481,36 @@ describe("read_file tool XML output structure", () => {
 				`<files>\n<file><path>${testFilePath}</path>\n<content/><notice>File is empty</notice>\n</file>\n</files>`,
 			)
 		})
+
+		it("should treat files with only BOM as empty", async () => {
+			// Setup - file has BOM only
+			mockedCountFileLines.mockResolvedValue(1) // File has 1 line
+			mockedExtractTextFromFile.mockResolvedValue("\uFEFF") // Only BOM
+			mockProvider.getState.mockResolvedValue({ maxReadFileLine: -1 })
+
+			// Execute
+			const result = await executeReadFileTool({}, { totalLines: 1 })
+
+			// Verify - should show empty file notice since BOM is stripped
+			expect(result).toBe(
+				`<files>\n<file><path>${testFilePath}</path>\n<content/><notice>File is empty</notice>\n</file>\n</files>`,
+			)
+		})
+
+		it("should strip BOM from file content", async () => {
+			// Setup - file has BOM followed by content
+			mockedCountFileLines.mockResolvedValue(1)
+			mockedExtractTextFromFile.mockResolvedValue("1 | \uFEFFHello World") // BOM + content with line number
+			mockProvider.getState.mockResolvedValue({ maxReadFileLine: -1 })
+
+			// Execute
+			const result = await executeReadFileTool({}, { totalLines: 1 })
+
+			// Verify - BOM should be stripped from the content
+			expect(result).toBe(
+				`<files>\n<file><path>${testFilePath}</path>\n<content lines="1-1">\n1 | \uFEFFHello World</content>\n</file>\n</files>`,
+			)
+		})
 	})
 
 	describe("Error Handling Tests", () => {

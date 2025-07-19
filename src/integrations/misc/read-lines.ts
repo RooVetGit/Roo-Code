@@ -7,6 +7,7 @@
  * Now you can read a range of lines from a file
  */
 import { createReadStream } from "fs"
+import stripBom from "strip-bom"
 
 const outOfRangeError = (filepath: string, n: number) => {
 	return new RangeError(`Line with index ${n} does not exist in '${filepath}'. Note that line indexing is zero-based`)
@@ -57,14 +58,24 @@ export function readLines(filepath: string, endLine?: number, startLine?: number
 		let buffer = ""
 		let lineCount = 0
 		let result = ""
+		let isFirstChunk = true
 
 		// Handle errors
 		input.on("error", reject)
 
 		// Process data chunks directly
 		input.on("data", (chunk) => {
+			// Convert chunk to string
+			let chunkStr = chunk.toString()
+
+			// Strip BOM from the first chunk if present
+			if (isFirstChunk) {
+				chunkStr = stripBom(chunkStr)
+				isFirstChunk = false
+			}
+
 			// Add chunk to buffer
-			buffer += chunk.toString()
+			buffer += chunkStr
 
 			let pos = 0
 			let nextNewline = buffer.indexOf("\n", pos)

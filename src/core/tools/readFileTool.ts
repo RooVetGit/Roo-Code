@@ -519,9 +519,14 @@ export async function readFileTool(
 				// Handle normal file read
 				const content = await extractTextFromFile(fullPath)
 				const lineRangeAttr = ` lines="1-${totalLines}"`
-				let xmlInfo = totalLines > 0 ? `<content${lineRangeAttr}>\n${content}</content>\n` : `<content/>`
 
-				if (totalLines === 0) {
+				// Check if file is effectively empty (no lines, only whitespace, or only BOM)
+				// Note: BOM is already stripped by extractTextFromFile
+				const isEffectivelyEmpty = totalLines === 0 || content.trim() === ""
+
+				let xmlInfo = !isEffectivelyEmpty ? `<content${lineRangeAttr}>\n${content}</content>\n` : `<content/>`
+
+				if (isEffectivelyEmpty) {
 					xmlInfo += `<notice>File is empty</notice>\n`
 				}
 
