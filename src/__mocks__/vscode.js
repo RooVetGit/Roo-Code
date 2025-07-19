@@ -36,17 +36,10 @@ const mockSelection = class extends mockRange {
 	}
 }
 
-const mockRelativePattern = class {
-	constructor(base, pattern) {
-		this.base = base
-		this.pattern = pattern
-	}
-}
-
 export const workspace = {
 	workspaceFolders: [],
 	getWorkspaceFolder: () => null,
-	onDidChangeWorkspaceFolders: (callback) => mockDisposable,
+	onDidChangeWorkspaceFolders: () => mockDisposable,
 	getConfiguration: () => ({
 		get: () => null,
 	}),
@@ -118,7 +111,6 @@ export const Range = mockRange
 export const Position = mockPosition
 export const Selection = mockSelection
 export const Disposable = mockDisposable
-export const RelativePattern = mockRelativePattern
 export const ThemeIcon = class {
 	constructor(id) {
 		this.id = id
@@ -172,7 +164,6 @@ export default {
 	Position,
 	Selection,
 	Disposable,
-	RelativePattern,
 	ThemeIcon,
 	FileType,
 	DiagnosticSeverity,
