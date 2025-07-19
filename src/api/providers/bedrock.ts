@@ -222,7 +222,14 @@ export class AwsBedrockHandler extends BaseProvider implements SingleCompletionH
 				this.options.awsBedrockEndpointEnabled && { endpoint: this.options.awsBedrockEndpoint }),
 		}
 
-		if (this.options.awsUseProfile && this.options.awsProfile) {
+		if (this.options.awsUseApiKey && this.options.awsApiKey) {
+			// Use API key/token-based credentials if enabled and API key is set
+			clientConfig.credentials = {
+				accessKeyId: "", // Required by AWS SDK but not used with token
+				secretAccessKey: "", // Required by AWS SDK but not used with token
+				sessionToken: this.options.awsApiKey,
+			}
+		} else if (this.options.awsUseProfile && this.options.awsProfile) {
 			// Use profile-based credentials if enabled and profile is set
 			clientConfig.credentials = fromIni({
 				profile: this.options.awsProfile,
