@@ -138,10 +138,11 @@ async function readTextFilesFromDirectory(dirPath: string): Promise<Array<{ file
 		)
 
 		// Filter out null values (directories, failed reads, or excluded files)
-		const filteredFiles = fileContents.filter((item): item is { filename: string; content: string } => item !== null)
-		
+		const filteredFiles = fileContents.filter(
+			(item): item is { filename: string; content: string } => item !== null,
+		)
+
 		// Sort files alphabetically by filename (case-insensitive) to ensure consistent order
-		// This fixes the issue where symlinked files were read in random order
 		return filteredFiles.sort((a, b) => {
 			const filenameA = path.basename(a.filename).toLowerCase()
 			const filenameB = path.basename(b.filename).toLowerCase()
