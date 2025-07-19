@@ -82,6 +82,14 @@ export async function codebaseSearchTool(
 			throw new Error("Code Indexing is not configured (Missing OpenAI Key or Qdrant URL).")
 		}
 
+		// Check if indexing is complete
+		const indexingState = manager.state
+		if (indexingState !== "Indexed") {
+			throw new Error(
+				`Semantic search isn't ready yet (currently ${indexingState}). The codebase is still being indexed. Please try again once indexing is complete, or use other tools like read_file or search_files for now.`,
+			)
+		}
+
 		const searchResults: VectorStoreSearchResult[] = await manager.searchIndex(query, directoryPrefix)
 
 		// 3. Format and push results
