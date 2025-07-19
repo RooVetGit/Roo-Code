@@ -249,7 +249,7 @@ describe("CodeIndexManager - handleSettingsChange regression", () => {
 		beforeEach(() => {
 			// Mock service factory objects
 			mockEmbedder = { embedderInfo: { name: "openai" } }
-			mockVectorStore = {}
+			mockVectorStore = { hasData: vi.fn().mockResolvedValue(false) }
 			mockScanner = {}
 			mockFileWatcher = {
 				onDidStartBatchProcessing: vi.fn(),

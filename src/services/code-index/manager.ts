@@ -142,14 +142,15 @@ export class CodeIndexManager {
 		}
 
 		// 5. Handle Indexing Start/Restart
-		// The enhanced vectorStore.initialize() in startIndexing() now handles dimension changes automatically
-		// by detecting incompatible collections and recreating them, so we rely on that for dimension changes
-		const shouldStartOrRestartIndexing =
-			requiresRestart ||
-			(needsServiceRecreation && (!this._orchestrator || this._orchestrator.state !== "Indexing"))
+		// Only start indexing if:
+		// - Configuration requires restart (settings changed)
+		// - Or this is the first initialization (no orchestrator exists yet)
+		// The orchestrator's startIndexing method will check if an existing index exists
+		// and skip the full scan if data is already present
+		const shouldStartIndexing = requiresRestart || !this._orchestrator
 
-		if (shouldStartOrRestartIndexing) {
-			this._orchestrator?.startIndexing() // This method is async, but we don't await it here
+		if (shouldStartIndexing && this._orchestrator) {
+			this._orchestrator.startIndexing() // This method is async, but we don't await it here
 		}
 
 		return { requiresRestart }

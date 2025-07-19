@@ -88,6 +88,7 @@ describe("DirectoryScanner", () => {
 			clearCollection: vi.fn().mockResolvedValue(undefined),
 			deleteCollection: vi.fn().mockResolvedValue(undefined),
 			collectionExists: vi.fn().mockResolvedValue(true),
+			hasData: vi.fn().mockResolvedValue(false),
 		}
 		mockCodeParser = {
 			parseFile: vi.fn().mockResolvedValue([]),

@@ -62,6 +62,12 @@ export interface IVectorStore {
 	 * @returns Promise resolving to boolean indicating if the collection exists
 	 */
 	collectionExists(): Promise<boolean>
+
+	/**
+	 * Checks if the collection has any data (points)
+	 * @returns Promise resolving to boolean indicating if the collection has data
+	 */
+	hasData(): Promise<boolean>
 }
 
 export interface VectorStoreSearchResult {
