@@ -133,6 +133,7 @@ describe("CodeIndexPopover Validation", () => {
 			codebaseIndexConfig: {
 				codebaseIndexEnabled: false,
 				codebaseIndexQdrantUrl: "",
+				codebaseIndexVectorStoreProvider: "qdrant",
 				codebaseIndexEmbedderProvider: "openai",
 				codebaseIndexEmbedderBaseUrl: "",
 				codebaseIndexEmbedderModelId: "",

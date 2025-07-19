@@ -5,6 +5,7 @@ import { OpenAICompatibleEmbedder } from "./embedders/openai-compatible"
 import { GeminiEmbedder } from "./embedders/gemini"
 import { EmbedderProvider, getDefaultModelId, getModelDimension } from "../../shared/embeddingModels"
 import { QdrantVectorStore } from "./vector-store/qdrant-client"
+import { LocalVectorStore } from "./vector-store/local-vector-store"
 import { codeParser, DirectoryScanner, FileWatcher } from "./processors"
 import { ICodeParser, IEmbedder, IFileWatcher, IVectorStore } from "./interfaces"
 import { CodeIndexConfigManager } from "./config-manager"
@@ -13,6 +14,7 @@ import { Ignore } from "ignore"
 import { t } from "../../i18n"
 import { TelemetryService } from "@roo-code/telemetry"
 import { TelemetryEventName } from "@roo-code/types"
+import { getLocalVectorStoreDirectoryPath } from "../../utils/storage"
 
 /**
  * Factory class responsible for creating and configuring code indexing service dependencies.
@@ -125,7 +127,15 @@ export class CodeIndexServiceFactory {
 				throw new Error(t("embeddings:serviceFactory.vectorDimensionNotDetermined", { modelId, provider }))
 			}
 		}
-
+		// Use Local
+		if (config.vectorStoreProvider === "local") {
+			const { workspacePath } = this
+			const globalStorageUri = this.configManager.getContextProxy().globalStorageUri.fsPath
+			const localVectorStoreDirectoryPlaceholder =
+				config.localVectorStoreDirectoryPlaceholder || getLocalVectorStoreDirectoryPath(globalStorageUri)
+			return new LocalVectorStore(workspacePath, vectorSize, localVectorStoreDirectoryPlaceholder)
+		}
+		// Use Qdrant
 		if (!config.qdrantUrl) {
 			throw new Error(t("embeddings:serviceFactory.qdrantUrlMissing"))
 		}
