@@ -209,6 +209,8 @@ describe("mergeExtensionState", () => {
 			sharingEnabled: false,
 			profileThresholds: {},
 			hasOpenedModeSelector: false, // Add the new required property
+			maxImageFileSize: 5,
+			maxTotalImageMemory: 20
 		}
 
 		const prevState: ExtensionState = {

@@ -489,6 +489,16 @@
 			"profileDescription": "僅此檔案的自訂閾值（覆蓋全域預設）",
 			"inheritDescription": "此檔案繼承全域預設閾值（{{threshold}}%）",
 			"usesGlobal": "（使用全域 {{threshold}}%）"
+		},
+		"maxImageFileSize": {
+			"label": "最大圖像檔案大小",
+			"mb": "MB",
+			"description": "read file工具可以處理的圖像檔案的最大大小（以MB為單位）。"
+		},
+		"maxTotalImageMemory": {
+			"label": "圖像最大總記憶體",
+			"mb": "MB",
+			"description": "單次讀取操作中所有圖像的最大總記憶體（以MB為單位）。防止同時讀取多個大圖像時出現記憶體問題。"
 		}
 	},
 	"terminal": {
