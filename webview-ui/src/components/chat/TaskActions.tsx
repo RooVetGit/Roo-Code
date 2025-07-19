@@ -14,9 +14,10 @@ import { ShareButton } from "./ShareButton"
 interface TaskActionsProps {
 	item?: HistoryItem
 	buttonsDisabled: boolean
+	exportAlwaysEnabled?: boolean
 }
 
-export const TaskActions = ({ item, buttonsDisabled }: TaskActionsProps) => {
+export const TaskActions = ({ item, buttonsDisabled, exportAlwaysEnabled = false }: TaskActionsProps) => {
 	const [deleteTaskId, setDeleteTaskId] = useState<string | null>(null)
 	const { t } = useTranslation()
 	const { copyWithFeedback, showCopyFeedback } = useCopyToClipboard()
@@ -27,7 +28,7 @@ export const TaskActions = ({ item, buttonsDisabled }: TaskActionsProps) => {
 			<IconButton
 				iconClass="codicon-desktop-download"
 				title={t("chat:task.export")}
-				disabled={buttonsDisabled}
+				disabled={exportAlwaysEnabled ? false : buttonsDisabled}
 				onClick={() => vscode.postMessage({ type: "exportCurrentTask" })}
 			/>
 			{item?.task && (

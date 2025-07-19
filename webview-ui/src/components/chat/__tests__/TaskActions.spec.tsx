@@ -382,5 +382,26 @@ describe("TaskActions", () => {
 			expect(shareButton).toBeDisabled()
 			expect(exportButton).toBeDisabled()
 		})
+
+		it("keeps export button enabled when exportAlwaysEnabled is true", () => {
+			render(<TaskActions item={mockItem} buttonsDisabled={true} exportAlwaysEnabled={true} />)
+
+			// Find button by its icon class
+			const buttons = screen.getAllByRole("button")
+			const shareButton = buttons.find((btn) => btn.querySelector(".codicon-link"))
+			const exportButton = screen.getByLabelText("Export task history")
+
+			// Share button should still be disabled
+			expect(shareButton).toBeDisabled()
+			// Export button should be enabled despite buttonsDisabled being true
+			expect(exportButton).not.toBeDisabled()
+		})
+
+		it("export button works normally when exportAlwaysEnabled is false", () => {
+			render(<TaskActions item={mockItem} buttonsDisabled={true} exportAlwaysEnabled={false} />)
+
+			const exportButton = screen.getByLabelText("Export task history")
+			expect(exportButton).toBeDisabled()
+		})
 	})
 })
