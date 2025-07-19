@@ -36,7 +36,7 @@ export class MistralEmbedder implements IEmbedder {
 			MistralEmbedder.MISTRAL_BASE_URL,
 			apiKey,
 			this.modelId,
-			MAX_ITEM_TOKENS,
+			MAX_ITEM_TOKENS, // This is the max token limit (8191), not the embedding dimension
 		)
 	}
 
