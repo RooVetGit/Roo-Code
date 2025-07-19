@@ -6,13 +6,19 @@ import { CommandExecutionStatus, commandExecutionStatusSchema } from "@roo-code/
 
 import { ExtensionMessage } from "@roo/ExtensionMessage"
 import { safeJsonParse } from "@roo/safeJsonParse"
-import { COMMAND_OUTPUT_STRING } from "@roo/combineCommandSequences"
 
 import { vscode } from "@src/utils/vscode"
 import { useExtensionState } from "@src/context/ExtensionStateContext"
 import { cn } from "@src/lib/utils"
 import { Button } from "@src/components/ui"
 import CodeBlock from "../common/CodeBlock"
+import { CommandPatternSelector } from "./CommandPatternSelector"
+import {
+	extractCommandPatterns,
+	getPatternDescription,
+	parseCommandAndOutput as parseCommandAndOutputUtil,
+	CommandPattern,
+} from "../../utils/commandPatterns"
 
 interface CommandExecutionProps {
 	executionId: string
@@ -22,20 +28,83 @@ interface CommandExecutionProps {
 }
 
 export const CommandExecution = ({ executionId, text, icon, title }: CommandExecutionProps) => {
-	const { terminalShellIntegrationDisabled = false } = useExtensionState()
+	const {
+		terminalShellIntegrationDisabled = false,
+		allowedCommands = [],
+		deniedCommands = [],
+		setAllowedCommands,
+		setDeniedCommands,
+	} = useExtensionState()
 
-	const { command, output: parsedOutput } = useMemo(() => parseCommandAndOutput(text), [text])
+	const {
+		command,
+		output: parsedOutput,
+		suggestions,
+	} = useMemo(() => {
+		// Use the enhanced parser from commandPatterns
+		return parseCommandAndOutputUtil(text || "")
+	}, [text])
 
 	// If we aren't opening the VSCode terminal for this command then we default
 	// to expanding the command execution output.
 	const [isExpanded, setIsExpanded] = useState(terminalShellIntegrationDisabled)
 	const [streamingOutput, setStreamingOutput] = useState("")
 	const [status, setStatus] = useState<CommandExecutionStatus | null>(null)
+	const showSuggestions = true
 
 	// The command's output can either come from the text associated with the
 	// task message (this is the case for completed commands) or from the
 	// streaming output (this is the case for running commands).
 	const output = streamingOutput || parsedOutput
+
+	// Extract command patterns
+	const commandPatterns = useMemo<CommandPattern[]>(() => {
+		const patterns: CommandPattern[] = []
+
+		// Use AI suggestions if available
+		if (suggestions.length > 0) {
+			suggestions.forEach((suggestion) => {
+				patterns.push({
+					pattern: suggestion,
+					description: getPatternDescription(suggestion),
+				})
+			})
+		} else {
+			// Extract patterns programmatically
+			const extractedPatterns = extractCommandPatterns(command)
+			extractedPatterns.forEach((pattern) => {
+				patterns.push({
+					pattern,
+					description: getPatternDescription(pattern),
+				})
+			})
+		}
+
+		return patterns
+	}, [command, suggestions])
+
+	// Handle pattern changes
+	const handleAllowPatternChange = (pattern: string) => {
+		const isAllowed = allowedCommands.includes(pattern)
+		const newAllowed = isAllowed ? allowedCommands.filter((p) => p !== pattern) : [...allowedCommands, pattern]
+		const newDenied = deniedCommands.filter((p) => p !== pattern)
+
+		setAllowedCommands(newAllowed)
+		setDeniedCommands(newDenied)
+		vscode.postMessage({ type: "allowedCommands", commands: newAllowed })
+		vscode.postMessage({ type: "deniedCommands", commands: newDenied })
+	}
+
+	const handleDenyPatternChange = (pattern: string) => {
+		const isDenied = deniedCommands.includes(pattern)
+		const newDenied = isDenied ? deniedCommands.filter((p) => p !== pattern) : [...deniedCommands, pattern]
+		const newAllowed = allowedCommands.filter((p) => p !== pattern)
+
+		setAllowedCommands(newAllowed)
+		setDeniedCommands(newDenied)
+		vscode.postMessage({ type: "allowedCommands", commands: newAllowed })
+		vscode.postMessage({ type: "deniedCommands", commands: newDenied })
+	}
 
 	const onMessage = useCallback(
 		(event: MessageEvent) => {
@@ -121,9 +190,20 @@ export const CommandExecution = ({ executionId, text, icon, title }: CommandExec
 				</div>
 			</div>
 
-			<div className="w-full bg-vscode-editor-background border border-vscode-border rounded-xs p-2">
-				<CodeBlock source={command} language="shell" />
-				<OutputContainer isExpanded={isExpanded} output={output} />
+			<div className="w-full bg-vscode-editor-background border border-vscode-border rounded-xs">
+				<div className="p-2">
+					<CodeBlock source={command} language="shell" />
+					<OutputContainer isExpanded={isExpanded} output={output} />
+				</div>
+				{showSuggestions && commandPatterns.length > 0 && (
+					<CommandPatternSelector
+						patterns={commandPatterns}
+						allowedCommands={allowedCommands}
+						deniedCommands={deniedCommands}
+						onAllowPatternChange={handleAllowPatternChange}
+						onDenyPatternChange={handleDenyPatternChange}
+					/>
+				)}
 			</div>
 		</>
 	)
@@ -142,20 +222,3 @@ const OutputContainerInternal = ({ isExpanded, output }: { isExpanded: boolean; 
 )
 
 const OutputContainer = memo(OutputContainerInternal)
-
-const parseCommandAndOutput = (text: string | undefined) => {
-	if (!text) {
-		return { command: "", output: "" }
-	}
-
-	const index = text.indexOf(COMMAND_OUTPUT_STRING)
-
-	if (index === -1) {
-		return { command: text, output: "" }
-	}
-
-	return {
-		command: text.slice(0, index),
-		output: text.slice(index + COMMAND_OUTPUT_STRING.length),
-	}
-}
