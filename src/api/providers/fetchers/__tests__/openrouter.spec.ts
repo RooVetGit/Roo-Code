@@ -29,7 +29,6 @@ describe("OpenRouter API", () => {
 
 			// Define models that are intentionally excluded
 			const excludedModels = new Set([
-				"google/gemini-2.5-pro-preview", // Excluded due to lag issue (#4487)
 				"google/gemini-2.5-flash", // OpenRouter doesn't report this as supporting prompt caching
 				"google/gemini-2.5-flash-lite-preview-06-17", // OpenRouter doesn't report this as supporting prompt caching
 			])
@@ -215,7 +214,7 @@ describe("OpenRouter API", () => {
 	describe("getOpenRouterModelEndpoints", () => {
 		it("fetches model endpoints and validates schema", async () => {
 			const { nockDone } = await nockBack("openrouter-model-endpoints.json")
-			const endpoints = await getOpenRouterModelEndpoints("google/gemini-2.5-pro-preview")
+			const endpoints = await getOpenRouterModelEndpoints("google/gemini-2.5-pro")
 
 			expect(endpoints).toEqual({
 				Google: {

@@ -129,9 +129,26 @@ export class GeminiHandler extends BaseProvider implements SingleCompletionHandl
 		}
 	}
 
+	/**
+	 * Check if the model ID is a legacy preview model that should be mapped to the GA version
+	 */
+	protected isLegacyPreviewModel(modelId: string): boolean {
+		return [
+			"gemini-2.5-pro-preview-03-25",
+			"gemini-2.5-pro-preview-05-06",
+			"gemini-2.5-pro-preview-06-05"
+		].includes(modelId)
+	}
+
 	override getModel() {
 		const modelId = this.options.apiModelId
 		let id = modelId && modelId in geminiModels ? (modelId as GeminiModelId) : geminiDefaultModelId
+		
+		// Handle backward compatibility for legacy preview models
+		if (modelId && this.isLegacyPreviewModel(modelId)) {
+			id = "gemini-2.5-pro" as GeminiModelId
+		}
+		
 		const info: ModelInfo = geminiModels[id]
 		const params = getModelParams({ format: "gemini", modelId: id, model: info, settings: this.options })
 

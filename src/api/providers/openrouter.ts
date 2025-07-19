@@ -69,6 +69,13 @@ export class OpenRouterHandler extends BaseProvider implements SingleCompletionH
 		this.client = new OpenAI({ baseURL, apiKey, defaultHeaders: DEFAULT_HEADERS })
 	}
 
+	/**
+	 * Check if the model ID is a legacy Gemini preview model that should be mapped to the GA version
+	 */
+	private isLegacyGeminiPreviewModel(modelId: string): boolean {
+		return modelId === "google/gemini-2.5-pro-preview"
+	}
+
 	override async *createMessage(
 		systemPrompt: string,
 		messages: Anthropic.Messages.MessageParam[],
@@ -83,7 +90,7 @@ export class OpenRouterHandler extends BaseProvider implements SingleCompletionH
 		// i We should generalize this using the logic in `getModelParams`, but
 		// this is easier for now.
 		if (
-			(modelId === "google/gemini-2.5-pro-preview" || modelId === "google/gemini-2.5-pro") &&
+			(this.isLegacyGeminiPreviewModel(modelId) || modelId === "google/gemini-2.5-pro") &&
 			typeof reasoning === "undefined"
 		) {
 			reasoning = { exclude: true }
