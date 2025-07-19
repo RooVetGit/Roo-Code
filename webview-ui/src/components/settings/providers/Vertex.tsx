@@ -1,4 +1,5 @@
-import { useCallback } from "react"
+import { useCallback, useState } from "react"
+import { Checkbox } from "vscrui"
 import { VSCodeLink, VSCodeTextField } from "@vscode/webview-ui-toolkit/react"
 
 import { type ProviderSettings, VERTEX_REGIONS } from "@roo-code/types"
@@ -16,6 +17,8 @@ type VertexProps = {
 export const Vertex = ({ apiConfiguration, setApiConfigurationField }: VertexProps) => {
 	const { t } = useAppTranslation()
 
+	const [vertexBaseUrlSelected, setVertexBaseUrlSelected] = useState(!!apiConfiguration?.vertexBaseUrl)
+
 	const handleInputChange = useCallback(
 		<K extends keyof ProviderSettings, E>(
 			field: K,
@@ -29,6 +32,28 @@ export const Vertex = ({ apiConfiguration, setApiConfigurationField }: VertexPro
 
 	return (
 		<>
+			<div>
+				<Checkbox
+					checked={vertexBaseUrlSelected}
+					onChange={(checked: boolean) => {
+						setVertexBaseUrlSelected(checked)
+
+						if (!checked) {
+							setApiConfigurationField("vertexBaseUrl", "")
+						}
+					}}>
+					{t("settings:providers.useCustomBaseUrl")}
+				</Checkbox>
+				{vertexBaseUrlSelected && (
+					<VSCodeTextField
+						value={apiConfiguration?.vertexBaseUrl || ""}
+						type="url"
+						onInput={handleInputChange("vertexBaseUrl")}
+						placeholder={t("settings:defaults.vertexUrl")}
+						className="w-full mt-1"
+					/>
+				)}
+			</div>
 			<div className="text-sm text-vscode-descriptionForeground">
 				<div>{t("settings:providers.googleCloudSetup.title")}</div>
 				<div>
