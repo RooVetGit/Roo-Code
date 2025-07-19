@@ -42,11 +42,24 @@ export type CodebaseIndexConfig = z.infer<typeof codebaseIndexConfigSchema>
  * CodebaseIndexModels
  */
 
+const modelProfileSchema = z.object({
+	/** The fixed dimension for the model, or a fallback for models with variable dimensions. */
+	dimension: z.number(),
+	scoreThreshold: z.number().optional(),
+	queryPrefix: z.string().optional(),
+	/** The minimum dimension supported by a variable-dimension model. */
+	minDimension: z.number().optional(),
+	/** The maximum dimension supported by a variable-dimension model. */
+	maxDimension: z.number().optional(),
+	/** The default dimension for a variable-dimension model, used for UI presentation. */
+	defaultDimension: z.number().optional(),
+})
+
 export const codebaseIndexModelsSchema = z.object({
-	openai: z.record(z.string(), z.object({ dimension: z.number() })).optional(),
-	ollama: z.record(z.string(), z.object({ dimension: z.number() })).optional(),
-	"openai-compatible": z.record(z.string(), z.object({ dimension: z.number() })).optional(),
-	gemini: z.record(z.string(), z.object({ dimension: z.number() })).optional(),
+	openai: z.record(z.string(), modelProfileSchema).optional(),
+	ollama: z.record(z.string(), modelProfileSchema).optional(),
+	"openai-compatible": z.record(z.string(), modelProfileSchema).optional(),
+	gemini: z.record(z.string(), modelProfileSchema).optional(),
 })
 
 export type CodebaseIndexModels = z.infer<typeof codebaseIndexModelsSchema>
