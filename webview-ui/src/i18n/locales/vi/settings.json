@@ -284,18 +284,6 @@
 		"vscodeLmModel": "Mô hình ngôn ngữ",
 		"vscodeLmWarning": "Lưu ý: Đây là tích hợp thử nghiệm và hỗ trợ nhà cung cấp có thể khác nhau. Nếu bạn nhận được lỗi về mô hình không được hỗ trợ, đó là vấn đề từ phía nhà cung cấp.",
 		"geminiParameters": {
-			"topK": {
-				"title": "Top K",
-				"description": "Điều chỉnh số lượng token có xác suất cao nhất được xem xét cho mỗi bước. Giá trị cao hơn tăng tính đa dạng, giá trị thấp hơn khiến đầu ra tập trung hơn và mang tính xác định."
-			},
-			"topP": {
-				"title": "Top P",
-				"description": "Điều chỉnh xác suất tích lũy của các token được xem xét (lấy mẫu nucleus). Giá trị gần 1.0 tăng tính đa dạng, trong khi giá trị thấp hơn khiến đầu ra tập trung hơn."
-			},
-			"maxOutputTokens": {
-				"title": "Token đầu ra tối đa",
-				"description": "Số lượng token tối đa mà mô hình có thể tạo ra trong một phản hồi. Giá trị cao hơn cho phép phản hồi dài hơn nhưng tăng mức sử dụng token và chi phí."
-			},
 			"urlContext": {
 				"title": "Bật ngữ cảnh URL",
 				"description": "Cho phép Gemini truy cập và xử lý URL để có thêm ngữ cảnh khi tạo phản hồi. Hữu ích cho các tác vụ yêu cầu phân tích nội dung web."
@@ -305,12 +293,7 @@
 				"description": "Cho phép Gemini tìm kiếm trên Google để lấy thông tin mới nhất và căn cứ phản hồi dựa trên dữ liệu thời gian thực. Hữu ích cho các truy vấn yêu cầu thông tin cập nhật."
 			}
 		},
-		"geminiSections": {
-			"modelParameters": {
-				"title": "Cài đặt nâng cao",
-				"description": "Điều chỉnh nhiệt độ, top-p và các cài đặt nâng cao khác."
-			}
-		},
+
 		"googleCloudSetup": {
 			"title": "Để sử dụng Google Cloud Vertex AI, bạn cần:",
 			"step1": "1. Tạo tài khoản Google Cloud, kích hoạt Vertex AI API và kích hoạt các mô hình Claude mong muốn.",

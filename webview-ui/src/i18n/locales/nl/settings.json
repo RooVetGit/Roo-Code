@@ -284,18 +284,6 @@
 		"vscodeLmModel": "Taalmodel",
 		"vscodeLmWarning": "Let op: dit is een zeer experimentele integratie en ondersteuning door providers kan variëren. Krijg je een foutmelding dat een model niet wordt ondersteund, dan ligt dat aan de provider.",
 		"geminiParameters": {
-			"topK": {
-				"title": "Top K",
-				"description": "Beheert het aantal tokens met de hoogste waarschijnlijkheid dat in elke stap wordt overwogen. Hogere waarden vergroten de diversiteit, lagere waarden maken de uitvoer meer gefocust en deterministisch."
-			},
-			"topP": {
-				"title": "Top P",
-				"description": "Beheert de cumulatieve kans van tokens om te overwegen (nucleus-sampling). Waarden dicht bij 1,0 vergroten de diversiteit, terwijl lagere waarden de uitvoer meer gefocust maken."
-			},
-			"maxOutputTokens": {
-				"title": "Maximale uitvoertokens",
-				"description": "Maximaal aantal tokens dat het model in één antwoord kan genereren. Hogere waarden maken langere antwoorden mogelijk, maar verhogen het tokengebruik en de kosten."
-			},
 			"urlContext": {
 				"title": "URL-context inschakelen",
 				"description": "Staat Gemini toe om URL's te openen en te verwerken voor extra context bij het genereren van antwoorden. Handig voor taken die webinhoudsanalyse vereisen."
@@ -305,12 +293,7 @@
 				"description": "Staat Gemini toe om Google te doorzoeken voor actuele informatie en antwoorden op realtime gegevens te baseren. Handig voor vragen die actuele informatie vereisen."
 			}
 		},
-		"geminiSections": {
-			"modelParameters": {
-				"title": "Geavanceerde instellingen",
-				"description": "Pas de temperatuur, top-p en andere geavanceerde instellingen aan."
-			}
-		},
+
 		"googleCloudSetup": {
 			"title": "Om Google Cloud Vertex AI te gebruiken, moet je:",
 			"step1": "1. Maak een Google Cloud-account aan, schakel de Vertex AI API in en activeer de gewenste Claude-modellen.",

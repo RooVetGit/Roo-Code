@@ -283,25 +283,8 @@
 		"cacheUsageNote": "Hinweis: Wenn Sie keine Cache-Nutzung sehen, versuchen Sie ein anderes Modell auszuwählen und dann Ihr gewünschtes Modell erneut auszuwählen.",
 		"vscodeLmModel": "Sprachmodell",
 		"vscodeLmWarning": "Hinweis: Dies ist eine sehr experimentelle Integration und die Anbieterunterstützung variiert. Wenn Sie einen Fehler über ein nicht unterstütztes Modell erhalten, liegt das Problem auf Anbieterseite.",
-		"geminiSections": {
-			"modelParameters": {
-				"title": "Ausgabesteuerung",
-				"description": "Feinabstimmung von topP, topK und maxOutputTokens"
-			}
-		},
+
 		"geminiParameters": {
-			"topK": {
-				"title": "Top K",
-				"description": "Ein niedriger Wert macht den Text vorhersagbarer, während ein hoher Wert ihn kreativer macht."
-			},
-			"topP": {
-				"title": "Top P",
-				"description": "Ein niedriger Wert führt zu fokussierterem Text, während ein hoher Wert zu vielfältigeren Ergebnissen führt."
-			},
-			"maxOutputTokens": {
-				"title": "Maximale Ausgabe-Tokens",
-				"description": "Dieser Parameter legt die maximale Länge der Antwort fest, die das Modell generieren darf."
-			},
 			"urlContext": {
 				"title": "URL-Kontext aktivieren",
 				"description": "Ermöglicht Gemini, verlinkte Seiten zu lesen, um deren Inhalt zu extrahieren, zu vergleichen und in fundierte Antworten zu synthetisieren."

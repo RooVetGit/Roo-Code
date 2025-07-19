@@ -288,18 +288,6 @@
 		"vscodeLmModel": "Model Bahasa",
 		"vscodeLmWarning": "Catatan: Ini adalah integrasi yang sangat eksperimental dan dukungan provider akan bervariasi. Jika kamu mendapat error tentang model yang tidak didukung, itu adalah masalah di sisi provider.",
 		"geminiParameters": {
-			"topK": {
-				"title": "Top K",
-				"description": "Mengontrol jumlah token dengan probabilitas tertinggi yang dipertimbangkan pada setiap langkah. Nilai lebih tinggi meningkatkan keberagaman, nilai lebih rendah membuat keluaran lebih terfokus dan deterministik."
-			},
-			"topP": {
-				"title": "Top P",
-				"description": "Mengontrol probabilitas kumulatif token yang dipertimbangkan (pengambilan sampel nucleus). Nilai mendekati 1.0 meningkatkan keberagaman, sedangkan nilai lebih rendah membuat keluaran lebih terfokus."
-			},
-			"maxOutputTokens": {
-				"title": "Token Output Maksimum",
-				"description": "Jumlah maksimum token yang dapat dihasilkan model dalam satu respons. Nilai lebih tinggi memungkinkan respons lebih panjang tetapi meningkatkan penggunaan token dan biaya."
-			},
 			"urlContext": {
 				"title": "Aktifkan Konteks URL",
 				"description": "Memungkinkan Gemini mengakses dan memproses URL untuk konteks tambahan saat menghasilkan respons. Berguna untuk tugas yang memerlukan analisis konten web."
@@ -309,12 +297,7 @@
 				"description": "Memungkinkan Gemini mencari informasi terkini di Google dan mendasarkan respons pada data waktu nyata. Berguna untuk kueri yang memerlukan informasi terkini."
 			}
 		},
-		"geminiSections": {
-			"modelParameters": {
-				"title": "Pengaturan Lanjutan",
-				"description": "Menyesuaikan suhu, top-p, dan pengaturan lanjutan lainnya."
-			}
-		},
+
 		"googleCloudSetup": {
 			"title": "Untuk menggunakan Google Cloud Vertex AI, kamu perlu:",
 			"step1": "1. Buat akun Google Cloud, aktifkan Vertex AI API & aktifkan model Claude yang diinginkan.",

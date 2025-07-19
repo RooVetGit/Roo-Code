@@ -284,18 +284,6 @@
 		"vscodeLmModel": "Modello linguistico",
 		"vscodeLmWarning": "Nota: Questa è un'integrazione molto sperimentale e il supporto del fornitore varierà. Se ricevi un errore relativo a un modello non supportato, si tratta di un problema del fornitore.",
 		"geminiParameters": {
-			"topK": {
-				"title": "Top K",
-				"description": "Controlla il numero di token con la massima probabilità da considerare ad ogni passaggio. Valori più alti aumentano la diversità, valori più bassi rendono l'output più focalizzato e deterministico."
-			},
-			"topP": {
-				"title": "Top P",
-				"description": "Controlla la probabilità cumulativa dei token da considerare (campionamento nucleare). Valori prossimi a 1,0 aumentano la diversità, mentre valori più bassi rendono l'output più focalizzato."
-			},
-			"maxOutputTokens": {
-				"title": "Token massimi di output",
-				"description": "Numero massimo di token che il modello può generare in una singola risposta. Valori più alti consentono risposte più lunghe ma aumentano l'utilizzo dei token e i costi."
-			},
 			"urlContext": {
 				"title": "Abilita contesto URL",
 				"description": "Consente a Gemini di accedere e processare URL per contesto aggiuntivo durante la generazione delle risposte. Utile per attività che richiedono analisi di contenuti web."
@@ -305,12 +293,7 @@
 				"description": "Consente a Gemini di cercare informazioni aggiornate su Google e basare le risposte su dati in tempo reale. Utile per query che richiedono informazioni aggiornate."
 			}
 		},
-		"geminiSections": {
-			"modelParameters": {
-				"title": "Impostazioni avanzate",
-				"description": "Regola la temperatura, top-p e altre impostazioni avanzate."
-			}
-		},
+
 		"googleCloudSetup": {
 			"title": "Per utilizzare Google Cloud Vertex AI, è necessario:",
 			"step1": "1. Creare un account Google Cloud, abilitare l'API Vertex AI e abilitare i modelli Claude desiderati.",

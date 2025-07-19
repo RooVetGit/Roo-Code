@@ -283,25 +283,8 @@
 		"cacheUsageNote": "注意：如果您沒有看到快取使用情況，請嘗試選擇其他模型，然後重新選擇您想要的模型。",
 		"vscodeLmModel": "語言模型",
 		"vscodeLmWarning": "注意：此整合功能仍處於實驗階段，各供應商的支援程度可能不同。如果出現模型不支援的錯誤，通常是供應商方面的問題。",
-		"geminiSections": {
-			"modelParameters": {
-				"title": "輸出控制",
-				"description": "微調 topP、topK 和 maxOutputTokens"
-			}
-		},
+
 		"geminiParameters": {
-			"topK": {
-				"title": "Top K",
-				"description": "較低的值使文字更具可預測性，而較高的值使其更具創造性。"
-			},
-			"topP": {
-				"title": "Top P",
-				"description": "較低的值可以使文字更集中，而較高的值可以產生更多樣化的結果。"
-			},
-			"maxOutputTokens": {
-				"title": "最大輸出 Token",
-				"description": "此參數設定模型允許產生的回應的最大長度。"
-			},
 			"urlContext": {
 				"title": "啟用 URL 上下文",
 				"description": "讓 Gemini 讀取連結的頁面以提取、比較和綜合其內容，從而提供明智的答覆。"

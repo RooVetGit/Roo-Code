@@ -283,25 +283,8 @@
 		"cacheUsageNote": "提示：若未显示缓存使用情况，请切换模型后重新选择",
 		"vscodeLmModel": "VSCode LM 模型",
 		"vscodeLmWarning": "注意：这是一个非常实验性的集成，提供商支持会有所不同。如果您收到有关不支持模型的错误，则这是提供商方面的问题。",
-		"geminiSections": {
-			"modelParameters": {
-				"title": "输出控制",
-				"description": "微调 topP、topK 和 maxOutputTokens"
-			}
-		},
+
 		"geminiParameters": {
-			"topK": {
-				"title": "Top K",
-				"description": "较低的值使文本更具可预测性，而较高的值使其更具创造性。"
-			},
-			"topP": {
-				"title": "Top P",
-				"description": "较低的值可以使文本更集中，而较高的值可以产生更多样化的结果。"
-			},
-			"maxOutputTokens": {
-				"title": "最大输出 Token",
-				"description": "此参数设置模型允许生成的响应的最大长度。"
-			},
 			"urlContext": {
 				"title": "启用 URL 上下文",
 				"description": "让 Gemini 读取链接的页面以提取、比较和综合其内容，从而提供明智的答复。"

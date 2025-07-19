@@ -284,18 +284,6 @@
 		"vscodeLmModel": "Modèle de langage",
 		"vscodeLmWarning": "Remarque : Il s'agit d'une intégration très expérimentale et le support des fournisseurs variera. Si vous recevez une erreur concernant un modèle non pris en charge, c'est un problème du côté du fournisseur.",
 		"geminiParameters": {
-			"topK": {
-				"title": "Top K",
-				"description": "Contrôle le nombre de tokens les plus probables à considérer à chaque étape. Des valeurs plus élevées augmentent la diversité, des valeurs plus faibles rendent la sortie plus ciblée et déterministe."
-			},
-			"topP": {
-				"title": "Top P",
-				"description": "Contrôle la probabilité cumulée des tokens à considérer (échantillonnage nucleus). Des valeurs proches de 1,0 augmentent la diversité, tandis que des valeurs plus faibles rendent la sortie plus ciblée."
-			},
-			"maxOutputTokens": {
-				"title": "Nombre maximal de tokens de sortie",
-				"description": "Nombre maximal de tokens que le modèle peut générer dans une seule réponse. Des valeurs plus élevées permettent des réponses plus longues mais augmentent l'utilisation des tokens et les coûts."
-			},
 			"urlContext": {
 				"title": "Activer le contexte d'URL",
 				"description": "Permet à Gemini d'accéder et de traiter les URL pour un contexte supplémentaire lors de la génération des réponses. Utile pour les tâches nécessitant l'analyse de contenu web."
@@ -305,12 +293,7 @@
 				"description": "Permet à Gemini d'effectuer des recherches sur Google pour obtenir des informations actuelles et fonder les réponses sur des données en temps réel. Utile pour les requêtes nécessitant des informations à jour."
 			}
 		},
-		"geminiSections": {
-			"modelParameters": {
-				"title": "Paramètres avancés",
-				"description": "Ajustez la température, top-p et d'autres paramètres avancés."
-			}
-		},
+
 		"googleCloudSetup": {
 			"title": "Pour utiliser Google Cloud Vertex AI, vous devez :",
 			"step1": "1. Créer un compte Google Cloud, activer l'API Vertex AI et activer les modèles Claude souhaités.",

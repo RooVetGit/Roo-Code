@@ -283,25 +283,8 @@
 		"cacheUsageNote": "Nota: Si no veieu l'ús de la caché, proveu de seleccionar un model diferent i després tornar a seleccionar el model desitjat.",
 		"vscodeLmModel": "Model de llenguatge",
 		"vscodeLmWarning": "Nota: Aquesta és una integració molt experimental i el suport del proveïdor variarà. Si rebeu un error sobre un model no compatible, és un problema del proveïdor.",
-		"geminiSections": {
-			"modelParameters": {
-				"title": "Controls de sortida",
-				"description": "Ajusta amb precisió topP, topK i maxOutputTokens"
-			}
-		},
+
 		"geminiParameters": {
-			"topK": {
-				"title": "Top K",
-				"description": "Un valor baix fa que el text sigui més predictible, mentre que un valor alt el fa més creatiu."
-			},
-			"topP": {
-				"title": "Top P",
-				"description": "Un valor baix condueix a un text més enfocat, mentre que un valor alt resulta en resultats més diversos."
-			},
-			"maxOutputTokens": {
-				"title": "Màxim de Tokens de Sortida",
-				"description": "Aquest paràmetre estableix la longitud màxima de la resposta que el model pot generar."
-			},
 			"urlContext": {
 				"title": "Activa el Context d'URL",
 				"description": "Permet a Gemini llegir pàgines enllaçades per extreure, comparar i sintetitzar el seu contingut en respostes informades."
