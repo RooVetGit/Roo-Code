@@ -730,8 +730,9 @@ export async function readFileTool(
 		// Combine all images: feedback images first, then file images
 		const allImages = [...feedbackImages, ...fileImageUrls]
 
-		// Use the supportsImages check from the beginning of the function
-		const imagesToInclude = supportsImages ? allImages : []
+		// Re-check if the model supports images before including them, in case it changed during execution.
+		const finalModelSupportsImages = cline.api.getModel().info.supportsImages ?? false
+		const imagesToInclude = finalModelSupportsImages ? allImages : []
 
 		// Push the result with appropriate formatting
 		if (statusMessage || imagesToInclude.length > 0) {
