@@ -471,10 +471,13 @@ describe("ClineProvider", () => {
 
 		expect(mockWebviewView.webview.html).toContain("<!DOCTYPE html>")
 
-		// Verify Content Security Policy contains the necessary PostHog domains
+		// Verify Content Security Policy contains the necessary PostHog domains and file protocol
 		expect(mockWebviewView.webview.html).toContain(
-			"connect-src https://openrouter.ai https://api.requesty.ai https://us.i.posthog.com https://us-assets.i.posthog.com",
+			"connect-src https://openrouter.ai https://api.requesty.ai https://us.i.posthog.com https://us-assets.i.posthog.com file+.vscode-resource.vscode-cdn.net:",
 		)
+		// Verify media-src includes file protocol for audio files
+		expect(mockWebviewView.webview.html).toContain("media-src")
+		expect(mockWebviewView.webview.html).toContain("file+.vscode-resource.vscode-cdn.net:")
 
 		// Extract the script-src directive section and verify required security elements
 		const html = mockWebviewView.webview.html
