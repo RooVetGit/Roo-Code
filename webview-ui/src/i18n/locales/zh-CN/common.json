@@ -39,6 +39,17 @@
 			"copyError": "复制图片时出错"
 		}
 	},
+	"upgrade": {
+		"title": "任务历史索引升级",
+		"description": "需要升级才能继续。此过程会将您的任务历史索引迁移到更快、更节省内存的格式。旧版 Roo 仍可访问旧格式。",
+		"clickToStart": "单击下面的按钮开始升级过程。",
+		"startButton": "开始升级",
+		"inProgress": "升级正在进行中...",
+		"logs": "升级日志:",
+		"waitingForLogs": "正在等待升级开始...",
+		"noLogs": "无可用日志。",
+		"complete": "升级完成"
+	},
 	"file": {
 		"errors": {
 			"invalidDataUri": "无效的数据 URI 格式",

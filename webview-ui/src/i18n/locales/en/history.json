@@ -31,7 +31,11 @@
 	"workspace": {
 		"prefix": "Workspace:",
 		"current": "Current",
-		"all": "All"
+		"all": "All",
+		"unknown": "Unknown",
+		"available": "Available Workspaces",
+		"recent": "Recent Workspaces",
+		"filterPlaceholder": "Filter workspaces..."
 	},
 	"sort": {
 		"prefix": "Sort:",
@@ -41,5 +45,15 @@
 		"mostTokens": "Most Tokens",
 		"mostRelevant": "Most Relevant"
 	},
-	"viewAllHistory": "View all tasks"
+	"viewAllHistory": "View all tasks",
+	"limit": {
+		"prefix": "Limit:",
+		"50": "50",
+		"100": "100",
+		"200": "200",
+		"500": "500",
+		"1000": "1000",
+		"all": "All"
+	},
+	"noItemsFound": "No items found"
 }

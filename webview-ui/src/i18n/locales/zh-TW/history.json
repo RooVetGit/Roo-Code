@@ -31,7 +31,11 @@
 	"workspace": {
 		"prefix": "工作區:",
 		"current": "目前",
-		"all": "所有"
+		"all": "所有",
+		"unknown": "未知",
+		"available": "可用的工作區",
+		"recent": "最近的工作區",
+		"filterPlaceholder": "篩選工作區..."
 	},
 	"sort": {
 		"prefix": "排序:",
@@ -41,5 +45,15 @@
 		"mostTokens": "最多 Token",
 		"mostRelevant": "最相關"
 	},
-	"viewAllHistory": "檢視所有工作"
+	"viewAllHistory": "檢視所有工作",
+	"limit": {
+		"prefix": "限制:",
+		"50": "50",
+		"100": "100",
+		"200": "200",
+		"500": "500",
+		"1000": "1000",
+		"all": "全部"
+	},
+	"noItemsFound": "找不到任何項目"
 }

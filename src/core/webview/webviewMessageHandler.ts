@@ -12,7 +12,11 @@ import {
 	type GlobalState,
 	type ClineMessage,
 	TelemetryEventName,
+	HistorySearchOptions,
+	HistoryItem,
 } from "@roo-code/types"
+import { getHistoryItemsForSearch } from "../task-persistence/taskHistory"
+import { isUpgradeNeeded, performUpgrade } from "../upgrade/upgrade"
 import { CloudService } from "@roo-code/cloud"
 import { TelemetryService } from "@roo-code/telemetry"
 import { type ApiMessage } from "../task-persistence/apiMessages"
@@ -64,14 +68,78 @@ export const webviewMessageHandler = async (
 	const getGlobalState = <K extends keyof GlobalState>(key: K) => provider.contextProxy.getValue(key)
 	const updateGlobalState = async <K extends keyof GlobalState>(key: K, value: GlobalState[K]) =>
 		await provider.contextProxy.setValue(key, value)
+	
+	/**
+	 * Helper function to handle common functionality for task history operations
+	 * @param operationName Name of the operation for logging
+	 * @param options Options for the operation
+	 * @param operation The async function to perform
+	 * @param onSuccess Callback for successful operation
+	 * @param onError Callback for operation error
+	 * @param logMessageType Type of message to use when sending logs to UI
+	 */
+	async function handleLoggingOperation<T>(
+		operationName: string,
+		options: any,
+		operation: (options: any, logs: string[]) => Promise<T>,
+		onSuccess: (result: T) => Promise<void>,
+		onError: (error: any) => Promise<void>,
+		logMessageType: "loggingOperation",
+	): Promise<void> {
+		try {
+			// Create a logs array to capture messages
+			const logs: string[] = []
+
+			// Log the options for debugging
+			console.log(`[webviewMessageHandler] ${operationName} options:`, JSON.stringify(options, null, 2))
+
+			// Create a monitoring function to send logs to UI
+			const sendLogsToUI = () => {
+				if (logs.length > 0) {
+					const logsCopy = [...logs]
+					logs.length = 0 // Clear the array
+
+					// Send each log message to the webview
+					for (const log of logsCopy) {
+						provider.postMessageToWebview({
+							type: logMessageType,
+							log,
+						})
+					}
+				}
+			}
+
+			// Set up interval to forward logs during operation
+			const logInterval = setInterval(sendLogsToUI, 100)
+
+			// Perform the operation
+			const result = await operation(options, logs)
+
+			// Clear the interval
+			clearInterval(logInterval)
+
+			// Send any remaining logs
+			sendLogsToUI()
+
+			// Handle success
+			await onSuccess(result)
+		} catch (error) {
+			// Handle error
+			await onError(error)
+		}
+	}
 
 	/**
 	 * Shared utility to find message indices based on timestamp
 	 */
-	const findMessageIndices = (messageTs: number, currentCline: any) => {
+	const findMessageIndices = (
+		messageTs: number,
+		clineMessages: ClineMessage[],
+		apiConversationHistory: ApiMessage[],
+	) => {
 		const timeCutoff = messageTs - 1000 // 1 second buffer before the message
-		const messageIndex = currentCline.clineMessages.findIndex((msg: ClineMessage) => msg.ts && msg.ts >= timeCutoff)
-		const apiConversationHistoryIndex = currentCline.apiConversationHistory.findIndex(
+		const messageIndex = clineMessages.findIndex((msg: ClineMessage) => msg.ts && msg.ts >= timeCutoff)
+		const apiConversationHistoryIndex = apiConversationHistory.findIndex(
 			(msg: ApiMessage) => msg.ts && msg.ts >= timeCutoff,
 		)
 		return { messageIndex, apiConversationHistoryIndex }
@@ -80,19 +148,29 @@ export const webviewMessageHandler = async (
 	/**
 	 * Removes the target message and all subsequent messages
 	 */
-	const removeMessagesThisAndSubsequent = async (
-		currentCline: any,
-		messageIndex: number,
-		apiConversationHistoryIndex: number,
-	) => {
-		// Delete this message and all that follow
-		await currentCline.overwriteClineMessages(currentCline.clineMessages.slice(0, messageIndex))
+	const removeMessagesThisAndSubsequent = async (currentCline: any, messageTs: number) => {
+		await currentCline.modifyConversation(
+			async (clineMessages: ClineMessage[], apiConversationHistory: ApiMessage[]) => {
+				const { messageIndex, apiConversationHistoryIndex } = findMessageIndices(
+					messageTs,
+					clineMessages,
+					apiConversationHistory,
+				)
 
-		if (apiConversationHistoryIndex !== -1) {
-			await currentCline.overwriteApiConversationHistory(
-				currentCline.apiConversationHistory.slice(0, apiConversationHistoryIndex),
-			)
-		}
+				if (messageIndex === -1) {
+					// Abort transaction
+					return undefined
+				}
+
+				clineMessages.splice(messageIndex)
+
+				if (apiConversationHistoryIndex !== -1) {
+					apiConversationHistory.splice(apiConversationHistoryIndex)
+				}
+
+				return [clineMessages, apiConversationHistory]
+			},
+		)
 	}
 
 	/**
@@ -113,23 +191,18 @@ export const webviewMessageHandler = async (
 		// Only proceed if we have a current cline
 		if (provider.getCurrentCline()) {
 			const currentCline = provider.getCurrentCline()!
-			const { messageIndex, apiConversationHistoryIndex } = findMessageIndices(messageTs, currentCline)
+			try {
+				const { historyItem } = await provider.getTaskWithId(currentCline.taskId)
 
-			if (messageIndex !== -1) {
-				try {
-					const { historyItem } = await provider.getTaskWithId(currentCline.taskId)
+				await removeMessagesThisAndSubsequent(currentCline, messageTs)
 
-					// Delete this message and all subsequent messages
-					await removeMessagesThisAndSubsequent(currentCline, messageIndex, apiConversationHistoryIndex)
-
-					// Initialize with history item after deletion
-					await provider.initClineWithHistoryItem(historyItem)
-				} catch (error) {
-					console.error("Error in delete message:", error)
-					vscode.window.showErrorMessage(
-						`Error deleting message: ${error instanceof Error ? error.message : String(error)}`,
-					)
-				}
+				// Initialize with history item after deletion
+				await provider.initClineWithHistoryItem(historyItem)
+			} catch (error) {
+				console.error("Error in delete message:", error)
+				vscode.window.showErrorMessage(
+					`Error deleting message: ${error instanceof Error ? error.message : String(error)}`,
+				)
 			}
 		}
 	}
@@ -159,31 +232,26 @@ export const webviewMessageHandler = async (
 		if (provider.getCurrentCline()) {
 			const currentCline = provider.getCurrentCline()!
 
-			// Use findMessageIndices to find messages based on timestamp
-			const { messageIndex, apiConversationHistoryIndex } = findMessageIndices(messageTs, currentCline)
+			try {
+				// Edit this message and delete subsequent
+				await removeMessagesThisAndSubsequent(currentCline, messageTs)
 
-			if (messageIndex !== -1) {
-				try {
-					// Edit this message and delete subsequent
-					await removeMessagesThisAndSubsequent(currentCline, messageIndex, apiConversationHistoryIndex)
+				// Process the edited message as a regular user message
+				// This will add it to the conversation and trigger an AI response
+				webviewMessageHandler(provider, {
+					type: "askResponse",
+					askResponse: "messageResponse",
+					text: editedContent,
+					images,
+				})
 
-					// Process the edited message as a regular user message
-					// This will add it to the conversation and trigger an AI response
-					webviewMessageHandler(provider, {
-						type: "askResponse",
-						askResponse: "messageResponse",
-						text: editedContent,
-						images,
-					})
-
-					// Don't initialize with history item for edit operations
-					// The webviewMessageHandler will handle the conversation state
-				} catch (error) {
-					console.error("Error in edit message:", error)
-					vscode.window.showErrorMessage(
-						`Error editing message: ${error instanceof Error ? error.message : String(error)}`,
-					)
-				}
+				// Don't initialize with history item for edit operations
+				// The webviewMessageHandler will handle the conversation state
+			} catch (error) {
+				console.error("Error in edit message:", error)
+				vscode.window.showErrorMessage(
+					`Error editing message: ${error instanceof Error ? error.message : String(error)}`,
+				)
 			}
 		}
 	}
@@ -434,11 +502,26 @@ export const webviewMessageHandler = async (
 		case "showTaskWithId":
 			provider.showTaskWithId(message.text!)
 			break
+		case "copyTask":
+			if (message.text) {
+				provider.copyTaskToClipboard(message.text)
+			}
+			break
 		case "condenseTaskContextRequest":
 			provider.condenseTaskContext(message.text!)
 			break
 		case "deleteTaskWithId":
-			provider.deleteTaskWithId(message.text!)
+			await provider.deleteTaskWithId(message.text!)
+			// Send confirmation message back to webview
+			provider.postMessageToWebview({ type: "taskDeletedConfirmation", text: message.text })
+			break
+		case "getHistoryItems":
+			const historyResults = await getHistoryItemsForSearch(message.historySearchOptions || {})
+			provider.postMessageToWebview({
+				type: "historyItems",
+				...historyResults,
+				requestId: message.requestId, // Pass the requestId back in the response
+			})
 			break
 		case "deleteMultipleTasksWithIds": {
 			const ids = message.ids
@@ -481,6 +564,9 @@ export const webviewMessageHandler = async (
 				console.log(
 					`Batch deletion completed: ${successCount}/${ids.length} tasks successful, ${failCount} tasks failed`,
 				)
+
+				// Send confirmation message back to webview
+				provider.postMessageToWebview({ type: "taskDeletedConfirmation", text: "batch" })
 			}
 			break
 		}
@@ -2191,6 +2277,65 @@ export const webviewMessageHandler = async (
 					)
 				}
 			}
+			break
+		}
+
+		case "isUpgradeNeeded": {
+			try {
+				const needed = await isUpgradeNeeded()
+				provider.postMessageToWebview({
+					type: "upgradeStatus" as any,
+					values: {
+						needed,
+					},
+				})
+			} catch (error) {
+				console.error(`[Upgrade] webviewMessageHandler: Error in isUpgradeNeeded:`, error)
+				provider.postMessageToWebview({
+					type: "upgradeStatus" as any,
+					values: {
+						needed: false,
+					},
+				})
+			}
+			break
+		}
+
+		case "performUpgrade": {
+			await handleLoggingOperation<{ success: boolean }>(
+				"performUpgrade",
+				{},
+				async (_, logs) => {
+					return { success: await performUpgrade(logs) }
+				},
+				async (result) => {
+					// Then send upgradeComplete message
+					provider.postMessageToWebview({
+						type: "upgradeComplete" as any,
+						values: {
+							success: result.success,
+						},
+					})
+
+					// Finally, send upgradeStatus with needed=false to indicate upgrade is no longer needed
+					provider.postMessageToWebview({
+						type: "upgradeStatus" as any,
+						values: {
+							needed: false,
+						},
+					})
+				},
+				async (error) => {
+					provider.postMessageToWebview({
+						type: "upgradeComplete" as any,
+						values: {
+							success: false,
+							error: String(error),
+						},
+					})
+				},
+				"loggingOperation",
+			)
 			break
 		}
 

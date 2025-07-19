@@ -47,6 +47,7 @@ import { Terminal } from "../../integrations/terminal/Terminal"
 import { downloadTask } from "../../integrations/misc/export-markdown"
 import { getTheme } from "../../integrations/theme/getTheme"
 import WorkspaceTracker from "../../integrations/workspace/WorkspaceTracker"
+import { getHistoryItem, setHistoryItems, deleteHistoryItem } from "../task-persistence/taskHistory"
 import { McpHub } from "../../services/mcp/McpHub"
 import { McpServerManager } from "../../services/mcp/McpServerManager"
 import { MarketplaceManager } from "../../services/marketplace"
@@ -56,6 +57,7 @@ import type { IndexProgressUpdate } from "../../services/code-index/interfaces/m
 import { MdmService } from "../../services/mdm/MdmService"
 import { fileExistsAtPath } from "../../utils/fs"
 import { setTtsEnabled, setTtsSpeed } from "../../utils/tts"
+import { safeReadJson } from "../../utils/safeReadJson"
 import { ContextProxy } from "../config/ContextProxy"
 import { ProviderSettingsManager } from "../config/ProviderSettingsManager"
 import { CustomModesManager } from "../config/CustomModesManager"
@@ -1128,8 +1130,8 @@ export class ClineProvider
 		uiMessagesFilePath: string
 		apiConversationHistory: Anthropic.MessageParam[]
 	}> {
-		const history = this.getGlobalState("taskHistory") ?? []
-		const historyItem = history.find((item) => item.id === id)
+		// Get the history item from the file-based storage
+		const historyItem = await getHistoryItem(id)
 
 		if (historyItem) {
 			const { getTaskDirectoryPath } = await import("../../utils/storage")
@@ -1137,10 +1139,9 @@ export class ClineProvider
 			const taskDirPath = await getTaskDirectoryPath(globalStoragePath, id)
 			const apiConversationHistoryFilePath = path.join(taskDirPath, GlobalFileNames.apiConversationHistory)
 			const uiMessagesFilePath = path.join(taskDirPath, GlobalFileNames.uiMessages)
-			const fileExists = await fileExistsAtPath(apiConversationHistoryFilePath)
 
-			if (fileExists) {
-				const apiConversationHistory = JSON.parse(await fs.readFile(apiConversationHistoryFilePath, "utf8"))
+			try {
+				const apiConversationHistory = await safeReadJson(apiConversationHistoryFilePath)
 
 				return {
 					historyItem,
@@ -1149,13 +1150,16 @@ export class ClineProvider
 					uiMessagesFilePath,
 					apiConversationHistory,
 				}
+			} catch (error) {
+				if (error.code !== "ENOENT") {
+					console.error(`Failed to read API conversation history for task ${id}:`, error)
+				}
 			}
 		}
 
-		// if we tried to get a task that doesn't exist, remove it from state
-		// FIXME: this seems to happen sometimes when the json file doesnt save to disk for some reason
-		await this.deleteTaskFromState(id)
-		throw new Error("Task not found")
+		// If we tried to get a task that doesn't exist, delete it from storage
+		await deleteHistoryItem(id)
+		throw new Error(`Task not found, removed from index: ${id}`)
 	}
 
 	async showTaskWithId(id: string) {
@@ -1171,6 +1175,19 @@ export class ClineProvider
 	async exportTaskWithId(id: string) {
 		const { historyItem, apiConversationHistory } = await this.getTaskWithId(id)
 		await downloadTask(historyItem.ts, apiConversationHistory)
+	}
+
+	async copyTaskToClipboard(id: string) {
+		try {
+			const historyItem = await getHistoryItem(id)
+			if (historyItem) {
+				await vscode.env.clipboard.writeText(historyItem.task)
+				vscode.window.showInformationMessage(t("common:info.clipboard_copy"))
+			}
+		} catch (error) {
+			this.log(`Error copying task: ${error}`)
+			vscode.window.showErrorMessage(t("common:errors.copy_task_failed"))
+		}
 	}
 
 	/* Condenses a task's message history to use fewer tokens. */
@@ -1238,9 +1255,7 @@ export class ClineProvider
 	}
 
 	async deleteTaskFromState(id: string) {
-		const taskHistory = this.getGlobalState("taskHistory") ?? []
-		const updatedTaskHistory = taskHistory.filter((task) => task.id !== id)
-		await this.updateGlobalState("taskHistory", updatedTaskHistory)
+		await deleteHistoryItem(id)
 		await this.postStateToWebview()
 	}
 
@@ -1384,7 +1399,6 @@ export class ClineProvider
 			ttsSpeed,
 			diffEnabled,
 			enableCheckpoints,
-			taskHistory,
 			soundVolume,
 			browserViewportSize,
 			screenshotQuality,
@@ -1470,12 +1484,9 @@ export class ClineProvider
 			autoCondenseContextPercent: autoCondenseContextPercent ?? 100,
 			uriScheme: vscode.env.uriScheme,
 			currentTaskItem: this.getCurrentCline()?.taskId
-				? (taskHistory || []).find((item: HistoryItem) => item.id === this.getCurrentCline()?.taskId)
+				? await getHistoryItem(this.getCurrentCline()!.taskId)
 				: undefined,
 			clineMessages: this.getCurrentCline()?.clineMessages || [],
-			taskHistory: (taskHistory || [])
-				.filter((item: HistoryItem) => item.ts && item.task)
-				.sort((a: HistoryItem, b: HistoryItem) => b.ts - a.ts),
 			soundEnabled: soundEnabled ?? false,
 			ttsEnabled: ttsEnabled ?? false,
 			ttsSpeed: ttsSpeed ?? 1.0,
@@ -1645,7 +1656,6 @@ export class ClineProvider
 			allowedMaxRequests: stateValues.allowedMaxRequests,
 			autoCondenseContext: stateValues.autoCondenseContext ?? true,
 			autoCondenseContextPercent: stateValues.autoCondenseContextPercent ?? 100,
-			taskHistory: stateValues.taskHistory,
 			allowedCommands: stateValues.allowedCommands,
 			deniedCommands: stateValues.deniedCommands,
 			soundEnabled: stateValues.soundEnabled ?? false,
@@ -1724,18 +1734,8 @@ export class ClineProvider
 		}
 	}
 
-	async updateTaskHistory(item: HistoryItem): Promise<HistoryItem[]> {
-		const history = (this.getGlobalState("taskHistory") as HistoryItem[] | undefined) || []
-		const existingItemIndex = history.findIndex((h) => h.id === item.id)
-
-		if (existingItemIndex !== -1) {
-			history[existingItemIndex] = item
-		} else {
-			history.push(item)
-		}
-
-		await this.updateGlobalState("taskHistory", history)
-		return history
+	async updateTaskHistory(item: HistoryItem): Promise<void> {
+		await setHistoryItems([item])
 	}
 
 	// ContextProxy

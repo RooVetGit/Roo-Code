@@ -86,6 +86,15 @@ vi.mock("@src/components/account/AccountView", () => ({
 	},
 }))
 
+vi.mock("@src/components/upgrade/UpgradeHandler", () => ({
+	__esModule: true,
+	default: () => <div data-testid="upgrade-handler" />,
+	useUpgradeCheck: () => ({
+		upgradeNeeded: false,
+		clearUpgradeNeeded: vi.fn(),
+	}),
+}))
+
 const mockUseExtensionState = vi.fn()
 
 vi.mock("@src/context/ExtensionStateContext", () => ({

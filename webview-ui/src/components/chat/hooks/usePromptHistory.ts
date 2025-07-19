@@ -1,9 +1,9 @@
-import { ClineMessage, HistoryItem } from "@roo-code/types"
+import { ClineMessage } from "@roo-code/types"
 import { useCallback, useEffect, useMemo, useState } from "react"
+import { useTaskSearch } from "../../../components/history/useTaskSearch"
 
 interface UsePromptHistoryProps {
 	clineMessages: ClineMessage[] | undefined
-	taskHistory: HistoryItem[] | undefined
 	cwd: string | undefined
 	inputValue: string
 	setInputValue: (value: string) => void
@@ -26,7 +26,6 @@ export interface UsePromptHistoryReturn {
 
 export const usePromptHistory = ({
 	clineMessages,
-	taskHistory,
 	cwd,
 	inputValue,
 	setInputValue,
@@ -38,6 +37,9 @@ export const usePromptHistory = ({
 	const [historyIndex, setHistoryIndex] = useState(-1)
 	const [tempInput, setTempInput] = useState("")
 	const [promptHistory, setPromptHistory] = useState<string[]>([])
+
+	// Use the useTaskSearch hook to get the task history
+	const { tasks } = useTaskSearch({ workspacePath: cwd, limit: MAX_PROMPT_HISTORY_SIZE })
 
 	// Initialize prompt history with hybrid approach: conversation messages if in task, otherwise task history
 	const filteredPromptHistory = useMemo(() => {
@@ -58,16 +60,16 @@ export const usePromptHistory = ({
 		}
 
 		// Fall back to task history only when starting fresh (no active conversation)
-		if (!taskHistory?.length || !cwd) {
+		if (!tasks.length || !cwd) {
 			return []
 		}
 
 		// Extract user prompts from task history for the current workspace only
-		return taskHistory
-			.filter((item) => item.task?.trim() && (!item.workspace || item.workspace === cwd))
+		return tasks
+			.filter((item) => item.task?.trim())
 			.map((item) => item.task)
 			.slice(0, MAX_PROMPT_HISTORY_SIZE)
-	}, [clineMessages, taskHistory, cwd])
+	}, [clineMessages, tasks, cwd])
 
 	// Update prompt history when filtered history changes and reset navigation
 	useEffect(() => {
