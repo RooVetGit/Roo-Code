@@ -1,21 +1,49 @@
 import { useState, useRef, useMemo, useEffect } from "react"
 
 export function TodoListDisplay({ todos }: { todos: any[] }) {
+	// Normalize todos to ensure we have a valid array
+	const normalizedTodos = useMemo(() => {
+		if (!todos) {
+			return []
+		}
+		if (!Array.isArray(todos)) {
+			// Try to handle case where todos might be a single object
+			if (typeof todos === "object" && "length" in todos) {
+				return Array.from(todos)
+			}
+			return []
+		}
+
+		// Filter out any invalid todo items
+		const validTodos = todos.filter((todo) => {
+			if (!todo || typeof todo !== "object") {
+				return false
+			}
+			if (!todo.content || typeof todo.content !== "string") {
+				return false
+			}
+			return true
+		})
+
+		return validTodos
+	}, [todos])
+
 	const [isCollapsed, setIsCollapsed] = useState(true)
 	const ulRef = useRef<HTMLUListElement>(null)
 	const itemRefs = useRef<(HTMLLIElement | null)[]>([])
 	const scrollIndex = useMemo(() => {
-		const inProgressIdx = todos.findIndex((todo: any) => todo.status === "in_progress")
+		const inProgressIdx = normalizedTodos.findIndex((todo: any) => todo.status === "in_progress")
 		if (inProgressIdx !== -1) return inProgressIdx
-		return todos.findIndex((todo: any) => todo.status !== "completed")
-	}, [todos])
+		return normalizedTodos.findIndex((todo: any) => todo.status !== "completed")
+	}, [normalizedTodos])
 
 	// Find the most important todo to display when collapsed
 	const mostImportantTodo = useMemo(() => {
-		const inProgress = todos.find((todo: any) => todo.status === "in_progress")
+		const inProgress = normalizedTodos.find((todo: any) => todo.status === "in_progress")
 		if (inProgress) return inProgress
-		return todos.find((todo: any) => todo.status !== "completed")
-	}, [todos])
+		return normalizedTodos.find((todo: any) => todo.status !== "completed")
+	}, [normalizedTodos])
+
 	useEffect(() => {
 		if (isCollapsed) return
 		if (!ulRef.current) return
@@ -29,11 +57,15 @@ export function TodoListDisplay({ todos }: { todos: any[] }) {
 			const scrollTo = targetTop - (ulHeight / 2 - targetHeight / 2)
 			ul.scrollTop = scrollTo
 		}
-	}, [todos, isCollapsed, scrollIndex])
-	if (!Array.isArray(todos) || todos.length === 0) return null
+	}, [normalizedTodos, isCollapsed, scrollIndex])
 
-	const totalCount = todos.length
-	const completedCount = todos.filter((todo: any) => todo.status === "completed").length
+	// Enhanced guard clause
+	if (normalizedTodos.length === 0) {
+		return null
+	}
+
+	const totalCount = normalizedTodos.length
+	const completedCount = normalizedTodos.filter((todo: any) => todo.status === "completed").length
 
 	const allCompleted = completedCount === totalCount && totalCount > 0
 
@@ -268,7 +300,7 @@ export function TodoListDisplay({ todos }: { todos: any[] }) {
 								overflowY: "auto",
 								padding: "12px 16px",
 							}}>
-							{todos.map((todo: any, idx: number) => {
+							{normalizedTodos.map((todo: any, idx: number) => {
 								let icon
 								if (todo.status === "completed") {
 									icon = (
