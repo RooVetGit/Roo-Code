@@ -285,7 +285,7 @@
 		"vscodeLmWarning": "Not: Bu çok deneysel bir entegrasyondur ve sağlayıcı desteği değişebilir. Bir modelin desteklenmediğine dair bir hata alırsanız, bu sağlayıcı tarafındaki bir sorundur.",
 		"geminiParameters": {
 			"urlContext": {
-				"title": "URL Bağlamını Etkinleştir",
+				"title": "URL bağlamını etkinleştir",
 				"description": "Yanıtlar oluşturulurken ek bağlam için Gemini'nin URL'lere erişmesine ve işlemesine izin verir. Web içeriği analizi gerektiren görevler için faydalıdır."
 			},
 			"groundingSearch": {

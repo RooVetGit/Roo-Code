@@ -81,7 +81,7 @@ export const Gemini = ({ apiConfiguration, setApiConfigurationField }: GeminiPro
 					onChange={(checked: boolean) => setApiConfigurationField("enableUrlContext", checked)}>
 					{t("settings:providers.geminiParameters.urlContext.title")}
 				</Checkbox>
-				<div className="text-sm text-vscode-descriptionForeground mb-3">
+				<div className="text-sm text-vscode-descriptionForeground mb-3 mt-1.5">
 					{t("settings:providers.geminiParameters.urlContext.description")}
 				</div>
 
@@ -91,7 +91,7 @@ export const Gemini = ({ apiConfiguration, setApiConfigurationField }: GeminiPro
 					onChange={(checked: boolean) => setApiConfigurationField("enableGrounding", checked)}>
 					{t("settings:providers.geminiParameters.groundingSearch.title")}
 				</Checkbox>
-				<div className="text-sm text-vscode-descriptionForeground mb-3">
+				<div className="text-sm text-vscode-descriptionForeground mb-3 mt-1.5">
 					{t("settings:providers.geminiParameters.groundingSearch.description")}
 				</div>
 			</div>

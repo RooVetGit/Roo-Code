@@ -286,7 +286,7 @@
 
 		"geminiParameters": {
 			"urlContext": {
-				"title": "Activa el Context d'URL",
+				"title": "Activa el context d'URL",
 				"description": "Permet a Gemini llegir pàgines enllaçades per extreure, comparar i sintetitzar el seu contingut en respostes informades."
 			},
 			"groundingSearch": {

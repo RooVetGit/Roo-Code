@@ -289,7 +289,7 @@
 		"vscodeLmWarning": "Catatan: Ini adalah integrasi yang sangat eksperimental dan dukungan provider akan bervariasi. Jika kamu mendapat error tentang model yang tidak didukung, itu adalah masalah di sisi provider.",
 		"geminiParameters": {
 			"urlContext": {
-				"title": "Aktifkan Konteks URL",
+				"title": "Aktifkan konteks URL",
 				"description": "Memungkinkan Gemini mengakses dan memproses URL untuk konteks tambahan saat menghasilkan respons. Berguna untuk tugas yang memerlukan analisis konten web."
 			},
 			"groundingSearch": {

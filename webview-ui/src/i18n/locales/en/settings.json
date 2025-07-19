@@ -285,11 +285,11 @@
 		"vscodeLmWarning": "Note: This is a very experimental integration and provider support will vary. If you get an error about a model not being supported, that's an issue on the provider's end.",
 		"geminiParameters": {
 			"urlContext": {
-				"title": "Enable URL Context",
+				"title": "Enable URL context",
 				"description": "Lets Gemini read linked pages to extract, compare, and synthesize their content into informed responses."
 			},
 			"groundingSearch": {
-				"title": "Enable Grounding with Google Search",
+				"title": "Enable Grounding with Google search",
 				"description": "Connects Gemini to real‑time web data for accurate, up‑to‑date answers with verifiable citations."
 			}
 		},
