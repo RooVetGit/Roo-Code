@@ -663,29 +663,16 @@ const ModesView = ({ onDone }: ModesViewProps) => {
 															setOpen(false)
 														}}
 														data-testid={`mode-option-${modeConfig.slug}`}>
-														<div className="flex items-center justify-between w-full">
+														<div className="flex items-center justify-between w-full min-w-0">
 															<span
-																style={{
-																	whiteSpace: "nowrap",
-																	overflow: "hidden",
-																	textOverflow: "ellipsis",
-																	flex: 2,
-																	minWidth: 0,
-																}}>
+																className="truncate flex-1 min-w-0 mr-2"
+																title={modeConfig.name}>
 																{modeConfig.name}
 															</span>
 															<span
-																className="text-foreground"
-																style={{
-																	whiteSpace: "nowrap",
-																	overflow: "hidden",
-																	textOverflow: "ellipsis",
-																	direction: "rtl",
-																	textAlign: "right",
-																	flex: 1,
-																	minWidth: 0,
-																	marginLeft: "0.5em",
-																}}>
+																className="text-foreground text-xs opacity-70 truncate flex-shrink-0 max-w-[40%] text-right"
+																style={{ direction: "rtl" }}
+																title={modeConfig.slug}>
 																{modeConfig.slug}
 															</span>
 														</div>

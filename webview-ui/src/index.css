@@ -479,3 +479,71 @@ input[cmdk-input]:focus {
 	transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
 	transition-duration: 150ms;
 }
+
+/* Responsive utilities for narrow containers */
+@media (max-width: 640px) {
+	.responsive-text {
+		font-size: 0.875rem;
+	}
+	
+	.responsive-gap {
+		gap: 0.25rem;
+	}
+	
+	.responsive-padding {
+		padding: 0.5rem;
+	}
+}
+
+/* Container query support for components */
+@container (max-width: 600px) {
+	.container-compact {
+		flex-direction: column;
+		gap: 0.5rem;
+	}
+	
+	.container-compact .settings-tab {
+		min-width: auto;
+		flex: 1;
+	}
+}
+
+/* Improved flex utilities for narrow containers */
+.flex-responsive {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.5rem;
+}
+
+.flex-responsive > * {
+	min-width: 0;
+	flex: 1 1 auto;
+}
+
+/* Better text truncation for dropdowns and selectors */
+.dropdown-text {
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	min-width: 0;
+	max-width: 100%;
+}
+
+.dropdown-container {
+	min-width: 0;
+	flex: 1;
+	overflow: hidden;
+}
+
+/* Ensure proper text wrapping and overflow handling */
+.text-wrap {
+	word-wrap: break-word;
+	overflow-wrap: break-word;
+}
+
+.text-ellipsis-safe {
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	min-width: 0;
+}

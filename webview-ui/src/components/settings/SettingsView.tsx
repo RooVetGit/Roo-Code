@@ -386,8 +386,8 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 
 		const observer = new ResizeObserver((entries) => {
 			for (const entry of entries) {
-				// If container width is less than 500px, switch to compact mode
-				setIsCompactMode(entry.contentRect.width < 500)
+				// If container width is less than 600px, switch to compact mode
+				setIsCompactMode(entry.contentRect.width < 600)
 			}
 		})
 
