@@ -89,8 +89,8 @@ export const getModelMaxOutputTokens = ({
 		return ANTHROPIC_DEFAULT_MAX_TOKENS
 	}
 
-	// If model has explicit maxTokens and it's not the full context window, use it
-	if (model.maxTokens && model.maxTokens !== model.contextWindow) {
+	// If model has explicit maxTokens, use it (even if it equals context window)
+	if (model.maxTokens) {
 		return model.maxTokens
 	}
 

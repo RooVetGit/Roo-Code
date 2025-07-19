@@ -1244,5 +1244,43 @@ describe("Sliding Window", () => {
 			expect(result2).not.toEqual(messagesWithSmallContent)
 			expect(result2.messages.length).toBe(3) // Truncated with 0.5 fraction
 		})
+
+		it("should handle models where maxTokens equals contextWindow correctly", async () => {
+			// This tests the edge case where a model has the same input and output token limits
+			const modelInfo = createModelInfo(100000, 100000) // maxTokens = contextWindow
+
+			// Create messages with very small content in the last one to avoid token overflow
+			const messagesWithSmallContent = [
+				...messages.slice(0, -1),
+				{ ...messages[messages.length - 1], content: "" },
+			]
+
+			// When maxTokens equals contextWindow, reservedTokens should be 100000 (not 20% of context)
+			// allowedTokens = contextWindow * (1 - TOKEN_BUFFER_PERCENTAGE) - reservedTokens
+			// allowedTokens = 100000 * 0.9 - 100000 = -10000
+			// This means any positive token count should trigger truncation
+
+			// Test with a small token count - should trigger truncation
+			const result = await truncateConversationIfNeeded({
+				messages: messagesWithSmallContent,
+				totalTokens: 1000, // Even small token counts should trigger truncation
+				contextWindow: modelInfo.contextWindow,
+				maxTokens: modelInfo.maxTokens,
+				apiHandler: mockApiHandler,
+				autoCondenseContext: false,
+				autoCondenseContextPercent: 100,
+				systemPrompt: "System prompt",
+				taskId,
+				profileThresholds: {},
+				currentProfileId: "default",
+			})
+
+			// Should truncate because allowedTokens is negative
+			expect(result.messages).not.toEqual(messagesWithSmallContent)
+			expect(result.messages.length).toBe(3) // Truncated with 0.5 fraction
+			expect(result.summary).toBe("")
+			expect(result.cost).toBe(0)
+			expect(result.prevContextTokens).toBe(1000)
+		})
 	})
 })

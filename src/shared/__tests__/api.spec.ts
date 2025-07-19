@@ -154,6 +154,49 @@ describe("getModelMaxOutputTokens", () => {
 
 		expect(getModelMaxOutputTokens({ modelId: "test", model, settings })).toBe(16_384)
 	})
+
+	test("should return model maxTokens even when it equals contextWindow", () => {
+		const model: ModelInfo = {
+			contextWindow: 100000,
+			maxTokens: 100000, // Same as context window
+			supportsPromptCache: true,
+		}
+
+		const settings: ProviderSettings = {
+			apiProvider: "anthropic",
+		}
+
+		const result = getModelMaxOutputTokens({
+			modelId: "claude-3-5-sonnet-20241022",
+			model,
+			settings,
+		})
+
+		// Should return the maxTokens value, not undefined
+		expect(result).toBe(100000)
+	})
+
+	test("should handle models with maxTokens equal to contextWindow for non-Anthropic providers", () => {
+		const model: ModelInfo = {
+			contextWindow: 50000,
+			maxTokens: 50000, // Same as context window
+			supportsPromptCache: false,
+		}
+
+		const settings: ProviderSettings = {
+			apiProvider: "openai",
+		}
+
+		const result = getModelMaxOutputTokens({
+			modelId: "gpt-4",
+			model,
+			settings,
+			format: "openai",
+		})
+
+		// Should return the maxTokens value
+		expect(result).toBe(50000)
+	})
 })
 
 describe("shouldUseReasoningBudget", () => {
