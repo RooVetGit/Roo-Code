@@ -448,7 +448,9 @@ describe("truncateOutput", () => {
 
 				// Character limit works on string length, not byte count
 				// 20% of 10 = 2, 80% of 10 = 8
-				const expected = "🚀🎉\n[...10 characters omitted...]\n🎨🎯🎪🎭🎬"
+				// Note: In JavaScript, each emoji is actually 2 characters (surrogate pair)
+				// So the content is actually 20 characters long, not 10
+				const expected = "🚀\n[...10 characters omitted...]\n🎯🎪🎭🎬"
 				expect(result).toBe(expected)
 			})
 
@@ -458,7 +460,9 @@ describe("truncateOutput", () => {
 
 				// Total length is 29 chars (including newlines)
 				// 20% of 15 = 3, 80% of 15 = 12
-				const expected = "lin\n[...14 characters omitted...]\ne3\nline4\nline5"
+				// The slice will take first 3 chars: "lin"
+				// And last 12 chars: "e4\nline5" (counting backwards)
+				const expected = "lin\n[...14 characters omitted...]\n\nline4\nline5"
 				expect(result).toBe(expected)
 			})
 
