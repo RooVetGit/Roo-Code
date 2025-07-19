@@ -114,6 +114,19 @@ vi.mock("@/components/ui", () => ({
 	CollapsibleContent: ({ children, className }: any) => (
 		<div className={`collapsible-content-mock ${className || ""}`}>{children}</div>
 	),
+	// Add Input component for MaxTokensControl
+	Input: ({ id, type, value, onChange, min, max, className, ...props }: any) => (
+		<input
+			id={id}
+			type={type}
+			value={value}
+			onChange={onChange}
+			min={min}
+			max={max}
+			className={className}
+			{...props}
+		/>
+	),
 }))
 
 vi.mock("../TemperatureControl", () => ({

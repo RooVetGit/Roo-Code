@@ -665,7 +665,7 @@ describe("getModelParams", () => {
 				model,
 			})
 
-			expect(result.maxTokens).toBe(20000)
+			expect(result.maxTokens).toBe(16000) // Capped to model's actual maxTokens
 			expect(result.reasoningBudget).toBe(10000)
 			expect(result.temperature).toBe(1.0) // Overridden for reasoning budget models
 			expect(result.reasoningEffort).toBeUndefined() // Budget takes precedence
