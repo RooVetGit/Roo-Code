@@ -3,7 +3,7 @@ import type { ClineProvider } from "../../../core/webview/ClineProvider"
 import type { ExtensionContext, Uri } from "vscode"
 import { ServerConfigSchema, McpHub } from "../McpHub"
 import fs from "fs/promises"
-import { vi, Mock } from "vitest"
+import { vi, Mock, describe, it, expect, beforeEach, afterEach } from "vitest"
 
 // Mock fs/promises before importing anything that uses it
 vi.mock("fs/promises", () => ({
@@ -36,9 +36,14 @@ vi.mock("fs/promises", () => ({
 // Mock safeWriteJson
 vi.mock("../../../utils/safeWriteJson", () => ({
 	safeWriteJson: vi.fn(async (filePath, data) => {
-		// Instead of trying to write to the file system, just call fs.writeFile mock
-		// This avoids the complex file locking and temp file operations
 		return fs.writeFile(filePath, JSON.stringify(data), "utf8")
+	}),
+}))
+
+vi.mock("../../../utils/safeReadJson", () => ({
+	safeReadJson: vi.fn(async (filePath) => {
+		const content = await fs.readFile(filePath, "utf8")
+		return JSON.parse(content)
 	}),
 }))
 
@@ -92,7 +97,6 @@ describe("McpHub", () => {
 
 		// Mock console.error to suppress error messages during tests
 		console.error = vi.fn()
-
 
 		const mockUri: Uri = {
 			scheme: "file",

@@ -1,3 +1,4 @@
+import { safeReadJson } from "../../utils/safeReadJson"
 import { safeWriteJson } from "../../utils/safeWriteJson"
 import os from "os"
 import * as path from "path"
@@ -49,7 +50,7 @@ export async function importSettingsFromPath(
 		const previousProviderProfiles = await providerSettingsManager.export()
 
 		const { providerProfiles: newProviderProfiles, globalSettings = {} } = schema.parse(
-			JSON.parse(await fs.readFile(filePath, "utf-8")),
+			await safeReadJson(filePath),
 		)
 
 		const providerProfiles = {
