@@ -39,39 +39,92 @@
 	"codeIndex": {
 		"title": "程式碼庫索引",
 		"enableLabel": "啟用程式碼庫索引",
-		"enableDescription": "<0>程式碼庫索引</0>是一個實驗性功能，使用 AI 嵌入為您的專案建立語義搜尋索引。這使 Roo Code 能夠透過基於含義而非僅僅關鍵詞來尋找相關程式碼，從而更好地理解和導覽大型程式碼庫。",
+		"enableDescription": "啟用程式碼索引以改進搜尋和上下文理解",
 		"providerLabel": "嵌入提供者",
 		"selectProviderPlaceholder": "選擇提供者",
 		"openaiProvider": "OpenAI",
 		"ollamaProvider": "Ollama",
+		"geminiProvider": "Gemini",
+		"geminiApiKeyLabel": "API 金鑰：",
+		"geminiApiKeyPlaceholder": "輸入您的Gemini API金鑰",
 		"openaiCompatibleProvider": "OpenAI 相容",
-		"openaiCompatibleBaseUrlLabel": "基礎 URL：",
-		"openaiCompatibleApiKeyLabel": "API 金鑰：",
-		"openaiCompatibleModelDimensionLabel": "嵌入維度：",
-		"openaiCompatibleModelDimensionPlaceholder": "例如，1536",
-		"openaiCompatibleModelDimensionDescription": "模型的嵌入維度（輸出大小）。請查閱您的提供商文件獲取此值。常見值：384、768、1536、3072。",
-		"openaiKeyLabel": "OpenAI 金鑰：",
+		"openAiKeyLabel": "OpenAI API 金鑰",
+		"openAiKeyPlaceholder": "輸入您的 OpenAI API 金鑰",
+		"openAiCompatibleBaseUrlLabel": "基礎 URL",
+		"openAiCompatibleApiKeyLabel": "API 金鑰",
+		"openAiCompatibleApiKeyPlaceholder": "輸入您的 API 金鑰",
+		"openAiCompatibleModelDimensionLabel": "嵌入維度：",
+		"modelDimensionLabel": "模型維度",
+		"openAiCompatibleModelDimensionPlaceholder": "例如，1536",
+		"openAiCompatibleModelDimensionDescription": "模型的嵌入維度（輸出大小）。請查閱您的提供商文件獲取此值。常見值：384、768、1536、3072。",
 		"modelLabel": "模型",
 		"selectModelPlaceholder": "選擇模型",
 		"ollamaUrlLabel": "Ollama URL：",
 		"qdrantUrlLabel": "Qdrant URL",
 		"qdrantKeyLabel": "Qdrant 金鑰：",
-		"advancedConfigLabel": "進階設定",
-		"searchMinScoreLabel": "搜尋分數閾值",
-		"searchMinScoreDescription": "搜尋結果所需的最低相似度分數（0.0-1.0）。較低的值會傳回更多結果，但可能較不相關。較高的值會傳回較少但更相關的結果。",
-		"searchMinScoreResetTooltip": "重設為預設值 (0.4)",
-		"startIndexingButton": "開始索引",
-		"clearIndexDataButton": "清除索引資料",
+		"startIndexingButton": "開始",
+		"clearIndexDataButton": "清除索引",
 		"unsavedSettingsMessage": "請先儲存設定再開始索引程序。",
 		"clearDataDialog": {
 			"title": "確定要繼續嗎？",
 			"description": "此操作無法復原。這將永久刪除您的程式碼庫索引資料。",
 			"cancelButton": "取消",
 			"confirmButton": "清除資料"
-		}
+		},
+		"description": "設定程式碼庫索引設定以啟用專案的語意搜尋。<0>了解更多</0>",
+		"statusTitle": "狀態",
+		"settingsTitle": "索引設定",
+		"disabledMessage": "程式碼庫索引目前已停用。請在全域設定中啟用以設定索引選項。",
+		"embedderProviderLabel": "嵌入器提供者",
+		"modelPlaceholder": "輸入模型名稱",
+		"selectModel": "選擇模型",
+		"ollamaBaseUrlLabel": "Ollama 基礎 URL",
+		"qdrantApiKeyLabel": "Qdrant API 金鑰",
+		"qdrantApiKeyPlaceholder": "輸入您的 Qdrant API 金鑰（選用）",
+		"setupConfigLabel": "設定",
+		"ollamaUrlPlaceholder": "http://localhost:11434",
+		"openAiCompatibleBaseUrlPlaceholder": "https://api.example.com",
+		"modelDimensionPlaceholder": "1536",
+		"qdrantUrlPlaceholder": "http://localhost:6333",
+		"saveError": "無法儲存設定",
+		"modelDimensions": "({{dimension}} 維度)",
+		"saveSuccess": "設定已成功儲存",
+		"saving": "儲存中...",
+		"saveSettings": "儲存",
+		"indexingStatuses": {
+			"standby": "待命",
+			"indexing": "索引中",
+			"indexed": "已索引",
+			"error": "錯誤"
+		},
+		"close": "關閉",
+		"validation": {
+			"invalidQdrantUrl": "無效的 Qdrant URL",
+			"invalidOllamaUrl": "無效的 Ollama URL",
+			"invalidBaseUrl": "無效的基礎 URL",
+			"qdrantUrlRequired": "需要 Qdrant URL",
+			"openaiApiKeyRequired": "需要 OpenAI API 金鑰",
+			"modelSelectionRequired": "需要選擇模型",
+			"apiKeyRequired": "需要 API 金鑰",
+			"modelIdRequired": "需要模型 ID",
+			"modelDimensionRequired": "需要模型維度",
+			"geminiApiKeyRequired": "需要 Gemini API 金鑰",
+			"ollamaBaseUrlRequired": "需要 Ollama 基礎 URL",
+			"baseUrlRequired": "需要基礎 URL",
+			"modelDimensionMinValue": "模型維度必須大於 0"
+		},
+		"advancedConfigLabel": "進階設定",
+		"searchMinScoreLabel": "搜尋分數閾值",
+		"searchMinScoreDescription": "搜尋結果所需的最低相似度分數（0.0-1.0）。較低的值會傳回更多結果，但可能較不相關。較高的值會傳回較少但更相關的結果。",
+		"searchMinScoreResetTooltip": "重設為預設值 (0.4)",
+		"searchMaxResultsLabel": "最大搜尋結果數",
+		"searchMaxResultsDescription": "查詢程式碼庫索引時傳回的最大搜尋結果數。較高的值提供更多上下文，但可能包含相關性較低的結果。",
+		"resetToDefault": "重設為預設值"
 	},
 	"autoApprove": {
 		"description": "允許 Roo 無需核准即執行操作。僅在您完全信任 AI 並了解相關安全風險時啟用這些設定。",
+		"toggleAriaLabel": "切換自動核准",
+		"disabledAriaLabel": "自動核准已停用 - 請先選取選項",
 		"readOnly": {
 			"label": "讀取",
 			"description": "啟用後，Roo 將自動檢視目錄內容並讀取檔案，無需點選核准按鈕。",
@@ -124,14 +177,23 @@
 			"description": "自動執行允許的終端機命令而無需核准",
 			"allowedCommands": "允許自動執行的命令",
 			"allowedCommandsDescription": "當「始終核准執行操作」啟用時可以自動執行的命令前綴。新增 * 以允許所有命令（請謹慎使用）。",
+			"deniedCommands": "拒絕的命令",
+			"deniedCommandsDescription": "將自動拒絕的命令前綴，無需使用者核准。與允許命令衝突時，最長前綴匹配優先。新增 * 拒絕所有命令。",
 			"commandPlaceholder": "輸入命令前綴（例如 'git '）",
-			"addButton": "新增"
+			"deniedCommandPlaceholder": "輸入要拒絕的命令前綴（例如 'rm -rf'）",
+			"addButton": "新增",
+			"autoDenied": "前綴為 `{{prefix}}` 的命令已被使用者禁止。不要透過執行其他命令來繞過此限制。"
+		},
+		"updateTodoList": {
+			"label": "待辦",
+			"description": "自動更新待辦清單無需批准"
 		},
 		"apiRequestLimit": {
 			"title": "最大請求數",
 			"description": "在請求批准以繼續執行工作之前，自動發出此數量的 API 請求。",
 			"unlimited": "無限制"
-		}
+		},
+		"selectOptionsFirst": "請至少選擇以下一個選項以啟用自動核准"
 	},
 	"providers": {
 		"providerDocumentation": "{{provider}} 文件",
@@ -151,6 +213,8 @@
 		"createProfile": "建立設定檔",
 		"cannotDeleteOnlyProfile": "無法刪除唯一的設定檔",
 		"searchPlaceholder": "搜尋設定檔",
+		"searchProviderPlaceholder": "搜尋供應商",
+		"noProviderMatchFound": "找不到供應商",
 		"noMatchFound": "找不到符合的設定檔",
 		"vscodeLmDescription": "VS Code 語言模型 API 可以讓您使用其他擴充功能（如 GitHub Copilot）提供的模型。最簡單的方式是從 VS Code Marketplace 安裝 Copilot 和 Copilot Chat 擴充套件。",
 		"awsCustomArnUse": "輸入您要使用的模型的有效 Amazon Bedrock ARN。格式範例：",
@@ -306,6 +370,12 @@
 			"label": "速率限制",
 			"description": "API 請求間的最短時間"
 		},
+		"consecutiveMistakeLimit": {
+			"label": "錯誤和重複限制",
+			"description": "在顯示「Roo 遇到問題」對話方塊前允許的連續錯誤或重複操作次數",
+			"unlimitedDescription": "已啟用無限重試（自動繼續）。對話方塊將永遠不會出現。",
+			"warning": "⚠️ 設定為 0 允許無限重試，這可能會消耗大量 API 使用量"
+		},
 		"reasoningEffort": {
 			"label": "模型推理強度",
 			"high": "高",
@@ -316,7 +386,9 @@
 		"claudeCode": {
 			"pathLabel": "Claude Code 路徑",
 			"description": "可選的 Claude Code CLI 路徑。如果未設定，則預設為 'claude'。",
-			"placeholder": "預設：claude"
+			"placeholder": "預設：claude",
+			"maxTokensLabel": "最大輸出 Token",
+			"maxTokensDescription": "Claude Code 回應的最大輸出 Token 數量。預設為 8000。"
 		}
 	},
 	"browser": {
@@ -472,6 +544,9 @@
 			"label": "繼承環境變數",
 			"description": "啟用後，終端機將從 VSCode 父程序繼承環境變數，如使用者設定檔中定義的 shell 整合設定。這直接切換 VSCode 全域設定 `terminal.integrated.inheritEnv`。 <0>瞭解更多</0>"
 		}
+	},
+	"advancedSettings": {
+		"title": "進階設定"
 	},
 	"advanced": {
 		"diff": {

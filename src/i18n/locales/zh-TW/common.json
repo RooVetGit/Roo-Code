@@ -17,10 +17,7 @@
 	"confirmation": {
 		"reset_state": "您確定要重設擴充套件中的所有狀態和金鑰儲存嗎？此操作無法復原。",
 		"delete_config_profile": "您確定要刪除此設定檔案嗎？",
-		"delete_custom_mode": "您確定要刪除此自訂模式嗎？",
-		"delete_message": "您想刪除哪些內容？",
-		"just_this_message": "僅這則訊息",
-		"this_and_subsequent": "這則訊息及所有後續訊息"
+		"delete_custom_mode_with_rules": "您確定要刪除此 {scope} 模式嗎？\n\n這也將刪除位於以下位置的關聯規則資料夾：\n{rulesFolderPath}"
 	},
 	"errors": {
 		"invalid_data_uri": "資料 URI 格式無效",
@@ -52,7 +49,7 @@
 		"cannot_access_path": "無法存取路徑 {{path}}：{{error}}",
 		"settings_import_failed": "設定匯入失敗：{{error}}。",
 		"mistake_limit_guidance": "這可能表明模型思維過程失敗或無法正確使用工具，可透過使用者指導來緩解（例如「嘗試將工作分解為更小的步驟」）。",
-		"violated_organization_allowlist": "執行工作失敗：目前設定檔違反了您的組織設定",
+		"violated_organization_allowlist": "執行工作失敗：目前設定檔與您的組織設定不相容",
 		"condense_failed": "壓縮上下文失敗",
 		"condense_not_enough_messages": "沒有足夠的訊息來壓縮上下文",
 		"condensed_recently": "上下文最近已壓縮；跳過此次嘗試",
@@ -65,11 +62,13 @@
 		"url_page_not_found": "找不到頁面。請檢查 URL 是否正確。",
 		"url_fetch_failed": "取得 URL 內容失敗：{{error}}",
 		"url_fetch_error_with_url": "取得 {{url}} 內容時發生錯誤：{{error}}",
+		"command_timeout": "命令執行超時，{{seconds}} 秒後",
 		"share_task_failed": "分享工作失敗。請重試。",
 		"share_no_active_task": "沒有活躍的工作可分享",
 		"share_auth_required": "需要身份驗證。請登入以分享工作。",
 		"share_not_enabled": "此組織未啟用工作分享功能。",
 		"share_task_not_found": "未找到工作或存取被拒絕。",
+		"delete_rules_folder_failed": "刪除規則資料夾失敗: {{rulesFolderPath}}。錯誤: {{error}}",
 		"claudeCode": {
 			"processExited": "Claude Code 程序退出，退出碼：{{exitCode}}。",
 			"errorOutput": "錯誤輸出：{{output}}",
@@ -103,9 +102,12 @@
 	"answers": {
 		"yes": "是",
 		"no": "否",
-		"cancel": "取消",
 		"remove": "刪除",
 		"keep": "保留"
+	},
+	"buttons": {
+		"save": "儲存",
+		"edit": "編輯"
 	},
 	"tasks": {
 		"canceled": "工作錯誤：它已被使用者停止並取消。",
@@ -144,6 +146,10 @@
 			"resetFailed": "重設自訂模式失敗：{{error}}",
 			"modeNotFound": "寫入錯誤：未找到模式",
 			"noWorkspaceForProject": "未找到專案特定模式的工作區資料夾"
+		},
+		"scope": {
+			"project": "專案",
+			"global": "全域"
 		}
 	},
 	"mdm": {
@@ -151,6 +157,19 @@
 			"cloud_auth_required": "您的組織需要 Roo Code Cloud 身份驗證。請登入以繼續。",
 			"organization_mismatch": "您必須使用組織的 Roo Code Cloud 帳戶進行身份驗證。",
 			"verification_failed": "無法驗證組織身份驗證。"
+		}
+	},
+	"prompts": {
+		"deleteMode": {
+			"title": "刪除自訂模式",
+			"description": "您確定要刪除此 {{scope}} 模式嗎？這也將刪除位於 {{rulesFolderPath}} 的關聯規則資料夾",
+			"descriptionNoRules": "您確定要刪除此自訂模式嗎？",
+			"confirm": "刪除"
+		}
+	},
+	"commands": {
+		"preventCompletionWithOpenTodos": {
+			"description": "當待辦事項清單中有未完成的待辦事項時阻止工作完成"
 		}
 	}
 }

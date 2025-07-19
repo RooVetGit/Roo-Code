@@ -17,10 +17,7 @@
 	"confirmation": {
 		"reset_state": "확장 프로그램의 모든 상태와 보안 저장소를 재설정하시겠습니까? 이 작업은 취소할 수 없습니다.",
 		"delete_config_profile": "이 구성 프로필을 삭제하시겠습니까?",
-		"delete_custom_mode": "이 사용자 지정 모드를 삭제하시겠습니까?",
-		"delete_message": "무엇을 삭제하시겠습니까?",
-		"just_this_message": "이 메시지만",
-		"this_and_subsequent": "이 메시지와 모든 후속 메시지"
+		"delete_custom_mode_with_rules": "이 {scope} 모드를 삭제하시겠습니까?\n\n이렇게 하면 연결된 규칙 폴더도 다음 위치에서 삭제됩니다:\n{rulesFolderPath}"
 	},
 	"errors": {
 		"invalid_data_uri": "잘못된 데이터 URI 형식",
@@ -52,7 +49,7 @@
 		"cannot_access_path": "경로 {{path}}에 접근할 수 없습니다: {{error}}",
 		"settings_import_failed": "설정 가져오기 실패: {{error}}.",
 		"mistake_limit_guidance": "이는 모델의 사고 과정 실패나 도구를 제대로 사용하지 못하는 것을 나타낼 수 있으며, 사용자 가이드를 통해 완화할 수 있습니다 (예: \"작업을 더 작은 단계로 나누어 시도해보세요\").",
-		"violated_organization_allowlist": "작업 실행 실패: 현재 프로필이 조직 설정을 위반합니다",
+		"violated_organization_allowlist": "작업 실행 실패: 현재 프로필이 조직 설정과 호환되지 않습니다",
 		"condense_failed": "컨텍스트 압축에 실패했습니다",
 		"condense_not_enough_messages": "컨텍스트를 압축할 메시지가 충분하지 않습니다",
 		"condensed_recently": "컨텍스트가 최근 압축되었습니다; 이 시도를 건너뜁니다",
@@ -65,12 +62,14 @@
 		"url_page_not_found": "페이지를 찾을 수 없습니다. URL이 올바른지 확인해 주세요.",
 		"url_fetch_failed": "URL 콘텐츠 가져오기 실패: {{error}}",
 		"url_fetch_error_with_url": "{{url}} 콘텐츠 가져오기 오류: {{error}}",
+		"command_timeout": "명령 실행 시간이 {{seconds}}초 후 초과되었습니다",
 		"share_task_failed": "작업 공유에 실패했습니다",
 		"share_no_active_task": "공유할 활성 작업이 없습니다",
 		"share_auth_required": "인증이 필요합니다. 작업을 공유하려면 로그인하세요.",
 		"share_not_enabled": "이 조직에서는 작업 공유가 활성화되지 않았습니다.",
 		"share_task_not_found": "작업을 찾을 수 없거나 액세스가 거부되었습니다.",
 		"mode_import_failed": "모드 가져오기 실패: {{error}}",
+		"delete_rules_folder_failed": "규칙 폴더 삭제 실패: {{rulesFolderPath}}. 오류: {{error}}",
 		"claudeCode": {
 			"processExited": "Claude Code 프로세스가 코드 {{exitCode}}로 종료되었습니다.",
 			"errorOutput": "오류 출력: {{output}}",
@@ -103,9 +102,12 @@
 	"answers": {
 		"yes": "예",
 		"no": "아니오",
-		"cancel": "취소",
 		"remove": "제거",
 		"keep": "유지"
+	},
+	"buttons": {
+		"save": "저장",
+		"edit": "편집"
 	},
 	"tasks": {
 		"canceled": "작업 오류: 사용자에 의해 중지 및 취소되었습니다.",
@@ -144,6 +146,10 @@
 			"resetFailed": "사용자 정의 모드 재설정 실패: {{error}}",
 			"modeNotFound": "쓰기 오류: 모드를 찾을 수 없습니다",
 			"noWorkspaceForProject": "프로젝트별 모드용 작업 공간 폴더를 찾을 수 없습니다"
+		},
+		"scope": {
+			"project": "프로젝트",
+			"global": "글로벌"
 		}
 	},
 	"mdm": {
@@ -151,6 +157,19 @@
 			"cloud_auth_required": "조직에서 Roo Code Cloud 인증이 필요합니다. 계속하려면 로그인하세요.",
 			"organization_mismatch": "조직의 Roo Code Cloud 계정으로 인증해야 합니다.",
 			"verification_failed": "조직 인증을 확인할 수 없습니다."
+		}
+	},
+	"prompts": {
+		"deleteMode": {
+			"title": "사용자 정의 모드 삭제",
+			"description": "이 {{scope}} 모드를 삭제하시겠습니까? 이렇게 하면 {{rulesFolderPath}}의 관련 규칙 폴더도 삭제됩니다.",
+			"descriptionNoRules": "이 사용자 정의 모드를 삭제하시겠습니까?",
+			"confirm": "삭제"
+		}
+	},
+	"commands": {
+		"preventCompletionWithOpenTodos": {
+			"description": "할 일 목록에 미완료된 할 일이 있을 때 작업 완료를 방지"
 		}
 	}
 }

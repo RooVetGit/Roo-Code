@@ -112,6 +112,21 @@ vi.mock("../../../components/common/Tab", () => ({
 
 vi.mock("@/components/ui", () => ({
 	...vi.importActual("@/components/ui"),
+	Popover: ({ children }: any) => <div data-testid="popover">{children}</div>,
+	PopoverTrigger: ({ children }: any) => <div data-testid="popover-trigger">{children}</div>,
+	PopoverContent: ({ children }: any) => <div data-testid="popover-content">{children}</div>,
+	Command: ({ children }: any) => <div data-testid="command">{children}</div>,
+	CommandInput: ({ value, onValueChange }: any) => (
+		<input data-testid="command-input" value={value} onChange={(e) => onValueChange(e.target.value)} />
+	),
+	CommandGroup: ({ children }: any) => <div data-testid="command-group">{children}</div>,
+	CommandItem: ({ children, onSelect }: any) => (
+		<div data-testid="command-item" onClick={onSelect}>
+			{children}
+		</div>
+	),
+	CommandList: ({ children }: any) => <div data-testid="command-list">{children}</div>,
+	CommandEmpty: ({ children }: any) => <div data-testid="command-empty">{children}</div>,
 	Slider: ({ value, onValueChange, "data-testid": dataTestId }: any) => (
 		<input
 			type="range"
@@ -144,6 +159,16 @@ vi.mock("@/components/ui", () => ({
 	),
 	SelectTrigger: ({ children }: any) => <div data-testid="select-trigger">{children}</div>,
 	SelectValue: ({ placeholder }: any) => <div data-testid="select-value">{placeholder}</div>,
+	SearchableSelect: ({ value, onValueChange, options, placeholder }: any) => (
+		<select value={value} onChange={(e) => onValueChange(e.target.value)} data-testid="searchable-select">
+			{placeholder && <option value="">{placeholder}</option>}
+			{options?.map((opt: any) => (
+				<option key={opt.value} value={opt.value}>
+					{opt.label}
+				</option>
+			))}
+		</select>
+	),
 	AlertDialog: ({ children, open }: any) => (
 		<div data-testid="alert-dialog" data-open={open}>
 			{children}
@@ -163,6 +188,20 @@ vi.mock("@/components/ui", () => ({
 		<button data-testid="alert-dialog-cancel" onClick={onClick}>
 			{children}
 		</button>
+	),
+	// Add Collapsible components
+	Collapsible: ({ children, open }: any) => (
+		<div className="collapsible-mock" data-open={open}>
+			{children}
+		</div>
+	),
+	CollapsibleTrigger: ({ children, className, onClick }: any) => (
+		<div className={`collapsible-trigger-mock ${className || ""}`} onClick={onClick}>
+			{children}
+		</div>
+	),
+	CollapsibleContent: ({ children, className }: any) => (
+		<div className={`collapsible-content-mock ${className || ""}`}>{children}</div>
 	),
 }))
 

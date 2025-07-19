@@ -39,39 +39,92 @@
 	"codeIndex": {
 		"title": "Kod Tabanı İndeksleme",
 		"enableLabel": "Kod Tabanı İndekslemeyi Etkinleştir",
-		"enableDescription": "<0>Kod Tabanı İndeksleme</0>, AI gömme teknolojisini kullanarak projenizin semantik arama indeksini oluşturan deneysel bir özelliktir. Bu, Roo Code'un sadece anahtar kelimeler yerine anlam temelinde ilgili kodu bularak büyük kod tabanlarını daha iyi anlamasını ve gezinmesini sağlar.",
+		"enableDescription": "Geliştirilmiş arama ve bağlam anlayışı için kod indekslemeyi etkinleştirin",
 		"providerLabel": "Gömme Sağlayıcısı",
 		"selectProviderPlaceholder": "Sağlayıcı seç",
 		"openaiProvider": "OpenAI",
 		"ollamaProvider": "Ollama",
+		"geminiProvider": "Gemini",
+		"geminiApiKeyLabel": "API Anahtarı:",
+		"geminiApiKeyPlaceholder": "Gemini API anahtarınızı girin",
 		"openaiCompatibleProvider": "OpenAI Uyumlu",
-		"openaiCompatibleBaseUrlLabel": "Temel URL:",
-		"openaiCompatibleApiKeyLabel": "API Anahtarı:",
-		"openaiCompatibleModelDimensionLabel": "Gömme Boyutu:",
-		"openaiCompatibleModelDimensionPlaceholder": "örn., 1536",
-		"openaiCompatibleModelDimensionDescription": "Modeliniz için gömme boyutu (çıktı boyutu). Bu değer için sağlayıcınızın belgelerine bakın. Yaygın değerler: 384, 768, 1536, 3072.",
-		"openaiKeyLabel": "OpenAI Anahtarı:",
+		"openAiKeyLabel": "OpenAI API Anahtarı",
+		"openAiKeyPlaceholder": "OpenAI API anahtarınızı girin",
+		"openAiCompatibleBaseUrlLabel": "Temel URL",
+		"openAiCompatibleApiKeyLabel": "API Anahtarı",
+		"openAiCompatibleApiKeyPlaceholder": "API anahtarınızı girin",
+		"openAiCompatibleModelDimensionLabel": "Gömme Boyutu:",
+		"modelDimensionLabel": "Model Boyutu",
+		"openAiCompatibleModelDimensionPlaceholder": "örn., 1536",
+		"openAiCompatibleModelDimensionDescription": "Modeliniz için gömme boyutu (çıktı boyutu). Bu değer için sağlayıcınızın belgelerine bakın. Yaygın değerler: 384, 768, 1536, 3072.",
 		"modelLabel": "Model",
 		"selectModelPlaceholder": "Model seç",
 		"ollamaUrlLabel": "Ollama URL:",
 		"qdrantUrlLabel": "Qdrant URL",
 		"qdrantKeyLabel": "Qdrant Anahtarı:",
-		"advancedConfigLabel": "Gelişmiş Yapılandırma",
-		"searchMinScoreLabel": "Arama Skoru Eşiği",
-		"searchMinScoreDescription": "Arama sonuçları için gereken minimum benzerlik puanı (0.0-1.0). Düşük değerler daha fazla sonuç döndürür ancak daha az alakalı olabilir. Yüksek değerler daha az ancak daha alakalı sonuçlar döndürür.",
-		"searchMinScoreResetTooltip": "Varsayılan değere sıfırla (0.4)",
-		"startIndexingButton": "İndekslemeyi Başlat",
-		"clearIndexDataButton": "İndeks Verilerini Temizle",
+		"startIndexingButton": "Başlat",
+		"clearIndexDataButton": "İndeks Temizle",
 		"unsavedSettingsMessage": "İndeksleme işlemini başlatmadan önce lütfen ayarlarını kaydet.",
 		"clearDataDialog": {
 			"title": "Emin misiniz?",
 			"description": "Bu işlem geri alınamaz. Bu, kod tabanı indeks verilerinizi kalıcı olarak silecektir.",
 			"cancelButton": "İptal",
 			"confirmButton": "Verileri Temizle"
-		}
+		},
+		"description": "Projenizin anlamsal aramasını etkinleştirmek için kod tabanı indeksleme ayarlarını yapılandırın. <0>Daha fazla bilgi</0>",
+		"statusTitle": "Durum",
+		"settingsTitle": "İndeksleme Ayarları",
+		"disabledMessage": "Kod tabanı indeksleme şu anda devre dışı. İndeksleme seçeneklerini yapılandırmak için genel ayarlarda etkinleştirin.",
+		"embedderProviderLabel": "Gömücü Sağlayıcı",
+		"modelPlaceholder": "Model adını girin",
+		"selectModel": "Bir model seçin",
+		"ollamaBaseUrlLabel": "Ollama Temel URL",
+		"qdrantApiKeyLabel": "Qdrant API Anahtarı",
+		"qdrantApiKeyPlaceholder": "Qdrant API anahtarınızı girin (isteğe bağlı)",
+		"setupConfigLabel": "Kurulum",
+		"ollamaUrlPlaceholder": "http://localhost:11434",
+		"openAiCompatibleBaseUrlPlaceholder": "https://api.example.com",
+		"modelDimensionPlaceholder": "1536",
+		"qdrantUrlPlaceholder": "http://localhost:6333",
+		"saveError": "Ayarlar kaydedilemedi",
+		"modelDimensions": "({{dimension}} boyut)",
+		"saveSuccess": "Ayarlar başarıyla kaydedildi",
+		"saving": "Kaydediliyor...",
+		"saveSettings": "Kaydet",
+		"indexingStatuses": {
+			"standby": "Bekleme",
+			"indexing": "İndeksleniyor",
+			"indexed": "İndekslendi",
+			"error": "Hata"
+		},
+		"close": "Kapat",
+		"validation": {
+			"invalidQdrantUrl": "Geçersiz Qdrant URL'si",
+			"invalidOllamaUrl": "Geçersiz Ollama URL'si",
+			"invalidBaseUrl": "Geçersiz temel URL'si",
+			"qdrantUrlRequired": "Qdrant URL'si gereklidir",
+			"openaiApiKeyRequired": "OpenAI API anahtarı gereklidir",
+			"modelSelectionRequired": "Model seçimi gereklidir",
+			"apiKeyRequired": "API anahtarı gereklidir",
+			"modelIdRequired": "Model kimliği gereklidir",
+			"modelDimensionRequired": "Model boyutu gereklidir",
+			"geminiApiKeyRequired": "Gemini API anahtarı gereklidir",
+			"ollamaBaseUrlRequired": "Ollama temel URL'si gereklidir",
+			"baseUrlRequired": "Temel URL'si gereklidir",
+			"modelDimensionMinValue": "Model boyutu 0'dan büyük olmalıdır"
+		},
+		"advancedConfigLabel": "Gelişmiş Yapılandırma",
+		"searchMinScoreLabel": "Arama Skoru Eşiği",
+		"searchMinScoreDescription": "Arama sonuçları için gereken minimum benzerlik puanı (0.0-1.0). Düşük değerler daha fazla sonuç döndürür ancak daha az alakalı olabilir. Yüksek değerler daha az ancak daha alakalı sonuçlar döndürür.",
+		"searchMinScoreResetTooltip": "Varsayılan değere sıfırla (0.4)",
+		"searchMaxResultsLabel": "Maksimum Arama Sonuçları",
+		"searchMaxResultsDescription": "Kod tabanı dizinini sorgularken döndürülecek maksimum arama sonucu sayısı. Daha yüksek değerler daha fazla bağlam sağlar ancak daha az alakalı sonuçlar içerebilir.",
+		"resetToDefault": "Varsayılana sıfırla"
 	},
 	"autoApprove": {
 		"description": "Roo'nun onay gerektirmeden otomatik olarak işlemler gerçekleştirmesine izin verin. Bu ayarları yalnızca yapay zekaya tamamen güveniyorsanız ve ilgili güvenlik risklerini anlıyorsanız etkinleştirin.",
+		"toggleAriaLabel": "Otomatik onayı değiştir",
+		"disabledAriaLabel": "Otomatik onay devre dışı - önce seçenekleri belirleyin",
 		"readOnly": {
 			"label": "Okuma",
 			"description": "Etkinleştirildiğinde, Roo otomatik olarak dizin içeriğini görüntüleyecek ve Onayla düğmesine tıklamanıza gerek kalmadan dosyaları okuyacaktır.",
@@ -124,14 +177,23 @@
 			"description": "Onay gerektirmeden otomatik olarak izin verilen terminal komutlarını yürüt",
 			"allowedCommands": "İzin Verilen Otomatik Yürütme Komutları",
 			"allowedCommandsDescription": "\"Yürütme işlemlerini her zaman onayla\" etkinleştirildiğinde otomatik olarak yürütülebilen komut önekleri. Tüm komutlara izin vermek için * ekleyin (dikkatli kullanın).",
+			"deniedCommands": "Reddedilen komutlar",
+			"deniedCommandsDescription": "Onay istenmeden otomatik olarak reddedilecek komut önekleri. İzin verilen komutlarla çakışma durumunda, en uzun önek eşleşmesi öncelik alır. Tüm komutları reddetmek için * ekleyin.",
 			"commandPlaceholder": "Komut öneki girin (örn. 'git ')",
-			"addButton": "Ekle"
+			"deniedCommandPlaceholder": "Reddetmek için komut öneki girin (örn. 'rm -rf')",
+			"addButton": "Ekle",
+			"autoDenied": "`{{prefix}}` önekli komutlar kullanıcı tarafından yasaklandı. Başka bir komut çalıştırarak bu kısıtlamayı aşma."
+		},
+		"updateTodoList": {
+			"label": "Todo",
+			"description": "Yapılacaklar listesi onay gerektirmeden otomatik olarak güncellenir"
 		},
 		"apiRequestLimit": {
 			"title": "Maksimum İstek",
 			"description": "Göreve devam etmek için onay istemeden önce bu sayıda API isteği otomatik olarak yap.",
 			"unlimited": "Sınırsız"
-		}
+		},
+		"selectOptionsFirst": "Otomatik onayı etkinleştirmek için aşağıdan en az bir seçenek seçin"
 	},
 	"providers": {
 		"providerDocumentation": "{{provider}} Dokümantasyonu",
@@ -151,6 +213,8 @@
 		"createProfile": "Profil oluştur",
 		"cannotDeleteOnlyProfile": "Yalnızca tek profili silemezsiniz",
 		"searchPlaceholder": "Profilleri ara",
+		"searchProviderPlaceholder": "Sağlayıcıları ara",
+		"noProviderMatchFound": "Eşleşen sağlayıcı bulunamadı",
 		"noMatchFound": "Eşleşen profil bulunamadı",
 		"vscodeLmDescription": "VS Code Dil Modeli API'si, diğer VS Code uzantıları tarafından sağlanan modelleri çalıştırmanıza olanak tanır (GitHub Copilot dahil ancak bunlarla sınırlı değildir). Başlamanın en kolay yolu, VS Code Marketplace'ten Copilot ve Copilot Chat uzantılarını yüklemektir.",
 		"awsCustomArnUse": "Kullanmak istediğiniz model için geçerli bir Amazon Bedrock ARN'si girin. Format örnekleri:",
@@ -306,6 +370,12 @@
 			"label": "Hız sınırı",
 			"description": "API istekleri arasındaki minimum süre."
 		},
+		"consecutiveMistakeLimit": {
+			"label": "Hata ve Tekrar Limiti",
+			"description": "'Roo sorun yaşıyor' iletişim kutusunu göstermeden önceki ardışık hata veya tekrarlanan eylem sayısı",
+			"unlimitedDescription": "Sınırsız yeniden deneme etkin (otomatik devam et). Diyalog asla görünmeyecek.",
+			"warning": "⚠️ 0'a ayarlamak, önemli API kullanımına neden olabilecek sınırsız yeniden denemeye izin verir"
+		},
 		"reasoningEffort": {
 			"label": "Model Akıl Yürütme Çabası",
 			"high": "Yüksek",
@@ -316,7 +386,9 @@
 		"claudeCode": {
 			"pathLabel": "Claude Code Yolu",
 			"description": "Claude Code CLI'nize isteğe bağlı yol. Ayarlanmazsa varsayılan olarak 'claude' kullanılır.",
-			"placeholder": "Varsayılan: claude"
+			"placeholder": "Varsayılan: claude",
+			"maxTokensLabel": "Maksimum Çıktı Token sayısı",
+			"maxTokensDescription": "Claude Code yanıtları için maksimum çıktı token sayısı. Varsayılan 8000'dir."
 		}
 	},
 	"browser": {
@@ -472,6 +544,9 @@
 			"label": "Ortam değişkenlerini devral",
 			"description": "Etkinleştirildiğinde, terminal VSCode üst işleminden ortam değişkenlerini devralır, örneğin kullanıcı profilinde tanımlanan kabuk entegrasyon ayarları gibi. Bu, VSCode'un global ayarı olan `terminal.integrated.inheritEnv` değerini doğrudan değiştirir. <0>Daha fazla bilgi</0>"
 		}
+	},
+	"advancedSettings": {
+		"title": "Gelişmiş ayarlar"
 	},
 	"advanced": {
 		"diff": {

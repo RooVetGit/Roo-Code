@@ -2,6 +2,7 @@ import path from "path"
 import fs from "fs/promises"
 
 import { TelemetryService } from "@roo-code/telemetry"
+import { DEFAULT_WRITE_DELAY_MS } from "@roo-code/types"
 
 import { ClineSayTool } from "../../shared/ExtensionMessage"
 import { getReadablePath } from "../../utils/path"
@@ -159,7 +160,12 @@ Expected structure:
 </args>
 
 Original error: ${errorMessage}`
-			throw new Error(detailedError)
+			cline.consecutiveMistakeCount++
+			cline.recordToolError("apply_diff")
+			TelemetryService.instance.captureDiffApplicationError(cline.taskId, cline.consecutiveMistakeCount)
+			await cline.say("diff_error", `Failed to parse apply_diff XML: ${errorMessage}`)
+			pushToolResult(detailedError)
+			return
 		}
 	} else if (legacyPath && typeof legacyDiffContent === "string") {
 		// Handle legacy parameters (old way)
@@ -505,7 +511,7 @@ ${errorDetails ? `\nTechnical details:\n${errorDetails}\n` : ""}
 				cline.diffViewProvider.editType = "modify"
 				await cline.diffViewProvider.open(relPath)
 				await cline.diffViewProvider.update(originalContent!, true)
-				await cline.diffViewProvider.scrollToFirstDiff()
+				cline.diffViewProvider.scrollToFirstDiff()
 
 				// For batch operations, we've already gotten approval
 				const isWriteProtected = cline.rooProtectedController?.isWriteProtected(relPath) || false
@@ -548,7 +554,11 @@ ${errorDetails ? `\nTechnical details:\n${errorDetails}\n` : ""}
 				}
 
 				// Call saveChanges to update the DiffViewProvider properties
-				await cline.diffViewProvider.saveChanges()
+				const provider = cline.providerRef.deref()
+				const state = await provider?.getState()
+				const diagnosticsEnabled = state?.diagnosticsEnabled ?? true
+				const writeDelayMs = state?.writeDelayMs ?? DEFAULT_WRITE_DELAY_MS
+				await cline.diffViewProvider.saveChanges(diagnosticsEnabled, writeDelayMs)
 
 				// Track file edit operation
 				await cline.fileContextTracker.trackFileContext(relPath, "roo_edited" as RecordSource)

@@ -2,6 +2,7 @@ import path from "path"
 import fs from "fs/promises"
 
 import { TelemetryService } from "@roo-code/telemetry"
+import { DEFAULT_WRITE_DELAY_MS } from "@roo-code/types"
 
 import { ClineSayTool } from "../../shared/ExtensionMessage"
 import { getReadablePath } from "../../utils/path"
@@ -145,11 +146,15 @@ export async function applyDiffToolLegacy(
 			cline.diffViewProvider.editType = "modify"
 			await cline.diffViewProvider.open(relPath)
 			await cline.diffViewProvider.update(diffResult.content, true)
-			await cline.diffViewProvider.scrollToFirstDiff()
+			cline.diffViewProvider.scrollToFirstDiff()
+
+			// Check if file is write-protected
+			const isWriteProtected = cline.rooProtectedController?.isWriteProtected(relPath) || false
 
 			const completeMessage = JSON.stringify({
 				...sharedMessageProps,
 				diff: diffContent,
+				isProtected: isWriteProtected,
 			} satisfies ClineSayTool)
 
 			let toolProgressStatus
@@ -158,7 +163,7 @@ export async function applyDiffToolLegacy(
 				toolProgressStatus = cline.diffStrategy.getProgressStatus(block, diffResult)
 			}
 
-			const didApprove = await askApproval("tool", completeMessage, toolProgressStatus)
+			const didApprove = await askApproval("tool", completeMessage, toolProgressStatus, isWriteProtected)
 
 			if (!didApprove) {
 				await cline.diffViewProvider.revertChanges() // Cline likely handles closing the diff view
@@ -166,7 +171,11 @@ export async function applyDiffToolLegacy(
 			}
 
 			// Call saveChanges to update the DiffViewProvider properties
-			await cline.diffViewProvider.saveChanges()
+			const provider = cline.providerRef.deref()
+			const state = await provider?.getState()
+			const diagnosticsEnabled = state?.diagnosticsEnabled ?? true
+			const writeDelayMs = state?.writeDelayMs ?? DEFAULT_WRITE_DELAY_MS
+			await cline.diffViewProvider.saveChanges(diagnosticsEnabled, writeDelayMs)
 
 			// Track file edit operation
 			if (relPath) {

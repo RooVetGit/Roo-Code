@@ -21,10 +21,7 @@
 	"confirmation": {
 		"reset_state": "Estàs segur que vols restablir tots els estats i emmagatzematge secret a l'extensió? Això no es pot desfer.",
 		"delete_config_profile": "Estàs segur que vols eliminar aquest perfil de configuració?",
-		"delete_custom_mode": "Estàs segur que vols eliminar aquest mode personalitzat?",
-		"delete_message": "Què vols eliminar?",
-		"just_this_message": "Només aquest missatge",
-		"this_and_subsequent": "Aquest i tots els missatges posteriors"
+		"delete_custom_mode_with_rules": "Esteu segur que voleu suprimir aquest mode {scope}?\n\nAixò també suprimirà la carpeta de regles associada a:\n{rulesFolderPath}"
 	},
 	"errors": {
 		"invalid_data_uri": "Format d'URI de dades no vàlid",
@@ -56,7 +53,7 @@
 		"cannot_access_path": "No es pot accedir a la ruta {{path}}: {{error}}",
 		"settings_import_failed": "Ha fallat la importació de la configuració: {{error}}.",
 		"mistake_limit_guidance": "Això pot indicar un error en el procés de pensament del model o la incapacitat d'utilitzar una eina correctament, que es pot mitigar amb orientació de l'usuari (p. ex. \"Prova de dividir la tasca en passos més petits\").",
-		"violated_organization_allowlist": "Ha fallat l'execució de la tasca: el perfil actual infringeix la configuració de la teva organització",
+		"violated_organization_allowlist": "Ha fallat l'execució de la tasca: el perfil actual no és compatible amb la configuració de la teva organització",
 		"condense_failed": "Ha fallat la condensació del context",
 		"condense_not_enough_messages": "No hi ha prou missatges per condensar el context",
 		"condensed_recently": "El context s'ha condensat recentment; s'omet aquest intent",
@@ -69,11 +66,13 @@
 		"url_page_not_found": "No s'ha trobat la pàgina. Comprova si la URL és correcta.",
 		"url_fetch_failed": "Error en obtenir el contingut de la URL: {{error}}",
 		"url_fetch_error_with_url": "Error en obtenir contingut per {{url}}: {{error}}",
+		"command_timeout": "L'execució de la comanda ha superat el temps d'espera de {{seconds}} segons",
 		"share_task_failed": "Ha fallat compartir la tasca. Si us plau, torna-ho a provar.",
 		"share_no_active_task": "No hi ha cap tasca activa per compartir",
 		"share_auth_required": "Es requereix autenticació. Si us plau, inicia sessió per compartir tasques.",
 		"share_not_enabled": "La compartició de tasques no està habilitada per a aquesta organització.",
 		"share_task_not_found": "Tasca no trobada o accés denegat.",
+		"delete_rules_folder_failed": "Error en eliminar la carpeta de regles: {{rulesFolderPath}}. Error: {{error}}",
 		"claudeCode": {
 			"processExited": "El procés Claude Code ha sortit amb codi {{exitCode}}.",
 			"errorOutput": "Sortida d'error: {{output}}",
@@ -107,9 +106,12 @@
 	"answers": {
 		"yes": "Sí",
 		"no": "No",
-		"cancel": "Cancel·lar",
 		"remove": "Eliminar",
 		"keep": "Mantenir"
+	},
+	"buttons": {
+		"save": "Desar",
+		"edit": "Editar"
 	},
 	"tasks": {
 		"canceled": "Error de tasca: Ha estat aturada i cancel·lada per l'usuari.",
@@ -144,6 +146,10 @@
 			"resetFailed": "Error en restablir els modes personalitzats: {{error}}",
 			"modeNotFound": "Error d'escriptura: Mode no trobat",
 			"noWorkspaceForProject": "No s'ha trobat cap carpeta d'espai de treball per al mode específic del projecte"
+		},
+		"scope": {
+			"project": "projecte",
+			"global": "global"
 		}
 	},
 	"mdm": {
@@ -151,6 +157,19 @@
 			"cloud_auth_required": "La teva organització requereix autenticació de Roo Code Cloud. Si us plau, inicia sessió per continuar.",
 			"organization_mismatch": "Has d'estar autenticat amb el compte de Roo Code Cloud de la teva organització.",
 			"verification_failed": "No s'ha pogut verificar l'autenticació de l'organització."
+		}
+	},
+	"prompts": {
+		"deleteMode": {
+			"title": "Suprimeix el mode personalitzat",
+			"description": "Esteu segur que voleu suprimir aquest mode {{scope}}? Això també suprimirà la carpeta de regles associada a: {{rulesFolderPath}}",
+			"descriptionNoRules": "Esteu segur que voleu suprimir aquest mode personalitzat?",
+			"confirm": "Suprimeix"
+		}
+	},
+	"commands": {
+		"preventCompletionWithOpenTodos": {
+			"description": "Evitar la finalització de tasques quan hi ha todos incomplets a la llista de todos"
 		}
 	}
 }
