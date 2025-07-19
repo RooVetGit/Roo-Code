@@ -488,4 +488,26 @@ export class QdrantVectorStore implements IVectorStore {
 		const collectionInfo = await this.getCollectionInfo()
 		return collectionInfo !== null
 	}
+
+	/**
+	 * Checks if the collection has any data (points)
+	 * @returns Promise resolving to boolean indicating if the collection has data
+	 */
+	async hasData(): Promise<boolean> {
+		try {
+			const collectionInfo = await this.getCollectionInfo()
+			if (!collectionInfo) {
+				return false
+			}
+
+			// Check if the collection has any points
+			// The collection info includes points_count or vectors_count depending on the version
+			const pointsCount = (collectionInfo as any).points_count || (collectionInfo as any).vectors_count || 0
+
+			return pointsCount > 0
+		} catch (error) {
+			console.warn(`[QdrantVectorStore] Error checking if collection has data:`, error)
+			return false
+		}
+	}
 }

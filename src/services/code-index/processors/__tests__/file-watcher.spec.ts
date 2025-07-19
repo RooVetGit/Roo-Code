@@ -118,6 +118,7 @@ describe("FileWatcher", () => {
 			upsertPoints: vi.fn().mockResolvedValue(undefined),
 			deletePointsByFilePath: vi.fn().mockResolvedValue(undefined),
 			deletePointsByMultipleFilePaths: vi.fn().mockResolvedValue(undefined),
+			hasData: vi.fn().mockResolvedValue(false),
 		}
 
 		mockIgnoreInstance = {

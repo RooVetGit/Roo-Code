@@ -122,6 +122,17 @@ export class CodeIndexOrchestrator {
 				await this.cacheManager.clearCacheFile()
 			}
 
+			// Check if we have an existing index with data
+			const hasExistingData = !collectionCreated && (await this.vectorStore.hasData())
+
+			if (hasExistingData) {
+				console.log("[CodeIndexOrchestrator] Existing index found with data. Skipping initial scan.")
+				// Start the file watcher without doing a full scan
+				await this._startWatcher()
+				this.stateManager.setSystemState("Indexed", "Using existing index. File watcher started.")
+				return
+			}
+
 			this.stateManager.setSystemState("Indexing", "Services ready. Starting workspace scan...")
 
 			let cumulativeBlocksIndexed = 0
