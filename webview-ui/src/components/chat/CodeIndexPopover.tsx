@@ -369,7 +369,20 @@ export const CodeIndexPopover: React.FC<CodeIndexPopoverProps> = ({
 					dataToValidate[key] = "placeholder-valid"
 				}
 			} else {
-				dataToValidate[key] = value
+				// Special handling for model dimension field - ensure it's a number when required
+				if (key === "codebaseIndexEmbedderModelDimension") {
+					// For OpenAI Compatible provider, this field is required and must be a number
+					if (currentSettings.codebaseIndexEmbedderProvider === "openai-compatible") {
+						// Convert to number if it's a string, or use undefined if empty
+						const numValue = typeof value === "string" ? parseInt(value, 10) : (value as number)
+						dataToValidate[key] = isNaN(numValue) ? undefined : numValue
+					} else {
+						// For other providers, it's optional
+						dataToValidate[key] = value
+					}
+				} else {
+					dataToValidate[key] = value
+				}
 			}
 		}
 
