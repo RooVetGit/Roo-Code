@@ -481,6 +481,21 @@ describe("read_file tool XML output structure", () => {
 				`<files>\n<file><path>${testFilePath}</path>\n<content/><notice>File is empty</notice>\n</file>\n</files>`,
 			)
 		})
+
+		it("should treat files with only whitespace as empty", async () => {
+			// Setup - file has lines but only whitespace content
+			mockedCountFileLines.mockResolvedValue(3) // File has 3 lines
+			mockedExtractTextFromFile.mockResolvedValue("   \n\t\n  ") // Only whitespace
+			mockProvider.getState.mockResolvedValue({ maxReadFileLine: -1 })
+
+			// Execute
+			const result = await executeReadFileTool({}, { totalLines: 3 })
+
+			// Verify - should show empty file notice even though totalLines > 0
+			expect(result).toBe(
+				`<files>\n<file><path>${testFilePath}</path>\n<content/><notice>File is empty</notice>\n</file>\n</files>`,
+			)
+		})
 	})
 
 	describe("Error Handling Tests", () => {
