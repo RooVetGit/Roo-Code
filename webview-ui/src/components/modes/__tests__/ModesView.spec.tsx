@@ -95,8 +95,14 @@ describe("PromptsView", () => {
 	it("handles prompt changes correctly", async () => {
 		renderPromptsView()
 
+		// Clear any messages that were sent during component mount (like checkRulesDirectory)
+		vitest.clearAllMocks()
+
 		// Get the textarea
 		const textarea = await waitFor(() => screen.getByTestId("code-prompt-textarea"))
+
+		// First focus the textarea to trigger the editing state
+		fireEvent.focus(textarea)
 
 		// Simulate VSCode TextArea change event
 		const changeEvent = new CustomEvent("change", {
@@ -108,6 +114,9 @@ describe("PromptsView", () => {
 		})
 
 		fireEvent(textarea, changeEvent)
+
+		// Now blur to trigger the save
+		fireEvent.blur(textarea)
 
 		expect(vscode.postMessage).toHaveBeenCalledWith({
 			type: "updatePrompt",
