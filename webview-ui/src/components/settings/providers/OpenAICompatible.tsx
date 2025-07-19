@@ -12,6 +12,12 @@ import {
 	openAiModelInfoSaneDefaults,
 } from "@roo-code/types"
 
+import {
+	extractApiVersionFromUrl,
+	isAzureOpenAiUrl,
+	isValidAzureApiVersion,
+} from "../../../../../src/utils/azure-url-parser"
+
 import { ExtensionMessage } from "@roo/ExtensionMessage"
 
 import { useAppTranslation } from "@src/i18n/TranslationContext"
@@ -40,6 +46,12 @@ export const OpenAICompatible = ({
 
 	const [azureApiVersionSelected, setAzureApiVersionSelected] = useState(!!apiConfiguration?.azureApiVersion)
 	const [openAiLegacyFormatSelected, setOpenAiLegacyFormatSelected] = useState(!!apiConfiguration?.openAiLegacyFormat)
+
+	// Check if API version can be extracted from the base URL
+	const baseUrl = apiConfiguration?.openAiBaseUrl || ""
+	const extractedApiVersion = extractApiVersionFromUrl(baseUrl)
+	const isAzureUrl = isAzureOpenAiUrl(baseUrl)
+	const showApiVersionExtraction = isAzureUrl && extractedApiVersion && !azureApiVersionSelected
 
 	const [openAiModels, setOpenAiModels] = useState<Record<string, ModelInfo> | null>(null)
 
@@ -194,12 +206,31 @@ export const OpenAICompatible = ({
 					}}>
 					{t("settings:modelInfo.azureApiVersion")}
 				</Checkbox>
+				{showApiVersionExtraction && (
+					<div
+						className="text-sm text-vscode-descriptionForeground ml-6 mb-2"
+						dangerouslySetInnerHTML={{
+							__html: t("settings:modelInfo.azureApiVersionDetected", { version: extractedApiVersion }),
+						}}
+					/>
+				)}
 				{azureApiVersionSelected && (
 					<VSCodeTextField
 						value={apiConfiguration?.azureApiVersion || ""}
 						onInput={handleInputChange("azureApiVersion")}
 						placeholder={`Default: ${azureOpenAiDefaultApiVersion}`}
 						className="w-full mt-1"
+						style={{
+							borderColor: (() => {
+								const value = apiConfiguration?.azureApiVersion
+								if (!value) {
+									return "var(--vscode-input-border)"
+								}
+								return isValidAzureApiVersion(value)
+									? "var(--vscode-charts-green)"
+									: "var(--vscode-errorForeground)"
+							})(),
+						}}
 					/>
 				)}
 			</div>
