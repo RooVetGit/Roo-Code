@@ -1608,6 +1608,8 @@ export class Task extends EventEmitter<ClineEvents> {
 			})
 		}
 
+		const hasMcpServers = mcpHub && (mcpHub.getAllServers().length ?? 0) > 0
+
 		const rooIgnoreInstructions = this.rooIgnoreController?.getInstructions()
 
 		const state = await this.providerRef.deref()?.getState()
@@ -1637,7 +1639,7 @@ export class Task extends EventEmitter<ClineEvents> {
 				provider.context,
 				this.cwd,
 				(this.api.getModel().info.supportsComputerUse ?? false) && (browserToolEnabled ?? true),
-				mcpHub,
+				hasMcpServers ? mcpHub : undefined,
 				this.diffStrategy,
 				browserViewportSize,
 				mode,
