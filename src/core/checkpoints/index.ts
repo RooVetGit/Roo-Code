@@ -14,6 +14,9 @@ import { DIFF_VIEW_URI_SCHEME } from "../../integrations/editor/DiffViewProvider
 
 import { CheckpointServiceOptions, RepoPerTaskCheckpointService } from "../../services/checkpoints"
 
+// Map to store pending checkpoint operations by taskId to prevent race conditions
+const pendingCheckpointOperations = new Map<string, Promise<any>>()
+
 export function getCheckpointService(cline: Task) {
 	if (!cline.enableCheckpoints) {
 		return undefined
@@ -150,35 +153,62 @@ async function getInitializedCheckpointService(
 }
 
 export async function checkpointSave(cline: Task, force = false) {
-	const service = getCheckpointService(cline)
+	const taskId = cline.taskId
 
-	if (!service) {
-		return
+	// Check if there's already a pending checkpoint operation for this task
+	const existingOperation = pendingCheckpointOperations.get(taskId)
+	if (existingOperation) {
+		// Return the existing Promise to prevent duplicate operations
+		return existingOperation
 	}
 
-	if (!service.isInitialized) {
-		const provider = cline.providerRef.deref()
-		provider?.log("[checkpointSave] checkpoints didn't initialize in time, disabling checkpoints for this task")
-		cline.enableCheckpoints = false
-		return
-	}
+	// Create a new checkpoint operation Promise
+	const checkpointOperation = (async () => {
+		try {
+			// Use getInitializedCheckpointService to wait for initialization
+			const service = await getInitializedCheckpointService(cline)
 
-	TelemetryService.instance.captureCheckpointCreated(cline.taskId)
+			if (!service) {
+				return
+			}
 
-	// Start the checkpoint process in the background.
-	return service.saveCheckpoint(`Task: ${cline.taskId}, Time: ${Date.now()}`, { allowEmpty: force }).catch((err) => {
-		console.error("[Task#checkpointSave] caught unexpected error, disabling checkpoints", err)
-		cline.enableCheckpoints = false
-	})
+			TelemetryService.instance.captureCheckpointCreated(cline.taskId)
+
+			// Start the checkpoint process in the background.
+			return await service.saveCheckpoint(`Task: ${cline.taskId}, Time: ${Date.now()}`, { allowEmpty: force })
+		} catch (err) {
+			console.error("[Task#checkpointSave] caught unexpected error, disabling checkpoints", err)
+			cline.enableCheckpoints = false
+			return undefined
+		}
+	})()
+
+	// Store the operation in the Map
+	pendingCheckpointOperations.set(taskId, checkpointOperation)
+
+	// Clean up the Map entry after the operation completes (success or failure)
+	checkpointOperation
+		.finally(() => {
+			pendingCheckpointOperations.delete(taskId)
+		})
+		.catch(() => {
+			// Error already handled above, this catch prevents unhandled rejection
+		})
+
+	return checkpointOperation
 }
 
 export type CheckpointRestoreOptions = {
 	ts: number
 	commitHash: string
 	mode: "preview" | "restore"
+	operation?: "delete" | "edit" // Optional to maintain backward compatibility
 }
 
-export async function checkpointRestore(cline: Task, { ts, commitHash, mode }: CheckpointRestoreOptions) {
+export async function checkpointRestore(
+	cline: Task,
+	{ ts, commitHash, mode, operation = "delete" }: CheckpointRestoreOptions,
+) {
 	const service = await getInitializedCheckpointService(cline)
 
 	if (!service) {
@@ -207,7 +237,10 @@ export async function checkpointRestore(cline: Task, { ts, commitHash, mode }: C
 				cline.combineMessages(deletedMessages),
 			)
 
-			await cline.overwriteClineMessages(cline.clineMessages.slice(0, index + 1))
+			// For delete operations, exclude the checkpoint message itself
+			// For edit operations, include the checkpoint message (to be edited)
+			const endIndex = operation === "edit" ? index + 1 : index
+			await cline.overwriteClineMessages(cline.clineMessages.slice(0, endIndex))
 
 			// TODO: Verify that this is working as expected.
 			await cline.say(

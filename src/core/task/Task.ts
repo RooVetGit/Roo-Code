@@ -181,6 +181,7 @@ export class Task extends EventEmitter<ClineEvents> {
 	// LLM Messages & Chat Messages
 	apiConversationHistory: ApiMessage[] = []
 	clineMessages: ClineMessage[] = []
+	public pendingUserMessageCheckpoint?: Record<string, unknown>
 
 	// Ask
 	private askResponse?: ClineAskResponse
@@ -518,7 +519,14 @@ export class Task extends EventEmitter<ClineEvents> {
 			await this.addToClineMessages({ ts: askTs, type: "ask", ask: type, text, isProtected })
 		}
 
-		await pWaitFor(() => this.askResponse !== undefined || this.lastMessageTs !== askTs, { interval: 100 })
+		await pWaitFor(() => this.askResponse !== undefined || this.lastMessageTs !== askTs || this.abort, {
+			interval: 100,
+		})
+
+		if (this.abort) {
+			// Task was aborted, return a default response
+			return { response: "messageResponse", text: undefined, images: undefined }
+		}
 
 		if (this.lastMessageTs !== askTs) {
 			// Could happen if we send multiple asks in a row i.e. with
@@ -709,15 +717,31 @@ export class Task extends EventEmitter<ClineEvents> {
 				this.lastMessageTs = sayTs
 			}
 
-			await this.addToClineMessages({
-				ts: sayTs,
-				type: "say",
-				say: type,
-				text,
-				images,
-				checkpoint,
-				contextCondense,
-			})
+			if (type === "user_feedback") {
+				// Automatically use and clear the pending checkpoint for user_feedback messages
+				const feedbackCheckpoint = checkpoint || this.pendingUserMessageCheckpoint
+				this.pendingUserMessageCheckpoint = undefined // Clear it after use
+
+				await this.addToClineMessages({
+					ts: sayTs,
+					type: "say",
+					say: type,
+					text,
+					images,
+					checkpoint: feedbackCheckpoint,
+					contextCondense,
+				})
+			} else {
+				await this.addToClineMessages({
+					ts: sayTs,
+					type: "say",
+					say: type,
+					text,
+					images,
+					checkpoint,
+					contextCondense,
+				})
+			}
 		}
 	}
 
@@ -744,6 +768,7 @@ export class Task extends EventEmitter<ClineEvents> {
 		this.apiConversationHistory = []
 		await this.providerRef.deref()?.postStateToWebview()
 
+		// Checkpoint will be saved in handleWebviewAskResponse before this message is created
 		await this.say("text", task, images)
 		this.isInitialized = true
 
@@ -844,7 +869,6 @@ export class Task extends EventEmitter<ClineEvents> {
 			responseText = text
 			responseImages = images
 		}
-
 		// Make sure that the api conversation history can be resumed by the API,
 		// even if it goes out of sync with cline messages.
 		let existingApiConversationHistory: ApiMessage[] = await this.getSavedApiConversationHistory()
@@ -1080,6 +1104,13 @@ export class Task extends EventEmitter<ClineEvents> {
 		// Will stop any autonomously running promises.
 		if (isAbandoned) {
 			this.abandoned = true
+		}
+
+		// Resolve any pending ask operations to prevent "Current ask promise was ignored" errors
+		if (this.askResponse === undefined) {
+			this.askResponse = "messageResponse"
+			this.askResponseText = undefined
+			this.askResponseImages = undefined
 		}
 
 		this.abort = true

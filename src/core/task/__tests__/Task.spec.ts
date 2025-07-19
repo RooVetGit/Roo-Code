@@ -1399,6 +1399,105 @@ describe("Cline", () => {
 			})
 		})
 
+		describe("Ask Operation Abort Handling", () => {
+			let mockProvider: any
+			let mockApiConfig: any
+
+			beforeEach(() => {
+				vi.clearAllMocks()
+
+				mockApiConfig = {
+					apiProvider: "anthropic",
+					apiKey: "test-key",
+				}
+
+				mockProvider = {
+					context: {
+						globalStorageUri: { fsPath: "/test/storage" },
+					},
+					getState: vi.fn().mockResolvedValue({}),
+					postMessageToWebview: vi.fn(),
+					postStateToWebview: vi.fn().mockResolvedValue(undefined),
+				}
+			})
+
+			it("should handle pending ask operations gracefully when task is aborted", async () => {
+				const [cline, taskPromise] = Task.create({
+					provider: mockProvider,
+					apiConfiguration: mockApiConfig,
+					task: "test task",
+				})
+
+				// Handle the task promise to prevent unhandled rejection
+				taskPromise.catch(() => {
+					// Expected error when task is aborted
+				})
+
+				// Start an ask operation but don't respond to it
+				const askPromise = cline.ask("tool", "Test question")
+
+				// Abort the task while ask is pending
+				await cline.abortTask()
+
+				// The ask should resolve with a default response instead of throwing
+				const result = await askPromise
+				expect(result.response).toBe("messageResponse")
+				expect(result.text).toBeUndefined()
+				expect(result.images).toBeUndefined()
+
+				// Ensure the task was properly aborted
+				expect(cline.abort).toBe(true)
+			})
+
+			it("should not throw 'Current ask promise was ignored' error when task is aborted", async () => {
+				const [cline, taskPromise] = Task.create({
+					provider: mockProvider,
+					apiConfiguration: mockApiConfig,
+					task: "test task",
+				})
+
+				// Handle the task promise to prevent unhandled rejection
+				taskPromise.catch(() => {
+					// Expected error when task is aborted
+				})
+
+				// Start multiple ask operations
+				const askPromise1 = cline.ask("tool", "Question 1")
+				const askPromise2 = cline.ask("tool", "Question 2")
+
+				// Abort the task
+				await cline.abortTask()
+
+				// Both asks should resolve without throwing
+				await expect(askPromise1).resolves.toBeTruthy()
+				await expect(askPromise2).resolves.toBeTruthy()
+			})
+
+			it("should resolve pending ask with messageResponse when abortTask is called", async () => {
+				const [cline, taskPromise] = Task.create({
+					provider: mockProvider,
+					apiConfiguration: mockApiConfig,
+					task: "test task",
+				})
+
+				// Handle the task promise to prevent unhandled rejection
+				taskPromise.catch(() => {
+					// Expected error when task is aborted
+				})
+
+				// Spy on the ask response properties
+				// Start an ask operation
+				const askPromise = cline.ask("tool", "Test question")
+
+				// Abort the task
+				await cline.abortTask()
+
+				// The ask response should have been set to messageResponse
+				const result = await askPromise
+				expect(result.response).toBe("messageResponse")
+			})
+		})
+
 		describe("getApiProtocol", () => {
 			it("should determine API protocol based on provider and model", async () => {
 				// Test with Anthropic provider
