@@ -65,6 +65,18 @@ vi.mock("vscode", () => ({
 	Disposable: {
 		from: vi.fn(),
 	},
+	Uri: {
+		file: (path: string) => ({ fsPath: path, path, scheme: "file" }),
+		parse: (path: string) => ({ fsPath: path, path, scheme: "file" }),
+	},
+	RelativePattern: class {
+		base: any
+		pattern: string
+		constructor(base: any, pattern: string) {
+			this.base = base
+			this.pattern = pattern
+		}
+	},
 }))
 vi.mock("fs/promises")
 vi.mock("../../../core/webview/ClineProvider")
@@ -92,7 +104,6 @@ describe("McpHub", () => {
 
 		// Mock console.error to suppress error messages during tests
 		console.error = vi.fn()
-
 
 		const mockUri: Uri = {
 			scheme: "file",

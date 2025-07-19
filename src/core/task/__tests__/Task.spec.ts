@@ -86,6 +86,18 @@ vi.mock("vscode", () => {
 			QuickFix: { value: "quickfix" },
 			RefactorRewrite: { value: "refactor.rewrite" },
 		},
+		Uri: {
+			file: (path: string) => ({ fsPath: path, path, scheme: "file" }),
+			parse: (path: string) => ({ fsPath: path, path, scheme: "file" }),
+		},
+		RelativePattern: class {
+			base: any
+			pattern: string
+			constructor(base: any, pattern: string) {
+				this.base = base
+				this.pattern = pattern
+			}
+		},
 		window: {
 			createTextEditorDecorationType: vi.fn().mockReturnValue({
 				dispose: vi.fn(),
