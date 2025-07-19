@@ -93,6 +93,7 @@ export async function executeRipgrepForFiles(
 		"--files",
 		"--follow",
 		"--hidden",
+		"--no-ignore-vcs", // Don't respect .gitignore - only .rooignore should control file access
 		"-g",
 		"!**/node_modules/**",
 		"-g",
