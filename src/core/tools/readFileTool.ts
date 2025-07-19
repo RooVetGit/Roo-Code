@@ -44,6 +44,20 @@ const SUPPORTED_IMAGE_FORMATS = [
 	".avif",
 ] as const
 
+const IMAGE_MIME_TYPES: Record<string, string> = {
+	".png": "image/png",
+	".jpg": "image/jpeg",
+	".jpeg": "image/jpeg",
+	".gif": "image/gif",
+	".webp": "image/webp",
+	".svg": "image/svg+xml",
+	".bmp": "image/bmp",
+	".ico": "image/x-icon",
+	".tiff": "image/tiff",
+	".tif": "image/tiff",
+	".avif": "image/avif",
+}
+
 /**
  * Reads an image file and returns both the data URL and buffer
  */
@@ -52,24 +66,9 @@ async function readImageAsDataUrlWithBuffer(filePath: string): Promise<{ dataUrl
 	const base64 = fileBuffer.toString("base64")
 	const ext = path.extname(filePath).toLowerCase()
 
-	// Map extensions to MIME types
-	const mimeTypes: Record<string, string> = {
-		".png": "image/png",
-		".jpg": "image/jpeg",
-		".jpeg": "image/jpeg",
-		".gif": "image/gif",
-		".webp": "image/webp",
-		".svg": "image/svg+xml",
-		".bmp": "image/bmp",
-		".ico": "image/x-icon",
-		".tiff": "image/tiff",
-		".tif": "image/tiff",
-		".avif": "image/avif",
-	}
-
-	const mimeType = mimeTypes[ext] || "image/png"
+	const mimeType = IMAGE_MIME_TYPES[ext] || "image/png"
 	const dataUrl = `data:${mimeType};base64,${base64}`
-	
+
 	return { dataUrl, buffer: fileBuffer }
 }
 
@@ -559,26 +558,11 @@ export async function readFileTool(
 							const { dataUrl: imageDataUrl, buffer } = await readImageAsDataUrlWithBuffer(fullPath)
 							const imageSizeInKB = Math.round(imageStats.size / 1024)
 
-							// For images, get dimensions if possible
-							let dimensionsInfo = ""
-							if (fileExtension === ".png") {
-								// Simple PNG dimension extraction (first 24 bytes contain width/height)
-								if (buffer.length >= 24) {
-									const width = buffer.readUInt32BE(16)
-									const height = buffer.readUInt32BE(20)
-									if (width && height) {
-										dimensionsInfo = `${width}x${height} pixels`
-									}
-								}
-							}
-
 							// Track file read
 							await cline.fileContextTracker.trackFileContext(relPath, "read_tool" as RecordSource)
 
 							// Store image data URL separately - NOT in XML
-							const noticeText = dimensionsInfo
-								? t("tools:readFile.imageWithDimensions", { dimensions: dimensionsInfo, size: imageSizeInKB })
-								: t("tools:readFile.imageWithSize", { size: imageSizeInKB })
+							const noticeText = t("tools:readFile.imageWithSize", { size: imageSizeInKB })
 
 							updateFileResult(relPath, {
 								xmlContent: `<file><path>${relPath}</path>\n<notice>${noticeText}</notice>\n</file>`,
