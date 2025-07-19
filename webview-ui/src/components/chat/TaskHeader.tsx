@@ -185,13 +185,7 @@ const TaskHeader = ({
 										</span>
 									)}
 								</div>
-								{!totalCost && (
-									<TaskActions
-										item={currentTaskItem}
-										buttonsDisabled={buttonsDisabled}
-										exportAlwaysEnabled={true}
-									/>
-								)}
+								{!totalCost && <TaskActions item={currentTaskItem} buttonsDisabled={buttonsDisabled} />}
 							</div>
 
 							{((typeof cacheReads === "number" && cacheReads > 0) ||
@@ -219,11 +213,7 @@ const TaskHeader = ({
 										<span className="font-bold">{t("chat:task.apiCost")}</span>
 										<span>${totalCost?.toFixed(2)}</span>
 									</div>
-									<TaskActions
-										item={currentTaskItem}
-										buttonsDisabled={buttonsDisabled}
-										exportAlwaysEnabled={true}
-									/>
+									<TaskActions item={currentTaskItem} buttonsDisabled={buttonsDisabled} />
 								</div>
 							)}
 						</div>

@@ -371,7 +371,7 @@ describe("TaskActions", () => {
 	})
 
 	describe("Button States", () => {
-		it("disables buttons when buttonsDisabled is true", () => {
+		it("disables share button but keeps export button enabled when buttonsDisabled is true", () => {
 			render(<TaskActions item={mockItem} buttonsDisabled={true} />)
 
 			// Find button by its icon class
@@ -380,28 +380,20 @@ describe("TaskActions", () => {
 			const exportButton = screen.getByLabelText("Export task history")
 
 			expect(shareButton).toBeDisabled()
-			expect(exportButton).toBeDisabled()
-		})
-
-		it("keeps export button enabled when exportAlwaysEnabled is true", () => {
-			render(<TaskActions item={mockItem} buttonsDisabled={true} exportAlwaysEnabled={true} />)
-
-			// Find button by its icon class
-			const buttons = screen.getAllByRole("button")
-			const shareButton = buttons.find((btn) => btn.querySelector(".codicon-link"))
-			const exportButton = screen.getByLabelText("Export task history")
-
-			// Share button should still be disabled
-			expect(shareButton).toBeDisabled()
-			// Export button should be enabled despite buttonsDisabled being true
+			// Export button should always be enabled regardless of buttonsDisabled
 			expect(exportButton).not.toBeDisabled()
 		})
 
-		it("export button works normally when exportAlwaysEnabled is false", () => {
-			render(<TaskActions item={mockItem} buttonsDisabled={true} exportAlwaysEnabled={false} />)
+		it("export button is always enabled regardless of buttonsDisabled state", () => {
+			// Test with buttonsDisabled = false
+			const { rerender } = render(<TaskActions item={mockItem} buttonsDisabled={false} />)
+			let exportButton = screen.getByLabelText("Export task history")
+			expect(exportButton).not.toBeDisabled()
 
-			const exportButton = screen.getByLabelText("Export task history")
-			expect(exportButton).toBeDisabled()
+			// Test with buttonsDisabled = true
+			rerender(<TaskActions item={mockItem} buttonsDisabled={true} />)
+			exportButton = screen.getByLabelText("Export task history")
+			expect(exportButton).not.toBeDisabled()
 		})
 	})
 })
