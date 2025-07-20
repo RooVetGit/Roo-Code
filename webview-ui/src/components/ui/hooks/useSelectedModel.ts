@@ -62,7 +62,7 @@ function mapLegacyGeminiModel(modelId: string): string {
 			return geminiDefaultModelId
 		}
 
-		if (modelId === "gemini-2.5-pro-exp-03-25") {
+		if (modelId.startsWith("gemini-2.5-pro-exp-")) {
 			return "gemini-2.5-pro"
 		}
 
@@ -95,7 +95,7 @@ function mapLegacyVertexModel(modelId: string): string {
 			return "gemini-2.0-flash-001"
 		}
 
-		if (modelId === "gemini-2.5-pro-exp-03-25") {
+		if (modelId.startsWith("gemini-2.5-pro-exp-")) {
 			return "gemini-2.5-pro"
 		}
 	}

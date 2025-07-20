@@ -55,7 +55,7 @@ export class GeminiHandler extends BaseProvider implements SingleCompletionHandl
 				return geminiDefaultModelId
 			}
 
-			if (modelId === "gemini-2.5-pro-exp-") {
+			if (modelId.startsWith("gemini-2.5-pro-exp-")) {
 				return "gemini-2.5-pro"
 			}
 

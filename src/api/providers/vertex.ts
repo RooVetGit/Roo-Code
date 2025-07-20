@@ -39,7 +39,7 @@ export class VertexHandler extends GeminiHandler implements SingleCompletionHand
 				return "gemini-2.0-flash-001"
 			}
 
-			if (modelId === "gemini-2.5-pro-exp-") {
+			if (modelId.startsWith("gemini-2.5-pro-exp-")) {
 				return "gemini-2.5-pro"
 			}
 		}
