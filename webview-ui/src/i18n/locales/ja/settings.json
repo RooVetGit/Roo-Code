@@ -47,6 +47,9 @@
 		"geminiProvider": "Gemini",
 		"geminiApiKeyLabel": "APIキー：",
 		"geminiApiKeyPlaceholder": "Gemini APIキーを入力してください",
+		"mistralProvider": "Mistral",
+		"mistralApiKeyLabel": "APIキー:",
+		"mistralApiKeyPlaceholder": "Mistral APIキーを入力してください",
 		"openaiCompatibleProvider": "OpenAI互換",
 		"openAiKeyLabel": "OpenAI APIキー",
 		"openAiKeyPlaceholder": "OpenAI APIキーを入力してください",
@@ -109,6 +112,7 @@
 			"modelIdRequired": "モデルIDが必要です",
 			"modelDimensionRequired": "モデルの次元が必要です",
 			"geminiApiKeyRequired": "Gemini APIキーが必要です",
+			"mistralApiKeyRequired": "Mistral APIキーが必要です",
 			"ollamaBaseUrlRequired": "OllamaのベースURLが必要です",
 			"baseUrlRequired": "ベースURLが必要です",
 			"modelDimensionMinValue": "モデルの次元は0より大きくなければなりません"
@@ -514,6 +518,10 @@
 		"outputLineLimit": {
 			"label": "ターミナル出力制限",
 			"description": "コマンド実行時にターミナル出力に含める最大行数。超過すると中央から行が削除され、tokenを節約します。 <0>詳細情報</0>"
+		},
+		"outputCharacterLimit": {
+			"label": "ターミナルの文字数制限",
+			"description": "コマンド実行時にターミナル出力に含める最大文字数。この制限は、非常に長い行によるメモリ問題を回避するため、行数制限よりも優先されます。超過した場合、出力は切り捨てられます。<0>詳細</0>"
 		},
 		"shellIntegrationTimeout": {
 			"label": "ターミナルシェル統合タイムアウト",

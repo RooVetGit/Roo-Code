@@ -52,6 +52,9 @@
 		"geminiProvider": "Gemini",
 		"geminiApiKeyLabel": "API 密钥：",
 		"geminiApiKeyPlaceholder": "输入您的Gemini API密钥",
+		"mistralProvider": "Mistral",
+		"mistralApiKeyLabel": "API 密钥:",
+		"mistralApiKeyPlaceholder": "输入您的 Mistral API 密钥",
 		"openaiCompatibleProvider": "OpenAI 兼容",
 		"openAiKeyLabel": "OpenAI API 密钥",
 		"openAiKeyPlaceholder": "输入你的 OpenAI API 密钥",
@@ -109,6 +112,7 @@
 			"modelIdRequired": "需要模型 ID",
 			"modelDimensionRequired": "需要模型维度",
 			"geminiApiKeyRequired": "需要 Gemini API 密钥",
+			"mistralApiKeyRequired": "需要 Mistral API 密钥",
 			"ollamaBaseUrlRequired": "需要 Ollama 基础 URL",
 			"baseUrlRequired": "需要基础 URL",
 			"modelDimensionMinValue": "模型维度必须大于 0"
@@ -514,6 +518,10 @@
 		"outputLineLimit": {
 			"label": "终端输出限制",
 			"description": "执行命令时在终端输出中包含的最大行数。超过时将从中间删除行，节省 token。 <0>了解更多</0>"
+		},
+		"outputCharacterLimit": {
+			"label": "终端字符限制",
+			"description": "执行命令时在终端输出中包含的最大字符数。此限制优先于行数限制，以防止因行过长而导致的内存问题。超出后，输出将被截断。 <0>了解更多</0>"
 		},
 		"shellIntegrationTimeout": {
 			"label": "终端初始化等待时间",

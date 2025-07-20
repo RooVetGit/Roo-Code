@@ -47,6 +47,9 @@
 		"geminiProvider": "Gemini",
 		"geminiApiKeyLabel": "API 키:",
 		"geminiApiKeyPlaceholder": "Gemini API 키를 입력하세요",
+		"mistralProvider": "Mistral",
+		"mistralApiKeyLabel": "API 키:",
+		"mistralApiKeyPlaceholder": "Mistral API 키를 입력하세요",
 		"openaiCompatibleProvider": "OpenAI 호환",
 		"openAiKeyLabel": "OpenAI API 키",
 		"openAiKeyPlaceholder": "OpenAI API 키를 입력하세요",
@@ -109,6 +112,7 @@
 			"modelIdRequired": "모델 ID가 필요합니다",
 			"modelDimensionRequired": "모델 차원이 필요합니다",
 			"geminiApiKeyRequired": "Gemini API 키가 필요합니다",
+			"mistralApiKeyRequired": "Mistral API 키가 필요합니다",
 			"ollamaBaseUrlRequired": "Ollama 기본 URL이 필요합니다",
 			"baseUrlRequired": "기본 URL이 필요합니다",
 			"modelDimensionMinValue": "모델 차원은 0보다 커야 합니다"
@@ -514,6 +518,10 @@
 		"outputLineLimit": {
 			"label": "터미널 출력 제한",
 			"description": "명령 실행 시 터미널 출력에 포함할 최대 라인 수. 초과 시 중간에서 라인이 제거되어 token이 절약됩니다. <0>더 알아보기</0>"
+		},
+		"outputCharacterLimit": {
+			"label": "터미널 문자 제한",
+			"description": "명령을 실행할 때 터미널 출력에 포함할 최대 문자 수입니다. 이 제한은 매우 긴 줄로 인한 메모리 문제를 방지하기 위해 줄 제한보다 우선합니다. 초과하면 출력이 잘립니다. <0>더 알아보기</0>"
 		},
 		"shellIntegrationTimeout": {
 			"label": "터미널 쉘 통합 타임아웃",

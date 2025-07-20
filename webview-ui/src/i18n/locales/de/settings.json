@@ -52,6 +52,9 @@
 		"geminiProvider": "Gemini",
 		"geminiApiKeyLabel": "API-Schlüssel:",
 		"geminiApiKeyPlaceholder": "Geben Sie Ihren Gemini-API-Schlüssel ein",
+		"mistralProvider": "Mistral",
+		"mistralApiKeyLabel": "API-Schlüssel:",
+		"mistralApiKeyPlaceholder": "Gib deinen Mistral-API-Schlüssel ein",
 		"openaiCompatibleProvider": "OpenAI-kompatibel",
 		"openAiKeyLabel": "OpenAI API-Schlüssel",
 		"openAiKeyPlaceholder": "Gib deinen OpenAI API-Schlüssel ein",
@@ -109,6 +112,7 @@
 			"modelIdRequired": "Modell-ID ist erforderlich",
 			"modelDimensionRequired": "Modellabmessung ist erforderlich",
 			"geminiApiKeyRequired": "Gemini-API-Schlüssel ist erforderlich",
+			"mistralApiKeyRequired": "Mistral-API-Schlüssel ist erforderlich",
 			"ollamaBaseUrlRequired": "Ollama-Basis-URL ist erforderlich",
 			"baseUrlRequired": "Basis-URL ist erforderlich",
 			"modelDimensionMinValue": "Modellabmessung muss größer als 0 sein"
@@ -514,6 +518,10 @@
 		"outputLineLimit": {
 			"label": "Terminal-Ausgabelimit",
 			"description": "Maximale Anzahl von Zeilen, die in der Terminal-Ausgabe bei der Ausführung von Befehlen enthalten sein sollen. Bei Überschreitung werden Zeilen aus der Mitte entfernt, wodurch Token gespart werden. <0>Mehr erfahren</0>"
+		},
+		"outputCharacterLimit": {
+			"label": "Terminal-Zeichenlimit",
+			"description": "Maximale Anzahl von Zeichen, die in die Terminalausgabe bei der Ausführung von Befehlen aufgenommen werden sollen. Dieses Limit hat Vorrang vor dem Zeilenlimit, um Speicherprobleme durch extrem lange Zeilen zu vermeiden. Bei Überschreitung wird die Ausgabe abgeschnitten. <0>Mehr erfahren</0>"
 		},
 		"shellIntegrationTimeout": {
 			"label": "Terminal-Shell-Integrationszeit-Limit",

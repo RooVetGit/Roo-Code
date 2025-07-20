@@ -47,6 +47,9 @@
 		"geminiProvider": "Gemini",
 		"geminiApiKeyLabel": "Klucz API:",
 		"geminiApiKeyPlaceholder": "Wprowadź swój klucz API Gemini",
+		"mistralProvider": "Mistral",
+		"mistralApiKeyLabel": "Klucz API:",
+		"mistralApiKeyPlaceholder": "Wprowadź swój klucz API Mistral",
 		"openaiCompatibleProvider": "Kompatybilny z OpenAI",
 		"openAiKeyLabel": "Klucz API OpenAI",
 		"openAiKeyPlaceholder": "Wprowadź swój klucz API OpenAI",
@@ -109,6 +112,7 @@
 			"modelIdRequired": "Wymagane jest ID modelu",
 			"modelDimensionRequired": "Wymagany jest wymiar modelu",
 			"geminiApiKeyRequired": "Wymagany jest klucz API Gemini",
+			"mistralApiKeyRequired": "Klucz API Mistral jest wymagany",
 			"ollamaBaseUrlRequired": "Wymagany jest bazowy adres URL Ollama",
 			"baseUrlRequired": "Wymagany jest bazowy adres URL",
 			"modelDimensionMinValue": "Wymiar modelu musi być większy niż 0"
@@ -514,6 +518,10 @@
 		"outputLineLimit": {
 			"label": "Limit wyjścia terminala",
 			"description": "Maksymalna liczba linii do uwzględnienia w wyjściu terminala podczas wykonywania poleceń. Po przekroczeniu linie będą usuwane ze środka, oszczędzając token. <0>Dowiedz się więcej</0>"
+		},
+		"outputCharacterLimit": {
+			"label": "Limit znaków w terminalu",
+			"description": "Maksymalna liczba znaków do uwzględnienia w danych wyjściowych terminala podczas wykonywania poleceń. Limit ten ma pierwszeństwo przed limitem linii, aby zapobiec problemom z pamięcią spowodowanym przez bardzo długie linie. Po przekroczeniu limitu dane wyjściowe zostaną obcięte. <0>Dowiedz się więcej</0>"
 		},
 		"shellIntegrationTimeout": {
 			"label": "Limit czasu integracji powłoki terminala",
