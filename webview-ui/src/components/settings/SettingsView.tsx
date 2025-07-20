@@ -16,6 +16,7 @@ import {
 	GitBranch,
 	Bell,
 	Database,
+	Wrench,
 	SquareTerminal,
 	FlaskConical,
 	AlertTriangle,
@@ -59,6 +60,7 @@ import { BrowserSettings } from "./BrowserSettings"
 import { CheckpointSettings } from "./CheckpointSettings"
 import { NotificationSettings } from "./NotificationSettings"
 import { ContextManagementSettings } from "./ContextManagementSettings"
+import { ToolsSettings } from "./ToolsSettings"
 import { TerminalSettings } from "./TerminalSettings"
 import { ExperimentalSettings } from "./ExperimentalSettings"
 import { LanguageSettings } from "./LanguageSettings"
@@ -85,6 +87,7 @@ const sectionNames = [
 	"checkpoints",
 	"notifications",
 	"contextManagement",
+	"tools",
 	"terminal",
 	"prompts",
 	"experimental",
@@ -176,6 +179,26 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 		alwaysAllowFollowupQuestions,
 		alwaysAllowUpdateTodoList,
 		followupAutoApproveTimeoutMs,
+		// Tool settings
+		enableToolExecuteCommand,
+		enableToolReadFile,
+		enableToolFetchInstructions,
+		enableToolWriteToFile,
+		enableToolApplyDiff,
+		enableToolInsertContent,
+		enableToolSearchAndReplace,
+		enableToolSearchFiles,
+		enableToolListFiles,
+		enableToolListCodeDefinitionNames,
+		enableToolBrowserAction,
+		enableToolUseMcpTool,
+		enableToolAccessMcpResource,
+		enableToolAskFollowupQuestion,
+		enableToolAttemptCompletion,
+		enableToolSwitchMode,
+		enableToolNewTask,
+		enableToolCodebaseSearch,
+		enableToolUpdateTodoList,
 	} = cachedState
 
 	const apiConfiguration = useMemo(() => cachedState.apiConfiguration ?? {}, [cachedState.apiConfiguration])
@@ -329,6 +352,27 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 			vscode.postMessage({ type: "updateCondensingPrompt", text: customCondensingPrompt || "" })
 			vscode.postMessage({ type: "updateSupportPrompt", values: customSupportPrompts || {} })
 			vscode.postMessage({ type: "upsertApiConfiguration", text: currentApiConfigName, apiConfiguration })
+
+			// Tool settings
+			vscode.postMessage({ type: "enableToolExecuteCommand", bool: enableToolExecuteCommand })
+			vscode.postMessage({ type: "enableToolReadFile", bool: enableToolReadFile })
+			vscode.postMessage({ type: "enableToolFetchInstructions", bool: enableToolFetchInstructions })
+			vscode.postMessage({ type: "enableToolWriteToFile", bool: enableToolWriteToFile })
+			vscode.postMessage({ type: "enableToolApplyDiff", bool: enableToolApplyDiff })
+			vscode.postMessage({ type: "enableToolInsertContent", bool: enableToolInsertContent })
+			vscode.postMessage({ type: "enableToolSearchAndReplace", bool: enableToolSearchAndReplace })
+			vscode.postMessage({ type: "enableToolSearchFiles", bool: enableToolSearchFiles })
+			vscode.postMessage({ type: "enableToolListFiles", bool: enableToolListFiles })
+			vscode.postMessage({ type: "enableToolListCodeDefinitionNames", bool: enableToolListCodeDefinitionNames })
+			vscode.postMessage({ type: "enableToolBrowserAction", bool: enableToolBrowserAction })
+			vscode.postMessage({ type: "enableToolUseMcpTool", bool: enableToolUseMcpTool })
+			vscode.postMessage({ type: "enableToolAccessMcpResource", bool: enableToolAccessMcpResource })
+			vscode.postMessage({ type: "enableToolAskFollowupQuestion", bool: enableToolAskFollowupQuestion })
+			vscode.postMessage({ type: "enableToolAttemptCompletion", bool: enableToolAttemptCompletion })
+			vscode.postMessage({ type: "enableToolSwitchMode", bool: enableToolSwitchMode })
+			vscode.postMessage({ type: "enableToolNewTask", bool: enableToolNewTask })
+			vscode.postMessage({ type: "enableToolCodebaseSearch", bool: enableToolCodebaseSearch })
+			vscode.postMessage({ type: "enableToolUpdateTodoList", bool: enableToolUpdateTodoList })
 			vscode.postMessage({ type: "telemetrySetting", text: telemetrySetting })
 			vscode.postMessage({ type: "profileThresholds", values: profileThresholds })
 			setChangeDetected(false)
@@ -406,6 +450,7 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 			{ id: "checkpoints", icon: GitBranch },
 			{ id: "notifications", icon: Bell },
 			{ id: "contextManagement", icon: Database },
+			{ id: "tools", icon: Wrench },
 			{ id: "terminal", icon: SquareTerminal },
 			{ id: "prompts", icon: MessageSquare },
 			{ id: "experimental", icon: FlaskConical },
@@ -666,6 +711,32 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 							maxReadFileLine={maxReadFileLine}
 							maxConcurrentFileReads={maxConcurrentFileReads}
 							profileThresholds={profileThresholds}
+							setCachedStateField={setCachedStateField}
+						/>
+					)}
+
+					{/* Tools Section */}
+					{activeTab === "tools" && (
+						<ToolsSettings
+							enableToolExecuteCommand={enableToolExecuteCommand}
+							enableToolReadFile={enableToolReadFile}
+							enableToolFetchInstructions={enableToolFetchInstructions}
+							enableToolWriteToFile={enableToolWriteToFile}
+							enableToolApplyDiff={enableToolApplyDiff}
+							enableToolInsertContent={enableToolInsertContent}
+							enableToolSearchAndReplace={enableToolSearchAndReplace}
+							enableToolSearchFiles={enableToolSearchFiles}
+							enableToolListFiles={enableToolListFiles}
+							enableToolListCodeDefinitionNames={enableToolListCodeDefinitionNames}
+							enableToolBrowserAction={enableToolBrowserAction}
+							enableToolUseMcpTool={enableToolUseMcpTool}
+							enableToolAccessMcpResource={enableToolAccessMcpResource}
+							enableToolAskFollowupQuestion={enableToolAskFollowupQuestion}
+							enableToolAttemptCompletion={enableToolAttemptCompletion}
+							enableToolSwitchMode={enableToolSwitchMode}
+							enableToolNewTask={enableToolNewTask}
+							enableToolCodebaseSearch={enableToolCodebaseSearch}
+							enableToolUpdateTodoList={enableToolUpdateTodoList}
 							setCachedStateField={setCachedStateField}
 						/>
 					)}

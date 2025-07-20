@@ -27,6 +27,7 @@
 		"checkpoints": "Checkpoints",
 		"notifications": "Notifications",
 		"contextManagement": "Context",
+		"tools": "Tools",
 		"terminal": "Terminal",
 		"prompts": "Prompts",
 		"experimental": "Experimental",
@@ -35,6 +36,97 @@
 	},
 	"prompts": {
 		"description": "Configure support prompts that are used for quick actions like enhancing prompts, explaining code, and fixing issues. These prompts help Roo provide better assistance for common development tasks."
+	},
+	"tools": {
+		"title": "Tools",
+		"description": "Control which tools are available to the AI. Disabling tools will prevent the AI from using them in conversations.",
+		"selectAll": "Select All",
+		"selectNone": "Select None",
+		"groups": {
+			"alwaysAvailable": "Core Functionality",
+			"read": "Read",
+			"edit": "Edit",
+			"modes": "Modes",
+			"command": "Command",
+			"browser": "Browser",
+			"mcp": "MCP (Model Context Protocol)"
+		},
+		"executeCommand": {
+			"label": "Execute Command",
+			"description": "execute_command - Allow AI to execute shell commands"
+		},
+		"readFile": {
+			"label": "Read File",
+			"description": "read_file - Allow AI to read file contents"
+		},
+		"fetchInstructions": {
+			"label": "Fetch Instructions",
+			"description": "fetch_instructions - Allow AI to fetch project instructions"
+		},
+		"writeToFile": {
+			"label": "Write to File",
+			"description": "write_to_file - Allow AI to write content to files"
+		},
+		"applyDiff": {
+			"label": "Apply Diff",
+			"description": "apply_diff - Allow AI to apply diff patches to files"
+		},
+		"insertContent": {
+			"label": "Insert Content",
+			"description": "insert_content - Allow AI to insert content into files"
+		},
+		"searchAndReplace": {
+			"label": "Search and Replace",
+			"description": "search_and_replace - Allow AI to perform search and replace operations"
+		},
+		"searchFiles": {
+			"label": "Search Files",
+			"description": "search_files - Allow AI to search for files in the project"
+		},
+		"listFiles": {
+			"label": "List Files",
+			"description": "list_files - Allow AI to list files and directories"
+		},
+		"listCodeDefinitionNames": {
+			"label": "List Code Definitions",
+			"description": "list_code_definition_names - Allow AI to list code definitions and symbols"
+		},
+		"browserAction": {
+			"label": "Browser Action",
+			"description": "browser_action - Allow AI to interact with web browsers"
+		},
+		"useMcpTool": {
+			"label": "Use MCP Tool",
+			"description": "use_mcp_tool - Allow AI to use Model Context Protocol tools"
+		},
+		"accessMcpResource": {
+			"label": "Access MCP Resource",
+			"description": "access_mcp_resource - Allow AI to access Model Context Protocol resources"
+		},
+		"askFollowupQuestion": {
+			"label": "Ask Followup Question",
+			"description": "ask_followup_question - Allow AI to ask followup questions"
+		},
+		"attemptCompletion": {
+			"label": "Attempt Completion",
+			"description": "attempt_completion - Allow AI to attempt task completion"
+		},
+		"switchMode": {
+			"label": "Switch Mode",
+			"description": "switch_mode - Allow AI to switch between different modes"
+		},
+		"newTask": {
+			"label": "New Task",
+			"description": "new_task - Allow AI to create new tasks"
+		},
+		"codebaseSearch": {
+			"label": "Codebase Search",
+			"description": "codebase_search - Allow AI to search through the codebase"
+		},
+		"updateTodoList": {
+			"label": "Update Todo List",
+			"description": "update_todo_list - Allow AI to update todo lists"
+		}
 	},
 	"codeIndex": {
 		"title": "Codebase Indexing",

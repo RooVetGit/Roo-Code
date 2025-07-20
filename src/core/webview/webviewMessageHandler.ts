@@ -1207,6 +1207,82 @@ export const webviewMessageHandler = async (
 			await updateGlobalState("browserToolEnabled", message.bool ?? true)
 			await provider.postStateToWebview()
 			break
+		case "enableToolExecuteCommand":
+			await updateGlobalState("enableToolExecuteCommand", message.bool ?? true)
+			await provider.postStateToWebview()
+			break
+		case "enableToolReadFile":
+			await updateGlobalState("enableToolReadFile", message.bool ?? true)
+			await provider.postStateToWebview()
+			break
+		case "enableToolFetchInstructions":
+			await updateGlobalState("enableToolFetchInstructions", message.bool ?? true)
+			await provider.postStateToWebview()
+			break
+		case "enableToolWriteToFile":
+			await updateGlobalState("enableToolWriteToFile", message.bool ?? true)
+			await provider.postStateToWebview()
+			break
+		case "enableToolApplyDiff":
+			await updateGlobalState("enableToolApplyDiff", message.bool ?? true)
+			await provider.postStateToWebview()
+			break
+		case "enableToolInsertContent":
+			await updateGlobalState("enableToolInsertContent", message.bool ?? true)
+			await provider.postStateToWebview()
+			break
+		case "enableToolSearchAndReplace":
+			await updateGlobalState("enableToolSearchAndReplace", message.bool ?? true)
+			await provider.postStateToWebview()
+			break
+		case "enableToolSearchFiles":
+			await updateGlobalState("enableToolSearchFiles", message.bool ?? true)
+			await provider.postStateToWebview()
+			break
+		case "enableToolListFiles":
+			await updateGlobalState("enableToolListFiles", message.bool ?? true)
+			await provider.postStateToWebview()
+			break
+		case "enableToolListCodeDefinitionNames":
+			await updateGlobalState("enableToolListCodeDefinitionNames", message.bool ?? true)
+			await provider.postStateToWebview()
+			break
+		case "enableToolBrowserAction":
+			await updateGlobalState("enableToolBrowserAction", message.bool ?? true)
+			await provider.postStateToWebview()
+			break
+		case "enableToolUseMcpTool":
+			await updateGlobalState("enableToolUseMcpTool", message.bool ?? true)
+			await provider.postStateToWebview()
+			break
+		case "enableToolAccessMcpResource":
+			await updateGlobalState("enableToolAccessMcpResource", message.bool ?? true)
+			await provider.postStateToWebview()
+			break
+		case "enableToolAskFollowupQuestion":
+			await updateGlobalState("enableToolAskFollowupQuestion", message.bool ?? true)
+			await provider.postStateToWebview()
+			break
+		case "enableToolAttemptCompletion":
+			await updateGlobalState("enableToolAttemptCompletion", message.bool ?? true)
+			await provider.postStateToWebview()
+			break
+		case "enableToolSwitchMode":
+			await updateGlobalState("enableToolSwitchMode", message.bool ?? true)
+			await provider.postStateToWebview()
+			break
+		case "enableToolNewTask":
+			await updateGlobalState("enableToolNewTask", message.bool ?? true)
+			await provider.postStateToWebview()
+			break
+		case "enableToolCodebaseSearch":
+			await updateGlobalState("enableToolCodebaseSearch", message.bool ?? true)
+			await provider.postStateToWebview()
+			break
+		case "enableToolUpdateTodoList":
+			await updateGlobalState("enableToolUpdateTodoList", message.bool ?? true)
+			await provider.postStateToWebview()
+			break
 		case "language":
 			changeLanguage(message.text ?? "en")
 			await updateGlobalState("language", message.text as Language)

@@ -109,6 +109,25 @@ export function getToolDescriptionsForMode(
 		tools.delete("codebase_search")
 	}
 
+	// Filter tools based on individual tool settings
+	if (settings) {
+		const toolsToRemove: string[] = []
+		tools.forEach((toolName) => {
+			// Convert tool_name to enableToolToolName format
+			const camelCase = toolName.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase())
+			const pascalCase = camelCase.charAt(0).toUpperCase() + camelCase.slice(1)
+			const settingKey = `enableTool${pascalCase}`
+
+			// If the setting exists and is false, mark tool for removal
+			if (settings[settingKey] === false) {
+				toolsToRemove.push(toolName)
+			}
+		})
+
+		// Remove disabled tools
+		toolsToRemove.forEach((toolName) => tools.delete(toolName))
+	}
+
 	// Map tool descriptions for allowed tools
 	const descriptions = Array.from(tools).map((toolName) => {
 		const descriptionFn = toolDescriptionMap[toolName]

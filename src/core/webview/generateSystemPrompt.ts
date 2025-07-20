@@ -24,6 +24,26 @@ export const generateSystemPrompt = async (provider: ClineProvider, message: Web
 		language,
 		maxReadFileLine,
 		maxConcurrentFileReads,
+		// Tool settings
+		enableToolExecuteCommand,
+		enableToolReadFile,
+		enableToolFetchInstructions,
+		enableToolWriteToFile,
+		enableToolApplyDiff,
+		enableToolInsertContent,
+		enableToolSearchAndReplace,
+		enableToolSearchFiles,
+		enableToolListFiles,
+		enableToolListCodeDefinitionNames,
+		enableToolBrowserAction,
+		enableToolUseMcpTool,
+		enableToolAccessMcpResource,
+		enableToolAskFollowupQuestion,
+		enableToolAttemptCompletion,
+		enableToolSwitchMode,
+		enableToolNewTask,
+		enableToolCodebaseSearch,
+		enableToolUpdateTodoList,
 	} = await provider.getState()
 
 	// Check experiment to determine which diff strategy to use
@@ -82,6 +102,26 @@ export const generateSystemPrompt = async (provider: ClineProvider, message: Web
 		maxReadFileLine !== -1,
 		{
 			maxConcurrentFileReads,
+			// Tool settings
+			enableToolExecuteCommand,
+			enableToolReadFile,
+			enableToolFetchInstructions,
+			enableToolWriteToFile,
+			enableToolApplyDiff,
+			enableToolInsertContent,
+			enableToolSearchAndReplace,
+			enableToolSearchFiles,
+			enableToolListFiles,
+			enableToolListCodeDefinitionNames,
+			enableToolBrowserAction,
+			enableToolUseMcpTool,
+			enableToolAccessMcpResource,
+			enableToolAskFollowupQuestion,
+			enableToolAttemptCompletion,
+			enableToolSwitchMode,
+			enableToolNewTask,
+			enableToolCodebaseSearch,
+			enableToolUpdateTodoList,
 		},
 	)
 

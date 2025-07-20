@@ -27,16 +27,20 @@ import {
 	markdownFormattingSection,
 } from "./sections"
 
-// Helper function to get prompt component, filtering out empty objects
-export function getPromptComponent(
-	customModePrompts: CustomModePrompts | undefined,
-	mode: string,
-): PromptComponent | undefined {
-	const component = customModePrompts?.[mode]
-	// Return undefined if component is empty
-	if (isEmpty(component)) {
+/**
+ * Extracts a prompt component from customModePrompts for a given mode.
+ * Returns undefined if the mode doesn't exist or has no properties.
+ */
+export function getPromptComponent(customModePrompts?: CustomModePrompts, mode?: string): PromptComponent | undefined {
+	if (!customModePrompts || !mode) {
 		return undefined
 	}
+
+	const component = customModePrompts[mode]
+	if (!component || isEmpty(component)) {
+		return undefined
+	}
+
 	return component
 }
 

@@ -1622,6 +1622,26 @@ export class Task extends EventEmitter<ClineEvents> {
 			language,
 			maxConcurrentFileReads,
 			maxReadFileLine,
+			// Tool settings
+			enableToolExecuteCommand,
+			enableToolReadFile,
+			enableToolFetchInstructions,
+			enableToolWriteToFile,
+			enableToolApplyDiff,
+			enableToolInsertContent,
+			enableToolSearchAndReplace,
+			enableToolSearchFiles,
+			enableToolListFiles,
+			enableToolListCodeDefinitionNames,
+			enableToolBrowserAction,
+			enableToolUseMcpTool,
+			enableToolAccessMcpResource,
+			enableToolAskFollowupQuestion,
+			enableToolAttemptCompletion,
+			enableToolSwitchMode,
+			enableToolNewTask,
+			enableToolCodebaseSearch,
+			enableToolUpdateTodoList,
 		} = state ?? {}
 
 		return await (async () => {
@@ -1650,6 +1670,26 @@ export class Task extends EventEmitter<ClineEvents> {
 				maxReadFileLine !== -1,
 				{
 					maxConcurrentFileReads,
+					// Tool settings
+					enableToolExecuteCommand,
+					enableToolReadFile,
+					enableToolFetchInstructions,
+					enableToolWriteToFile,
+					enableToolApplyDiff,
+					enableToolInsertContent,
+					enableToolSearchAndReplace,
+					enableToolSearchFiles,
+					enableToolListFiles,
+					enableToolListCodeDefinitionNames,
+					enableToolBrowserAction,
+					enableToolUseMcpTool,
+					enableToolAccessMcpResource,
+					enableToolAskFollowupQuestion,
+					enableToolAttemptCompletion,
+					enableToolSwitchMode,
+					enableToolNewTask,
+					enableToolCodebaseSearch,
+					enableToolUpdateTodoList,
 				},
 			)
 		})()

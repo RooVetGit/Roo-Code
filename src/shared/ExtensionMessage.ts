@@ -232,6 +232,26 @@ export type ExtensionState = Pick<
 	| "codebaseIndexConfig"
 	| "codebaseIndexModels"
 	| "profileThresholds"
+	// Tool settings
+	| "enableToolExecuteCommand"
+	| "enableToolReadFile"
+	| "enableToolFetchInstructions"
+	| "enableToolWriteToFile"
+	| "enableToolApplyDiff"
+	| "enableToolInsertContent"
+	| "enableToolSearchAndReplace"
+	| "enableToolSearchFiles"
+	| "enableToolListFiles"
+	| "enableToolListCodeDefinitionNames"
+	| "enableToolBrowserAction"
+	| "enableToolUseMcpTool"
+	| "enableToolAccessMcpResource"
+	| "enableToolAskFollowupQuestion"
+	| "enableToolAttemptCompletion"
+	| "enableToolSwitchMode"
+	| "enableToolNewTask"
+	| "enableToolCodebaseSearch"
+	| "enableToolUpdateTodoList"
 > & {
 	version: string
 	clineMessages: ClineMessage[]
