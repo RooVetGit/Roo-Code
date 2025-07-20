@@ -31,10 +31,20 @@
 		"prompts": "Indicaciones",
 		"experimental": "Experimental",
 		"language": "Idioma",
-		"about": "Acerca de Roo Code"
+		"about": "Acerca de Roo Code",
+		"editingType": "Tipo de edición",
+		"diffSettings": "Configuración de diff",
+		"diffViewAutoFocusBehavior": "Auto-enfoque de vista diff",
+		"fileEditing": "Edición de archivos"
 	},
 	"prompts": {
 		"description": "Configura indicaciones de soporte que se utilizan para acciones rápidas como mejorar indicaciones, explicar código y solucionar problemas. Estas indicaciones ayudan a Roo a brindar mejor asistencia para tareas comunes de desarrollo."
+	},
+	"editingType": {
+		"description": "Elige tu flujo de trabajo de edición preferido."
+	},
+	"diffSettings": {
+		"description": "Configura cómo se aplican los diffs durante la edición."
 	},
 	"codeIndex": {
 		"title": "Indexación de código",
@@ -577,6 +587,13 @@
 				"label": "Precisión de coincidencia",
 				"description": "Este control deslizante controla cuán precisamente deben coincidir las secciones de código al aplicar diffs. Valores más bajos permiten coincidencias más flexibles pero aumentan el riesgo de reemplazos incorrectos. Use valores por debajo del 100% con extrema precaución."
 			}
+		},
+		"fileEditing": {
+			"fileBasedEditing": {
+				"label": "Habilitar edición basada en sistema de archivos",
+				"description": "Cuando está habilitado, Roo editará archivos directamente en el sistema de archivos en lugar de usar vistas de diff. Esto deshabilita todos los demás toggles de comportamiento de edición para una experiencia de edición más simple y directa."
+			},
+			"exclusivityNotice": "El modo de edición basado en archivos está habilitado. Todos los demás toggles de comportamiento de edición están deshabilitados para garantizar una experiencia consistente."
 		}
 	},
 	"experimental": {

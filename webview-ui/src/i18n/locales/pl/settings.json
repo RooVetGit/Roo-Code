@@ -31,10 +31,19 @@
 		"prompts": "Podpowiedzi",
 		"experimental": "Eksperymentalne",
 		"language": "Język",
-		"about": "O Roo Code"
+		"about": "O Roo Code",
+		"editingType": "Typ edycji",
+		"diffSettings": "Ustawienia diff",
+		"fileEditing": "Edycja plików"
 	},
 	"prompts": {
 		"description": "Skonfiguruj podpowiedzi wsparcia używane do szybkich działań, takich jak ulepszanie podpowiedzi, wyjaśnianie kodu i rozwiązywanie problemów. Te podpowiedzi pomagają Roo zapewnić lepsze wsparcie dla typowych zadań programistycznych."
+	},
+	"editingType": {
+		"description": "Wybierz preferowany przepływ pracy edycji."
+	},
+	"diffSettings": {
+		"description": "Skonfiguruj, jak różnice są stosowane podczas edycji."
 	},
 	"codeIndex": {
 		"title": "Indeksowanie kodu",
@@ -577,6 +586,13 @@
 				"label": "Precyzja dopasowania",
 				"description": "Ten suwak kontroluje, jak dokładnie sekcje kodu muszą pasować podczas stosowania różnic. Niższe wartości umożliwiają bardziej elastyczne dopasowywanie, ale zwiększają ryzyko nieprawidłowych zamian. Używaj wartości poniżej 100% z najwyższą ostrożnością."
 			}
+		},
+		"fileEditing": {
+			"fileBasedEditing": {
+				"label": "Włącz edycję opartą na systemie plików",
+				"description": "Gdy włączone, Roo będzie edytować pliki bezpośrednio w systemie plików zamiast korzystać z widoków różnic. To wyłącza wszystkie inne przełączniki zachowania edycji dla prostszego, bezpośredniego doświadczenia edycji."
+			},
+			"exclusivityNotice": "Tryb edycji oparty na plikach jest włączony. Wszystkie inne przełączniki zachowania edycji są wyłączone, aby zapewnić spójne doświadczenie."
 		}
 	},
 	"experimental": {

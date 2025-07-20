@@ -386,6 +386,11 @@
 					"type": "string",
 					"default": "",
 					"description": "%settings.autoImportSettingsPath.description%"
+				},
+				"roo-cline.fileBasedEditing": {
+					"type": "boolean",
+					"default": false,
+					"description": "%roo-cline.fileBasedEditing.description%"
 				}
 			}
 		}

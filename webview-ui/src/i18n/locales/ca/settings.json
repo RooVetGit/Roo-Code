@@ -31,7 +31,16 @@
 		"prompts": "Indicacions",
 		"experimental": "Experimental",
 		"language": "Idioma",
-		"about": "Sobre Roo Code"
+		"about": "Sobre Roo Code",
+		"editingType": "Tipus d'edició",
+		"diffSettings": "Configuració de diferències",
+		"fileEditing": "Edició d'arxius"
+	},
+	"editingType": {
+		"description": "Trieu el vostre flux de treball d'edició preferit."
+	},
+	"diffSettings": {
+		"description": "Configureu com s'apliquen les diferències durant l'edició."
 	},
 	"prompts": {
 		"description": "Configura les indicacions de suport utilitzades per a accions ràpides com millorar indicacions, explicar codi i solucionar problemes. Aquestes indicacions ajuden Roo a proporcionar millor assistència per a tasques comunes de desenvolupament."
@@ -577,6 +586,13 @@
 				"label": "Precisió de coincidència",
 				"description": "Aquest control lliscant controla amb quina precisió han de coincidir les seccions de codi en aplicar diffs. Valors més baixos permeten coincidències més flexibles però augmenten el risc de reemplaçaments incorrectes. Utilitzeu valors per sota del 100% amb extrema precaució."
 			}
+		},
+		"fileEditing": {
+			"fileBasedEditing": {
+				"label": "Activar edició basada en sistema d'arxius",
+				"description": "Quan està activat, Roo editarà arxius directament al sistema d'arxius en lloc d'utilitzar vistes de diferències. Això desactiva tots els altres commutadors de comportament d'edició per a una experiència d'edició més simple i directa."
+			},
+			"exclusivityNotice": "El mode d'edició basat en arxius està activat. Tots els altres commutadors de comportament d'edició estan desactivats per assegurar una experiència consistent."
 		}
 	},
 	"experimental": {

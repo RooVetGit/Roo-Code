@@ -143,7 +143,7 @@ describe("writeToFileTool", () => {
 		mockCline.rooIgnoreController = {
 			validateAccess: vi.fn().mockReturnValue(true),
 		}
-		mockCline.diffViewProvider = {
+		mockCline.editingProvider = {
 			editType: undefined,
 			isEditing: false,
 			originalContent: "",
@@ -246,7 +246,7 @@ describe("writeToFileTool", () => {
 			await executeWriteFileTool({}, { accessAllowed: true })
 
 			expect(mockCline.rooIgnoreController.validateAccess).toHaveBeenCalledWith(testFilePath)
-			expect(mockCline.diffViewProvider.open).toHaveBeenCalledWith(testFilePath)
+			expect(mockCline.editingProvider.open).toHaveBeenCalledWith(testFilePath)
 		})
 	})
 
@@ -255,18 +255,18 @@ describe("writeToFileTool", () => {
 			await executeWriteFileTool({}, { fileExists: true })
 
 			expect(mockedFileExistsAtPath).toHaveBeenCalledWith(absoluteFilePath)
-			expect(mockCline.diffViewProvider.editType).toBe("modify")
+			expect(mockCline.editingProvider.editType).toBe("modify")
 		})
 
 		it.skipIf(process.platform === "win32")("detects new file and sets editType to create", async () => {
 			await executeWriteFileTool({}, { fileExists: false })
 
 			expect(mockedFileExistsAtPath).toHaveBeenCalledWith(absoluteFilePath)
-			expect(mockCline.diffViewProvider.editType).toBe("create")
+			expect(mockCline.editingProvider.editType).toBe("create")
 		})
 
 		it("uses cached editType without filesystem check", async () => {
-			mockCline.diffViewProvider.editType = "modify"
+			mockCline.editingProvider.editType = "modify"
 
 			await executeWriteFileTool({})
 
@@ -278,13 +278,13 @@ describe("writeToFileTool", () => {
 		it("removes markdown code block markers from content", async () => {
 			await executeWriteFileTool({ content: testContentWithMarkdown })
 
-			expect(mockCline.diffViewProvider.update).toHaveBeenCalledWith("Line 1\nLine 2", true)
+			expect(mockCline.editingProvider.update).toHaveBeenCalledWith("Line 1\nLine 2", true)
 		})
 
 		it("passes through empty content unchanged", async () => {
 			await executeWriteFileTool({ content: "" })
 
-			expect(mockCline.diffViewProvider.update).toHaveBeenCalledWith("", true)
+			expect(mockCline.editingProvider.update).toHaveBeenCalledWith("", true)
 		})
 
 		it("unescapes HTML entities for non-Claude models", async () => {
@@ -312,7 +312,7 @@ describe("writeToFileTool", () => {
 
 			expect(mockedEveryLineHasLineNumbers).toHaveBeenCalledWith(contentWithLineNumbers)
 			expect(mockedStripLineNumbers).toHaveBeenCalledWith(contentWithLineNumbers)
-			expect(mockCline.diffViewProvider.update).toHaveBeenCalledWith("line one\nline two", true)
+			expect(mockCline.editingProvider.update).toHaveBeenCalledWith("line one\nline two", true)
 		})
 	})
 
@@ -321,10 +321,10 @@ describe("writeToFileTool", () => {
 			await executeWriteFileTool({}, { fileExists: false })
 
 			expect(mockCline.consecutiveMistakeCount).toBe(0)
-			expect(mockCline.diffViewProvider.open).toHaveBeenCalledWith(testFilePath)
-			expect(mockCline.diffViewProvider.update).toHaveBeenCalledWith(testContent, true)
+			expect(mockCline.editingProvider.open).toHaveBeenCalledWith(testFilePath)
+			expect(mockCline.editingProvider.update).toHaveBeenCalledWith(testContent, true)
 			expect(mockAskApproval).toHaveBeenCalled()
-			expect(mockCline.diffViewProvider.saveChanges).toHaveBeenCalled()
+			expect(mockCline.editingProvider.saveChanges).toHaveBeenCalled()
 			expect(mockCline.fileContextTracker.trackFileContext).toHaveBeenCalledWith(testFilePath, "roo_edited")
 			expect(mockCline.didEditFile).toBe(true)
 		})
@@ -349,21 +349,21 @@ describe("writeToFileTool", () => {
 		it("returns early when path is missing in partial block", async () => {
 			await executeWriteFileTool({ path: undefined }, { isPartial: true })
 
-			expect(mockCline.diffViewProvider.open).not.toHaveBeenCalled()
+			expect(mockCline.editingProvider.open).not.toHaveBeenCalled()
 		})
 
 		it("returns early when content is undefined in partial block", async () => {
 			await executeWriteFileTool({ content: undefined }, { isPartial: true })
 
-			expect(mockCline.diffViewProvider.open).not.toHaveBeenCalled()
+			expect(mockCline.editingProvider.open).not.toHaveBeenCalled()
 		})
 
 		it("streams content updates during partial execution", async () => {
 			await executeWriteFileTool({}, { isPartial: true })
 
 			expect(mockCline.ask).toHaveBeenCalled()
-			expect(mockCline.diffViewProvider.open).toHaveBeenCalledWith(testFilePath)
-			expect(mockCline.diffViewProvider.update).toHaveBeenCalledWith(testContent, false)
+			expect(mockCline.editingProvider.open).toHaveBeenCalledWith(testFilePath)
+			expect(mockCline.editingProvider.update).toHaveBeenCalledWith(testContent, false)
 		})
 	})
 
@@ -373,19 +373,19 @@ describe("writeToFileTool", () => {
 
 			await executeWriteFileTool({})
 
-			expect(mockCline.diffViewProvider.revertChanges).toHaveBeenCalled()
-			expect(mockCline.diffViewProvider.saveChanges).not.toHaveBeenCalled()
+			expect(mockCline.editingProvider.revertChanges).toHaveBeenCalled()
+			expect(mockCline.editingProvider.saveChanges).not.toHaveBeenCalled()
 		})
 
 		it("reports user edits with diff feedback", async () => {
 			const userEditsValue = "- old line\n+ new line"
-			mockCline.diffViewProvider.saveChanges.mockResolvedValue({
+			mockCline.editingProvider.saveChanges.mockResolvedValue({
 				newProblemsMessage: " with warnings",
 				userEdits: userEditsValue,
 				finalContent: "modified content",
 			})
-			// Set the userEdits property on the diffViewProvider mock to simulate user edits
-			mockCline.diffViewProvider.userEdits = userEditsValue
+			// Set the userEdits property on the editingProvider mock to simulate user edits
+			mockCline.editingProvider.userEdits = userEditsValue
 
 			await executeWriteFileTool({}, { fileExists: true })
 
@@ -398,21 +398,21 @@ describe("writeToFileTool", () => {
 
 	describe("error handling", () => {
 		it("handles general file operation errors", async () => {
-			mockCline.diffViewProvider.open.mockRejectedValue(new Error("General error"))
+			mockCline.editingProvider.open.mockRejectedValue(new Error("General error"))
 
 			await executeWriteFileTool({})
 
 			expect(mockHandleError).toHaveBeenCalledWith("writing file", expect.any(Error))
-			expect(mockCline.diffViewProvider.reset).toHaveBeenCalled()
+			expect(mockCline.editingProvider.reset).toHaveBeenCalled()
 		})
 
 		it("handles partial streaming errors", async () => {
-			mockCline.diffViewProvider.open.mockRejectedValue(new Error("Open failed"))
+			mockCline.editingProvider.open.mockRejectedValue(new Error("Open failed"))
 
 			await executeWriteFileTool({}, { isPartial: true })
 
 			expect(mockHandleError).toHaveBeenCalledWith("writing file", expect.any(Error))
-			expect(mockCline.diffViewProvider.reset).toHaveBeenCalled()
+			expect(mockCline.editingProvider.reset).toHaveBeenCalled()
 		})
 	})
 })

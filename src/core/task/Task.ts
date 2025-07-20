@@ -91,6 +91,8 @@ import { ApiMessage } from "../task-persistence/apiMessages"
 import { getMessagesSinceLastSummary, summarizeConversation } from "../condense"
 import { maybeRemoveImageBlocks } from "../../api/transform/image-cleaning"
 import { restoreTodoListForTask } from "../tools/updateTodoListTool"
+import { IEditingProvider } from "../../integrations/editor/IEditingProvider"
+import { EditingProviderFactory } from "../../integrations/editor/EditingProviderFactory"
 
 // Constants
 const MAX_EXPONENTIAL_BACKOFF_SECONDS = 600 // 10 minutes
@@ -172,7 +174,7 @@ export class Task extends EventEmitter<ClineEvents> {
 	browserSession: BrowserSession
 
 	// Editing
-	diffViewProvider: DiffViewProvider
+	editingProvider: IEditingProvider
 	diffStrategy?: DiffStrategy
 	diffEnabled: boolean = false
 	fuzzyMatchThreshold: number
@@ -260,7 +262,7 @@ export class Task extends EventEmitter<ClineEvents> {
 		this.consecutiveMistakeLimit = consecutiveMistakeLimit ?? DEFAULT_CONSECUTIVE_MISTAKE_LIMIT
 		this.providerRef = new WeakRef(provider)
 		this.globalStoragePath = provider.context.globalStorageUri.fsPath
-		this.diffViewProvider = new DiffViewProvider(this.cwd)
+		this.editingProvider = EditingProviderFactory.createEditingProvider(this.cwd)
 		this.enableCheckpoints = enableCheckpoints
 
 		this.rootTask = rootTask
@@ -762,6 +764,7 @@ export class Task extends EventEmitter<ClineEvents> {
 
 	public async resumePausedTask(lastMessage: string) {
 		// Release this Cline instance from paused state.
+		this.editingProvider = EditingProviderFactory.createEditingProvider(this.cwd)
 		this.isPaused = false
 		this.emit("taskUnpaused")
 
@@ -1066,8 +1069,8 @@ export class Task extends EventEmitter<ClineEvents> {
 
 		try {
 			// If we're not streaming then `abortStream` won't be called
-			if (this.isStreaming && this.diffViewProvider.isEditing) {
-				this.diffViewProvider.revertChanges().catch(console.error)
+			if (this.isStreaming && this.editingProvider.isEditing) {
+				this.editingProvider.revertChanges().catch(console.error)
 			}
 		} catch (error) {
 			console.error("Error reverting diff changes:", error)
@@ -1160,6 +1163,7 @@ export class Task extends EventEmitter<ClineEvents> {
 		if (this.abort) {
 			throw new Error(`[RooCode#recursivelyMakeRooRequests] task ${this.taskId}.${this.instanceId} aborted`)
 		}
+		this.editingProvider = EditingProviderFactory.resetAndCreateNewEditingProvider(this.cwd, this.editingProvider)
 
 		if (this.consecutiveMistakeLimit > 0 && this.consecutiveMistakeCount >= this.consecutiveMistakeLimit) {
 			const { response, text, images } = await this.ask(
@@ -1296,8 +1300,8 @@ export class Task extends EventEmitter<ClineEvents> {
 			}
 
 			const abortStream = async (cancelReason: ClineApiReqCancelReason, streamingFailedMessage?: string) => {
-				if (this.diffViewProvider.isEditing) {
-					await this.diffViewProvider.revertChanges() // closes diff view
+				if (this.editingProvider.isEditing) {
+					await this.editingProvider.revertChanges() // closes diff view
 				}
 
 				// if last message is a partial we need to update and save it
@@ -1349,7 +1353,7 @@ export class Task extends EventEmitter<ClineEvents> {
 			this.presentAssistantMessageLocked = false
 			this.presentAssistantMessageHasPendingUpdates = false
 
-			await this.diffViewProvider.reset()
+			await this.editingProvider.reset()
 
 			// Yields only if the first chunk is successful, otherwise will
 			// allow the user to retry the request (most likely due to rate

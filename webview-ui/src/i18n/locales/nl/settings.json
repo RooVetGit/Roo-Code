@@ -31,10 +31,19 @@
 		"prompts": "Prompts",
 		"experimental": "Experimenteel",
 		"language": "Taal",
-		"about": "Over Roo Code"
+		"about": "Over Roo Code",
+		"editingType": "Bewerkingstype",
+		"diffSettings": "Diff-instellingen",
+		"fileEditing": "Bestandsbewerking"
 	},
 	"prompts": {
 		"description": "Configureer ondersteuningsprompts die worden gebruikt voor snelle acties zoals het verbeteren van prompts, het uitleggen van code en het oplossen van problemen. Deze prompts helpen Roo om betere ondersteuning te bieden voor veelvoorkomende ontwikkelingstaken."
+	},
+	"editingType": {
+		"description": "Kies je voorkeursworkflow voor bewerken."
+	},
+	"diffSettings": {
+		"description": "Configureer hoe diffs worden toegepast tijdens het bewerken."
 	},
 	"codeIndex": {
 		"title": "Codebase indexering",
@@ -577,6 +586,13 @@
 				"label": "Matchnauwkeurigheid",
 				"description": "Deze schuifregelaar bepaalt hoe nauwkeurig codeblokken moeten overeenkomen bij het toepassen van diffs. Lagere waarden laten flexibelere matching toe maar verhogen het risico op verkeerde vervangingen. Gebruik waarden onder 100% met uiterste voorzichtigheid."
 			}
+		},
+		"fileEditing": {
+			"fileBasedEditing": {
+				"label": "Bestandssysteem-gebaseerde bewerking inschakelen",
+				"description": "Indien ingeschakeld, zal Roo bestanden direct in het bestandssysteem bewerken in plaats van diff-weergaven te gebruiken. Dit schakelt alle andere bewerkingsgedrag-schakelaars uit voor een eenvoudigere, directere bewerkingservaring."
+			},
+			"exclusivityNotice": "Bestandsgebaseerde bewerkingsmodus is ingeschakeld. Alle andere bewerkingsgedrag-schakelaars zijn uitgeschakeld om een consistente ervaring te garanderen."
 		}
 	},
 	"experimental": {

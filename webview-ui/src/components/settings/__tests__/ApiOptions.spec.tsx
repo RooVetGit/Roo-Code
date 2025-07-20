@@ -147,7 +147,7 @@ vi.mock("../RateLimitSecondsControl", () => ({
 }))
 
 // Mock DiffSettingsControl for tests
-vi.mock("../DiffSettingsControl", () => ({
+vi.mock("../FileEditingOptions", () => ({
 	DiffSettingsControl: ({ diffEnabled, fuzzyMatchThreshold, onChange }: any) => (
 		<div data-testid="diff-settings-control">
 			<label>
@@ -258,15 +258,9 @@ const renderApiOptions = (props: Partial<ApiOptionsProps> = {}) => {
 }
 
 describe("ApiOptions", () => {
-	it("shows diff settings, temperature and rate limit controls by default", () => {
-		renderApiOptions({
-			apiConfiguration: {
-				diffEnabled: true,
-				fuzzyMatchThreshold: 0.95,
-			},
-		})
+	it("shows temperature and rate limit controls by default", () => {
+		renderApiOptions()
 		// Check for DiffSettingsControl by looking for text content
-		expect(screen.getByText(/enable editing through diffs/i)).toBeInTheDocument()
 		expect(screen.getByTestId("temperature-control")).toBeInTheDocument()
 		expect(screen.getByTestId("rate-limit-seconds-control")).toBeInTheDocument()
 	})

@@ -1384,6 +1384,7 @@ export class ClineProvider
 			ttsEnabled,
 			ttsSpeed,
 			diffEnabled,
+			fileBasedEditing,
 			enableCheckpoints,
 			taskHistory,
 			soundVolume,
@@ -1482,6 +1483,7 @@ export class ClineProvider
 			ttsEnabled: ttsEnabled ?? false,
 			ttsSpeed: ttsSpeed ?? 1.0,
 			diffEnabled: diffEnabled ?? true,
+			fileBasedEditing: fileBasedEditing ?? false,
 			enableCheckpoints: enableCheckpoints ?? true,
 			shouldShowAnnouncement:
 				telemetrySetting !== "unset" && lastShownAnnouncementId !== this.latestAnnouncementId,
@@ -1655,6 +1657,7 @@ export class ClineProvider
 			ttsEnabled: stateValues.ttsEnabled ?? false,
 			ttsSpeed: stateValues.ttsSpeed ?? 1.0,
 			diffEnabled: stateValues.diffEnabled ?? true,
+			fileBasedEditing: stateValues.fileBasedEditing ?? false,
 			enableCheckpoints: stateValues.enableCheckpoints ?? true,
 			soundVolume: stateValues.soundVolume,
 			browserViewportSize: stateValues.browserViewportSize ?? "900x600",

@@ -107,6 +107,7 @@ export const globalSettingsSchema = z.object({
 
 	rateLimitSeconds: z.number().optional(),
 	diffEnabled: z.boolean().optional(),
+	fileBasedEditing: z.boolean().optional(),
 	fuzzyMatchThreshold: z.number().optional(),
 	experiments: experimentsSchema.optional(),
 
@@ -250,6 +251,7 @@ export const EVALS_SETTINGS: RooCodeSettings = {
 	diagnosticsEnabled: true,
 
 	diffEnabled: true,
+	fileBasedEditing: false,
 	fuzzyMatchThreshold: 1,
 
 	enableCheckpoints: false,

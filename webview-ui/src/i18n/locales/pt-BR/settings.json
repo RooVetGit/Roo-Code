@@ -31,10 +31,19 @@
 		"prompts": "Prompts",
 		"experimental": "Experimental",
 		"language": "Idioma",
-		"about": "Sobre"
+		"about": "Sobre",
+		"editingType": "Tipo de edição",
+		"diffSettings": "Configurações de diff",
+		"fileEditing": "Edição de arquivos"
 	},
 	"prompts": {
 		"description": "Configure prompts de suporte usados para ações rápidas como melhorar prompts, explicar código e corrigir problemas. Esses prompts ajudam o Roo a fornecer melhor assistência para tarefas comuns de desenvolvimento."
+	},
+	"editingType": {
+		"description": "Escolha seu fluxo de trabalho de edição preferido."
+	},
+	"diffSettings": {
+		"description": "Configure como os diffs são aplicados durante a edição."
 	},
 	"codeIndex": {
 		"title": "Indexação de Código",
@@ -577,6 +586,13 @@
 				"label": "Precisão de correspondência",
 				"description": "Este controle deslizante controla quão precisamente as seções de código devem corresponder ao aplicar diffs. Valores mais baixos permitem correspondências mais flexíveis, mas aumentam o risco de substituições incorretas. Use valores abaixo de 100% com extrema cautela."
 			}
+		},
+		"fileEditing": {
+			"fileBasedEditing": {
+				"label": "Ativar edição baseada em sistema de arquivos",
+				"description": "Quando ativado, o Roo editará arquivos diretamente no sistema de arquivos em vez de usar visualizações de diff. Isso desativa todos os outros alternadores de comportamento de edição para uma experiência de edição mais simples e direta."
+			},
+			"exclusivityNotice": "O modo de edição baseado em arquivo está ativado. Todos os outros alternadores de comportamento de edição estão desativados para garantir uma experiência consistente."
 		}
 	},
 	"experimental": {

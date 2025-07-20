@@ -15,12 +15,13 @@ import { Task } from "../../core/task/Task"
 import { DEFAULT_WRITE_DELAY_MS } from "@roo-code/types"
 
 import { DecorationController } from "./DecorationController"
+import { IEditingProvider } from "./IEditingProvider"
 
 export const DIFF_VIEW_URI_SCHEME = "cline-diff"
 export const DIFF_VIEW_LABEL_CHANGES = "Original ↔ Roo's Changes"
 
 // TODO: https://github.com/cline/cline/pull/3354
-export class DiffViewProvider {
+export class DiffViewProvider implements IEditingProvider {
 	// Properties to store the results of saveChanges
 	newProblemsMessage?: string
 	userEdits?: string
@@ -181,7 +182,10 @@ export class DiffViewProvider {
 		}
 	}
 
-	async saveChanges(diagnosticsEnabled: boolean = true, writeDelayMs: number = DEFAULT_WRITE_DELAY_MS): Promise<{
+	async saveChanges(
+		diagnosticsEnabled: boolean = true,
+		writeDelayMs: number = DEFAULT_WRITE_DELAY_MS,
+	): Promise<{
 		newProblemsMessage: string | undefined
 		userEdits: string | undefined
 		finalContent: string | undefined
@@ -216,22 +220,22 @@ export class DiffViewProvider {
 		// and can address them accordingly. If problems don't change immediately after
 		// applying a fix, won't be notified, which is generally fine since the
 		// initial fix is usually correct and it may just take time for linters to catch up.
-		
+
 		let newProblemsMessage = ""
-		
+
 		if (diagnosticsEnabled) {
 			// Add configurable delay to allow linters time to process and clean up issues
 			// like unused imports (especially important for Go and other languages)
 			// Ensure delay is non-negative
 			const safeDelayMs = Math.max(0, writeDelayMs)
-			
+
 			try {
 				await delay(safeDelayMs)
 			} catch (error) {
 				// Log error but continue - delay failure shouldn't break the save operation
 				console.warn(`Failed to apply write delay: ${error}`)
 			}
-			
+
 			const postDiagnostics = vscode.languages.getDiagnostics()
 
 			const newProblems = await diagnosticsToProblemsString(

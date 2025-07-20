@@ -508,10 +508,10 @@ ${errorDetails ? `\nTechnical details:\n${errorDetails}\n` : ""}
 				cline.consecutiveMistakeCountForApplyDiff.delete(relPath)
 
 				// Show diff view before asking for approval (only for single file or after batch approval)
-				cline.diffViewProvider.editType = "modify"
-				await cline.diffViewProvider.open(relPath)
-				await cline.diffViewProvider.update(originalContent!, true)
-				cline.diffViewProvider.scrollToFirstDiff()
+				cline.editingProvider.editType = "modify"
+				await cline.editingProvider.open(relPath)
+				await cline.editingProvider.update(originalContent!, true)
+				cline.editingProvider.scrollToFirstDiff()
 
 				// For batch operations, we've already gotten approval
 				const isWriteProtected = cline.rooProtectedController?.isWriteProtected(relPath) || false
@@ -548,7 +548,7 @@ ${errorDetails ? `\nTechnical details:\n${errorDetails}\n` : ""}
 				}
 
 				if (!didApprove) {
-					await cline.diffViewProvider.revertChanges()
+					await cline.editingProvider.revertChanges()
 					results.push(`Changes to ${relPath} were not approved by user`)
 					continue
 				}
@@ -558,7 +558,7 @@ ${errorDetails ? `\nTechnical details:\n${errorDetails}\n` : ""}
 				const state = await provider?.getState()
 				const diagnosticsEnabled = state?.diagnosticsEnabled ?? true
 				const writeDelayMs = state?.writeDelayMs ?? DEFAULT_WRITE_DELAY_MS
-				await cline.diffViewProvider.saveChanges(diagnosticsEnabled, writeDelayMs)
+				await cline.editingProvider.saveChanges(diagnosticsEnabled, writeDelayMs)
 
 				// Track file edit operation
 				await cline.fileContextTracker.trackFileContext(relPath, "roo_edited" as RecordSource)
@@ -572,7 +572,7 @@ ${errorDetails ? `\nTechnical details:\n${errorDetails}\n` : ""}
 				}
 
 				// Get the formatted response message
-				const message = await cline.diffViewProvider.pushToolWriteResult(cline, cline.cwd, !fileExists)
+				const message = await cline.editingProvider.pushToolWriteResult(cline, cline.cwd, !fileExists)
 
 				if (partFailHint) {
 					results.push(partFailHint + "\n" + message)
@@ -580,7 +580,7 @@ ${errorDetails ? `\nTechnical details:\n${errorDetails}\n` : ""}
 					results.push(message)
 				}
 
-				await cline.diffViewProvider.reset()
+				await cline.editingProvider.reset()
 			} catch (error) {
 				const errorMsg = error instanceof Error ? error.message : String(error)
 				updateOperationResult(relPath, {
@@ -606,7 +606,7 @@ ${errorDetails ? `\nTechnical details:\n${errorDetails}\n` : ""}
 		return
 	} catch (error) {
 		await handleError("applying diff", error)
-		await cline.diffViewProvider.reset()
+		await cline.editingProvider.reset()
 		return
 	}
 }

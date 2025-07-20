@@ -31,10 +31,19 @@
 		"prompts": "Invites",
 		"experimental": "Expérimental",
 		"language": "Langue",
-		"about": "À propos de Roo Code"
+		"about": "À propos de Roo Code",
+		"editingType": "Type d'édition",
+		"diffSettings": "Paramètres de diff",
+		"fileEditing": "Édition de fichiers"
 	},
 	"prompts": {
 		"description": "Configurez les invites de support utilisées pour les actions rapides comme l'amélioration des invites, l'explication du code et la résolution des problèmes. Ces invites aident Roo à fournir une meilleure assistance pour les tâches de développement courantes."
+	},
+	"editingType": {
+		"description": "Choisissez votre flux de travail d'édition préféré."
+	},
+	"diffSettings": {
+		"description": "Configurez comment les diffs sont appliqués pendant l'édition."
 	},
 	"codeIndex": {
 		"title": "Indexation de la base de code",
@@ -577,6 +586,13 @@
 				"label": "Précision de correspondance",
 				"description": "Ce curseur contrôle la précision avec laquelle les sections de code doivent correspondre lors de l'application des diffs. Des valeurs plus basses permettent des correspondances plus flexibles mais augmentent le risque de remplacements incorrects. Utilisez des valeurs inférieures à 100 % avec une extrême prudence."
 			}
+		},
+		"fileEditing": {
+			"fileBasedEditing": {
+				"label": "Activer l'édition basée sur le système de fichiers",
+				"description": "Lorsqu'activé, Roo éditera les fichiers directement dans le système de fichiers au lieu d'utiliser des vues de diff. Cela désactive tous les autres commutateurs de comportement d'édition pour une expérience d'édition plus simple et directe."
+			},
+			"exclusivityNotice": "Le mode d'édition basé sur les fichiers est activé. Tous les autres commutateurs de comportement d'édition sont désactivés pour assurer une expérience cohérente."
 		}
 	},
 	"experimental": {

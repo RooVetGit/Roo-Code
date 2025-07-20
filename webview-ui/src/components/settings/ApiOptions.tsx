@@ -77,7 +77,6 @@ import { inputEventTransform, noTransform } from "./transforms"
 import { ModelInfoView } from "./ModelInfoView"
 import { ApiErrorMessage } from "./ApiErrorMessage"
 import { ThinkingBudget } from "./ThinkingBudget"
-import { DiffSettingsControl } from "./DiffSettingsControl"
 import { TemperatureControl } from "./TemperatureControl"
 import { RateLimitSecondsControl } from "./RateLimitSecondsControl"
 import { ConsecutiveMistakeLimitControl } from "./ConsecutiveMistakeLimitControl"
@@ -564,11 +563,6 @@ const ApiOptions = ({
 						<span className="font-medium">{t("settings:advancedSettings.title")}</span>
 					</CollapsibleTrigger>
 					<CollapsibleContent className="space-y-3">
-						<DiffSettingsControl
-							diffEnabled={apiConfiguration.diffEnabled}
-							fuzzyMatchThreshold={apiConfiguration.fuzzyMatchThreshold}
-							onChange={(field, value) => setApiConfigurationField(field, value)}
-						/>
 						<TemperatureControl
 							value={apiConfiguration.modelTemperature}
 							onChange={handleInputChange("modelTemperature", noTransform)}

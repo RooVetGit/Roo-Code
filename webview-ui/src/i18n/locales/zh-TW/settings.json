@@ -31,7 +31,16 @@
 		"prompts": "提示詞",
 		"experimental": "實驗性",
 		"language": "語言",
-		"about": "關於 Roo Code"
+		"about": "關於 Roo Code",
+		"editingType": "編輯類型",
+		"diffSettings": "差異設定",
+		"fileEditing": "檔案編輯"
+	},
+	"editingType": {
+		"description": "選擇您偏好的編輯工作流程。"
+	},
+	"diffSettings": {
+		"description": "配置編輯期間如何套用差異。"
 	},
 	"prompts": {
 		"description": "設定用於快速操作的支援提示詞，如增強提示詞、解釋程式碼和修復問題。這些提示詞幫助 Roo 為常見開發工作提供更好的支援。"
@@ -577,6 +586,13 @@
 				"label": "比對精確度",
 				"description": "此滑桿控制套用差異時程式碼區段的比對精確度。較低的數值允許更彈性的比對，但也會增加錯誤取代的風險。使用低於 100% 的數值時請特別謹慎。"
 			}
+		},
+		"fileEditing": {
+			"fileBasedEditing": {
+				"label": "啟用基於檔案系統的編輯",
+				"description": "啟用後，Roo 將直接在檔案系統中編輯檔案，而不是使用差異檢視。這會停用所有其他編輯行為切換，以提供更簡單、更直接的編輯體驗。"
+			},
+			"exclusivityNotice": "基於檔案的編輯模式已啟用。所有其他編輯行為切換都已停用，以確保一致的體驗。"
 		}
 	},
 	"experimental": {

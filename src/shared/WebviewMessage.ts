@@ -93,6 +93,7 @@ export interface WebviewMessage {
 		| "ttsSpeed"
 		| "soundVolume"
 		| "diffEnabled"
+		| "fileBasedEditing"
 		| "enableCheckpoints"
 		| "browserViewportSize"
 		| "screenshotQuality"

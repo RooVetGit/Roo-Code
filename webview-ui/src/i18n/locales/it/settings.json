@@ -31,10 +31,19 @@
 		"prompts": "Prompt",
 		"experimental": "Sperimentale",
 		"language": "Lingua",
-		"about": "Informazioni su Roo Code"
+		"about": "Informazioni su Roo Code",
+		"editingType": "Tipo di modifica",
+		"diffSettings": "Impostazioni diff",
+		"fileEditing": "Modifica file"
 	},
 	"prompts": {
 		"description": "Configura i prompt di supporto utilizzati per azioni rapide come il miglioramento dei prompt, la spiegazione del codice e la risoluzione dei problemi. Questi prompt aiutano Roo a fornire una migliore assistenza per le attività di sviluppo comuni."
+	},
+	"editingType": {
+		"description": "Scegli il tuo flusso di lavoro di modifica preferito."
+	},
+	"diffSettings": {
+		"description": "Configura come vengono applicati i diff durante la modifica."
 	},
 	"codeIndex": {
 		"title": "Indicizzazione del codice",
@@ -577,6 +586,13 @@
 				"label": "Precisione corrispondenza",
 				"description": "Questo cursore controlla quanto precisamente le sezioni di codice devono corrispondere quando si applicano i diff. Valori più bassi consentono corrispondenze più flessibili ma aumentano il rischio di sostituzioni errate. Usa valori inferiori al 100% con estrema cautela."
 			}
+		},
+		"fileEditing": {
+			"fileBasedEditing": {
+				"label": "Abilita modifica basata sul file system",
+				"description": "Quando abilitato, Roo modificherà i file direttamente nel file system invece di utilizzare viste diff. Questo disabilita tutti gli altri toggle di comportamento di modifica per un'esperienza di modifica più semplice e diretta."
+			},
+			"exclusivityNotice": "La modalità di modifica basata su file è abilitata. Tutti gli altri toggle di comportamento di modifica sono disabilitati per garantire un'esperienza coerente."
 		}
 	},
 	"experimental": {
