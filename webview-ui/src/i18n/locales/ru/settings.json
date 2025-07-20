@@ -27,6 +27,7 @@
 		"checkpoints": "Контрольные точки",
 		"notifications": "Уведомления",
 		"contextManagement": "Контекст",
+		"tools": "Инструменты",
 		"terminal": "Терминал",
 		"prompts": "Промпты",
 		"experimental": "Экспериментальное",
@@ -35,6 +36,97 @@
 	},
 	"prompts": {
 		"description": "Настройте промпты поддержки, используемые для быстрых действий, таких как улучшение промптов, объяснение кода и исправление проблем. Эти промпты помогают Roo обеспечить лучшую поддержку для общих задач разработки."
+	},
+	"tools": {
+		"title": "Инструменты",
+		"description": "Управляйте, какие инструменты доступны для ИИ. Отключение инструментов не позволит ИИ использовать их в диалогах.",
+		"selectAll": "Выбрать все",
+		"selectNone": "Снять выделение",
+		"groups": {
+			"alwaysAvailable": "Основные функции",
+			"read": "Чтение",
+			"edit": "Редактирование",
+			"modes": "Режимы",
+			"command": "Команды",
+			"browser": "Браузер",
+			"mcp": "MCP (Протокол контекста модели)"
+		},
+		"executeCommand": {
+			"label": "Выполнить команду",
+			"description": "execute_command - Разрешить ИИ выполнять команды оболочки"
+		},
+		"readFile": {
+			"label": "Прочитать файл",
+			"description": "read_file - Разрешить ИИ читать содержимое файлов"
+		},
+		"fetchInstructions": {
+			"label": "Получить инструкции",
+			"description": "fetch_instructions - Разрешить ИИ получать инструкции проекта"
+		},
+		"writeToFile": {
+			"label": "Записать в файл",
+			"description": "write_to_file - Разрешить ИИ записывать содержимое в файлы"
+		},
+		"applyDiff": {
+			"label": "Применить дифф",
+			"description": "apply_diff - Разрешить ИИ применять дифф-патчи к файлам"
+		},
+		"insertContent": {
+			"label": "Вставить содержимое",
+			"description": "insert_content - Разрешить ИИ вставлять содержимое в файлы"
+		},
+		"searchAndReplace": {
+			"label": "Найти и заменить",
+			"description": "search_and_replace - Разрешить ИИ выполнять операции поиска и замены"
+		},
+		"searchFiles": {
+			"label": "Искать файлы",
+			"description": "search_files - Разрешить ИИ искать файлы в проекте"
+		},
+		"listFiles": {
+			"label": "Список файлов",
+			"description": "list_files - Разрешить ИИ выводить списки файлов и каталогов"
+		},
+		"listCodeDefinitionNames": {
+			"label": "Список определений кода",
+			"description": "list_code_definition_names - Разрешить ИИ выводить списки определений и символов кода"
+		},
+		"browserAction": {
+			"label": "Действие в браузере",
+			"description": "browser_action - Разрешить ИИ взаимодействовать с веб-браузерами"
+		},
+		"useMcpTool": {
+			"label": "Использовать инструмент MCP",
+			"description": "use_mcp_tool - Разрешить ИИ использовать инструменты протокола контекста модели"
+		},
+		"accessMcpResource": {
+			"label": "Доступ к ресурсу MCP",
+			"description": "access_mcp_resource - Разрешить ИИ получать доступ к ресурсам протокола контекста модели"
+		},
+		"askFollowupQuestion": {
+			"label": "Задать уточняющий вопрос",
+			"description": "ask_followup_question - Разрешить ИИ задавать уточняющие вопросы"
+		},
+		"attemptCompletion": {
+			"label": "Попытка завершения",
+			"description": "attempt_completion - Разрешить ИИ пытаться завершить задачу"
+		},
+		"switchMode": {
+			"label": "Переключить режим",
+			"description": "switch_mode - Разрешить ИИ переключаться между различными режимами"
+		},
+		"newTask": {
+			"label": "Новая задача",
+			"description": "new_task - Разрешить ИИ создавать новые задачи"
+		},
+		"codebaseSearch": {
+			"label": "Поиск по кодовой базе",
+			"description": "codebase_search - Разрешить ИИ выполнять поиск по кодовой базе"
+		},
+		"updateTodoList": {
+			"label": "Обновить список дел",
+			"description": "update_todo_list - Разрешить ИИ обновлять списки дел"
+		}
 	},
 	"codeIndex": {
 		"title": "Индексация кодовой базы",

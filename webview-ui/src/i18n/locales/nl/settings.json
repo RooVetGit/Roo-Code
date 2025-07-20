@@ -27,6 +27,7 @@
 		"checkpoints": "Checkpoints",
 		"notifications": "Meldingen",
 		"contextManagement": "Context",
+		"tools": "Gereedschap",
 		"terminal": "Terminal",
 		"prompts": "Prompts",
 		"experimental": "Experimenteel",
@@ -35,6 +36,97 @@
 	},
 	"prompts": {
 		"description": "Configureer ondersteuningsprompts die worden gebruikt voor snelle acties zoals het verbeteren van prompts, het uitleggen van code en het oplossen van problemen. Deze prompts helpen Roo om betere ondersteuning te bieden voor veelvoorkomende ontwikkelingstaken."
+	},
+	"tools": {
+		"title": "Gereedschap",
+		"description": "Beheer welke gereedschappen beschikbaar zijn voor de AI. Het uitschakelen van gereedschappen voorkomt dat de AI ze in gesprekken gebruikt.",
+		"selectAll": "Alles selecteren",
+		"selectNone": "Niets selecteren",
+		"groups": {
+			"alwaysAvailable": "Kernfunctionaliteit",
+			"read": "Lezen",
+			"edit": "Bewerken",
+			"modes": "Modi",
+			"command": "Commando",
+			"browser": "Browser",
+			"mcp": "MCP (Model Context Protocol)"
+		},
+		"executeCommand": {
+			"label": "Commando uitvoeren",
+			"description": "execute_command - Sta AI toe om shell-commando's uit te voeren"
+		},
+		"readFile": {
+			"label": "Bestand lezen",
+			"description": "read_file - Sta AI toe om bestandsinhoud te lezen"
+		},
+		"fetchInstructions": {
+			"label": "Instructies ophalen",
+			"description": "fetch_instructions - Sta AI toe om projectinstructies op te halen"
+		},
+		"writeToFile": {
+			"label": "Naar bestand schrijven",
+			"description": "write_to_file - Sta AI toe om inhoud naar bestanden te schrijven"
+		},
+		"applyDiff": {
+			"label": "Diff toepassen",
+			"description": "apply_diff - Sta AI toe om diff-patches op bestanden toe te passen"
+		},
+		"insertContent": {
+			"label": "Inhoud invoegen",
+			"description": "insert_content - Sta AI toe om inhoud in bestanden in te voegen"
+		},
+		"searchAndReplace": {
+			"label": "Zoeken en vervangen",
+			"description": "search_and_replace - Sta AI toe om zoek- en vervangbewerkingen uit te voeren"
+		},
+		"searchFiles": {
+			"label": "Bestanden zoeken",
+			"description": "search_files - Sta AI toe om naar bestanden in het project te zoeken"
+		},
+		"listFiles": {
+			"label": "Bestanden weergeven",
+			"description": "list_files - Sta AI toe om bestanden en mappen weer te geven"
+		},
+		"listCodeDefinitionNames": {
+			"label": "Codedefinities weergeven",
+			"description": "list_code_definition_names - Sta AI toe om codedefinities en symbolen weer te geven"
+		},
+		"browserAction": {
+			"label": "Browseractie",
+			"description": "browser_action - Sta AI toe om met webbrowsers te communiceren"
+		},
+		"useMcpTool": {
+			"label": "MCP-gereedschap gebruiken",
+			"description": "use_mcp_tool - Sta AI toe om Model Context Protocol-gereedschappen te gebruiken"
+		},
+		"accessMcpResource": {
+			"label": "Toegang tot MCP-resource",
+			"description": "access_mcp_resource - Sta AI toe om toegang te krijgen tot Model Context Protocol-resources"
+		},
+		"askFollowupQuestion": {
+			"label": "Vervolgvraag stellen",
+			"description": "ask_followup_question - Sta AI toe om vervolgvragen te stellen"
+		},
+		"attemptCompletion": {
+			"label": "Voltooiing proberen",
+			"description": "attempt_completion - Sta AI toe om taakvoltooiing te proberen"
+		},
+		"switchMode": {
+			"label": "Modus wisselen",
+			"description": "switch_mode - Sta AI toe om tussen verschillende modi te wisselen"
+		},
+		"newTask": {
+			"label": "Nieuwe taak",
+			"description": "new_task - Sta AI toe om nieuwe taken te maken"
+		},
+		"codebaseSearch": {
+			"label": "Codebase doorzoeken",
+			"description": "codebase_search - Sta AI toe om de codebase te doorzoeken"
+		},
+		"updateTodoList": {
+			"label": "Takenlijst bijwerken",
+			"description": "update_todo_list - Sta AI toe om takenlijsten bij te werken"
+		}
 	},
 	"codeIndex": {
 		"title": "Codebase indexering",

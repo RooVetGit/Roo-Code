@@ -27,18 +27,110 @@
 		"checkpoints": "チェックポイント",
 		"notifications": "通知",
 		"contextManagement": "コンテキスト",
+		"tools": "ツール",
 		"terminal": "ターミナル",
 		"prompts": "プロンプト",
-		"experimental": "実験的",
+		"experimental": "実験的機能",
 		"language": "言語",
 		"about": "Roo Codeについて"
 	},
 	"prompts": {
-		"description": "プロンプトの強化、コードの説明、問題の修正などの迅速なアクションに使用されるサポートプロンプトを設定します。これらのプロンプトは、Rooが一般的な開発タスクでより良いサポートを提供するのに役立ちます。"
+		"description": "プロンプトの強化、コードの説明、問題の修正などのクイックアクションに使用されるサポートプロンプトを構成します。これらのプロンプトは、Rooが一般的な開発タスクに対してより良い支援を提供するのに役立ちます。"
+	},
+	"tools": {
+		"title": "ツール",
+		"description": "AIが利用できるツールを制御します。ツールを無効にすると、AIが会話でそれらを使用できなくなります。",
+		"selectAll": "すべて選択",
+		"selectNone": "すべて選択解除",
+		"groups": {
+			"alwaysAvailable": "コア機能",
+			"read": "読み取り",
+			"edit": "編集",
+			"modes": "モード",
+			"command": "コマンド",
+			"browser": "ブラウザ",
+			"mcp": "MCP（モデルコンテキストプロトコル）"
+		},
+		"executeCommand": {
+			"label": "コマンドを実行",
+			"description": "execute_command - AIにシェルコマンドの実行を許可します"
+		},
+		"readFile": {
+			"label": "ファイルを読み込む",
+			"description": "read_file - AIにファイルの内容の読み込みを許可します"
+		},
+		"fetchInstructions": {
+			"label": "指示を取得",
+			"description": "fetch_instructions - AIにプロジェクトの指示の取得を許可します"
+		},
+		"writeToFile": {
+			"label": "ファイルに書き込む",
+			"description": "write_to_file - AIにファイルへのコンテンツの書き込みを許可します"
+		},
+		"applyDiff": {
+			"label": "差分を適用",
+			"description": "apply_diff - AIにファイルへの差分パッチの適用を許可します"
+		},
+		"insertContent": {
+			"label": "コンテンツを挿入",
+			"description": "insert_content - AIにファイルへのコンテンツの挿入を許可します"
+		},
+		"searchAndReplace": {
+			"label": "検索と置換",
+			"description": "search_and_replace - AIに検索と置換操作の実行を許可します"
+		},
+		"searchFiles": {
+			"label": "ファイルを検索",
+			"description": "search_files - AIにプロジェクト内のファイルの検索を許可します"
+		},
+		"listFiles": {
+			"label": "ファイルを一覧表示",
+			"description": "list_files - AIにファイルとディレクトリの一覧表示を許可します"
+		},
+		"listCodeDefinitionNames": {
+			"label": "コード定義を一覧表示",
+			"description": "list_code_definition_names - AIにコード定義とシンボルの一覧表示を許可します"
+		},
+		"browserAction": {
+			"label": "ブラウザアクション",
+			"description": "browser_action - AIにWebブラウザとの対話を許可します"
+		},
+		"useMcpTool": {
+			"label": "MCPツールを使用",
+			"description": "use_mcp_tool - AIにモデルコンテキストプロトコルツールの使用を許可します"
+		},
+		"accessMcpResource": {
+			"label": "MCPリソースにアクセス",
+			"description": "access_mcp_resource - AIにモデルコンテキストプロトコルリソースへのアクセスを許可します"
+		},
+		"askFollowupQuestion": {
+			"label": "フォローアップの質問をする",
+			"description": "ask_followup_question - AIにフォローアップの質問をすることを許可します"
+		},
+		"attemptCompletion": {
+			"label": "完了を試行",
+			"description": "attempt_completion - AIにタスクの完了の試行を許可します"
+		},
+		"switchMode": {
+			"label": "モードを切り替える",
+			"description": "switch_mode - AIに異なるモード間の切り替えを許可します"
+		},
+		"newTask": {
+			"label": "新しいタスク",
+			"description": "new_task - AIに新しいタスクの作成を許可します"
+		},
+		"codebaseSearch": {
+			"label": "コードベースを検索",
+			"description": "codebase_search - AIにコードベースの検索を許可します"
+		},
+		"updateTodoList": {
+			"label": "Todoリストを更新",
+			"description": "update_todo_list - AIにTodoリストの更新を許可します"
+		}
 	},
 	"codeIndex": {
 		"title": "コードベースのインデックス作成",
-		"enableLabel": "コードベースのインデックス作成を有効化",
+		"enableLabel": "コードベースのインデックス作成の有効化",
 		"enableDescription": "コードのインデックス作成を有効にして、検索とコンテキストの理解を向上させます",
 		"providerLabel": "埋め込みプロバイダー",
 		"selectProviderPlaceholder": "プロバイダーを選択",

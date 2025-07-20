@@ -27,6 +27,7 @@
 		"checkpoints": "Kontrol Noktaları",
 		"notifications": "Bildirimler",
 		"contextManagement": "Bağlam",
+		"tools": "Araçlar",
 		"terminal": "Terminal",
 		"prompts": "Promptlar",
 		"experimental": "Deneysel",
@@ -35,6 +36,97 @@
 	},
 	"prompts": {
 		"description": "Prompt geliştirme, kod açıklama ve sorun çözme gibi hızlı eylemler için kullanılan destek promptlarını yapılandırın. Bu promptlar, Roo'nun yaygın geliştirme görevleri için daha iyi destek sağlamasına yardımcı olur."
+	},
+	"tools": {
+		"title": "Araçlar",
+		"description": "Yapay zekanın kullanabileceği araçları kontrol edin. Araçları devre dışı bırakmak, yapay zekanın konuşmalarda onları kullanmasını engelleyecektir.",
+		"selectAll": "Tümünü Seç",
+		"selectNone": "Hiçbirini Seçme",
+		"groups": {
+			"alwaysAvailable": "Çekirdek İşlevsellik",
+			"read": "Oku",
+			"edit": "Düzenle",
+			"modes": "Modlar",
+			"command": "Komut",
+			"browser": "Tarayıcı",
+			"mcp": "MCP (Model Bağlam Protokolü)"
+		},
+		"executeCommand": {
+			"label": "Komutu Çalıştır",
+			"description": "execute_command - Yapay zekanın kabuk komutlarını çalıştırmasına izin ver"
+		},
+		"readFile": {
+			"label": "Dosyayı Oku",
+			"description": "read_file - Yapay zekanın dosya içeriğini okumasına izin ver"
+		},
+		"fetchInstructions": {
+			"label": "Talimatları Getir",
+			"description": "fetch_instructions - Yapay zekanın proje talimatlarını getirmesine izin ver"
+		},
+		"writeToFile": {
+			"label": "Dosyaya Yaz",
+			"description": "write_to_file - Yapay zekanın dosyalara içerik yazmasına izin ver"
+		},
+		"applyDiff": {
+			"label": "Fark Uygula",
+			"description": "apply_diff - Yapay zekanın dosyalara fark yamaları uygulamasına izin ver"
+		},
+		"insertContent": {
+			"label": "İçerik Ekle",
+			"description": "insert_content - Yapay zekanın dosyalara içerik eklemesine izin ver"
+		},
+		"searchAndReplace": {
+			"label": "Ara ve Değiştir",
+			"description": "search_and_replace - Yapay zekanın arama ve değiştirme işlemleri yapmasına izin ver"
+		},
+		"searchFiles": {
+			"label": "Dosyaları Ara",
+			"description": "search_files - Yapay zekanın projedeki dosyaları aramasına izin ver"
+		},
+		"listFiles": {
+			"label": "Dosyaları Listele",
+			"description": "list_files - Yapay zekanın dosyaları ve dizinleri listelemesine izin ver"
+		},
+		"listCodeDefinitionNames": {
+			"label": "Kod Tanımlarını Listele",
+			"description": "list_code_definition_names - Yapay zekanın kod tanımlarını ve sembollerini listelemesine izin ver"
+		},
+		"browserAction": {
+			"label": "Tarayıcı Eylemi",
+			"description": "browser_action - Yapay zekanın web tarayıcılarıyla etkileşime girmesine izin ver"
+		},
+		"useMcpTool": {
+			"label": "MCP Aracı Kullan",
+			"description": "use_mcp_tool - Yapay zekanın Model Bağlam Protokolü araçlarını kullanmasına izin ver"
+		},
+		"accessMcpResource": {
+			"label": "MCP Kaynağına Eriş",
+			"description": "access_mcp_resource - Yapay zekanın Model Bağlam Protokolü kaynaklarına erişmesine izin ver"
+		},
+		"askFollowupQuestion": {
+			"label": "Takip Sorusu Sor",
+			"description": "ask_followup_question - Yapay zekanın takip soruları sormasına izin ver"
+		},
+		"attemptCompletion": {
+			"label": "Tamamlamayı Dene",
+			"description": "attempt_completion - Yapay zekanın görevi tamamlamayı denemesine izin ver"
+		},
+		"switchMode": {
+			"label": "Mod Değiştir",
+			"description": "switch_mode - Yapay zekanın farklı modlar arasında geçiş yapmasına izin ver"
+		},
+		"newTask": {
+			"label": "Yeni Görev",
+			"description": "new_task - Yapay zekanın yeni görevler oluşturmasına izin ver"
+		},
+		"codebaseSearch": {
+			"label": "Kod Tabanında Ara",
+			"description": "codebase_search - Yapay zekanın kod tabanında arama yapmasına izin ver"
+		},
+		"updateTodoList": {
+			"label": "Yapılacaklar Listesini Güncelle",
+			"description": "update_todo_list - Yapay zekanın yapılacaklar listesini güncellemesine izin ver"
+		}
 	},
 	"codeIndex": {
 		"title": "Kod Tabanı İndeksleme",

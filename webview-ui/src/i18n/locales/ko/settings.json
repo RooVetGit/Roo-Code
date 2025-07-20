@@ -31,6 +31,7 @@
 		"prompts": "프롬프트",
 		"experimental": "실험적",
 		"language": "언어",
+		"tools": "도구",
 		"about": "Roo Code 정보"
 	},
 	"prompts": {
@@ -710,5 +711,96 @@
 		"useCustomArn": "사용자 지정 ARN 사용..."
 	},
 	"includeMaxOutputTokens": "최대 출력 토큰 포함",
-	"includeMaxOutputTokensDescription": "API 요청에서 최대 출력 토큰 매개변수를 전송합니다. 일부 제공업체는 이를 지원하지 않을 수 있습니다."
+	"includeMaxOutputTokensDescription": "API 요청에서 최대 출력 토큰 매개변수를 전송합니다. 일부 제공업체는 이를 지원하지 않을 수 있습니다.",
+	"tools": {
+		"title": "도구",
+		"description": "AI가 사용할 수 있는 도구를 제어합니다. 도구를 비활성화하면 AI가 대화에서 해당 도구를 사용할 수 없습니다.",
+		"selectAll": "모두 선택",
+		"selectNone": "선택 안 함",
+		"groups": {
+			"alwaysAvailable": "핵심 기능",
+			"read": "읽기",
+			"edit": "편집",
+			"modes": "모드",
+			"command": "명령",
+			"browser": "브라우저",
+			"mcp": "MCP (모델 컨텍스트 프로토콜)"
+		},
+		"executeCommand": {
+			"label": "명령 실행",
+			"description": "execute_command - AI가 셸 명령을 실행하도록 허용"
+		},
+		"readFile": {
+			"label": "파일 읽기",
+			"description": "read_file - AI가 파일 내용을 읽도록 허용"
+		},
+		"fetchInstructions": {
+			"label": "지침 가져오기",
+			"description": "fetch_instructions - AI가 프로젝트 지침을 가져오도록 허용"
+		},
+		"writeToFile": {
+			"label": "파일에 쓰기",
+			"description": "write_to_file - AI가 파일에 내용을 쓰도록 허용"
+		},
+		"applyDiff": {
+			"label": "Diff 적용",
+			"description": "apply_diff - AI가 파일에 diff 패치를 적용하도록 허용"
+		},
+		"insertContent": {
+			"label": "콘텐츠 삽입",
+			"description": "insert_content - AI가 파일에 콘텐츠를 삽입하도록 허용"
+		},
+		"searchAndReplace": {
+			"label": "검색 및 바꾸기",
+			"description": "search_and_replace - AI가 검색 및 바꾸기 작업을 수행하도록 허용"
+		},
+		"searchFiles": {
+			"label": "파일 검색",
+			"description": "search_files - AI가 프로젝트에서 파일을 검색하도록 허용"
+		},
+		"listFiles": {
+			"label": "파일 목록",
+			"description": "list_files - AI가 파일 및 디렉터리 목록을 표시하도록 허용"
+		},
+		"listCodeDefinitionNames": {
+			"label": "코드 정의 목록",
+			"description": "list_code_definition_names - AI가 코드 정의 및 기호 목록을 표시하도록 허용"
+		},
+		"browserAction": {
+			"label": "브라우저 작업",
+			"description": "browser_action - AI가 웹 브라우저와 상호 작용하도록 허용"
+		},
+		"useMcpTool": {
+			"label": "MCP 도구 사용",
+			"description": "use_mcp_tool - AI가 모델 컨텍스트 프로토콜 도구를 사용하도록 허용"
+		},
+		"accessMcpResource": {
+			"label": "MCP 리소스 액세스",
+			"description": "access_mcp_resource - AI가 모델 컨텍스트 프로토콜 리소스에 액세스하도록 허용"
+		},
+		"askFollowupQuestion": {
+			"label": "후속 질문하기",
+			"description": "ask_followup_question - AI가 후속 질문을 하도록 허용"
+		},
+		"attemptCompletion": {
+			"label": "완료 시도",
+			"description": "attempt_completion - AI가 작업 완료를 시도하도록 허용"
+		},
+		"switchMode": {
+			"label": "모드 전환",
+			"description": "switch_mode - AI가 다른 모드 간에 전환하도록 허용"
+		},
+		"newTask": {
+			"label": "새 작업",
+			"description": "new_task - AI가 새 작업을 만들도록 허용"
+		},
+		"codebaseSearch": {
+			"label": "코드베이스 검색",
+			"description": "codebase_search - AI가 코드베이스를 통해 검색하도록 허용"
+		},
+		"updateTodoList": {
+			"label": "할 일 목록 업데이트",
+			"description": "update_todo_list - AI가 할 일 목록을 업데이트하도록 허용"
+		}
+	}
 }

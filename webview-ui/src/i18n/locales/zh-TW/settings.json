@@ -27,6 +27,7 @@
 		"checkpoints": "檢查點",
 		"notifications": "通知",
 		"contextManagement": "上下文",
+		"tools": "工具",
 		"terminal": "終端機",
 		"prompts": "提示詞",
 		"experimental": "實驗性",
@@ -35,6 +36,97 @@
 	},
 	"prompts": {
 		"description": "設定用於快速操作的支援提示詞，如增強提示詞、解釋程式碼和修復問題。這些提示詞幫助 Roo 為常見開發工作提供更好的支援。"
+	},
+	"tools": {
+		"title": "工具",
+		"description": "控制 AI 可用的工具。停用工具將防止 AI 在對話中使用它們。",
+		"selectAll": "全選",
+		"selectNone": "取消全選",
+		"groups": {
+			"alwaysAvailable": "核心功能",
+			"read": "讀取",
+			"edit": "編輯",
+			"modes": "模式",
+			"command": "指令",
+			"browser": "瀏覽器",
+			"mcp": "MCP (模型內容協議)"
+		},
+		"executeCommand": {
+			"label": "執行指令",
+			"description": "execute_command - 允許 AI 執行 shell 指令"
+		},
+		"readFile": {
+			"label": "讀取檔案",
+			"description": "read_file - 允許 AI 讀取檔案內容"
+		},
+		"fetchInstructions": {
+			"label": "擷取指示",
+			"description": "fetch_instructions - 允許 AI 擷取專案指示"
+		},
+		"writeToFile": {
+			"label": "寫入檔案",
+			"description": "write_to_file - 允許 AI 將內容寫入檔案"
+		},
+		"applyDiff": {
+			"label": "套用差異",
+			"description": "apply_diff - 允許 AI 將差異修補程式套用到檔案"
+		},
+		"insertContent": {
+			"label": "插入內容",
+			"description": "insert_content - 允許 AI 將內容插入檔案"
+		},
+		"searchAndReplace": {
+			"label": "搜尋與取代",
+			"description": "search_and_replace - 允許 AI 執行搜尋與取代操作"
+		},
+		"searchFiles": {
+			"label": "搜尋檔案",
+			"description": "search_files - 允許 AI 在專案中搜尋檔案"
+		},
+		"listFiles": {
+			"label": "列出檔案",
+			"description": "list_files - 允許 AI 列出檔案和目錄"
+		},
+		"listCodeDefinitionNames": {
+			"label": "列出程式碼定義",
+			"description": "list_code_definition_names - 允許 AI 列出程式碼定義和符號"
+		},
+		"browserAction": {
+			"label": "瀏覽器操作",
+			"description": "browser_action - 允許 AI 與網頁瀏覽器互動"
+		},
+		"useMcpTool": {
+			"label": "使用 MCP 工具",
+			"description": "use_mcp_tool - 允許 AI 使用模型內容協議工具"
+		},
+		"accessMcpResource": {
+			"label": "存取 MCP 資源",
+			"description": "access_mcp_resource - 允許 AI 存取模型內容協議資源"
+		},
+		"askFollowupQuestion": {
+			"label": "提出後續問題",
+			"description": "ask_followup_question - 允許 AI 提出後續問題"
+		},
+		"attemptCompletion": {
+			"label": "嘗試完成",
+			"description": "attempt_completion - 允許 AI 嘗試完成工作"
+		},
+		"switchMode": {
+			"label": "切換模式",
+			"description": "switch_mode - 允許 AI 在不同模式之間切換"
+		},
+		"newTask": {
+			"label": "新工作",
+			"description": "new_task - 允許 AI 建立新工作"
+		},
+		"codebaseSearch": {
+			"label": "程式碼庫搜尋",
+			"description": "codebase_search - 允許 AI 搜尋整個程式碼庫"
+		},
+		"updateTodoList": {
+			"label": "更新待辦清單",
+			"description": "update_todo_list - 允許 AI 更新待辦清單"
+		}
 	},
 	"codeIndex": {
 		"title": "程式碼庫索引",

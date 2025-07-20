@@ -29,12 +29,104 @@
 		"contextManagement": "Context",
 		"terminal": "Terminal",
 		"prompts": "Indicacions",
+		"tools": "Eines",
 		"experimental": "Experimental",
 		"language": "Idioma",
 		"about": "Sobre Roo Code"
 	},
 	"prompts": {
 		"description": "Configura les indicacions de suport utilitzades per a accions ràpides com millorar indicacions, explicar codi i solucionar problemes. Aquestes indicacions ajuden Roo a proporcionar millor assistència per a tasques comunes de desenvolupament."
+	},
+	"tools": {
+		"title": "Eines",
+		"description": "Controla quines eines estan disponibles per a la IA. Desactivar eines impedirà que la IA les utilitzi en les converses.",
+		"selectAll": "Seleccionar-ho tot",
+		"selectNone": "No seleccionar-ne cap",
+		"groups": {
+			"alwaysAvailable": "Funcionalitat bàsica",
+			"read": "Llegir",
+			"edit": "Editar",
+			"modes": "Modes",
+			"command": "Comanda",
+			"browser": "Navegador",
+			"mcp": "MCP (Protocol de Context del Model)"
+		},
+		"executeCommand": {
+			"label": "Executar comanda",
+			"description": "execute_command - Permet a la IA executar comandes de shell"
+		},
+		"readFile": {
+			"label": "Llegir fitxer",
+			"description": "read_file - Permet a la IA llegir el contingut dels fitxers"
+		},
+		"fetchInstructions": {
+			"label": "Obtenir instruccions",
+			"description": "fetch_instructions - Permet a la IA obtenir les instruccions del projecte"
+		},
+		"writeToFile": {
+			"label": "Escriure al fitxer",
+			"description": "write_to_file - Permet a la IA escriure contingut als fitxers"
+		},
+		"applyDiff": {
+			"label": "Aplicar diferències",
+			"description": "apply_diff - Permet a la IA aplicar pegats de diferències als fitxers"
+		},
+		"insertContent": {
+			"label": "Inserir contingut",
+			"description": "insert_content - Permet a la IA inserir contingut als fitxers"
+		},
+		"searchAndReplace": {
+			"label": "Cercar i reemplaçar",
+			"description": "search_and_replace - Permet a la IA realitzar operacions de cerca i reemplaçament"
+		},
+		"searchFiles": {
+			"label": "Cercar fitxers",
+			"description": "search_files - Permet a la IA cercar fitxers al projecte"
+		},
+		"listFiles": {
+			"label": "Llistar fitxers",
+			"description": "list_files - Permet a la IA llistar fitxers i directoris"
+		},
+		"listCodeDefinitionNames": {
+			"label": "Llistar definicions de codi",
+			"description": "list_code_definition_names - Permet a la IA llistar definicions i símbols de codi"
+		},
+		"browserAction": {
+			"label": "Acció del navegador",
+			"description": "browser_action - Permet a la IA interactuar amb els navegadors web"
+		},
+		"useMcpTool": {
+			"label": "Utilitzar l'eina MCP",
+			"description": "use_mcp_tool - Permet a la IA utilitzar les eines del Protocol de Context del Model"
+		},
+		"accessMcpResource": {
+			"label": "Accedir al recurs MCP",
+			"description": "access_mcp_resource - Permet a la IA accedir als recursos del Protocol de Context del Model"
+		},
+		"askFollowupQuestion": {
+			"label": "Fer una pregunta de seguiment",
+			"description": "ask_followup_question - Permet a la IA fer preguntes de seguiment"
+		},
+		"attemptCompletion": {
+			"label": "Intentar finalització",
+			"description": "attempt_completion - Permet a la IA intentar la finalització d'una tasca"
+		},
+		"switchMode": {
+			"label": "Canviar de mode",
+			"description": "switch_mode - Permet a la IA canviar entre diferents modes"
+		},
+		"newTask": {
+			"label": "Tasca nova",
+			"description": "new_task - Permet a la IA crear noves tasques"
+		},
+		"codebaseSearch": {
+			"label": "Cerca a la base de codi",
+			"description": "codebase_search - Permet a la IA cercar a través de la base de codi"
+		},
+		"updateTodoList": {
+			"label": "Actualitzar la llista de tasques",
+			"description": "update_todo_list - Permet a la IA actualitzar les llistes de tasques pendents"
+		}
 	},
 	"codeIndex": {
 		"title": "Indexació de codi",

@@ -27,6 +27,7 @@
 		"checkpoints": "चेकपॉइंट",
 		"notifications": "सूचनाएँ",
 		"contextManagement": "संदर्भ",
+		"tools": "उपकरण",
 		"terminal": "टर्मिनल",
 		"prompts": "प्रॉम्प्ट्स",
 		"experimental": "प्रायोगिक",
@@ -35,6 +36,97 @@
 	},
 	"prompts": {
 		"description": "प्रॉम्प्ट्स को बेहतर बनाना, कोड की व्याख्या करना और समस्याओं को ठीक करना जैसी त्वरित कार्रवाइयों के लिए उपयोग किए जाने वाले सहायक प्रॉम्प्ट्स को कॉन्फ़िगर करें। ये प्रॉम्प्ट्स Roo को सामान्य विकास कार्यों के लिए बेहतर सहायता प्रदान करने में मदद करते हैं।"
+	},
+	"tools": {
+		"title": "उपकरण",
+		"description": "AI के लिए कौन से उपकरण उपलब्ध हैं, इसे नियंत्रित करें। उपकरणों को अक्षम करने से AI उन्हें बातचीत में उपयोग करने से रोक देगा।",
+		"selectAll": "सभी चुनें",
+		"selectNone": "कोई भी न चुनें",
+		"groups": {
+			"alwaysAvailable": "मुख्य कार्यक्षमता",
+			"read": "पढ़ें",
+			"edit": "संपादित करें",
+			"modes": "मोड",
+			"command": "कमांड",
+			"browser": "ब्राउज़र",
+			"mcp": "MCP (मॉडल संदर्भ प्रोटोकॉल)"
+		},
+		"executeCommand": {
+			"label": "कमांड निष्पादित करें",
+			"description": "execute_command - AI को शेल कमांड निष्पादित करने की अनुमति दें"
+		},
+		"readFile": {
+			"label": "फ़ाइल पढ़ें",
+			"description": "read_file - AI को फ़ाइल सामग्री पढ़ने की अनुमति दें"
+		},
+		"fetchInstructions": {
+			"label": "निर्देश प्राप्त करें",
+			"description": "fetch_instructions - AI को प्रोजेक्ट निर्देश प्राप्त करने की अनुमति दें"
+		},
+		"writeToFile": {
+			"label": "फ़ाइल में लिखें",
+			"description": "write_to_file - AI को फ़ाइलों में सामग्री लिखने की अनुमति दें"
+		},
+		"applyDiff": {
+			"label": "Diff लागू करें",
+			"description": "apply_diff - AI को फ़ाइलों पर diff पैच लागू करने की अनुमति दें"
+		},
+		"insertContent": {
+			"label": "सामग्री डालें",
+			"description": "insert_content - AI को फ़ाइलों में सामग्री डालने की अनुमति दें"
+		},
+		"searchAndReplace": {
+			"label": "खोजें और बदलें",
+			"description": "search_and_replace - AI को खोज और प्रतिस्थापन संचालन करने की अनुमति दें"
+		},
+		"searchFiles": {
+			"label": "फ़ाइलें खोजें",
+			"description": "search_files - AI को प्रोजेक्ट में फ़ाइलों की खोज करने की अनुमति दें"
+		},
+		"listFiles": {
+			"label": "फ़ाइलें सूचीबद्ध करें",
+			"description": "list_files - AI को फ़ाइलों और निर्देशिकाओं को सूचीबद्ध करने की अनुमति दें"
+		},
+		"listCodeDefinitionNames": {
+			"label": "कोड परिभाषाएं सूचीबद्ध करें",
+			"description": "list_code_definition_names - AI को कोड परिभाषाओं और प्रतीकों को सूचीबद्ध करने की अनुमति दें"
+		},
+		"browserAction": {
+			"label": "ब्राउज़र क्रिया",
+			"description": "browser_action - AI को वेब ब्राउज़र के साथ इंटरैक्ट करने की अनुमति दें"
+		},
+		"useMcpTool": {
+			"label": "MCP टूल का उपयोग करें",
+			"description": "use_mcp_tool - AI को मॉडल संदर्भ प्रोटोकॉल टूल का उपयोग करने की अनुमति दें"
+		},
+		"accessMcpResource": {
+			"label": "MCP संसाधन तक पहुँचें",
+			"description": "access_mcp_resource - AI को मॉडल संदर्भ प्रोटोकॉल संसाधनों तक पहुंचने की अनुमति दें"
+		},
+		"askFollowupQuestion": {
+			"label": "अनुवर्ती प्रश्न पूछें",
+			"description": "ask_followup_question - AI को अनुवर्ती प्रश्न पूछने की अनुमति दें"
+		},
+		"attemptCompletion": {
+			"label": "पूर्णता का प्रयास करें",
+			"description": "attempt_completion - AI को कार्य पूर्णता का प्रयास करने की अनुमति दें"
+		},
+		"switchMode": {
+			"label": "मोड बदलें",
+			"description": "switch_mode - AI को विभिन्न मोड के बीच स्विच करने की अनुमति दें"
+		},
+		"newTask": {
+			"label": "नया कार्य",
+			"description": "new_task - AI को नए कार्य बनाने की अनुमति दें"
+		},
+		"codebaseSearch": {
+			"label": "कोडबेस खोजें",
+			"description": "codebase_search - AI को कोडबेस के माध्यम से खोजने की अनुमति दें"
+		},
+		"updateTodoList": {
+			"label": "टू-डू सूची अपडेट करें",
+			"description": "update_todo_list - AI को टू-डू सूचियों को अपडेट करने की अनुमति दें"
+		}
 	},
 	"codeIndex": {
 		"title": "कोडबेस इंडेक्सिंग",

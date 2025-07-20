@@ -27,7 +27,8 @@
 		"checkpoints": "Punti di controllo",
 		"notifications": "Notifiche",
 		"contextManagement": "Contesto",
-		"terminal": "Terminal",
+		"tools": "Strumenti",
+		"terminal": "Terminale",
 		"prompts": "Prompt",
 		"experimental": "Sperimentale",
 		"language": "Lingua",
@@ -35,6 +36,97 @@
 	},
 	"prompts": {
 		"description": "Configura i prompt di supporto utilizzati per azioni rapide come il miglioramento dei prompt, la spiegazione del codice e la risoluzione dei problemi. Questi prompt aiutano Roo a fornire una migliore assistenza per le attività di sviluppo comuni."
+	},
+	"tools": {
+		"title": "Strumenti",
+		"description": "Controlla quali strumenti sono disponibili per l'IA. La disattivazione degli strumenti impedirà all'IA di utilizzarli nelle conversazioni.",
+		"selectAll": "Seleziona tutto",
+		"selectNone": "Deseleziona tutto",
+		"groups": {
+			"alwaysAvailable": "Funzionalità principali",
+			"read": "Lettura",
+			"edit": "Modifica",
+			"modes": "Modalità",
+			"command": "Comando",
+			"browser": "Browser",
+			"mcp": "MCP (Model Context Protocol)"
+		},
+		"executeCommand": {
+			"label": "Esegui Comando",
+			"description": "execute_command - Consente all'IA di eseguire comandi di shell"
+		},
+		"readFile": {
+			"label": "Leggi File",
+			"description": "read_file - Consente all'IA di leggere il contenuto dei file"
+		},
+		"fetchInstructions": {
+			"label": "Recupera Istruzioni",
+			"description": "fetch_instructions - Consente all'IA di recuperare le istruzioni del progetto"
+		},
+		"writeToFile": {
+			"label": "Scrivi su File",
+			"description": "write_to_file - Consente all'IA di scrivere contenuti nei file"
+		},
+		"applyDiff": {
+			"label": "Applica Diff",
+			"description": "apply_diff - Consente all'IA di applicare patch di differenze ai file"
+		},
+		"insertContent": {
+			"label": "Inserisci Contenuto",
+			"description": "insert_content - Consente all'IA di inserire contenuti nei file"
+		},
+		"searchAndReplace": {
+			"label": "Cerca e Sostituisci",
+			"description": "search_and_replace - Consente all'IA di eseguire operazioni di ricerca e sostituzione"
+		},
+		"searchFiles": {
+			"label": "Cerca File",
+			"description": "search_files - Consente all'IA di cercare file nel progetto"
+		},
+		"listFiles": {
+			"label": "Elenca File",
+			"description": "list_files - Consente all'IA di elencare file e directory"
+		},
+		"listCodeDefinitionNames": {
+			"label": "Elenca Definizioni Codice",
+			"description": "list_code_definition_names - Consente all'IA di elencare definizioni e simboli di codice"
+		},
+		"browserAction": {
+			"label": "Azione Browser",
+			"description": "browser_action - Consente all'IA di interagire con i browser web"
+		},
+		"useMcpTool": {
+			"label": "Usa Strumento MCP",
+			"description": "use_mcp_tool - Consente all'IA di utilizzare gli strumenti del Model Context Protocol"
+		},
+		"accessMcpResource": {
+			"label": "Accedi a Risorsa MCP",
+			"description": "access_mcp_resource - Consente all'IA di accedere alle risorse del Model Context Protocol"
+		},
+		"askFollowupQuestion": {
+			"label": "Fai Domanda di Follow-up",
+			"description": "ask_followup_question - Consente all'IA di porre domande di follow-up"
+		},
+		"attemptCompletion": {
+			"label": "Tenta Completamento",
+			"description": "attempt_completion - Consente all'IA di tentare il completamento dell'attività"
+		},
+		"switchMode": {
+			"label": "Cambia Modalità",
+			"description": "switch_mode - Consente all'IA di passare da una modalità all'altra"
+		},
+		"newTask": {
+			"label": "Nuovo Compito",
+			"description": "new_task - Consente all'IA di creare nuovi compiti"
+		},
+		"codebaseSearch": {
+			"label": "Ricerca nel Codice",
+			"description": "codebase_search - Consente all'IA di effettuare ricerche nel codice"
+		},
+		"updateTodoList": {
+			"label": "Aggiorna Elenco Cose da Fare",
+			"description": "update_todo_list - Consente all'IA di aggiornare gli elenchi di cose da fare"
+		}
 	},
 	"codeIndex": {
 		"title": "Indicizzazione del codice",

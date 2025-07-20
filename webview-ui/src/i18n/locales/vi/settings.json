@@ -31,10 +31,102 @@
 		"prompts": "Lời nhắc",
 		"experimental": "Thử nghiệm",
 		"language": "Ngôn ngữ",
-		"about": "Giới thiệu"
+		"about": "Giới thiệu",
+		"tools": "Công cụ"
 	},
 	"prompts": {
 		"description": "Cấu hình các lời nhắc hỗ trợ được sử dụng cho các hành động nhanh như cải thiện lời nhắc, giải thích mã và khắc phục sự cố. Những lời nhắc này giúp Roo cung cấp hỗ trợ tốt hơn cho các tác vụ phát triển phổ biến."
+	},
+	"tools": {
+		"title": "Công cụ",
+		"description": "Kiểm soát những công cụ nào có sẵn cho AI. Việc tắt các công cụ sẽ ngăn AI sử dụng chúng trong các cuộc hội thoại.",
+		"selectAll": "Chọn tất cả",
+		"selectNone": "Không chọn gì",
+		"groups": {
+			"alwaysAvailable": "Chức năng cốt lõi",
+			"read": "Đọc",
+			"edit": "Chỉnh sửa",
+			"modes": "Chế độ",
+			"command": "Lệnh",
+			"browser": "Trình duyệt",
+			"mcp": "MCP (Giao thức ngữ cảnh mô hình)"
+		},
+		"executeCommand": {
+			"label": "Thực thi lệnh",
+			"description": "execute_command - Cho phép AI thực thi các lệnh shell"
+		},
+		"readFile": {
+			"label": "Đọc tệp",
+			"description": "read_file - Cho phép AI đọc nội dung tệp"
+		},
+		"fetchInstructions": {
+			"label": "Tìm nạp hướng dẫn",
+			"description": "fetch_instructions - Cho phép AI tìm nạp hướng dẫn dự án"
+		},
+		"writeToFile": {
+			"label": "Ghi vào tệp",
+			"description": "write_to_file - Cho phép AI ghi nội dung vào tệp"
+		},
+		"applyDiff": {
+			"label": "Áp dụng Diff",
+			"description": "apply_diff - Cho phép AI áp dụng các bản vá diff cho tệp"
+		},
+		"insertContent": {
+			"label": "Chèn nội dung",
+			"description": "insert_content - Cho phép AI chèn nội dung vào tệp"
+		},
+		"searchAndReplace": {
+			"label": "Tìm kiếm và thay thế",
+			"description": "search_and_replace - Cho phép AI thực hiện các thao tác tìm kiếm và thay thế"
+		},
+		"searchFiles": {
+			"label": "Tìm kiếm tệp",
+			"description": "search_files - Cho phép AI tìm kiếm tệp trong dự án"
+		},
+		"listFiles": {
+			"label": "Liệt kê tệp",
+			"description": "list_files - Cho phép AI liệt kê các tệp và thư mục"
+		},
+		"listCodeDefinitionNames": {
+			"label": "Liệt kê định nghĩa mã",
+			"description": "list_code_definition_names - Cho phép AI liệt kê các định nghĩa và ký hiệu mã"
+		},
+		"browserAction": {
+			"label": "Hành động trình duyệt",
+			"description": "browser_action - Cho phép AI tương tác với trình duyệt web"
+		},
+		"useMcpTool": {
+			"label": "Sử dụng công cụ MCP",
+			"description": "use_mcp_tool - Cho phép AI sử dụng các công cụ Giao thức ngữ cảnh mô hình"
+		},
+		"accessMcpResource": {
+			"label": "Truy cập tài nguyên MCP",
+			"description": "access_mcp_resource - Cho phép AI truy cập các tài nguyên Giao thức ngữ cảnh mô hình"
+		},
+		"askFollowupQuestion": {
+			"label": "Hỏi câu hỏi tiếp theo",
+			"description": "ask_followup_question - Cho phép AI hỏi các câu hỏi tiếp theo"
+		},
+		"attemptCompletion": {
+			"label": "Cố gắng hoàn thành",
+			"description": "attempt_completion - Cho phép AI cố gắng hoàn thành nhiệm vụ"
+		},
+		"switchMode": {
+			"label": "Chuyển chế độ",
+			"description": "switch_mode - Cho phép AI chuyển đổi giữa các chế độ khác nhau"
+		},
+		"newTask": {
+			"label": "Nhiệm vụ mới",
+			"description": "new_task - Cho phép AI tạo nhiệm vụ mới"
+		},
+		"codebaseSearch": {
+			"label": "Tìm kiếm trong codebase",
+			"description": "codebase_search - Cho phép AI tìm kiếm trong toàn bộ codebase"
+		},
+		"updateTodoList": {
+			"label": "Cập nhật danh sách việc cần làm",
+			"description": "update_todo_list - Cho phép AI cập nhật danh sách việc cần làm"
+		}
 	},
 	"codeIndex": {
 		"title": "Lập chỉ mục mã nguồn",

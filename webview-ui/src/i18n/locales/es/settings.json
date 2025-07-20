@@ -29,12 +29,104 @@
 		"contextManagement": "Contexto",
 		"terminal": "Terminal",
 		"prompts": "Indicaciones",
+		"tools": "Herramientas",
 		"experimental": "Experimental",
 		"language": "Idioma",
 		"about": "Acerca de Roo Code"
 	},
 	"prompts": {
 		"description": "Configura indicaciones de soporte que se utilizan para acciones rápidas como mejorar indicaciones, explicar código y solucionar problemas. Estas indicaciones ayudan a Roo a brindar mejor asistencia para tareas comunes de desarrollo."
+	},
+	"tools": {
+		"title": "Herramientas",
+		"description": "Controla qué herramientas están disponibles para la IA. Deshabilitar herramientas evitará que la IA las use en las conversaciones.",
+		"selectAll": "Seleccionar todo",
+		"selectNone": "No seleccionar ninguno",
+		"groups": {
+			"alwaysAvailable": "Funcionalidad principal",
+			"read": "Leer",
+			"edit": "Editar",
+			"modes": "Modos",
+			"command": "Comando",
+			"browser": "Navegador",
+			"mcp": "MCP (Protocolo de Contexto del Modelo)"
+		},
+		"executeCommand": {
+			"label": "Ejecutar comando",
+			"description": "execute_command - Permitir que la IA ejecute comandos de shell"
+		},
+		"readFile": {
+			"label": "Leer archivo",
+			"description": "read_file - Permitir que la IA lea el contenido de los archivos"
+		},
+		"fetchInstructions": {
+			"label": "Obtener instrucciones",
+			"description": "fetch_instructions - Permitir que la IA obtenga las instrucciones del proyecto"
+		},
+		"writeToFile": {
+			"label": "Escribir en archivo",
+			"description": "write_to_file - Permitir que la IA escriba contenido en los archivos"
+		},
+		"applyDiff": {
+			"label": "Aplicar diferencias",
+			"description": "apply_diff - Permitir que la IA aplique parches de diferencias a los archivos"
+		},
+		"insertContent": {
+			"label": "Insertar contenido",
+			"description": "insert_content - Permitir que la IA inserte contenido en los archivos"
+		},
+		"searchAndReplace": {
+			"label": "Buscar y reemplazar",
+			"description": "search_and_replace - Permitir que la IA realice operaciones de búsqueda y reemplazo"
+		},
+		"searchFiles": {
+			"label": "Buscar archivos",
+			"description": "search_files - Permitir que la IA busque archivos en el proyecto"
+		},
+		"listFiles": {
+			"label": "Listar archivos",
+			"description": "list_files - Permitir que la IA liste archivos y directorios"
+		},
+		"listCodeDefinitionNames": {
+			"label": "Listar definiciones de código",
+			"description": "list_code_definition_names - Permitir que la IA liste definiciones y símbolos de código"
+		},
+		"browserAction": {
+			"label": "Acción del navegador",
+			"description": "browser_action - Permitir que la IA interactúe con los navegadores web"
+		},
+		"useMcpTool": {
+			"label": "Usar herramienta MCP",
+			"description": "use_mcp_tool - Permitir que la IA use las herramientas del Protocolo de Contexto del Modelo"
+		},
+		"accessMcpResource": {
+			"label": "Acceder al recurso MCP",
+			"description": "access_mcp_resource - Permitir que la IA acceda a los recursos del Protocolo de Contexto del Modelo"
+		},
+		"askFollowupQuestion": {
+			"label": "Hacer pregunta de seguimiento",
+			"description": "ask_followup_question - Permitir que la IA haga preguntas de seguimiento"
+		},
+		"attemptCompletion": {
+			"label": "Intentar finalización",
+			"description": "attempt_completion - Permitir que la IA intente la finalización de la tarea"
+		},
+		"switchMode": {
+			"label": "Cambiar de modo",
+			"description": "switch_mode - Permitir que la IA cambie entre diferentes modos"
+		},
+		"newTask": {
+			"label": "Nueva tarea",
+			"description": "new_task - Permitir que la IA cree nuevas tareas"
+		},
+		"codebaseSearch": {
+			"label": "Búsqueda en la base de código",
+			"description": "codebase_search - Permitir que la IA busque en la base de código"
+		},
+		"updateTodoList": {
+			"label": "Actualizar lista de tareas",
+			"description": "update_todo_list - Permitir que la IA actualice las listas de tareas pendientes"
+		}
 	},
 	"codeIndex": {
 		"title": "Indexación de código",

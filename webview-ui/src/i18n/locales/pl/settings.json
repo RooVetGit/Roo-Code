@@ -29,12 +29,104 @@
 		"contextManagement": "Kontekst",
 		"terminal": "Terminal",
 		"prompts": "Podpowiedzi",
+		"tools": "Narzędzia",
 		"experimental": "Eksperymentalne",
 		"language": "Język",
 		"about": "O Roo Code"
 	},
 	"prompts": {
 		"description": "Skonfiguruj podpowiedzi wsparcia używane do szybkich działań, takich jak ulepszanie podpowiedzi, wyjaśnianie kodu i rozwiązywanie problemów. Te podpowiedzi pomagają Roo zapewnić lepsze wsparcie dla typowych zadań programistycznych."
+	},
+	"tools": {
+		"title": "Narzędzia",
+		"description": "Kontroluj, które narzędzia są dostępne dla AI. Wyłączenie narzędzi uniemożliwi AI korzystanie z nich w rozmowach.",
+		"selectAll": "Zaznacz wszystko",
+		"selectNone": "Odznacz wszystko",
+		"groups": {
+			"alwaysAvailable": "Podstawowa funkcjonalność",
+			"read": "Odczyt",
+			"edit": "Edycja",
+			"modes": "Tryby",
+			"command": "Polecenie",
+			"browser": "Przeglądarka",
+			"mcp": "MCP (Protokół Kontekstu Modelu)"
+		},
+		"executeCommand": {
+			"label": "Wykonaj polecenie",
+			"description": "execute_command - Pozwól AI na wykonywanie poleceń powłoki"
+		},
+		"readFile": {
+			"label": "Czytaj plik",
+			"description": "read_file - Pozwól AI na odczytywanie zawartości plików"
+		},
+		"fetchInstructions": {
+			"label": "Pobierz instrukcje",
+			"description": "fetch_instructions - Pozwól AI na pobieranie instrukcji projektu"
+		},
+		"writeToFile": {
+			"label": "Zapisz do pliku",
+			"description": "write_to_file - Pozwól AI na zapisywanie zawartości do plików"
+		},
+		"applyDiff": {
+			"label": "Zastosuj diff",
+			"description": "apply_diff - Pozwól AI na stosowanie łatek diff do plików"
+		},
+		"insertContent": {
+			"label": "Wstaw zawartość",
+			"description": "insert_content - Pozwól AI na wstawianie zawartości do plików"
+		},
+		"searchAndReplace": {
+			"label": "Wyszukaj i zamień",
+			"description": "search_and_replace - Pozwól AI na operacje wyszukiwania i zamiany"
+		},
+		"searchFiles": {
+			"label": "Wyszukaj pliki",
+			"description": "search_files - Pozwól AI na wyszukiwanie plików w projekcie"
+		},
+		"listFiles": {
+			"label": "Listuj pliki",
+			"description": "list_files - Pozwól AI na listowanie plików i katalogów"
+		},
+		"listCodeDefinitionNames": {
+			"label": "Listuj definicje kodu",
+			"description": "list_code_definition_names - Pozwól AI na listowanie definicji kodu i symboli"
+		},
+		"browserAction": {
+			"label": "Akcja przeglądarki",
+			"description": "browser_action - Pozwól AI na interakcję z przeglądarkami internetowymi"
+		},
+		"useMcpTool": {
+			"label": "Użyj narzędzia MCP",
+			"description": "use_mcp_tool - Pozwól AI na używanie narzędzi protokołu kontekstu modelu"
+		},
+		"accessMcpResource": {
+			"label": "Dostęp do zasobu MCP",
+			"description": "access_mcp_resource - Pozwól AI na dostęp do zasobów protokołu kontekstu modelu"
+		},
+		"askFollowupQuestion": {
+			"label": "Zadaj pytanie uzupełniające",
+			"description": "ask_followup_question - Pozwól AI na zadawanie pytań uzupełniających"
+		},
+		"attemptCompletion": {
+			"label": "Spróbuj ukończyć",
+			"description": "attempt_completion - Pozwól AI na próbę ukończenia zadania"
+		},
+		"switchMode": {
+			"label": "Przełącz tryb",
+			"description": "switch_mode - Pozwól AI na przełączanie między różnymi trybami"
+		},
+		"newTask": {
+			"label": "Nowe zadanie",
+			"description": "new_task - Pozwól AI na tworzenie nowych zadań"
+		},
+		"codebaseSearch": {
+			"label": "Wyszukiwanie w bazie kodu",
+			"description": "codebase_search - Pozwól AI na przeszukiwanie bazy kodu"
+		},
+		"updateTodoList": {
+			"label": "Aktualizuj listę zadań",
+			"description": "update_todo_list - Pozwól AI na aktualizację list zadań"
+		}
 	},
 	"codeIndex": {
 		"title": "Indeksowanie kodu",

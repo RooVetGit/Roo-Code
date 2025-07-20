@@ -27,6 +27,7 @@
 		"checkpoints": "Checkpoint",
 		"notifications": "Notifikasi",
 		"contextManagement": "Konteks",
+		"tools": "Alat",
 		"terminal": "Terminal",
 		"prompts": "Prompt",
 		"experimental": "Eksperimental",
@@ -35,6 +36,97 @@
 	},
 	"prompts": {
 		"description": "Konfigurasi support prompt yang digunakan untuk aksi cepat seperti meningkatkan prompt, menjelaskan kode, dan memperbaiki masalah. Prompt ini membantu Roo memberikan bantuan yang lebih baik untuk tugas pengembangan umum."
+	},
+	"tools": {
+		"title": "Alat",
+		"description": "Kontrol alat mana yang tersedia untuk AI. Menonaktifkan alat akan mencegah AI menggunakannya dalam percakapan.",
+		"selectAll": "Pilih Semua",
+		"selectNone": "Pilih Tidak Ada",
+		"groups": {
+			"alwaysAvailable": "Fungsi Inti",
+			"read": "Baca",
+			"edit": "Ubah",
+			"modes": "Mode",
+			"command": "Perintah",
+			"browser": "Browser",
+			"mcp": "MCP (Protokol Konteks Model)"
+		},
+		"executeCommand": {
+			"label": "Jalankan Perintah",
+			"description": "execute_command - Izinkan AI untuk menjalankan perintah shell"
+		},
+		"readFile": {
+			"label": "Baca File",
+			"description": "read_file - Izinkan AI untuk membaca konten file"
+		},
+		"fetchInstructions": {
+			"label": "Ambil Instruksi",
+			"description": "fetch_instructions - Izinkan AI untuk mengambil instruksi proyek"
+		},
+		"writeToFile": {
+			"label": "Tulis ke File",
+			"description": "write_to_file - Izinkan AI untuk menulis konten ke file"
+		},
+		"applyDiff": {
+			"label": "Terapkan Diff",
+			"description": "apply_diff - Izinkan AI untuk menerapkan patch diff ke file"
+		},
+		"insertContent": {
+			"label": "Sisipkan Konten",
+			"description": "insert_content - Izinkan AI untuk menyisipkan konten ke dalam file"
+		},
+		"searchAndReplace": {
+			"label": "Cari dan Ganti",
+			"description": "search_and_replace - Izinkan AI untuk melakukan operasi pencarian dan penggantian"
+		},
+		"searchFiles": {
+			"label": "Cari File",
+			"description": "search_files - Izinkan AI untuk mencari file dalam proyek"
+		},
+		"listFiles": {
+			"label": "Daftar File",
+			"description": "list_files - Izinkan AI untuk mendaftar file dan direktori"
+		},
+		"listCodeDefinitionNames": {
+			"label": "Daftar Definisi Kode",
+			"description": "list_code_definition_names - Izinkan AI untuk mendaftar definisi dan simbol kode"
+		},
+		"browserAction": {
+			"label": "Aksi Browser",
+			"description": "browser_action - Izinkan AI untuk berinteraksi dengan browser web"
+		},
+		"useMcpTool": {
+			"label": "Gunakan Alat MCP",
+			"description": "use_mcp_tool - Izinkan AI untuk menggunakan alat Protokol Konteks Model"
+		},
+		"accessMcpResource": {
+			"label": "Akses Sumber Daya MCP",
+			"description": "access_mcp_resource - Izinkan AI untuk mengakses sumber daya Protokol Konteks Model"
+		},
+		"askFollowupQuestion": {
+			"label": "Ajukan Pertanyaan Tindak Lanjut",
+			"description": "ask_followup_question - Izinkan AI untuk mengajukan pertanyaan tindak lanjut"
+		},
+		"attemptCompletion": {
+			"label": "Coba Penyelesaian",
+			"description": "attempt_completion - Izinkan AI untuk mencoba menyelesaikan tugas"
+		},
+		"switchMode": {
+			"label": "Ganti Mode",
+			"description": "switch_mode - Izinkan AI untuk beralih di antara mode yang berbeda"
+		},
+		"newTask": {
+			"label": "Tugas Baru",
+			"description": "new_task - Izinkan AI untuk membuat tugas baru"
+		},
+		"codebaseSearch": {
+			"label": "Pencarian Basis Kode",
+			"description": "codebase_search - Izinkan AI untuk mencari di seluruh basis kode"
+		},
+		"updateTodoList": {
+			"label": "Perbarui Daftar Tugas",
+			"description": "update_todo_list - Izinkan AI untuk memperbarui daftar tugas"
+		}
 	},
 	"codeIndex": {
 		"title": "Pengindeksan Codebase",

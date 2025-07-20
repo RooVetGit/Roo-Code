@@ -28,10 +28,102 @@
 		"notifications": "Notifications",
 		"contextManagement": "Contexte",
 		"terminal": "Terminal",
+		"tools": "Outils",
 		"prompts": "Invites",
 		"experimental": "Expérimental",
 		"language": "Langue",
 		"about": "À propos de Roo Code"
+	},
+	"tools": {
+		"title": "Outils",
+		"description": "Contrôlez les outils disponibles pour l'IA. La désactivation des outils empêchera l'IA de les utiliser dans les conversations.",
+		"selectAll": "Tout sélectionner",
+		"selectNone": "Ne rien sélectionner",
+		"groups": {
+			"alwaysAvailable": "Fonctionnalité de base",
+			"read": "Lire",
+			"edit": "Modifier",
+			"modes": "Modes",
+			"command": "Commande",
+			"browser": "Navigateur",
+			"mcp": "MCP (Protocole de Contexte de Modèle)"
+		},
+		"executeCommand": {
+			"label": "Exécuter une commande",
+			"description": "execute_command - Permettre à l'IA d'exécuter des commandes shell"
+		},
+		"readFile": {
+			"label": "Lire un fichier",
+			"description": "read_file - Permettre à l'IA de lire le contenu des fichiers"
+		},
+		"fetchInstructions": {
+			"label": "Récupérer les instructions",
+			"description": "fetch_instructions - Permettre à l'IA de récupérer les instructions du projet"
+		},
+		"writeToFile": {
+			"label": "Écrire dans un fichier",
+			"description": "write_to_file - Permettre à l'IA d'écrire du contenu dans des fichiers"
+		},
+		"applyDiff": {
+			"label": "Appliquer un diff",
+			"description": "apply_diff - Permettre à l'IA d'appliquer des correctifs diff aux fichiers"
+		},
+		"insertContent": {
+			"label": "Insérer du contenu",
+			"description": "insert_content - Permettre à l'IA d'insérer du contenu dans des fichiers"
+		},
+		"searchAndReplace": {
+			"label": "Rechercher et remplacer",
+			"description": "search_and_replace - Permettre à l'IA d'effectuer des opérations de recherche et de remplacement"
+		},
+		"searchFiles": {
+			"label": "Rechercher des fichiers",
+			"description": "search_files - Permettre à l'IA de rechercher des fichiers dans le projet"
+		},
+		"listFiles": {
+			"label": "Lister les fichiers",
+			"description": "list_files - Permettre à l'IA de lister les fichiers et les répertoires"
+		},
+		"listCodeDefinitionNames": {
+			"label": "Lister les définitions de code",
+			"description": "list_code_definition_names - Permettre à l'IA de lister les définitions de code et les symboles"
+		},
+		"browserAction": {
+			"label": "Action du navigateur",
+			"description": "browser_action - Permettre à l'IA d'interagir avec les navigateurs web"
+		},
+		"useMcpTool": {
+			"label": "Utiliser l'outil MCP",
+			"description": "use_mcp_tool - Permettre à l'IA d'utiliser les outils du Protocole de Contexte de Modèle"
+		},
+		"accessMcpResource": {
+			"label": "Accéder à la ressource MCP",
+			"description": "access_mcp_resource - Permettre à l'IA d'accéder aux ressources du Protocole de Contexte de Modèle"
+		},
+		"askFollowupQuestion": {
+			"label": "Poser une question de suivi",
+			"description": "ask_followup_question - Permettre à l'IA de poser des questions de suivi"
+		},
+		"attemptCompletion": {
+			"label": "Tenter de terminer",
+			"description": "attempt_completion - Permettre à l'IA de tenter de terminer la tâche"
+		},
+		"switchMode": {
+			"label": "Changer de mode",
+			"description": "switch_mode - Permettre à l'IA de basculer entre différents modes"
+		},
+		"newTask": {
+			"label": "Nouvelle tâche",
+			"description": "new_task - Permettre à l'IA de créer de nouvelles tâches"
+		},
+		"codebaseSearch": {
+			"label": "Recherche dans la base de code",
+			"description": "codebase_search - Permettre à l'IA de rechercher dans la base de code"
+		},
+		"updateTodoList": {
+			"label": "Mettre à jour la liste de tâches",
+			"description": "update_todo_list - Permettre à l'IA de mettre à jour les listes de tâches"
+		}
 	},
 	"prompts": {
 		"description": "Configurez les invites de support utilisées pour les actions rapides comme l'amélioration des invites, l'explication du code et la résolution des problèmes. Ces invites aident Roo à fournir une meilleure assistance pour les tâches de développement courantes."

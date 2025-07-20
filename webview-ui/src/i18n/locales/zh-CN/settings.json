@@ -27,6 +27,7 @@
 		"checkpoints": "存档点",
 		"notifications": "通知",
 		"contextManagement": "上下文",
+		"tools": "工具",
 		"terminal": "终端",
 		"prompts": "提示词",
 		"experimental": "实验性",
@@ -35,6 +36,97 @@
 	},
 	"prompts": {
 		"description": "配置用于快速操作的支持提示词，如增强提示词、解释代码和修复问题。这些提示词帮助 Roo 为常见开发任务提供更好的支持。"
+	},
+	"tools": {
+		"title": "工具",
+		"description": "控制 AI 可用的工具。禁用工具将阻止 AI 在对话中使用它们。",
+		"selectAll": "全选",
+		"selectNone": "全不选",
+		"groups": {
+			"alwaysAvailable": "核心功能",
+			"read": "读取",
+			"edit": "编辑",
+			"modes": "模式",
+			"command": "命令",
+			"browser": "浏览器",
+			"mcp": "MCP (模型上下文协议)"
+		},
+		"executeCommand": {
+			"label": "执行命令",
+			"description": "execute_command - 允许 AI 执行 shell 命令"
+		},
+		"readFile": {
+			"label": "读取文件",
+			"description": "read_file - 允许 AI 读取文件内容"
+		},
+		"fetchInstructions": {
+			"label": "获取指令",
+			"description": "fetch_instructions - 允许 AI 获取项目指令"
+		},
+		"writeToFile": {
+			"label": "写入文件",
+			"description": "write_to_file - 允许 AI 将内容写入文件"
+		},
+		"applyDiff": {
+			"label": "应用 diff",
+			"description": "apply_diff - 允许 AI 将 diff 补丁应用于文件"
+		},
+		"insertContent": {
+			"label": "插入内容",
+			"description": "insert_content - 允许 AI 将内容插入文件"
+		},
+		"searchAndReplace": {
+			"label": "搜索和替换",
+			"description": "search_and_replace - 允许 AI 执行搜索和替换操作"
+		},
+		"searchFiles": {
+			"label": "搜索文件",
+			"description": "search_files - 允许 AI 在项目中搜索文件"
+		},
+		"listFiles": {
+			"label": "列出文件",
+			"description": "list_files - 允许 AI 列出文件和目录"
+		},
+		"listCodeDefinitionNames": {
+			"label": "列出代码定义",
+			"description": "list_code_definition_names - 允许 AI 列出代码定义和符号"
+		},
+		"browserAction": {
+			"label": "浏览器操作",
+			"description": "browser_action - 允许 AI 与网页浏览器交互"
+		},
+		"useMcpTool": {
+			"label": "使用 MCP 工具",
+			"description": "use_mcp_tool - 允许 AI 使用模型上下文协议工具"
+		},
+		"accessMcpResource": {
+			"label": "访问 MCP 资源",
+			"description": "access_mcp_resource - 允许 AI 访问模型上下文协议资源"
+		},
+		"askFollowupQuestion": {
+			"label": "提出追问",
+			"description": "ask_followup_question - 允许 AI 提出追问"
+		},
+		"attemptCompletion": {
+			"label": "尝试完成",
+			"description": "attempt_completion - 允许 AI 尝试完成任务"
+		},
+		"switchMode": {
+			"label": "切换模式",
+			"description": "switch_mode - 允许 AI 在不同模式间切换"
+		},
+		"newTask": {
+			"label": "新任务",
+			"description": "new_task - 允许 AI 创建新任务"
+		},
+		"codebaseSearch": {
+			"label": "代码库搜索",
+			"description": "codebase_search - 允许 AI 搜索整个代码库"
+		},
+		"updateTodoList": {
+			"label": "更新待办列表",
+			"description": "update_todo_list - 允许 AI 更新待办列表"
+		}
 	},
 	"codeIndex": {
 		"title": "代码库索引",

@@ -29,12 +29,104 @@
 		"contextManagement": "Kontext",
 		"terminal": "Terminal",
 		"prompts": "Eingabeaufforderungen",
+		"tools": "Werkzeuge",
 		"experimental": "Experimentell",
 		"language": "Sprache",
 		"about": "Über Roo Code"
 	},
 	"prompts": {
 		"description": "Konfiguriere Support-Prompts, die für schnelle Aktionen wie das Verbessern von Prompts, das Erklären von Code und das Beheben von Problemen verwendet werden. Diese Prompts helfen Roo dabei, bessere Unterstützung für häufige Entwicklungsaufgaben zu bieten."
+	},
+	"tools": {
+		"title": "Werkzeuge",
+		"description": "Steuere, welche Werkzeuge der KI zur Verfügung stehen. Das Deaktivieren von Werkzeugen verhindert, dass die KI sie in Gesprächen verwendet.",
+		"selectAll": "Alle auswählen",
+		"selectNone": "Keine auswählen",
+		"groups": {
+			"alwaysAvailable": "Kernfunktionalität",
+			"read": "Lesen",
+			"edit": "Bearbeiten",
+			"modes": "Modi",
+			"command": "Befehl",
+			"browser": "Browser",
+			"mcp": "MCP (Modell-Kontext-Protokoll)"
+		},
+		"executeCommand": {
+			"label": "Befehl ausführen",
+			"description": "execute_command - Erlaube der KI, Shell-Befehle auszuführen"
+		},
+		"readFile": {
+			"label": "Datei lesen",
+			"description": "read_file - Erlaube der KI, Dateiinhalte zu lesen"
+		},
+		"fetchInstructions": {
+			"label": "Anweisungen abrufen",
+			"description": "fetch_instructions - Erlaube der KI, Projektanweisungen abzurufen"
+		},
+		"writeToFile": {
+			"label": "In Datei schreiben",
+			"description": "write_to_file - Erlaube der KI, Inhalte in Dateien zu schreiben"
+		},
+		"applyDiff": {
+			"label": "Diff anwenden",
+			"description": "apply_diff - Erlaube der KI, Diff-Patches auf Dateien anzuwenden"
+		},
+		"insertContent": {
+			"label": "Inhalt einfügen",
+			"description": "insert_content - Erlaube der KI, Inhalte in Dateien einzufügen"
+		},
+		"searchAndReplace": {
+			"label": "Suchen und Ersetzen",
+			"description": "search_and_replace - Erlaube der KI, Such- und Ersetzungsoperationen durchzuführen"
+		},
+		"searchFiles": {
+			"label": "Dateien suchen",
+			"description": "search_files - Erlaube der KI, nach Dateien im Projekt zu suchen"
+		},
+		"listFiles": {
+			"label": "Dateien auflisten",
+			"description": "list_files - Erlaube der KI, Dateien und Verzeichnisse aufzulisten"
+		},
+		"listCodeDefinitionNames": {
+			"label": "Codedefinitionen auflisten",
+			"description": "list_code_definition_names - Erlaube der KI, Codedefinitionen und Symbole aufzulisten"
+		},
+		"browserAction": {
+			"label": "Browser-Aktion",
+			"description": "browser_action - Erlaube der KI, mit Webbrowsern zu interagieren"
+		},
+		"useMcpTool": {
+			"label": "MCP-Tool verwenden",
+			"description": "use_mcp_tool - Erlaube der KI, die Werkzeuge des Modell-Kontext-Protokolls zu verwenden"
+		},
+		"accessMcpResource": {
+			"label": "Auf MCP-Ressource zugreifen",
+			"description": "access_mcp_resource - Erlaube der KI, auf die Ressourcen des Modell-Kontext-Protokolls zuzugreifen"
+		},
+		"askFollowupQuestion": {
+			"label": "Nachfrage stellen",
+			"description": "ask_followup_question - Erlaube der KI, Nachfragen zu stellen"
+		},
+		"attemptCompletion": {
+			"label": "Abschluss versuchen",
+			"description": "attempt_completion - Erlaube der KI, den Abschluss einer Aufgabe zu versuchen"
+		},
+		"switchMode": {
+			"label": "Modus wechseln",
+			"description": "switch_mode - Erlaube der KI, zwischen verschiedenen Modi zu wechseln"
+		},
+		"newTask": {
+			"label": "Neue Aufgabe",
+			"description": "new_task - Erlaube der KI, neue Aufgaben zu erstellen"
+		},
+		"codebaseSearch": {
+			"label": "Codebasis-Suche",
+			"description": "codebase_search - Erlaube der KI, die Codebasis zu durchsuchen"
+		},
+		"updateTodoList": {
+			"label": "To-Do-Liste aktualisieren",
+			"description": "update_todo_list - Erlaube der KI, To-Do-Listen zu aktualisieren"
+		}
 	},
 	"codeIndex": {
 		"title": "Codebase-Indexierung",

@@ -27,6 +27,7 @@
 		"checkpoints": "Checkpoints",
 		"notifications": "Notificações",
 		"contextManagement": "Contexto",
+		"tools": "Ferramentas",
 		"terminal": "Terminal",
 		"prompts": "Prompts",
 		"experimental": "Experimental",
@@ -35,6 +36,97 @@
 	},
 	"prompts": {
 		"description": "Configure prompts de suporte usados para ações rápidas como melhorar prompts, explicar código e corrigir problemas. Esses prompts ajudam o Roo a fornecer melhor assistência para tarefas comuns de desenvolvimento."
+	},
+	"tools": {
+		"title": "Ferramentas",
+		"description": "Controle quais ferramentas estão disponíveis para a IA. Desativar ferramentas impedirá que a IA as utilize nas conversas.",
+		"selectAll": "Selecionar Tudo",
+		"selectNone": "Selecionar Nenhum",
+		"groups": {
+			"alwaysAvailable": "Funcionalidade Principal",
+			"read": "Leitura",
+			"edit": "Edição",
+			"modes": "Modos",
+			"command": "Comando",
+			"browser": "Navegador",
+			"mcp": "MCP (Protocolo de Contexto do Modelo)"
+		},
+		"executeCommand": {
+			"label": "Executar Comando",
+			"description": "execute_command - Permitir que a IA execute comandos de shell"
+		},
+		"readFile": {
+			"label": "Ler Arquivo",
+			"description": "read_file - Permitir que a IA leia o conteúdo de arquivos"
+		},
+		"fetchInstructions": {
+			"label": "Buscar Instruções",
+			"description": "fetch_instructions - Permitir que a IA busque instruções do projeto"
+		},
+		"writeToFile": {
+			"label": "Escrever em Arquivo",
+			"description": "write_to_file - Permitir que a IA escreva conteúdo em arquivos"
+		},
+		"applyDiff": {
+			"label": "Aplicar Diff",
+			"description": "apply_diff - Permitir que a IA aplique patches de diff em arquivos"
+		},
+		"insertContent": {
+			"label": "Inserir Conteúdo",
+			"description": "insert_content - Permitir que a IA insira conteúdo em arquivos"
+		},
+		"searchAndReplace": {
+			"label": "Buscar e Substituir",
+			"description": "search_and_replace - Permitir que a IA realize operações de busca e substituição"
+		},
+		"searchFiles": {
+			"label": "Buscar Arquivos",
+			"description": "search_files - Permitir que a IA busque arquivos no projeto"
+		},
+		"listFiles": {
+			"label": "Listar Arquivos",
+			"description": "list_files - Permitir que a IA liste arquivos e diretórios"
+		},
+		"listCodeDefinitionNames": {
+			"label": "Listar Definições de Código",
+			"description": "list_code_definition_names - Permitir que a IA liste definições e símbolos de código"
+		},
+		"browserAction": {
+			"label": "Ação do Navegador",
+			"description": "browser_action - Permitir que a IA interaja com navegadores da web"
+		},
+		"useMcpTool": {
+			"label": "Usar Ferramenta MCP",
+			"description": "use_mcp_tool - Permitir que a IA use ferramentas do Protocolo de Contexto do Modelo"
+		},
+		"accessMcpResource": {
+			"label": "Acessar Recurso MCP",
+			"description": "access_mcp_resource - Permitir que a IA acesse recursos do Protocolo de Contexto do Modelo"
+		},
+		"askFollowupQuestion": {
+			"label": "Fazer Pergunta de Acompanhamento",
+			"description": "ask_followup_question - Permitir que a IA faça perguntas de acompanhamento"
+		},
+		"attemptCompletion": {
+			"label": "Tentar Conclusão",
+			"description": "attempt_completion - Permitir que a IA tente a conclusão da tarefa"
+		},
+		"switchMode": {
+			"label": "Mudar de Modo",
+			"description": "switch_mode - Permitir que a IA alterne entre diferentes modos"
+		},
+		"newTask": {
+			"label": "Nova Tarefa",
+			"description": "new_task - Permitir que a IA crie novas tarefas"
+		},
+		"codebaseSearch": {
+			"label": "Pesquisa na Base de Código",
+			"description": "codebase_search - Permitir que a IA pesquise na base de código"
+		},
+		"updateTodoList": {
+			"label": "Atualizar Lista de Tarefas",
+			"description": "update_todo_list - Permitir que a IA atualize listas de tarefas"
+		}
 	},
 	"codeIndex": {
 		"title": "Indexação de Código",
