@@ -55,11 +55,11 @@ function mapLegacyGeminiModel(modelId: string): string {
 		}
 
 		if (modelId.startsWith("gemini-1.5-pro-")) {
-			return "gemini-2.0-pro-exp-02-05"
+			return geminiDefaultModelId
 		}
 
 		if (modelId.startsWith("gemini-1.5-flash-")) {
-			return "gemini-2.0-flash-001"
+			return geminiDefaultModelId
 		}
 
 		if (modelId === "gemini-2.5-pro-exp-03-25") {
@@ -67,7 +67,7 @@ function mapLegacyGeminiModel(modelId: string): string {
 		}
 
 		if (modelId === "gemini-exp-1206") {
-			return "gemini-2.0-pro-exp-02-05"
+			return geminiDefaultModelId
 		}
 	}
 
@@ -88,7 +88,7 @@ function mapLegacyVertexModel(modelId: string): string {
 		}
 
 		if (modelId.startsWith("gemini-1.5-pro-")) {
-			return "gemini-2.0-pro-exp-02-05"
+			return "gemini-2.0-flash-001"
 		}
 
 		if (modelId.startsWith("gemini-1.5-flash-")) {
