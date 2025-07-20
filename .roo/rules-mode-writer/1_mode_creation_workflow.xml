@@ -6,6 +6,25 @@
 
   <detailed_steps>
     <step number="1">
+      <title>Choose Mode Scope</title>
+      <description>
+        Determine whether the mode should be available globally or only within the current project.
+      </description>
+      <actions>
+        <action>Ask the user to select the mode's scope.</action>
+      </actions>
+      <example>
+        <ask_followup_question>
+          <question>Should this be a global mode (available in all projects) or a local mode (only for this project)?</question>
+          <follow_up>
+            <suggest>Create a global mode</suggest>
+            <suggest>Create a local mode</suggest>
+          </follow_up>
+        </ask_followup_question>
+      </example>
+    </step>
+
+    <step number="2">
       <title>Gather Requirements</title>
       <description>
         Understand what the user wants the mode to accomplish
@@ -29,7 +48,28 @@
       </example>
     </step>
 
-    <step number="2">
+    <step number="3">
+      <title>Define Final File Paths and Create Directories</title>
+      <description>
+        Based on the selected scope, define the absolute paths for the mode's configuration and rule files, and create the necessary directories directly in the final location.
+      </description>
+      <actions>
+        <action>
+          If "global" is selected, construct the full path using the 'Home Directory' from the SYSTEM INFORMATION section. The base path is `[Home Directory]/AppData/Roaming/Code/User/globalStorage/rooveterinaryinc.roo-cline/`. The mode configuration file is `[base path]/settings/custom_modes.yaml` and the rules directory is `[base path]/.roo/rules-[mode-slug]/`.
+        </action>
+        <action>
+          If "local" is selected, the mode configuration file is `.roomodes` and the rules directory is `.roo/rules-[mode-slug]/` relative to the workspace root.
+        </action>
+        <action>
+          Create the `rules-[mode-slug]` directory directly in the final destination path (local or global).
+        </action>
+      </actions>
+      <important_note>
+        Always use the full, absolute path when creating directories and writing files for global modes.
+      </important_note>
+    </step>
+
+    <step number="4">
       <title>Design Mode Configuration</title>
       <description>
         Create the mode definition with all required fields
@@ -75,7 +115,7 @@
       </important_note>
     </step>
 
-    <step number="3">
+    <step number="5">
       <title>Implement File Restrictions</title>
       <description>
         Configure appropriate file access permissions
@@ -98,10 +138,10 @@ groups:
       </guidelines>
     </step>
 
-    <step number="4">
+    <step number="6">
       <title>Create XML Instruction Files</title>
       <description>
-        Design structured instruction files in .roo/rules-[mode-slug]/
+        Design structured instruction files and write them directly to the full path determined in the previous step (e.g., `C:\Users\...\rules-[mode-slug]/` for global, or `./.roo/rules-[mode-slug]/` for local). Do not create files locally and move them.
       </description>
       <file_structure>
         <file name="1_workflow.xml">Main workflow and step-by-step processes</file>
@@ -118,7 +158,7 @@ groups:
       </xml_best_practices>
     </step>
 
-    <step number="5">
+    <step number="7">
       <title>Test and Refine</title>
       <description>
         Verify the mode works as intended

@@ -17,12 +17,11 @@ customModes:
       - Creating detailed XML instruction files in the .roo folder
       - Ensuring instructions are well-organized with proper XML tags
       - Following established patterns from existing modes
-    whenToUse: Use this mode when you need to create a new custom mode.
-    description: Create and implement custom modes.
+    whenToUse: Use this mode when you need to create a new custom mode. It will guide you through the process of creating a new mode, including choosing whether to create it globally (available in all projects) or locally (for the current project only).
     groups:
       - read
       - - edit
-        - fileRegex: (\.roomodes$|\.roo/.*\.xml$|\.yaml$)
+        - fileRegex: (\.roomodes$|.*\.xml$|.*\.yaml$)
           description: Mode configuration files and XML instructions
       - command
       - mcp
