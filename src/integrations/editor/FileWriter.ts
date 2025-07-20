@@ -14,10 +14,6 @@ import { IEditingProvider } from "./IEditingProvider"
 import { DEFAULT_WRITE_DELAY_MS } from "@roo-code/types"
 import delay from "delay"
 
-interface FileWriterSettings {
-	fileBasedEditing: boolean
-}
-
 /**
  * FileWriter provides direct file-system editing without diff views.
  * It mirrors the API of DiffViewProvider for seamless integration.
@@ -35,18 +31,6 @@ export class FileWriter implements IEditingProvider {
 	private preDiagnostics: [vscode.Uri, vscode.Diagnostic[]][] = []
 
 	constructor(private cwd: string) {}
-
-	/**
-	 * Reads file writing settings from VSCode configuration
-	 */
-	private async _readFileWriterSettings(): Promise<FileWriterSettings> {
-		const config = vscode.workspace.getConfiguration("roo-cline")
-		const fileBasedEditing = config.get<boolean>("fileBasedEditing", false)
-
-		return {
-			fileBasedEditing,
-		}
-	}
 
 	/**
 	 * Prepares for editing the given relative path file

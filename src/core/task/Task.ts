@@ -24,6 +24,7 @@ import {
 	TodoItem,
 	getApiProtocol,
 	getModelId,
+	Experiments,
 } from "@roo-code/types"
 import { TelemetryService } from "@roo-code/telemetry"
 import { CloudService } from "@roo-code/cloud"
@@ -53,7 +54,6 @@ import { McpServerManager } from "../../services/mcp/McpServerManager"
 import { RepoPerTaskCheckpointService } from "../../services/checkpoints"
 
 // integrations
-import { DiffViewProvider } from "../../integrations/editor/DiffViewProvider"
 import { findToolName, formatContentBlockToMarkdown } from "../../integrations/misc/export-markdown"
 import { RooTerminalProcess } from "../../integrations/terminal/types"
 import { TerminalRegistry } from "../../integrations/terminal/TerminalRegistry"
@@ -121,7 +121,7 @@ export type TaskOptions = {
 	task?: string
 	images?: string[]
 	historyItem?: HistoryItem
-	experiments?: Record<string, boolean>
+	experiments?: Experiments
 	startTask?: boolean
 	rootTask?: Task
 	parentTask?: Task
@@ -275,6 +275,22 @@ export class Task extends EventEmitter<ClineEvents> {
 			TelemetryService.instance.captureTaskCreated(this.taskId)
 		}
 
+		// Check experiment asynchronously and editingprovider if needed
+		provider.getState().then((state) => {
+			const isFileBasedEditingEnabled = experiments?.isEnabled(
+				state.experiments ?? {},
+				EXPERIMENT_IDS.FILE_BASED_EDITING,
+			)
+
+			if (isFileBasedEditingEnabled) {
+				this.editingProvider = EditingProviderFactory.resetAndCreateNewEditingProvider(
+					this.cwd,
+					this.editingProvider,
+					state.experiments ?? {},
+				)
+			}
+		})
+
 		// Only set up diff strategy if diff is enabled
 		if (this.diffEnabled) {
 			// Default to old strategy, will be updated if experiment is enabled
@@ -282,7 +298,7 @@ export class Task extends EventEmitter<ClineEvents> {
 
 			// Check experiment asynchronously and update strategy if needed
 			provider.getState().then((state) => {
-				const isMultiFileApplyDiffEnabled = experiments.isEnabled(
+				const isMultiFileApplyDiffEnabled = experiments?.isEnabled(
 					state.experiments ?? {},
 					EXPERIMENT_IDS.MULTI_FILE_APPLY_DIFF,
 				)
@@ -764,7 +780,8 @@ export class Task extends EventEmitter<ClineEvents> {
 
 	public async resumePausedTask(lastMessage: string) {
 		// Release this Cline instance from paused state.
-		this.editingProvider = EditingProviderFactory.createEditingProvider(this.cwd)
+		const context = await this.providerRef.deref()?.getState()
+		this.editingProvider = EditingProviderFactory.createEditingProvider(this.cwd, context?.experiments ?? {})
 		this.isPaused = false
 		this.emit("taskUnpaused")
 
@@ -1163,7 +1180,12 @@ export class Task extends EventEmitter<ClineEvents> {
 		if (this.abort) {
 			throw new Error(`[RooCode#recursivelyMakeRooRequests] task ${this.taskId}.${this.instanceId} aborted`)
 		}
-		this.editingProvider = EditingProviderFactory.resetAndCreateNewEditingProvider(this.cwd, this.editingProvider)
+		const context = await this.providerRef.deref()?.getState()
+		this.editingProvider = EditingProviderFactory.resetAndCreateNewEditingProvider(
+			this.cwd,
+			this.editingProvider,
+			context?.experiments ?? {},
+		)
 
 		if (this.consecutiveMistakeLimit > 0 && this.consecutiveMistakeCount >= this.consecutiveMistakeLimit) {
 			const { response, text, images } = await this.ask(

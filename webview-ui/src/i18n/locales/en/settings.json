@@ -627,6 +627,10 @@
 		"MULTI_FILE_APPLY_DIFF": {
 			"name": "Enable concurrent file edits",
 			"description": "When enabled, Roo can edit multiple files in a single request. When disabled, Roo must edit files one at a time. Disabling this can help when working with less capable models or when you want more control over file modifications."
+		},
+		"FILE_BASED_EDITING": {
+			"name": "Enable file-based editing",
+			"description": "When enabled, Roo can edit files directly using file-based operations. This may improve reliability for large files and advanced workflows, but could cause unexpected behavior. Only enable if you understand the risks."
 		}
 	},
 	"promptCaching": {
