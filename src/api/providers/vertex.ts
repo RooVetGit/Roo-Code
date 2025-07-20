@@ -1,4 +1,10 @@
-import { type ModelInfo, type VertexModelId, vertexDefaultModelId, vertexModels } from "@roo-code/types"
+import {
+	type ModelInfo,
+	type VertexModelId,
+	vertexDefaultModelId,
+	vertexModels,
+	legacyVertexModels,
+} from "@roo-code/types"
 
 import type { ApiHandlerOptions } from "../../shared/api"
 
@@ -12,9 +18,43 @@ export class VertexHandler extends GeminiHandler implements SingleCompletionHand
 		super({ ...options, isVertex: true })
 	}
 
+	/**
+	 * Maps legacy Vertex model IDs to current supported models
+	 */
+	private mapLegacyVertexModel(modelId: string): VertexModelId {
+		if (modelId in vertexModels) {
+			return modelId as VertexModelId
+		}
+
+		if (modelId in legacyVertexModels) {
+			if (modelId.startsWith("gemini-2.5-pro-preview-")) {
+				return "gemini-2.5-pro"
+			}
+
+			if (modelId.startsWith("gemini-1.5-pro-")) {
+				return "gemini-2.0-pro-exp-02-05"
+			}
+
+			if (modelId.startsWith("gemini-1.5-flash-")) {
+				return "gemini-2.0-flash-001"
+			}
+
+			if (modelId === "gemini-2.5-pro-exp-") {
+				return "gemini-2.5-pro"
+			}
+		}
+
+		return vertexDefaultModelId
+	}
+
 	override getModel() {
 		const modelId = this.options.apiModelId
-		let id = modelId && modelId in vertexModels ? (modelId as VertexModelId) : vertexDefaultModelId
+		let id = modelId ? this.mapLegacyVertexModel(modelId) : vertexDefaultModelId
+
+		if (modelId && id && modelId !== id) {
+			this.options.apiModelId = id
+		}
+
 		const info: ModelInfo = vertexModels[id]
 		const params = getModelParams({ format: "gemini", modelId: id, model: info, settings: this.options })
 

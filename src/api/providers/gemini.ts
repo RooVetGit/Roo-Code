@@ -7,7 +7,13 @@ import {
 } from "@google/genai"
 import type { JWTInput } from "google-auth-library"
 
-import { type ModelInfo, type GeminiModelId, geminiDefaultModelId, geminiModels } from "@roo-code/types"
+import {
+	type ModelInfo,
+	type GeminiModelId,
+	geminiDefaultModelId,
+	geminiModels,
+	legacyGeminiModels,
+} from "@roo-code/types"
 
 import type { ApiHandlerOptions } from "../../shared/api"
 import { safeJsonParse } from "../../shared/safeJsonParse"
@@ -27,6 +33,39 @@ export class GeminiHandler extends BaseProvider implements SingleCompletionHandl
 	protected options: ApiHandlerOptions
 
 	private client: GoogleGenAI
+
+	/**
+	 * Maps legacy Gemini model IDs to current supported models
+	 */
+	private mapLegacyGeminiModel(modelId: string): GeminiModelId {
+		if (modelId in geminiModels) {
+			return modelId as GeminiModelId
+		}
+
+		if (modelId in legacyGeminiModels) {
+			if (modelId.startsWith("gemini-2.5-pro-preview-")) {
+				return "gemini-2.5-pro"
+			}
+
+			if (modelId.startsWith("gemini-1.5-pro-")) {
+				return "gemini-2.0-pro-exp-02-05"
+			}
+
+			if (modelId.startsWith("gemini-1.5-flash-")) {
+				return "gemini-2.0-flash-001"
+			}
+
+			if (modelId === "gemini-2.5-pro-exp-") {
+				return "gemini-2.5-pro"
+			}
+
+			if (modelId === "gemini-exp-1206") {
+				return "gemini-2.0-pro-exp-02-05"
+			}
+		}
+
+		return geminiDefaultModelId
+	}
 
 	constructor({ isVertex, ...options }: GeminiHandlerOptions) {
 		super()
@@ -131,7 +170,12 @@ export class GeminiHandler extends BaseProvider implements SingleCompletionHandl
 
 	override getModel() {
 		const modelId = this.options.apiModelId
-		let id = modelId && modelId in geminiModels ? (modelId as GeminiModelId) : geminiDefaultModelId
+		let id = modelId ? this.mapLegacyGeminiModel(modelId) : geminiDefaultModelId
+
+		if (modelId && modelId !== id) {
+			this.options.apiModelId = id
+		}
+
 		const info: ModelInfo = geminiModels[id]
 		const params = getModelParams({ format: "gemini", modelId: id, model: info, settings: this.options })
 

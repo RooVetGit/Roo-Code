@@ -163,6 +163,62 @@ describe("GeminiHandler", () => {
 		})
 	})
 
+	describe("legacy model migration", () => {
+		it("should map gemini-2.5-pro-preview-{dates} to gemini-2.5-pro", () => {
+			const legacyHandler = new GeminiHandler({
+				apiModelId: "gemini-2.5-pro-preview-03-25",
+				geminiApiKey: "test-key",
+			})
+			const modelInfo = legacyHandler.getModel()
+			expect(modelInfo.id).toBe("gemini-2.5-pro")
+		})
+
+		it("should map gemini-1.5-pro-{variants} to gemini-2.0-pro-exp-02-05", () => {
+			const legacyHandler = new GeminiHandler({
+				apiModelId: "gemini-1.5-pro-002",
+				geminiApiKey: "test-key",
+			})
+			const modelInfo = legacyHandler.getModel()
+			expect(modelInfo.id).toBe("gemini-2.0-pro-exp-02-05")
+		})
+
+		it("should map gemini-1.5-flash-{variants} to gemini-2.0-flash-001", () => {
+			const legacyHandler = new GeminiHandler({
+				apiModelId: "gemini-1.5-flash-002",
+				geminiApiKey: "test-key",
+			})
+			const modelInfo = legacyHandler.getModel()
+			expect(modelInfo.id).toBe("gemini-2.0-flash-001")
+		})
+
+		it("should map experimental gemini-2.5-pro-exp-03-25 to gemini-2.5-pro", () => {
+			const legacyHandler = new GeminiHandler({
+				apiModelId: "gemini-2.5-pro-exp-03-25",
+				geminiApiKey: "test-key",
+			})
+			const modelInfo = legacyHandler.getModel()
+			expect(modelInfo.id).toBe("gemini-2.5-pro")
+		})
+
+		it("should map gemini-exp-1206 to gemini-2.0-pro-exp-02-05", () => {
+			const legacyHandler = new GeminiHandler({
+				apiModelId: "gemini-exp-1206",
+				geminiApiKey: "test-key",
+			})
+			const modelInfo = legacyHandler.getModel()
+			expect(modelInfo.id).toBe("gemini-2.0-pro-exp-02-05")
+		})
+
+		it("should keep current models as-is", () => {
+			const currentHandler = new GeminiHandler({
+				apiModelId: "gemini-2.5-pro",
+				geminiApiKey: "test-key",
+			})
+			const modelInfo = currentHandler.getModel()
+			expect(modelInfo.id).toBe("gemini-2.5-pro")
+		})
+	})
+
 	describe("calculateCost", () => {
 		// Mock ModelInfo based on gemini-1.5-flash-latest pricing (per 1M tokens)
 		// Removed 'id' and 'name' as they are not part of ModelInfo type directly
