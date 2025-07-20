@@ -1,4 +1,3 @@
-import * as vscode from "vscode"
 import { DiffViewProvider } from "./DiffViewProvider"
 import { FileWriter } from "./FileWriter"
 import { IEditingProvider } from "./IEditingProvider"
