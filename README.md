@@ -104,6 +104,7 @@ Make Roo Code work your way with:
 - [Custom Modes](https://docs.roocode.com/advanced-usage/custom-modes) for specialized tasks
 - [Local Models](https://docs.roocode.com/advanced-usage/local-models) for offline use
 - [Auto-Approval Settings](https://docs.roocode.com/advanced-usage/auto-approving-actions) for faster workflows
+- **Agent Rules Standard** - Roo Code supports the [Agent Rules](https://agent-rules.org/) standard via `AGENTS.md` files, enabling unified natural language guidelines across different AI coding tools
 
 ## Resources
 

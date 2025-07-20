@@ -214,12 +214,28 @@ export async function loadRuleFiles(cwd: string): Promise<string> {
 	return ""
 }
 
+/**
+ * Load AGENTS.md file from the project root if it exists
+ */
+async function loadAgentRulesFile(cwd: string): Promise<string> {
+	try {
+		const agentsPath = path.join(cwd, "AGENTS.md")
+		const content = await safeReadFile(agentsPath)
+		if (content) {
+			return `# Agent Rules Standard (AGENTS.md):\n${content}`
+		}
+	} catch (err) {
+		// Silently ignore errors - AGENTS.md is optional
+	}
+	return ""
+}
+
 export async function addCustomInstructions(
 	modeCustomInstructions: string,
 	globalCustomInstructions: string,
 	cwd: string,
 	mode: string,
-	options: { language?: string; rooIgnoreInstructions?: string; settings?: Record<string, any> } = {},
+	options: { language?: string; rooIgnoreInstructions?: string; useAgentRules?: boolean; settings?: Record<string, any> } = {},
 ): Promise<string> {
 	const sections = []
 
@@ -295,6 +311,14 @@ export async function addCustomInstructions(
 
 	if (options.rooIgnoreInstructions) {
 		rules.push(options.rooIgnoreInstructions)
+	}
+
+	// Add AGENTS.md content if enabled (default: true)
+	if (options.useAgentRules !== false) {
+		const agentRulesContent = await loadAgentRulesFile(cwd)
+		if (agentRulesContent && agentRulesContent.trim()) {
+			rules.push(agentRulesContent.trim())
+		}
 	}
 
 	// Add generic rules

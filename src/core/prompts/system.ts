@@ -119,7 +119,12 @@ ${getSystemInfoSection(cwd)}
 
 ${getObjectiveSection(codeIndexManager, experiments)}
 
-${await addCustomInstructions(baseInstructions, globalCustomInstructions || "", cwd, mode, { language: language ?? formatLanguage(vscode.env.language), rooIgnoreInstructions, settings })}`
+${await addCustomInstructions(baseInstructions, globalCustomInstructions || "", cwd, mode, {
+	language: language ?? formatLanguage(vscode.env.language),
+	rooIgnoreInstructions,
+	useAgentRules: settings?.useAgentRules,
+	settings,
+})}`
 
 	return basePrompt
 }
@@ -177,7 +182,12 @@ export const SYSTEM_PROMPT = async (
 			globalCustomInstructions || "",
 			cwd,
 			mode,
-			{ language: language ?? formatLanguage(vscode.env.language), rooIgnoreInstructions, settings },
+			{
+				language: language ?? formatLanguage(vscode.env.language),
+				rooIgnoreInstructions,
+				useAgentRules: settings?.useAgentRules,
+				settings,
+			},
 		)
 
 		// For file-based prompts, don't include the tool sections
