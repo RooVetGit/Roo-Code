@@ -5,7 +5,6 @@ import * as os from "os"
 import { IVectorStore } from "../interfaces/vector-store"
 import { VectorStoreSearchResult } from "../interfaces"
 import { DEFAULT_MAX_SEARCH_RESULTS, DEFAULT_SEARCH_MIN_SCORE } from "../constants"
-import { t } from "../../../i18n"
 import * as fs from "fs"
 
 export class LibSQLVectorStore implements IVectorStore {
@@ -89,11 +88,7 @@ export class LibSQLVectorStore implements IVectorStore {
 			return false
 		} catch (error) {
 			console.error(`Failed to initialize vector store table ${this.tableName}:`, error)
-			throw new Error(
-				t("embeddings:vectorStore.libsqlConnectionFailed", {
-					errorMessage: error instanceof Error ? error.message : String(error),
-				}),
-			)
+			throw new Error(`LibsqlConnectionFailed ${error instanceof Error ? error.message : String(error)}`)
 		}
 	}
 
@@ -296,7 +291,7 @@ export class LibSQLVectorStore implements IVectorStore {
 		await this.executeWriteOperationWithRetry(async () => {
 			if (await this.tableExists()) {
 				await this.client.execute(`DROP TABLE ${this.tableName}`)
-				await this.client.execute(`VACUUM`)
+				await this.client.execute("VACUUM")
 			}
 		})
 	}
