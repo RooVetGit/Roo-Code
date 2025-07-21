@@ -1890,11 +1890,8 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 										// Calculate button className based on Daniel's suggestion
 										const showShareButton =
 											primaryButtonText === t("chat:startNewTask.title") && currentTaskItem?.id
-										const buttonClassName = showShareButton
-											? "flex-[9] mr-[6px]"
-											: secondaryButtonText
-												? "flex-1 mr-[6px]"
-												: "flex-[2] mr-0"
+										const buttonClassName =
+											showShareButton || secondaryButtonText ? "flex-1 mr-[6px]" : "flex-[2] mr-0"
 
 										return (
 											<>
@@ -1956,7 +1953,7 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 																<VSCodeButton
 																	appearance="primary"
 																	disabled={!enableButtons}
-																	className="flex-1 ml-[6px]"
+																	className="ml-[6px]"
 																	onClick={() => {
 																		// Trigger the hidden ShareButton
 																		const shareButton = document.querySelector(
