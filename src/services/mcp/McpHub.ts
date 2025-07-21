@@ -973,19 +973,24 @@ export class McpHub {
 			}
 
 			if (!currentConnection) {
-				// New server
-				try {
-					this.setupFileWatcher(name, validatedConfig, source)
-					await this.connectToServer(name, validatedConfig, source)
-				} catch (error) {
-					this.showErrorMessage(`Failed to connect to new MCP server ${name}`, error)
+				// New server - only connect if not disabled
+				if (!validatedConfig.disabled) {
+					try {
+						this.setupFileWatcher(name, validatedConfig, source)
+						await this.connectToServer(name, validatedConfig, source)
+					} catch (error) {
+						this.showErrorMessage(`Failed to connect to new MCP server ${name}`, error)
+					}
 				}
 			} else if (!deepEqual(JSON.parse(currentConnection.server.config), config)) {
 				// Existing server with changed config
 				try {
 					this.setupFileWatcher(name, validatedConfig, source)
 					await this.deleteConnection(name, source)
-					await this.connectToServer(name, validatedConfig, source)
+					// Only reconnect if not disabled
+					if (!validatedConfig.disabled) {
+						await this.connectToServer(name, validatedConfig, source)
+					}
 				} catch (error) {
 					this.showErrorMessage(`Failed to reconnect MCP server ${name}`, error)
 				}
@@ -1257,8 +1262,17 @@ export class McpHub {
 				try {
 					connection.server.disabled = disabled
 
-					// Only refresh capabilities if connected
-					if (connection.server.status === "connected") {
+					// If disabling the server, disconnect it
+					if (disabled && connection.server.status === "connected") {
+						await this.deleteConnection(serverName, serverSource)
+					} else if (!disabled && connection.server.status !== "connected") {
+						// If enabling the server and it's not connected, connect it
+						const config = JSON.parse(connection.server.config)
+						await this.connectToServer(serverName, config, serverSource)
+					}
+
+					// Only refresh capabilities if connected and not disabled
+					if (!disabled && connection.server.status === "connected") {
 						connection.server.tools = await this.fetchToolsList(serverName, serverSource)
 						connection.server.resources = await this.fetchResourcesList(serverName, serverSource)
 						connection.server.resourceTemplates = await this.fetchResourceTemplatesList(

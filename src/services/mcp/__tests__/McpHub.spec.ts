@@ -65,6 +65,19 @@ vi.mock("vscode", () => ({
 	Disposable: {
 		from: vi.fn(),
 	},
+	Uri: {
+		file: vi.fn((path) => ({
+			scheme: "file",
+			authority: "",
+			path,
+			query: "",
+			fragment: "",
+			fsPath: path,
+			with: vi.fn(),
+			toJSON: vi.fn(),
+		})),
+	},
+	RelativePattern: vi.fn((base, pattern) => ({ base, pattern })),
 }))
 vi.mock("fs/promises")
 vi.mock("../../../core/webview/ClineProvider")
@@ -568,6 +581,190 @@ describe("McpHub", () => {
 			await expect(mcpHub.readResource("disabled-server", "some/uri")).rejects.toThrow(
 				'Server "disabled-server" is disabled',
 			)
+		})
+
+		it("should not connect to disabled servers during initialization", async () => {
+			// Clear all mocks before this test
+			vi.clearAllMocks()
+
+			const mockConfig = {
+				mcpServers: {
+					"disabled-server": {
+						type: "stdio",
+						command: "node",
+						args: ["test.js"],
+						disabled: true,
+					},
+					"enabled-server": {
+						type: "stdio",
+						command: "node",
+						args: ["test2.js"],
+						disabled: false,
+					},
+				},
+			}
+
+			// Mock reading initial config
+			vi.mocked(fs.readFile).mockResolvedValue(JSON.stringify(mockConfig))
+
+			// Mock StdioClientTransport
+			const mockTransport = {
+				start: vi.fn().mockResolvedValue(undefined),
+				close: vi.fn().mockResolvedValue(undefined),
+				stderr: {
+					on: vi.fn(),
+				},
+				onerror: null,
+				onclose: null,
+			}
+
+			const StdioClientTransport = (await import("@modelcontextprotocol/sdk/client/stdio.js"))
+				.StdioClientTransport as ReturnType<typeof vi.fn>
+			StdioClientTransport.mockClear()
+			StdioClientTransport.mockImplementation(() => mockTransport)
+
+			// Mock Client
+			const Client = (await import("@modelcontextprotocol/sdk/client/index.js")).Client as ReturnType<
+				typeof vi.fn
+			>
+			Client.mockClear()
+			Client.mockImplementation(() => ({
+				connect: vi.fn().mockResolvedValue(undefined),
+				close: vi.fn().mockResolvedValue(undefined),
+				getInstructions: vi.fn().mockReturnValue("test instructions"),
+				request: vi.fn().mockResolvedValue({ tools: [], resources: [], resourceTemplates: [] }),
+			}))
+
+			// Create a new McpHub instance
+			const newMcpHub = new McpHub(mockProvider as ClineProvider)
+
+			// Wait for initialization
+			await new Promise((resolve) => setTimeout(resolve, 100))
+
+			// Verify that only the enabled server was connected
+			expect(StdioClientTransport).toHaveBeenCalledTimes(1)
+			expect(StdioClientTransport).toHaveBeenCalledWith(
+				expect.objectContaining({
+					args: ["test2.js"], // Only the enabled server
+				}),
+			)
+		})
+
+		it("should disconnect server when toggling to disabled", async () => {
+			const mockConfig = {
+				mcpServers: {
+					"test-server": {
+						type: "stdio",
+						command: "node",
+						args: ["test.js"],
+						disabled: false,
+					},
+				},
+			}
+
+			// Mock reading initial config
+			vi.mocked(fs.readFile).mockResolvedValueOnce(JSON.stringify(mockConfig))
+
+			// Set up mock connection
+			const mockTransport = {
+				close: vi.fn().mockResolvedValue(undefined),
+			}
+			const mockClient = {
+				close: vi.fn().mockResolvedValue(undefined),
+			}
+			const mockConnection: McpConnection = {
+				server: {
+					name: "test-server",
+					config: JSON.stringify({
+						type: "stdio",
+						command: "node",
+						args: ["test.js"],
+						disabled: false,
+					}),
+					status: "connected",
+					disabled: false,
+					source: "global",
+				},
+				client: mockClient as any,
+				transport: mockTransport as any,
+			}
+			mcpHub.connections = [mockConnection]
+
+			// Toggle to disabled
+			await mcpHub.toggleServerDisabled("test-server", true)
+
+			// Verify the server was disconnected
+			expect(mockTransport.close).toHaveBeenCalled()
+			expect(mockClient.close).toHaveBeenCalled()
+			expect(mcpHub.connections.length).toBe(0)
+		})
+
+		it("should reconnect server when toggling to enabled", async () => {
+			const mockConfig = {
+				mcpServers: {
+					"test-server": {
+						type: "stdio",
+						command: "node",
+						args: ["test.js"],
+						disabled: true,
+					},
+				},
+			}
+
+			// Mock reading initial config
+			vi.mocked(fs.readFile).mockResolvedValueOnce(JSON.stringify(mockConfig))
+
+			// Mock StdioClientTransport
+			const mockTransport = {
+				start: vi.fn().mockResolvedValue(undefined),
+				close: vi.fn().mockResolvedValue(undefined),
+				stderr: {
+					on: vi.fn(),
+				},
+				onerror: null,
+				onclose: null,
+			}
+
+			const StdioClientTransport = (await import("@modelcontextprotocol/sdk/client/stdio.js"))
+				.StdioClientTransport as ReturnType<typeof vi.fn>
+			StdioClientTransport.mockImplementation(() => mockTransport)
+
+			// Mock Client
+			const Client = (await import("@modelcontextprotocol/sdk/client/index.js")).Client as ReturnType<
+				typeof vi.fn
+			>
+			const mockClient = {
+				connect: vi.fn().mockResolvedValue(undefined),
+				close: vi.fn().mockResolvedValue(undefined),
+				getInstructions: vi.fn().mockReturnValue("test instructions"),
+				request: vi.fn().mockResolvedValue({ tools: [], resources: [], resourceTemplates: [] }),
+			}
+			Client.mockImplementation(() => mockClient)
+
+			// Set up mock connection for disabled server
+			const mockConnection: McpConnection = {
+				server: {
+					name: "test-server",
+					config: JSON.stringify({
+						type: "stdio",
+						command: "node",
+						args: ["test.js"],
+						disabled: true,
+					}),
+					status: "disconnected",
+					disabled: true,
+					source: "global",
+				},
+				client: {} as any,
+				transport: {} as any,
+			}
+			mcpHub.connections = [mockConnection]
+
+			// Toggle to enabled
+			await mcpHub.toggleServerDisabled("test-server", false)
+
+			// Verify the server was connected
+			expect(mockClient.connect).toHaveBeenCalled()
 		})
 	})
 

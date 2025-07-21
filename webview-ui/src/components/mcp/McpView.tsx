@@ -218,6 +218,11 @@ const ServerRow = ({ server, alwaysAllowMcp }: { server: McpServer; alwaysAllowM
 	]
 
 	const getStatusColor = () => {
+		// Show grey/disabled color for disabled servers regardless of connection status
+		if (server.disabled) {
+			return "var(--vscode-disabledForeground)"
+		}
+
 		switch (server.status) {
 			case "connected":
 				return "var(--vscode-testing-iconPassed)"
