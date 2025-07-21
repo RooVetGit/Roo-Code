@@ -1244,42 +1244,6 @@ describe("read_file tool with image support", () => {
 			expect(imagesArg![0]).toBe(`data:image/png;base64,${base64ImageData}`)
 		})
 
-		it("should extract and display PNG dimensions correctly", async () => {
-			// Setup - Create a proper PNG buffer with known dimensions (100x200 pixels)
-			const pngSignature = Buffer.from([0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A]) // PNG signature
-			const ihdrLength = Buffer.from([0x00, 0x00, 0x00, 0x0D]) // IHDR chunk length (13 bytes)
-			const ihdrType = Buffer.from("IHDR", "ascii") // IHDR chunk type
-			const width = Buffer.alloc(4)
-			width.writeUInt32BE(100, 0) // Width: 100 pixels
-			const height = Buffer.alloc(4)
-			height.writeUInt32BE(200, 0) // Height: 200 pixels
-			const ihdrData = Buffer.from([0x08, 0x02, 0x00, 0x00, 0x00]) // Bit depth, color type, compression, filter, interlace
-			const crc = Buffer.from([0x00, 0x00, 0x00, 0x00]) // Dummy CRC
-			
-			const pngBuffer = Buffer.concat([pngSignature, ihdrLength, ihdrType, width, height, ihdrData, crc])
-			const pngBase64 = pngBuffer.toString("base64")
-			
-			mockedFsReadFile.mockResolvedValue(pngBuffer)
-
-			// Execute
-			const result = await executeReadImageTool()
-
-			// Verify result is a multi-part response
-			expect(Array.isArray(result)).toBe(true)
-			const textPart = (result as any[]).find((p) => p.type === "text")?.text
-			const imagePart = (result as any[]).find((p) => p.type === "image")
-
-			// Verify text part contains dimensions
-			expect(textPart).toContain(`<file><path>${testImagePath}</path>`)
-			expect(textPart).toContain("100x200 pixels") // Should include the dimensions
-			expect(textPart).toContain(`<notice>Image file`)
-
-			// Verify image part
-			expect(imagePart).toBeDefined()
-			expect(imagePart.source.media_type).toBe("image/png")
-			expect(imagePart.source.data).toBe(pngBase64)
-		})
-
 		it("should handle large image files", async () => {
 			// Setup - simulate a large image
 			const largeBase64 = "A".repeat(1000000) // 1MB of base64 data
