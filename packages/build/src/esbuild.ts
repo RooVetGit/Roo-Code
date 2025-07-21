@@ -275,3 +275,60 @@ function transformRecord<T>(obj: Record<string, any>, from: string, to: string):
 		{} as T,
 	)
 }
+
+export function copyLibsqlNativeModules(srcDir: string, distDir: string): void {
+	const workspaceRoot = path.join(srcDir, "..")
+	const pnpmLibsqlDir = path.join(workspaceRoot, "node_modules", ".pnpm", "libsql@0.5.15", "node_modules", "libsql")
+	const packageJsonPath = path.join(pnpmLibsqlDir, "package.json")
+
+	if (!fs.existsSync(packageJsonPath)) {
+		console.warn(
+			`[copyLibsqlNativeModules] libsql package.json not found at ${packageJsonPath}. Skipping native module copy.`,
+		)
+		return
+	}
+
+	const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, "utf8"))
+	const optionalDependencies = packageJson.optionalDependencies || {}
+
+	const libsqlNativeModules = Object.keys(optionalDependencies).filter((dep) => dep.startsWith("@libsql/"))
+
+	if (libsqlNativeModules.length === 0) {
+		console.log("[copyLibsqlNativeModules] No @libsql native modules found in optionalDependencies. Skipping copy.")
+		return
+	}
+
+	const destLibsqlDir = path.join(distDir, "node_modules", "@libsql")
+	fs.mkdirSync(destLibsqlDir, { recursive: true })
+
+	libsqlNativeModules.forEach((moduleName) => {
+		console.log(`[copyLibsqlNativeModules] Processing module: ${moduleName}`)
+		console.log(`[copyLibsqlNativeModules] Module version: ${optionalDependencies[moduleName]}`)
+		const pnpmModuleName = moduleName.replace("/", "+")
+		const modulePath = path.join(
+			workspaceRoot,
+			"node_modules",
+			".pnpm",
+			`${pnpmModuleName}@${optionalDependencies[moduleName]}`,
+			"node_modules",
+			moduleName,
+		)
+		const nativeModuleName = moduleName.split("/")[1]
+		if (!nativeModuleName) {
+			console.warn(`[copyLibsqlNativeModules] Invalid module name format: ${moduleName}. Skipping.`)
+			return
+		}
+		const destPath = path.join(destLibsqlDir, nativeModuleName)
+
+		if (fs.existsSync(modulePath)) {
+			if (fs.existsSync(destPath)) {
+				rmDir(destPath)
+			}
+			fs.mkdirSync(destPath, { recursive: true })
+			const count = copyDir(modulePath, destPath, 0)
+			console.log(`[copyLibsqlNativeModules] Copied ${count} files from ${moduleName} to ${destPath}`)
+		} else {
+			console.warn(`[copyLibsqlNativeModules] Native module not found: ${modulePath}. Skipping.`)
+		}
+	})
+}

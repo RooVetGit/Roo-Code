@@ -119,6 +119,10 @@
 		"searchMinScoreResetTooltip": "Zresetuj do wartości domyślnej (0.4)",
 		"searchMaxResultsLabel": "Maksymalna liczba wyników wyszukiwania",
 		"searchMaxResultsDescription": "Maksymalna liczba wyników wyszukiwania zwracanych podczas zapytania do indeksu bazy kodu. Wyższe wartości zapewniają więcej kontekstu, ale mogą zawierać mniej istotne wyniki.",
+		"vectorStoreProviderLabel": "Dostawca magazynu wektorów",
+		"libSQLDirectoryLabel": "Katalog LibSQL",
+		"libSQLDirectoryPlaceholder": "Wprowadź niestandardowy katalog LibSQL (opcjonalnie)",
+		"libSQLDirectoryDescription": "Ścieżka do przechowywania plików bazy danych wektorów LibSQL. Domyślnie jest to folder w katalogu domowym użytkownika (np. C:\\Users\\TwojaNazwaUżytkownika\\.roo\\libsql w systemie Windows lub /home/twojanazwauzytkownika/.roo/libsql w systemie Linux/macOS).",
 		"resetToDefault": "Przywróć domyślne"
 	},
 	"autoApprove": {

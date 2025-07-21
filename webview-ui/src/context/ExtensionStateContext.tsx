@@ -223,6 +223,8 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 			codebaseIndexEmbedderModelId: "",
 			codebaseIndexSearchMaxResults: undefined,
 			codebaseIndexSearchMinScore: undefined,
+			codebaseIndexVectorStoreProvider: "qdrant",
+			codebaseIndexLibSQLDirectory: undefined,
 		},
 		codebaseIndexModels: { ollama: {}, openai: {} },
 		alwaysAllowUpdateTodoList: true,

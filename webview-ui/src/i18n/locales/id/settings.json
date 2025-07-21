@@ -119,6 +119,10 @@
 		"searchMinScoreResetTooltip": "Reset ke nilai default (0.4)",
 		"searchMaxResultsLabel": "Hasil Pencarian Maksimum",
 		"searchMaxResultsDescription": "Jumlah maksimum hasil pencarian yang dikembalikan saat melakukan query indeks basis kode. Nilai yang lebih tinggi memberikan lebih banyak konteks tetapi mungkin menyertakan hasil yang kurang relevan.",
+		"vectorStoreProviderLabel": "Penyedia Penyimpanan Vektor",
+		"libSQLDirectoryLabel": "Direktori LibSQL",
+		"libSQLDirectoryPlaceholder": "Masukkan direktori LibSQL kustom (opsional)",
+		"libSQLDirectoryDescription": "Jalur untuk menyimpan file database vektor LibSQL. Defaultnya adalah folder di dalam direktori home pengguna Anda (misalnya, C:\\Users\\NamaPenggunaAnda\\.roo\\libsql di Windows, atau /home/namapenggunaanda/.roo/libsql di Linux/macOS).",
 		"resetToDefault": "Reset ke default"
 	},
 	"autoApprove": {

@@ -61,6 +61,8 @@ interface LocalCodeIndexSettings {
 	codebaseIndexEmbedderModelDimension?: number // Generic dimension for all providers
 	codebaseIndexSearchMaxResults?: number
 	codebaseIndexSearchMinScore?: number
+	codebaseIndexVectorStoreProvider: "libsql" | "qdrant"
+	codebaseIndexLibSQLDirectory?: string
 
 	// Secret settings (start empty, will be loaded separately)
 	codeIndexOpenAiKey?: string
@@ -169,6 +171,8 @@ export const CodeIndexPopover: React.FC<CodeIndexPopoverProps> = ({
 		codebaseIndexOpenAiCompatibleBaseUrl: "",
 		codebaseIndexOpenAiCompatibleApiKey: "",
 		codebaseIndexGeminiApiKey: "",
+		codebaseIndexVectorStoreProvider: "qdrant",
+		codebaseIndexLibSQLDirectory: undefined,
 	})
 
 	// Initial settings state - stores the settings when popover opens
@@ -202,6 +206,8 @@ export const CodeIndexPopover: React.FC<CodeIndexPopoverProps> = ({
 				codebaseIndexOpenAiCompatibleBaseUrl: codebaseIndexConfig.codebaseIndexOpenAiCompatibleBaseUrl || "",
 				codebaseIndexOpenAiCompatibleApiKey: "",
 				codebaseIndexGeminiApiKey: "",
+				codebaseIndexVectorStoreProvider: codebaseIndexConfig.codebaseIndexVectorStoreProvider || "qdrant",
+				codebaseIndexLibSQLDirectory: codebaseIndexConfig.codebaseIndexLibSQLDirectory,
 			}
 			setInitialSettings(settings)
 			setCurrentSettings(settings)
@@ -933,54 +939,99 @@ export const CodeIndexPopover: React.FC<CodeIndexPopoverProps> = ({
 										</>
 									)}
 
+									{/* Vector Store Settings */}
+									<div className="space-y-2">
+										<label className="text-sm font-medium">
+											{t("settings:codeIndex.vectorStoreProviderLabel")}
+										</label>
+										<Select
+											value={currentSettings.codebaseIndexVectorStoreProvider}
+											onValueChange={(value: "libsql" | "qdrant") => {
+												updateSetting("codebaseIndexVectorStoreProvider", value)
+											}}>
+											<SelectTrigger className="w-full">
+												<SelectValue />
+											</SelectTrigger>
+											<SelectContent>
+												<SelectItem value="qdrant">Qdrant</SelectItem>
+												<SelectItem value="libsql">LibSQL</SelectItem>
+											</SelectContent>
+										</Select>
+									</div>
 									{/* Qdrant Settings */}
-									<div className="space-y-2">
-										<label className="text-sm font-medium">
-											{t("settings:codeIndex.qdrantUrlLabel")}
-										</label>
-										<VSCodeTextField
-											value={currentSettings.codebaseIndexQdrantUrl || ""}
-											onInput={(e: any) =>
-												updateSetting("codebaseIndexQdrantUrl", e.target.value)
-											}
-											onBlur={(e: any) => {
-												// Set default Qdrant URL if field is empty
-												if (!e.target.value.trim()) {
-													currentSettings.codebaseIndexQdrantUrl = DEFAULT_QDRANT_URL
-													updateSetting("codebaseIndexQdrantUrl", DEFAULT_QDRANT_URL)
-												}
-											}}
-											placeholder={t("settings:codeIndex.qdrantUrlPlaceholder")}
-											className={cn("w-full", {
-												"border-red-500": formErrors.codebaseIndexQdrantUrl,
-											})}
-										/>
-										{formErrors.codebaseIndexQdrantUrl && (
-											<p className="text-xs text-vscode-errorForeground mt-1 mb-0">
-												{formErrors.codebaseIndexQdrantUrl}
-											</p>
-										)}
-									</div>
+									{currentSettings.codebaseIndexVectorStoreProvider === "qdrant" && (
+										<>
+											<div className="space-y-2">
+												<label className="text-sm font-medium">
+													{t("settings:codeIndex.qdrantUrlLabel")}
+												</label>
+												<VSCodeTextField
+													value={currentSettings.codebaseIndexQdrantUrl || ""}
+													onInput={(e: any) =>
+														updateSetting("codebaseIndexQdrantUrl", e.target.value)
+													}
+													onBlur={(e: any) => {
+														// Set default Qdrant URL if field is empty
+														if (!e.target.value.trim()) {
+															currentSettings.codebaseIndexQdrantUrl = DEFAULT_QDRANT_URL
+															updateSetting("codebaseIndexQdrantUrl", DEFAULT_QDRANT_URL)
+														}
+													}}
+													placeholder={t("settings:codeIndex.qdrantUrlPlaceholder")}
+													className={cn("w-full", {
+														"border-red-500": formErrors.codebaseIndexQdrantUrl,
+													})}
+												/>
+												{formErrors.codebaseIndexQdrantUrl && (
+													<p className="text-xs text-vscode-errorForeground mt-1 mb-0">
+														{formErrors.codebaseIndexQdrantUrl}
+													</p>
+												)}
+											</div>
 
-									<div className="space-y-2">
-										<label className="text-sm font-medium">
-											{t("settings:codeIndex.qdrantApiKeyLabel")}
-										</label>
-										<VSCodeTextField
-											type="password"
-											value={currentSettings.codeIndexQdrantApiKey || ""}
-											onInput={(e: any) => updateSetting("codeIndexQdrantApiKey", e.target.value)}
-											placeholder={t("settings:codeIndex.qdrantApiKeyPlaceholder")}
-											className={cn("w-full", {
-												"border-red-500": formErrors.codeIndexQdrantApiKey,
-											})}
-										/>
-										{formErrors.codeIndexQdrantApiKey && (
-											<p className="text-xs text-vscode-errorForeground mt-1 mb-0">
-												{formErrors.codeIndexQdrantApiKey}
+											<div className="space-y-2">
+												<label className="text-sm font-medium">
+													{t("settings:codeIndex.qdrantApiKeyLabel")}
+												</label>
+												<VSCodeTextField
+													type="password"
+													value={currentSettings.codeIndexQdrantApiKey || ""}
+													onInput={(e: any) =>
+														updateSetting("codeIndexQdrantApiKey", e.target.value)
+													}
+													placeholder={t("settings:codeIndex.qdrantApiKeyPlaceholder")}
+													className={cn("w-full", {
+														"border-red-500": formErrors.codeIndexQdrantApiKey,
+													})}
+												/>
+												{formErrors.codeIndexQdrantApiKey && (
+													<p className="text-xs text-vscode-errorForeground mt-1 mb-0">
+														{formErrors.codeIndexQdrantApiKey}
+													</p>
+												)}
+											</div>
+										</>
+									)}
+
+									{/* LibSQL Settings */}
+									{currentSettings.codebaseIndexVectorStoreProvider === "libsql" && (
+										<div className="space-y-2">
+											<label className="text-sm font-medium">
+												{t("settings:codeIndex.libSQLDirectoryLabel")}
+											</label>
+											<VSCodeTextField
+												value={currentSettings.codebaseIndexLibSQLDirectory || ""}
+												onInput={(e: any) =>
+													updateSetting("codebaseIndexLibSQLDirectory", e.target.value)
+												}
+												placeholder={t("settings:codeIndex.libSQLDirectoryPlaceholder")}
+												className="w-full"
+											/>
+											<p className="text-xs text-vscode-descriptionForeground">
+												{t("settings:codeIndex.libSQLDirectoryDescription")}
 											</p>
-										)}
-									</div>
+										</div>
+									)}
 								</div>
 							)}
 						</div>

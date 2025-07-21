@@ -119,6 +119,10 @@
 		"searchMinScoreResetTooltip": "기본값(0.4)으로 재설정",
 		"searchMaxResultsLabel": "최대 검색 결과",
 		"searchMaxResultsDescription": "코드베이스 인덱스를 쿼리할 때 반환할 최대 검색 결과 수입니다. 값이 높을수록 더 많은 컨텍스트를 제공하지만 관련성이 낮은 결과가 포함될 수 있습니다.",
+		"vectorStoreProviderLabel": "벡터 스토어 공급자",
+		"libSQLDirectoryLabel": "LibSQL 디렉토리",
+		"libSQLDirectoryPlaceholder": "사용자 지정 LibSQL 디렉토리 입력 (선택 사항)",
+		"libSQLDirectoryDescription": "LibSQL 벡터 데이터베이스 파일을 저장할 경로입니다. 기본값은 사용자 홈 디렉토리 내의 폴더입니다 (예: Windows의 C:\\Users\\YourUsername\\.roo\\libsql 또는 Linux/macOS의 /home/yourusername/.roo/libsql).",
 		"resetToDefault": "기본값으로 재설정"
 	},
 	"autoApprove": {

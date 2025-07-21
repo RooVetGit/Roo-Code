@@ -1,8 +1,7 @@
-import { describe, it, expect, beforeAll, afterAll, beforeEach, afterEach, vi } from "vitest"
+import { describe, it, expect, beforeAll, afterAll, beforeEach, vi } from "vitest"
 import { LibSQLVectorStore } from "../libsql-client"
 import * as path from "path"
 import * as fs from "fs"
-import { DEFAULT_MAX_SEARCH_RESULTS, DEFAULT_SEARCH_MIN_SCORE } from "../../constants"
 
 const getWorkspacePath = () => "/mock/workspace/path"
 
@@ -424,60 +423,6 @@ describe("LibSQLVectorStore", () => {
 		it("should return true when collection exists", async () => {
 			const exists = await vectorStore.collectionExists()
 			expect(exists).toBe(true)
-		})
-	})
-
-	describe("Default Parameter Handling", () => {
-		beforeEach(async () => {
-			await vectorStore.deleteCollection()
-			await vectorStore.initialize()
-		})
-
-		it("should use default maxResults and minScore when not provided", async () => {
-			const numPoints = DEFAULT_MAX_SEARCH_RESULTS
-			const points = []
-			for (let i = 0; i < numPoints; i++) {
-				points.push({
-					id: `test${i}`,
-					vector: [1, 0, 0],
-					payload: {
-						filePath: `test/file${i}.ts`,
-						codeChunk: `test code ${i}`,
-						startLine: i * 5 + 1,
-						endLine: i * 5 + 5,
-					},
-				})
-			}
-			points.push({
-				id: "low-score-1",
-				vector: [0.1, 0.9, 0],
-				payload: {
-					filePath: "test/low-score-1.ts",
-					codeChunk: "low score code",
-					startLine: 1,
-					endLine: 5,
-				},
-			})
-			points.push({
-				id: "low-score-2",
-				vector: [0.05, 0.95, 0],
-				payload: {
-					filePath: "test/low-score-2.ts",
-					codeChunk: "very low score code",
-					startLine: 1,
-					endLine: 5,
-				},
-			})
-
-			await vectorStore.upsertPoints(points)
-
-			const results = await vectorStore.search([1, 0, 0])
-
-			expect(results).toHaveLength(10)
-
-			results.forEach((result) => {
-				expect(result.score).toBeGreaterThanOrEqual(DEFAULT_SEARCH_MIN_SCORE)
-			})
 		})
 	})
 

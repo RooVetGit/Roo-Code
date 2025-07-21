@@ -119,6 +119,10 @@
 		"searchMinScoreResetTooltip": "Reset naar standaardwaarde (0.4)",
 		"searchMaxResultsLabel": "Maximum Zoekresultaten",
 		"searchMaxResultsDescription": "Maximum aantal zoekresultaten dat wordt geretourneerd bij het doorzoeken van de codebase-index. Hogere waarden bieden meer context maar kunnen minder relevante resultaten bevatten.",
+		"vectorStoreProviderLabel": "Vector Store Provider",
+		"libSQLDirectoryLabel": "LibSQL Directory",
+		"libSQLDirectoryPlaceholder": "Voer aangepaste LibSQL-directory in (optioneel)",
+		"libSQLDirectoryDescription": "Pad om de LibSQL vector database bestanden op te slaan. Standaard is dit een map binnen de home directory van uw gebruiker (bijv. C:\\Users\\UwGebruikersnaam\\.roo\\libsql op Windows, of /home/uwgebruikersnaam/.roo/libsql op Linux/macOS).",
 		"resetToDefault": "Reset naar standaard"
 	},
 	"autoApprove": {

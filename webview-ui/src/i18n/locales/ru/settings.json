@@ -119,6 +119,10 @@
 		"searchMinScoreResetTooltip": "Сбросить к значению по умолчанию (0.4)",
 		"searchMaxResultsLabel": "Максимальное количество результатов поиска",
 		"searchMaxResultsDescription": "Максимальное количество результатов поиска, возвращаемых при запросе индекса кодовой базы. Более высокие значения предоставляют больше контекста, но могут включать менее релевантные результаты.",
+		"vectorStoreProviderLabel": "Провайдер векторного хранилища",
+		"libSQLDirectoryLabel": "Каталог LibSQL",
+		"libSQLDirectoryPlaceholder": "Введите пользовательский каталог LibSQL (необязательно)",
+		"libSQLDirectoryDescription": "Путь для хранения файлов векторной базы данных LibSQL. По умолчанию это папка в домашнем каталоге пользователя (например, C:\\Users\\ВашеИмяПользователя\\.roo\\libsql в Windows или /home/вашеимяпользователя/.roo/libsql в Linux/macOS).",
 		"resetToDefault": "Сбросить к значению по умолчанию"
 	},
 	"autoApprove": {

@@ -119,6 +119,10 @@
 		"searchMinScoreResetTooltip": "恢复默认值 (0.4)",
 		"searchMaxResultsLabel": "最大搜索结果数",
 		"searchMaxResultsDescription": "查询代码库索引时返回的最大搜索结果数。较高的值提供更多上下文，但可能包含相关性较低的结果。",
+		"vectorStoreProviderLabel": "向量存储提供商",
+		"libSQLDirectoryLabel": "LibSQL 目录",
+		"libSQLDirectoryPlaceholder": "输入自定义 LibSQL 目录（可选）",
+		"libSQLDirectoryDescription": "存储 LibSQL 向量数据库文件的路径。默认为用户主目录下的一个文件夹（例如，Windows 上为 C:\\Users\\您的用户名\\.roo\\libsql，或 Linux/macOS 上为 /home/您的用户名/.roo/libsql）。",
 		"resetToDefault": "恢复默认值"
 	},
 	"autoApprove": {

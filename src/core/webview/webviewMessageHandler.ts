@@ -1946,6 +1946,8 @@ export const webviewMessageHandler = async (
 					codebaseIndexOpenAiCompatibleBaseUrl: settings.codebaseIndexOpenAiCompatibleBaseUrl,
 					codebaseIndexSearchMaxResults: settings.codebaseIndexSearchMaxResults,
 					codebaseIndexSearchMinScore: settings.codebaseIndexSearchMinScore,
+					codebaseIndexVectorStoreProvider: settings.codebaseIndexVectorStoreProvider,
+					codebaseIndexLibSQLDirectory: settings.codebaseIndexLibSQLDirectory,
 				}
 
 				// Save global state first

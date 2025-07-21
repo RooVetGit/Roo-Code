@@ -119,6 +119,10 @@
 		"searchMinScoreResetTooltip": "Auf Standardwert zurücksetzen (0.4)",
 		"searchMaxResultsLabel": "Maximale Suchergebnisse",
 		"searchMaxResultsDescription": "Maximale Anzahl von Suchergebnissen, die bei der Abfrage des Codebase-Index zurückgegeben werden. Höhere Werte bieten mehr Kontext, können aber weniger relevante Ergebnisse enthalten.",
+		"vectorStoreProviderLabel": "Vektor-Speicher-Anbieter",
+		"libSQLDirectoryLabel": "LibSQL-Verzeichnis",
+		"libSQLDirectoryPlaceholder": "Benutzerdefiniertes LibSQL-Verzeichnis eingeben (optional)",
+		"libSQLDirectoryDescription": "Pfad zum Speichern der LibSQL-Vektordateien. Standardmäßig ein Ordner im Home-Verzeichnis Ihres Benutzers (z.B. C:\\Users\\IhrBenutzername\\.roo\\libsql unter Windows oder /home/ihrbenutzername/.roo/libsql unter Linux/macOS).",
 		"resetToDefault": "Auf Standard zurücksetzen"
 	},
 	"autoApprove": {

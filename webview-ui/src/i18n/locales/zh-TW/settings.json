@@ -119,6 +119,10 @@
 		"searchMinScoreResetTooltip": "重設為預設值 (0.4)",
 		"searchMaxResultsLabel": "最大搜尋結果數",
 		"searchMaxResultsDescription": "查詢程式碼庫索引時傳回的最大搜尋結果數。較高的值提供更多上下文，但可能包含相關性較低的結果。",
+		"vectorStoreProviderLabel": "向量儲存提供者",
+		"libSQLDirectoryLabel": "LibSQL 目錄",
+		"libSQLDirectoryPlaceholder": "輸入自訂 LibSQL 目錄（選用）",
+		"libSQLDirectoryDescription": "儲存 LibSQL 向量資料庫檔案的路徑。預設為使用者主目錄下的一個資料夾（例如，Windows 上為 C:\\Users\\您的使用者名稱\\.roo\\libsql，或 Linux/macOS 上為 /home/您的使用者名稱/.roo/libsql）。",
 		"resetToDefault": "重設為預設值"
 	},
 	"autoApprove": {

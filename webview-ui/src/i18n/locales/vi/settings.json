@@ -119,6 +119,10 @@
 		"searchMinScoreResetTooltip": "Đặt lại về giá trị mặc định (0.4)",
 		"searchMaxResultsLabel": "Số Kết Quả Tìm Kiếm Tối Đa",
 		"searchMaxResultsDescription": "Số lượng kết quả tìm kiếm tối đa được trả về khi truy vấn chỉ mục cơ sở mã. Giá trị cao hơn cung cấp nhiều ngữ cảnh hơn nhưng có thể bao gồm các kết quả ít liên quan hơn.",
+		"vectorStoreProviderLabel": "Nhà cung cấp Vector Store",
+		"libSQLDirectoryLabel": "Thư mục LibSQL",
+		"libSQLDirectoryPlaceholder": "Nhập thư mục LibSQL tùy chỉnh (tùy chọn)",
+		"libSQLDirectoryDescription": "Đường dẫn để lưu trữ các tệp cơ sở dữ liệu vector LibSQL. Mặc định là một thư mục trong thư mục chính của người dùng (ví dụ: C:\\Users\\TênNgườiDùngCủaBạn\\.roo\\libsql trên Windows hoặc /home/tênngườidùngcủabạn/.roo/libsql trên Linux/macOS).",
 		"resetToDefault": "Đặt lại về mặc định"
 	},
 	"autoApprove": {

@@ -251,6 +251,8 @@ export interface WebviewMessage {
 		codebaseIndexOpenAiCompatibleBaseUrl?: string
 		codebaseIndexSearchMaxResults?: number
 		codebaseIndexSearchMinScore?: number
+		codebaseIndexVectorStoreProvider?: "libsql" | "qdrant"
+		codebaseIndexLibSQLDirectory?: string
 
 		// Secret settings
 		codeIndexOpenAiKey?: string

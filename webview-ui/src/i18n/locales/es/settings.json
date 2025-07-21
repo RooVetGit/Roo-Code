@@ -119,6 +119,10 @@
 		"searchMinScoreResetTooltip": "Restablecer al valor predeterminado (0.4)",
 		"searchMaxResultsLabel": "Resultados máximos de búsqueda",
 		"searchMaxResultsDescription": "Número máximo de resultados de búsqueda a devolver al consultar el índice de código. Valores más altos proporcionan más contexto pero pueden incluir resultados menos relevantes.",
+		"vectorStoreProviderLabel": "Proveedor de Almacén de Vectores",
+		"libSQLDirectoryLabel": "Directorio de LibSQL",
+		"libSQLDirectoryPlaceholder": "Introduzca el directorio personalizado de LibSQL (opcional)",
+		"libSQLDirectoryDescription": "Ruta para almacenar los archivos de la base de datos vectorial de LibSQL. Por defecto, es una carpeta dentro del directorio de inicio de su usuario (por ejemplo, C:\\Users\\SuNombreDeUsuario\\.roo\\libsql en Windows, o /home/sunombredeusuario/.roo/libsql en Linux/macOS).",
 		"resetToDefault": "Restablecer al valor predeterminado"
 	},
 	"autoApprove": {

@@ -140,6 +140,7 @@ describe("CodeIndexPopover Validation", () => {
 				codebaseIndexSearchMinScore: 0.7,
 				codebaseIndexOpenAiCompatibleBaseUrl: "",
 				codebaseIndexEmbedderModelDimension: undefined,
+				codebaseIndexVectorStoreProvider: "qdrant",
 			},
 			codebaseIndexModels: {
 				openai: [{ dimension: 1536 }],

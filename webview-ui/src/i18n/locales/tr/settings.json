@@ -119,6 +119,10 @@
 		"searchMinScoreResetTooltip": "Varsayılan değere sıfırla (0.4)",
 		"searchMaxResultsLabel": "Maksimum Arama Sonuçları",
 		"searchMaxResultsDescription": "Kod tabanı dizinini sorgularken döndürülecek maksimum arama sonucu sayısı. Daha yüksek değerler daha fazla bağlam sağlar ancak daha az alakalı sonuçlar içerebilir.",
+		"vectorStoreProviderLabel": "Vektör Deposu Sağlayıcısı",
+		"libSQLDirectoryLabel": "LibSQL Dizini",
+		"libSQLDirectoryPlaceholder": "Özel LibSQL dizini girin (isteğe bağlı)",
+		"libSQLDirectoryDescription": "LibSQL vektör veritabanı dosyalarını depolamak için yol. Varsayılan olarak kullanıcınızın ana dizinindeki bir klasördür (örn. Windows'ta C:\\Users\\KullanıcıAdınız\\.roo\\libsql veya Linux/macOS'ta /home/kullanıcıadınız/.roo/libsql).",
 		"resetToDefault": "Varsayılana sıfırla"
 	},
 	"autoApprove": {

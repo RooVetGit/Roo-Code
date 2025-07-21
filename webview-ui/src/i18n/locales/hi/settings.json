@@ -119,6 +119,10 @@
 		"searchMinScoreResetTooltip": "डिफ़ॉल्ट मान पर रीसेट करें (0.4)",
 		"searchMaxResultsLabel": "अधिकतम खोज परिणाम",
 		"searchMaxResultsDescription": "कोडबेस इंडेक्स को क्वेरी करते समय वापस करने के लिए खोज परिणामों की अधिकतम संख्या। उच्च मान अधिक संदर्भ प्रदान करते हैं लेकिन कम प्रासंगिक परिणाम शामिल कर सकते हैं।",
+		"vectorStoreProviderLabel": "वेक्टर स्टोर प्रदाता",
+		"libSQLDirectoryLabel": "LibSQL डायरेक्टरी",
+		"libSQLDirectoryPlaceholder": "कस्टम LibSQL डायरेक्टरी दर्ज करें (वैकल्पिक)",
+		"libSQLDirectoryDescription": "LibSQL वेक्टर डेटाबेस फ़ाइलों को संग्रहीत करने का पथ। डिफ़ॉल्ट रूप से आपके उपयोगकर्ता के होम डायरेक्टरी के भीतर एक फ़ोल्डर होता है (उदा., Windows पर C:\\Users\\आपकाउपयोगकर्तानाम\\.roo\\libsql, या Linux/macOS पर /home/आपकाउपयोगकर्तानाम/.roo/libsql)।",
 		"resetToDefault": "डिफ़ॉल्ट पर रीसेट करें"
 	},
 	"autoApprove": {
