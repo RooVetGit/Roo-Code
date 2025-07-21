@@ -200,7 +200,7 @@ export async function addCustomInstructions(
 	globalCustomInstructions: string,
 	cwd: string,
 	mode: string,
-	options: { language?: string; rooIgnoreInstructions?: string } = {},
+	options: { language?: string; rooIgnoreInstructions?: string; settings?: Record<string, any> } = {},
 ): Promise<string> {
 	const sections = []
 
@@ -259,7 +259,27 @@ export async function addCustomInstructions(
 
 	// Add mode-specific instructions after
 	if (typeof modeCustomInstructions === "string" && modeCustomInstructions.trim()) {
-		sections.push(`Mode-specific Instructions:\n${modeCustomInstructions.trim()}`)
+		let instructions = modeCustomInstructions.trim()
+
+		// Filter out todo list references if todoListEnabled is false
+		if (options.settings?.todoListEnabled === false) {
+			// Remove sentences that mention update_todo_list
+			instructions = instructions
+				.split("\n")
+				.map((line) => {
+					// Skip lines that mention update_todo_list tool
+					if (line.includes("update_todo_list") || line.includes("todo list using the")) {
+						return ""
+					}
+					return line
+				})
+				.filter((line) => line !== "")
+				.join("\n")
+				// Clean up any double line breaks that might have been created
+				.replace(/\n\n+/g, "\n\n")
+		}
+
+		sections.push(`Mode-specific Instructions:\n${instructions}`)
 	}
 
 	// Add rules - include both mode-specific and generic rules if they exist
