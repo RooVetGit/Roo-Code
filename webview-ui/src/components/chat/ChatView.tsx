@@ -1890,8 +1890,11 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 										// Calculate button className based on Daniel's suggestion
 										const showShareButton =
 											primaryButtonText === t("chat:startNewTask.title") && currentTaskItem?.id
-										const buttonClassName =
-											showShareButton || secondaryButtonText ? "flex-1 mr-[6px]" : "flex-[2] mr-0"
+										const buttonClassName = showShareButton
+											? "flex-[9] mr-[6px]"
+											: secondaryButtonText
+												? "flex-1 mr-[6px]"
+												: "flex-[2] mr-0"
 
 										return (
 											<>
@@ -1951,7 +1954,7 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 															{/* Visible VSCodeButton that matches the style */}
 															<StandardTooltip content={t("chat:task.share")}>
 																<VSCodeButton
-																	appearance="secondary"
+																	appearance="primary"
 																	disabled={!enableButtons}
 																	className="flex-1 ml-[6px]"
 																	onClick={() => {
@@ -1963,8 +1966,7 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 																			shareButton.click()
 																		}
 																	}}>
-																	<i className="codicon codicon-link mr-1.5 align-middle"></i>
-																	{t("chat:task.share")}
+																	<i className="codicon codicon-link"></i>
 																</VSCodeButton>
 															</StandardTooltip>
 														</>
