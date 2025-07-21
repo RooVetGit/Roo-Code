@@ -1963,7 +1963,8 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 																			shareButton.click()
 																		}
 																	}}>
-																	<span className="codicon codicon-link"></span>
+																	<i className="codicon codicon-link mr-1.5 align-middle"></i>
+																	{t("chat:task.share")}
 																</VSCodeButton>
 															</StandardTooltip>
 														</>
