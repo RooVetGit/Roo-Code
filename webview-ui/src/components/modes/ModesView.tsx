@@ -833,7 +833,7 @@ const ModesView = ({ onDone }: ModesViewProps) => {
 							})()}
 							onChange={(e) => {
 								const value =
-									(e as unknown as CustomEvent)?.detail?.target?.value ||
+									(e as unknown as CustomEvent)?.detail?.target?.value ??
 									((e as any).target as HTMLTextAreaElement).value
 								const customMode = findModeBySlug(visualMode, customModes)
 								if (customMode) {
@@ -888,7 +888,7 @@ const ModesView = ({ onDone }: ModesViewProps) => {
 							})()}
 							onChange={(e) => {
 								const value =
-									(e as unknown as CustomEvent)?.detail?.target?.value ||
+									(e as unknown as CustomEvent)?.detail?.target?.value ??
 									((e as any).target as HTMLTextAreaElement).value
 								const customMode = findModeBySlug(visualMode, customModes)
 								if (customMode) {
@@ -943,7 +943,7 @@ const ModesView = ({ onDone }: ModesViewProps) => {
 							})()}
 							onChange={(e) => {
 								const value =
-									(e as unknown as CustomEvent)?.detail?.target?.value ||
+									(e as unknown as CustomEvent)?.detail?.target?.value ??
 									((e as any).target as HTMLTextAreaElement).value
 								const customMode = findModeBySlug(visualMode, customModes)
 								if (customMode) {
@@ -1102,7 +1102,7 @@ const ModesView = ({ onDone }: ModesViewProps) => {
 							})()}
 							onChange={(e) => {
 								const value =
-									(e as unknown as CustomEvent)?.detail?.target?.value ||
+									(e as unknown as CustomEvent)?.detail?.target?.value ??
 									((e as any).target as HTMLTextAreaElement).value
 								const customMode = findModeBySlug(visualMode, customModes)
 								if (customMode) {
@@ -1307,7 +1307,7 @@ const ModesView = ({ onDone }: ModesViewProps) => {
 						value={customInstructions || ""}
 						onChange={(e) => {
 							const value =
-								(e as unknown as CustomEvent)?.detail?.target?.value ||
+								(e as unknown as CustomEvent)?.detail?.target?.value ??
 								((e as any).target as HTMLTextAreaElement).value
 							setCustomInstructions(value || undefined)
 							vscode.postMessage({

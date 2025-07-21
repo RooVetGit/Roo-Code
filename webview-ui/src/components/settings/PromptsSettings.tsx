@@ -147,7 +147,7 @@ const PromptsSettings = ({ customSupportPrompts, setCustomSupportPrompts }: Prom
 						value={getSupportPromptValue(activeSupportOption)}
 						onChange={(e) => {
 							const value =
-								(e as unknown as CustomEvent)?.detail?.target?.value ||
+								(e as unknown as CustomEvent)?.detail?.target?.value ??
 								((e as any).target as HTMLTextAreaElement).value
 							const trimmedValue = value.trim()
 							updateSupportPrompt(activeSupportOption, trimmedValue || undefined)
