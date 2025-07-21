@@ -271,29 +271,17 @@ export class AnthropicHandler extends BaseProvider implements SingleCompletionHa
 		return content?.type === "text" ? content.text : ""
 	}
 
-	/**
-	 * Counts tokens for the given content using Anthropic's API
-	 *
-	 * @param content The content blocks to count tokens for
-	 * @returns A promise resolving to the token count
-	 */
-	override async countTokens(content: Array<Anthropic.Messages.ContentBlockParam>): Promise<number> {
-		try {
-			// Use the current model
-			const { id: model } = this.getModel()
+	protected override async apiBasedTokenCount(content: Array<Anthropic.Messages.ContentBlockParam>): Promise<number> {
+		const { id: model } = this.getModel()
+		const response = await this.client.messages.countTokens({
+			model,
+			messages: [{ role: "user", content }],
+		})
 
-			const response = await this.client.messages.countTokens({
-				model,
-				messages: [{ role: "user", content: content }],
-			})
-
-			return response.input_tokens
-		} catch (error) {
-			// Log error but fallback to tiktoken estimation
-			console.warn("Anthropic token counting failed, using fallback", error)
-
-			// Use the base provider's implementation as fallback
-			return super.countTokens(content)
+		if (response.input_tokens === undefined) {
+			throw new Error("Anthropic remote token counting returned undefined.")
 		}
+
+		return response.input_tokens
 	}
 }

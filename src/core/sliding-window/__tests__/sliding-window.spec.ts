@@ -43,6 +43,37 @@ class MockApiHandler extends BaseProvider {
 			},
 		}
 	}
+
+	// Override countTokens to use the count without factors
+	override async countTokens(
+		content: any[],
+		options: {
+			maxTokens?: number | null
+			effectiveThreshold?: number
+			totalTokens: number
+		},
+	): Promise<number> {
+		if (content.length === 0) {
+			return 0
+		}
+
+		const { countTokens: localCountTokens } = await import("../../../utils/countTokens")
+
+		let totalTokens = 0
+		for (const block of content) {
+			if (block.type === "text") {
+				if (block.text === "") {
+					continue
+				}
+				totalTokens += await localCountTokens([block], { useWorker: true })
+			} else if (block.type === "image") {
+				const dataLength = block.source.data.length
+				totalTokens += Math.ceil(Math.sqrt(dataLength)) * 1.5
+			}
+		}
+
+		return totalTokens
+	}
 }
 
 // Create a singleton instance for tests
@@ -149,9 +180,22 @@ describe("Sliding Window", () => {
 	 */
 	describe("estimateTokenCount", () => {
 		it("should return 0 for empty or undefined content", async () => {
-			expect(await estimateTokenCount([], mockApiHandler)).toBe(0)
-			// @ts-ignore - Testing with undefined
-			expect(await estimateTokenCount(undefined, mockApiHandler)).toBe(0)
+			expect(
+				await estimateTokenCount([], mockApiHandler, {
+					effectiveThreshold: undefined,
+					maxTokens: null,
+					totalTokens: 0,
+				}),
+			).toBe(0)
+
+			expect(
+				// @ts-ignore - Testing with undefined
+				await estimateTokenCount(undefined, mockApiHandler, {
+					effectiveThreshold: undefined,
+					maxTokens: null,
+					totalTokens: 0,
+				}),
+			).toBe(0)
 		})
 
 		it("should estimate tokens for text blocks", async () => {
@@ -161,7 +205,11 @@ describe("Sliding Window", () => {
 
 			// With tiktoken, the exact token count may differ from character-based estimation
 			// Instead of expecting an exact number, we verify it's a reasonable positive number
-			const result = await estimateTokenCount(content, mockApiHandler)
+			const result = await estimateTokenCount(content, mockApiHandler, {
+				effectiveThreshold: undefined,
+				maxTokens: null,
+				totalTokens: 0,
+			})
 			expect(result).toBeGreaterThan(0)
 
 			// We can also verify that longer text results in more tokens
@@ -171,7 +219,11 @@ describe("Sliding Window", () => {
 					text: "This is a longer text block with significantly more characters to encode into tokens",
 				},
 			]
-			const longerResult = await estimateTokenCount(longerContent, mockApiHandler)
+			const longerResult = await estimateTokenCount(longerContent, mockApiHandler, {
+				effectiveThreshold: undefined,
+				maxTokens: null,
+				totalTokens: 0,
+			})
 			expect(longerResult).toBeGreaterThan(result)
 		})
 
@@ -186,8 +238,16 @@ describe("Sliding Window", () => {
 			]
 
 			// Verify the token count scales with the size of the image data
-			const smallImageTokens = await estimateTokenCount(smallImage, mockApiHandler)
-			const largerImageTokens = await estimateTokenCount(largerImage, mockApiHandler)
+			const smallImageTokens = await estimateTokenCount(smallImage, mockApiHandler, {
+				effectiveThreshold: undefined,
+				maxTokens: null,
+				totalTokens: 0,
+			})
+			const largerImageTokens = await estimateTokenCount(largerImage, mockApiHandler, {
+				effectiveThreshold: undefined,
+				maxTokens: null,
+				totalTokens: 0,
+			})
 
 			// Small image should have some tokens
 			expect(smallImageTokens).toBeGreaterThan(0)
@@ -211,25 +271,45 @@ describe("Sliding Window", () => {
 
 			// With tiktoken, we can't predict exact text token counts,
 			// but we can verify the total is greater than just the image tokens
-			const result = await estimateTokenCount(content, mockApiHandler)
+			const result = await estimateTokenCount(content, mockApiHandler, {
+				effectiveThreshold: undefined,
+				maxTokens: null,
+				totalTokens: 0,
+			})
 			expect(result).toBeGreaterThan(imageTokens)
 
 			// Also test against a version with only the image to verify text adds tokens
 			const imageOnlyContent: Array<Anthropic.Messages.ContentBlockParam> = [
 				{ type: "image", source: { type: "base64", media_type: "image/jpeg", data: "dummy_data" } },
 			]
-			const imageOnlyResult = await estimateTokenCount(imageOnlyContent, mockApiHandler)
+			const imageOnlyResult = await estimateTokenCount(imageOnlyContent, mockApiHandler, {
+				effectiveThreshold: undefined,
+				maxTokens: null,
+				totalTokens: 0,
+			})
 			expect(result).toBeGreaterThan(imageOnlyResult)
 		})
 
 		it("should handle empty text blocks", async () => {
 			const content: Array<Anthropic.Messages.ContentBlockParam> = [{ type: "text", text: "" }]
-			expect(await estimateTokenCount(content, mockApiHandler)).toBe(0)
+			expect(
+				await estimateTokenCount(content, mockApiHandler, {
+					effectiveThreshold: undefined,
+					maxTokens: null,
+					totalTokens: 0,
+				}),
+			).toBe(0)
 		})
 
 		it("should handle plain string messages", async () => {
 			const content = "This is a plain text message"
-			expect(await estimateTokenCount([{ type: "text", text: content }], mockApiHandler)).toBeGreaterThan(0)
+			expect(
+				await estimateTokenCount([{ type: "text", text: content }], mockApiHandler, {
+					effectiveThreshold: undefined,
+					maxTokens: null,
+					totalTokens: 0,
+				}),
+			).toBeGreaterThan(0)
 		})
 	})
 
@@ -414,7 +494,11 @@ describe("Sliding Window", () => {
 
 			// Test case 1: Small content that won't push us over the threshold
 			const smallContent = [{ type: "text" as const, text: "Small content" }]
-			const smallContentTokens = await estimateTokenCount(smallContent, mockApiHandler)
+			const smallContentTokens = await estimateTokenCount(smallContent, mockApiHandler, {
+				effectiveThreshold: undefined,
+				maxTokens: null,
+				totalTokens: 0,
+			})
 			const messagesWithSmallContent: ApiMessage[] = [
 				...messages.slice(0, -1),
 				{ role: messages[messages.length - 1].role, content: smallContent },
@@ -450,7 +534,11 @@ describe("Sliding Window", () => {
 					text: "A very large incoming message that would consume a significant number of tokens and push us over the threshold",
 				},
 			]
-			const largeContentTokens = await estimateTokenCount(largeContent, mockApiHandler)
+			const largeContentTokens = await estimateTokenCount(largeContent, mockApiHandler, {
+				effectiveThreshold: undefined,
+				maxTokens: null,
+				totalTokens: 0,
+			})
 			const messagesWithLargeContent: ApiMessage[] = [
 				...messages.slice(0, -1),
 				{ role: messages[messages.length - 1].role, content: largeContent },
@@ -478,7 +566,11 @@ describe("Sliding Window", () => {
 
 			// Test case 3: Very large content that will definitely exceed threshold
 			const veryLargeContent = [{ type: "text" as const, text: "X".repeat(1000) }]
-			const veryLargeContentTokens = await estimateTokenCount(veryLargeContent, mockApiHandler)
+			const veryLargeContentTokens = await estimateTokenCount(veryLargeContent, mockApiHandler, {
+				effectiveThreshold: undefined,
+				maxTokens: null,
+				totalTokens: 0,
+			})
 			const messagesWithVeryLargeContent: ApiMessage[] = [
 				...messages.slice(0, -1),
 				{ role: messages[messages.length - 1].role, content: veryLargeContent },
