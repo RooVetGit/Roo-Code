@@ -5,8 +5,8 @@ import * as os from "os"
 import { IVectorStore } from "../interfaces/vector-store"
 import { VectorStoreSearchResult } from "../interfaces"
 import { DEFAULT_MAX_SEARCH_RESULTS, DEFAULT_SEARCH_MIN_SCORE } from "../constants"
+import { t } from "../../../i18n"
 import * as fs from "fs"
-import { deflateSync, inflateSync } from "zlib"
 
 export class LibSQLVectorStore implements IVectorStore {
 	private readonly vectorSize: number
@@ -23,17 +23,15 @@ export class LibSQLVectorStore implements IVectorStore {
 		const dbPath = path.join(resolvedBasePath, `ws_${hash.substring(0, 16)}.db`)
 		this.connectionUrl = `file:${dbPath}`
 		this.tableName = "code_vectors"
+
 		const dbDirectory = path.dirname(dbPath)
 		fs.mkdirSync(dbDirectory, { recursive: true })
+
 		this.client = createClient({ url: this.connectionUrl })
 		this.client.execute("PRAGMA journal_mode=WAL;").catch((err) => console.warn("Failed to set WAL mode:", err))
 		this.client
 			.execute("PRAGMA busy_timeout=5000;")
 			.catch((err) => console.warn("Failed to set busy timeout:", err))
-		this.client.execute("PRAGMA page_size = 4096;").catch((err) => console.warn("Failed to set page size:", err))
-		this.client
-			.execute("PRAGMA auto_vacuum = FULL;")
-			.catch((err) => console.warn("Failed to set auto_vacuum:", err))
 	}
 
 	private async executeWriteOperationWithRetry<T>(operation: () => Promise<T>, isTransaction = false): Promise<T> {
@@ -91,7 +89,11 @@ export class LibSQLVectorStore implements IVectorStore {
 			return false
 		} catch (error) {
 			console.error(`Failed to initialize vector store table ${this.tableName}:`, error)
-			throw new Error(`LibSQLConnectionFailed ${error instanceof Error ? error.message : String(error)}`)
+			throw new Error(
+				t("embeddings:vectorStore.libsqlConnectionFailed", {
+					errorMessage: error instanceof Error ? error.message : String(error),
+				}),
+			)
 		}
 	}
 
@@ -109,7 +111,11 @@ export class LibSQLVectorStore implements IVectorStore {
                 CREATE TABLE ${this.tableName} (
                     id TEXT PRIMARY KEY,
                     vector F32_BLOB(${this.vectorSize}),
-                    payload BLOB
+                    filePath TEXT,
+                    codeChunk TEXT,
+                    startLine INTEGER,
+                    endLine INTEGER,
+                    pathSegments TEXT
                 )
             `,
 		})
@@ -141,45 +147,56 @@ export class LibSQLVectorStore implements IVectorStore {
 		}>,
 	): Promise<void> {
 		await this.executeWriteOperationWithRetry(async () => {
-			const statements: Array<{ sql: string; args: any[] }> = []
+			const tx = await this.client.transaction("write")
+			try {
+				for (const point of points) {
+					let pathSegments = {}
+					if (point.payload?.filePath) {
+						const segments = path.normalize(point.payload.filePath).split(path.sep).filter(Boolean)
+						pathSegments = segments.reduce(
+							(acc: Record<string, string>, segment: string, index: number) => {
+								acc[index.toString()] = segment
+								return acc
+							},
+							{},
+						)
+					}
 
-			for (const point of points) {
-				let pathSegments: Record<string, string> = {}
-				if (point.payload?.filePath) {
-					const segments = path.normalize(point.payload.filePath).split(path.sep).filter(Boolean)
-					pathSegments = segments.reduce((acc: Record<string, string>, segment: string, index: number) => {
-						acc[index.toString()] = segment
-						return acc
-					}, {})
+					await tx.execute({
+						sql: `
+                            INSERT INTO ${this.tableName} (id, vector, filePath, codeChunk, startLine, endLine, pathSegments)
+                            VALUES (?, vector32(?), ?, ?, ?, ?, ?)
+                            ON CONFLICT(id) DO UPDATE SET
+                                vector = vector32(?),
+                                filePath = ?,
+                                codeChunk = ?,
+                                startLine = ?,
+                                endLine = ?,
+                                pathSegments = ?
+                        `,
+						args: [
+							point.id,
+							JSON.stringify(point.vector),
+							point.payload.filePath,
+							point.payload.codeChunk,
+							point.payload.startLine,
+							point.payload.endLine,
+							JSON.stringify(pathSegments),
+							JSON.stringify(point.vector),
+							point.payload.filePath,
+							point.payload.codeChunk,
+							point.payload.startLine,
+							point.payload.endLine,
+							JSON.stringify(pathSegments),
+						],
+					})
 				}
-
-				const payload = {
-					f: point.payload.filePath,
-					c: point.payload.codeChunk,
-					s: point.payload.startLine,
-					e: point.payload.endLine,
-					p: pathSegments,
-				}
-				const compressedPayload = deflateSync(JSON.stringify(payload))
-
-				statements.push({
-					sql: `INSERT INTO ${this.tableName} (id, vector, payload)
-						  VALUES (?, vector32(?), ?)
-						  ON CONFLICT(id) DO UPDATE SET
-							vector = vector32(?),
-							payload = ?
-			             `,
-					args: [
-						point.id,
-						JSON.stringify(point.vector),
-						compressedPayload,
-						JSON.stringify(point.vector),
-						compressedPayload,
-					],
-				})
+				await tx.commit()
+			} catch (error) {
+				await tx.rollback()
+				throw error
 			}
-			await this.client.batch(statements, "write")
-		})
+		}, true)
 	}
 
 	async search(
@@ -199,24 +216,27 @@ export class LibSQLVectorStore implements IVectorStore {
 			if (directoryPrefix) {
 				const segments = path.normalize(directoryPrefix).split(path.sep).filter(Boolean)
 				segments.forEach((segment, index) => {
-					filterQuery += ` AND json_extract(payload, '$.p.${index}') = ?`
+					filterQuery += ` AND json_extract(pathSegments, '$.${index}') = ?`
 					filterArgs.push(segment)
 				})
 			}
 
 			const result = await this.client.execute({
 				sql: `
-			                 SELECT
-			                     t.id,
-			                     (1 - vector_distance_cos(t.vector, vector32(?))) as score,
-			                     t.payload
-			                 FROM vector_top_k('${this.tableName}_vector_idx', vector32(?), ?) AS ann
-			                 JOIN ${this.tableName} AS t ON t.rowid = ann.id
-			                 WHERE 1=1 ${filterQuery}
-			                 AND (1 - vector_distance_cos(t.vector, vector32(?))) > ?
-			                 ORDER BY score DESC
-			                 LIMIT ?
-			             `,
+                    SELECT 
+                        t.id,
+                        (1 - vector_distance_cos(t.vector, vector32(?))) as score,
+                        t.filePath,
+                        t.codeChunk,
+                        t.startLine,
+                        t.endLine
+                    FROM vector_top_k('${this.tableName}_vector_idx', vector32(?), ?) AS ann
+                    JOIN ${this.tableName} AS t ON t.rowid = ann.id
+                    WHERE 1=1 ${filterQuery}
+                    AND (1 - vector_distance_cos(t.vector, vector32(?))) > ?
+                    ORDER BY score DESC
+                    LIMIT ?
+                `,
 				args: [
 					vectorStr,
 					vectorStr,
@@ -228,21 +248,17 @@ export class LibSQLVectorStore implements IVectorStore {
 				],
 			})
 
-			return result.rows.map((row) => {
-				const decompressedPayload = JSON.parse(inflateSync(Buffer.from(row.payload as Uint8Array)).toString())
-				return {
-					id: row.id as string,
-					score: row.score as number,
-					filePath: decompressedPayload.f as string,
-					payload: {
-						filePath: decompressedPayload.f as string,
-						codeChunk: decompressedPayload.c as string,
-						startLine: decompressedPayload.s as number,
-						endLine: decompressedPayload.e as number,
-						pathSegments: decompressedPayload.p as Record<string, string>,
-					},
-				}
-			})
+			return result.rows.map((row) => ({
+				id: row.id as string,
+				score: row.score as number,
+				filePath: row.filePath as string,
+				payload: {
+					filePath: row.filePath as string,
+					codeChunk: row.codeChunk as string,
+					startLine: row.startLine as number,
+					endLine: row.endLine as number,
+				},
+			}))
 		} catch (error) {
 			console.error("Failed to search points:", error)
 			throw error
@@ -258,24 +274,29 @@ export class LibSQLVectorStore implements IVectorStore {
 
 		await this.executeWriteOperationWithRetry(async () => {
 			const tx = await this.client.transaction("write")
-			const normalizedPaths = filePaths.map((filePath) => path.normalize(filePath))
+			try {
+				const normalizedPaths = filePaths.map((filePath) => path.normalize(filePath))
 
-			const deleteStatements = normalizedPaths.map((normalizedPath) => ({
-				sql: `
-				                    DELETE FROM ${this.tableName}
-				                    WHERE json_extract(payload, '$.f') = ?
-				                `,
-				args: [normalizedPath],
-			}))
-			await this.client.batch(deleteStatements, "write")
-		})
+				await tx.execute({
+					sql: `
+                        DELETE FROM ${this.tableName}
+                        WHERE filePath IN (${normalizedPaths.map(() => "?").join(",")})
+                    `,
+					args: normalizedPaths,
+				})
+				await tx.commit()
+			} catch (error) {
+				await tx.rollback()
+				throw error
+			}
+		}, true)
 	}
 
 	async deleteCollection(): Promise<void> {
 		await this.executeWriteOperationWithRetry(async () => {
 			if (await this.tableExists()) {
 				await this.client.execute(`DROP TABLE ${this.tableName}`)
-				await this.client.execute("VACUUM")
+				await this.client.execute(`VACUUM`)
 			}
 		})
 	}
