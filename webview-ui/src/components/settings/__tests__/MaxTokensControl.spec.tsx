@@ -25,11 +25,41 @@ describe("MaxTokensControl", () => {
 		mockOnChange.mockClear()
 	})
 
-	test("should render with default value of 8192", () => {
+	test("should render with empty value when no value provided", () => {
 		render(<MaxTokensControl {...defaultProps} />)
 
 		const input = screen.getByRole("spinbutton") as HTMLInputElement
+		expect(input.value).toBe("")
+	})
+
+	test("should apply default value on blur when field is empty", () => {
+		render(<MaxTokensControl {...defaultProps} />)
+
+		const input = screen.getByRole("spinbutton") as HTMLInputElement
+		expect(input.value).toBe("")
+
+		// Blur the empty input
+		fireEvent.blur(input)
+
+		// Should now show default value
 		expect(input.value).toBe("8192")
+		expect(mockOnChange).toHaveBeenCalledWith(8192)
+	})
+
+	test("should apply model's max tokens as default on blur when available", () => {
+		const modelInfo: ModelInfo = {
+			maxTokens: 16000,
+			contextWindow: 100000,
+			supportsPromptCache: true,
+		}
+
+		render(<MaxTokensControl {...defaultProps} modelInfo={modelInfo} />)
+
+		const input = screen.getByRole("spinbutton") as HTMLInputElement
+		fireEvent.blur(input)
+
+		expect(input.value).toBe("16000")
+		expect(mockOnChange).toHaveBeenCalledWith(16000)
 	})
 
 	test("should render with provided value", () => {
@@ -48,13 +78,24 @@ describe("MaxTokensControl", () => {
 		expect(mockOnChange).toHaveBeenCalledWith(20000)
 	})
 
-	test("should call onChange with undefined when input is cleared", () => {
+	test("should call onChange with undefined when input is cleared and allow empty state", () => {
 		render(<MaxTokensControl {...defaultProps} value={16000} />)
+
+		const input = screen.getByRole("spinbutton") as HTMLInputElement
+		fireEvent.change(input, { target: { value: "" } })
+
+		expect(mockOnChange).toHaveBeenCalledWith(undefined)
+		expect(input.value).toBe("") // Should remain empty until blur
+	})
+
+	test("should not show validation error for empty field", () => {
+		render(<MaxTokensControl {...defaultProps} />)
 
 		const input = screen.getByRole("spinbutton")
 		fireEvent.change(input, { target: { value: "" } })
 
-		expect(mockOnChange).toHaveBeenCalledWith(undefined)
+		// Should not show "too low" error for empty field
+		expect(screen.queryByText("settings:providers.maxOutputTokens.validation.tooLow")).not.toBeInTheDocument()
 	})
 
 	test("should show validation error when value exceeds model max", () => {
@@ -75,7 +116,7 @@ describe("MaxTokensControl", () => {
 		expect(screen.getByText("settings:providers.maxOutputTokens.validation.tooLow")).toBeInTheDocument()
 	})
 
-	test("should show model support message when valid", () => {
+	test("should show model support message when valid and not empty", () => {
 		const modelInfo: ModelInfo = {
 			maxTokens: 64000,
 			contextWindow: 200000,
@@ -85,6 +126,19 @@ describe("MaxTokensControl", () => {
 		render(<MaxTokensControl {...defaultProps} value={8192} modelInfo={modelInfo} />)
 
 		expect(screen.getByText("settings:providers.maxOutputTokens.modelSupports")).toBeInTheDocument()
+	})
+
+	test("should not show model support message when field is empty", () => {
+		const modelInfo: ModelInfo = {
+			maxTokens: 64000,
+			contextWindow: 200000,
+			supportsPromptCache: true,
+		}
+
+		render(<MaxTokensControl {...defaultProps} modelInfo={modelInfo} />)
+
+		// Empty field should not show model support message
+		expect(screen.queryByText("settings:providers.maxOutputTokens.modelSupports")).not.toBeInTheDocument()
 	})
 
 	test("should use custom min and max values", () => {

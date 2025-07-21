@@ -1,4 +1,4 @@
-import React from "react"
+import React, { useState, useEffect } from "react"
 import { useAppTranslation } from "@/i18n/TranslationContext"
 import { ModelInfo } from "@roo-code/types"
 import { Input } from "@/components/ui"
@@ -22,24 +22,51 @@ export const MaxTokensControl: React.FC<MaxTokensControlProps> = ({
 }) => {
 	const { t } = useAppTranslation()
 
-	const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-		const inputValue = e.target.value
-		if (inputValue === "") {
-			onChange(undefined)
-			return
+	// Track the input value separately to allow empty state
+	const [inputValue, setInputValue] = useState<string>(() => {
+		if (value !== undefined) {
+			return value.toString()
 		}
+		return ""
+	})
 
-		const numValue = parseInt(inputValue, 10)
-		if (!isNaN(numValue)) {
-			onChange(numValue)
+	// Update input value when prop changes
+	useEffect(() => {
+		if (value !== undefined) {
+			setInputValue(value.toString())
+		}
+	}, [value])
+
+	const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+		const newValue = e.target.value
+		setInputValue(newValue)
+
+		// Still update the parent immediately for live validation feedback
+		if (newValue === "") {
+			onChange(undefined)
+		} else {
+			const numValue = parseInt(newValue, 10)
+			if (!isNaN(numValue)) {
+				onChange(numValue)
+			}
+		}
+	}
+
+	const handleBlur = () => {
+		// Apply default value only on blur if field is empty
+		if (inputValue === "") {
+			const defaultValue = modelInfo?.maxTokens ?? 8192
+			setInputValue(defaultValue.toString())
+			onChange(defaultValue)
 		}
 	}
 
 	const effectiveMaxValue = modelInfo?.maxTokens || maxValue || 100000
-	const displayValue = value ?? modelInfo?.maxTokens ?? 8192
 
-	const isValueTooHigh = displayValue > effectiveMaxValue
-	const isValueTooLow = displayValue < minValue
+	// For validation, use the actual value or 0 if empty (to show error)
+	const validationValue = inputValue === "" ? 0 : parseInt(inputValue, 10) || 0
+	const isValueTooHigh = validationValue > effectiveMaxValue
+	const isValueTooLow = validationValue < minValue && inputValue !== ""
 	const hasError = isValueTooHigh || isValueTooLow
 
 	return (
@@ -50,8 +77,9 @@ export const MaxTokensControl: React.FC<MaxTokensControlProps> = ({
 			<Input
 				id="max-output-tokens"
 				type="number"
-				value={displayValue}
+				value={inputValue}
 				onChange={handleChange}
+				onBlur={handleBlur}
 				min={minValue}
 				max={effectiveMaxValue}
 				className={`w-full ${hasError ? "border-red-500 focus:border-red-500" : ""}`}
@@ -69,7 +97,7 @@ export const MaxTokensControl: React.FC<MaxTokensControlProps> = ({
 					{t("settings:providers.maxOutputTokens.validation.tooLow", { min: minValue })}
 				</div>
 			)}
-			{modelInfo && !hasError && (
+			{modelInfo && !hasError && inputValue !== "" && (
 				<div className="text-sm text-vscode-descriptionForeground">
 					{t("settings:providers.maxOutputTokens.modelSupports", { max: modelInfo.maxTokens })}
 				</div>
