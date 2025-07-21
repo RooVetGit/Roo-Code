@@ -629,8 +629,9 @@ describe("SYSTEM_PROMPT", () => {
 			settings, // settings
 		)
 
-		expect(prompt).not.toContain("update_todo_list")
+		// Should not contain the tool description
 		expect(prompt).not.toContain("## update_todo_list")
+		// Mode instructions will still reference the tool with a fallback to markdown
 
 		// Reset flag
 		useRealCustomInstructions = false
