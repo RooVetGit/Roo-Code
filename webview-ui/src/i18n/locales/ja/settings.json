@@ -47,6 +47,9 @@
 		"geminiProvider": "Gemini",
 		"geminiApiKeyLabel": "APIキー：",
 		"geminiApiKeyPlaceholder": "Gemini APIキーを入力してください",
+		"mistralProvider": "Mistral",
+		"mistralApiKeyLabel": "APIキー:",
+		"mistralApiKeyPlaceholder": "Mistral APIキーを入力してください",
 		"openaiCompatibleProvider": "OpenAI互換",
 		"openAiKeyLabel": "OpenAI APIキー",
 		"openAiKeyPlaceholder": "OpenAI APIキーを入力してください",
@@ -109,6 +112,7 @@
 			"modelIdRequired": "モデルIDが必要です",
 			"modelDimensionRequired": "モデルの次元が必要です",
 			"geminiApiKeyRequired": "Gemini APIキーが必要です",
+			"mistralApiKeyRequired": "Mistral APIキーが必要です",
 			"ollamaBaseUrlRequired": "OllamaのベースURLが必要です",
 			"baseUrlRequired": "ベースURLが必要です",
 			"modelDimensionMinValue": "モデルの次元は0より大きくなければなりません"
@@ -123,6 +127,8 @@
 	},
 	"autoApprove": {
 		"description": "Rooが承認なしで自動的に操作を実行できるようにします。AIを完全に信頼し、関連するセキュリティリスクを理解している場合にのみ、これらの設定を有効にしてください。",
+		"toggleAriaLabel": "自動承認の切り替え",
+		"disabledAriaLabel": "自動承認が無効です - 最初にオプションを選択してください",
 		"readOnly": {
 			"label": "読み取り",
 			"description": "有効にすると、Rooは承認ボタンをクリックすることなく、自動的にディレクトリの内容を表示してファイルを読み取ります。",
@@ -190,7 +196,8 @@
 			"title": "最大リクエスト数",
 			"description": "タスクを続行するための承認を求める前に、自動的にこの数のAPIリクエストを行います。",
 			"unlimited": "無制限"
-		}
+		},
+		"selectOptionsFirst": "自動承認を有効にするには、以下のオプションを少なくとも1つ選択してください"
 	},
 	"providers": {
 		"providerDocumentation": "{{provider}}のドキュメント",
@@ -500,6 +507,10 @@
 		"outputLineLimit": {
 			"label": "ターミナル出力制限",
 			"description": "コマンド実行時にターミナル出力に含める最大行数。超過すると中央から行が削除され、tokenを節約します。 <0>詳細情報</0>"
+		},
+		"outputCharacterLimit": {
+			"label": "ターミナルの文字数制限",
+			"description": "コマンド実行時にターミナル出力に含める最大文字数。この制限は、非常に長い行によるメモリ問題を回避するため、行数制限よりも優先されます。超過した場合、出力は切り捨てられます。<0>詳細</0>"
 		},
 		"shellIntegrationTimeout": {
 			"label": "ターミナルシェル統合タイムアウト",

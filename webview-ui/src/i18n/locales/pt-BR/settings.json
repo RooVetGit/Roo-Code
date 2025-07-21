@@ -47,6 +47,9 @@
 		"geminiProvider": "Gemini",
 		"geminiApiKeyLabel": "Chave de API:",
 		"geminiApiKeyPlaceholder": "Digite sua chave de API do Gemini",
+		"mistralProvider": "Mistral",
+		"mistralApiKeyLabel": "Chave de API:",
+		"mistralApiKeyPlaceholder": "Digite sua chave de API da Mistral",
 		"openaiCompatibleProvider": "Compatível com OpenAI",
 		"openAiKeyLabel": "Chave de API OpenAI",
 		"openAiKeyPlaceholder": "Digite sua chave de API OpenAI",
@@ -109,6 +112,7 @@
 			"modelIdRequired": "O ID do modelo é obrigatório",
 			"modelDimensionRequired": "A dimensão do modelo é obrigatória",
 			"geminiApiKeyRequired": "A chave de API do Gemini é obrigatória",
+			"mistralApiKeyRequired": "A chave de API Mistral é obrigatória",
 			"ollamaBaseUrlRequired": "A URL base do Ollama é obrigatória",
 			"baseUrlRequired": "A URL base é obrigatória",
 			"modelDimensionMinValue": "A dimensão do modelo deve ser maior que 0"
@@ -123,6 +127,8 @@
 	},
 	"autoApprove": {
 		"description": "Permitir que o Roo realize operações automaticamente sem exigir aprovação. Ative essas configurações apenas se confiar totalmente na IA e compreender os riscos de segurança associados.",
+		"toggleAriaLabel": "Alternar aprovação automática",
+		"disabledAriaLabel": "Aprovação automática desativada - selecione as opções primeiro",
 		"readOnly": {
 			"label": "Leitura",
 			"description": "Quando ativado, o Roo visualizará automaticamente o conteúdo do diretório e lerá arquivos sem que você precise clicar no botão Aprovar.",
@@ -190,7 +196,8 @@
 			"title": "Máximo de Solicitações",
 			"description": "Fazer automaticamente este número de requisições à API antes de pedir aprovação para continuar com a tarefa.",
 			"unlimited": "Ilimitado"
-		}
+		},
+		"selectOptionsFirst": "Selecione pelo menos uma opção abaixo para habilitar a aprovação automática"
 	},
 	"providers": {
 		"providerDocumentation": "Documentação do {{provider}}",
@@ -500,6 +507,10 @@
 		"outputLineLimit": {
 			"label": "Limite de saída do terminal",
 			"description": "Número máximo de linhas a incluir na saída do terminal ao executar comandos. Quando excedido, as linhas serão removidas do meio, economizando token. <0>Saiba mais</0>"
+		},
+		"outputCharacterLimit": {
+			"label": "Limite de caracteres do terminal",
+			"description": "Número máximo de caracteres a serem incluídos na saída do terminal ao executar comandos. Este limite tem precedência sobre o limite de linhas para evitar problemas de memória com linhas extremamente longas. Quando excedido, a saída será truncada. <0>Saiba mais</0>"
 		},
 		"shellIntegrationTimeout": {
 			"label": "Tempo limite de integração do shell do terminal",

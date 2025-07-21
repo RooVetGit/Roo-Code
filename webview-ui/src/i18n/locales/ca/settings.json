@@ -47,6 +47,9 @@
 		"geminiProvider": "Gemini",
 		"geminiApiKeyLabel": "Clau API:",
 		"geminiApiKeyPlaceholder": "Introduïu la vostra clau d'API de Gemini",
+		"mistralProvider": "Mistral",
+		"mistralApiKeyLabel": "Clau de l'API:",
+		"mistralApiKeyPlaceholder": "Introduïu la vostra clau de l'API de Mistral",
 		"openaiCompatibleProvider": "Compatible amb OpenAI",
 		"openAiKeyLabel": "Clau API OpenAI",
 		"openAiKeyPlaceholder": "Introduïu la vostra clau API OpenAI",
@@ -109,6 +112,7 @@
 			"modelIdRequired": "Cal un ID de model",
 			"modelDimensionRequired": "Cal una dimensió de model",
 			"geminiApiKeyRequired": "Cal una clau d'API de Gemini",
+			"mistralApiKeyRequired": "La clau de l'API de Mistral és requerida",
 			"ollamaBaseUrlRequired": "Cal una URL base d'Ollama",
 			"baseUrlRequired": "Cal una URL base",
 			"modelDimensionMinValue": "La dimensió del model ha de ser superior a 0"
@@ -123,6 +127,8 @@
 	},
 	"autoApprove": {
 		"description": "Permet que Roo realitzi operacions automàticament sense requerir aprovació. Activeu aquesta configuració només si confieu plenament en la IA i enteneu els riscos de seguretat associats.",
+		"toggleAriaLabel": "Commuta l'aprovació automàtica",
+		"disabledAriaLabel": "Aprovació automàtica desactivada: seleccioneu primer les opcions",
 		"readOnly": {
 			"label": "Llegir",
 			"description": "Quan està activat, Roo veurà automàticament el contingut del directori i llegirà fitxers sense que calgui fer clic al botó Aprovar.",
@@ -190,7 +196,8 @@
 			"title": "Màximes Sol·licituds",
 			"description": "Fes aquesta quantitat de sol·licituds API automàticament abans de demanar aprovació per continuar amb la tasca.",
 			"unlimited": "Il·limitat"
-		}
+		},
+		"selectOptionsFirst": "Seleccioneu almenys una opció a continuació per activar l'aprovació automàtica"
 	},
 	"providers": {
 		"providerDocumentation": "Documentació de {{provider}}",
@@ -500,6 +507,10 @@
 		"outputLineLimit": {
 			"label": "Límit de sortida de terminal",
 			"description": "Nombre màxim de línies a incloure a la sortida del terminal en executar comandes. Quan s'excedeix, s'eliminaran línies del mig, estalviant token. <0>Més informació</0>"
+		},
+		"outputCharacterLimit": {
+			"label": "Límit de caràcters del terminal",
+			"description": "Nombre màxim de caràcters a incloure en la sortida del terminal en executar ordres. Aquest límit té precedència sobre el límit de línies per evitar problemes de memòria amb línies extremadament llargues. Quan se superi, la sortida es truncarà. <0>Més informació</0>"
 		},
 		"shellIntegrationTimeout": {
 			"label": "Temps d'espera d'integració de shell del terminal",

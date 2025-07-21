@@ -47,6 +47,9 @@
 		"geminiProvider": "Gemini",
 		"geminiApiKeyLabel": "API Key:",
 		"geminiApiKeyPlaceholder": "Masukkan kunci API Gemini Anda",
+		"mistralProvider": "Mistral",
+		"mistralApiKeyLabel": "Kunci API:",
+		"mistralApiKeyPlaceholder": "Masukkan kunci API Mistral Anda",
 		"openaiCompatibleProvider": "OpenAI Compatible",
 		"openAiKeyLabel": "OpenAI API Key",
 		"openAiKeyPlaceholder": "Masukkan kunci API OpenAI kamu",
@@ -109,6 +112,7 @@
 			"modelIdRequired": "ID Model diperlukan",
 			"modelDimensionRequired": "Dimensi model diperlukan",
 			"geminiApiKeyRequired": "Kunci API Gemini diperlukan",
+			"mistralApiKeyRequired": "Kunci API Mistral diperlukan",
 			"ollamaBaseUrlRequired": "URL dasar Ollama diperlukan",
 			"baseUrlRequired": "URL dasar diperlukan",
 			"modelDimensionMinValue": "Dimensi model harus lebih besar dari 0"
@@ -123,6 +127,8 @@
 	},
 	"autoApprove": {
 		"description": "Izinkan Roo untuk secara otomatis melakukan operasi tanpa memerlukan persetujuan. Aktifkan pengaturan ini hanya jika kamu sepenuhnya mempercayai AI dan memahami risiko keamanan yang terkait.",
+		"toggleAriaLabel": "Beralih persetujuan otomatis",
+		"disabledAriaLabel": "Persetujuan otomatis dinonaktifkan - pilih opsi terlebih dahulu",
 		"readOnly": {
 			"label": "Baca",
 			"description": "Ketika diaktifkan, Roo akan secara otomatis melihat konten direktori dan membaca file tanpa memerlukan kamu mengklik tombol Setujui.",
@@ -194,7 +200,8 @@
 			"title": "Permintaan Maks",
 			"description": "Secara otomatis membuat sejumlah permintaan API ini sebelum meminta persetujuan untuk melanjutkan tugas.",
 			"unlimited": "Tidak terbatas"
-		}
+		},
+		"selectOptionsFirst": "Pilih setidaknya satu opsi di bawah ini untuk mengaktifkan persetujuan otomatis"
 	},
 	"providers": {
 		"providerDocumentation": "Dokumentasi {{provider}}",
@@ -504,6 +511,10 @@
 		"outputLineLimit": {
 			"label": "Batas output terminal",
 			"description": "Jumlah maksimum baris yang disertakan dalam output terminal saat mengeksekusi perintah. Ketika terlampaui, baris akan dihapus dari tengah, menghemat token. <0>Pelajari lebih lanjut</0>"
+		},
+		"outputCharacterLimit": {
+			"label": "Batas karakter terminal",
+			"description": "Jumlah maksimum karakter yang akan disertakan dalam output terminal saat menjalankan perintah. Batas ini lebih diutamakan daripada batas baris untuk mencegah masalah memori dari baris yang sangat panjang. Ketika terlampaui, output akan dipotong. <0>Pelajari lebih lanjut</0>"
 		},
 		"shellIntegrationTimeout": {
 			"label": "Timeout integrasi shell terminal",

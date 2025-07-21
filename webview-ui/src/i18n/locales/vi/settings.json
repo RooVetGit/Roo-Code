@@ -47,6 +47,9 @@
 		"geminiProvider": "Gemini",
 		"geminiApiKeyLabel": "Khóa API:",
 		"geminiApiKeyPlaceholder": "Nhập khóa API Gemini của bạn",
+		"mistralProvider": "Mistral",
+		"mistralApiKeyLabel": "Khóa API:",
+		"mistralApiKeyPlaceholder": "Nhập khóa API Mistral của bạn",
 		"openaiCompatibleProvider": "Tương thích OpenAI",
 		"openAiKeyLabel": "Khóa API OpenAI",
 		"openAiKeyPlaceholder": "Nhập khóa API OpenAI của bạn",
@@ -109,6 +112,7 @@
 			"modelIdRequired": "Yêu cầu ID mô hình",
 			"modelDimensionRequired": "Yêu cầu kích thước mô hình",
 			"geminiApiKeyRequired": "Yêu cầu khóa API Gemini",
+			"mistralApiKeyRequired": "Cần có khóa API của Mistral",
 			"ollamaBaseUrlRequired": "Yêu cầu URL cơ sở Ollama",
 			"baseUrlRequired": "Yêu cầu URL cơ sở",
 			"modelDimensionMinValue": "Kích thước mô hình phải lớn hơn 0"
@@ -123,6 +127,8 @@
 	},
 	"autoApprove": {
 		"description": "Cho phép Roo tự động thực hiện các hoạt động mà không cần phê duyệt. Chỉ bật những cài đặt này nếu bạn hoàn toàn tin tưởng AI và hiểu rõ các rủi ro bảo mật liên quan.",
+		"toggleAriaLabel": "Chuyển đổi tự động phê duyệt",
+		"disabledAriaLabel": "Tự động phê duyệt bị vô hiệu hóa - hãy chọn các tùy chọn trước",
 		"readOnly": {
 			"label": "Đọc",
 			"description": "Khi được bật, Roo sẽ tự động xem nội dung thư mục và đọc tệp mà không yêu cầu bạn nhấp vào nút Phê duyệt.",
@@ -190,7 +196,8 @@
 			"title": "Số lượng yêu cầu tối đa",
 			"description": "Tự động thực hiện số lượng API request này trước khi yêu cầu phê duyệt để tiếp tục với nhiệm vụ.",
 			"unlimited": "Không giới hạn"
-		}
+		},
+		"selectOptionsFirst": "Chọn ít nhất một tùy chọn bên dưới để bật tự động phê duyệt"
 	},
 	"providers": {
 		"providerDocumentation": "Tài liệu {{provider}}",
@@ -500,6 +507,10 @@
 		"outputLineLimit": {
 			"label": "Giới hạn đầu ra terminal",
 			"description": "Số dòng tối đa để đưa vào đầu ra terminal khi thực hiện lệnh. Khi vượt quá, các dòng sẽ bị xóa khỏi phần giữa, tiết kiệm token. <0>Tìm hiểu thêm</0>"
+		},
+		"outputCharacterLimit": {
+			"label": "Giới hạn ký tự của terminal",
+			"description": "Số ký tự tối đa để bao gồm trong đầu ra của terminal khi thực thi lệnh. Giới hạn này được ưu tiên hơn giới hạn dòng để ngăn chặn các vấn đề về bộ nhớ do các dòng quá dài. Khi vượt quá, đầu ra sẽ bị cắt bớt. <0>Tìm hiểu thêm</0>"
 		},
 		"shellIntegrationTimeout": {
 			"label": "Thời gian chờ tích hợp shell terminal",
