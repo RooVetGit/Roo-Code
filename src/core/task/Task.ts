@@ -1452,7 +1452,7 @@ export class Task extends EventEmitter<ClineEvents> {
 						: (error.message ?? JSON.stringify(serializeError(error), null, 2))
 
 					// Now call abortTask after determining the cancel reason
-					this.abortTask()
+					await this.abortTask()
 
 					await abortStream(cancelReason, streamingFailedMessage)
 
