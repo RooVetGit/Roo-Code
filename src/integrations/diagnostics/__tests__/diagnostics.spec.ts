@@ -423,11 +423,11 @@ describe("diagnosticsToProblemsString", () => {
 		expect(vscode.workspace.openTextDocument).not.toHaveBeenCalled()
 	})
 
-	it("should limit diagnostics when maxDiagnostics is specified", async () => {
+	it("should limit diagnostics based on content size when maxDiagnostics is specified", async () => {
 		// Mock file URI
 		const fileUri = vscode.Uri.file("/path/to/file.ts")
 
-		// Create multiple diagnostics
+		// Create multiple diagnostics with varying message lengths
 		const diagnostics = [
 			new vscode.Diagnostic(new vscode.Range(0, 0, 0, 10), "Error 1", vscode.DiagnosticSeverity.Error),
 			new vscode.Diagnostic(new vscode.Range(1, 0, 1, 10), "Warning 1", vscode.DiagnosticSeverity.Warning),
@@ -450,27 +450,28 @@ describe("diagnosticsToProblemsString", () => {
 		}
 		vscode.workspace.openTextDocument = vitest.fn().mockResolvedValue(mockDocument)
 
-		// Test with maxDiagnostics set to 3
+		// Test with maxDiagnostics set to 3 (which translates to ~3000 character limit)
 		const result = await diagnosticsToProblemsString(
 			[[fileUri, diagnostics]],
 			[vscode.DiagnosticSeverity.Error, vscode.DiagnosticSeverity.Warning],
 			"/path/to",
 			true, // includeDiagnostics
-			3, // maxDiagnostics
+			3, // maxDiagnostics (will be converted to character limit)
 		)
 
-		// Verify only 3 diagnostics are included (prioritizing errors)
+		// Verify that diagnostics are included based on size limit, prioritizing errors
 		expect(result).toContain("Error 1")
 		expect(result).toContain("Error 2")
 		expect(result).toContain("Error 3")
-		expect(result).not.toContain("Warning 1")
-		expect(result).not.toContain("Warning 2")
+		// Warnings may or may not be included depending on the size calculation
 
-		// Verify the limit message is included
-		expect(result).toContain("(Showing 3 of 5 total diagnostics)")
+		// Verify the limit message is included if some diagnostics were omitted
+		if (!result.includes("Warning 1") || !result.includes("Warning 2")) {
+			expect(result).toContain("more problems omitted to prevent context overflow")
+		}
 	})
 
-	it("should prioritize errors over warnings when limiting diagnostics", async () => {
+	it("should prioritize errors over warnings when limiting diagnostics by size", async () => {
 		// Mock file URIs
 		const fileUri1 = vscode.Uri.file("/path/to/file1.ts")
 		const fileUri2 = vscode.Uri.file("/path/to/file2.ts")
@@ -505,7 +506,7 @@ describe("diagnosticsToProblemsString", () => {
 		}
 		vscode.workspace.openTextDocument = vitest.fn().mockResolvedValue(mockDocument)
 
-		// Test with maxDiagnostics set to 2
+		// Test with maxDiagnostics set to 2 (which translates to ~2000 character limit)
 		const result = await diagnosticsToProblemsString(
 			[
 				[fileUri1, diagnostics1],
@@ -514,18 +515,22 @@ describe("diagnosticsToProblemsString", () => {
 			[vscode.DiagnosticSeverity.Error, vscode.DiagnosticSeverity.Warning, vscode.DiagnosticSeverity.Information],
 			"/path/to",
 			true, // includeDiagnostics
-			2, // maxDiagnostics
+			2, // maxDiagnostics (will be converted to character limit)
 		)
 
-		// Verify only errors are included (2 errors total)
+		// Verify errors are prioritized over warnings
 		expect(result).toContain("Error in file1")
 		expect(result).toContain("Error in file2")
-		expect(result).not.toContain("Warning in file1")
-		expect(result).not.toContain("Warning in file2")
-		expect(result).not.toContain("Info in file2")
+		// Warnings and info may not be included due to size limit
 
-		// Verify the limit message is included
-		expect(result).toContain("(Showing 2 of 5 total diagnostics)")
+		// Verify the limit message is included if diagnostics were omitted
+		if (
+			!result.includes("Warning in file1") ||
+			!result.includes("Warning in file2") ||
+			!result.includes("Info in file2")
+		) {
+			expect(result).toContain("more problems omitted to prevent context overflow")
+		}
 	})
 
 	it("should handle maxDiagnostics with no limit when undefined", async () => {

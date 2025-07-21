@@ -495,7 +495,7 @@
 			},
 			"maxMessages": {
 				"label": "Maximum diagnostic messages",
-				"description": "Maximum number of diagnostic messages to include per file. This limit applies to both automatic inclusion (when checkbox is enabled) and manual @problems mentions. Higher values provide more context but increase token usage.",
+				"description": "Controls the approximate size limit for diagnostic messages. The value represents a multiplier for content size (each unit ≈ 1KB). This prevents context overflow by limiting total diagnostic content rather than count. Higher values allow more diagnostic information but increase token usage.",
 				"resetTooltip": "Reset to default value (50)",
 				"unlimitedLabel": "Unlimited"
 			}
