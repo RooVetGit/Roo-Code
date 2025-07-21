@@ -63,7 +63,11 @@ vi.mock("../AutoApproveMenu", () => ({
 
 // Mock ShareButton component
 vi.mock("../ShareButton", () => ({
-	ShareButton: function MockShareButton({ item: _item, disabled }: { item: any; disabled: boolean }) {
+	ShareButton: function MockShareButton({ item, disabled }: { item: any; disabled: boolean }) {
+		// Match the actual ShareButton behavior - don't render if no item ID
+		if (!item?.id) {
+			return null
+		}
 		return (
 			<button data-testid="share-button" disabled={disabled} className="share-button">
 				Share
