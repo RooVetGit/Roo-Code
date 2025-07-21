@@ -1942,28 +1942,34 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 													currentTaskItem?.id && (
 														<>
 															{/* Hidden ShareButton for functionality */}
-															<div style={{ display: "none" }}>
+															<div className="hidden">
 																<ShareButton
 																	item={currentTaskItem}
 																	disabled={!enableButtons}
 																/>
 															</div>
-															{/* Visible VSCodeButton that matches the style */}
+															{/* Visible VSCodeButton that matches Start New Task */}
 															<StandardTooltip content={t("chat:task.share")}>
 																<VSCodeButton
 																	appearance="primary"
 																	disabled={!enableButtons}
-																	className="ml-[6px]"
+																	className="ml-[6px] align-middle"
 																	onClick={() => {
-																		// Trigger the hidden ShareButton
-																		const shareButton = document.querySelector(
-																			".share-button",
-																		) as HTMLElement
+																		// Find and click the share button
+																		const shareButtons =
+																			document.querySelectorAll("button")
+																		const shareButton = Array.from(
+																			shareButtons,
+																		).find(
+																			(btn) =>
+																				btn.querySelector(".codicon-link") &&
+																				btn.closest('[role="dialog"]') === null,
+																		)
 																		if (shareButton) {
 																			shareButton.click()
 																		}
 																	}}>
-																	<i className="codicon codicon-link"></i>
+																	<span className="codicon codicon-link"></span>
 																</VSCodeButton>
 															</StandardTooltip>
 														</>
