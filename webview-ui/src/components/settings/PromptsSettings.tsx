@@ -62,6 +62,9 @@ const PromptsSettings = ({ customSupportPrompts, setCustomSupportPrompts }: Prom
 				type: "updateCondensingPrompt",
 				text: value || supportPrompt.default.CONDENSE,
 			})
+			// Also update the customSupportPrompts to trigger change detection
+			const updatedPrompts = { ...customSupportPrompts, [type]: value }
+			setCustomSupportPrompts(updatedPrompts)
 		} else {
 			const updatedPrompts = { ...customSupportPrompts, [type]: value }
 			setCustomSupportPrompts(updatedPrompts)
@@ -75,6 +78,10 @@ const PromptsSettings = ({ customSupportPrompts, setCustomSupportPrompts }: Prom
 				type: "updateCondensingPrompt",
 				text: supportPrompt.default.CONDENSE,
 			})
+			// Also update the customSupportPrompts to trigger change detection
+			const updatedPrompts = { ...customSupportPrompts }
+			delete updatedPrompts[type]
+			setCustomSupportPrompts(updatedPrompts)
 		} else {
 			const updatedPrompts = { ...customSupportPrompts }
 			delete updatedPrompts[type]
