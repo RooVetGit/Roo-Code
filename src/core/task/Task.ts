@@ -1214,7 +1214,7 @@ export class Task extends EventEmitter<ClineEvents> {
 
 		// Determine API protocol based on provider and model
 		const modelId = getModelId(this.apiConfiguration)
-		const apiProtocol = getApiProtocol(this.apiConfiguration.apiProvider, modelId)
+		const apiProtocol = getApiProtocol(this.apiConfiguration.apiProvider)
 
 		await this.say(
 			"api_req_started",

@@ -301,7 +301,7 @@ export const getModelId = (settings: ProviderSettings): string | undefined => {
 }
 
 // Providers that use Anthropic-style API protocol
-export const ANTHROPIC_STYLE_PROVIDERS: ProviderName[] = ["anthropic", "claude-code"]
+export const ANTHROPIC_STYLE_PROVIDERS: ProviderName[] = ["anthropic", "claude-code", "bedrock"]
 
 // Helper function to determine API protocol for a provider
 export const getApiProtocol = (provider: ProviderName | undefined): "anthropic" | "openai" => {
