@@ -278,8 +278,8 @@ export const vertexModels = {
 		contextWindow: 131072,
 		supportsImages: false,
 		supportsPromptCache: false,
-		inputPrice: 0.2,
-		outputPrice: 0.6,
+		inputPrice: 0.35,
+		outputPrice: 1.15,
 		description: "Meta Llama 4 Maverick 17B Instruct model, 128K context.",
 	},
 } as const satisfies Record<string, ModelInfo>
