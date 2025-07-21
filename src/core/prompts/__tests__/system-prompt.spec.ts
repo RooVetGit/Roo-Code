@@ -59,90 +59,64 @@ vi.mock("../sections/modes", () => ({
 	getModesSection: vi.fn().mockImplementation(async () => `====\n\nMODES\n\n- Test modes section`),
 }))
 
-// Mock fs/promises to prevent file system access in tests
-vi.mock("fs/promises", () => ({
-	default: {
-		readFile: vi.fn().mockRejectedValue({ code: "ENOENT" }),
-		readdir: vi.fn().mockResolvedValue([]),
-		stat: vi.fn().mockRejectedValue({ code: "ENOENT" }),
-		readlink: vi.fn().mockRejectedValue({ code: "ENOENT" }),
-	},
-	readFile: vi.fn().mockRejectedValue({ code: "ENOENT" }),
-	readdir: vi.fn().mockResolvedValue([]),
-	stat: vi.fn().mockRejectedValue({ code: "ENOENT" }),
-	readlink: vi.fn().mockRejectedValue({ code: "ENOENT" }),
-}))
-
-// Conditionally mock custom instructions
-let useRealCustomInstructions = false
-
-vi.mock("../sections/custom-instructions", async () => {
-	const actual = await vi.importActual<typeof import("../sections/custom-instructions")>(
-		"../sections/custom-instructions",
-	)
-
+// Mock the custom instructions
+vi.mock("../sections/custom-instructions", () => {
+	const addCustomInstructions = vi.fn()
 	return {
-		...actual,
-		addCustomInstructions: vi
-			.fn()
-			.mockImplementation(
-				async (
-					modeCustomInstructions: string,
-					globalCustomInstructions: string,
-					cwd: string,
-					mode: string,
-					options?: { language?: string; rooIgnoreInstructions?: string; settings?: Record<string, any> },
-				) => {
-					if (useRealCustomInstructions) {
-						// Use the real implementation for todo list tests
-						return actual.addCustomInstructions(
-							modeCustomInstructions,
-							globalCustomInstructions,
-							cwd,
-							mode,
-							options,
-						)
-					}
-
-					// Use mock implementation for other tests
-					const sections = []
-
-					// Add language preference if provided
-					if (options?.language) {
-						sections.push(
-							`Language Preference:\nYou should always speak and think in the "${options.language}" language.`,
-						)
-					}
-
-					// Add global instructions first
-					if (globalCustomInstructions?.trim()) {
-						sections.push(`Global Instructions:\n${globalCustomInstructions.trim()}`)
-					}
-
-					// Add mode-specific instructions after
-					if (modeCustomInstructions?.trim()) {
-						sections.push(`Mode-specific Instructions:\n${modeCustomInstructions}`)
-					}
-
-					// Add rules
-					const rules = []
-					if (mode) {
-						rules.push(`# Rules from .clinerules-${mode}:\nMock mode-specific rules`)
-					}
-					rules.push(`# Rules from .clinerules:\nMock generic rules`)
-
-					if (rules.length > 0) {
-						sections.push(`Rules:\n${rules.join("\n")}`)
-					}
-
-					const joinedSections = sections.join("\n\n")
-					return joinedSections
-						? `\n====\n\nUSER'S CUSTOM INSTRUCTIONS\n\nThe following additional instructions are provided by the user, and should be followed to the best of your ability without interfering with the TOOL USE guidelines.\n\n${joinedSections}`
-						: ""
-				},
-			),
+		addCustomInstructions,
+		__setMockImplementation: (impl: any) => {
+			addCustomInstructions.mockImplementation(impl)
+		},
 	}
 })
+
+// Set up default mock implementation
+const customInstructionsMock = vi.mocked(await import("../sections/custom-instructions"))
+const { __setMockImplementation } = customInstructionsMock as any
+__setMockImplementation(
+	async (
+		modeCustomInstructions: string,
+		globalCustomInstructions: string,
+		cwd: string,
+		mode: string,
+		options?: { language?: string; rooIgnoreInstructions?: string; settings?: Record<string, any> },
+	) => {
+		const sections = []
+
+		// Add language preference if provided
+		if (options?.language) {
+			sections.push(
+				`Language Preference:\nYou should always speak and think in the "${options.language}" language.`,
+			)
+		}
+
+		// Add global instructions first
+		if (globalCustomInstructions?.trim()) {
+			sections.push(`Global Instructions:\n${globalCustomInstructions.trim()}`)
+		}
+
+		// Add mode-specific instructions after
+		if (modeCustomInstructions?.trim()) {
+			sections.push(`Mode-specific Instructions:\n${modeCustomInstructions}`)
+		}
+
+		// Add rules
+		const rules = []
+		if (mode) {
+			rules.push(`# Rules from .clinerules-${mode}:\nMock mode-specific rules`)
+		}
+		rules.push(`# Rules from .clinerules:\nMock generic rules`)
+
+		if (rules.length > 0) {
+			sections.push(`Rules:\n${rules.join("\n")}`)
+		}
+
+		const joinedSections = sections.join("\n\n")
+		return joinedSections
+			? `\n====\n\nUSER'S CUSTOM INSTRUCTIONS\n\nThe following additional instructions are provided by the user, and should be followed to the best of your ability without interfering with the TOOL USE guidelines.\n\n${joinedSections}`
+			: ""
+	},
+)
 
 // Mock vscode language
 vi.mock("vscode", () => ({
@@ -602,9 +576,6 @@ describe("SYSTEM_PROMPT", () => {
 	})
 
 	it("should exclude update_todo_list tool when todoListEnabled is false", async () => {
-		// Use real custom instructions implementation for this test
-		useRealCustomInstructions = true
-
 		const settings = {
 			todoListEnabled: false,
 		}
@@ -632,15 +603,9 @@ describe("SYSTEM_PROMPT", () => {
 		// Should not contain the tool description
 		expect(prompt).not.toContain("## update_todo_list")
 		// Mode instructions will still reference the tool with a fallback to markdown
-
-		// Reset flag
-		useRealCustomInstructions = false
 	})
 
 	it("should include update_todo_list tool when todoListEnabled is true", async () => {
-		// Use real custom instructions implementation for this test
-		useRealCustomInstructions = true
-
 		const settings = {
 			todoListEnabled: true,
 		}
@@ -667,15 +632,9 @@ describe("SYSTEM_PROMPT", () => {
 
 		expect(prompt).toContain("update_todo_list")
 		expect(prompt).toContain("## update_todo_list")
-
-		// Reset flag
-		useRealCustomInstructions = false
 	})
 
 	it("should include update_todo_list tool when todoListEnabled is undefined", async () => {
-		// Use real custom instructions implementation for this test
-		useRealCustomInstructions = true
-
 		const settings = {
 			// todoListEnabled not set
 		}
@@ -702,9 +661,6 @@ describe("SYSTEM_PROMPT", () => {
 
 		expect(prompt).toContain("update_todo_list")
 		expect(prompt).toContain("## update_todo_list")
-
-		// Reset flag
-		useRealCustomInstructions = false
 	})
 
 	afterAll(() => {
