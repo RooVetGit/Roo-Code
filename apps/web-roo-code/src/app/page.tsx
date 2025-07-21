@@ -64,12 +64,15 @@ export default async function Home() {
 										</svg>
 									</a>
 								</Button>
-								<Button variant="outline" size="lg" className="w-full sm:w-auto">
+								<Button
+									variant="outline"
+									size="lg"
+									className="w-full sm:w-auto bg-white/20 dark:bg-white/10 backdrop-blur-sm border border-black/40 dark:border-white/30 hover:border-blue-400 hover:bg-white/30 dark:hover:bg-white/20 hover:shadow-[0_0_20px_rgba(59,130,246,0.5)] transition-all duration-300">
 									<a
-										href="https://docs.roocode.com"
+										href="https://roocode.com/enterprise"
 										target="_blank"
 										className="flex w-full items-center justify-center">
-										View Documentation
+										For Enterprise
 									</a>
 								</Button>
 							</div>
