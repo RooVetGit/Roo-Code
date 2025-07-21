@@ -19,10 +19,10 @@ export class LocalVectorStore implements IVectorStore {
 
 	constructor(workspacePath: string, vectorSize: number, dbDirectory: string) {
 		this.vectorSize = vectorSize
-
+		const basename = path.basename(workspacePath)
 		// Generate collection name from workspace path
 		const hash = createHash("sha256").update(workspacePath).digest("hex")
-		this.collectionName = `ws-${hash.substring(0, 16)}`
+		this.collectionName = `${basename}-${hash.substring(0, 16)}`
 		// Set up database path
 		this.dbPath = path.join(dbDirectory, this.collectionName, `vector-store.db`)
 	}

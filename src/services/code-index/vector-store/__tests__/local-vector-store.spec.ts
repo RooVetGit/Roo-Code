@@ -48,8 +48,8 @@ describe("LocalVectorStore", () => {
 	})
 
 	it("constructor should generate correct collectionName and dbPath", () => {
-		expect(store["collectionName"]).toBe("ws-mockhashmockhash")
-		expect(store["dbPath"]).toMatch(/\.roo[\/\\]vector[\/\\]ws-mockhashmockhash[\/\\]vector-store\.db$/)
+		expect(store["collectionName"]).toBe("workspace-mockhashmockhash")
+		expect(store["dbPath"]).toMatch(/\.roo[\/\\]vector[\/\\]workspace-mockhashmockhash[\/\\]vector-store\.db$/)
 	})
 
 	describe("initialize", () => {
