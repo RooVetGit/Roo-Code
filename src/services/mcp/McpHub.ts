@@ -134,14 +134,27 @@ export class McpHub {
 	isConnecting: boolean = false
 	private configChangeDebounceTimers: Map<string, NodeJS.Timeout> = new Map()
 	private toggleOperations: Map<string, Promise<void>> = new Map() // Track ongoing toggle operations
+	private isInitializing: boolean = true // Flag to prevent duplicate connections during initialization
 
 	constructor(provider: ClineProvider) {
 		this.providerRef = new WeakRef(provider)
-		this.watchMcpSettingsFile()
-		this.watchProjectMcpFile().catch(console.error)
+		this.initializeHub().catch(console.error)
+	}
+
+	private async initializeHub(): Promise<void> {
+		// Set up watchers first but mark as initializing to prevent them from creating connections
+		this.isInitializing = true
+
+		await this.watchMcpSettingsFile()
+		await this.watchProjectMcpFile()
 		this.setupWorkspaceFoldersWatcher()
-		this.initializeGlobalMcpServers()
-		this.initializeProjectMcpServers()
+
+		// Now initialize servers - watchers won't trigger duplicate connections
+		await this.initializeGlobalMcpServers()
+		await this.initializeProjectMcpServers()
+
+		// Clear the initialization flag after servers are set up
+		this.isInitializing = false
 	}
 	/**
 	 * Registers a client (e.g., ClineProvider) using this hub.
@@ -255,6 +268,12 @@ export class McpHub {
 	 * Debounced wrapper for handling config file changes
 	 */
 	private debounceConfigChange(filePath: string, source: "global" | "project"): void {
+		// Skip file change handling during initialization to prevent duplicate connections
+		if (this.isInitializing) {
+			console.log(`Skipping config change for ${source} during initialization`)
+			return
+		}
+
 		const key = `${source}-${filePath}`
 
 		// Clear existing timer if any

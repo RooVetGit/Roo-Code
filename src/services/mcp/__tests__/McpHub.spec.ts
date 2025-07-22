@@ -1017,6 +1017,68 @@ describe("McpHub", () => {
 			// Still should not connect
 			expect(StdioClientTransport).not.toHaveBeenCalled()
 		})
+
+		it("should not create duplicate connections during initialization", async () => {
+			// Mock the config file read
+			const mockConfig = {
+				mcpServers: {
+					"test-server": {
+						type: "stdio" as const,
+						command: "node",
+						args: ["test.js"],
+						disabled: false,
+						timeout: 60,
+						cwd: process.cwd(),
+						alwaysAllow: [],
+						disabledTools: [],
+					},
+				},
+			}
+			vi.mocked(fs.readFile).mockResolvedValue(JSON.stringify(mockConfig))
+
+			// Mock StdioClientTransport
+			const mockTransport = {
+				start: vi.fn().mockResolvedValue(undefined),
+				close: vi.fn().mockResolvedValue(undefined),
+				stderr: {
+					on: vi.fn(),
+				},
+				onerror: null,
+				onclose: null,
+			}
+
+			const StdioClientTransport = (await import("@modelcontextprotocol/sdk/client/stdio.js"))
+				.StdioClientTransport as ReturnType<typeof vi.fn>
+			StdioClientTransport.mockClear()
+			StdioClientTransport.mockImplementation(() => mockTransport)
+
+			// Mock Client
+			const mockClient = {
+				connect: vi.fn().mockResolvedValue(undefined),
+				close: vi.fn().mockResolvedValue(undefined),
+				getInstructions: vi.fn().mockReturnValue("test instructions"),
+				request: vi.fn().mockResolvedValue({ tools: [], resources: [], resourceTemplates: [] }),
+			}
+			const Client = (await import("@modelcontextprotocol/sdk/client/index.js")).Client as ReturnType<
+				typeof vi.fn
+			>
+			Client.mockClear()
+			Client.mockImplementation(() => mockClient)
+
+			// Create a new McpHub instance
+			const newMcpHub = new McpHub(mockProvider as ClineProvider)
+
+			// Wait for initialization to complete
+			await new Promise((resolve) => setTimeout(resolve, 200))
+
+			// Verify that only one connection was created (not duplicated)
+			expect(StdioClientTransport).toHaveBeenCalledTimes(1)
+			expect(mockClient.connect).toHaveBeenCalledTimes(1)
+
+			// Verify the hub has exactly one connection
+			expect(newMcpHub.connections.length).toBe(1)
+			expect(newMcpHub.connections[0].server.name).toBe("test-server")
+		})
 	})
 
 	describe("callTool", () => {
