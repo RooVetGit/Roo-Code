@@ -1,0 +1,18 @@
+{
+	"additions": 225,
+	"author": { "is_bot": true, "login": "app/roomote" },
+	"baseRefName": "main",
+	"body": "Fixes #6036\n\nThis PR fixes the issue where disabled MCP servers were still starting processes and showing incorrect status indicators in the UI.\n\nChanges:\n- Added disabled check in updateServerConnections() to prevent connecting to disabled servers\n- Modified toggleServerDisabled() to disconnect servers when disabling and reconnect when enabling\n- Updated UI to show grey/disabled color for disabled servers\n- Added comprehensive tests for disabled server behavior\n\nAll existing tests pass and new tests verify the fix works correctly.\n<!-- ELLIPSIS_HIDDEN -->\n\n----\n\n> [!IMPORTANT]\n> Fixes issue where disabled MCP servers were incorrectly starting processes and showing incorrect statuses by updating connection logic and UI indicators.\n> \n>   - **Behavior**:\n>     - `updateServerConnections()` in `McpHub.ts` now checks if servers are disabled before connecting.\n>     - `toggleServerDisabled()` in `McpHub.ts` disconnects servers when disabled and reconnects when enabled.\n>     - UI in `McpView.tsx` shows grey color for disabled servers.\n>   - **Tests**:\n>     - Added tests in `McpHub.spec.ts` to verify disabled server behavior, including not connecting during initialization and correct toggling behavior.\n>   - **Misc**:\n>     - All existing tests pass, and new tests confirm the fix works correctly.\n> \n> <sup>This description was created by </sup>[<img alt=\"Ellipsis\" src=\"https://img.shields.io/badge/Ellipsis-blue?color=175173\">](https://www.ellipsis.dev?ref=RooCodeInc%2FRoo-Code&utm_source=github&utm_medium=referral)<sup> for cd0bc9300841e7ebcca35550bd00c1dd4ce4ca70. You can [customize](https://app.ellipsis.dev/RooCodeInc/settings/summaries) this summary. It will automatically update as commits are pushed.</sup>\n\n<!-- ELLIPSIS_HIDDEN -->",
+	"changedFiles": 3,
+	"deletions": 9,
+	"files": [
+		{ "path": "src/services/mcp/McpHub.ts", "additions": 23, "deletions": 9 },
+		{ "path": "src/services/mcp/__tests__/McpHub.spec.ts", "additions": 197, "deletions": 0 },
+		{ "path": "webview-ui/src/components/mcp/McpView.tsx", "additions": 5, "deletions": 0 }
+	],
+	"headRefName": "fix/disabled-mcp-servers-issue-6036",
+	"number": 6037,
+	"state": "OPEN",
+	"title": "fix: prevent disabled MCP servers from starting processes and show correct status",
+	"url": "https://github.com/RooCodeInc/Roo-Code/pull/6037"
+}

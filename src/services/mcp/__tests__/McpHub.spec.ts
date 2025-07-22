@@ -541,6 +541,37 @@ describe("McpHub", () => {
 			expect(servers[0].name).toBe("enabled-server")
 		})
 
+		it("should include all servers (including disabled) in getAllServers", () => {
+			const mockConnections: McpConnection[] = [
+				{
+					server: {
+						name: "enabled-server",
+						config: "{}",
+						status: "connected",
+						disabled: false,
+					},
+					client: {} as any,
+					transport: {} as any,
+				},
+				{
+					server: {
+						name: "disabled-server",
+						config: "{}",
+						status: "connected",
+						disabled: true,
+					},
+					client: {} as any,
+					transport: {} as any,
+				},
+			]
+
+			mcpHub.connections = mockConnections
+			const servers = mcpHub.getAllServers()
+
+			expect(servers.length).toBe(2)
+			expect(servers.map((s) => s.name)).toEqual(["enabled-server", "disabled-server"])
+		})
+
 		it("should prevent calling tools on disabled servers", async () => {
 			const mockConnection: McpConnection = {
 				server: {

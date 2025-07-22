@@ -407,7 +407,7 @@ export class McpHub {
 	}
 
 	getServers(): McpServer[] {
-		// Only return enabled servers
+		// Return only enabled servers for use in prompts
 		return this.connections.filter((conn) => !conn.server.disabled).map((conn) => conn.server)
 	}
 
@@ -983,7 +983,28 @@ export class McpHub {
 				// New server
 				try {
 					this.setupFileWatcher(name, validatedConfig, source)
-					await this.connectToServer(name, validatedConfig, source)
+					if (validatedConfig.disabled) {
+						// Create a connection object for disabled servers but don't connect
+						const connection: McpConnection = {
+							server: {
+								name,
+								config: JSON.stringify(validatedConfig),
+								status: "disconnected",
+								disabled: true,
+								source,
+								projectPath:
+									source === "project"
+										? vscode.workspace.workspaceFolders?.[0]?.uri.fsPath
+										: undefined,
+								errorHistory: [],
+							},
+							client: null as any, // Disabled servers don't have clients
+							transport: null as any, // Disabled servers don't have transports
+						}
+						this.connections.push(connection)
+					} else {
+						await this.connectToServer(name, validatedConfig, source)
+					}
 				} catch (error) {
 					this.showErrorMessage(`Failed to connect to new MCP server ${name}`, error)
 				}
@@ -992,7 +1013,28 @@ export class McpHub {
 				try {
 					this.setupFileWatcher(name, validatedConfig, source)
 					await this.deleteConnection(name, source)
-					await this.connectToServer(name, validatedConfig, source)
+					if (validatedConfig.disabled) {
+						// Create a connection object for disabled servers but don't connect
+						const connection: McpConnection = {
+							server: {
+								name,
+								config: JSON.stringify(validatedConfig),
+								status: "disconnected",
+								disabled: true,
+								source,
+								projectPath:
+									source === "project"
+										? vscode.workspace.workspaceFolders?.[0]?.uri.fsPath
+										: undefined,
+								errorHistory: [],
+							},
+							client: null as any, // Disabled servers don't have clients
+							transport: null as any, // Disabled servers don't have transports
+						}
+						this.connections.push(connection)
+					} else {
+						await this.connectToServer(name, validatedConfig, source)
+					}
 				} catch (error) {
 					this.showErrorMessage(`Failed to reconnect MCP server ${name}`, error)
 				}
@@ -1286,33 +1328,31 @@ export class McpHub {
 			// Update the server config in the appropriate file
 			await this.updateServerConfig(serverName, { disabled }, serverSource)
 
-			// Update the connection object
-			if (connection) {
-				try {
-					connection.server.disabled = disabled
-
-					// If disabling the server, disconnect it
-					if (disabled) {
-						await this.deleteConnection(serverName, serverSource)
-					} else if (!disabled) {
-						// If enabling the server, connect it
-						const config = JSON.parse(connection.server.config)
-						// Ensure the config has the updated disabled state
-						config.disabled = false
-						await this.connectToServer(serverName, config, serverSource)
+			// If disabling the server, update the connection state and disconnect
+			if (disabled) {
+				connection.server.disabled = true
+				await this.deleteConnection(serverName, serverSource)
+			} else {
+				// If enabling the server, we need to re-read the config and reconnect
+				// Get the updated config from the file
+				let configPath: string
+				if (serverSource === "project") {
+					const projectMcpPath = await this.getProjectMcpPath()
+					if (!projectMcpPath) {
+						throw new Error("Project MCP configuration file not found")
 					}
+					configPath = projectMcpPath
+				} else {
+					configPath = await this.getMcpSettingsFilePath()
+				}
 
-					// Only refresh capabilities if connected and not disabled
-					if (!disabled && connection.server.status === "connected") {
-						connection.server.tools = await this.fetchToolsList(serverName, serverSource)
-						connection.server.resources = await this.fetchResourcesList(serverName, serverSource)
-						connection.server.resourceTemplates = await this.fetchResourceTemplatesList(
-							serverName,
-							serverSource,
-						)
-					}
-				} catch (error) {
-					console.error(`Failed to refresh capabilities for ${serverName}:`, error)
+				const content = await fs.readFile(configPath, "utf-8")
+				const fileConfig = JSON.parse(content)
+				const serverConfig = fileConfig.mcpServers?.[serverName]
+
+				if (serverConfig) {
+					// Update server connections will handle creating the new connection
+					await this.updateServerConnections({ [serverName]: serverConfig }, serverSource)
 				}
 			}
 
