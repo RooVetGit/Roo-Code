@@ -239,7 +239,7 @@ export async function checkSvnInstalled(): Promise<boolean> {
  * @param cwd The working directory
  * @returns Array of matching SVN commits
  */
-export async function searchSvnCommits(query: string, cwd: string, p0: number): Promise<SvnCommit[]> {
+export async function searchSvnCommits(query: string, cwd: string): Promise<SvnCommit[]> {
 	SvnLogger.debug("searchSvnCommits called", { query, cwd })
 
 	try {
@@ -497,5 +497,110 @@ export async function getSvnWorkingState(cwd: string): Promise<{
 	} catch (error) {
 		console.error("[DEBUG] Error in getSvnWorkingState:", error)
 		return { status: "", diff: "" }
+	}
+}
+
+/**
+ * Gets formatted SVN commit information for mentions
+ * @param revision The revision number (can be with or without 'r' prefix)
+ * @param cwd The working directory
+ * @returns Formatted commit information string
+ */
+export async function getSvnCommitInfoForMentions(revision: string, cwd: string): Promise<string> {
+	try {
+		console.log("[DEBUG] getSvnCommitInfoForMentions called with revision:", revision, "cwd:", cwd)
+
+		if (!(await checkSvnInstalled()) || !(await checkSvnRepo(cwd))) {
+			console.log("[DEBUG] SVN not installed or not a repository")
+			return "Error: SVN not available or not an SVN repository"
+		}
+
+		// Clean revision number (remove 'r' prefix if present)
+		const cleanRevision = revision.replace(/^r/i, "")
+		console.log("[DEBUG] Clean revision:", cleanRevision)
+
+		// Get commit info
+		const { stdout: logOutput } = await execAsync(`svn log -r ${cleanRevision} -v`, { cwd })
+		console.log("[DEBUG] SVN log output:", logOutput)
+
+		// Parse the log output
+		const lines = logOutput.split("\n")
+		let commitInfo = ""
+		let author = ""
+		let date = ""
+		let message = ""
+		let changedPaths = ""
+
+		// Find the revision line
+		const revisionLineIndex = lines.findIndex((line) => line.includes(`r${cleanRevision}`))
+		if (revisionLineIndex >= 0) {
+			const revisionLine = lines[revisionLineIndex]
+			const match = revisionLine.match(/r(\d+)\s+\|\s+([^|]+)\s+\|\s+([^|]+)\s+\|/)
+			if (match) {
+				author = match[2].trim()
+				date = match[3].trim()
+			}
+		}
+
+		// Find changed paths
+		const changedPathsStart = lines.findIndex((line) => line.includes("Changed paths:"))
+		if (changedPathsStart >= 0) {
+			let i = changedPathsStart + 1
+			const pathLines = []
+			while (i < lines.length && lines[i].trim() && !lines[i].startsWith("-")) {
+				if (lines[i].trim()) {
+					pathLines.push(lines[i].trim())
+				}
+				i++
+			}
+			changedPaths = pathLines.join("\n")
+		}
+
+		// Find message
+		const messageStart = lines.findIndex(
+			(line, index) =>
+				index > revisionLineIndex && line.trim() && !line.startsWith("-") && !line.includes("Changed paths:"),
+		)
+		if (messageStart >= 0) {
+			let i = messageStart
+			const messageLines = []
+			while (i < lines.length && !lines[i].startsWith("-")) {
+				if (lines[i].trim()) {
+					messageLines.push(lines[i].trim())
+				}
+				i++
+			}
+			message = messageLines.join("\n")
+		}
+
+		// Get diff
+		let diff = ""
+		try {
+			const { stdout: diffOutput } = await execAsync(`svn diff -c ${cleanRevision}`, { cwd })
+			diff = truncateOutput(diffOutput, SVN_OUTPUT_LINE_LIMIT)
+		} catch (error) {
+			console.log("[DEBUG] SVN diff command failed:", error)
+			diff = "Diff not available"
+		}
+
+		// Format the output
+		commitInfo = `Revision: r${cleanRevision}\n`
+		commitInfo += `Author: ${author}\n`
+		commitInfo += `Date: ${date}\n\n`
+		commitInfo += `Message: ${message}\n\n`
+
+		if (changedPaths) {
+			commitInfo += `Changed Paths:\n${changedPaths}\n\n`
+		}
+
+		if (diff && diff.trim()) {
+			commitInfo += `Full Changes:\n\n${diff}`
+		}
+
+		console.log("[DEBUG] Formatted commit info:", commitInfo)
+		return commitInfo
+	} catch (error) {
+		console.error("[DEBUG] Error getting SVN commit info for mentions:", error)
+		return `Error fetching SVN commit r${revision}: ${error.message}`
 	}
 }

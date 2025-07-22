@@ -7,7 +7,7 @@ import { isBinaryFile } from "isbinaryfile"
 import { mentionRegexGlobal, unescapeSpaces } from "../../shared/context-mentions"
 
 import { getCommitInfo, getWorkingState } from "../../utils/git"
-import { getSvnWorkingState } from "../../utils/svn"
+import { getSvnWorkingState, getSvnCommitInfoForMentions } from "../../utils/svn"
 import { getWorkspacePath } from "../../utils/path"
 
 import { openFile } from "../../integrations/misc/open-file"
@@ -100,6 +100,8 @@ export async function parseMentions(
 			return `Working directory changes (see below for details)`
 		} else if (/^[a-f0-9]{7,40}$/.test(mention)) {
 			return `Git commit '${mention}' (see below for commit info)`
+		} else if (/^r?\d+$/.test(mention)) {
+			return `SVN revision '${mention}' (see below for commit info)`
 		} else if (mention === "terminal") {
 			return `Terminal Output (see below for output)`
 		}
@@ -209,6 +211,13 @@ export async function parseMentions(
 				parsedText += `\n\n<git_commit hash="${mention}">\n${commitInfo}\n</git_commit>`
 			} catch (error) {
 				parsedText += `\n\n<git_commit hash="${mention}">\nError fetching commit info: ${error.message}\n</git_commit>`
+			}
+		} else if (/^r?\d+$/.test(mention)) {
+			try {
+				const commitInfo = await getSvnCommitInfoForMentions(mention, cwd)
+				parsedText += `\n\n<svn_commit revision="${mention}">\n${commitInfo}\n</svn_commit>`
+			} catch (error) {
+				parsedText += `\n\n<svn_commit revision="${mention}">\nError fetching commit info: ${error.message}\n</svn_commit>`
 			}
 		} else if (mention === "terminal") {
 			try {

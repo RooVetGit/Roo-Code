@@ -257,7 +257,7 @@ const getCommandsMap = ({ context, outputChannel, provider }: RegisterCommandOpt
 
 			// 搜索最近的提交
 			SvnLogger.info("Searching for recent commits...")
-			const commits = await searchSvnCommits("", workspaceRoot, 5)
+			const commits = await searchSvnCommits("", workspaceRoot)
 			SvnLogger.info(`Found ${commits.length} commits`)
 			commits.forEach((commit, index) => {
 				SvnLogger.info(`Commit ${index + 1}: r${commit.revision} - ${commit.message}`)
