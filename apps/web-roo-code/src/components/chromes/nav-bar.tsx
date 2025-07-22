@@ -73,16 +73,19 @@ export function NavBar({ stars, downloads }: NavBarProps) {
 						className="text-muted-foreground transition-transform duration-200 hover:scale-105 hover:text-foreground">
 						Careers
 					</a>
-					<div className="flex items-center rounded-full bg-muted/50 px-3 py-1.5 text-sm">
-						<span className="text-muted-foreground">Roo Code Cloud is coming</span>
-						<span className="mx-1.5 text-muted-foreground">&middot;</span>
-						<a
-							href="https://shard-dogwood-daf.notion.site/238fd1401b0a8087b858e1ad431507cf?pvs=105"
-							target="_blank"
-							rel="noopener noreferrer"
-							className="font-medium text-primary hover:underline">
-							Sign up
-						</a>
+					<div className="flex items-center rounded-full bg-gradient-to-r from-blue-400 to-cyan-400 p-0.5 text-xs">
+						<div className="rounded-full bg-background px-2 py-1.5">
+							<span className="text-muted-foreground border-r-2 border-foreground/50 pr-1.5">
+								Roo Code Cloud is coming
+							</span>
+							<a
+								href="https://shard-dogwood-daf.notion.site/238fd1401b0a8087b858e1ad431507cf?pvs=105"
+								target="_blank"
+								rel="noopener noreferrer"
+								className="font-medium text-primary hover:underline pl-1.5">
+								Sign up
+							</a>
+						</div>
 					</div>
 				</nav>
 
@@ -175,7 +178,7 @@ export function NavBar({ stars, downloads }: NavBarProps) {
 						onClick={() => setIsMenuOpen(false)}>
 						Careers
 					</a>
-					<div className="mx-8 my-3 flex items-center rounded-full bg-muted/50 px-3 py-1.5 text-sm">
+					<div className="mx-8 my-3 flex items-center rounded-full bg-muted/70 border border-border/30 px-3 py-1.5 text-sm shadow-sm">
 						<span className="text-foreground/80">Roo Code Cloud is coming</span>
 						<span className="mx-1.5 text-foreground/80">&middot;</span>
 						<a
