@@ -134,6 +134,7 @@ export class McpHub {
 	isConnecting: boolean = false
 	private refCount: number = 0 // Reference counter for active clients
 	private configChangeDebounceTimers: Map<string, NodeJS.Timeout> = new Map()
+	private toggleOperations: Map<string, Promise<void>> = new Map() // Track ongoing toggle operations
 
 	constructor(provider: ClineProvider) {
 		this.providerRef = new WeakRef(provider)
@@ -557,6 +558,12 @@ export class McpHub {
 		config: z.infer<typeof ServerConfigSchema>,
 		source: "global" | "project" = "global",
 	): Promise<void> {
+		// Check if server is disabled before attempting to connect
+		if (config.disabled) {
+			console.log(`Skipping connection to disabled server: ${name}`)
+			return
+		}
+
 		// Remove existing connection if it exists with the same source
 		await this.deleteConnection(name, source)
 
@@ -973,24 +980,19 @@ export class McpHub {
 			}
 
 			if (!currentConnection) {
-				// New server - only connect if not disabled
-				if (!validatedConfig.disabled) {
-					try {
-						this.setupFileWatcher(name, validatedConfig, source)
-						await this.connectToServer(name, validatedConfig, source)
-					} catch (error) {
-						this.showErrorMessage(`Failed to connect to new MCP server ${name}`, error)
-					}
+				// New server
+				try {
+					this.setupFileWatcher(name, validatedConfig, source)
+					await this.connectToServer(name, validatedConfig, source)
+				} catch (error) {
+					this.showErrorMessage(`Failed to connect to new MCP server ${name}`, error)
 				}
 			} else if (!deepEqual(JSON.parse(currentConnection.server.config), config)) {
 				// Existing server with changed config
 				try {
 					this.setupFileWatcher(name, validatedConfig, source)
 					await this.deleteConnection(name, source)
-					// Only reconnect if not disabled
-					if (!validatedConfig.disabled) {
-						await this.connectToServer(name, validatedConfig, source)
-					}
+					await this.connectToServer(name, validatedConfig, source)
 				} catch (error) {
 					this.showErrorMessage(`Failed to reconnect MCP server ${name}`, error)
 				}
@@ -1246,6 +1248,33 @@ export class McpHub {
 		disabled: boolean,
 		source?: "global" | "project",
 	): Promise<void> {
+		// Check if there's already a toggle operation in progress for this server
+		const operationKey = `${serverName}-${source || "global"}`
+		const existingOperation = this.toggleOperations.get(operationKey)
+
+		if (existingOperation) {
+			console.log(`Toggle operation already in progress for ${operationKey}, waiting...`)
+			await existingOperation
+			return
+		}
+
+		// Create a new toggle operation
+		const toggleOperation = this._performToggleServerDisabled(serverName, disabled, source)
+		this.toggleOperations.set(operationKey, toggleOperation)
+
+		try {
+			await toggleOperation
+		} finally {
+			// Clean up the operation from the map
+			this.toggleOperations.delete(operationKey)
+		}
+	}
+
+	private async _performToggleServerDisabled(
+		serverName: string,
+		disabled: boolean,
+		source?: "global" | "project",
+	): Promise<void> {
 		try {
 			// Find the connection to determine if it's a global or project server
 			const connection = this.findConnection(serverName, source)
@@ -1263,11 +1292,13 @@ export class McpHub {
 					connection.server.disabled = disabled
 
 					// If disabling the server, disconnect it
-					if (disabled && connection.server.status === "connected") {
+					if (disabled) {
 						await this.deleteConnection(serverName, serverSource)
-					} else if (!disabled && connection.server.status !== "connected") {
-						// If enabling the server and it's not connected, connect it
+					} else if (!disabled) {
+						// If enabling the server, connect it
 						const config = JSON.parse(connection.server.config)
+						// Ensure the config has the updated disabled state
+						config.disabled = false
 						await this.connectToServer(serverName, config, serverSource)
 					}
 

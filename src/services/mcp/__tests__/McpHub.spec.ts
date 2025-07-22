@@ -766,6 +766,141 @@ describe("McpHub", () => {
 			// Verify the server was connected
 			expect(mockClient.connect).toHaveBeenCalled()
 		})
+
+		it("should handle toggling a server that's already in the target state", async () => {
+			const mockConfig = {
+				mcpServers: {
+					"test-server": {
+						type: "stdio",
+						command: "node",
+						args: ["test.js"],
+						disabled: true,
+					},
+				},
+			}
+
+			// Mock reading initial config
+			vi.mocked(fs.readFile).mockResolvedValueOnce(JSON.stringify(mockConfig))
+
+			// Set up mock connection for already disabled server
+			const mockConnection: McpConnection = {
+				server: {
+					name: "test-server",
+					config: JSON.stringify({
+						type: "stdio",
+						command: "node",
+						args: ["test.js"],
+						disabled: true,
+					}),
+					status: "disconnected",
+					disabled: true,
+					source: "global",
+				},
+				client: {} as any,
+				transport: {} as any,
+			}
+			mcpHub.connections = [mockConnection]
+
+			// Try to disable an already disabled server
+			await mcpHub.toggleServerDisabled("test-server", true)
+
+			// Verify the config was still updated (idempotent operation)
+			expect(fs.writeFile).toHaveBeenCalled()
+		})
+
+		it("should handle errors during toggle operations gracefully", async () => {
+			const mockConfig = {
+				mcpServers: {
+					"test-server": {
+						type: "stdio",
+						command: "node",
+						args: ["test.js"],
+						disabled: false,
+					},
+				},
+			}
+
+			// Mock reading initial config
+			vi.mocked(fs.readFile).mockResolvedValueOnce(JSON.stringify(mockConfig))
+
+			// Mock writeFile to throw an error
+			vi.mocked(fs.writeFile).mockRejectedValueOnce(new Error("Permission denied"))
+
+			// Set up mock connection
+			const mockConnection: McpConnection = {
+				server: {
+					name: "test-server",
+					config: JSON.stringify({
+						type: "stdio",
+						command: "node",
+						args: ["test.js"],
+						disabled: false,
+					}),
+					status: "connected",
+					disabled: false,
+					source: "global",
+				},
+				client: {} as any,
+				transport: {} as any,
+			}
+			mcpHub.connections = [mockConnection]
+
+			// Try to toggle and expect it to throw
+			await expect(mcpHub.toggleServerDisabled("test-server", true)).rejects.toThrow()
+		})
+
+		it("should handle concurrent toggle operations", async () => {
+			const mockConfig = {
+				mcpServers: {
+					"test-server": {
+						type: "stdio",
+						command: "node",
+						args: ["test.js"],
+						disabled: false,
+					},
+				},
+			}
+
+			// Mock reading initial config
+			vi.mocked(fs.readFile).mockResolvedValue(JSON.stringify(mockConfig))
+
+			// Mock writeFile with a delay to simulate slow operation
+			let writeCallCount = 0
+			vi.mocked(fs.writeFile).mockImplementation(async () => {
+				writeCallCount++
+				await new Promise((resolve) => setTimeout(resolve, 100))
+			})
+
+			// Set up mock connection
+			const mockConnection: McpConnection = {
+				server: {
+					name: "test-server",
+					config: JSON.stringify({
+						type: "stdio",
+						command: "node",
+						args: ["test.js"],
+						disabled: false,
+					}),
+					status: "connected",
+					disabled: false,
+					source: "global",
+				},
+				client: {} as any,
+				transport: {} as any,
+			}
+			mcpHub.connections = [mockConnection]
+
+			// Start multiple concurrent toggle operations
+			const promise1 = mcpHub.toggleServerDisabled("test-server", true)
+			const promise2 = mcpHub.toggleServerDisabled("test-server", true)
+			const promise3 = mcpHub.toggleServerDisabled("test-server", true)
+
+			// Wait for all to complete
+			await Promise.all([promise1, promise2, promise3])
+
+			// Only the first operation should have executed
+			expect(writeCallCount).toBe(1)
+		})
 	})
 
 	describe("callTool", () => {
