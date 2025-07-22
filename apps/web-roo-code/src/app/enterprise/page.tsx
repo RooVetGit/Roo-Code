@@ -46,7 +46,7 @@ export default async function Enterprise() {
 									size="lg"
 									className="w-full sm:w-auto bg-white/20 dark:bg-white/10 backdrop-blur-sm border border-black/40 dark:border-white/30 hover:border-blue-400 hover:bg-white/30 dark:hover:bg-white/20 hover:shadow-[0_0_20px_rgba(59,130,246,0.5)] transition-all duration-300">
 									<a href="#benefits" className="flex w-full items-center justify-center">
-										Learn More
+										Why Roo Code
 									</a>
 								</Button>
 							</div>
@@ -466,10 +466,10 @@ export default async function Enterprise() {
 				<div className="absolute inset-0 bg-gradient-to-b from-blue-500/5 via-cyan-500/5 to-purple-500/5 dark:from-blue-500/10 dark:via-cyan-500/10 dark:to-purple-500/10" />
 				<div className="container relative z-10 mx-auto px-4 sm:px-6 lg:px-8">
 					<div className="mx-auto max-w-4xl">
-						<div className="relative rounded-3xl border border-border/50 bg-gradient-to-br from-blue-500/5 via-cyan-500/5 to-purple-500/5 p-8 shadow-2xl backdrop-blur-xl dark:border-border/30 dark:from-gray-800/20 dark:via-gray-700/20 dark:to-gray-800/20 dark:shadow-[0_20px_50px_rgba(0,0,0,0.5)] sm:p-12">
-							<div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-blue-500/5 via-transparent to-purple-500/5 dark:from-gray-700/10 dark:to-gray-800/10" />
+						<div className="relative rounded-3xl border border-border/50 bg-gradient-to-br from-blue-500/5 via-cyan-500/5 to-purple-500/5 p-8 shadow-2xl backdrop-blur-xl dark:border-white/20 dark:bg-gradient-to-br dark:from-gray-800 dark:via-gray-900 dark:to-black dark:shadow-[0_30px_90px_rgba(255,255,255,0.15)] sm:p-12">
+							<div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-blue-500/5 via-transparent to-purple-500/5 dark:bg-gradient-to-br dark:from-white/[0.05] dark:via-transparent dark:to-white/[0.03]" />
 							<div className="relative text-center">
-								<h2 className="mb-4 bg-gradient-to-b from-foreground to-foreground/70 bg-clip-text text-3xl font-bold tracking-tight text-transparent sm:text-4xl">
+								<h2 className="mb-4 text-3xl font-bold tracking-tight sm:text-4xl">
 									Ready to Transform Your Development Process?
 								</h2>
 								<p className="mb-8 text-lg text-muted-foreground">
@@ -477,7 +477,7 @@ export default async function Enterprise() {
 									Code Cloud for Enterprise.
 								</p>
 								<div className="grid gap-4 sm:grid-cols-2 sm:gap-6">
-									<div className="rounded-lg border border-border bg-card/80 backdrop-blur-sm p-6 text-center shadow-lg hover:shadow-xl transition-shadow duration-300">
+									<div className="rounded-lg border border-border bg-card/80 backdrop-blur-sm p-6 text-center shadow-lg hover:shadow-xl transition-all duration-300 dark:border-white/20 dark:bg-gray-800/80 dark:hover:border-white/40 dark:hover:bg-gray-700/90 dark:hover:shadow-[0_20px_50px_rgba(255,255,255,0.2)] dark:hover:scale-[1.02]">
 										<h3 className="mb-2 text-xl font-bold">Become an Early Access Partner</h3>
 										<p className="mb-4 text-muted-foreground">
 											Collaborate in shaping Roo Code&apos;s enterprise solution.
@@ -488,7 +488,7 @@ export default async function Enterprise() {
 											buttonClassName="bg-black text-white hover:bg-gray-800 hover:shadow-lg hover:shadow-black/20 dark:bg-white dark:text-black dark:hover:bg-gray-200 dark:hover:shadow-white/20 transition-all duration-300"
 										/>
 									</div>
-									<div className="rounded-lg border border-border bg-card/80 backdrop-blur-sm p-6 text-center shadow-lg hover:shadow-xl transition-shadow duration-300">
+									<div className="rounded-lg border border-border bg-card/80 backdrop-blur-sm p-6 text-center shadow-lg hover:shadow-xl transition-all duration-300 dark:border-white/20 dark:bg-gray-800/80 dark:hover:border-white/40 dark:hover:bg-gray-700/90 dark:hover:shadow-[0_20px_50px_rgba(255,255,255,0.2)] dark:hover:scale-[1.02]">
 										<h3 className="mb-2 text-xl font-bold">Request a Demo</h3>
 										<p className="mb-4 text-muted-foreground">
 											See Roo Code&apos;s enterprise capabilities in action.

@@ -84,9 +84,7 @@ export function FAQSection() {
 							duration: 0.6,
 							ease: [0.21, 0.45, 0.27, 0.9],
 						}}>
-						<h2 className="bg-gradient-to-b from-foreground to-foreground/70 bg-clip-text text-4xl font-bold tracking-tight text-transparent sm:text-5xl">
-							Frequently Asked Questions
-						</h2>
+						<h2 className="text-4xl font-bold tracking-tight sm:text-5xl">Frequently Asked Questions</h2>
 						<p className="mt-6 text-lg text-muted-foreground">
 							Everything you need to know about Roo Code and how it can transform your development
 							workflow.

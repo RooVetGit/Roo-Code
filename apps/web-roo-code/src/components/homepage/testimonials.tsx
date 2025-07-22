@@ -109,7 +109,7 @@ export function Testimonials() {
 							duration: 0.6,
 							ease: [0.21, 0.45, 0.27, 0.9],
 						}}>
-						<h2 className="bg-gradient-to-b from-foreground to-foreground/70 bg-clip-text text-4xl font-bold tracking-tight text-transparent sm:text-5xl">
+						<h2 className="text-4xl font-bold tracking-tight sm:text-5xl">
 							Empowering developers worldwide.
 						</h2>
 						<p className="mt-6 text-lg text-muted-foreground">
