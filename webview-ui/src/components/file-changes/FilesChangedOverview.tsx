@@ -7,12 +7,6 @@ import { vscode } from "@/utils/vscode"
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
 interface FilesChangedOverviewProps {}
 
-interface _CheckpointEventData {
-	type: "checkpointCreated" | "checkpointRestored"
-	checkpoint: string
-	previousCheckpoint?: string
-}
-
 /**
  * FilesChangedOverview is a self-managing component that listens for checkpoint events
  * and displays file changes. It manages its own state and communicates with the backend
