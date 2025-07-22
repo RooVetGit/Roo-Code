@@ -113,6 +113,7 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 		historyPreviewCollapsed, // Added historyPreviewCollapsed
 		soundEnabled,
 		soundVolume,
+		cloudIsAuthenticated,
 	} = useExtensionState()
 
 	const messagesRef = useRef(messages)
@@ -1696,7 +1697,7 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 						{telemetrySetting === "unset" && <TelemetryBanner />}
 
 						<div className="mb-2.5">
-							{taskHistory.length < 4 ? (
+							{cloudIsAuthenticated || taskHistory.length < 4 ? (
 								<RooTips />
 							) : (
 								<div className="border border-muted/20 px-4 py-1 text-center flex items-start gap-2">
