@@ -3,6 +3,7 @@ import { FileChangeset, FileChange } from "@roo-code/types"
 import { useTranslation } from "react-i18next"
 import { useExtensionState } from "@/context/ExtensionStateContext"
 import { vscode } from "@/utils/vscode"
+import { useDebounce } from "@/hooks/useDebounce"
 
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
 interface FilesChangedOverviewProps {}
@@ -46,18 +47,8 @@ const FilesChangedOverview: React.FC<FilesChangedOverviewProps> = () => {
 	const totalHeight = shouldVirtualize ? files.length * ITEM_HEIGHT : "auto"
 	const offsetY = shouldVirtualize ? Math.floor(scrollTop / ITEM_HEIGHT) * ITEM_HEIGHT : 0
 
-	// Simple double-click prevention
-	const [isProcessing, setIsProcessing] = React.useState(false)
-	const timeoutRef = React.useRef<NodeJS.Timeout | null>(null)
-
-	// Cleanup timeout on unmount
-	React.useEffect(() => {
-		return () => {
-			if (timeoutRef.current) {
-				clearTimeout(timeoutRef.current)
-			}
-		}
-	}, [])
+	// Debounced operations to prevent double-clicks
+	const { isProcessing, handleWithDebounce } = useDebounce(300)
 
 	// FCO initialization logic
 	const checkInit = React.useCallback(() => {
@@ -112,25 +103,6 @@ const FilesChangedOverview: React.FC<FilesChangedOverviewProps> = () => {
 		vscode.postMessage({ type: "rejectAllFileChanges", uris: visibleUris })
 		// Backend will send updated filesChanged message with filtered results
 	}, [files])
-
-	const handleWithDebounce = React.useCallback(
-		async (operation: () => void) => {
-			if (isProcessing) return
-			setIsProcessing(true)
-			try {
-				operation()
-			} catch (_error) {
-				// Silently handle any errors to prevent crashing
-				// Debug logging removed for production
-			}
-			// Brief delay to prevent double-clicks
-			if (timeoutRef.current) {
-				clearTimeout(timeoutRef.current)
-			}
-			timeoutRef.current = setTimeout(() => setIsProcessing(false), 300)
-		},
-		[isProcessing],
-	)
 
 	/**
 	 * Handles scroll events for virtualization
