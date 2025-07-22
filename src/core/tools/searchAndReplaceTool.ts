@@ -11,6 +11,8 @@ import { ClineSayTool } from "../../shared/ExtensionMessage"
 import { getReadablePath } from "../../utils/path"
 import { fileExistsAtPath } from "../../utils/fs"
 import { RecordSource } from "../context-tracking/FileContextTrackerTypes"
+import { calculateFileMetadata } from "../file-history/fileHistoryUtils"
+import { FileMetadata } from "../task-persistence/apiMessages"
 
 /**
  * Tool for performing search and replace operations on files
@@ -244,6 +246,20 @@ export async function searchAndReplaceTool(
 		)
 
 		pushToolResult(message)
+
+		// Calculate and set pending file metadata for the search and replace operation
+		try {
+			const fileMetadata = await calculateFileMetadata(cline, validRelPath, "write")
+
+			// Set pending metadata to be attached to next API message
+			cline.pendingFileMetadata = [fileMetadata]
+			cline.pendingToolMetadata = {
+				name: "search_and_replace",
+				operation: "write",
+			}
+		} catch (error) {
+			console.warn(`[searchAndReplaceTool] Failed to calculate file metadata for ${validRelPath}:`, error)
+		}
 
 		// Record successful tool usage and cleanup
 		cline.recordToolUsage("search_and_replace")
