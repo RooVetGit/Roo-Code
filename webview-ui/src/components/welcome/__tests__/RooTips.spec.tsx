@@ -25,7 +25,7 @@ describe("RooTips Component", () => {
 
 	describe("when cycle is false (default)", () => {
 		beforeEach(() => {
-			render(<RooTips cycle={false} />)
+			render(<RooTips />)
 		})
 
 		test("renders only the top two tips", () => {

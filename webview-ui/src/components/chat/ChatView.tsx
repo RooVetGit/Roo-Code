@@ -1709,7 +1709,7 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 							/>
 						</p>
 						<div className="mb-2.5">
-							<RooTips cycle={false} />
+							<RooTips />
 						</div>
 						{/* Show the task history preview if expanded and tasks exist */}
 						{taskHistory.length > 0 && isExpanded && <HistoryPreview />}
