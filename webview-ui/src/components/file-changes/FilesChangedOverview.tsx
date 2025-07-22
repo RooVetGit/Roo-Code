@@ -66,15 +66,11 @@ const FilesChangedOverview: React.FC<FilesChangedOverviewProps> = () => {
 	}, [])
 
 	// FCO initialization logic
-	const checkInit = React.useCallback(
-		(baseCheckpoint: string) => {
-			if (!isInitialized) {
-				console.log("[FCO] Initializing with base checkpoint:", baseCheckpoint)
-				setIsInitialized(true)
-			}
-		},
-		[isInitialized],
-	)
+	const checkInit = React.useCallback(() => {
+		if (!isInitialized) {
+			setIsInitialized(true)
+		}
+	}, [isInitialized])
 
 	// Update changeset - backend handles filtering, no local filtering needed
 	const updateChangeset = React.useCallback((newChangeset: FileChangeset) => {
@@ -82,21 +78,16 @@ const FilesChangedOverview: React.FC<FilesChangedOverviewProps> = () => {
 	}, [])
 
 	// Handle checkpoint creation
-	const handleCheckpointCreated = React.useCallback(
-		(checkpoint: string, previousCheckpoint?: string) => {
-			if (!isInitialized) {
-				checkInit(previousCheckpoint || checkpoint)
-			}
-			// Note: Backend automatically sends file changes during checkpoint creation
-			// No need to request them here - just wait for the filesChanged message
-		},
-		[isInitialized, checkInit],
-	)
+	const handleCheckpointCreated = React.useCallback(() => {
+		if (!isInitialized) {
+			checkInit()
+		}
+		// Note: Backend automatically sends file changes during checkpoint creation
+		// No need to request them here - just wait for the filesChanged message
+	}, [isInitialized, checkInit])
 
 	// Handle checkpoint restoration with the 4 examples logic
-	const handleCheckpointRestored = React.useCallback((restoredCheckpoint: string) => {
-		console.log("[FCO] Handling checkpoint restore to:", restoredCheckpoint)
-
+	const handleCheckpointRestored = React.useCallback(() => {
 		// Request file changes after checkpoint restore
 		// Backend should calculate changes from initial baseline to restored checkpoint
 		vscode.postMessage({ type: "filesChangedRequest" })
@@ -167,15 +158,13 @@ const FilesChangedOverview: React.FC<FilesChangedOverviewProps> = () => {
 
 			// Guard against null/undefined/malformed messages
 			if (!message || typeof message !== "object" || !message.type) {
-				console.debug("[FCO] Ignoring malformed message:", message)
 				return
 			}
 
 			switch (message.type) {
 				case "filesChanged":
 					if (message.filesChanged) {
-						console.log("[FCO] Received filesChanged message:", message.filesChanged)
-						checkInit(message.filesChanged.baseCheckpoint)
+						checkInit()
 						updateChangeset(message.filesChanged)
 					} else {
 						// Clear the changeset
@@ -183,12 +172,10 @@ const FilesChangedOverview: React.FC<FilesChangedOverviewProps> = () => {
 					}
 					break
 				case "checkpointCreated":
-					console.log("[FCO] Checkpoint created:", message.checkpoint)
-					handleCheckpointCreated(message.checkpoint, message.previousCheckpoint)
+					handleCheckpointCreated()
 					break
 				case "checkpointRestored":
-					console.log("[FCO] Checkpoint restored:", message.checkpoint)
-					handleCheckpointRestored(message.checkpoint)
+					handleCheckpointRestored()
 					break
 			}
 		}

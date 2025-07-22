@@ -21,15 +21,11 @@ export function getCheckpointService(cline: Task) {
 	if (cline.checkpointService) {
 		return cline.checkpointService
 	}
-	console.log(
-		`[DEBUG] getCheckpointService called for task ${cline.taskId}. Service exists: ${!!cline.checkpointService}`,
-	)
 	if (!cline.enableCheckpoints) {
 		return undefined
 	}
 
 	if (cline.checkpointServiceInitializing) {
-		console.log("[Task#getCheckpointService] checkpoint service is still initializing")
 		return undefined
 	}
 
@@ -44,8 +40,6 @@ export function getCheckpointService(cline: Task) {
 			// NO-OP
 		}
 	}
-
-	console.log("[Task#getCheckpointService] initializing checkpoints service")
 
 	try {
 		const workspaceDir = getWorkspacePath()
@@ -79,22 +73,8 @@ export function getCheckpointService(cline: Task) {
 			log("[Task#getCheckpointService] service initialized")
 
 			try {
-				// Debug logging to understand checkpoint detection
-				console.log("[DEBUG] Checkpoint detection - total messages:", cline.clineMessages.length)
-				console.log(
-					"[DEBUG] Checkpoint detection - message types:",
-					cline.clineMessages.map((m) => ({ ts: m.ts, type: m.type, say: m.say, ask: m.ask })),
-				)
-
 				const checkpointMessages = cline.clineMessages.filter(({ say }) => say === "checkpoint_saved")
-				console.log(
-					"[DEBUG] Found checkpoint messages:",
-					checkpointMessages.length,
-					checkpointMessages.map((m) => ({ ts: m.ts, text: m.text })),
-				)
-
 				const isCheckpointNeeded = checkpointMessages.length === 0
-				console.log("[DEBUG] isCheckpointNeeded result:", isCheckpointNeeded)
 
 				cline.checkpointService = service
 				cline.checkpointServiceInitializing = false
@@ -313,7 +293,6 @@ export async function getInitializedCheckpointService(
 	try {
 		await pWaitFor(
 			() => {
-				console.log("[Task#getCheckpointService] waiting for service to initialize")
 				return service.isInitialized
 			},
 			{ interval, timeout },
