@@ -115,7 +115,7 @@ describe("AutoApproveMenu", () => {
 			expect(screen.getByText("Read-only operations")).toBeInTheDocument()
 		})
 
-		it("should not allow toggling master checkbox when no options are selected", () => {
+		it("should allow toggling master checkbox even when no options are selected", () => {
 			;(useExtensionState as ReturnType<typeof vi.fn>).mockReturnValue({
 				...defaultExtensionState,
 				autoApprovalEnabled: false,
@@ -128,8 +128,11 @@ describe("AutoApproveMenu", () => {
 			const masterCheckbox = screen.getByRole("checkbox")
 			fireEvent.click(masterCheckbox)
 
-			// Should not send any message since no options are selected
-			expect(mockPostMessage).not.toHaveBeenCalled()
+			// Should send message to toggle auto-approval even when no options are selected
+			expect(mockPostMessage).toHaveBeenCalledWith({
+				type: "autoApprovalEnabled",
+				bool: true,
+			})
 		})
 
 		it("should toggle master checkbox when options are selected", () => {
