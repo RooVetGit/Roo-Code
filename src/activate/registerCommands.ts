@@ -16,6 +16,7 @@ import { CodeIndexManager } from "../services/code-index/manager"
 import { importSettingsWithFeedback } from "../core/config/importExport"
 import { MdmService } from "../services/mdm/MdmService"
 import { t } from "../i18n"
+import { checkSvnInstalled, checkSvnRepo, getSvnRepositoryInfo, searchSvnCommits, SvnLogger } from "../utils/svn"
 
 /**
  * Helper to get the visible ClineProvider instance or log if not found.
@@ -217,6 +218,60 @@ const getCommandsMap = ({ context, outputChannel, provider }: RegisterCommandOpt
 		}
 
 		visibleProvider.postMessageToWebview({ type: "acceptInput" })
+	},
+	debugSvn: async () => {
+		const workspaceFolders = vscode.workspace.workspaceFolders
+		if (!workspaceFolders || workspaceFolders.length === 0) {
+			vscode.window.showErrorMessage("No workspace folder is open")
+			return
+		}
+
+		const workspaceRoot = workspaceFolders[0].uri.fsPath
+		SvnLogger.info(`Starting SVN debug for workspace: ${workspaceRoot}`)
+
+		try {
+			// 检查 SVN 是否安装
+			SvnLogger.info("Checking if SVN is installed...")
+			const svnInstalled = await checkSvnInstalled()
+			SvnLogger.info(`SVN installed: ${svnInstalled}`)
+
+			if (!svnInstalled) {
+				vscode.window.showErrorMessage("SVN is not installed or not in PATH")
+				return
+			}
+
+			// 检查是否是 SVN 仓库
+			SvnLogger.info("Checking if current directory is an SVN repository...")
+			const isSvnRepo = await checkSvnRepo(workspaceRoot)
+			SvnLogger.info(`Is SVN repository: ${isSvnRepo}`)
+
+			if (!isSvnRepo) {
+				vscode.window.showWarningMessage("Current workspace is not an SVN repository")
+				return
+			}
+
+			// 获取 SVN 仓库信息
+			SvnLogger.info("Getting SVN repository information...")
+			const repoInfo = await getSvnRepositoryInfo(workspaceRoot)
+			SvnLogger.info(`Repository info: ${JSON.stringify(repoInfo, null, 2)}`)
+
+			// 搜索最近的提交
+			SvnLogger.info("Searching for recent commits...")
+			const commits = await searchSvnCommits("", workspaceRoot, 5)
+			SvnLogger.info(`Found ${commits.length} commits`)
+			commits.forEach((commit, index) => {
+				SvnLogger.info(`Commit ${index + 1}: r${commit.revision} - ${commit.message}`)
+			})
+
+			vscode.window.showInformationMessage(
+				`SVN Debug Complete! Found ${commits.length} commits. Check "Roo Code - SVN Debug" output channel for details.`,
+			)
+		} catch (error) {
+			SvnLogger.error("SVN debug failed", error)
+			vscode.window.showErrorMessage(
+				`SVN debug failed: ${error instanceof Error ? error.message : String(error)}`,
+			)
+		}
 	},
 })
 

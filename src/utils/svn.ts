@@ -8,6 +8,70 @@ import { truncateOutput } from "../integrations/misc/extract-text"
 const execAsync = promisify(exec)
 const SVN_OUTPUT_LINE_LIMIT = 500
 
+// SVN Debug Logger
+export class SvnLogger {
+	private static outputChannel: vscode.OutputChannel | null = null
+
+	static getOutputChannel(): vscode.OutputChannel {
+		if (!this.outputChannel) {
+			this.outputChannel = vscode.window.createOutputChannel("Roo Code - SVN Debug")
+		}
+		return this.outputChannel
+	}
+
+	static debug(message: string, ...args: any[]) {
+		const timestamp = new Date().toISOString()
+		const logMessage = `[${timestamp}] [DEBUG] ${message}`
+
+		// Log to console
+		console.log(logMessage, ...args)
+
+		// Log to VS Code output channel
+		const channel = this.getOutputChannel()
+		channel.appendLine(logMessage)
+		if (args.length > 0) {
+			channel.appendLine(`  Args: ${JSON.stringify(args, null, 2)}`)
+		}
+	}
+
+	static error(message: string, error?: any) {
+		const timestamp = new Date().toISOString()
+		const logMessage = `[${timestamp}] [ERROR] ${message}`
+
+		// Log to console
+		console.error(logMessage, error)
+
+		// Log to VS Code output channel
+		const channel = this.getOutputChannel()
+		channel.appendLine(logMessage)
+		if (error) {
+			channel.appendLine(`  Error: ${error.toString()}`)
+			if (error.stack) {
+				channel.appendLine(`  Stack: ${error.stack}`)
+			}
+		}
+	}
+
+	static info(message: string, ...args: any[]) {
+		const timestamp = new Date().toISOString()
+		const logMessage = `[${timestamp}] [INFO] ${message}`
+
+		// Log to console
+		console.log(logMessage, ...args)
+
+		// Log to VS Code output channel
+		const channel = this.getOutputChannel()
+		channel.appendLine(logMessage)
+		if (args.length > 0) {
+			channel.appendLine(`  Data: ${JSON.stringify(args, null, 2)}`)
+		}
+	}
+
+	static showOutput() {
+		this.getOutputChannel().show()
+	}
+}
+
 export interface SvnRepositoryInfo {
 	repositoryUrl?: string
 	repositoryName?: string
@@ -27,14 +91,20 @@ export interface SvnCommit {
  * @returns SVN repository information or empty object if not an SVN repository
  */
 export async function getSvnRepositoryInfo(workspaceRoot: string): Promise<SvnRepositoryInfo> {
+	SvnLogger.debug("getSvnRepositoryInfo called", { workspaceRoot })
+
 	try {
 		const svnDir = path.join(workspaceRoot, ".svn")
+		SvnLogger.debug("Checking SVN directory", { svnDir })
 
 		// Check if .svn directory exists
 		try {
 			await fs.access(svnDir)
-		} catch {
-			// Not an SVN repository
+			SvnLogger.debug("SVN directory found")
+		} catch (error) {
+			SvnLogger.debug("SVN directory not found - not an SVN repository", {
+				error: (error instanceof Error ? error : new Error(String(error))).toString(),
+			})
 			return {}
 		}
 
@@ -42,7 +112,9 @@ export async function getSvnRepositoryInfo(workspaceRoot: string): Promise<SvnRe
 
 		// Try to get SVN info using svn info command
 		try {
+			SvnLogger.debug("Executing 'svn info' command", { cwd: workspaceRoot })
 			const { stdout } = await execAsync("svn info", { cwd: workspaceRoot })
+			SvnLogger.debug("SVN info command output", { stdout })
 
 			// Parse SVN info output
 			const urlMatch = stdout.match(/^URL:\s*(.+)$/m)
@@ -50,19 +122,26 @@ export async function getSvnRepositoryInfo(workspaceRoot: string): Promise<SvnRe
 				const url = urlMatch[1].trim()
 				svnInfo.repositoryUrl = url
 				svnInfo.repositoryName = extractSvnRepositoryName(url)
+				SvnLogger.debug("Extracted repository info", { url, repositoryName: svnInfo.repositoryName })
+			} else {
+				SvnLogger.debug("No URL found in SVN info output")
 			}
 
 			const rootMatch = stdout.match(/^Working Copy Root Path:\s*(.+)$/m)
 			if (rootMatch && rootMatch[1]) {
 				svnInfo.workingCopyRoot = rootMatch[1].trim()
+				SvnLogger.debug("Found working copy root", { workingCopyRoot: svnInfo.workingCopyRoot })
+			} else {
+				SvnLogger.debug("No working copy root found in SVN info output")
 			}
 		} catch (error) {
-			// Ignore SVN info errors
+			SvnLogger.error("SVN info command failed", error instanceof Error ? error : new Error(String(error)))
 		}
 
+		SvnLogger.info("Final SVN repository info", svnInfo)
 		return svnInfo
 	} catch (error) {
-		// Return empty object on any error
+		SvnLogger.error("Error in getSvnRepositoryInfo", error instanceof Error ? error : new Error(String(error)))
 		return {}
 	}
 }
@@ -118,11 +197,18 @@ export async function getWorkspaceSvnInfo(): Promise<SvnRepositoryInfo> {
  * @returns True if it's an SVN repository, false otherwise
  */
 export async function checkSvnRepo(cwd: string): Promise<boolean> {
+	SvnLogger.debug("checkSvnRepo called", { cwd })
+
 	try {
 		const svnDir = path.join(cwd, ".svn")
 		await fs.access(svnDir)
+		SvnLogger.debug("SVN repository detected", { svnDir })
 		return true
-	} catch {
+	} catch (error) {
+		SvnLogger.debug("Not an SVN repository", {
+			cwd,
+			error: (error instanceof Error ? error : new Error(String(error))).toString(),
+		})
 		return false
 	}
 }
@@ -132,10 +218,17 @@ export async function checkSvnRepo(cwd: string): Promise<boolean> {
  * @returns True if SVN is available, false otherwise
  */
 export async function checkSvnInstalled(): Promise<boolean> {
+	SvnLogger.debug("checkSvnInstalled called")
+
 	try {
-		await execAsync("svn --version")
+		const { stdout } = await execAsync("svn --version")
+		SvnLogger.debug("SVN is installed", { version: stdout.split("\n")[0] })
 		return true
-	} catch {
+	} catch (error) {
+		SvnLogger.error(
+			"SVN is not installed or not available",
+			error instanceof Error ? error : new Error(String(error)),
+		)
 		return false
 	}
 }
@@ -146,10 +239,18 @@ export async function checkSvnInstalled(): Promise<boolean> {
  * @param cwd The working directory
  * @returns Array of matching SVN commits
  */
-export async function searchSvnCommits(query: string, cwd: string): Promise<SvnCommit[]> {
+export async function searchSvnCommits(query: string, cwd: string, p0: number): Promise<SvnCommit[]> {
+	SvnLogger.debug("searchSvnCommits called", { query, cwd })
+
 	try {
 		// Check if SVN is available
-		if (!(await checkSvnInstalled()) || !(await checkSvnRepo(cwd))) {
+		const svnInstalled = await checkSvnInstalled()
+		const isSvnRepo = await checkSvnRepo(cwd)
+
+		SvnLogger.debug("SVN availability check", { svnInstalled, isSvnRepo })
+
+		if (!svnInstalled || !isSvnRepo) {
+			SvnLogger.debug("SVN not available or not a repository, returning empty array")
 			return []
 		}
 
@@ -157,24 +258,43 @@ export async function searchSvnCommits(query: string, cwd: string): Promise<SvnC
 
 		// If query looks like a revision number, search for that specific revision
 		if (/^\d+$/.test(query)) {
+			SvnLogger.debug("Query looks like revision number, searching for specific revision", { revision: query })
 			try {
-				const { stdout } = await execAsync(`svn log -r ${query} --xml`, { cwd })
+				const command = `svn log -r ${query} --xml`
+				SvnLogger.debug("Executing revision search command", { command, cwd })
+
+				const { stdout } = await execAsync(command, { cwd })
+				SvnLogger.debug("Revision search output", { stdout })
+
 				const revisionCommits = parseSvnLogXml(stdout)
 				commits.push(...revisionCommits)
-			} catch {
-				// Revision might not exist, continue with general search
+				SvnLogger.debug("Found commits for revision", {
+					count: revisionCommits.length,
+					commits: revisionCommits,
+				})
+			} catch (error) {
+				SvnLogger.debug("Revision search failed, continuing with general search", {
+					error: (error instanceof Error ? error : new Error(String(error))).toString(),
+				})
 			}
 		}
 
 		// Search in commit messages (get recent commits and filter)
 		try {
-			const { stdout } = await execAsync("svn log -l 100 --xml", { cwd })
+			const command = "svn log -l 100 --xml"
+			SvnLogger.debug("Executing message search command", { command, cwd })
+
+			const { stdout } = await execAsync(command, { cwd })
+			SvnLogger.debug("Message search output length", { outputLength: stdout.length })
+
 			const allCommits = parseSvnLogXml(stdout)
+			SvnLogger.debug("Parsed all commits", { count: allCommits.length })
 
 			// Filter commits by message content
 			const messageMatches = allCommits.filter(
 				(commit) => commit.message.toLowerCase().includes(query.toLowerCase()) || commit.revision === query,
 			)
+			SvnLogger.debug("Filtered commits by message", { matchCount: messageMatches.length, query })
 
 			// Add unique commits (avoid duplicates from revision search)
 			messageMatches.forEach((commit) => {
@@ -182,13 +302,20 @@ export async function searchSvnCommits(query: string, cwd: string): Promise<SvnC
 					commits.push(commit)
 				}
 			})
-		} catch {
-			// Ignore errors in message search
+		} catch (error) {
+			SvnLogger.error("Message search failed", error instanceof Error ? error : new Error(String(error)))
 		}
 
-		return commits.slice(0, 20) // Limit results
+		const finalCommits = commits.slice(0, 20) // Limit results
+		SvnLogger.info("Search completed", {
+			query,
+			totalFound: commits.length,
+			returned: finalCommits.length,
+			commits: finalCommits,
+		})
+		return finalCommits
 	} catch (error) {
-		console.error("Error searching SVN commits:", error)
+		SvnLogger.error("Error searching SVN commits", error instanceof Error ? error : new Error(String(error)))
 		return []
 	}
 }
