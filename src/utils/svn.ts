@@ -419,31 +419,45 @@ export async function getSvnWorkingState(cwd: string): Promise<{
 	diff: string
 }> {
 	try {
+		console.log("[DEBUG] getSvnWorkingState called with cwd:", cwd)
+
 		if (!(await checkSvnInstalled()) || !(await checkSvnRepo(cwd))) {
+			console.log("[DEBUG] SVN not installed or not a repository")
 			return { status: "", diff: "" }
 		}
 
 		// Get status
 		let status = ""
 		try {
+			console.log("[DEBUG] Executing 'svn status' command")
 			const { stdout: statusOutput } = await execAsync("svn status", { cwd })
+			console.log("[DEBUG] SVN status raw output:", JSON.stringify(statusOutput))
 			status = truncateOutput(statusOutput, SVN_OUTPUT_LINE_LIMIT)
-		} catch {
+			console.log("[DEBUG] SVN status after truncation:", JSON.stringify(status))
+		} catch (error) {
+			console.log("[DEBUG] SVN status command failed:", error)
 			// Status might not be available
 		}
 
 		// Get diff of working changes
 		let diff = ""
 		try {
+			console.log("[DEBUG] Executing 'svn diff' command")
 			const { stdout: diffOutput } = await execAsync("svn diff", { cwd })
+			console.log("[DEBUG] SVN diff raw output length:", diffOutput.length)
+			console.log("[DEBUG] SVN diff raw output preview:", JSON.stringify(diffOutput.substring(0, 500)))
 			diff = truncateOutput(diffOutput, SVN_OUTPUT_LINE_LIMIT)
-		} catch {
+			console.log("[DEBUG] SVN diff after truncation length:", diff.length)
+		} catch (error) {
+			console.log("[DEBUG] SVN diff command failed:", error)
 			// Diff might not be available
 		}
 
-		return { status, diff }
+		const result = { status, diff }
+		console.log("[DEBUG] getSvnWorkingState returning:", JSON.stringify(result))
+		return result
 	} catch (error) {
-		console.error("Error getting SVN working state:", error)
+		console.error("[DEBUG] Error in getSvnWorkingState:", error)
 		return { status: "", diff: "" }
 	}
 }

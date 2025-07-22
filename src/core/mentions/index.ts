@@ -7,6 +7,7 @@ import { isBinaryFile } from "isbinaryfile"
 import { mentionRegexGlobal, unescapeSpaces } from "../../shared/context-mentions"
 
 import { getCommitInfo, getWorkingState } from "../../utils/git"
+import { getSvnWorkingState } from "../../utils/svn"
 import { getWorkspacePath } from "../../utils/path"
 
 import { openFile } from "../../integrations/misc/open-file"
@@ -95,6 +96,8 @@ export async function parseMentions(
 			return `Workspace Problems (see below for diagnostics)`
 		} else if (mention === "git-changes") {
 			return `Working directory changes (see below for details)`
+		} else if (mention === "svn-changes") {
+			return `Working directory changes (see below for details)`
 		} else if (/^[a-f0-9]{7,40}$/.test(mention)) {
 			return `Git commit '${mention}' (see below for commit info)`
 		} else if (mention === "terminal") {
@@ -176,6 +179,29 @@ export async function parseMentions(
 				parsedText += `\n\n<git_working_state>\n${workingState}\n</git_working_state>`
 			} catch (error) {
 				parsedText += `\n\n<git_working_state>\nError fetching working state: ${error.message}\n</git_working_state>`
+			}
+		} else if (mention === "svn-changes") {
+			try {
+				const svnWorkingState = await getSvnWorkingState(cwd)
+				console.log("[DEBUG] SVN working state object:", JSON.stringify(svnWorkingState, null, 2))
+
+				// Format the SVN working state properly
+				let formattedState = ""
+				if (svnWorkingState.status) {
+					formattedState += `Status:\n${svnWorkingState.status}\n\n`
+				}
+				if (svnWorkingState.diff) {
+					formattedState += `Diff:\n${svnWorkingState.diff}`
+				}
+				if (!formattedState.trim()) {
+					formattedState = "No changes detected in working directory."
+				}
+
+				console.log("[DEBUG] Formatted SVN state for AI:", formattedState)
+				parsedText += `\n\n<svn_working_state>\n${formattedState}\n</svn_working_state>`
+			} catch (error) {
+				console.error("[DEBUG] Error fetching SVN working state:", error)
+				parsedText += `\n\n<svn_working_state>\nError fetching SVN working state: ${error.message}\n</svn_working_state>`
 			}
 		} else if (/^[a-f0-9]{7,40}$/.test(mention)) {
 			try {

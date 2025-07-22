@@ -21,6 +21,8 @@ export async function processUserContentMentions({
 	rooIgnoreController?: any
 	showRooIgnoredFiles?: boolean
 }) {
+	console.log("[DEBUG] Processing user content mentions, input userContent:", JSON.stringify(userContent, null, 2))
+
 	// Process userContent array, which contains various block types:
 	// TextBlockParam, ImageBlockParam, ToolUseBlockParam, and ToolResultBlockParam.
 	// We need to apply parseMentions() to:
@@ -31,22 +33,25 @@ export async function processUserContentMentions({
 	// (see askFollowupQuestion), we place all user generated content in
 	// these tags so they can effectively be used as markers for when we
 	// should parse mentions).
-	return Promise.all(
+	const result = await Promise.all(
 		userContent.map(async (block) => {
 			const shouldProcessMentions = (text: string) => text.includes("<task>") || text.includes("<feedback>")
 
 			if (block.type === "text") {
 				if (shouldProcessMentions(block.text)) {
+					console.log("[DEBUG] Processing mentions in text block:", block.text)
+					const processedText = await parseMentions(
+						block.text,
+						cwd,
+						urlContentFetcher,
+						fileContextTracker,
+						rooIgnoreController,
+						showRooIgnoredFiles,
+					)
+					console.log("[DEBUG] Processed text block result:", processedText)
 					return {
 						...block,
-						text: await parseMentions(
-							block.text,
-							cwd,
-							urlContentFetcher,
-							fileContextTracker,
-							rooIgnoreController,
-							showRooIgnoredFiles,
-						),
+						text: processedText,
 					}
 				}
 
@@ -54,16 +59,19 @@ export async function processUserContentMentions({
 			} else if (block.type === "tool_result") {
 				if (typeof block.content === "string") {
 					if (shouldProcessMentions(block.content)) {
+						console.log("[DEBUG] Processing mentions in tool_result string content:", block.content)
+						const processedContent = await parseMentions(
+							block.content,
+							cwd,
+							urlContentFetcher,
+							fileContextTracker,
+							rooIgnoreController,
+							showRooIgnoredFiles,
+						)
+						console.log("[DEBUG] Processed tool_result string content result:", processedContent)
 						return {
 							...block,
-							content: await parseMentions(
-								block.content,
-								cwd,
-								urlContentFetcher,
-								fileContextTracker,
-								rooIgnoreController,
-								showRooIgnoredFiles,
-							),
+							content: processedContent,
 						}
 					}
 
@@ -72,16 +80,22 @@ export async function processUserContentMentions({
 					const parsedContent = await Promise.all(
 						block.content.map(async (contentBlock) => {
 							if (contentBlock.type === "text" && shouldProcessMentions(contentBlock.text)) {
+								console.log(
+									"[DEBUG] Processing mentions in tool_result array content:",
+									contentBlock.text,
+								)
+								const processedText = await parseMentions(
+									contentBlock.text,
+									cwd,
+									urlContentFetcher,
+									fileContextTracker,
+									rooIgnoreController,
+									showRooIgnoredFiles,
+								)
+								console.log("[DEBUG] Processed tool_result array content result:", processedText)
 								return {
 									...contentBlock,
-									text: await parseMentions(
-										contentBlock.text,
-										cwd,
-										urlContentFetcher,
-										fileContextTracker,
-										rooIgnoreController,
-										showRooIgnoredFiles,
-									),
+									text: processedText,
 								}
 							}
 
@@ -98,4 +112,7 @@ export async function processUserContentMentions({
 			return block
 		}),
 	)
+
+	console.log("[DEBUG] Final processed userContent for AI:", JSON.stringify(result, null, 2))
+	return result
 }
