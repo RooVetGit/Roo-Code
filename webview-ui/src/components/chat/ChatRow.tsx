@@ -1083,7 +1083,12 @@ export const ChatRowContent = ({
 								</div>
 							) : (
 								<div className="flex justify-between">
-									<div className="flex-grow px-2 py-1 wrap-anywhere">
+									<div
+										className="flex-grow px-2 py-1 wrap-anywhere"
+										onDoubleClick={(e) => {
+											e.stopPropagation()
+											handleEditClick()
+										}}>
 										<Mention text={message.text} withShadow />
 									</div>
 									<div className="flex">

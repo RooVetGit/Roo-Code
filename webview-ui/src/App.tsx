@@ -93,6 +93,9 @@ const App = () => {
 		messageTs: 0,
 	})
 
+	// Track if the user has seen the edit warning - using ref to persist across renders
+	const hasSeenEditWarningRef = useRef<boolean>(false)
+
 	const [editMessageDialogState, setEditMessageDialogState] = useState<EditMessageDialogState>({
 		isOpen: false,
 		messageTs: 0,
@@ -160,12 +163,23 @@ const App = () => {
 			}
 
 			if (message.type === "showEditMessageDialog" && message.messageTs && message.text) {
-				setEditMessageDialogState({
-					isOpen: true,
-					messageTs: message.messageTs,
-					text: message.text,
-					images: message.images || [],
-				})
+				// If the user has already seen the warning, skip the dialog and directly edit
+				if (hasSeenEditWarningRef.current) {
+					vscode.postMessage({
+						type: "editMessageConfirm",
+						messageTs: message.messageTs,
+						text: message.text,
+						images: message.images || [],
+					})
+				} else {
+					// Show the warning dialog for the first time
+					setEditMessageDialogState({
+						isOpen: true,
+						messageTs: message.messageTs,
+						text: message.text,
+						images: message.images || [],
+					})
+				}
 			}
 
 			if (message.type === "acceptInput") {
@@ -283,6 +297,8 @@ const App = () => {
 				open={editMessageDialogState.isOpen}
 				onOpenChange={(open) => setEditMessageDialogState((prev) => ({ ...prev, isOpen: open }))}
 				onConfirm={() => {
+					// Mark that the user has seen the edit warning
+					hasSeenEditWarningRef.current = true
 					vscode.postMessage({
 						type: "editMessageConfirm",
 						messageTs: editMessageDialogState.messageTs,
