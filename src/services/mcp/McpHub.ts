@@ -132,7 +132,7 @@ export class McpHub {
 	private isDisposed: boolean = false
 	connections: McpConnection[] = []
 	isConnecting: boolean = false
-	private configChangeDebounceTimers: Map<string, NodeJS.Timeout> = new Map()
+	private configChangeDebounceTimers: Map<string, NodeJS.Timeout | null> = new Map()
 	private isInitializing: boolean = true // Flag to prevent duplicate connections during initialization
 
 	constructor(provider: ClineProvider) {
@@ -275,9 +275,19 @@ export class McpHub {
 
 		const key = `${source}-${filePath}`
 
+		// Check if we should skip this change (e.g., from toggleServerDisabled)
+		if (this.configChangeDebounceTimers.has(key)) {
+			const timer = this.configChangeDebounceTimers.get(key)
+			// If the timer value is null, it means we should skip this change
+			if (timer === null) {
+				console.log(`[McpHub] Skipping file watcher trigger for ${source} config (programmatic change)`)
+				return
+			}
+		}
+
 		// Clear existing timer if any
 		const existingTimer = this.configChangeDebounceTimers.get(key)
-		if (existingTimer) {
+		if (existingTimer && existingTimer !== null) {
 			clearTimeout(existingTimer)
 		}
 
@@ -291,6 +301,8 @@ export class McpHub {
 	}
 
 	private async handleConfigFileChange(filePath: string, source: "global" | "project"): Promise<void> {
+		console.log(`[McpHub] handleConfigFileChange called for ${source} config at ${filePath}`)
+
 		try {
 			const content = await fs.readFile(filePath, "utf-8")
 			let config: any
@@ -314,6 +326,7 @@ export class McpHub {
 				return
 			}
 
+			console.log(`[McpHub] File watcher triggering updateServerConnections for ${source}`)
 			await this.updateServerConnections(result.data.mcpServers || {}, source)
 		} catch (error) {
 			// Check if the error is because the file doesn't exist
@@ -571,9 +584,11 @@ export class McpHub {
 		config: z.infer<typeof ServerConfigSchema>,
 		source: "global" | "project" = "global",
 	): Promise<void> {
+		console.log(`[McpHub] connectToServer called for ${name}, source=${source}, disabled=${config.disabled}`)
+
 		// Check if server is disabled before attempting to connect
 		if (config.disabled) {
-			console.log(`Skipping connection to disabled server: ${name}`)
+			console.log(`[McpHub] Skipping connection to disabled server: ${name}`)
 			return
 		}
 
@@ -965,6 +980,10 @@ export class McpHub {
 		source: "global" | "project" = "global",
 		manageConnectingState: boolean = true,
 	): Promise<void> {
+		console.log(
+			`[McpHub] updateServerConnections called for source=${source}, servers=${Object.keys(newServers).join(", ")}`,
+		)
+
 		if (manageConnectingState) {
 			this.isConnecting = true
 		}
@@ -1341,6 +1360,10 @@ export class McpHub {
 		source?: "global" | "project",
 	): Promise<void> {
 		try {
+			console.log(
+				`[McpHub] toggleServerDisabled called for ${serverName}, disabled=${disabled}, source=${source}`,
+			)
+
 			// Find the connection to determine if it's a global or project server
 			const connection = this.findConnection(serverName, source)
 			if (!connection) {
@@ -1348,11 +1371,29 @@ export class McpHub {
 			}
 
 			const serverSource = connection.server.source || "global"
+
+			// Get the config file path
+			let configPath: string
+			if (serverSource === "project") {
+				const projectMcpPath = await this.getProjectMcpPath()
+				if (!projectMcpPath) {
+					throw new Error("Project MCP configuration file not found")
+				}
+				configPath = projectMcpPath
+			} else {
+				configPath = await this.getMcpSettingsFilePath()
+			}
+
+			// Set a null timer to indicate we should skip the next file change event
+			const configChangeKey = `${serverSource}-${configPath}`
+			this.configChangeDebounceTimers.set(configChangeKey, null)
+
 			// Update the server config in the appropriate file
 			await this.updateServerConfig(serverName, { disabled }, serverSource)
 
 			// If disabling the server, update the connection state and disconnect
 			if (disabled) {
+				console.log(`[McpHub] Disabling server ${serverName}`)
 				// First update the config file
 				connection.server.disabled = true
 
@@ -1383,19 +1424,8 @@ export class McpHub {
 				}
 				this.connections.push(placeholderConnection)
 			} else {
+				console.log(`[McpHub] Enabling server ${serverName}`)
 				// If enabling the server, we need to re-read the config and reconnect
-				// Get the updated config from the file
-				let configPath: string
-				if (serverSource === "project") {
-					const projectMcpPath = await this.getProjectMcpPath()
-					if (!projectMcpPath) {
-						throw new Error("Project MCP configuration file not found")
-					}
-					configPath = projectMcpPath
-				} else {
-					configPath = await this.getMcpSettingsFilePath()
-				}
-
 				const content = await fs.readFile(configPath, "utf-8")
 				const fileConfig = JSON.parse(content)
 				const serverConfig = fileConfig.mcpServers?.[serverName]
@@ -1407,6 +1437,11 @@ export class McpHub {
 			}
 
 			await this.notifyWebviewOfServerChanges()
+
+			// Clear the skip flag after a delay to allow the file watcher to work normally again
+			setTimeout(() => {
+				this.configChangeDebounceTimers.delete(configChangeKey)
+			}, 1000) // Wait 1 second before allowing file watcher to trigger again
 		} catch (error) {
 			this.showErrorMessage(`Failed to update server ${serverName} state`, error)
 			throw error
@@ -1755,7 +1790,9 @@ export class McpHub {
 
 		// Clear all debounce timers
 		for (const timer of this.configChangeDebounceTimers.values()) {
-			clearTimeout(timer)
+			if (timer !== null) {
+				clearTimeout(timer)
+			}
 		}
 		this.configChangeDebounceTimers.clear()
 

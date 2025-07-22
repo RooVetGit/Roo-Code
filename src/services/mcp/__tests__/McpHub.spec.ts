@@ -1736,5 +1736,130 @@ describe("McpHub", () => {
 				}),
 			)
 		})
+
+		it("should not create duplicate connections when toggling disabled state", async () => {
+			// Mock the config file read
+			const mockConfig = {
+				mcpServers: {
+					github: {
+						type: "stdio" as const,
+						command: "node",
+						args: ["github-server.js"],
+						disabled: false,
+						timeout: 60,
+						cwd: process.cwd(),
+						alwaysAllow: [],
+						disabledTools: [],
+					},
+				},
+			}
+			vi.mocked(fs.readFile).mockResolvedValue(JSON.stringify(mockConfig))
+
+			// Mock StdioClientTransport
+			const mockTransport = {
+				start: vi.fn().mockResolvedValue(undefined),
+				close: vi.fn().mockResolvedValue(undefined),
+				stderr: {
+					on: vi.fn(),
+				},
+				onerror: null,
+				onclose: null,
+			}
+
+			const StdioClientTransport = (await import("@modelcontextprotocol/sdk/client/stdio.js"))
+				.StdioClientTransport as ReturnType<typeof vi.fn>
+			StdioClientTransport.mockClear()
+			StdioClientTransport.mockImplementation(() => mockTransport)
+
+			// Mock Client
+			const mockClient = {
+				connect: vi.fn().mockResolvedValue(undefined),
+				close: vi.fn().mockResolvedValue(undefined),
+				getInstructions: vi.fn().mockReturnValue("test instructions"),
+				request: vi.fn().mockResolvedValue({ tools: [], resources: [], resourceTemplates: [] }),
+			}
+			const Client = (await import("@modelcontextprotocol/sdk/client/index.js")).Client as ReturnType<
+				typeof vi.fn
+			>
+			Client.mockClear()
+			Client.mockImplementation(() => mockClient)
+
+			// Create a new McpHub instance
+			const newMcpHub = new McpHub(mockProvider as ClineProvider)
+
+			// Wait for initialization to complete
+			await new Promise((resolve) => setTimeout(resolve, 200))
+
+			// Verify initial connection
+			expect(StdioClientTransport).toHaveBeenCalledTimes(1)
+			expect(mockClient.connect).toHaveBeenCalledTimes(1)
+			expect(newMcpHub.connections.length).toBe(1)
+
+			// Clear mocks
+			StdioClientTransport.mockClear()
+			Client.mockClear()
+			mockClient.connect.mockClear()
+			mockClient.close.mockClear()
+
+			// Toggle to disabled
+			await newMcpHub.toggleServerDisabled("github", true, "global")
+
+			// Verify server was disconnected
+			expect(mockClient.close).toHaveBeenCalledTimes(1)
+			expect(mockTransport.close).toHaveBeenCalledTimes(1)
+
+			// Clear mocks again
+			mockClient.close.mockClear()
+			mockTransport.close.mockClear()
+
+			// Update mock to return disabled config
+			vi.mocked(fs.readFile).mockResolvedValue(
+				JSON.stringify({
+					mcpServers: {
+						github: {
+							...mockConfig.mcpServers.github,
+							disabled: true,
+						},
+					},
+				}),
+			)
+
+			// Wait to ensure file watcher would have triggered if not prevented
+			await new Promise((resolve) => setTimeout(resolve, 1000))
+
+			// Verify no duplicate connections were created
+			expect(StdioClientTransport).not.toHaveBeenCalled()
+			expect(mockClient.connect).not.toHaveBeenCalled()
+
+			// Now toggle back to enabled
+			vi.mocked(fs.readFile).mockResolvedValue(
+				JSON.stringify({
+					mcpServers: {
+						github: {
+							...mockConfig.mcpServers.github,
+							disabled: false,
+						},
+					},
+				}),
+			)
+
+			// Create new mocks for the re-enabled connection
+			const newMockClient = {
+				connect: vi.fn().mockResolvedValue(undefined),
+				close: vi.fn().mockResolvedValue(undefined),
+				getInstructions: vi.fn().mockReturnValue("test instructions"),
+				request: vi.fn().mockResolvedValue({ tools: [], resources: [], resourceTemplates: [] }),
+			}
+			Client.mockImplementation(() => newMockClient)
+
+			await newMcpHub.toggleServerDisabled("github", false, "global")
+
+			// Wait a bit to ensure file watcher would have triggered
+			await new Promise((resolve) => setTimeout(resolve, 1500))
+
+			// Verify only one new connection was created (not two)
+			expect(StdioClientTransport).toHaveBeenCalledTimes(1)
+			expect(newMockClient.connect).toHaveBeenCalledTimes(1)
+		})
 	})
 })
