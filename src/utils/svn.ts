@@ -453,6 +453,44 @@ export async function getSvnWorkingState(cwd: string): Promise<{
 			// Diff might not be available
 		}
 
+		// If diff is empty but we have untracked files, provide additional information
+		if (!diff.trim() && status.trim()) {
+			const untrackedFiles = status
+				.split("\n")
+				.filter((line) => line.trim().startsWith("?"))
+				.map((line) => line.trim().substring(1).trim())
+
+			if (untrackedFiles.length > 0) {
+				console.log("[DEBUG] Found untracked files, attempting to show content preview")
+				let additionalInfo = "\n\nNote: The following files are untracked (not under version control):\n"
+
+				for (const file of untrackedFiles.slice(0, 3)) {
+					// Limit to first 3 files
+					try {
+						const filePath = path.resolve(cwd, file)
+						const stats = await fs.stat(filePath)
+
+						if (stats.isFile() && stats.size < 10000) {
+							// Only show content for small files
+							const content = await fs.readFile(filePath, "utf-8")
+							const preview = content.length > 500 ? content.substring(0, 500) + "..." : content
+							additionalInfo += `\n--- Content of ${file} ---\n${preview}\n`
+						} else {
+							additionalInfo += `\n--- ${file} (${stats.isFile() ? "file" : "directory"}) ---\n`
+						}
+					} catch (error) {
+						additionalInfo += `\n--- ${file} (unable to read: ${error.message}) ---\n`
+					}
+				}
+
+				if (untrackedFiles.length > 3) {
+					additionalInfo += `\n... and ${untrackedFiles.length - 3} more untracked files`
+				}
+
+				diff = additionalInfo
+			}
+		}
+
 		const result = { status, diff }
 		console.log("[DEBUG] getSvnWorkingState returning:", JSON.stringify(result))
 		return result
