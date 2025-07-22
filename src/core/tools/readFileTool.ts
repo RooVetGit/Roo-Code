@@ -14,6 +14,8 @@ import { readLines } from "../../integrations/misc/read-lines"
 import { extractTextFromFile, addLineNumbers, getSupportedBinaryFormats } from "../../integrations/misc/extract-text"
 import { parseSourceCodeDefinitionsForFile } from "../../services/tree-sitter"
 import { parseXml } from "../../utils/xml"
+import { getInvalidRanges, calculateFileMetadata, subtractRanges, mergeRanges } from "../file-history/fileHistoryUtils"
+import { FileLineRange, FileMetadata } from "../task-persistence/apiMessages"
 
 export function getReadFileToolDescription(blockName: string, blockParams: any): string {
 	// Handle both single path and multiple files via args
@@ -185,6 +187,9 @@ export async function readFileTool(
 		lineRanges: entry.lineRanges,
 	}))
 
+	const optimizedRangeMap = new Map<string, FileLineRange[]>()
+	const originalRequestedRangeMap = new Map<string, FileLineRange[]>()
+
 	// Function to update file result status
 	const updateFileResult = (path: string, updates: Partial<FileResult>) => {
 		const index = fileResults.findIndex((result) => result.path === path)
@@ -246,7 +251,70 @@ export async function readFileTool(
 					continue
 				}
 
-				// Add to files that need approval
+				// Check history validation before approval
+				const { maxReadFileLine = -1 } = (await cline.providerRef.deref()?.getState()) ?? {}
+
+				// Convert line ranges to FileLineRange format for history checking
+				let requestedRanges: FileLineRange[] = []
+				if (fileResult.lineRanges && fileResult.lineRanges.length > 0) {
+					requestedRanges = fileResult.lineRanges.map((range) => ({
+						start: range.start,
+						end: range.end,
+					}))
+				} else {
+					// For full file reads, we need to determine the total lines first
+					try {
+						const totalLines = await countFileLines(fullPath)
+						if (totalLines > 0) {
+							if (maxReadFileLine > 0 && totalLines > maxReadFileLine) {
+								requestedRanges = [{ start: 1, end: maxReadFileLine }]
+							} else if (maxReadFileLine !== 0) {
+								// Skip for definitions-only mode
+								requestedRanges = [{ start: 1, end: totalLines }]
+							}
+						}
+					} catch (error) {
+						// If we can't count lines, we'll proceed with the read and let it fail naturally
+					}
+				}
+
+				// Use consolidated function to check if ranges need to be read
+				if (requestedRanges.length > 0) {
+					try {
+						const result = await getInvalidRanges(cline, relPath, requestedRanges)
+
+						console.log(
+							`[DEBUG] ${relPath}: rangesToRead=${result?.rangesToRead?.length || "undefined"}, requested=${requestedRanges.length}`,
+						)
+
+						// If undefined is returned, it means a catastrophic failure in getInvalidRanges, not a rejection
+						if (!result) {
+							// For safety, proceed with the read as if history check failed
+							console.warn(
+								`[readFileTool] History check returned undefined for ${relPath}. Proceeding with original ranges.`,
+							)
+						} else if (result.rangesToRead.length === 0 && requestedRanges.length > 0) {
+							console.log(`[DEBUG] REJECTING ${relPath} - all content already valid`)
+							const beforeNumbers = result.validMessageIndices.map((i) => i + 1).sort((a, b) => a - b)
+							const errorMsg = `All requested content is already valid in conversation history at ${beforeNumbers.length > 1 ? "messages" : "message"} ${beforeNumbers.join(", ")} before this response and does not need to be re-read`
+
+							updateFileResult(relPath, {
+								status: "blocked",
+								error: errorMsg,
+								xmlContent: `<file><path>${relPath}</path><error>${errorMsg}</error></file>`,
+							})
+							continue
+						} else {
+							optimizedRangeMap.set(relPath, result.rangesToRead)
+							originalRequestedRangeMap.set(relPath, requestedRanges)
+						}
+					} catch (error) {
+						// If history checking fails, proceed with the read
+						console.warn(`[readFileTool] History check failed for ${relPath}:`, error)
+					}
+				}
+
+				// Add to files that need approval (ONLY if not blocked by history check)
 				filesToApprove.push(fileResult)
 			}
 		}
@@ -451,9 +519,24 @@ export async function readFileTool(
 				}
 
 				// Handle range reads (bypass maxReadFileLine)
-				if (fileResult.lineRanges && fileResult.lineRanges.length > 0) {
+				const optimizedRanges = optimizedRangeMap.get(relPath)
+				const originalRanges = originalRequestedRangeMap.get(relPath)
+				const rangesToRead = optimizedRanges || fileResult.lineRanges || []
+
+				if (rangesToRead.length > 0) {
 					const rangeResults: string[] = []
-					for (const range of fileResult.lineRanges) {
+
+					if (originalRanges && optimizedRanges) {
+						const skippedRanges = subtractRanges(originalRanges, optimizedRanges)
+						if (skippedRanges.length > 0) {
+							const skippedRangeText = skippedRanges.map((r) => `${r.start}-${r.end}`).join(", ")
+							const newRangeText = optimizedRanges.map((r) => `${r.start}-${r.end}`).join(", ")
+							const notice = `Lines ${skippedRangeText} already available in conversation history, showing only new lines ${newRangeText}`
+							fileResult.notice = notice
+						}
+					}
+
+					for (const range of rangesToRead) {
 						const content = addLineNumbers(
 							await readLines(fullPath, range.end - 1, range.start - 1),
 							range.start,
@@ -461,8 +544,15 @@ export async function readFileTool(
 						const lineRangeAttr = ` lines="${range.start}-${range.end}"`
 						rangeResults.push(`<content${lineRangeAttr}>\n${content}</content>`)
 					}
+
+					let xmlContent = `<file><path>${relPath}</path>\n`
+					if (fileResult.notice) {
+						xmlContent += `<notice>${fileResult.notice}</notice>\n`
+					}
+					xmlContent += `${rangeResults.join("\n")}\n</file>`
+
 					updateFileResult(relPath, {
-						xmlContent: `<file><path>${relPath}</path>\n${rangeResults.join("\n")}\n</file>`,
+						xmlContent,
 					})
 					continue
 				}
@@ -573,6 +663,51 @@ export async function readFileTool(
 			}
 		}
 
+		// Calculate file metadata for successfully read files
+		const fileMetadataList: FileMetadata[] = []
+		for (const fileResult of fileResults) {
+			if (fileResult.status === "approved" && fileResult.xmlContent) {
+				const relPath = fileResult.path
+
+				try {
+					// Convert line ranges to FileLineRange format
+					let validRanges: FileLineRange[] = []
+					const optimizedRanges = optimizedRangeMap.get(relPath)
+
+					if (optimizedRanges) {
+						validRanges = optimizedRanges
+					} else if (fileResult.lineRanges && fileResult.lineRanges.length > 0) {
+						validRanges = fileResult.lineRanges.map((range) => ({
+							start: range.start,
+							end: range.end,
+						}))
+					} else {
+						// For full file reads, determine the actual range that was read
+						const fullPath = path.resolve(cline.cwd, relPath)
+						const totalLines = await countFileLines(fullPath)
+						const { maxReadFileLine = -1 } = (await cline.providerRef.deref()?.getState()) ?? {}
+
+						if (totalLines > 0) {
+							if (maxReadFileLine > 0 && totalLines > maxReadFileLine) {
+								validRanges = [{ start: 1, end: maxReadFileLine }]
+							} else if (maxReadFileLine !== 0) {
+								// Skip for definitions-only mode
+								validRanges = [{ start: 1, end: totalLines }]
+							}
+						}
+					}
+
+					// Use consolidated function to calculate metadata
+					const fileMetadata = await calculateFileMetadata(cline, relPath, "read", validRanges)
+					fileMetadataList.push(fileMetadata)
+				} catch (error) {
+					// If we can't determine ranges, skip this file's metadata
+					console.warn(`[readFileTool] Failed to calculate metadata for ${relPath}:`, error)
+					continue
+				}
+			}
+		}
+
 		// Push the result with appropriate formatting
 		if (statusMessage) {
 			const result = formatResponse.toolResult(statusMessage, feedbackImages)
@@ -588,6 +723,15 @@ export async function readFileTool(
 		} else {
 			// No status message, just push the files XML
 			pushToolResult(filesXml)
+		}
+
+		// Set pending metadata to be attached to next API message
+		if (fileMetadataList.length > 0) {
+			cline.pendingFileMetadata = fileMetadataList
+			cline.pendingToolMetadata = {
+				name: "read_file",
+				operation: "read",
+			}
 		}
 	} catch (error) {
 		// Handle all errors using per-file format for consistency

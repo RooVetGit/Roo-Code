@@ -409,6 +409,11 @@ export async function presentAssistantMessage(cline: Task) {
 				}
 			}
 
+			// Clear mtime map once at the start of tool execution
+			if (!block.partial) {
+				cline.clearMtimeMap()
+			}
+
 			switch (block.name) {
 				case "write_to_file":
 					await writeToFileTool(cline, block, askApproval, handleError, pushToolResult, removeClosingTag)

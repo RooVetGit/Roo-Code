@@ -9,7 +9,28 @@ import { fileExistsAtPath } from "../../utils/fs"
 import { GlobalFileNames } from "../../shared/globalFileNames"
 import { getTaskDirectoryPath } from "../../utils/storage"
 
-export type ApiMessage = Anthropic.MessageParam & { ts?: number; isSummary?: boolean }
+export interface FileLineRange {
+	start: number
+	end: number
+}
+
+export interface FileMetadata {
+	path: string
+	mtime: number
+	validRanges: FileLineRange[]
+}
+
+export interface ToolMetadata {
+	name: string
+	operation: "read" | "write" | "modify"
+}
+
+export type ApiMessage = Anthropic.MessageParam & {
+	ts?: number
+	isSummary?: boolean
+	files?: FileMetadata[]
+	tool?: ToolMetadata
+}
 
 export async function readApiMessages({
 	taskId,
