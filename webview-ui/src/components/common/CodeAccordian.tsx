@@ -72,15 +72,16 @@ const CodeAccordian = ({
 					)}
 					{onJumpToFile && path && (
 						<span
-							className="codicon codicon-link-external mr-2 cursor-pointer"
-							style={{ fontSize: 13.5, margin: "1px 0" }}
+							className="codicon codicon-link-external mr-1"
+							style={{ fontSize: 13.5 }}
 							onClick={(e) => {
 								e.stopPropagation()
 								onJumpToFile()
 							}}
+							aria-label={`Open file: ${path}`}
 						/>
 					)}
-					<span className={`codicon codicon-chevron-${isExpanded ? "up" : "down"}`}></span>
+					{!onJumpToFile && <span className={`codicon codicon-chevron-${isExpanded ? "up" : "down"}`}></span>}
 				</ToolUseBlockHeader>
 			)}
 			{(!hasHeader || isExpanded) && (
