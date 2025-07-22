@@ -129,6 +129,7 @@ export interface WebviewMessage {
 		| "mcpEnabled"
 		| "enableMcpServerCreation"
 		| "searchCommits"
+		| "searchSvnCommits"
 		| "alwaysApproveResubmit"
 		| "requestDelaySeconds"
 		| "setApiConfigPassword"

@@ -116,6 +116,45 @@ const ContextMenu: React.FC<ContextMenuProps> = ({
 				} else {
 					return <span>Git Commits</span>
 				}
+			case ContextMenuOptionType.Svn:
+				if (option.value) {
+					return (
+						<div
+							style={{
+								flex: 1,
+								overflow: "hidden",
+								display: "flex",
+								flexDirection: "column",
+								alignItems: "flex-start",
+								justifyContent: "center",
+								textAlign: "left",
+							}}>
+							<span
+								style={{
+									whiteSpace: "nowrap",
+									overflow: "hidden",
+									textOverflow: "ellipsis",
+									width: "100%",
+								}}>
+								{option.label}
+							</span>
+							<span
+								style={{
+									fontSize: "0.75em",
+									opacity: 0.75,
+									whiteSpace: "nowrap",
+									overflow: "hidden",
+									textOverflow: "ellipsis",
+									width: "100%",
+									lineHeight: "1.2",
+								}}>
+								{option.description}
+							</span>
+						</div>
+					)
+				} else {
+					return <span>SVN Commits</span>
+				}
 			case ContextMenuOptionType.File:
 			case ContextMenuOptionType.OpenedFile:
 			case ContextMenuOptionType.Folder:
@@ -176,6 +215,8 @@ const ContextMenu: React.FC<ContextMenuProps> = ({
 			case ContextMenuOptionType.URL:
 				return "link"
 			case ContextMenuOptionType.Git:
+				return "git-commit"
+			case ContextMenuOptionType.Svn:
 				return "git-commit"
 			case ContextMenuOptionType.NoResults:
 				return "info"
@@ -282,7 +323,8 @@ const ContextMenu: React.FC<ContextMenuProps> = ({
 							</div>
 							{(option.type === ContextMenuOptionType.File ||
 								option.type === ContextMenuOptionType.Folder ||
-								option.type === ContextMenuOptionType.Git) &&
+								option.type === ContextMenuOptionType.Git ||
+								option.type === ContextMenuOptionType.Svn) &&
 								!option.value && (
 									<i
 										className="codicon codicon-chevron-right"

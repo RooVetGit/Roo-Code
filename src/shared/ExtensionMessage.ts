@@ -13,6 +13,7 @@ import type {
 } from "@roo-code/types"
 
 import { GitCommit } from "../utils/git"
+import { SvnCommit } from "../utils/svn"
 
 import { McpServer } from "./mcp"
 import { Mode } from "./modes"
@@ -61,6 +62,7 @@ export interface ExtensionMessage {
 		| "mcpServers"
 		| "enhancedPrompt"
 		| "commitSearchResults"
+		| "svnCommitSearchResults"
 		| "listApiConfig"
 		| "routerModels"
 		| "openAiModels"
@@ -137,6 +139,7 @@ export interface ExtensionMessage {
 	vsCodeLmModels?: { vendor?: string; family?: string; version?: string; id?: string }[]
 	mcpServers?: McpServer[]
 	commits?: GitCommit[]
+	svnCommits?: SvnCommit[]
 	listApiConfig?: ProviderSettingsEntry[]
 	mode?: Mode
 	customMode?: ModeConfig
