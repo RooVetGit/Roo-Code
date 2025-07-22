@@ -110,8 +110,8 @@ export interface ExtensionMessage {
 		| "showDeleteMessageDialog"
 		| "showEditMessageDialog"
 		| "filesChanged"
-		| "checkpoint_created"
-		| "checkpoint_restored"
+		| "checkpointCreated"
+		| "checkpointRestored"
 		| "say"
 	text?: string
 	payload?: any // Add a generic payload for now, can refine later
@@ -168,8 +168,8 @@ export interface ExtensionMessage {
 	messageTs?: number
 	context?: string
 	filesChanged?: FileChangeset // Added filesChanged property
-	checkpoint?: string // For checkpoint_created and checkpoint_restored messages
-	previousCheckpoint?: string // For checkpoint_created message
+	checkpoint?: string // For checkpointCreated and checkpointRestored messages
+	previousCheckpoint?: string // For checkpointCreated message
 	say?: ClineSay // Added say property
 }
 
