@@ -26,7 +26,7 @@ export class MoonshotHandler extends OpenAiHandler {
 		return { id, info, ...params }
 	}
 
-	// Override to handle DeepSeek's usage metrics, including caching.
+	// Override to handle Moonshot's usage metrics, including caching.
 	protected override processUsageMetrics(usage: any): ApiStreamUsageChunk {
 		return {
 			type: "usage",
