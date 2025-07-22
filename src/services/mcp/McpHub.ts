@@ -133,7 +133,6 @@ export class McpHub {
 	connections: McpConnection[] = []
 	isConnecting: boolean = false
 	private configChangeDebounceTimers: Map<string, NodeJS.Timeout> = new Map()
-	private toggleOperations: Map<string, Promise<void>> = new Map() // Track ongoing toggle operations
 	private isInitializing: boolean = true // Flag to prevent duplicate connections during initialization
 
 	constructor(provider: ClineProvider) {
@@ -315,19 +314,7 @@ export class McpHub {
 				return
 			}
 
-			// Check if any servers have toggle operations in progress
-			const servers = result.data.mcpServers || {}
-			const hasActiveToggleOperations = Object.keys(servers).some((serverName) => {
-				const operationKey = `${serverName}-${source}`
-				return this.toggleOperations.has(operationKey)
-			})
-
-			if (hasActiveToggleOperations) {
-				console.log(`Skipping config file change for ${source} - toggle operations in progress`)
-				return
-			}
-
-			await this.updateServerConnections(servers, source)
+			await this.updateServerConnections(result.data.mcpServers || {}, source)
 		} catch (error) {
 			// Check if the error is because the file doesn't exist
 			if (error.code === "ENOENT" && source === "project") {
@@ -953,8 +940,13 @@ export class McpHub {
 
 		for (const connection of connections) {
 			try {
-				await connection.transport.close()
-				await connection.client.close()
+				// Only try to close transport and client if they exist (not null for disabled servers)
+				if (connection.transport) {
+					await connection.transport.close()
+				}
+				if (connection.client) {
+					await connection.client.close()
+				}
 			} catch (error) {
 				console.error(`Failed to close transport for ${name}:`, error)
 			}
@@ -1344,33 +1336,6 @@ export class McpHub {
 	}
 
 	public async toggleServerDisabled(
-		serverName: string,
-		disabled: boolean,
-		source?: "global" | "project",
-	): Promise<void> {
-		// Check if there's already a toggle operation in progress for this server
-		const operationKey = `${serverName}-${source || "global"}`
-		const existingOperation = this.toggleOperations.get(operationKey)
-
-		if (existingOperation) {
-			console.log(`Toggle operation already in progress for ${operationKey}, waiting...`)
-			await existingOperation
-			return
-		}
-
-		// Create a new toggle operation
-		const toggleOperation = this._performToggleServerDisabled(serverName, disabled, source)
-		this.toggleOperations.set(operationKey, toggleOperation)
-
-		try {
-			await toggleOperation
-		} finally {
-			// Clean up the operation from the map
-			this.toggleOperations.delete(operationKey)
-		}
-	}
-
-	private async _performToggleServerDisabled(
 		serverName: string,
 		disabled: boolean,
 		source?: "global" | "project",
