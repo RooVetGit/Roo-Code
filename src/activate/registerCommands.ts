@@ -230,7 +230,7 @@ const getCommandsMap = ({ context, outputChannel, provider }: RegisterCommandOpt
 		SvnLogger.info(`Starting SVN debug for workspace: ${workspaceRoot}`)
 
 		try {
-			// 检查 SVN 是否安装
+			// check svn installed
 			SvnLogger.info("Checking if SVN is installed...")
 			const svnInstalled = await checkSvnInstalled()
 			SvnLogger.info(`SVN installed: ${svnInstalled}`)
@@ -240,7 +240,7 @@ const getCommandsMap = ({ context, outputChannel, provider }: RegisterCommandOpt
 				return
 			}
 
-			// 检查是否是 SVN 仓库
+			// check svn repo
 			SvnLogger.info("Checking if current directory is an SVN repository...")
 			const isSvnRepo = await checkSvnRepo(workspaceRoot)
 			SvnLogger.info(`Is SVN repository: ${isSvnRepo}`)
@@ -250,12 +250,12 @@ const getCommandsMap = ({ context, outputChannel, provider }: RegisterCommandOpt
 				return
 			}
 
-			// 获取 SVN 仓库信息
+			// get svn repo info
 			SvnLogger.info("Getting SVN repository information...")
 			const repoInfo = await getSvnRepositoryInfo(workspaceRoot)
 			SvnLogger.info(`Repository info: ${JSON.stringify(repoInfo, null, 2)}`)
 
-			// 搜索最近的提交
+			// search recent commits
 			SvnLogger.info("Searching for recent commits...")
 			const commits = await searchSvnCommits("", workspaceRoot)
 			SvnLogger.info(`Found ${commits.length} commits`)
