@@ -327,5 +327,8 @@
 		"title": "Roo Code Cloud sắp ra mắt!",
 		"description": "Chạy các agent từ xa trên cloud, truy cập các tác vụ của bạn từ mọi nơi, cộng tác với người khác và nhiều hơn nữa.",
 		"joinWaitlist": "Tham gia danh sách chờ để được truy cập sớm."
+	},
+	"editMessage": {
+		"placeholder": "Chỉnh sửa tin nhắn của bạn..."
 	}
 }
