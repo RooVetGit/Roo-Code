@@ -79,7 +79,7 @@ type TruncateOptions = {
 	currentProfileId: string
 }
 
-type TruncateResponse = SummarizeResponse & { prevContextTokens: number }
+export type TruncateResponse = SummarizeResponse & { prevContextTokens: number }
 
 /**
  * Conditionally truncates the conversation messages if the total token count

@@ -2,6 +2,7 @@ import * as vscode from "vscode"
 import { createHash } from "crypto"
 import { ICacheManager } from "./interfaces/cache"
 import debounce from "lodash.debounce"
+import { safeReadJson } from "../../utils/safeReadJson"
 import { safeWriteJson } from "../../utils/safeWriteJson"
 import { TelemetryService } from "@roo-code/telemetry"
 import { TelemetryEventName } from "@roo-code/types"
@@ -37,8 +38,7 @@ export class CacheManager implements ICacheManager {
 	 */
 	async initialize(): Promise<void> {
 		try {
-			const cacheData = await vscode.workspace.fs.readFile(this.cachePath)
-			this.fileHashes = JSON.parse(cacheData.toString())
+			this.fileHashes = await safeReadJson(this.cachePath.fsPath)
 		} catch (error) {
 			this.fileHashes = {}
 			TelemetryService.instance.captureEvent(TelemetryEventName.CODE_INDEX_ERROR, {
