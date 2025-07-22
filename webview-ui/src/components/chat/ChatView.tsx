@@ -3,7 +3,6 @@ import { useDeepCompareEffect, useEvent, useMount } from "react-use"
 import debounce from "debounce"
 import { Virtuoso, type VirtuosoHandle } from "react-virtuoso"
 import removeMd from "remove-markdown"
-import { Trans } from "react-i18next"
 import { VSCodeButton } from "@vscode/webview-ui-toolkit/react"
 import useSound from "use-sound"
 import { LRUCache } from "lru-cache"
@@ -32,7 +31,6 @@ import {
 	parseCommand,
 } from "@src/utils/command-validation"
 import { useTranslation } from "react-i18next"
-import { buildDocLink } from "@src/utils/docLinks"
 import { useAppTranslation } from "@src/i18n/TranslationContext"
 import { useExtensionState } from "@src/context/ExtensionStateContext"
 import { useSelectedModel } from "@src/components/ui/hooks/useSelectedModel"
@@ -1696,20 +1694,30 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 
 						<RooHero />
 						{telemetrySetting === "unset" && <TelemetryBanner />}
-						<p className="text-vscode-editor-foreground leading-tight font-vscode-font-family text-center text-balance max-w-[380px] mx-auto my-0">
-							<Trans
-								i18nKey="chat:about"
-								components={{
-									DocsLink: (
-										<a href={buildDocLink("", "welcome")} target="_blank" rel="noopener noreferrer">
-											the docs
-										</a>
-									),
-								}}
-							/>
-						</p>
+
 						<div className="mb-2.5">
-							<RooTips />
+							{taskHistory.length < 4 ? (
+								<RooTips />
+							) : (
+								<div className="border border-muted/20 px-4 py-1 text-center flex items-start gap-2">
+									<i className="mr-1 codicon codicon-cloud text-xl! mt-2 text-vscode-descriptionForeground" />
+									<div className="text-left">
+										<p>
+											<strong>Roo Code Cloud is coming soon!</strong>
+											<br />
+											<span>
+												Run Roomote agents in the cloud, access your tasks from anywhere,
+												collaborate with others, and more.
+											</span>
+										</p>
+										<p>
+											<a href="https://shard-dogwood-daf.notion.site/238fd1401b0a8087b858e1ad431507cf?pvs=105">
+												Join the waitlist to get early access.
+											</a>
+										</p>
+									</div>
+								</div>
+							)}
 						</div>
 						{/* Show the task history preview if expanded and tasks exist */}
 						{taskHistory.length > 0 && isExpanded && <HistoryPreview />}
