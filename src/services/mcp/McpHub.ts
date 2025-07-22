@@ -1207,6 +1207,15 @@ export class McpHub {
 				}
 			}
 
+			// Store disabled state before clearing connections
+			const disabledServers = new Map<string, boolean>()
+			for (const conn of this.connections) {
+				if (conn.server.disabled) {
+					const key = `${conn.server.name}-${conn.server.source || "global"}`
+					disabledServers.set(key, true)
+				}
+			}
+
 			// Clear all existing connections first
 			const existingConnections = [...this.connections]
 			for (const conn of existingConnections) {
@@ -1217,6 +1226,15 @@ export class McpHub {
 			// This ensures proper initialization including fetching tools, resources, etc.
 			await this.initializeMcpServers("global")
 			await this.initializeMcpServers("project")
+
+			// Re-apply disabled state to servers that were disabled before refresh
+			for (const conn of this.connections) {
+				const key = `${conn.server.name}-${conn.server.source || "global"}`
+				if (disabledServers.has(key) && !conn.server.disabled) {
+					// Server was disabled before refresh but got re-enabled, disable it again
+					await this.toggleServerDisabled(conn.server.name, true, conn.server.source)
+				}
+			}
 
 			await delay(100)
 
@@ -1339,8 +1357,35 @@ export class McpHub {
 
 			// If disabling the server, update the connection state and disconnect
 			if (disabled) {
+				// First update the config file
 				connection.server.disabled = true
+
+				// Store the config before deleting the connection
+				const storedConfig = connection.server.config
+
+				// Delete the connection (this closes transport and client)
 				await this.deleteConnection(serverName, serverSource)
+
+				// Create a placeholder connection for disabled servers
+				// This is needed so the server still appears in the UI
+				const parsedConfig = JSON.parse(storedConfig)
+				parsedConfig.disabled = true
+
+				const placeholderConnection: McpConnection = {
+					server: {
+						name: serverName,
+						config: JSON.stringify(parsedConfig),
+						status: "disconnected",
+						disabled: true,
+						source: serverSource,
+						projectPath:
+							serverSource === "project" ? vscode.workspace.workspaceFolders?.[0]?.uri.fsPath : undefined,
+						errorHistory: [],
+					},
+					client: null as any,
+					transport: null as any,
+				}
+				this.connections.push(placeholderConnection)
 			} else {
 				// If enabling the server, we need to re-read the config and reconnect
 				// Get the updated config from the file

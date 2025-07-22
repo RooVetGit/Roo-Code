@@ -484,9 +484,13 @@ describe("McpHub", () => {
 			const mockConnection: McpConnection = {
 				server: {
 					name: "test-server",
-					type: "stdio",
-					command: "node",
-					args: ["test.js"],
+					config: JSON.stringify({
+						type: "stdio",
+						command: "node",
+						args: ["test.js"],
+						disabled: false,
+					}),
+					status: "connected",
 					disabled: false,
 					source: "global",
 				} as any,
@@ -734,7 +738,12 @@ describe("McpHub", () => {
 			// Verify the server was disconnected
 			expect(mockTransport.close).toHaveBeenCalled()
 			expect(mockClient.close).toHaveBeenCalled()
-			expect(mcpHub.connections.length).toBe(0)
+			// Should have 1 placeholder connection for the disabled server
+			expect(mcpHub.connections.length).toBe(1)
+			expect(mcpHub.connections[0].server.disabled).toBe(true)
+			expect(mcpHub.connections[0].server.status).toBe("disconnected")
+			expect(mcpHub.connections[0].client).toBeNull()
+			expect(mcpHub.connections[0].transport).toBeNull()
 		})
 
 		it("should reconnect server when toggling to enabled", async () => {
