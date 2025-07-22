@@ -123,12 +123,10 @@ export class LocalVectorStore implements IVectorStore {
 				await db
 					.prepare("UPDATE collections SET vector_size = ? WHERE id = ?")
 					.run(this.vectorSize, collection.id)
-				await this.resizeCollection()
 				this.cachedCollectionId = collection.id != null ? Number(collection.id) : null
 				return true
 			}
 
-			await this.resizeCollection()
 			this.cachedCollectionId = collection.id != null ? Number(collection.id) : null
 			return false
 		} catch (error) {
