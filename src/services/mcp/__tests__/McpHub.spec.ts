@@ -939,6 +939,75 @@ describe("McpHub", () => {
 			// Only the first operation should have executed
 			expect(writeCallCount).toBe(1)
 		})
+
+		it("should not restart disabled servers via file watcher or restartConnection", async () => {
+			// Mock the config file read
+			const mockConfig = {
+				mcpServers: {
+					"disabled-server": {
+						type: "stdio" as const,
+						command: "node",
+						args: ["test.js"],
+						disabled: true,
+						timeout: 60,
+						cwd: process.cwd(),
+						alwaysAllow: [],
+						disabledTools: [],
+					},
+				},
+			}
+			vi.mocked(fs.readFile).mockResolvedValue(JSON.stringify(mockConfig))
+
+			// Mock StdioClientTransport
+			const mockTransport = {
+				start: vi.fn().mockResolvedValue(undefined),
+				close: vi.fn().mockResolvedValue(undefined),
+				stderr: {
+					on: vi.fn(),
+				},
+				onerror: null,
+				onclose: null,
+			}
+
+			const StdioClientTransport = (await import("@modelcontextprotocol/sdk/client/stdio.js"))
+				.StdioClientTransport as ReturnType<typeof vi.fn>
+			StdioClientTransport.mockClear()
+			StdioClientTransport.mockImplementation(() => mockTransport)
+
+			// Mock Client
+			const Client = (await import("@modelcontextprotocol/sdk/client/index.js")).Client as ReturnType<
+				typeof vi.fn
+			>
+			Client.mockClear()
+			Client.mockImplementation(() => ({
+				connect: vi.fn().mockResolvedValue(undefined),
+				close: vi.fn().mockResolvedValue(undefined),
+				getInstructions: vi.fn().mockReturnValue("test instructions"),
+				request: vi.fn().mockResolvedValue({ tools: [], resources: [], resourceTemplates: [] }),
+			}))
+
+			// Create a new McpHub instance
+			const newMcpHub = new McpHub(mockProvider as ClineProvider)
+
+			// Wait for initialization
+			await new Promise((resolve) => setTimeout(resolve, 100))
+
+			// Verify that the disabled server was not connected
+			expect(StdioClientTransport).not.toHaveBeenCalled()
+
+			// Try to restart the connection
+			await newMcpHub["restartConnection"]("disabled-server")
+
+			// Verify that the server was still not connected
+			expect(StdioClientTransport).not.toHaveBeenCalled()
+
+			// Simulate file watcher trigger by calling setupFileWatcher
+			// First, we need to access the private method
+			await newMcpHub["setupFileWatcher"]("disabled-server", mockConfig.mcpServers["disabled-server"])
+
+			// Still should not connect
+			expect(StdioClientTransport).not.toHaveBeenCalled()
+		})
 	})
 
 	describe("callTool", () => {

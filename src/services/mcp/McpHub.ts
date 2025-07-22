@@ -132,7 +132,6 @@ export class McpHub {
 	private isDisposed: boolean = false
 	connections: McpConnection[] = []
 	isConnecting: boolean = false
-	private refCount: number = 0 // Reference counter for active clients
 	private configChangeDebounceTimers: Map<string, NodeJS.Timeout> = new Map()
 	private toggleOperations: Map<string, Promise<void>> = new Map() // Track ongoing toggle operations
 
@@ -146,24 +145,20 @@ export class McpHub {
 	}
 	/**
 	 * Registers a client (e.g., ClineProvider) using this hub.
-	 * Increments the reference count.
+	 * @deprecated Reference counting is no longer used. The McpServerManager maintains the singleton.
 	 */
 	public registerClient(): void {
-		this.refCount++
-		console.log(`McpHub: Client registered. Ref count: ${this.refCount}`)
+		// No-op: Reference counting removed to prevent premature disposal
+		console.log(`McpHub: Client registered (reference counting disabled)`)
 	}
 
 	/**
-	 * Unregisters a client. Decrements the reference count.
-	 * If the count reaches zero, disposes the hub.
+	 * Unregisters a client.
+	 * @deprecated Reference counting is no longer used. The McpServerManager maintains the singleton.
 	 */
 	public async unregisterClient(): Promise<void> {
-		this.refCount--
-		console.log(`McpHub: Client unregistered. Ref count: ${this.refCount}`)
-		if (this.refCount <= 0) {
-			console.log("McpHub: Last client unregistered. Disposing hub.")
-			await this.dispose()
-		}
+		// No-op: Reference counting removed to prevent premature disposal
+		console.log(`McpHub: Client unregistered (reference counting disabled)`)
 	}
 
 	/**
@@ -1052,6 +1047,12 @@ export class McpHub {
 		config: z.infer<typeof ServerConfigSchema>,
 		source: "global" | "project" = "global",
 	) {
+		// Skip setting up watchers for disabled servers
+		if (config.disabled) {
+			console.log(`Skipping file watcher setup for disabled server: ${name}`)
+			return
+		}
+
 		// Initialize an empty array for this server if it doesn't exist
 		if (!this.fileWatchers.has(name)) {
 			this.fileWatchers.set(name, [])
@@ -1126,6 +1127,16 @@ export class McpHub {
 		const connection = this.findConnection(serverName, source)
 		const config = connection?.server.config
 		if (config) {
+			// Parse the config to check if server is disabled
+			const parsedConfig = JSON.parse(config)
+
+			// Skip restart if server is disabled
+			if (parsedConfig.disabled) {
+				console.log(`Skipping restart for disabled server: ${serverName}`)
+				this.isConnecting = false
+				return
+			}
+
 			vscode.window.showInformationMessage(t("mcp:info.server_restarting", { serverName }))
 			connection.server.status = "connecting"
 			connection.server.error = ""
@@ -1133,8 +1144,6 @@ export class McpHub {
 			await delay(500) // artificial delay to show user that server is restarting
 			try {
 				await this.deleteConnection(serverName, connection.server.source)
-				// Parse the config to validate it
-				const parsedConfig = JSON.parse(config)
 				try {
 					// Validate the config
 					const validatedConfig = this.validateServerConfig(parsedConfig, serverName)
