@@ -643,11 +643,18 @@ describe("McpHub", () => {
 
 			// Verify that only the enabled server was connected
 			expect(StdioClientTransport).toHaveBeenCalledTimes(1)
-			expect(StdioClientTransport).toHaveBeenCalledWith(
-				expect.objectContaining({
-					args: ["test2.js"], // Only the enabled server
-				}),
-			)
+
+			// Check the call arguments - handle Windows cmd.exe wrapping
+			const callArgs = StdioClientTransport.mock.calls[0][0]
+			if (process.platform === "win32") {
+				// On Windows, commands are wrapped with cmd.exe
+				expect(callArgs.command).toBe("cmd.exe")
+				expect(callArgs.args).toEqual(["/c", "node", "test2.js"])
+			} else {
+				// On other platforms, no wrapping
+				expect(callArgs.command).toBe("node")
+				expect(callArgs.args).toEqual(["test2.js"])
+			}
 		})
 
 		it("should disconnect server when toggling to disabled", async () => {
