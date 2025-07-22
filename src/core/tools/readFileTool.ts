@@ -15,62 +15,13 @@ import { extractTextFromFile, addLineNumbers, getSupportedBinaryFormats } from "
 import { parseSourceCodeDefinitionsForFile } from "../../services/tree-sitter"
 import { parseXml } from "../../utils/xml"
 import * as fs from "fs/promises"
-
-/**
- * Default maximum allowed image file size in bytes (5MB)
- */
-const DEFAULT_MAX_IMAGE_FILE_SIZE_MB = 5
-
-/**
- * Default maximum total memory usage for all images in a single read operation (20MB)
- * This prevents memory issues when reading multiple large images simultaneously
- */
-const DEFAULT_MAX_TOTAL_IMAGE_MEMORY_MB = 20
-
-/**
- * Supported image formats that can be displayed
- */
-const SUPPORTED_IMAGE_FORMATS = [
-	".png",
-	".jpg",
-	".jpeg",
-	".gif",
-	".webp",
-	".svg",
-	".bmp",
-	".ico",
-	".tiff",
-	".tif",
-	".avif",
-] as const
-
-const IMAGE_MIME_TYPES: Record<string, string> = {
-	".png": "image/png",
-	".jpg": "image/jpeg",
-	".jpeg": "image/jpeg",
-	".gif": "image/gif",
-	".webp": "image/webp",
-	".svg": "image/svg+xml",
-	".bmp": "image/bmp",
-	".ico": "image/x-icon",
-	".tiff": "image/tiff",
-	".tif": "image/tiff",
-	".avif": "image/avif",
-}
-
-/**
- * Reads an image file and returns both the data URL and buffer
- */
-async function readImageAsDataUrlWithBuffer(filePath: string): Promise<{ dataUrl: string; buffer: Buffer }> {
-	const fileBuffer = await fs.readFile(filePath)
-	const base64 = fileBuffer.toString("base64")
-	const ext = path.extname(filePath).toLowerCase()
-
-	const mimeType = IMAGE_MIME_TYPES[ext] || "image/png"
-	const dataUrl = `data:${mimeType};base64,${base64}`
-
-	return { dataUrl, buffer: fileBuffer }
-}
+import {
+	DEFAULT_MAX_IMAGE_FILE_SIZE_MB,
+	DEFAULT_MAX_TOTAL_IMAGE_MEMORY_MB,
+	SUPPORTED_IMAGE_FORMATS,
+	readImageAsDataUrlWithBuffer,
+	isSupportedImageFormat,
+} from "./helpers/imageHelpers"
 
 export function getReadFileToolDescription(blockName: string, blockParams: any): string {
 	// Handle both single path and multiple files via args
@@ -485,7 +436,11 @@ export async function readFileTool(
 		// Track total image memory usage across all files
 		let totalImageMemoryUsed = 0
 		const state = await cline.providerRef.deref()?.getState()
-		const { maxReadFileLine = -1, maxImageFileSize = DEFAULT_MAX_IMAGE_FILE_SIZE_MB, maxTotalImageMemory = DEFAULT_MAX_TOTAL_IMAGE_MEMORY_MB } = state ?? {}
+		const {
+			maxReadFileLine = -1,
+			maxImageFileSize = DEFAULT_MAX_IMAGE_FILE_SIZE_MB,
+			maxTotalImageMemory = DEFAULT_MAX_TOTAL_IMAGE_MEMORY_MB,
+		} = state ?? {}
 
 		// Then process only approved files
 		for (const fileResult of fileResults) {
@@ -507,11 +462,12 @@ export async function readFileTool(
 					const supportedBinaryFormats = getSupportedBinaryFormats()
 
 					// Check if it's a supported image format
-					if (SUPPORTED_IMAGE_FORMATS.includes(fileExtension as (typeof SUPPORTED_IMAGE_FORMATS)[number])) {
+					if (isSupportedImageFormat(fileExtension)) {
 						// Skip image processing if model doesn't support images
 						if (!supportsImages) {
-							const notice = "Image file detected but current model does not support images. Skipping image processing."
-							
+							const notice =
+								"Image file detected but current model does not support images. Skipping image processing."
+
 							// Track file read
 							await cline.fileContextTracker.trackFileContext(relPath, "read_tool" as RecordSource)
 
@@ -527,7 +483,10 @@ export async function readFileTool(
 							// Check if image file exceeds individual size limit
 							if (imageStats.size > maxImageFileSize * 1024 * 1024) {
 								const imageSizeInMB = (imageStats.size / (1024 * 1024)).toFixed(1)
-								const notice = t("tools:readFile.imageTooLarge", { size: imageSizeInMB, max: maxImageFileSize })
+								const notice = t("tools:readFile.imageTooLarge", {
+									size: imageSizeInMB,
+									max: maxImageFileSize,
+								})
 
 								// Track file read
 								await cline.fileContextTracker.trackFileContext(relPath, "read_tool" as RecordSource)
