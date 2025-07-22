@@ -5,6 +5,7 @@ import Link from "next/link"
 import Image from "next/image"
 import { ChevronDown } from "lucide-react"
 import { FaBluesky, FaDiscord, FaGithub, FaLinkedin, FaReddit, FaTiktok, FaXTwitter, FaYoutube } from "react-icons/fa6"
+import { useTheme } from "next-themes"
 
 import { EXTERNAL_LINKS, INTERNAL_LINKS } from "@/lib/constants"
 import { useLogoSrc } from "@/lib/hooks/use-logo-src"
@@ -14,6 +15,7 @@ export function Footer() {
 	const [privacyDropdownOpen, setPrivacyDropdownOpen] = useState(false)
 	const dropdownRef = useRef<HTMLDivElement>(null)
 	const logoSrc = useLogoSrc()
+	const { resolvedTheme } = useTheme()
 
 	// Close dropdown when clicking outside
 	useEffect(() => {
@@ -105,6 +107,21 @@ export function Footer() {
 								<span className="sr-only">YouTube</span>
 							</a>
 						</div>
+
+						{/* Made with Roo Code */}
+						<a
+							href="https://roocode.com"
+							target="_blank"
+							rel="noopener noreferrer"
+							className="mt-8 inline-flex items-center space-x-2 group">
+							<Image
+								src={resolvedTheme === "light" ? "/RooCode-Badge-blk.svg" : "/RooCode-Badge-white.svg"}
+								alt="Made with Roo Code"
+								width={120}
+								height={40}
+								className="h-8 w-auto opacity-70 transition-opacity group-hover:opacity-100"
+							/>
+						</a>
 					</div>
 
 					<div className="mt-16 grid grid-cols-2 gap-8 xl:col-span-2 xl:mt-0">
