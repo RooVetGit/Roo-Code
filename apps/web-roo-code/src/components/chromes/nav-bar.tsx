@@ -62,13 +62,6 @@ export function NavBar({ stars, downloads }: NavBarProps) {
 						Enterprise
 					</Link>
 					<a
-						href={EXTERNAL_LINKS.SECURITY}
-						target="_blank"
-						rel="noopener noreferrer"
-						className="text-muted-foreground transition-transform duration-200 hover:scale-105 hover:text-foreground">
-						Security
-					</a>
-					<a
 						href={EXTERNAL_LINKS.DOCUMENTATION}
 						target="_blank"
 						className="text-muted-foreground transition-transform duration-200 hover:scale-105 hover:text-foreground">
