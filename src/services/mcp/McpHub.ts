@@ -315,7 +315,19 @@ export class McpHub {
 				return
 			}
 
-			await this.updateServerConnections(result.data.mcpServers || {}, source)
+			// Check if any servers have toggle operations in progress
+			const servers = result.data.mcpServers || {}
+			const hasActiveToggleOperations = Object.keys(servers).some((serverName) => {
+				const operationKey = `${serverName}-${source}`
+				return this.toggleOperations.has(operationKey)
+			})
+
+			if (hasActiveToggleOperations) {
+				console.log(`Skipping config file change for ${source} - toggle operations in progress`)
+				return
+			}
+
+			await this.updateServerConnections(servers, source)
 		} catch (error) {
 			// Check if the error is because the file doesn't exist
 			if (error.code === "ENOENT" && source === "project") {
