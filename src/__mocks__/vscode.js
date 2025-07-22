@@ -39,10 +39,7 @@ const mockSelection = class extends mockRange {
 export const workspace = {
 	workspaceFolders: [],
 	getWorkspaceFolder: () => null,
-	onDidChangeWorkspaceFolders: (callback) => {
-		// Return a disposable that can be used to unsubscribe
-		return mockDisposable
-	},
+	onDidChangeWorkspaceFolders: () => mockDisposable,
 	getConfiguration: () => ({
 		get: () => null,
 	}),
@@ -114,12 +111,6 @@ export const Range = mockRange
 export const Position = mockPosition
 export const Selection = mockSelection
 export const Disposable = mockDisposable
-export const RelativePattern = class {
-	constructor(base, pattern) {
-		this.base = base
-		this.pattern = pattern
-	}
-}
 export const ThemeIcon = class {
 	constructor(id) {
 		this.id = id
@@ -173,7 +164,6 @@ export default {
 	Position,
 	Selection,
 	Disposable,
-	RelativePattern,
 	ThemeIcon,
 	FileType,
 	DiagnosticSeverity,
