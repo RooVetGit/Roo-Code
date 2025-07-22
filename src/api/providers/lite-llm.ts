@@ -44,13 +44,44 @@ export class LiteLLMHandler extends RouterProvider implements SingleCompletionHa
 			...convertToOpenAiMessages(messages),
 		]
 
+		// Apply cache control if prompt caching is enabled and supported
+		let enhancedMessages = openAiMessages
+		if (this.options.litellmUsePromptCache && info.supportsPromptCache) {
+			const cacheControl = { cache_control: { type: "ephemeral" } }
+
+			// Add cache control to system message
+			enhancedMessages[0] = {
+				...enhancedMessages[0],
+				...cacheControl,
+			}
+
+			// Find the last two user messages to apply caching
+			const userMsgIndices = enhancedMessages.reduce(
+				(acc, msg, index) => (msg.role === "user" ? [...acc, index] : acc),
+				[] as number[],
+			)
+			const lastUserMsgIndex = userMsgIndices[userMsgIndices.length - 1] ?? -1
+			const secondLastUserMsgIndex = userMsgIndices[userMsgIndices.length - 2] ?? -1
+
+			// Apply cache_control to the last two user messages
+			enhancedMessages = enhancedMessages.map((message, index) => {
+				if (index === lastUserMsgIndex || index === secondLastUserMsgIndex) {
+					return {
+						...message,
+						...cacheControl,
+					}
+				}
+				return message
+			})
+		}
+
 		// Required by some providers; others default to max tokens allowed
 		let maxTokens: number | undefined = info.maxTokens ?? undefined
 
 		const requestOptions: OpenAI.Chat.Completions.ChatCompletionCreateParamsStreaming = {
 			model: modelId,
 			max_tokens: maxTokens,
-			messages: openAiMessages,
+			messages: enhancedMessages,
 			stream: true,
 			stream_options: {
 				include_usage: true,
@@ -80,20 +111,30 @@ export class LiteLLMHandler extends RouterProvider implements SingleCompletionHa
 			}
 
 			if (lastUsage) {
+				// Extract cache-related information if available
+				// LiteLLM may use different field names for cache tokens
+				const cacheWriteTokens =
+					lastUsage.cache_creation_input_tokens || (lastUsage as any).prompt_cache_miss_tokens || 0
+				const cacheReadTokens =
+					lastUsage.prompt_tokens_details?.cached_tokens ||
+					(lastUsage as any).cache_read_input_tokens ||
+					(lastUsage as any).prompt_cache_hit_tokens ||
+					0
+
 				const usageData: ApiStreamUsageChunk = {
 					type: "usage",
 					inputTokens: lastUsage.prompt_tokens || 0,
 					outputTokens: lastUsage.completion_tokens || 0,
-					cacheWriteTokens: lastUsage.cache_creation_input_tokens || 0,
-					cacheReadTokens: lastUsage.prompt_tokens_details?.cached_tokens || 0,
+					cacheWriteTokens: cacheWriteTokens > 0 ? cacheWriteTokens : undefined,
+					cacheReadTokens: cacheReadTokens > 0 ? cacheReadTokens : undefined,
 				}
 
 				usageData.totalCost = calculateApiCostOpenAI(
 					info,
 					usageData.inputTokens,
 					usageData.outputTokens,
-					usageData.cacheWriteTokens,
-					usageData.cacheReadTokens,
+					usageData.cacheWriteTokens || 0,
+					usageData.cacheReadTokens || 0,
 				)
 
 				yield usageData
