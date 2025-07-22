@@ -79,14 +79,163 @@ export async function checkReadRequirement(
 }
 
 /**
- * Calculates the final valid ranges after a write operation.
- * For write operations, the entire file becomes valid.
+ * Computes which line ranges were modified by comparing original and modified content.
  */
-export function calculateWriteRanges(filePath: string, totalLines: number, finalMtime: number): FileMetadata {
+function computeModifiedRanges(originalLines: string[], modifiedLines: string[]): FileLineRange[] {
+	const ranges: FileLineRange[] = []
+	let start = -1
+
+	for (let i = 0; i < Math.max(originalLines.length, modifiedLines.length); i++) {
+		if (originalLines[i] !== modifiedLines[i]) {
+			if (start === -1) {
+				start = i + 1
+			}
+		} else if (start !== -1) {
+			ranges.push({ start: start, end: i })
+			start = -1
+		}
+	}
+
+	if (start !== -1) {
+		ranges.push({ start: start, end: modifiedLines.length })
+	}
+
+	return ranges
+}
+
+/**
+ * Adjusts historical ranges based on line shifts from modifications.
+ */
+function adjustHistoricalRanges(
+	historicalRanges: FileLineRange[],
+	originalContent: string,
+	modifiedContent: string,
+): FileLineRange[] {
+	const diff = require("diff")
+	const changes = diff.diffLines(originalContent, modifiedContent, { newlineIsToken: true })
+
+	let adjustedRanges = [...historicalRanges]
+
+	let lineOffset = 0
+	let originalLine = 1
+
+	for (const part of changes) {
+		const partEnd = originalLine + part.count - 1
+
+		if (part.added) {
+			lineOffset += part.count
+		} else if (part.removed) {
+			lineOffset -= part.count
+		}
+
+		adjustedRanges = adjustedRanges.map((range) => {
+			const rangeEnd = range.start + (range.end - range.start)
+			if (part.removed && range.start <= partEnd && rangeEnd >= originalLine) {
+				// Range is affected by removal
+				const overlapStart = Math.max(range.start, originalLine)
+				const overlapEnd = Math.min(rangeEnd, partEnd)
+				const overlap = overlapEnd - overlapStart + 1
+				return { start: range.start, end: range.end - overlap }
+			} else if (part.added && range.start > originalLine) {
+				// Range is after addition
+				return { start: range.start + part.count, end: range.end + part.count }
+			}
+			return range
+		})
+
+		if (!part.added) {
+			originalLine += part.count
+		}
+	}
+
+	return adjustedRanges.filter((r) => r.start <= r.end)
+}
+
+/**
+ * Calculates the line shift for a specific modification range.
+ */
+function getLineShiftForRange(modRange: FileLineRange, originalLines: string[], modifiedLines: string[]): number {
+	const originalRangeSize = Math.min(modRange.end, originalLines.length) - modRange.start + 1
+	const modifiedRangeSize = Math.min(modRange.end, modifiedLines.length) - modRange.start + 1
+	return modifiedRangeSize - originalRangeSize
+}
+
+/**
+ * Gets line-by-line changes between original and modified content.
+ */
+function getChangedLineRanges(
+	originalContent: string,
+	modifiedContent: string,
+): { ranges: FileLineRange[]; totalShift: number } {
+	const originalLines = originalContent.split("\n")
+	const modifiedLines = modifiedContent.split("\n")
+
+	const ranges = computeModifiedRanges(originalLines, modifiedLines)
+	const totalShift = modifiedLines.length - originalLines.length
+
+	return { ranges, totalShift }
+}
+
+/**
+ * Calculates the final valid ranges after a write operation.
+ * Compares original and modified content to determine which ranges changed.
+ */
+export function calculateWriteRanges(
+	filePath: string,
+	originalContent: string | undefined,
+	modifiedContent: string,
+	finalMtime: number,
+	apiConversationHistory: ApiMessage[],
+): FileMetadata {
+	const modifiedLines = modifiedContent.split("\n")
+	const totalLines = modifiedContent.trim() === "" ? 0 : modifiedLines.length
+
+	// For new files, entire content is valid
+	if (originalContent === undefined || originalContent === "") {
+		return {
+			path: filePath,
+			mtime: finalMtime,
+			validRanges: totalLines > 0 ? [{ start: 1, end: totalLines }] : [],
+		}
+	}
+
+	// Get historical valid ranges with matching mtime
+	const historicalRanges: FileLineRange[] = []
+	for (let i = apiConversationHistory.length - 1; i >= 0; i--) {
+		const message = apiConversationHistory[i]
+		if (!message.files) continue
+
+		const fileMetadata = message.files.find((f) => f.path === filePath)
+		if (fileMetadata && fileMetadata.mtime === finalMtime) {
+			historicalRanges.push(...fileMetadata.validRanges)
+		} else if (fileMetadata) {
+			// Stop if we find a different mtime (file changed)
+			break
+		}
+	}
+
+	// Find which ranges were modified
+	const { ranges: modifiedRanges } = getChangedLineRanges(originalContent, modifiedContent)
+
+	// If no changes detected, return historical ranges
+	if (modifiedRanges.length === 0) {
+		return {
+			path: filePath,
+			mtime: finalMtime,
+			validRanges: mergeRanges(historicalRanges),
+		}
+	}
+
+	// Adjust historical ranges based on modifications
+	const adjustedHistoricalRanges = adjustHistoricalRanges(historicalRanges, originalContent, modifiedContent)
+
+	// Combine modified ranges with adjusted historical ranges
+	const allValidRanges = mergeRanges([...adjustedHistoricalRanges, ...modifiedRanges])
+
 	return {
 		path: filePath,
 		mtime: finalMtime,
-		validRanges: totalLines > 0 ? [{ start: 1, end: totalLines }] : [],
+		validRanges: allValidRanges,
 	}
 }
 
@@ -248,13 +397,16 @@ export async function calculateFileMetadata(
 	}
 
 	if (operation === "write") {
-		// For write operations, get the final mtime and total lines
+		// For write operations, get the final mtime and content from diffViewProvider
 		const fullPath = path.resolve(task.cwd, filePath)
 		const stats = await fs.stat(fullPath)
 		const finalMtime = Math.floor(stats.mtimeMs)
-		const totalLines = await countFileLines(fullPath)
 
-		return calculateWriteRanges(filePath, totalLines, finalMtime)
+		// Get original and modified content from diffViewProvider
+		const originalContent = task.diffViewProvider.originalContent || ""
+		const modifiedContent = await fs.readFile(fullPath, "utf8")
+
+		return calculateWriteRanges(filePath, originalContent, modifiedContent, finalMtime, task.apiConversationHistory)
 	} else {
 		// For read operations, use the provided valid ranges
 		if (!validRanges) {
