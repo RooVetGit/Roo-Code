@@ -152,12 +152,12 @@ describe("FilesChangedOverview (Self-Managing)", () => {
 		expect(screen.getByTestId("files-changed-header")).toHaveTextContent("2 files changed")
 	})
 
-	it("should handle checkpoint_created message", async () => {
+	it("should handle checkpointCreated message", async () => {
 		renderComponent()
 
 		// Simulate checkpoint created event
 		simulateMessage({
-			type: "checkpoint_created",
+			type: "checkpointCreated",
 			checkpoint: "new-checkpoint-hash",
 			previousCheckpoint: "previous-hash",
 		})
@@ -174,7 +174,7 @@ describe("FilesChangedOverview (Self-Managing)", () => {
 		})
 	})
 
-	it("should handle checkpoint_restored message", async () => {
+	it("should handle checkpointRestored message", async () => {
 		renderComponent()
 
 		// First set up some files
@@ -189,7 +189,7 @@ describe("FilesChangedOverview (Self-Managing)", () => {
 
 		// Simulate checkpoint restore
 		simulateMessage({
-			type: "checkpoint_restored",
+			type: "checkpointRestored",
 			checkpoint: "restored-checkpoint-hash",
 		})
 
@@ -645,7 +645,7 @@ describe("FilesChangedOverview (Self-Managing)", () => {
 
 			// Send checkpoint message without required fields
 			simulateMessage({
-				type: "checkpoint_created",
+				type: "checkpointCreated",
 				// Missing checkpoint property
 			})
 

@@ -8,7 +8,7 @@ import { vscode } from "@/utils/vscode"
 interface FilesChangedOverviewProps {}
 
 interface _CheckpointEventData {
-	type: "checkpoint_created" | "checkpoint_restored"
+	type: "checkpointCreated" | "checkpointRestored"
 	checkpoint: string
 	previousCheckpoint?: string
 }
@@ -182,11 +182,11 @@ const FilesChangedOverview: React.FC<FilesChangedOverviewProps> = () => {
 						setChangeset(null)
 					}
 					break
-				case "checkpoint_created":
+				case "checkpointCreated":
 					console.log("[FCO] Checkpoint created:", message.checkpoint)
 					handleCheckpointCreated(message.checkpoint, message.previousCheckpoint)
 					break
-				case "checkpoint_restored":
+				case "checkpointRestored":
 					console.log("[FCO] Checkpoint restored:", message.checkpoint)
 					handleCheckpointRestored(message.checkpoint)
 					break
