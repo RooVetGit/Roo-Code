@@ -302,7 +302,7 @@ export const getModelId = (settings: ProviderSettings): string | undefined => {
 }
 
 // Providers that use Anthropic-style API protocol
-export const ANTHROPIC_STYLE_PROVIDERS: ProviderName[] = ["anthropic", "claude-code"]
+export const ANTHROPIC_STYLE_PROVIDERS: ProviderName[] = ["anthropic", "claude-code", "bedrock"]
 
 // Helper function to determine API protocol for a provider and model
 export const getApiProtocol = (provider: ProviderName | undefined, modelId?: string): "anthropic" | "openai" => {
@@ -311,13 +311,8 @@ export const getApiProtocol = (provider: ProviderName | undefined, modelId?: str
 		return "anthropic"
 	}
 
-	// For vertex and bedrock providers, check if the model ID contains "claude" (case-insensitive)
-	if (
-		provider &&
-		(provider === "vertex" || provider === "bedrock") &&
-		modelId &&
-		modelId.toLowerCase().includes("claude")
-	) {
+	// For vertex provider, check if the model ID contains "claude" (case-insensitive)
+	if (provider && provider === "vertex" && modelId && modelId.toLowerCase().includes("claude")) {
 		return "anthropic"
 	}
 
