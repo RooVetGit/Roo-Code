@@ -36,6 +36,7 @@ import { useExtensionState } from "@src/context/ExtensionStateContext"
 import { useSelectedModel } from "@src/components/ui/hooks/useSelectedModel"
 import RooHero from "@src/components/welcome/RooHero"
 import RooTips from "@src/components/welcome/RooTips"
+import RooCloudCTA from "@src/components/welcome/RooCloudCTA"
 import { StandardTooltip } from "@src/components/ui"
 import { useAutoApprovalState } from "@src/hooks/useAutoApprovalState"
 import { useAutoApprovalToggles } from "@src/hooks/useAutoApprovalToggles"
@@ -1697,28 +1698,7 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 						{telemetrySetting === "unset" && <TelemetryBanner />}
 
 						<div className="mb-2.5">
-							{cloudIsAuthenticated || taskHistory.length < 4 ? (
-								<RooTips />
-							) : (
-								<div className="border border-muted/20 px-4 py-1 text-center flex items-start gap-2">
-									<i className="mr-1 codicon codicon-cloud text-xl! mt-2 text-vscode-descriptionForeground" />
-									<div className="text-left">
-										<p>
-											<strong>Roo Code Cloud is coming soon!</strong>
-											<br />
-											<span>
-												Run Roomote agents in the cloud, access your tasks from anywhere,
-												collaborate with others, and more.
-											</span>
-										</p>
-										<p>
-											<a href="https://shard-dogwood-daf.notion.site/238fd1401b0a8087b858e1ad431507cf?pvs=105">
-												Join the waitlist to get early access.
-											</a>
-										</p>
-									</div>
-								</div>
-							)}
+							{cloudIsAuthenticated || taskHistory.length < 4 ? <RooTips /> : <RooCloudCTA />}
 						</div>
 						{/* Show the task history preview if expanded and tasks exist */}
 						{taskHistory.length > 0 && isExpanded && <HistoryPreview />}
