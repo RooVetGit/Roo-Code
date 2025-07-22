@@ -46,11 +46,6 @@ export function NavBar({ stars, downloads }: NavBarProps) {
 						className="text-muted-foreground transition-transform duration-200 hover:scale-105 hover:text-foreground max-lg:hidden">
 						Testimonials
 					</ScrollButton>
-					<ScrollButton
-						targetId="faq"
-						className="text-muted-foreground transition-transform duration-200 hover:scale-105 hover:text-foreground">
-						FAQ
-					</ScrollButton>
 					<Link
 						href="/evals"
 						className="text-muted-foreground transition-transform duration-200 hover:scale-105 hover:text-foreground">
@@ -72,13 +67,14 @@ export function NavBar({ stars, downloads }: NavBarProps) {
 						href={EXTERNAL_LINKS.DOCUMENTATION}
 						target="_blank"
 						className="text-muted-foreground transition-transform duration-200 hover:scale-105 hover:text-foreground">
-						Documentation
+						Docs
 					</a>
 					<a
-						href={EXTERNAL_LINKS.CAREERS}
+						href="https://discord.com/invite/roocode"
 						target="_blank"
+						rel="noopener noreferrer"
 						className="text-muted-foreground transition-transform duration-200 hover:scale-105 hover:text-foreground">
-						Careers
+						Community
 					</a>
 				</nav>
 
@@ -131,12 +127,6 @@ export function NavBar({ stars, downloads }: NavBarProps) {
 						onClick={() => setIsMenuOpen(false)}>
 						Testimonials
 					</ScrollButton>
-					<ScrollButton
-						targetId="faq"
-						className="w-full px-8 py-3 text-left text-sm font-medium text-foreground/80 transition-colors hover:bg-accent hover:text-foreground"
-						onClick={() => setIsMenuOpen(false)}>
-						FAQ
-					</ScrollButton>
 					<Link
 						href="/evals"
 						className="w-full px-8 py-3 text-left text-sm font-medium text-foreground/80 transition-colors hover:bg-accent hover:text-foreground"
@@ -162,14 +152,15 @@ export function NavBar({ stars, downloads }: NavBarProps) {
 						target="_blank"
 						className="w-full px-8 py-3 text-left text-sm font-medium text-foreground/80 transition-colors hover:bg-accent hover:text-foreground"
 						onClick={() => setIsMenuOpen(false)}>
-						Documentation
+						Docs
 					</a>
 					<a
-						href={EXTERNAL_LINKS.CAREERS}
+						href="https://discord.com/invite/roocode"
 						target="_blank"
+						rel="noopener noreferrer"
 						className="w-full px-8 py-3 text-left text-sm font-medium text-foreground/80 transition-colors hover:bg-accent hover:text-foreground"
 						onClick={() => setIsMenuOpen(false)}>
-						Careers
+						Community
 					</a>
 
 					<hr className="mx-8 my-2 border-t border-border/50" />
