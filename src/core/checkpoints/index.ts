@@ -73,61 +73,65 @@ export function getCheckpointService(cline: Task) {
 		cline.checkpointServiceInitializing = true
 
 		// Check if Git is installed before initializing the service
-		;(async () => {
-			try {
-				const gitInstalled = await checkGitInstalled()
+		// Note: This is intentionally fire-and-forget to match the original IIFE pattern
+		// The service is returned immediately while Git check happens asynchronously
+		checkGitInstallation(cline, service, log, provider)
 
-				if (!gitInstalled) {
-					log("[Task#getCheckpointService] Git is not installed, disabling checkpoints")
-					cline.enableCheckpoints = false
-					cline.checkpointServiceInitializing = false
+		return service
+	} catch (err) {
+		log(`[Task#getCheckpointService] ${err.message}`)
+		cline.enableCheckpoints = false
+		return undefined
+	}
+}
 
-					// Show user-friendly notification
-					const selection = await vscode.window.showWarningMessage(
-						t("common:errors.git_not_installed"),
-						t("common:buttons.learn_more"),
-					)
+async function checkGitInstallation(
+	cline: Task,
+	service: RepoPerTaskCheckpointService,
+	log: (message: string) => void,
+	provider: any,
+) {
+	try {
+		const gitInstalled = await checkGitInstalled()
 
-					if (selection === t("common:buttons.learn_more")) {
-						vscode.env.openExternal(vscode.Uri.parse("https://git-scm.com/downloads"))
-					}
+		if (!gitInstalled) {
+			log("[Task#getCheckpointService] Git is not installed, disabling checkpoints")
+			cline.enableCheckpoints = false
+			cline.checkpointServiceInitializing = false
 
-					return
-				}
+			// Show user-friendly notification
+			const selection = await vscode.window.showWarningMessage(
+				t("common:errors.git_not_installed"),
+				t("common:buttons.learn_more"),
+			)
 
-				// Git is installed, proceed with initialization
-				service.on("initialize", () => {
-					log("[Task#getCheckpointService] service initialized")
-
-					try {
-						const isCheckpointNeeded =
-							typeof cline.clineMessages.find(({ say }) => say === "checkpoint_saved") === "undefined"
-
-						cline.checkpointService = service
-						cline.checkpointServiceInitializing = false
-
-						if (isCheckpointNeeded) {
-							log("[Task#getCheckpointService] no checkpoints found, saving initial checkpoint")
-							checkpointSave(cline)
-						}
-					} catch (err) {
-						log("[Task#getCheckpointService] caught error in on('initialize'), disabling checkpoints")
-						cline.enableCheckpoints = false
-					}
-				})
-			} catch (err) {
-				// Differentiate between Git check errors and other errors
-				if (err?.message?.includes("git") || err?.message?.includes("Git")) {
-					log("[Task#getCheckpointService] Git check failed, disabling checkpoints")
-					console.error("Git check error:", err)
-				} else {
-					log("[Task#getCheckpointService] Unexpected error during initialization, disabling checkpoints")
-					console.error("Initialization error:", err)
-				}
-				cline.enableCheckpoints = false
-				cline.checkpointServiceInitializing = false
+			if (selection === t("common:buttons.learn_more")) {
+				await vscode.env.openExternal(vscode.Uri.parse("https://git-scm.com/downloads"))
 			}
-		})()
+
+			return
+		}
+
+		// Git is installed, proceed with initialization
+		service.on("initialize", () => {
+			log("[Task#getCheckpointService] service initialized")
+
+			try {
+				const isCheckpointNeeded =
+					typeof cline.clineMessages.find(({ say }) => say === "checkpoint_saved") === "undefined"
+
+				cline.checkpointService = service
+				cline.checkpointServiceInitializing = false
+
+				if (isCheckpointNeeded) {
+					log("[Task#getCheckpointService] no checkpoints found, saving initial checkpoint")
+					checkpointSave(cline)
+				}
+			} catch (err) {
+				log("[Task#getCheckpointService] caught error in on('initialize'), disabling checkpoints")
+				cline.enableCheckpoints = false
+			}
+		})
 
 		service.on("checkpoint", ({ isFirst, fromHash: from, toHash: to }) => {
 			try {
@@ -154,12 +158,11 @@ export function getCheckpointService(cline: Task) {
 			log(`[Task#getCheckpointService] initShadowGit -> ${err.message}`)
 			cline.enableCheckpoints = false
 		})
-
-		return service
 	} catch (err) {
-		log(`[Task#getCheckpointService] ${err.message}`)
+		log(`[Task#getCheckpointService] Unexpected error during Git check: ${err.message}`)
+		console.error("Git check error:", err)
 		cline.enableCheckpoints = false
-		return undefined
+		cline.checkpointServiceInitializing = false
 	}
 }
 
