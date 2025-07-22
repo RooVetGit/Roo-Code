@@ -73,21 +73,24 @@ export function getCheckpointService(cline: Task) {
 		cline.checkpointServiceInitializing = true
 
 		// Check if Git is installed before initializing the service
-		checkGitInstalled()
-			.then((gitInstalled) => {
+		;(async () => {
+			try {
+				const gitInstalled = await checkGitInstalled()
+
 				if (!gitInstalled) {
 					log("[Task#getCheckpointService] Git is not installed, disabling checkpoints")
 					cline.enableCheckpoints = false
 					cline.checkpointServiceInitializing = false
 
 					// Show user-friendly notification
-					vscode.window
-						.showWarningMessage(t("common:errors.git_not_installed"), t("common:buttons.learn_more"))
-						.then((selection) => {
-							if (selection === t("common:buttons.learn_more")) {
-								vscode.env.openExternal(vscode.Uri.parse("https://git-scm.com/downloads"))
-							}
-						})
+					const selection = await vscode.window.showWarningMessage(
+						t("common:errors.git_not_installed"),
+						t("common:buttons.learn_more"),
+					)
+
+					if (selection === t("common:buttons.learn_more")) {
+						vscode.env.openExternal(vscode.Uri.parse("https://git-scm.com/downloads"))
+					}
 
 					return
 				}
@@ -112,13 +115,19 @@ export function getCheckpointService(cline: Task) {
 						cline.enableCheckpoints = false
 					}
 				})
-			})
-			.catch((err) => {
-				log("[Task#getCheckpointService] error checking Git installation, disabling checkpoints")
-				console.error(err)
+			} catch (err) {
+				// Differentiate between Git check errors and other errors
+				if (err?.message?.includes("git") || err?.message?.includes("Git")) {
+					log("[Task#getCheckpointService] Git check failed, disabling checkpoints")
+					console.error("Git check error:", err)
+				} else {
+					log("[Task#getCheckpointService] Unexpected error during initialization, disabling checkpoints")
+					console.error("Initialization error:", err)
+				}
 				cline.enableCheckpoints = false
 				cline.checkpointServiceInitializing = false
-			})
+			}
+		})()
 
 		service.on("checkpoint", ({ isFirst, fromHash: from, toHash: to }) => {
 			try {
