@@ -479,7 +479,7 @@ export async function getSvnWorkingState(cwd: string): Promise<{
 							additionalInfo += `\n--- ${file} (${stats.isFile() ? "file" : "directory"}) ---\n`
 						}
 					} catch (error) {
-						additionalInfo += `\n--- ${file} (unable to read: ${error.message}) ---\n`
+						additionalInfo += `\n--- ${file} (unable to read: ${error instanceof Error ? error.message : String(error)}) ---\n`
 					}
 				}
 
@@ -601,6 +601,6 @@ export async function getSvnCommitInfoForMentions(revision: string, cwd: string)
 		return commitInfo
 	} catch (error) {
 		console.error("[DEBUG] Error getting SVN commit info for mentions:", error)
-		return `Error fetching SVN commit r${revision}: ${error.message}`
+		return `Error fetching SVN commit r${revision}: ${error instanceof Error ? error.message : String(error)}`
 	}
 }
