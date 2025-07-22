@@ -21,7 +21,7 @@ export default async function Home() {
 
 	return (
 		<>
-			<section className="relative flex h-[calc(125vh-theme(spacing.16))] items-center overflow-hidden md:h-[calc(100svh-theme(spacing.16))] lg:h-[calc(100vh-theme(spacing.16))]">
+			<section className="relative flex h-[calc(125vh-theme(spacing.12))] items-center overflow-hidden md:h-[calc(100svh-theme(spacing.12))] lg:h-[calc(100vh-theme(spacing.12))]">
 				<AnimatedBackground />
 				<div className="container relative z-10 mx-auto px-4 sm:px-6 lg:px-8">
 					<div className="grid gap-8 md:gap-12 lg:grid-cols-2 lg:gap-16">

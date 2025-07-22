@@ -1,17 +1,7 @@
 "use client"
 
 import { motion } from "framer-motion"
-import {
-	FaRobot,
-	FaCode,
-	FaBrain,
-	FaTools,
-	FaTerminal,
-	FaPuzzlePiece,
-	FaGlobe,
-	FaShieldAlt,
-	FaBolt,
-} from "react-icons/fa"
+import { Bot, Code, Brain, Wrench, Terminal, Puzzle, Globe, Shield, Zap } from "lucide-react"
 import { FeaturesMobile } from "./features-mobile"
 
 import { ReactNode } from "react"
@@ -24,55 +14,55 @@ export interface Feature {
 
 export const features: Feature[] = [
 	{
-		icon: <FaRobot className="h-6 w-6" />,
+		icon: <Bot className="h-6 w-6 text-white" />,
 		title: "Your AI Dev Team in VS Code",
 		description:
 			"Roo Code puts a team of agentic AI assistants directly in your editor, with the power to plan, write, and fix code across multiple files.",
 	},
 	{
-		icon: <FaCode className="h-6 w-6" />,
+		icon: <Code className="h-6 w-6 text-white" />,
 		title: "Multiple Specialized Modes",
 		description:
 			"From coding to debugging to architecture, Roo Code has a mode for every dev scenario—just switch on the fly.",
 	},
 	{
-		icon: <FaBrain className="h-6 w-6" />,
+		icon: <Brain className="h-6 w-6 text-white" />,
 		title: "Deep Project-wide Context",
 		description:
 			"Roo Code reads your entire codebase, preserving valid code through diff-based edits for seamless multi-file refactors.",
 	},
 	{
-		icon: <FaTools className="h-6 w-6" />,
+		icon: <Wrench className="h-6 w-6 text-white" />,
 		title: "Open-Source and Model-Agnostic",
 		description:
 			"Bring your own model or use local AI—no vendor lock-in. Roo Code is free, open, and adaptable to your needs.",
 	},
 	{
-		icon: <FaTerminal className="h-6 w-6" />,
+		icon: <Terminal className="h-6 w-6 text-white" />,
 		title: "Guarded Command Execution",
 		description:
 			"Approve or deny commands as needed. Roo Code automates your dev workflow while keeping oversight firmly in your hands.",
 	},
 	{
-		icon: <FaPuzzlePiece className="h-6 w-6" />,
+		icon: <Puzzle className="h-6 w-6 text-white" />,
 		title: "Fully Customizable",
 		description:
 			"Create or tweak modes, define usage rules, and shape Roo Code's behavior precisely—your code, your way.",
 	},
 	{
-		icon: <FaGlobe className="h-6 w-6" />,
+		icon: <Globe className="h-6 w-6 text-white" />,
 		title: "Automated Browser Actions",
 		description:
 			"Seamlessly test and verify your web app directly from VS Code—Roo Code can open a browser, run checks, and more.",
 	},
 	{
-		icon: <FaShieldAlt className="h-6 w-6" />,
+		icon: <Shield className="h-6 w-6 text-white" />,
 		title: "Secure by Design",
 		description:
 			"Security-first from the ground up, Roo Code meets rigorous standards without slowing you down. Monitoring and strict policies keep your code safe at scale.",
 	},
 	{
-		icon: <FaBolt className="h-6 w-6" />,
+		icon: <Zap className="h-6 w-6 text-white" />,
 		title: "Seamless Setup and Workflows",
 		description:
 			"Get started in minutes—no heavy configs. Roo Code fits alongside your existing tools and dev flow, while supercharging your productivity.",
@@ -167,7 +157,7 @@ export function Features() {
 								<div className="relative h-full rounded-2xl border border-border/50 bg-background/30 p-8 backdrop-blur-xl transition-all duration-300 hover:border-border hover:bg-background/50 dark:hover:border-border/80 dark:hover:bg-background/40">
 									<div className="mb-5 inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-blue-500/10 to-cyan-500/10 p-2.5 dark:from-blue-500/20 dark:to-cyan-500/20">
 										<div className="rounded-lg bg-gradient-to-r from-blue-500/80 to-cyan-500/80 p-2.5">
-											<div className="text-white">{feature.icon}</div>
+											{feature.icon}
 										</div>
 									</div>
 									<h3 className="mb-3 text-xl font-medium text-foreground/90">{feature.title}</h3>
