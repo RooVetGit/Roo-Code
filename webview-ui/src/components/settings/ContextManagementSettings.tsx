@@ -24,6 +24,7 @@ type ContextManagementSettingsProps = HTMLAttributes<HTMLDivElement> & {
 	profileThresholds?: Record<string, number>
 	includeDiagnosticMessages?: boolean
 	maxDiagnosticMessages?: number
+	writeDelayMs: number
 	setCachedStateField: SetCachedStateField<
 		| "autoCondenseContext"
 		| "autoCondenseContextPercent"
@@ -35,6 +36,7 @@ type ContextManagementSettingsProps = HTMLAttributes<HTMLDivElement> & {
 		| "profileThresholds"
 		| "includeDiagnosticMessages"
 		| "maxDiagnosticMessages"
+		| "writeDelayMs"
 	>
 }
 
@@ -51,6 +53,7 @@ export const ContextManagementSettings = ({
 	profileThresholds = {},
 	includeDiagnosticMessages,
 	maxDiagnosticMessages,
+	writeDelayMs,
 	className,
 	...props
 }: ContextManagementSettingsProps) => {
@@ -269,6 +272,26 @@ export const ContextManagementSettings = ({
 					</div>
 					<div className="text-vscode-descriptionForeground text-sm mt-1">
 						{t("settings:contextManagement.diagnostics.maxMessages.description")}
+					</div>
+				</div>
+
+				<div>
+					<span className="block font-medium mb-1">
+						{t("settings:contextManagement.diagnostics.delayAfterWrite.label")}
+					</span>
+					<div className="flex items-center gap-2">
+						<Slider
+							min={0}
+							max={5000}
+							step={100}
+							value={[writeDelayMs]}
+							onValueChange={([value]) => setCachedStateField("writeDelayMs", value)}
+							data-testid="write-delay-slider"
+						/>
+						<span className="w-20">{writeDelayMs}ms</span>
+					</div>
+					<div className="text-vscode-descriptionForeground text-sm mt-1">
+						{t("settings:contextManagement.diagnostics.delayAfterWrite.description")}
 					</div>
 				</div>
 			</Section>

@@ -490,14 +490,14 @@
 		},
 		"diagnostics": {
 			"includeMessages": {
-				"label": "Tanılamaları otomatik olarak bağlama dahil et",
-				"description": "Etkinleştirildiğinde, düzenlenen dosyalardan tanılama mesajları (hatalar) otomatik olarak bağlama dahil edilecektir. @problems kullanarak tüm çalışma alanı tanılamalarını her zaman manuel olarak dahil edebilirsiniz."
+				"label": "Tanı mesajlarını otomatik olarak bağlama dahil et",
+				"description": "Etkinleştirildiğinde, düzenlenen dosyalardan tanı mesajları (hatalar) otomatik olarak bağlama dahil edilecektir. @problems kullanarak tüm çalışma alanı tanı mesajlarını her zaman manuel olarak dahil edebilirsiniz."
 			},
 			"maxMessages": {
 				"label": "Maksimum tanı mesajı",
 				"description": "Dosya başına dahil edilecek maksimum tanı mesajı sayısı. Bu sınır hem otomatik dahil etme (onay kutusu etkinleştirildiğinde) hem de manuel @problems bahisleri için geçerlidir. Daha yüksek değerler daha fazla bağlam sağlar ancak jeton kullanımını artırır.",
 				"resetTooltip": "Varsayılan değere sıfırla (50)",
-				"unlimited": "Sınırsız tanılama mesajları",
+				"unlimited": "Sınırsız tanı mesajları",
 				"unlimitedLabel": "Sınırsız"
 			}
 		},

@@ -5,7 +5,7 @@ import { TelemetryService } from "@roo-code/telemetry"
 
 // Default values for diagnostic settings
 const DEFAULT_INCLUDE_DIAGNOSTIC_MESSAGES = true
-const DEFAULT_MAX_DIAGNOSTIC_MESSAGES = 5
+const DEFAULT_MAX_DIAGNOSTIC_MESSAGES = 50
 
 // Mock fs/promises to avoid file system operations
 vi.mock("fs/promises", () => ({

@@ -1562,7 +1562,7 @@ export class ClineProvider
 			alwaysAllowFollowupQuestions: alwaysAllowFollowupQuestions ?? false,
 			followupAutoApproveTimeoutMs: followupAutoApproveTimeoutMs ?? 60000,
 			includeDiagnosticMessages: includeDiagnosticMessages ?? true,
-			maxDiagnosticMessages: maxDiagnosticMessages ?? 5,
+			maxDiagnosticMessages: maxDiagnosticMessages ?? 50,
 		}
 	}
 
@@ -1730,7 +1730,7 @@ export class ClineProvider
 			profileThresholds: stateValues.profileThresholds ?? {},
 			// Add diagnostic message settings
 			includeDiagnosticMessages: stateValues.includeDiagnosticMessages ?? true,
-			maxDiagnosticMessages: stateValues.maxDiagnosticMessages ?? 5,
+			maxDiagnosticMessages: stateValues.maxDiagnosticMessages ?? 50,
 		}
 
 		// Return the same structure as before
@@ -1824,7 +1824,7 @@ export class ClineProvider
 			profileThresholds: stateValues.profileThresholds ?? {},
 			// Add diagnostic message settings
 			includeDiagnosticMessages: stateValues.includeDiagnosticMessages ?? true,
-			maxDiagnosticMessages: stateValues.maxDiagnosticMessages ?? 5,
+			maxDiagnosticMessages: stateValues.maxDiagnosticMessages ?? 50,
 		}
 	}
 
