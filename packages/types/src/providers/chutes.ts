@@ -164,6 +164,15 @@ export const chutesModels = {
 		outputPrice: 0,
 		description: "DeepSeek V3 (0324) model.",
 	},
+	"Qwen/Qwen3-235B-A22B-Instruct-2507": {
+		maxTokens: 32768,
+		contextWindow: 262144,
+		supportsImages: false,
+		supportsPromptCache: false,
+		inputPrice: 0,
+		outputPrice: 0,
+		description: "Qwen3 235B A22B Instruct 2507 model with 262K context window.",
+	},
 	"Qwen/Qwen3-235B-A22B": {
 		maxTokens: 32768,
 		contextWindow: 40960,
@@ -226,14 +235,5 @@ export const chutesModels = {
 		inputPrice: 0,
 		outputPrice: 0,
 		description: "TNGTech DeepSeek R1T Chimera model.",
-	},
-	"Qwen/Qwen3-235B-A22B-Instruct-2507": {
-		maxTokens: 32768,
-		contextWindow: 262144,
-		supportsImages: false,
-		supportsPromptCache: false,
-		inputPrice: 0,
-		outputPrice: 0,
-		description: "Qwen3 235B A22B Instruct 2507 model with 262K context window.",
 	},
 } as const satisfies Record<string, ModelInfo>
