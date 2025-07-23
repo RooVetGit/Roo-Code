@@ -338,7 +338,24 @@ export class Task extends EventEmitter<ClineEvents> {
 	}
 
 	private async addToApiConversationHistory(message: Anthropic.MessageParam) {
-		const messageWithTs = { ...message, ts: Date.now() }
+		const messageWithTs: ApiMessage = {
+			...message,
+			ts: Date.now(),
+		}
+
+		// Attach pending file metadata and tool metadata if they exist
+		if (this.pendingFileMetadata && this.pendingFileMetadata.length > 0) {
+			messageWithTs.files = this.pendingFileMetadata
+			// Clear pending metadata after attaching it
+			this.pendingFileMetadata = undefined
+		}
+
+		if (this.pendingToolMetadata) {
+			messageWithTs.tool = this.pendingToolMetadata
+			// Clear pending tool metadata after attaching it
+			this.pendingToolMetadata = undefined
+		}
+
 		this.apiConversationHistory.push(messageWithTs)
 		await this.saveApiConversationHistory()
 	}
