@@ -274,6 +274,7 @@
 		"litellmBaseUrl": "URL cơ sở LiteLLM",
 		"awsCredentials": "Thông tin xác thực AWS",
 		"awsProfile": "Hồ sơ AWS",
+		"awsApiKey": "Khóa API AWS Bedrock",
 		"awsProfileName": "Tên hồ sơ AWS",
 		"awsAccessKey": "Khóa truy cập AWS",
 		"awsSecretKey": "Khóa bí mật AWS",

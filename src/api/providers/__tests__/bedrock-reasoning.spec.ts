@@ -309,15 +309,11 @@ describe("AwsBedrockHandler - Extended Thinking", () => {
 				chunks.push(chunk)
 			}
 
-			// Verify the client was created with API key credentials
+			// Verify the client was created with API key token
 			expect(BedrockRuntimeClient).toHaveBeenCalledWith(
 				expect.objectContaining({
 					region: "us-east-1",
-					credentials: {
-						accessKeyId: "",
-						secretAccessKey: "",
-						sessionToken: "test-api-key-token",
-					},
+					token: "test-api-key-token",
 				}),
 			)
 
