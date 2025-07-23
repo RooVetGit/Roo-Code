@@ -73,7 +73,9 @@
 			"actionsMenuLabel": "Més accions",
 			"official": "Oficial",
 			"verified": "Verificat"
-		}
+		},
+		"removeFailed": "No s'ha pogut eliminar l'element: {{error}}",
+		"unknownError": "S'ha produït un error desconegut"
 	},
 	"install": {
 		"title": "Instal·lar {{name}}",

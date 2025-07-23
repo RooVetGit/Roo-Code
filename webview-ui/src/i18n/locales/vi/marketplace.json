@@ -71,7 +71,9 @@
 			"removeProjectTooltip": "Xóa khỏi dự án hiện tại",
 			"removeGlobalTooltip": "Xóa khỏi cấu hình toàn cục",
 			"actionsMenuLabel": "Thêm hành động"
-		}
+		},
+		"removeFailed": "Không thể xóa mục: {{error}}",
+		"unknownError": "Đã xảy ra lỗi không xác định"
 	},
 	"install": {
 		"title": "Cài đặt {{name}}",

@@ -73,7 +73,9 @@
 			"actionsMenuLabel": "Weitere Aktionen",
 			"official": "Offiziell",
 			"verified": "Verifiziert"
-		}
+		},
+		"removeFailed": "Element konnte nicht entfernt werden: {{error}}",
+		"unknownError": "Unbekannter Fehler aufgetreten"
 	},
 	"install": {
 		"title": "{{name}} installieren",

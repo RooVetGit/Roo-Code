@@ -71,7 +71,9 @@
 			"removeProjectTooltip": "現在のプロジェクトから削除",
 			"removeGlobalTooltip": "グローバル設定から削除",
 			"actionsMenuLabel": "その他のアクション"
-		}
+		},
+		"removeFailed": "アイテムの削除に失敗しました: {{error}}",
+		"unknownError": "不明なエラーが発生しました"
 	},
 	"install": {
 		"title": "{{name}}をインストール",

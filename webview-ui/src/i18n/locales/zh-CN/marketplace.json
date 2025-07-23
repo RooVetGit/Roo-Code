@@ -71,7 +71,9 @@
 			"removeProjectTooltip": "从当前项目中移除",
 			"removeGlobalTooltip": "从全局配置中移除",
 			"actionsMenuLabel": "更多操作"
-		}
+		},
+		"removeFailed": "删除失败: {{error}}",
+		"unknownError": "发生未知错误"
 	},
 	"install": {
 		"title": "安装 {{name}}",

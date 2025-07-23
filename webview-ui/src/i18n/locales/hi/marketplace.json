@@ -71,7 +71,9 @@
 			"removeProjectTooltip": "वर्तमान प्रोजेक्ट से हटाएं",
 			"removeGlobalTooltip": "ग्लोबल कॉन्फ़िगरेशन से हटाएं",
 			"actionsMenuLabel": "अधिक क्रियाएं"
-		}
+		},
+		"removeFailed": "आइटम हटाने में विफल: {{error}}",
+		"unknownError": "अज्ञात त्रुटि हुई"
 	},
 	"install": {
 		"title": "{{name}} इंस्टॉल करें",

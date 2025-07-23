@@ -71,7 +71,9 @@
 			"removeProjectTooltip": "현재 프로젝트에서 삭제",
 			"removeGlobalTooltip": "전역 설정에서 삭제",
 			"actionsMenuLabel": "추가 작업"
-		}
+		},
+		"removeFailed": "항목을 제거하지 못했습니다: {{error}}",
+		"unknownError": "알 수 없는 오류가 발생했습니다"
 	},
 	"install": {
 		"title": "{{name}} 설치",

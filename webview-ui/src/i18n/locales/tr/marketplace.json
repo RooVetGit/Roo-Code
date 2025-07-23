@@ -71,7 +71,9 @@
 			"removeProjectTooltip": "Mevcut projeden kaldır",
 			"removeGlobalTooltip": "Global yapılandırmadan kaldır",
 			"actionsMenuLabel": "Daha fazla eylem"
-		}
+		},
+		"removeFailed": "Öğe kaldırılamadı: {{error}}",
+		"unknownError": "Bilinmeyen bir hata oluştu"
 	},
 	"install": {
 		"title": "{{name}} Yükle",

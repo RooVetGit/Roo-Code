@@ -71,7 +71,9 @@
 			"removeProjectTooltip": "Rimuovi dal progetto corrente",
 			"removeGlobalTooltip": "Rimuovi dalla configurazione globale",
 			"actionsMenuLabel": "Altre azioni"
-		}
+		},
+		"removeFailed": "Impossibile rimuovere l'elemento: {{error}}",
+		"unknownError": "Si è verificato un errore sconosciuto"
 	},
 	"install": {
 		"title": "Installa {{name}}",

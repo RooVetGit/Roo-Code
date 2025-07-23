@@ -71,7 +71,9 @@
 			"removeProjectTooltip": "Verwijderen uit huidig project",
 			"removeGlobalTooltip": "Verwijderen uit globale configuratie",
 			"actionsMenuLabel": "Meer acties"
-		}
+		},
+		"removeFailed": "Item verwijderen mislukt: {{error}}",
+		"unknownError": "Onbekende fout opgetreden"
 	},
 	"install": {
 		"title": "{{name}} installeren",

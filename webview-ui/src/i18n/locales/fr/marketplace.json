@@ -73,7 +73,9 @@
 			"actionsMenuLabel": "Plus d'actions",
 			"official": "Officiel",
 			"verified": "Vérifié"
-		}
+		},
+		"removeFailed": "Échec de la suppression de l'élément : {{error}}",
+		"unknownError": "Une erreur inconnue est survenue"
 	},
 	"install": {
 		"title": "Installer {{name}}",

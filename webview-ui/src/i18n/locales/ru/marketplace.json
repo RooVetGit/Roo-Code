@@ -71,7 +71,9 @@
 			"removeProjectTooltip": "Удалить из текущего проекта",
 			"removeGlobalTooltip": "Удалить из глобальной конфигурации",
 			"actionsMenuLabel": "Дополнительные действия"
-		}
+		},
+		"removeFailed": "Не удалось удалить элемент: {{error}}",
+		"unknownError": "Произошла неизвестная ошибка"
 	},
 	"install": {
 		"title": "Установить {{name}}",
