@@ -8,7 +8,6 @@ import {
 	SystemContentBlock,
 } from "@aws-sdk/client-bedrock-runtime"
 import { fromIni } from "@aws-sdk/credential-providers"
-import { fromStatic } from "@aws-sdk/token-providers"
 import { Anthropic } from "@anthropic-ai/sdk"
 
 import {
@@ -225,7 +224,7 @@ export class AwsBedrockHandler extends BaseProvider implements SingleCompletionH
 
 		if (this.options.awsUseApiKey && this.options.awsApiKey) {
 			// Use API key/token-based authentication if enabled and API key is set
-			clientConfig.token = fromStatic({ token: { token: this.options.awsApiKey } })
+			clientConfig.token = { token: this.options.awsApiKey }
 			clientConfig.authSchemePreference = ["httpBearerAuth"] // Otherwise there's no end of credential problems.
 		} else if (this.options.awsUseProfile && this.options.awsProfile) {
 			// Use profile-based credentials if enabled and profile is set

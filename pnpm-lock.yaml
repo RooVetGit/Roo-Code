@@ -573,9 +573,6 @@ importers:
       '@aws-sdk/credential-providers':
         specifier: ^3.848.0
         version: 3.848.0
-      '@aws-sdk/token-providers':
-        specifier: ^3.848.0
-        version: 3.848.0
       '@google/genai':
         specifier: ^1.0.0
         version: 1.3.0(@modelcontextprotocol/sdk@1.12.0)
