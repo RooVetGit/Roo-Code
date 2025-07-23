@@ -324,5 +324,18 @@
 	},
 	"versionIndicator": {
 		"ariaLabel": "Version {{version}} - Click to view release notes"
+	},
+	"contextMenu": {
+		"instructions": "Type @ to open file insertion menu. Use arrow keys to navigate, Enter to select, Escape to close.",
+		"menuOpened": "File insertion menu opened",
+		"menuClosed": "File insertion menu closed",
+		"position": "{{current}} of {{total}}",
+		"announceFile": "File: {{name}}, {{position}}",
+		"announceFolder": "Folder: {{name}}, {{position}}",
+		"announceProblems": "Problems, {{position}}",
+		"announceTerminal": "Terminal, {{position}}",
+		"announceGit": "Git: {{name}}, {{position}}",
+		"announceMode": "Mode: {{name}}, {{position}}",
+		"announceGeneric": "{{name}}, {{position}}"
 	}
 }

@@ -12,6 +12,7 @@ import { useExtensionState } from "@/context/ExtensionStateContext"
 import { useAppTranslation } from "@/i18n/TranslationContext"
 import {
 	ContextMenuOptionType,
+	ContextMenuQueryItem,
 	getContextMenuOptions,
 	insertMention,
 	removeMention,
@@ -180,6 +181,7 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 		const contextMenuContainerRef = useRef<HTMLDivElement>(null)
 		const [isEnhancingPrompt, setIsEnhancingPrompt] = useState(false)
 		const [isFocused, setIsFocused] = useState(false)
+		const [screenReaderAnnouncement, setScreenReaderAnnouncement] = useState("")
 
 		// Use custom hook for prompt history navigation
 		const { handleHistoryNavigation, resetHistoryNavigation, resetOnInputChange } = usePromptHistory({
@@ -500,7 +502,15 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 				setCursorPosition(newCursorPosition)
 
 				const showMenu = shouldShowContextMenu(newValue, newCursorPosition)
+				const wasMenuVisible = showContextMenu
 				setShowContextMenu(showMenu)
+
+				// Announce menu state changes for screen readers
+				if (showMenu && !wasMenuVisible) {
+					setScreenReaderAnnouncement(t("chat:contextMenu.menuOpened"))
+				} else if (!showMenu && wasMenuVisible) {
+					setScreenReaderAnnouncement(t("chat:contextMenu.menuClosed"))
+				}
 
 				if (showMenu) {
 					if (newValue.startsWith("/")) {
@@ -550,7 +560,14 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 					setFileSearchResults([]) // Clear file search results.
 				}
 			},
-			[setInputValue, setSearchRequestId, setFileSearchResults, setSearchLoading, resetOnInputChange],
+			[
+				setInputValue,
+				setSearchRequestId,
+				setFileSearchResults,
+				setSearchLoading,
+				resetOnInputChange,
+				showContextMenu,
+			],
 		)
 
 		useEffect(() => {
@@ -558,6 +575,80 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 				setSelectedType(null)
 			}
 		}, [showContextMenu])
+
+		// Helper function to get announcement text for screen readers
+		const getAnnouncementText = useCallback(
+			(option: ContextMenuQueryItem, index: number, total: number) => {
+				const position = t("chat:contextMenu.position", { current: index + 1, total })
+
+				switch (option.type) {
+					case ContextMenuOptionType.File:
+					case ContextMenuOptionType.OpenedFile:
+						return t("chat:contextMenu.announceFile", {
+							name: option.value || option.label,
+							position,
+						})
+					case ContextMenuOptionType.Folder:
+						return t("chat:contextMenu.announceFolder", {
+							name: option.value || option.label,
+							position,
+						})
+					case ContextMenuOptionType.Problems:
+						return t("chat:contextMenu.announceProblems", { position })
+					case ContextMenuOptionType.Terminal:
+						return t("chat:contextMenu.announceTerminal", { position })
+					case ContextMenuOptionType.Git:
+						return t("chat:contextMenu.announceGit", {
+							name: option.label || option.value,
+							position,
+						})
+					case ContextMenuOptionType.Mode:
+						return t("chat:contextMenu.announceMode", {
+							name: option.label,
+							position,
+						})
+					default:
+						return t("chat:contextMenu.announceGeneric", {
+							name: option.label || option.value,
+							position,
+						})
+				}
+			},
+			[t],
+		)
+
+		// Announce selected menu item for screen readers with debouncing
+		useEffect(() => {
+			if (!showContextMenu || selectedMenuIndex < 0) return
+
+			const timeoutId = setTimeout(() => {
+				const options = getContextMenuOptions(
+					searchQuery,
+					inputValue,
+					selectedType,
+					queryItems,
+					fileSearchResults,
+					allModes,
+				)
+				const selectedOption = options[selectedMenuIndex]
+				if (selectedOption && selectedOption.type !== ContextMenuOptionType.NoResults) {
+					const announcement = getAnnouncementText(selectedOption, selectedMenuIndex, options.length)
+					setScreenReaderAnnouncement(announcement)
+				}
+			}, 100) // Small delay to avoid rapid announcements
+
+			return () => clearTimeout(timeoutId)
+		}, [
+			showContextMenu,
+			selectedMenuIndex,
+			searchQuery,
+			inputValue,
+			selectedType,
+			queryItems,
+			fileSearchResults,
+			allModes,
+			getAnnouncementText,
+		])
 
 		const handleBlur = useCallback(() => {
 			// Only hide the context menu if the user didn't click on it.
@@ -1076,6 +1167,10 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 					minRows={3}
 					maxRows={15}
 					autoFocus={true}
+					aria-expanded={showContextMenu}
+					aria-haspopup="listbox"
+					aria-controls={showContextMenu ? "context-menu" : undefined}
+					aria-describedby="context-menu-instructions"
 					className={cn(
 						"w-full",
 						"text-vscode-input-foreground",
@@ -1248,6 +1343,19 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 								/>
 							</div>
 						)}
+
+						{/* Live region for screen reader announcements */}
+						<div
+							aria-live="polite"
+							aria-atomic="true"
+							className="sr-only absolute -left-[10000px] w-px h-px overflow-hidden">
+							{screenReaderAnnouncement}
+						</div>
+
+						{/* Instructions for screen readers */}
+						<div id="context-menu-instructions" className="sr-only">
+							{t("chat:contextMenu.instructions")}
+						</div>
 
 						{renderTextAreaSection()}
 					</div>
