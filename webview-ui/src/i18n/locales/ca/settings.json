@@ -618,6 +618,10 @@
 		"MULTI_FILE_APPLY_DIFF": {
 			"name": "Habilita edicions de fitxers concurrents",
 			"description": "Quan està activat, Roo pot editar múltiples fitxers en una sola petició. Quan està desactivat, Roo ha d'editar fitxers d'un en un. Desactivar això pot ajudar quan es treballa amb models menys capaços o quan vols més control sobre les modificacions de fitxers."
+		},
+		"filesChangedOverview": {
+			"name": "Activar vista general de fitxers canviats",
+			"description": "Quan s'activa, mostra un panell que mostra els fitxers que han estat modificats entre punts de control. Això us permet veure diferències, acceptar/rebutjar canvis individuals i gestionar el vostre estat de treball."
 		}
 	},
 	"promptCaching": {

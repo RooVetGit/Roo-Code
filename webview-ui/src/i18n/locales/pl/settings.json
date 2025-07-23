@@ -618,6 +618,10 @@
 		"MULTI_FILE_APPLY_DIFF": {
 			"name": "Włącz równoczesne edycje plików",
 			"description": "Gdy włączone, Roo może edytować wiele plików w jednym żądaniu. Gdy wyłączone, Roo musi edytować pliki jeden po drugim. Wyłączenie tego może pomóc podczas pracy z mniej zdolnymi modelami lub gdy chcesz mieć większą kontrolę nad modyfikacjami plików."
+		},
+		"filesChangedOverview": {
+			"name": "Włącz przegląd zmienionych plików",
+			"description": "Po włączeniu wyświetla panel pokazujący pliki, które zostały zmodyfikowane między punktami kontrolnymi. Pozwala to na przeglądanie różnic, akceptowanie/odrzucanie poszczególnych zmian i zarządzanie stanem pracy."
 		}
 	},
 	"promptCaching": {

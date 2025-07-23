@@ -618,6 +618,10 @@
 		"MULTI_FILE_APPLY_DIFF": {
 			"name": "Gleichzeitige Dateibearbeitungen aktivieren",
 			"description": "Wenn aktiviert, kann Roo mehrere Dateien in einer einzigen Anfrage bearbeiten. Wenn deaktiviert, muss Roo Dateien einzeln bearbeiten. Das Deaktivieren kann hilfreich sein, wenn mit weniger fähigen Modellen gearbeitet wird oder wenn du mehr Kontrolle über Dateiänderungen haben möchtest."
+		},
+		"filesChangedOverview": {
+			"name": "Übersicht der geänderten Dateien aktivieren",
+			"description": "Wenn aktiviert, wird ein Panel angezeigt, das Dateien zeigt, die zwischen Checkpoints geändert wurden. Damit kannst du Diffs anzeigen, einzelne Änderungen akzeptieren/ablehnen und deinen Arbeitsstatus verwalten."
 		}
 	},
 	"promptCaching": {

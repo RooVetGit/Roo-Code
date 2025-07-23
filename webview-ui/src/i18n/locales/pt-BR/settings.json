@@ -618,6 +618,10 @@
 		"MULTI_FILE_APPLY_DIFF": {
 			"name": "Habilitar edições de arquivos concorrentes",
 			"description": "Quando habilitado, o Roo pode editar múltiplos arquivos em uma única solicitação. Quando desabilitado, o Roo deve editar arquivos um de cada vez. Desabilitar isso pode ajudar ao trabalhar com modelos menos capazes ou quando você quer mais controle sobre modificações de arquivos."
+		},
+		"filesChangedOverview": {
+			"name": "Ativar Visão Geral de Arquivos Alterados",
+			"description": "Quando ativado, exibe um painel mostrando arquivos que foram modificados entre checkpoints. Isso permite visualizar diferenças, aceitar/rejeitar mudanças individuais e gerenciar seu estado de trabalho."
 		}
 	},
 	"promptCaching": {

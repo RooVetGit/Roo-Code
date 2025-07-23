@@ -618,6 +618,10 @@
 		"MULTI_FILE_APPLY_DIFF": {
 			"name": "Habilitar ediciones de archivos concurrentes",
 			"description": "Cuando está habilitado, Roo puede editar múltiples archivos en una sola solicitud. Cuando está deshabilitado, Roo debe editar archivos de uno en uno. Deshabilitar esto puede ayudar cuando trabajas con modelos menos capaces o cuando quieres más control sobre las modificaciones de archivos."
+		},
+		"filesChangedOverview": {
+			"name": "Habilitar vista general de archivos modificados",
+			"description": "Cuando está habilitado, muestra un panel que muestra los archivos que han sido modificados entre puntos de control. Esto te permite ver diferencias, aceptar/rechazar cambios individuales y gestionar tu estado de trabajo."
 		}
 	},
 	"promptCaching": {

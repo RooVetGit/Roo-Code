@@ -618,6 +618,10 @@
 		"MULTI_FILE_APPLY_DIFF": {
 			"name": "啟用並行檔案編輯",
 			"description": "啟用後 Roo 可在單個請求中編輯多個檔案。停用後 Roo 必須逐個編輯檔案。停用此功能有助於使用能力較弱的模型或需要更精確控制檔案修改時。"
+		},
+		"filesChangedOverview": {
+			"name": "啟用檔案變更概覽",
+			"description": "啟用後，顯示一個面板，顯示在檢查點之間修改的檔案。這讓您可以檢視差異，接受/拒絕個別變更，並管理您的工作狀態。"
 		}
 	},
 	"promptCaching": {

@@ -10,6 +10,8 @@ import type {
 	OrganizationAllowList,
 	CloudUserInfo,
 	ShareVisibility,
+	ClineSay,
+	FileChangeset,
 } from "@roo-code/types"
 
 import { GitCommit } from "../utils/git"
@@ -107,6 +109,10 @@ export interface ExtensionMessage {
 		| "codeIndexSecretStatus"
 		| "showDeleteMessageDialog"
 		| "showEditMessageDialog"
+		| "filesChanged"
+		| "checkpointCreated"
+		| "checkpointRestored"
+		| "say"
 	text?: string
 	payload?: any // Add a generic payload for now, can refine later
 	action?:
@@ -161,6 +167,10 @@ export interface ExtensionMessage {
 	settings?: any
 	messageTs?: number
 	context?: string
+	filesChanged?: FileChangeset // Added filesChanged property
+	checkpoint?: string // For checkpointCreated and checkpointRestored messages
+	previousCheckpoint?: string // For checkpointCreated message
+	say?: ClineSay // Added say property
 }
 
 export type ExtensionState = Pick<
@@ -283,6 +293,7 @@ export type ExtensionState = Pick<
 	marketplaceInstalledMetadata?: { project: Record<string, any>; global: Record<string, any> }
 	profileThresholds: Record<string, number>
 	hasOpenedModeSelector: boolean
+	filesChangedEnabled: boolean
 }
 
 export interface ClineSayTool {

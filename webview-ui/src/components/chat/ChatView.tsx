@@ -780,7 +780,10 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 	useEvent("message", handleMessage)
 
 	// NOTE: the VSCode window needs to be focused for this to work.
-	useMount(() => textAreaRef.current?.focus())
+	useMount(() => {
+		vscode.postMessage({ type: "webviewReady" })
+		textAreaRef.current?.focus()
+	})
 
 	useDebounceEffect(
 		() => {
