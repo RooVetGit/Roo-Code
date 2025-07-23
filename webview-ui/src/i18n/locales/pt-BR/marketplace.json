@@ -125,6 +125,19 @@
 			"maxSources": "Máximo de {{max}} fontes permitidas"
 		}
 	},
+	"removeConfirm": {
+		"mode": {
+			"title": "Remover Modo",
+			"message": "Tem certeza de que deseja remover o modo \"{{modeName}}\"?",
+			"rulesWarning": "Isso também removerá todos os arquivos de regras associados a este modo."
+		},
+		"mcp": {
+			"title": "Remover Servidor MCP",
+			"message": "Tem certeza de que deseja remover o servidor MCP \"{{mcpName}}\"?"
+		},
+		"cancel": "Cancelar",
+		"confirm": "Remover"
+	},
 	"footer": {
 		"issueText": "Encontrou um problema com um item do marketplace ou tem sugestões para novos itens? <0>Abra um issue no GitHub</0> para nos avisar!"
 	}

@@ -2229,8 +2229,22 @@ export const webviewMessageHandler = async (
 				try {
 					await marketplaceManager.removeInstalledMarketplaceItem(message.mpItem, message.mpInstallOptions)
 					await provider.postStateToWebview()
+
+					// Send success message to webview
+					provider.postMessageToWebview({
+						type: "marketplaceRemoveResult",
+						success: true,
+						slug: message.mpItem.id,
+					})
 				} catch (error) {
 					console.error(`Error removing marketplace item: ${error}`)
+					// Send error message to webview
+					provider.postMessageToWebview({
+						type: "marketplaceRemoveResult",
+						success: false,
+						error: error instanceof Error ? error.message : String(error),
+						slug: message.mpItem.id,
+					})
 				}
 			}
 			break

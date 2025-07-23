@@ -125,6 +125,19 @@
 			"maxSources": "최대 {{max}}개의 소스가 허용됩니다"
 		}
 	},
+	"removeConfirm": {
+		"mode": {
+			"title": "모드 제거",
+			"message": "정말로 '{{modeName}}' 모드를 제거하시겠습니까?",
+			"rulesWarning": "이렇게 하면 이 모드와 관련된 모든 규칙 파일도 제거됩니다."
+		},
+		"mcp": {
+			"title": "MCP 서버 제거",
+			"message": "정말로 '{{mcpName}}' MCP 서버를 제거하시겠습니까?"
+		},
+		"cancel": "취소",
+		"confirm": "제거"
+	},
 	"footer": {
 		"issueText": "Marketplace 아이템에 문제가 있거나 새로운 아이템에 대한 제안이 있나요? <0>GitHub issue를 열어서</0> 알려주세요!"
 	}

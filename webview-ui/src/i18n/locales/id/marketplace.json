@@ -125,6 +125,19 @@
 			"maxSources": "Maksimal {{max}} sumber diizinkan"
 		}
 	},
+	"removeConfirm": {
+		"mode": {
+			"title": "Hapus Mode",
+			"message": "Apakah Anda yakin ingin menghapus mode \"{{modeName}}\"?",
+			"rulesWarning": "Ini juga akan menghapus semua file aturan terkait untuk mode ini."
+		},
+		"mcp": {
+			"title": "Hapus Server MCP",
+			"message": "Apakah Anda yakin ingin menghapus server MCP \"{{mcpName}}\"?"
+		},
+		"cancel": "Batal",
+		"confirm": "Hapus"
+	},
 	"footer": {
 		"issueText": "Menemukan masalah dengan item marketplace atau punya saran untuk yang baru? <0>Buka GitHub issue</0> untuk memberi tahu kami!"
 	}

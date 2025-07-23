@@ -2,9 +2,12 @@ import * as vscode from "vscode"
 import * as path from "path"
 import * as fs from "fs/promises"
 import * as yaml from "yaml"
+import * as os from "os"
 import type { MarketplaceItem, MarketplaceItemType, InstallMarketplaceItemOptions, McpParameter } from "@roo-code/types"
 import { GlobalFileNames } from "../../shared/globalFileNames"
 import { ensureSettingsDirectoryExists } from "../../utils/globalContext"
+import { fileExistsAtPath } from "../../utils/fs"
+import type { CustomModesManager } from "../../core/config/CustomModesManager"
 
 export interface InstallOptions extends InstallMarketplaceItemOptions {
 	target: "project" | "global"
@@ -12,7 +15,10 @@ export interface InstallOptions extends InstallMarketplaceItemOptions {
 }
 
 export class SimpleInstaller {
-	constructor(private readonly context: vscode.ExtensionContext) {}
+	constructor(
+		private readonly context: vscode.ExtensionContext,
+		private readonly customModesManager?: CustomModesManager,
+	) {}
 
 	async installItem(item: MarketplaceItem, options: InstallOptions): Promise<{ filePath: string; line?: number }> {
 		const { target } = options
@@ -40,6 +46,48 @@ export class SimpleInstaller {
 			throw new Error("Mode content should not be an array")
 		}
 
+		// If CustomModesManager is available, use importModeWithRules
+		if (this.customModesManager) {
+			// Transform marketplace content to import format (wrap in customModes array)
+			const importData = {
+				customModes: [yaml.parse(item.content)],
+			}
+			const importYaml = yaml.stringify(importData)
+
+			// Call customModesManager.importModeWithRules
+			const result = await this.customModesManager.importModeWithRules(importYaml, target)
+
+			if (!result.success) {
+				throw new Error(result.error || "Failed to import mode")
+			}
+
+			// Return the file path and line number for VS Code to open
+			const filePath = await this.getModeFilePath(target)
+
+			// Try to find the line number where the mode was added
+			let line: number | undefined
+			try {
+				const fileContent = await fs.readFile(filePath, "utf-8")
+				const lines = fileContent.split("\n")
+				const modeData = yaml.parse(item.content)
+
+				// Find the line containing the slug of the added mode
+				if (modeData?.slug) {
+					const slugLineIndex = lines.findIndex(
+						(l) => l.includes(`slug: ${modeData.slug}`) || l.includes(`slug: "${modeData.slug}"`),
+					)
+					if (slugLineIndex >= 0) {
+						line = slugLineIndex + 1 // Convert to 1-based line number
+					}
+				}
+			} catch (error) {
+				// If we can't find the line number, that's okay
+			}
+
+			return { filePath, line }
+		}
+
+		// Fallback to original implementation if CustomModesManager is not available
 		const filePath = await this.getModeFilePath(target)
 		const modeData = yaml.parse(item.content)
 
@@ -248,55 +296,69 @@ export class SimpleInstaller {
 	}
 
 	private async removeMode(item: MarketplaceItem, target: "project" | "global"): Promise<void> {
-		const filePath = await this.getModeFilePath(target)
+		if (!this.customModesManager) {
+			throw new Error("CustomModesManager is not available")
+		}
 
+		// Parse the item content to get the slug
+		let content: string
+		if (Array.isArray(item.content)) {
+			// Array of McpInstallationMethod objects - use first method
+			content = item.content[0].content
+		} else {
+			content = item.content || ""
+		}
+
+		let modeSlug: string
 		try {
-			const existing = await fs.readFile(filePath, "utf-8")
-			let existingData: any
+			const modeData = yaml.parse(content)
+			modeSlug = modeData.slug
+		} catch (error) {
+			throw new Error("Invalid mode content: unable to parse YAML")
+		}
 
-			try {
-				const parsed = yaml.parse(existing)
-				// Ensure we have a valid object
-				existingData = parsed && typeof parsed === "object" ? parsed : {}
-			} catch (parseError) {
-				// If we can't parse the file, we can't safely remove a mode
-				const fileName = target === "project" ? ".roomodes" : "custom-modes.yaml"
-				throw new Error(
-					`Cannot remove mode: The ${fileName} file contains invalid YAML. ` +
-						`Please fix the syntax errors before removing modes.`,
-				)
-			}
+		if (!modeSlug) {
+			throw new Error("Mode missing slug identifier")
+		}
 
-			// Ensure customModes array exists
-			if (!existingData.customModes) {
-				existingData.customModes = []
-			}
+		// Get the mode details before deletion to determine source and rules folder path
+		const customModes = await this.customModesManager.getCustomModes()
+		const modeToDelete = customModes.find((mode) => mode.slug === modeSlug)
 
-			// Parse the item content to get the slug
-			let content: string
-			if (Array.isArray(item.content)) {
-				// Array of McpInstallationMethod objects - use first method
-				content = item.content[0].content
+		// Use CustomModesManager to delete the mode configuration
+		await this.customModesManager.deleteCustomMode(modeSlug)
+
+		// Handle rules folder deletion separately (similar to webviewMessageHandler)
+		if (modeToDelete) {
+			// Determine the scope based on source (project or global)
+			const scope = modeToDelete.source || "global"
+
+			// Determine the rules folder path
+			let rulesFolderPath: string
+			if (scope === "project") {
+				const workspaceFolder = vscode.workspace.workspaceFolders?.[0]
+				if (workspaceFolder) {
+					rulesFolderPath = path.join(workspaceFolder.uri.fsPath, ".roo", `rules-${modeSlug}`)
+				} else {
+					return // No workspace, can't delete project rules
+				}
 			} else {
-				content = item.content
-			}
-			const modeData = yaml.parse(content || "")
-
-			if (!modeData.slug) {
-				return // Nothing to remove if no slug
+				// Global scope - use OS home directory
+				const homeDir = os.homedir()
+				rulesFolderPath = path.join(homeDir, ".roo", `rules-${modeSlug}`)
 			}
 
-			// Remove mode with matching slug
-			existingData.customModes = existingData.customModes.filter((mode: any) => mode.slug !== modeData.slug)
-
-			// Always write back the file, even if empty
-			await fs.writeFile(filePath, yaml.stringify(existingData, { lineWidth: 0 }), "utf-8")
-		} catch (error: any) {
-			if (error.code === "ENOENT") {
-				// File doesn't exist, nothing to remove
-				return
+			// Check if the rules folder exists and delete it
+			const rulesFolderExists = await fileExistsAtPath(rulesFolderPath)
+			if (rulesFolderExists) {
+				try {
+					await fs.rm(rulesFolderPath, { recursive: true, force: true })
+					console.log(`Deleted rules folder for mode ${modeSlug}: ${rulesFolderPath}`)
+				} catch (error) {
+					console.error(`Failed to delete rules folder for mode ${modeSlug}: ${error}`)
+					// Continue even if folder deletion fails
+				}
 			}
-			throw error
 		}
 	}
 

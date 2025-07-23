@@ -125,6 +125,19 @@
 			"maxSources": "最多允許 {{max}} 個來源"
 		}
 	},
+	"removeConfirm": {
+		"mode": {
+			"title": "移除模式",
+			"message": "您確定要移除「{{modeName}}」模式嗎？",
+			"rulesWarning": "這也會移除此模式的任何相關規則檔案。"
+		},
+		"mcp": {
+			"title": "移除 MCP 伺服器",
+			"message": "您確定要移除 MCP 伺服器「{{mcpName}}」嗎？"
+		},
+		"cancel": "取消",
+		"confirm": "移除"
+	},
 	"footer": {
 		"issueText": "發現 marketplace 項目問題或有新項目建議？<0>在 GitHub 開啟 issue</0> 告訴我們！"
 	}

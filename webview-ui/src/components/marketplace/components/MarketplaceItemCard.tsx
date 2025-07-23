@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react"
+import React, { useMemo, useState, useEffect } from "react"
 import { MarketplaceItem, TelemetryEventName } from "@roo-code/types"
 import { vscode } from "@/utils/vscode"
 import { telemetryClient } from "@/utils/TelemetryClient"
@@ -10,6 +10,16 @@ import { Button } from "@/components/ui/button"
 import { StandardTooltip } from "@/components/ui"
 import { MarketplaceInstallModal } from "./MarketplaceInstallModal"
 import { useExtensionState } from "@/context/ExtensionStateContext"
+import {
+	AlertDialog,
+	AlertDialogAction,
+	AlertDialogCancel,
+	AlertDialogContent,
+	AlertDialogDescription,
+	AlertDialogFooter,
+	AlertDialogHeader,
+	AlertDialogTitle,
+} from "@/components/ui"
 
 interface ItemInstalledMetadata {
 	type: string
@@ -29,6 +39,29 @@ export const MarketplaceItemCard: React.FC<MarketplaceItemCardProps> = ({ item, 
 	const { t } = useAppTranslation()
 	const { cwd } = useExtensionState()
 	const [showInstallModal, setShowInstallModal] = useState(false)
+	const [showRemoveConfirm, setShowRemoveConfirm] = useState(false)
+	const [removeTarget, setRemoveTarget] = useState<"project" | "global">("project")
+
+	// Listen for removal result messages
+	useEffect(() => {
+		const handleMessage = (event: MessageEvent) => {
+			const message = event.data
+			if (message.type === "marketplaceRemoveResult" && message.slug === item.id) {
+				if (message.success) {
+					// Removal succeeded - refresh marketplace data
+					vscode.postMessage({
+						type: "fetchMarketplaceData",
+					})
+				} else {
+					// Removal failed - could show an error toast/notification here if needed
+					console.error("Failed to remove marketplace item:", message.error)
+				}
+			}
+		}
+
+		window.addEventListener("message", handleMessage)
+		return () => window.removeEventListener("message", handleMessage)
+	}, [item.id])
 
 	const typeLabel = useMemo(() => {
 		const labels: Partial<Record<MarketplaceItem["type"], string>> = {
@@ -92,16 +125,8 @@ export const MarketplaceItemCard: React.FC<MarketplaceItemCardProps> = ({ item, 
 									onClick={() => {
 										// Determine which installation to remove (prefer project over global)
 										const target = isInstalledInProject ? "project" : "global"
-										vscode.postMessage({
-											type: "removeInstalledMarketplaceItem",
-											mpItem: item,
-											mpInstallOptions: { target },
-										})
-
-										// Request fresh marketplace data to update installed status
-										vscode.postMessage({
-											type: "fetchMarketplaceData",
-										})
+										setRemoveTarget(target)
+										setShowRemoveConfirm(true)
 									}}>
 									{t("marketplace:items.card.remove")}
 								</Button>
@@ -169,6 +194,46 @@ export const MarketplaceItemCard: React.FC<MarketplaceItemCardProps> = ({ item, 
 				onClose={() => setShowInstallModal(false)}
 				hasWorkspace={!!cwd}
 			/>
+
+			{/* Remove Confirmation Dialog */}
+			<AlertDialog open={showRemoveConfirm} onOpenChange={setShowRemoveConfirm}>
+				<AlertDialogContent>
+					<AlertDialogHeader>
+						<AlertDialogTitle>
+							{item.type === "mode"
+								? t("marketplace:removeConfirm.mode.title")
+								: t("marketplace:removeConfirm.mcp.title")}
+						</AlertDialogTitle>
+						<AlertDialogDescription>
+							{item.type === "mode" ? (
+								<>
+									{t("marketplace:removeConfirm.mode.message", { modeName: item.name })}
+									<div className="mt-2 text-sm">
+										{t("marketplace:removeConfirm.mode.rulesWarning")}
+									</div>
+								</>
+							) : (
+								t("marketplace:removeConfirm.mcp.message", { mcpName: item.name })
+							)}
+						</AlertDialogDescription>
+					</AlertDialogHeader>
+					<AlertDialogFooter>
+						<AlertDialogCancel>{t("marketplace:removeConfirm.cancel")}</AlertDialogCancel>
+						<AlertDialogAction
+							onClick={() => {
+								vscode.postMessage({
+									type: "removeInstalledMarketplaceItem",
+									mpItem: item,
+									mpInstallOptions: { target: removeTarget },
+								})
+
+								setShowRemoveConfirm(false)
+							}}>
+							{t("marketplace:removeConfirm.confirm")}
+						</AlertDialogAction>
+					</AlertDialogFooter>
+				</AlertDialogContent>
+			</AlertDialog>
 		</>
 	)
 }
