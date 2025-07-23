@@ -2,7 +2,6 @@ import * as vscode from "vscode"
 import * as path from "path"
 import * as fs from "fs/promises"
 import * as yaml from "yaml"
-import * as os from "os"
 import type { MarketplaceItem, MarketplaceItemType, InstallMarketplaceItemOptions, McpParameter } from "@roo-code/types"
 import { GlobalFileNames } from "../../shared/globalFileNames"
 import { ensureSettingsDirectoryExists } from "../../utils/globalContext"
@@ -321,45 +320,8 @@ export class SimpleInstaller {
 			throw new Error("Mode missing slug identifier")
 		}
 
-		// Get the mode details before deletion to determine source and rules folder path
-		const customModes = await this.customModesManager.getCustomModes()
-		const modeToDelete = customModes.find((mode) => mode.slug === modeSlug)
-
-		// Use CustomModesManager to delete the mode configuration
+		// Use CustomModesManager to delete the mode configuration and associated rules folder
 		await this.customModesManager.deleteCustomMode(modeSlug)
-
-		// Handle rules folder deletion separately (similar to webviewMessageHandler)
-		if (modeToDelete) {
-			// Determine the scope based on source (project or global)
-			const scope = modeToDelete.source || "global"
-
-			// Determine the rules folder path
-			let rulesFolderPath: string
-			if (scope === "project") {
-				const workspaceFolder = vscode.workspace.workspaceFolders?.[0]
-				if (workspaceFolder) {
-					rulesFolderPath = path.join(workspaceFolder.uri.fsPath, ".roo", `rules-${modeSlug}`)
-				} else {
-					return // No workspace, can't delete project rules
-				}
-			} else {
-				// Global scope - use OS home directory
-				const homeDir = os.homedir()
-				rulesFolderPath = path.join(homeDir, ".roo", `rules-${modeSlug}`)
-			}
-
-			// Check if the rules folder exists and delete it
-			const rulesFolderExists = await fileExistsAtPath(rulesFolderPath)
-			if (rulesFolderExists) {
-				try {
-					await fs.rm(rulesFolderPath, { recursive: true, force: true })
-					console.log(`Deleted rules folder for mode ${modeSlug}: ${rulesFolderPath}`)
-				} catch (error) {
-					console.error(`Failed to delete rules folder for mode ${modeSlug}: ${error}`)
-					// Continue even if folder deletion fails
-				}
-			}
-		}
 	}
 
 	private async removeMcp(item: MarketplaceItem, target: "project" | "global"): Promise<void> {

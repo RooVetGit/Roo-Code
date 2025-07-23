@@ -2238,6 +2238,12 @@ export const webviewMessageHandler = async (
 					})
 				} catch (error) {
 					console.error(`Error removing marketplace item: ${error}`)
+
+					// Show error message to user
+					vscode.window.showErrorMessage(
+						`Failed to remove marketplace item: ${error instanceof Error ? error.message : String(error)}`,
+					)
+
 					// Send error message to webview
 					provider.postMessageToWebview({
 						type: "marketplaceRemoveResult",
