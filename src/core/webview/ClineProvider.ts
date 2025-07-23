@@ -682,7 +682,7 @@ export class ClineProvider
 			`img-src ${webview.cspSource} https://storage.googleapis.com https://img.clerk.com data:`,
 			`media-src ${webview.cspSource}`,
 			`script-src 'unsafe-eval' ${webview.cspSource} https://* https://*.posthog.com http://${localServerUrl} http://0.0.0.0:${localPort} 'nonce-${nonce}'`,
-			`connect-src ${webview.cspSource} https://* https://*.posthog.com ws://${localServerUrl} ws://0.0.0.0:${localPort} http://${localServerUrl} http://0.0.0.0:${localPort}`,
+			`connect-src https://* https://*.posthog.com ws://${localServerUrl} ws://0.0.0.0:${localPort} http://${localServerUrl} http://0.0.0.0:${localPort}`,
 		]
 
 		return /*html*/ `
@@ -764,7 +764,7 @@ export class ClineProvider
             <meta charset="utf-8">
             <meta name="viewport" content="width=device-width,initial-scale=1,shrink-to-fit=no">
             <meta name="theme-color" content="#000000">
-            <meta http-equiv="Content-Security-Policy" content="default-src 'none'; font-src ${webview.cspSource} data:; style-src ${webview.cspSource} 'unsafe-inline'; img-src ${webview.cspSource} https://storage.googleapis.com https://img.clerk.com data:; media-src ${webview.cspSource}; script-src ${webview.cspSource} 'wasm-unsafe-eval' 'nonce-${nonce}' https://us-assets.i.posthog.com 'strict-dynamic'; connect-src ${webview.cspSource} https://openrouter.ai https://api.requesty.ai https://us.i.posthog.com https://us-assets.i.posthog.com;">
+            <meta http-equiv="Content-Security-Policy" content="default-src 'none'; font-src ${webview.cspSource} data:; style-src ${webview.cspSource} 'unsafe-inline'; img-src ${webview.cspSource} https://storage.googleapis.com https://img.clerk.com data:; media-src ${webview.cspSource}; script-src ${webview.cspSource} 'wasm-unsafe-eval' 'nonce-${nonce}' https://us-assets.i.posthog.com 'strict-dynamic'; connect-src https://openrouter.ai https://api.requesty.ai https://us.i.posthog.com https://us-assets.i.posthog.com;">
             <link rel="stylesheet" type="text/css" href="${stylesUri}">
 			<link href="${codiconsUri}" rel="stylesheet" />
 			<script nonce="${nonce}">
@@ -1726,100 +1726,6 @@ export class ClineProvider
 					stateValues.codebaseIndexConfig?.codebaseIndexOpenAiCompatibleBaseUrl,
 				codebaseIndexSearchMaxResults: stateValues.codebaseIndexConfig?.codebaseIndexSearchMaxResults,
 				codebaseIndexSearchMinScore: stateValues.codebaseIndexConfig?.codebaseIndexSearchMinScore,
-			},
-			profileThresholds: stateValues.profileThresholds ?? {},
-			// Add diagnostic message settings
-			includeDiagnosticMessages: stateValues.includeDiagnosticMessages ?? true,
-			maxDiagnosticMessages: stateValues.maxDiagnosticMessages ?? 50,
-		}
-
-		// Return the same structure as before
-		return {
-			apiConfiguration: providerSettings,
-			lastShownAnnouncementId: stateValues.lastShownAnnouncementId,
-			customInstructions: stateValues.customInstructions,
-			apiModelId: stateValues.apiModelId,
-			alwaysAllowReadOnly: stateValues.alwaysAllowReadOnly ?? false,
-			alwaysAllowReadOnlyOutsideWorkspace: stateValues.alwaysAllowReadOnlyOutsideWorkspace ?? false,
-			alwaysAllowWrite: stateValues.alwaysAllowWrite ?? false,
-			alwaysAllowWriteOutsideWorkspace: stateValues.alwaysAllowWriteOutsideWorkspace ?? false,
-			alwaysAllowWriteProtected: stateValues.alwaysAllowWriteProtected ?? false,
-			alwaysAllowExecute: stateValues.alwaysAllowExecute ?? false,
-			alwaysAllowBrowser: stateValues.alwaysAllowBrowser ?? false,
-			alwaysAllowMcp: stateValues.alwaysAllowMcp ?? false,
-			alwaysAllowModeSwitch: stateValues.alwaysAllowModeSwitch ?? false,
-			alwaysAllowSubtasks: stateValues.alwaysAllowSubtasks ?? false,
-			alwaysAllowFollowupQuestions: stateValues.alwaysAllowFollowupQuestions ?? false,
-			alwaysAllowUpdateTodoList: stateValues.alwaysAllowUpdateTodoList ?? false,
-			followupAutoApproveTimeoutMs: stateValues.followupAutoApproveTimeoutMs ?? 60000,
-			allowedMaxRequests: stateValues.allowedMaxRequests,
-			autoCondenseContext: stateValues.autoCondenseContext ?? true,
-			autoCondenseContextPercent: stateValues.autoCondenseContextPercent ?? 100,
-			taskHistory: stateValues.taskHistory,
-			allowedCommands: stateValues.allowedCommands,
-			soundEnabled: stateValues.soundEnabled ?? false,
-			ttsEnabled: stateValues.ttsEnabled ?? false,
-			ttsSpeed: stateValues.ttsSpeed ?? 1.0,
-			diffEnabled: stateValues.diffEnabled ?? true,
-			enableCheckpoints: stateValues.enableCheckpoints ?? true,
-			soundVolume: stateValues.soundVolume,
-			browserViewportSize: stateValues.browserViewportSize ?? "900x600",
-			screenshotQuality: stateValues.screenshotQuality ?? 75,
-			remoteBrowserHost: stateValues.remoteBrowserHost,
-			remoteBrowserEnabled: stateValues.remoteBrowserEnabled ?? false,
-			cachedChromeHostUrl: stateValues.cachedChromeHostUrl as string | undefined,
-			fuzzyMatchThreshold: stateValues.fuzzyMatchThreshold ?? 1.0,
-			writeDelayMs: stateValues.writeDelayMs ?? 1000,
-			terminalOutputLineLimit: stateValues.terminalOutputLineLimit ?? 500,
-			terminalShellIntegrationTimeout:
-				stateValues.terminalShellIntegrationTimeout ?? Terminal.defaultShellIntegrationTimeout,
-			terminalShellIntegrationDisabled: stateValues.terminalShellIntegrationDisabled ?? false,
-			terminalCommandDelay: stateValues.terminalCommandDelay ?? 0,
-			terminalPowershellCounter: stateValues.terminalPowershellCounter ?? false,
-			terminalZshClearEolMark: stateValues.terminalZshClearEolMark ?? true,
-			terminalZshOhMy: stateValues.terminalZshOhMy ?? false,
-			terminalZshP10k: stateValues.terminalZshP10k ?? false,
-			terminalZdotdir: stateValues.terminalZdotdir ?? false,
-			terminalCompressProgressBar: stateValues.terminalCompressProgressBar ?? true,
-			mode: stateValues.mode ?? defaultModeSlug,
-			language: stateValues.language ?? formatLanguage(vscode.env.language),
-			mcpEnabled: stateValues.mcpEnabled ?? true,
-			enableMcpServerCreation: stateValues.enableMcpServerCreation ?? true,
-			alwaysApproveResubmit: stateValues.alwaysApproveResubmit ?? false,
-			requestDelaySeconds: Math.max(5, stateValues.requestDelaySeconds ?? 10),
-			currentApiConfigName: stateValues.currentApiConfigName ?? "default",
-			listApiConfigMeta: stateValues.listApiConfigMeta ?? [],
-			pinnedApiConfigs: stateValues.pinnedApiConfigs ?? {},
-			modeApiConfigs: stateValues.modeApiConfigs ?? ({} as Record<Mode, string>),
-			customModePrompts: stateValues.customModePrompts ?? {},
-			customSupportPrompts: stateValues.customSupportPrompts ?? {},
-			enhancementApiConfigId: stateValues.enhancementApiConfigId,
-			experiments: stateValues.experiments ?? experimentDefault,
-			autoApprovalEnabled: stateValues.autoApprovalEnabled ?? false,
-			customModes,
-			maxOpenTabsContext: stateValues.maxOpenTabsContext ?? 20,
-			maxWorkspaceFiles: stateValues.maxWorkspaceFiles ?? 200,
-			openRouterUseMiddleOutTransform: stateValues.openRouterUseMiddleOutTransform ?? true,
-			browserToolEnabled: stateValues.browserToolEnabled ?? true,
-			telemetrySetting: stateValues.telemetrySetting || "unset",
-			showRooIgnoredFiles: stateValues.showRooIgnoredFiles ?? true,
-			maxReadFileLine: stateValues.maxReadFileLine ?? -1,
-			maxConcurrentFileReads: stateValues.maxConcurrentFileReads ?? 5,
-			historyPreviewCollapsed: stateValues.historyPreviewCollapsed ?? false,
-			cloudUserInfo,
-			cloudIsAuthenticated,
-			sharingEnabled,
-			organizationAllowList,
-			// Explicitly add condensing settings
-			condensingApiConfigId: stateValues.condensingApiConfigId,
-			customCondensingPrompt: stateValues.customCondensingPrompt,
-			codebaseIndexModels: stateValues.codebaseIndexModels ?? EMBEDDING_MODEL_PROFILES,
-			codebaseIndexConfig: stateValues.codebaseIndexConfig ?? {
-				codebaseIndexEnabled: true,
-				codebaseIndexQdrantUrl: "http://localhost:6333",
-				codebaseIndexEmbedderProvider: "openai",
-				codebaseIndexEmbedderBaseUrl: "",
-				codebaseIndexEmbedderModelId: "",
 			},
 			profileThresholds: stateValues.profileThresholds ?? {},
 			// Add diagnostic message settings
