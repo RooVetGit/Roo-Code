@@ -674,6 +674,22 @@ export const webviewMessageHandler = async (
 			// TODO: Cache like we do for OpenRouter, etc?
 			provider.postMessageToWebview({ type: "vsCodeLmModels", vsCodeLmModels })
 			break
+		case "requestHuggingFaceModels":
+			try {
+				const { getHuggingFaceModels } = await import("../../api/huggingface-models")
+				const huggingFaceModelsResponse = await getHuggingFaceModels()
+				provider.postMessageToWebview({
+					type: "huggingFaceModels",
+					huggingFaceModels: huggingFaceModelsResponse.models,
+				})
+			} catch (error) {
+				console.error("Failed to fetch Hugging Face models:", error)
+				provider.postMessageToWebview({
+					type: "huggingFaceModels",
+					huggingFaceModels: [],
+				})
+			}
+			break
 		case "openImage":
 			openImage(message.text!, { values: message.values })
 			break
@@ -1252,6 +1268,16 @@ export const webviewMessageHandler = async (
 		case "maxConcurrentFileReads":
 			const valueToSave = message.value // Capture the value intended for saving
 			await updateGlobalState("maxConcurrentFileReads", valueToSave)
+			await provider.postStateToWebview()
+			break
+		case "includeDiagnosticMessages":
+			// Only apply default if the value is truly undefined (not false)
+			const includeValue = message.bool !== undefined ? message.bool : true
+			await updateGlobalState("includeDiagnosticMessages", includeValue)
+			await provider.postStateToWebview()
+			break
+		case "maxDiagnosticMessages":
+			await updateGlobalState("maxDiagnosticMessages", message.value ?? 50)
 			await provider.postStateToWebview()
 			break
 		case "setHistoryPreviewCollapsed": // Add the new case handler
