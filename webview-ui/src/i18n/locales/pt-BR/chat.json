@@ -116,7 +116,8 @@
 		"title": "Modos",
 		"marketplace": "Marketplace de Modos",
 		"settings": "Configurações de Modos",
-		"description": "Personas especializadas que adaptam o comportamento do Roo."
+		"description": "Personas especializadas que adaptam o comportamento do Roo.",
+		"searchPlaceholder": "Pesquisar modos..."
 	},
 	"errorReadingFile": "Erro ao ler arquivo:",
 	"noValidImages": "Nenhuma imagem válida foi processada",

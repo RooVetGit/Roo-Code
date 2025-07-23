@@ -116,7 +116,8 @@
 		"title": "Modalità",
 		"marketplace": "Marketplace delle Modalità",
 		"settings": "Impostazioni Modalità",
-		"description": "Personalità specializzate che adattano il comportamento di Roo."
+		"description": "Personalità specializzate che adattano il comportamento di Roo.",
+		"searchPlaceholder": "Cerca modalità..."
 	},
 	"errorReadingFile": "Errore nella lettura del file:",
 	"noValidImages": "Nessuna immagine valida è stata elaborata",

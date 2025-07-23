@@ -155,7 +155,7 @@ export const ModeSelector = ({
 							ref={searchInputRef}
 							value={searchValue}
 							onChange={(e) => setSearchValue(e.target.value)}
-							placeholder={t("common:ui.search_placeholder")}
+							placeholder={t("chat:modeSelector.searchPlaceholder")}
 							className="w-full h-8 px-2 py-1 text-xs bg-vscode-input-background text-vscode-input-foreground border border-vscode-input-border rounded focus:outline-0"
 							data-testid="mode-search-input"
 						/>

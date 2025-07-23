@@ -116,7 +116,8 @@
 		"title": "Modi",
 		"marketplace": "Modus-Marketplace",
 		"settings": "Modus-Einstellungen",
-		"description": "Spezialisierte Personas, die Roos Verhalten anpassen."
+		"description": "Spezialisierte Personas, die Roos Verhalten anpassen.",
+		"searchPlaceholder": "Modi suchen..."
 	},
 	"errorReadingFile": "Fehler beim Lesen der Datei:",
 	"noValidImages": "Keine gültigen Bilder wurden verarbeitet",
