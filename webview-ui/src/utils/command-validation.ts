@@ -376,56 +376,6 @@ export function isAutoDeniedSingleCommand(
 }
 
 /**
- * Check if a command string should be auto-approved.
- * Only blocks subshell attempts if there's a denylist configured.
- * Requires all sub-commands to be auto-approved.
- */
-export function isAutoApprovedCommand(command: string, allowedCommands: string[], deniedCommands?: string[]): boolean {
-	if (!command?.trim()) return true
-
-	// Only block subshell execution attempts if there's a denylist configured
-	if ((command.includes("$(") || command.includes("`")) && deniedCommands?.length) {
-		return false
-	}
-
-	// Parse into sub-commands (split by &&, ||, ;, |)
-	const subCommands = parseCommand(command)
-
-	// Ensure every sub-command is auto-approved
-	return subCommands.every((cmd) => {
-		// Remove simple PowerShell-like redirections (e.g. 2>&1) before checking
-		const cmdWithoutRedirection = cmd.replace(/\d*>&\d*/, "").trim()
-
-		return isAutoApprovedSingleCommand(cmdWithoutRedirection, allowedCommands, deniedCommands)
-	})
-}
-
-/**
- * Check if a command string should be auto-denied.
- * Only blocks subshell attempts if there's a denylist configured.
- * Auto-denies if any sub-command is auto-denied.
- */
-export function isAutoDeniedCommand(command: string, allowedCommands: string[], deniedCommands?: string[]): boolean {
-	if (!command?.trim()) return false
-
-	// Only block subshell execution attempts if there's a denylist configured
-	if ((command.includes("$(") || command.includes("`")) && deniedCommands?.length) {
-		return true
-	}
-
-	// Parse into sub-commands (split by &&, ||, ;, |)
-	const subCommands = parseCommand(command)
-
-	// Auto-deny if any sub-command is auto-denied
-	return subCommands.some((cmd) => {
-		// Remove simple PowerShell-like redirections (e.g. 2>&1) before checking
-		const cmdWithoutRedirection = cmd.replace(/\d*>&\d*/, "").trim()
-
-		return isAutoDeniedSingleCommand(cmdWithoutRedirection, allowedCommands, deniedCommands)
-	})
-}
-
-/**
  * Command approval decision types
  */
 export type CommandDecision = "auto_approve" | "auto_deny" | "ask_user"
