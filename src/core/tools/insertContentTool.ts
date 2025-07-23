@@ -98,7 +98,6 @@ export async function insertContentTool(
 
 		cline.diffViewProvider.editType = fileExists ? "modify" : "create"
 		cline.diffViewProvider.originalContent = fileContent
-
 		const lines = fileExists ? fileContent.split("\n") : []
 
 		const updatedContent = insertGroups(lines, [
