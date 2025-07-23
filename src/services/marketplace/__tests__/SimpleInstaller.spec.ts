@@ -228,8 +228,11 @@ describe("SimpleInstaller", () => {
 			await installer.removeItem(mockModeItem, { target: "project" })
 
 			expect(mockCustomModesManager.deleteCustomMode).toHaveBeenCalledWith("test")
-			expect(fileExistsAtPath).toHaveBeenCalledWith("/test/workspace/.roo/rules-test")
-			expect(mockFs.rm).toHaveBeenCalledWith("/test/workspace/.roo/rules-test", { recursive: true, force: true })
+			expect(fileExistsAtPath).toHaveBeenCalledWith(path.join("/test/workspace", ".roo", "rules-test"))
+			expect(mockFs.rm).toHaveBeenCalledWith(path.join("/test/workspace", ".roo", "rules-test"), {
+				recursive: true,
+				force: true,
+			})
 		})
 
 		it("should handle global mode removal with rules cleanup", async () => {
@@ -243,8 +246,11 @@ describe("SimpleInstaller", () => {
 			await installer.removeItem(mockModeItem, { target: "global" })
 
 			expect(mockCustomModesManager.deleteCustomMode).toHaveBeenCalledWith("test")
-			expect(fileExistsAtPath).toHaveBeenCalledWith("/home/user/.roo/rules-test")
-			expect(mockFs.rm).toHaveBeenCalledWith("/home/user/.roo/rules-test", { recursive: true, force: true })
+			expect(fileExistsAtPath).toHaveBeenCalledWith(path.join("/home/user", ".roo", "rules-test"))
+			expect(mockFs.rm).toHaveBeenCalledWith(path.join("/home/user", ".roo", "rules-test"), {
+				recursive: true,
+				force: true,
+			})
 		})
 
 		it("should handle case when rules folder does not exist", async () => {
@@ -258,7 +264,7 @@ describe("SimpleInstaller", () => {
 			await installer.removeItem(mockModeItem, { target: "project" })
 
 			expect(mockCustomModesManager.deleteCustomMode).toHaveBeenCalledWith("test")
-			expect(fileExistsAtPath).toHaveBeenCalledWith("/test/workspace/.roo/rules-test")
+			expect(fileExistsAtPath).toHaveBeenCalledWith(path.join("/test/workspace", ".roo", "rules-test"))
 			expect(mockFs.rm).not.toHaveBeenCalled()
 		})
 
