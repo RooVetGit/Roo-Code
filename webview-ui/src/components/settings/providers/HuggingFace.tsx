@@ -1,6 +1,6 @@
 import { useCallback, useState, useEffect, useMemo } from "react"
 import { useEvent } from "react-use"
-import { VSCodeTextField } from "@vscode/webview-ui-toolkit/react"
+import { VSCodeTextField, VSCodeCheckbox } from "@vscode/webview-ui-toolkit/react"
 
 import type { ProviderSettings } from "@roo-code/types"
 
@@ -8,7 +8,9 @@ import { ExtensionMessage } from "@roo/ExtensionMessage"
 import { vscode } from "@src/utils/vscode"
 import { useAppTranslation } from "@src/i18n/TranslationContext"
 import { VSCodeButtonLink } from "@src/components/common/VSCodeButtonLink"
-import { SearchableSelect, type SearchableSelectOption } from "@src/components/ui"
+import { SearchableSelect, type SearchableSelectOption, Slider } from "@src/components/ui"
+import { cn } from "@src/lib/utils"
+import { TemperatureControl } from "../TemperatureControl"
 
 import { inputEventTransform } from "../transforms"
 
@@ -140,6 +142,49 @@ export const HuggingFace = ({ apiConfiguration, setApiConfigurationField }: Hugg
 		return nameMap[provider] || provider.charAt(0).toUpperCase() + provider.slice(1)
 	}
 
+	// Get model capabilities
+	const modelCapabilities = useMemo(() => {
+		if (!currentModel) return null
+
+		const supportsImages = currentModel.pipeline_tag === "image-text-to-text"
+		const maxTokens = currentModel.config.tokenizer_config?.model_max_length
+
+		return {
+			supportsImages,
+			maxTokens,
+		}
+	}, [currentModel])
+
+	// Model capabilities component
+	const ModelCapabilities = () => {
+		if (!modelCapabilities) return null
+
+		return (
+			<div className="flex flex-col gap-2">
+				<div className="flex flex-col gap-1 text-sm">
+					<div
+						className={cn(
+							"flex items-center gap-1",
+							modelCapabilities.supportsImages
+								? "text-vscode-charts-green"
+								: "text-vscode-errorForeground",
+						)}>
+						<span
+							className={cn("codicon", modelCapabilities.supportsImages ? "codicon-check" : "codicon-x")}
+						/>
+						{modelCapabilities.supportsImages ? "Supports images" : "Text only"}
+					</div>
+					{modelCapabilities.maxTokens && (
+						<div className="flex items-center gap-1 text-vscode-descriptionForeground">
+							<span className="codicon codicon-info" />
+							Max context: {modelCapabilities.maxTokens.toLocaleString()} tokens
+						</div>
+					)}
+				</div>
+			</div>
+		)
+	}
+
 	return (
 		<>
 			<VSCodeTextField
@@ -201,6 +246,49 @@ export const HuggingFace = ({ apiConfiguration, setApiConfigurationField }: Hugg
 					/>
 				</div>
 			)}
+
+			{/* Model capabilities */}
+			{currentModel && <ModelCapabilities />}
+
+			{/* Temperature control */}
+			<TemperatureControl
+				value={apiConfiguration?.modelTemperature}
+				onChange={(value) => setApiConfigurationField("modelTemperature", value)}
+				maxValue={2}
+			/>
+
+			{/* Max tokens control */}
+			<div className="flex flex-col gap-3">
+				<VSCodeCheckbox
+					checked={apiConfiguration?.includeMaxTokens ?? false}
+					onChange={(e: any) => setApiConfigurationField("includeMaxTokens", e.target.checked)}>
+					<label className="block font-medium mb-1">Include max output tokens</label>
+				</VSCodeCheckbox>
+				<div className="text-sm text-vscode-descriptionForeground -mt-2">
+					Limit the maximum number of tokens in the response
+				</div>
+
+				{apiConfiguration?.includeMaxTokens && (
+					<div className="flex flex-col gap-3 pl-3 border-l-2 border-vscode-button-background">
+						<div>
+							<label className="block font-medium mb-2 text-sm">Max output tokens</label>
+							<div className="flex items-center gap-2">
+								<Slider
+									min={1}
+									max={modelCapabilities?.maxTokens || 8192}
+									step={256}
+									value={[apiConfiguration?.modelMaxTokens || 2048]}
+									onValueChange={([value]) => setApiConfigurationField("modelMaxTokens", value)}
+								/>
+								<span className="w-16 text-sm">{apiConfiguration?.modelMaxTokens || 2048}</span>
+							</div>
+							<div className="text-vscode-descriptionForeground text-sm mt-1">
+								Maximum tokens to generate in response
+							</div>
+						</div>
+					</div>
+				)}
+			</div>
 
 			<div className="text-sm text-vscode-descriptionForeground -mt-2">
 				{t("settings:providers.apiKeyStorageNotice")}
