@@ -480,9 +480,48 @@ export function getCommandDecision(
 ): CommandDecision {
 	if (!command?.trim()) return "auto_approve"
 
-	// Only block subshell execution attempts if there's a denylist configured
+	// Check if subshells contain denied prefixes
 	if ((command.includes("$(") || command.includes("`")) && deniedCommands?.length) {
-		return "auto_deny"
+		// Extract subshell content and check if it contains denied prefixes
+		let match: RegExpExecArray | null
+
+		// Check $() subshells
+		const dollarRegex = /\$\((.*?)\)/g
+		while ((match = dollarRegex.exec(command)) !== null) {
+			const subshellContent = match[1].trim()
+			// Check if the subshell content matches any denied prefix
+			if (
+				deniedCommands.some((denied) => {
+					const lowerDenied = denied.toLowerCase()
+					const lowerContent = subshellContent.toLowerCase()
+					return lowerContent.startsWith(lowerDenied)
+				})
+			) {
+				return "auto_deny"
+			}
+		}
+
+		// Check `` subshells
+		const backtickRegex = /`(.*?)`/g
+		while ((match = backtickRegex.exec(command)) !== null) {
+			const subshellContent = match[1].trim()
+			// Check if the subshell content matches any denied prefix
+			if (
+				deniedCommands.some((denied) => {
+					const lowerDenied = denied.toLowerCase()
+					const lowerContent = subshellContent.toLowerCase()
+					return lowerContent.startsWith(lowerDenied)
+				})
+			) {
+				return "auto_deny"
+			}
+		}
+
+		// Also check if the main command contains denied prefixes
+		const mainCommandLower = command.toLowerCase()
+		if (deniedCommands.some((denied) => mainCommandLower.includes(denied.toLowerCase()))) {
+			return "auto_deny"
+		}
 	}
 
 	// Parse into sub-commands (split by &&, ||, ;, |)
