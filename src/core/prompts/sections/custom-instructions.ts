@@ -235,7 +235,12 @@ export async function addCustomInstructions(
 	globalCustomInstructions: string,
 	cwd: string,
 	mode: string,
-	options: { language?: string; rooIgnoreInstructions?: string; useAgentRules?: boolean; settings?: Record<string, any> } = {},
+	options: {
+		language?: string
+		rooIgnoreInstructions?: string
+		useAgentRules?: boolean
+		settings?: Record<string, any>
+	} = {},
 ): Promise<string> {
 	const sections = []
 
@@ -313,8 +318,8 @@ export async function addCustomInstructions(
 		rules.push(options.rooIgnoreInstructions)
 	}
 
-	// Add AGENTS.md content if enabled (default: true)
-	if (options.useAgentRules !== false) {
+	// Add AGENTS.md content if enabled (default: false)
+	if (options.useAgentRules === true) {
 		const agentRulesContent = await loadAgentRulesFile(cwd)
 		if (agentRulesContent && agentRulesContent.trim()) {
 			rules.push(agentRulesContent.trim())
