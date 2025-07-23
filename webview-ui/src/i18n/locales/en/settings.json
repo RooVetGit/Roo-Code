@@ -27,7 +27,6 @@
 		"checkpoints": "Checkpoints",
 		"notifications": "Notifications",
 		"contextManagement": "Context",
-		"ui": "Interface",
 		"terminal": "Terminal",
 		"prompts": "Prompts",
 		"experimental": "Experimental",
@@ -499,13 +498,6 @@
 			"usesGlobal": "(uses global {{threshold}}%)"
 		}
 	},
-	"ui": {
-		"description": "Configure interface and display settings",
-		"filesChanged": {
-			"label": "Enable Files Changed Overview",
-			"description": "When enabled, displays a panel showing files that have been modified between checkpoints.\nThis allows you to view diffs and accept/reject individual changes."
-		}
-	},
 	"terminal": {
 		"basic": {
 			"label": "Terminal Settings: Basic",
@@ -626,6 +618,10 @@
 		"MULTI_FILE_APPLY_DIFF": {
 			"name": "Enable concurrent file edits",
 			"description": "When enabled, Roo can edit multiple files in a single request. When disabled, Roo must edit files one at a time. Disabling this can help when working with less capable models or when you want more control over file modifications."
+		},
+		"filesChangedOverview": {
+			"name": "Enable Files Changed Overview",
+			"description": "When enabled, displays a panel showing files that have been modified between checkpoints.\nThis allows you to view diffs and accept/reject individual changes."
 		}
 	},
 	"promptCaching": {

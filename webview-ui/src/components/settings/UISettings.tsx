@@ -33,10 +33,12 @@ export const UISettings = ({ filesChangedEnabled, setCachedStateField, className
 						checked={filesChangedEnabled}
 						onChange={(e: any) => setCachedStateField("filesChangedEnabled", e.target.checked)}
 						data-testid="files-changed-enabled-checkbox">
-						<label className="block font-medium mb-1">{t("settings:ui.filesChanged.label")}</label>
+						<label className="block font-medium mb-1">
+							{t("settings:experimental.filesChangedOverview.name")}
+						</label>
 					</VSCodeCheckbox>
 					<div className="text-vscode-descriptionForeground text-sm mt-1 mb-3">
-						{t("settings:ui.filesChanged.description")}
+						{t("settings:experimental.filesChangedOverview.description")}
 					</div>
 				</div>
 			</Section>

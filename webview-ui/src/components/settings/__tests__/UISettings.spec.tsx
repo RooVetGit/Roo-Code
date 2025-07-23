@@ -55,8 +55,8 @@ describe("UISettings", () => {
 		expect(filesChangedCheckbox).not.toBeChecked()
 
 		// Check label and description are present
-		expect(screen.getByText("settings:ui.filesChanged.label")).toBeInTheDocument()
-		expect(screen.getByText("settings:ui.filesChanged.description")).toBeInTheDocument()
+		expect(screen.getByText("settings:experimental.filesChangedOverview.name")).toBeInTheDocument()
+		expect(screen.getByText("settings:experimental.filesChangedOverview.description")).toBeInTheDocument()
 	})
 
 	it("displays correct state when filesChangedEnabled is true", () => {
@@ -130,10 +130,10 @@ describe("UISettings", () => {
 			render(<UISettings {...defaultProps} />)
 
 			// Check that labels are present
-			expect(screen.getByText("settings:ui.filesChanged.label")).toBeInTheDocument()
+			expect(screen.getByText("settings:experimental.filesChangedOverview.name")).toBeInTheDocument()
 
 			// Check that descriptions are present
-			expect(screen.getByText("settings:ui.filesChanged.description")).toBeInTheDocument()
+			expect(screen.getByText("settings:experimental.filesChangedOverview.description")).toBeInTheDocument()
 		})
 
 		it("has proper test ids for all interactive elements", () => {
@@ -169,8 +169,8 @@ describe("UISettings", () => {
 			// Verify that translation keys are being used (mocked to return the key)
 			expect(screen.getByText("settings:sections.ui")).toBeInTheDocument()
 			expect(screen.getByText("settings:ui.description")).toBeInTheDocument()
-			expect(screen.getByText("settings:ui.filesChanged.label")).toBeInTheDocument()
-			expect(screen.getByText("settings:ui.filesChanged.description")).toBeInTheDocument()
+			expect(screen.getByText("settings:experimental.filesChangedOverview.name")).toBeInTheDocument()
+			expect(screen.getByText("settings:experimental.filesChangedOverview.description")).toBeInTheDocument()
 		})
 	})
 
