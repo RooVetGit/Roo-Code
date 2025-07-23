@@ -495,7 +495,7 @@
 			},
 			"maxMessages": {
 				"label": "Maximum diagnostic messages",
-				"description": "Controls the approximate size limit for diagnostic messages. The value represents a multiplier for content size (each unit ≈ 1KB). This prevents context overflow by limiting total diagnostic content rather than count. Higher values allow more diagnostic information but increase token usage.",
+				"description": "Limits the number of diagnostic messages (errors, warnings) included in the context. When set, only this many diagnostics will be shown, prioritizing errors over warnings. Set to 0 for unlimited diagnostics.",
 				"resetTooltip": "Reset to default value (50)",
 				"unlimitedLabel": "Unlimited"
 			}

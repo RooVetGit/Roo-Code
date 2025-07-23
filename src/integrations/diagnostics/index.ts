@@ -86,12 +86,8 @@ export async function diagnosticsToProblemsString(
 	const fileStats = new Map<vscode.Uri, vscode.FileStat>()
 	let result = ""
 
-	// If we have a limit, we need to use size-based limiting instead of count-based
+	// If we have a limit, use count-based limiting
 	if (maxDiagnosticMessages && maxDiagnosticMessages > 0) {
-		// Convert maxDiagnosticMessages to a character limit
-		// Assuming average diagnostic message is ~1000 characters, multiply by the count
-		const MAX_PROBLEMS_CONTENT_SIZE = maxDiagnosticMessages * 1000
-		let currentSize = 0
 		let includedCount = 0
 		let totalCount = 0
 
@@ -112,10 +108,15 @@ export async function diagnosticsToProblemsString(
 			return a.diagnostic.range.start.line - b.diagnostic.range.start.line
 		})
 
-		// Process diagnostics and track size
+		// Process diagnostics up to the count limit
 		const includedDiagnostics: typeof allDiagnostics = []
 		for (const item of allDiagnostics) {
-			// Format the diagnostic to calculate its size
+			// Stop if we've reached the count limit
+			if (includedCount >= maxDiagnosticMessages) {
+				break
+			}
+
+			// Format the diagnostic
 			let label: string
 			switch (item.diagnostic.severity) {
 				case vscode.DiagnosticSeverity.Error:
@@ -156,15 +157,8 @@ export async function diagnosticsToProblemsString(
 				diagnosticText = `\n- [${source}${label}] ${line} | (unavailable) : ${item.diagnostic.message}`
 			}
 
-			// Check if adding this diagnostic would exceed the size limit
-			const diagnosticSize = diagnosticText.length + path.relative(cwd, item.uri.fsPath).toPosix().length + 2 // +2 for newlines
-			if (currentSize + diagnosticSize > MAX_PROBLEMS_CONTENT_SIZE && includedCount > 0) {
-				break // Stop before exceeding limit
-			}
-
 			item.formattedText = diagnosticText
 			includedDiagnostics.push(item)
-			currentSize += diagnosticSize
 			includedCount++
 		}
 
