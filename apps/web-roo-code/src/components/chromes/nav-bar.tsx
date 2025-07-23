@@ -79,8 +79,7 @@ export function NavBar({ stars, downloads }: NavBarProps) {
 								Roo Code Cloud is coming
 							</span>
 							<a
-								href="https://shard-dogwood-daf.notion.site/238fd1401b0a8087b858e1ad431507cf?pvs=105"
-								target="_blank"
+								href="/cloud-waitlist"
 								rel="noopener noreferrer"
 								className="font-medium text-primary hover:underline pl-1.5">
 								Sign up
@@ -126,6 +125,19 @@ export function NavBar({ stars, downloads }: NavBarProps) {
 			<div
 				className={`absolute left-0 right-0 top-16 z-50 transform border-b border-border bg-background shadow-lg backdrop-blur-none transition-all duration-200 md:hidden ${isMenuOpen ? "translate-y-0 opacity-100" : "pointer-events-none -translate-y-2 opacity-0"}`}>
 				<nav className="flex flex-col py-2">
+					<div className="mx-5 mb-2 flex items-center rounded-full bg-gradient-to-r from-blue-400 to-cyan-400 p-0.5 text-xs">
+						<div className="flex-grow text-center rounded-full bg-background px-2 py-1.5">
+							<span className="text-muted-foreground border-r-2 border-foreground/50 pr-3">
+								Roo Code Cloud is coming
+							</span>
+							<a
+								href="/cloud-waitlist"
+								rel="noopener noreferrer"
+								className="font-medium text-primary hover:underline pl-3">
+								Sign up
+							</a>
+						</div>
+					</div>
 					<ScrollButton
 						targetId="features"
 						className="w-full px-8 py-3 text-left text-sm font-medium text-foreground/80 transition-colors hover:bg-accent hover:text-foreground"
@@ -178,18 +190,6 @@ export function NavBar({ stars, downloads }: NavBarProps) {
 						onClick={() => setIsMenuOpen(false)}>
 						Careers
 					</a>
-					<div className="mx-8 my-3 flex items-center rounded-full bg-muted/70 border border-border/30 px-3 py-1.5 text-sm shadow-sm">
-						<span className="text-foreground/80">Roo Code Cloud is coming</span>
-						<span className="mx-1.5 text-foreground/80">&middot;</span>
-						<a
-							href="https://shard-dogwood-daf.notion.site/238fd1401b0a8087b858e1ad431507cf?pvs=105"
-							target="_blank"
-							rel="noopener noreferrer"
-							className="font-medium text-primary hover:underline"
-							onClick={() => setIsMenuOpen(false)}>
-							Sign up
-						</a>
-					</div>
 
 					<hr className="mx-8 my-2 border-t border-border/50" />
 

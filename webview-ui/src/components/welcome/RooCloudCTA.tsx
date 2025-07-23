@@ -13,9 +13,7 @@ export function RooCloudCTA() {
 					<span>{t("rooCloudCTA.description")}</span>
 				</p>
 				<p>
-					<a href="https://shard-dogwood-daf.notion.site/238fd1401b0a8087b858e1ad431507cf?pvs=105">
-						{t("rooCloudCTA.joinWaitlist")}
-					</a>
+					<a href="https://roocode.com/cloud-waitlist">{t("rooCloudCTA.joinWaitlist")}</a>
 				</p>
 			</div>
 		</div>
