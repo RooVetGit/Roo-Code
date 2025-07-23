@@ -52,5 +52,8 @@
 		"vectorDimensionNotDetermined": "Could not determine vector dimension for model '{{modelId}}' with provider '{{provider}}'. Check model profiles or configuration.",
 		"qdrantUrlMissing": "Qdrant URL missing for vector store creation",
 		"codeIndexingNotConfigured": "Cannot create services: Code indexing is not properly configured"
+	},
+	"codeIndex": {
+		"errorState": "Code index is in error state. Please check your configuration."
 	}
 }

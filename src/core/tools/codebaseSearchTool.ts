@@ -7,6 +7,28 @@ import { formatResponse } from "../prompts/responses"
 import { VectorStoreSearchResult } from "../../services/code-index/interfaces"
 import { AskApproval, HandleError, PushToolResult, RemoveClosingTag, ToolUse } from "../../shared/tools"
 import path from "path"
+import { TelemetryService } from "@roo-code/telemetry"
+import { TelemetryEventName } from "@roo-code/types"
+
+type IndexingState = "Standby" | "Indexing" | "Indexed" | "Error"
+
+/**
+ * Get a user-friendly message for the current indexing state
+ * @param state The current indexing state
+ * @returns A descriptive message for the user
+ */
+function getIndexingStateMessage(state: IndexingState): string {
+	switch (state) {
+		case "Standby":
+			return "Code indexing has not started yet. Please wait for the initial indexing to complete."
+		case "Indexing":
+			return "Code indexing is currently in progress. Semantic search will be available once indexing is complete."
+		case "Error":
+			return "Code indexing encountered an error. Please check your configuration and try again."
+		default:
+			return `Code indexing is in an unexpected state: ${state}`
+	}
+}
 
 export async function codebaseSearchTool(
 	cline: Task,
@@ -83,24 +105,20 @@ export async function codebaseSearchTool(
 		}
 
 		// Check indexing state at runtime
-		const indexingState = manager.state
+		const indexingState = manager.state as IndexingState
+
+		// Track telemetry for non-indexed states
 		if (indexingState !== "Indexed") {
-			let stateMessage = ""
-			switch (indexingState) {
-				case "Standby":
-					stateMessage =
-						"Code indexing has not started yet. Please wait for the initial indexing to complete."
-					break
-				case "Indexing":
-					stateMessage =
-						"Code indexing is currently in progress. Semantic search will be available once indexing is complete."
-					break
-				case "Error":
-					stateMessage = "Code indexing encountered an error. Please check your configuration and try again."
-					break
-				default:
-					stateMessage = `Code indexing is in an unexpected state: ${indexingState}`
-			}
+			TelemetryService.instance.captureEvent(TelemetryEventName.TOOL_USED, {
+				tool: toolName,
+				codeIndexState: indexingState,
+				hasQuery: query ? true : false,
+				result: "unavailable_not_indexed",
+			})
+		}
+
+		if (indexingState !== "Indexed") {
+			const stateMessage = getIndexingStateMessage(indexingState)
 
 			// Return informative message instead of throwing error
 			pushToolResult(

@@ -6,6 +6,7 @@ import { CodeIndexConfigManager } from "./config-manager"
 import { CodeIndexStateManager } from "./state-manager"
 import { TelemetryService } from "@roo-code/telemetry"
 import { TelemetryEventName } from "@roo-code/types"
+import { t } from "../../i18n"
 
 /**
  * Service responsible for searching the code index.
@@ -38,7 +39,7 @@ export class CodeIndexSearchService {
 		// This allows the tool to provide more user-friendly feedback
 		const currentState = this.stateManager.getCurrentStatus().systemStatus
 		if (currentState === "Error") {
-			throw new Error(`Code index is in error state. Please check your configuration.`)
+			throw new Error(t("embeddings:codeIndex.errorState"))
 		}
 
 		try {

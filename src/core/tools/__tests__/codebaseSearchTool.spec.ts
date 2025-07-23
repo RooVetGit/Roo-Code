@@ -3,6 +3,8 @@ import { codebaseSearchTool } from "../codebaseSearchTool"
 import { CodeIndexManager } from "../../../services/code-index/manager"
 import { Task } from "../../task/Task"
 import { ToolUse } from "../../../shared/tools"
+import { TelemetryService } from "@roo-code/telemetry"
+import { TelemetryEventName } from "@roo-code/types"
 
 // Mock dependencies
 vi.mock("../../../services/code-index/manager")
@@ -17,6 +19,13 @@ vi.mock("../../prompts/responses", () => ({
 vi.mock("vscode", () => ({
 	workspace: {
 		asRelativePath: vi.fn((path: string) => path.replace("/test/workspace/", "")),
+	},
+}))
+vi.mock("@roo-code/telemetry", () => ({
+	TelemetryService: {
+		instance: {
+			captureEvent: vi.fn(),
+		},
 	},
 }))
 
@@ -273,6 +282,145 @@ describe("codebaseSearchTool", () => {
 			expect(mockPushToolResult).toHaveBeenCalledWith(
 				expect.stringContaining("Semantic search is not available yet (currently Standby)"),
 			)
+		})
+
+		it("should track telemetry when indexing is in Standby state", async () => {
+			mockCodeIndexManager.state = "Standby"
+
+			const block: ToolUse = {
+				type: "tool_use",
+				name: "codebase_search",
+				params: { query: "test query" },
+				partial: false,
+			}
+
+			await codebaseSearchTool(
+				mockTask,
+				block,
+				mockAskApproval,
+				mockHandleError,
+				mockPushToolResult,
+				mockRemoveClosingTag,
+			)
+
+			expect(TelemetryService.instance.captureEvent).toHaveBeenCalledWith(TelemetryEventName.TOOL_USED, {
+				tool: "codebase_search",
+				codeIndexState: "Standby",
+				hasQuery: true,
+				result: "unavailable_not_indexed",
+			})
+		})
+
+		it("should track telemetry when indexing is in progress", async () => {
+			mockCodeIndexManager.state = "Indexing"
+
+			const block: ToolUse = {
+				type: "tool_use",
+				name: "codebase_search",
+				params: { query: "test query" },
+				partial: false,
+			}
+
+			await codebaseSearchTool(
+				mockTask,
+				block,
+				mockAskApproval,
+				mockHandleError,
+				mockPushToolResult,
+				mockRemoveClosingTag,
+			)
+
+			expect(TelemetryService.instance.captureEvent).toHaveBeenCalledWith(TelemetryEventName.TOOL_USED, {
+				tool: "codebase_search",
+				codeIndexState: "Indexing",
+				hasQuery: true,
+				result: "unavailable_not_indexed",
+			})
+			expect(mockPushToolResult).toHaveBeenCalledWith(
+				expect.stringContaining("Code indexing is currently in progress"),
+			)
+		})
+
+		it("should track telemetry when indexing is in error state", async () => {
+			mockCodeIndexManager.state = "Error"
+
+			const block: ToolUse = {
+				type: "tool_use",
+				name: "codebase_search",
+				params: { query: "test query" },
+				partial: false,
+			}
+
+			await codebaseSearchTool(
+				mockTask,
+				block,
+				mockAskApproval,
+				mockHandleError,
+				mockPushToolResult,
+				mockRemoveClosingTag,
+			)
+
+			expect(TelemetryService.instance.captureEvent).toHaveBeenCalledWith(TelemetryEventName.TOOL_USED, {
+				tool: "codebase_search",
+				codeIndexState: "Error",
+				hasQuery: true,
+				result: "unavailable_not_indexed",
+			})
+			expect(mockPushToolResult).toHaveBeenCalledWith(
+				expect.stringContaining("Code indexing encountered an error"),
+			)
+		})
+
+		it("should not track telemetry when indexing is complete", async () => {
+			mockCodeIndexManager.state = "Indexed"
+			mockCodeIndexManager.searchIndex.mockResolvedValue([])
+
+			const block: ToolUse = {
+				type: "tool_use",
+				name: "codebase_search",
+				params: { query: "test query" },
+				partial: false,
+			}
+
+			await codebaseSearchTool(
+				mockTask,
+				block,
+				mockAskApproval,
+				mockHandleError,
+				mockPushToolResult,
+				mockRemoveClosingTag,
+			)
+
+			// Should not capture telemetry event for non-indexed states
+			expect(TelemetryService.instance.captureEvent).not.toHaveBeenCalledWith(
+				TelemetryEventName.TOOL_USED,
+				expect.objectContaining({
+					result: "unavailable_not_indexed",
+				}),
+			)
+		})
+
+		it("should track telemetry with hasQuery false when query is missing", async () => {
+			mockCodeIndexManager.state = "Standby"
+
+			const block: ToolUse = {
+				type: "tool_use",
+				name: "codebase_search",
+				params: {},
+				partial: false,
+			}
+
+			await codebaseSearchTool(
+				mockTask,
+				block,
+				mockAskApproval,
+				mockHandleError,
+				mockPushToolResult,
+				mockRemoveClosingTag,
+			)
+
+			// Even though query is missing, telemetry should still be tracked before parameter validation
+			expect(mockTask.sayAndCreateMissingParamError).toHaveBeenCalledWith("codebase_search", "query")
 		})
 	})
 
