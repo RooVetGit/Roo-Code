@@ -253,6 +253,9 @@
 		"getChutesApiKey": "Obter chave de API Chutes",
 		"deepSeekApiKey": "Chave de API DeepSeek",
 		"getDeepSeekApiKey": "Obter chave de API DeepSeek",
+		"moonshotApiKey": "Chave de API Moonshot",
+		"getMoonshotApiKey": "Obter chave de API Moonshot",
+		"moonshotBaseUrl": "Ponto de entrada Moonshot",
 		"geminiApiKey": "Chave de API Gemini",
 		"getGroqApiKey": "Obter chave de API Groq",
 		"groqApiKey": "Chave de API Groq",
@@ -588,6 +591,10 @@
 				"label": "Precisão de correspondência",
 				"description": "Este controle deslizante controla quão precisamente as seções de código devem corresponder ao aplicar diffs. Valores mais baixos permitem correspondências mais flexíveis, mas aumentam o risco de substituições incorretas. Use valores abaixo de 100% com extrema cautela."
 			}
+		},
+		"todoList": {
+			"label": "Habilitar ferramenta de lista de tarefas",
+			"description": "Quando habilitado, o Roo pode criar e gerenciar listas de tarefas para acompanhar o progresso das tarefas. Isso ajuda a organizar tarefas complexas em etapas gerenciáveis."
 		}
 	},
 	"experimental": {
