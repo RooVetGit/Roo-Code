@@ -52,5 +52,8 @@
 		"vectorDimensionNotDetermined": "Tidak dapat menentukan dimensi vektor untuk model '{{modelId}}' dengan penyedia '{{provider}}'. Periksa profil model atau konfigurasi.",
 		"qdrantUrlMissing": "URL Qdrant tidak ada untuk membuat penyimpanan vektor",
 		"codeIndexingNotConfigured": "Tidak dapat membuat layanan: Pengindeksan kode tidak dikonfigurasi dengan benar"
+	},
+	"codeIndex": {
+		"errorState": "Indeks kode dalam status kesalahan. Silakan periksa konfigurasi Anda."
 	}
 }

@@ -52,5 +52,8 @@
 		"vectorDimensionNotDetermined": "No s'ha pogut determinar la dimensió del vector per al model '{{modelId}}' amb el proveïdor '{{provider}}'. Comprova els perfils del model o la configuració.",
 		"qdrantUrlMissing": "Falta l'URL de Qdrant per crear l'emmagatzematge de vectors",
 		"codeIndexingNotConfigured": "No es poden crear serveis: La indexació de codi no està configurada correctament"
+	},
+	"codeIndex": {
+		"errorState": "L'índex de codi està en estat d'error. Si us plau, comproveu la vostra configuració."
 	}
 }

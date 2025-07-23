@@ -52,5 +52,8 @@
 		"vectorDimensionNotDetermined": "プロバイダー '{{provider}}' のモデル '{{modelId}}' の埋め込み次元を決定できませんでした。モデルプロファイルまたは設定を確認してください。",
 		"qdrantUrlMissing": "ベクターストア作成のためのQdrant URLがありません",
 		"codeIndexingNotConfigured": "サービスを作成できません: コードインデックスが正しく設定されていません"
+	},
+	"codeIndex": {
+		"errorState": "コードインデックスがエラー状態です。設定を確認してください。"
 	}
 }
