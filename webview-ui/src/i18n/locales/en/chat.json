@@ -119,7 +119,8 @@
 		"marketplace": "Mode Marketplace",
 		"settings": "Mode Settings",
 		"description": "Specialized personas that tailor Roo's behavior.",
-		"searchPlaceholder": "Search modes..."
+		"searchPlaceholder": "Search modes...",
+		"noResults": "No results found"
 	},
 	"enhancePromptDescription": "The 'Enhance Prompt' button helps improve your prompt by providing additional context, clarification, or rephrasing. Try typing a prompt in here and clicking the button again to see how it works.",
 	"addImages": "Add images to message",

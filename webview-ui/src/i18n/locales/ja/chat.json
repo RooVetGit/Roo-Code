@@ -117,7 +117,8 @@
 		"marketplace": "モードマーケットプレイス",
 		"settings": "モード設定",
 		"description": "Rooの動作をカスタマイズする専門的なペルソナ。",
-		"searchPlaceholder": "モードを検索..."
+		"searchPlaceholder": "モードを検索...",
+		"noResults": "結果が見つかりません"
 	},
 	"errorReadingFile": "ファイル読み込みエラー:",
 	"noValidImages": "有効な画像が処理されませんでした",

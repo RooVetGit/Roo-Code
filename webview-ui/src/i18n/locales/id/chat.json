@@ -123,7 +123,8 @@
 		"marketplace": "Marketplace Mode",
 		"settings": "Pengaturan Mode",
 		"description": "Persona khusus yang menyesuaikan perilaku Roo.",
-		"searchPlaceholder": "Cari mode..."
+		"searchPlaceholder": "Cari mode...",
+		"noResults": "Tidak ada hasil yang ditemukan"
 	},
 	"addImages": "Tambahkan gambar ke pesan",
 	"sendMessage": "Kirim pesan",

@@ -117,7 +117,8 @@
 		"marketplace": "Modus-Marketplace",
 		"settings": "Modus-Einstellungen",
 		"description": "Spezialisierte Personas, die Roos Verhalten anpassen.",
-		"searchPlaceholder": "Modi suchen..."
+		"searchPlaceholder": "Modi suchen...",
+		"noResults": "Keine Ergebnisse gefunden"
 	},
 	"errorReadingFile": "Fehler beim Lesen der Datei:",
 	"noValidImages": "Keine gültigen Bilder wurden verarbeitet",

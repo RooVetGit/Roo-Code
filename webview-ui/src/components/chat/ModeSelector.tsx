@@ -114,6 +114,13 @@ export const ModeSelector = ({
 		[trackModeSelectorOpened],
 	)
 
+	// Auto-focus search input when popover opens
+	React.useEffect(() => {
+		if (open && searchInputRef.current) {
+			searchInputRef.current.focus()
+		}
+	}, [open])
+
 	// Combine instruction text for tooltip
 	const instructionText = `${t("chat:modeSelector.description")} ${modeShortcutText}`
 
@@ -172,7 +179,9 @@ export const ModeSelector = ({
 					{/* Mode List */}
 					<div className="max-h-[300px] overflow-y-auto">
 						{filteredModes.length === 0 && searchValue ? (
-							<div className="py-2 px-3 text-sm text-vscode-foreground/70">No results found</div>
+							<div className="py-2 px-3 text-sm text-vscode-foreground/70">
+								{t("chat:modeSelector.noResults")}
+							</div>
 						) : (
 							<div className="py-1">
 								{filteredModes.map((mode) => (
