@@ -155,7 +155,7 @@ export const ModeSelector = ({
 							ref={searchInputRef}
 							value={searchValue}
 							onChange={(e) => setSearchValue(e.target.value)}
-							placeholder="Search modes..."
+							placeholder={t("common:ui.search_placeholder")}
 							className="w-full h-8 px-2 py-1 text-xs bg-vscode-input-background text-vscode-input-foreground border border-vscode-input-border rounded focus:outline-0"
 							data-testid="mode-search-input"
 						/>
@@ -172,9 +172,7 @@ export const ModeSelector = ({
 					{/* Mode List */}
 					<div className="max-h-[300px] overflow-y-auto">
 						{filteredModes.length === 0 && searchValue ? (
-							<div className="py-2 px-3 text-sm text-vscode-foreground/70">
-								{t("settings:modelPicker.noMatchFound")}
-							</div>
+							<div className="py-2 px-3 text-sm text-vscode-foreground/70">No results found</div>
 						) : (
 							<div className="py-1">
 								{filteredModes.map((mode) => (
