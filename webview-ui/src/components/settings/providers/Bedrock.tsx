@@ -6,6 +6,7 @@ import { type ProviderSettings, type ModelInfo, BEDROCK_REGIONS } from "@roo-cod
 
 import { useAppTranslation } from "@src/i18n/TranslationContext"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, StandardTooltip } from "@src/components/ui"
+import { ApiKeyInput } from "@src/components/common/ApiKeyInput"
 
 import { inputEventTransform, noTransform } from "../transforms"
 
@@ -59,30 +60,24 @@ export const Bedrock = ({ apiConfiguration, setApiConfigurationField, selectedMo
 				</VSCodeTextField>
 			) : (
 				<>
-					<VSCodeTextField
+					<ApiKeyInput
 						value={apiConfiguration?.awsAccessKey || ""}
-						type="password"
 						onInput={handleInputChange("awsAccessKey")}
 						placeholder={t("settings:placeholders.accessKey")}
-						className="w-full">
-						<label className="block font-medium mb-1">{t("settings:providers.awsAccessKey")}</label>
-					</VSCodeTextField>
-					<VSCodeTextField
+						label={t("settings:providers.awsAccessKey")}
+					/>
+					<ApiKeyInput
 						value={apiConfiguration?.awsSecretKey || ""}
-						type="password"
 						onInput={handleInputChange("awsSecretKey")}
 						placeholder={t("settings:placeholders.secretKey")}
-						className="w-full">
-						<label className="block font-medium mb-1">{t("settings:providers.awsSecretKey")}</label>
-					</VSCodeTextField>
-					<VSCodeTextField
+						label={t("settings:providers.awsSecretKey")}
+					/>
+					<ApiKeyInput
 						value={apiConfiguration?.awsSessionToken || ""}
-						type="password"
 						onInput={handleInputChange("awsSessionToken")}
 						placeholder={t("settings:placeholders.sessionToken")}
-						className="w-full">
-						<label className="block font-medium mb-1">{t("settings:providers.awsSessionToken")}</label>
-					</VSCodeTextField>
+						label={t("settings:providers.awsSessionToken")}
+					/>
 				</>
 			)}
 			<div>

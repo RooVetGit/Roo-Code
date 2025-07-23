@@ -6,6 +6,7 @@ import type { ProviderSettings } from "@roo-code/types"
 
 import { useAppTranslation } from "@src/i18n/TranslationContext"
 import { VSCodeButtonLink } from "@src/components/common/VSCodeButtonLink"
+import { ApiKeyInput } from "@src/components/common/ApiKeyInput"
 
 import { inputEventTransform } from "../transforms"
 
@@ -56,14 +57,12 @@ export const OpenAI = ({ apiConfiguration, setApiConfigurationField }: OpenAIPro
 					/>
 				</>
 			)}
-			<VSCodeTextField
+			<ApiKeyInput
 				value={apiConfiguration?.openAiNativeApiKey || ""}
-				type="password"
 				onInput={handleInputChange("openAiNativeApiKey")}
 				placeholder={t("settings:placeholders.apiKey")}
-				className="w-full">
-				<label className="block font-medium mb-1">{t("settings:providers.openAiApiKey")}</label>
-			</VSCodeTextField>
+				label={t("settings:providers.openAiApiKey")}
+			/>
 			<div className="text-sm text-vscode-descriptionForeground -mt-2">
 				{t("settings:providers.apiKeyStorageNotice")}
 			</div>
