@@ -499,6 +499,10 @@
 				"resetTooltip": "Redefinir para o valor padrão (50)",
 				"unlimited": "Mensagens de diagnóstico ilimitadas",
 				"unlimitedLabel": "Ilimitado"
+			},
+			"delayAfterWrite": {
+				"label": "Atraso após as gravações para permitir que os diagnósticos detectem possíveis problemas",
+				"description": "Tempo de espera após a gravação de arquivos antes de prosseguir, permitindo que as ferramentas de diagnóstico processem as alterações e detectem problemas."
 			}
 		},
 		"condensingThreshold": {

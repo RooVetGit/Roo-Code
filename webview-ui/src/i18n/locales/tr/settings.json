@@ -499,6 +499,10 @@
 				"resetTooltip": "Varsayılan değere sıfırla (50)",
 				"unlimited": "Sınırsız tanı mesajları",
 				"unlimitedLabel": "Sınırsız"
+			},
+			"delayAfterWrite": {
+				"label": "Potansiyel sorunları tespit etmek için tanılamaya izin vermek üzere yazmalardan sonra gecikme",
+				"description": "Devam etmeden önce dosya yazımlarından sonra beklenecek süre, tanılama araçlarının değişiklikleri işlemesine ve sorunları tespit etmesine olanak tanır."
 			}
 		},
 		"condensingThreshold": {

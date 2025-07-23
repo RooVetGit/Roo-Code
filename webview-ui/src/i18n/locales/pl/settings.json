@@ -499,6 +499,10 @@
 				"resetTooltip": "Resetuj do wartości domyślnej (50)",
 				"unlimited": "Nieograniczone komunikaty diagnostyczne",
 				"unlimitedLabel": "Nieograniczone"
+			},
+			"delayAfterWrite": {
+				"label": "Opóźnienie po zapisie, aby umożliwić diagnostyce wykrycie potencjalnych problemów",
+				"description": "Czas oczekiwania po zapisie plików przed kontynuowaniem, aby narzędzia diagnostyczne mogły przetworzyć zmiany i wykryć problemy."
 			}
 		},
 		"condensingThreshold": {

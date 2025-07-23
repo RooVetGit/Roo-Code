@@ -498,6 +498,10 @@
 				"description": "Maximale Anzahl von Diagnosenachrichten, die pro Datei eingeschlossen werden. Dieses Limit gilt sowohl für die automatische Einbeziehung (wenn das Kontrollkästchen aktiviert ist) als auch für manuelle @problems-Erwähnungen. Höhere Werte bieten mehr Kontext, erhöhen aber den Token-Verbrauch.",
 				"resetTooltip": "Auf Standardwert zurücksetzen (50)",
 				"unlimitedLabel": "Unbegrenzt"
+			},
+			"delayAfterWrite": {
+				"label": "Verzögerung nach Schreibvorgängen, damit Diagnosen potenzielle Probleme erkennen können",
+				"description": "Wartezeit nach Dateischreibvorgängen vor dem Fortfahren, damit Diagnosetools Änderungen verarbeiten und Probleme erkennen können."
 			}
 		},
 		"condensingThreshold": {

@@ -499,6 +499,10 @@
 				"resetTooltip": "重設為預設值 (50)",
 				"unlimited": "無限制診斷訊息",
 				"unlimitedLabel": "無限制"
+			},
+			"delayAfterWrite": {
+				"label": "寫入後延遲以允許診斷程式偵測潛在問題",
+				"description": "在繼續之前寫入檔案後等待的時間，允許診斷工具處理變更並偵測問題。"
 			}
 		},
 		"condensingThreshold": {

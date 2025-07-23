@@ -481,6 +481,10 @@
 				"resetTooltip": "Reset ke nilai default (50)",
 				"unlimited": "Pesan diagnostik tidak terbatas",
 				"unlimitedLabel": "Tak terbatas"
+			},
+			"delayAfterWrite": {
+				"label": "Tunda setelah penulisan untuk memungkinkan diagnostik mendeteksi potensi masalah",
+				"description": "Waktu tunggu setelah penulisan file sebelum melanjutkan, memungkinkan alat diagnostik untuk memproses perubahan dan mendeteksi masalah."
 			}
 		},
 		"condensingThreshold": {

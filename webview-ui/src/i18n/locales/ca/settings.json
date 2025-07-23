@@ -498,6 +498,10 @@
 				"description": "Nombre màxim de missatges de diagnòstic a incloure per fitxer. Aquest límit s'aplica tant a la inclusió automàtica (quan la casella està activada) com a les mencions manuals de @problems. Valors més alts proporcionen més context però augmenten l'ús de tokens.",
 				"resetTooltip": "Restablir al valor per defecte (50)",
 				"unlimitedLabel": "Il·limitat"
+			},
+			"delayAfterWrite": {
+				"label": "Retard després d'escriptures per permetre que els diagnòstics detectin possibles problemes",
+				"description": "Temps d'espera després d'escriptures de fitxers abans de continuar, permetent que les eines de diagnòstic processin els canvis i detectin problemes."
 			}
 		},
 		"condensingThreshold": {

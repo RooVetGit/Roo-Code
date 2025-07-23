@@ -499,6 +499,10 @@
 				"resetTooltip": "重置为默认值 (50)",
 				"unlimited": "无限制诊断消息",
 				"unlimitedLabel": "无限制"
+			},
+			"delayAfterWrite": {
+				"label": "写入后延迟以允许诊断程序检测潜在问题",
+				"description": "在继续之前写入文件后等待的时间，允许诊断工具处理更改并检测问题。"
 			}
 		},
 		"condensingThreshold": {

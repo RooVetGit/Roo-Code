@@ -499,6 +499,10 @@
 				"resetTooltip": "Reset naar standaardwaarde (50)",
 				"unlimited": "Onbeperkte diagnostische berichten",
 				"unlimitedLabel": "Onbeperkt"
+			},
+			"delayAfterWrite": {
+				"label": "Vertraging na het schrijven om diagnostiek potentiële problemen te laten detecteren",
+				"description": "Wachttijd na het schrijven van bestanden voordat u doorgaat, zodat diagnostische hulpmiddelen wijzigingen kunnen verwerken en problemen kunnen detecteren."
 			}
 		},
 		"condensingThreshold": {

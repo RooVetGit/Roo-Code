@@ -499,6 +499,10 @@
 				"resetTooltip": "Đặt lại về giá trị mặc định (50)",
 				"unlimited": "Thông báo chẩn đoán không giới hạn",
 				"unlimitedLabel": "Không giới hạn"
+			},
+			"delayAfterWrite": {
+				"label": "Trì hoãn sau khi ghi để cho phép chẩn đoán phát hiện các sự cố tiềm ẩn",
+				"description": "Thời gian chờ sau khi ghi tệp trước khi tiếp tục, cho phép các công cụ chẩn đoán xử lý các thay đổi và phát hiện sự cố."
 			}
 		},
 		"condensingThreshold": {

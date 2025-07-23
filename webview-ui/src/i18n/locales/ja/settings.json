@@ -499,6 +499,10 @@
 				"resetTooltip": "デフォルト値（50）にリセット",
 				"unlimited": "無制限の診断メッセージ",
 				"unlimitedLabel": "無制限"
+			},
+			"delayAfterWrite": {
+				"label": "書き込み後に診断が潜在的な問題を検出できるように遅延させる",
+				"description": "ファイルの書き込み後に処理を続行するまでの待機時間。これにより、診断ツールが変更を処理して問題を検出できます。"
 			}
 		},
 		"condensingThreshold": {

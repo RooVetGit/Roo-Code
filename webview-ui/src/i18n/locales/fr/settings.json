@@ -498,6 +498,10 @@
 				"description": "Nombre maximum de messages de diagnostic à inclure par fichier. Cette limite s'applique à la fois à l'inclusion automatique (lorsque la case est cochée) et aux mentions manuelles @problems. Des valeurs plus élevées fournissent plus de contexte mais augmentent l'utilisation des jetons.",
 				"resetTooltip": "Réinitialiser à la valeur par défaut (50)",
 				"unlimitedLabel": "Illimité"
+			},
+			"delayAfterWrite": {
+				"label": "Délai après les écritures pour permettre aux diagnostics de détecter les problèmes potentiels",
+				"description": "Temps d'attente après les écritures de fichiers avant de continuer, permettant aux outils de diagnostic de traiter les modifications et de détecter les problèmes."
 			}
 		},
 		"condensingThreshold": {

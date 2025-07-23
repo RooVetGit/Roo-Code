@@ -499,6 +499,10 @@
 				"resetTooltip": "기본값(50)으로 재설정",
 				"unlimited": "무제한 진단 메시지",
 				"unlimitedLabel": "무제한"
+			},
+			"delayAfterWrite": {
+				"label": "진단이 잠재적인 문제를 감지할 수 있도록 쓰기 후 지연",
+				"description": "파일 쓰기 후 계속 진행하기 전에 대기하는 시간으로, 진단 도구가 변경 사항을 처리하고 문제를 감지할 수 있도록 합니다."
 			}
 		},
 		"condensingThreshold": {

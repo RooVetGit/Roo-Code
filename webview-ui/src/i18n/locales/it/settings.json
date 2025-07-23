@@ -499,6 +499,10 @@
 				"resetTooltip": "Ripristina al valore predefinito (50)",
 				"unlimited": "Messaggi diagnostici illimitati",
 				"unlimitedLabel": "Illimitato"
+			},
+			"delayAfterWrite": {
+				"label": "Ritardo dopo le scritture per consentire alla diagnostica di rilevare potenziali problemi",
+				"description": "Tempo di attesa dopo la scrittura dei file prima di procedere, consentendo agli strumenti di diagnostica di elaborare le modifiche e rilevare i problemi."
 			}
 		},
 		"condensingThreshold": {
