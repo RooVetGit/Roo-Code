@@ -1663,8 +1663,7 @@ export class Task extends EventEmitter<ClineEvents> {
 				{
 					maxConcurrentFileReads,
 					todoListEnabled: apiConfiguration?.todoListEnabled,
-					useAgentRules:
-						vscode.workspace.getConfiguration("roo-cline").get<boolean>("useAgentRules") ?? false,
+					useAgentRules: vscode.workspace.getConfiguration("roo-cline").get<boolean>("useAgentRules") ?? true,
 				},
 			)
 		})()

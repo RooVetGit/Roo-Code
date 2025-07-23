@@ -318,8 +318,8 @@ export async function addCustomInstructions(
 		rules.push(options.rooIgnoreInstructions)
 	}
 
-	// Add AGENTS.md content if enabled (default: false)
-	if (options.useAgentRules === true) {
+	// Add AGENTS.md content if enabled (default: true)
+	if (options.useAgentRules !== false) {
 		const agentRulesContent = await loadAgentRulesFile(cwd)
 		if (agentRulesContent && agentRulesContent.trim()) {
 			rules.push(agentRulesContent.trim())
