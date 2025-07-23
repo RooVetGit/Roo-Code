@@ -2,6 +2,7 @@ import * as vscode from "vscode"
 import * as path from "path"
 import * as fs from "fs/promises"
 import * as yaml from "yaml"
+import * as os from "os"
 import type { MarketplaceItem, MarketplaceItemType, InstallMarketplaceItemOptions, McpParameter } from "@roo-code/types"
 import { GlobalFileNames } from "../../shared/globalFileNames"
 import { ensureSettingsDirectoryExists } from "../../utils/globalContext"
@@ -320,8 +321,41 @@ export class SimpleInstaller {
 			throw new Error("Mode missing slug identifier")
 		}
 
-		// Use CustomModesManager to delete the mode configuration and associated rules folder
+		// Get the current modes to determine the source
+		const modes = await this.customModesManager.getCustomModes()
+		const mode = modes.find((m) => m.slug === modeSlug)
+
+		// Use CustomModesManager to delete the mode configuration
 		await this.customModesManager.deleteCustomMode(modeSlug)
+
+		// Also clean up the rules folder if it exists
+		if (mode) {
+			const isGlobal = mode.source === "global" || target === "global"
+			let rulesFolderPath: string
+
+			if (isGlobal) {
+				const homeDir = os.homedir()
+				rulesFolderPath = path.join(homeDir, ".roo", `rules-${modeSlug}`)
+			} else {
+				const workspaceFolder = vscode.workspace.workspaceFolders?.[0]
+				if (workspaceFolder) {
+					rulesFolderPath = path.join(workspaceFolder.uri.fsPath, ".roo", `rules-${modeSlug}`)
+				} else {
+					return // No workspace folder, can't delete project rules
+				}
+			}
+
+			// Check if rules folder exists and delete it
+			const folderExists = await fileExistsAtPath(rulesFolderPath)
+			if (folderExists) {
+				try {
+					await fs.rm(rulesFolderPath, { recursive: true, force: true })
+				} catch (error) {
+					// Log error but don't throw - continue with the removal
+					console.error(`Failed to delete rules folder for mode ${modeSlug}:`, error)
+				}
+			}
+		}
 	}
 
 	private async removeMcp(item: MarketplaceItem, target: "project" | "global"): Promise<void> {
