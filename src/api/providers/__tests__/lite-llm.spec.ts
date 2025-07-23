@@ -98,11 +98,16 @@ describe("LiteLLMHandler", () => {
 			// Verify that create was called with cache control headers
 			const createCall = mockOpenAIClient.chat.completions.create.mock.calls[0][0]
 
-			// Check system message has cache control
+			// Check system message has cache control in the proper format
 			expect(createCall.messages[0]).toMatchObject({
 				role: "system",
-				content: systemPrompt,
-				cache_control: { type: "ephemeral" },
+				content: [
+					{
+						type: "text",
+						text: systemPrompt,
+						cache_control: { type: "ephemeral" },
+					},
+				],
 			})
 
 			// Check that the last two user messages have cache control
@@ -111,10 +116,33 @@ describe("LiteLLMHandler", () => {
 				.filter((idx: number) => idx !== -1)
 
 			const lastUserIdx = userMessageIndices[userMessageIndices.length - 1]
+			const secondLastUserIdx = userMessageIndices[userMessageIndices.length - 2]
 
+			// Check last user message has proper structure with cache control
 			expect(createCall.messages[lastUserIdx]).toMatchObject({
-				cache_control: { type: "ephemeral" },
+				role: "user",
+				content: [
+					{
+						type: "text",
+						text: "How are you?",
+						cache_control: { type: "ephemeral" },
+					},
+				],
 			})
+
+			// Check second last user message (first user message in this case)
+			if (secondLastUserIdx !== -1) {
+				expect(createCall.messages[secondLastUserIdx]).toMatchObject({
+					role: "user",
+					content: [
+						{
+							type: "text",
+							text: "Hello",
+							cache_control: { type: "ephemeral" },
+						},
+					],
+				})
+			}
 
 			// Verify usage includes cache tokens
 			const usageChunk = results.find((chunk) => chunk.type === "usage")
