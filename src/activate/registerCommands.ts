@@ -230,47 +230,69 @@ const getCommandsMap = ({ context, outputChannel, provider }: RegisterCommandOpt
 		SvnLogger.info(`Starting SVN debug for workspace: ${workspaceRoot}`)
 
 		try {
-			// check svn installed
+			// Check SVN installation and repository status
+			// Note: These functions now handle their own user-friendly error messages
 			SvnLogger.info("Checking if SVN is installed...")
 			const svnInstalled = await checkSvnInstalled()
 			SvnLogger.info(`SVN installed: ${svnInstalled}`)
 
 			if (!svnInstalled) {
-				vscode.window.showErrorMessage("SVN is not installed or not in PATH")
+				// Error message already shown by checkSvnInstalled
 				return
 			}
 
-			// check svn repo
 			SvnLogger.info("Checking if current directory is an SVN repository...")
 			const isSvnRepo = await checkSvnRepo(workspaceRoot)
 			SvnLogger.info(`Is SVN repository: ${isSvnRepo}`)
 
 			if (!isSvnRepo) {
-				vscode.window.showWarningMessage("Current workspace is not an SVN repository")
+				// Error message already shown by checkSvnRepo
 				return
 			}
 
-			// get svn repo info
+			// Get SVN repository information
 			SvnLogger.info("Getting SVN repository information...")
 			const repoInfo = await getSvnRepositoryInfo(workspaceRoot)
 			SvnLogger.info(`Repository info: ${JSON.stringify(repoInfo, null, 2)}`)
 
-			// search recent commits
+			// Search for recent commits
 			SvnLogger.info("Searching for recent commits...")
 			const commits = await searchSvnCommits("", workspaceRoot)
 			SvnLogger.info(`Found ${commits.length} commits`)
+
 			commits.forEach((commit, index) => {
 				SvnLogger.info(`Commit ${index + 1}: r${commit.revision} - ${commit.message}`)
 			})
 
-			vscode.window.showInformationMessage(
-				`SVN Debug Complete! Found ${commits.length} commits. Check "Roo Code - SVN Debug" output channel for details.`,
+			// Show success message
+			const action = await vscode.window.showInformationMessage(
+				`SVN Debug Complete! Found ${commits.length} commits.\n\nRepository URL: ${repoInfo.repositoryUrl || "Unknown"}\nWorking Copy Root: ${repoInfo.workingCopyRoot || "Unknown"}\n\nCheck "Roo Code - SVN Debug" output channel for detailed information.`,
+				{ modal: false },
+				"Show Output",
 			)
+
+			if (action === "Show Output") {
+				SvnLogger.showOutput()
+			}
 		} catch (error) {
-			SvnLogger.error("SVN debug failed", error)
-			vscode.window.showErrorMessage(
-				`SVN debug failed: ${error instanceof Error ? error.message : String(error)}`,
-			)
+			// This should rarely happen now since individual functions handle their own errors
+			const svnError = error instanceof Error ? error : new Error(String(error))
+			SvnLogger.error("SVN debug failed", svnError)
+
+			vscode.window
+				.showErrorMessage(
+					"SVN debug operation failed",
+					{
+						modal: false,
+						detail: `Unexpected error: ${svnError.message}\n\nPlease check the SVN Debug output channel for more details.`,
+					},
+					"Show Output",
+				)
+				.then((action) => {
+					if (action === "Show Output") {
+						SvnLogger.showOutput()
+					}
+				})
 		}
 	},
 })

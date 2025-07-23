@@ -177,7 +177,7 @@
 			},
 			{
 				"command": "roo-cline.debugSvn",
-				"title": "Debug SVN Integration",
+				"title": "%command.debugSvn.title%",
 				"category": "%configuration.title%"
 			}
 		],

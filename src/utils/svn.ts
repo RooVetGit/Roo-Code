@@ -192,24 +192,201 @@ export async function getWorkspaceSvnInfo(): Promise<SvnRepositoryInfo> {
 }
 
 /**
- * Checks if the given directory is an SVN repository
- * @param cwd The directory to check
- * @returns True if it's an SVN repository, false otherwise
+ * Enhanced error handling with user-friendly messages
  */
-export async function checkSvnRepo(cwd: string): Promise<boolean> {
-	SvnLogger.debug("checkSvnRepo called", { cwd })
+class SvnErrorHandler {
+	/**
+	 * Shows user-friendly error message with guidance
+	 */
+	static async showSvnNotInstalledError(): Promise<void> {
+		const action = await vscode.window.showErrorMessage(
+			"SVN is not installed or not available in PATH",
+			{
+				modal: false,
+				detail: "SVN command line tool is required for SVN operations. Please install SVN and ensure it's available in your system PATH.",
+			},
+			"Install Guide",
+			"Check PATH",
+		)
 
-	try {
-		const svnDir = path.join(cwd, ".svn")
-		await fs.access(svnDir)
-		SvnLogger.debug("SVN repository detected", { svnDir })
-		return true
-	} catch (error) {
-		SvnLogger.debug("Not an SVN repository", {
-			cwd,
-			error: (error instanceof Error ? error : new Error(String(error))).toString(),
+		if (action === "Install Guide") {
+			vscode.env.openExternal(vscode.Uri.parse("https://subversion.apache.org/packages.html"))
+		} else if (action === "Check PATH") {
+			vscode.window.showInformationMessage("To check if SVN is in PATH, open terminal and run: svn --version", {
+				modal: false,
+			})
+		}
+	}
+
+	/**
+	 * Shows user-friendly message when not in SVN repository
+	 */
+	static async showNotSvnRepositoryError(workspacePath: string): Promise<void> {
+		const action = await vscode.window.showWarningMessage(
+			"Current workspace is not an SVN repository",
+			{
+				modal: false,
+				detail: `The directory "${workspacePath}" does not contain a .svn folder. SVN operations are only available in SVN working copies.`,
+			},
+			"Learn More",
+			"Initialize SVN",
+		)
+
+		if (action === "Learn More") {
+			vscode.env.openExternal(vscode.Uri.parse("https://svnbook.red-bean.com/en/1.7/svn.basic.html"))
+		} else if (action === "Initialize SVN") {
+			vscode.window.showInformationMessage(
+				"To initialize SVN repository, use: svn checkout <repository-url> or svn import",
+				{ modal: false },
+			)
+		}
+	}
+
+	/**
+	 * Shows network/connection error with guidance
+	 */
+	static async showNetworkError(error: Error): Promise<void> {
+		const action = await vscode.window.showErrorMessage(
+			"SVN network operation failed",
+			{
+				modal: false,
+				detail: `Network error: ${error.message}. This could be due to network connectivity issues, server problems, or authentication failures.`,
+			},
+			"Retry",
+			"Check Connection",
+		)
+
+		if (action === "Check Connection") {
+			vscode.window.showInformationMessage(
+				"Please check:\n• Network connectivity\n• SVN server status\n• Authentication credentials\n• Firewall settings",
+				{ modal: false },
+			)
+		}
+	}
+
+	/**
+	 * Shows repository corruption error with guidance
+	 */
+	static async showRepositoryCorruptionError(workspacePath: string): Promise<void> {
+		const action = await vscode.window.showErrorMessage(
+			"SVN repository appears to be corrupted",
+			{
+				modal: false,
+				detail: `The .svn directory in "${workspacePath}" may be corrupted or incomplete. This can happen due to interrupted operations or file system issues.`,
+			},
+			"Cleanup",
+			"Get Help",
+		)
+
+		if (action === "Cleanup") {
+			vscode.window.showInformationMessage(
+				"Try running: svn cleanup\nIf that fails, you may need to re-checkout the repository.",
+				{ modal: false },
+			)
+		} else if (action === "Get Help") {
+			vscode.env.openExternal(vscode.Uri.parse("https://svnbook.red-bean.com/en/1.7/svn.ref.svn.c.cleanup.html"))
+		}
+	}
+
+	/**
+	 * Shows permission error with guidance
+	 */
+	static async showPermissionError(error: Error): Promise<void> {
+		const action = await vscode.window.showErrorMessage(
+			"SVN operation failed due to permission issues",
+			{
+				modal: false,
+				detail: `Permission denied: ${error.message}. This could be due to file system permissions or SVN server access rights.`,
+			},
+			"Check Permissions",
+			"Get Help",
+		)
+
+		if (action === "Check Permissions") {
+			vscode.window.showInformationMessage(
+				"Please check:\n• File/folder permissions\n• SVN server access rights\n• User authentication\n• Write permissions in working directory",
+				{ modal: false },
+			)
+		}
+	}
+
+	/**
+	 * Shows feature unavailable message with graceful degradation
+	 */
+	static showFeatureUnavailable(feature: string, reason: string): void {
+		vscode.window.showWarningMessage(`SVN ${feature} is currently unavailable`, {
+			modal: false,
+			detail: `${reason}. Some SVN features may be limited until this is resolved.`,
 		})
-		return false
+	}
+
+	/**
+	 * Determines error type and shows appropriate message
+	 */
+	static async handleSvnError(error: Error, context: string, workspacePath?: string): Promise<void> {
+		const errorMessage = error.message.toLowerCase()
+
+		// Network/connection errors
+		if (
+			errorMessage.includes("network") ||
+			errorMessage.includes("connection") ||
+			errorMessage.includes("timeout") ||
+			errorMessage.includes("unreachable") ||
+			errorMessage.includes("resolve")
+		) {
+			await this.showNetworkError(error)
+			return
+		}
+
+		// Permission errors
+		if (
+			errorMessage.includes("permission") ||
+			errorMessage.includes("access denied") ||
+			errorMessage.includes("forbidden") ||
+			errorMessage.includes("eacces")
+		) {
+			await this.showPermissionError(error)
+			return
+		}
+
+		// Repository corruption
+		if (
+			errorMessage.includes("corrupt") ||
+			errorMessage.includes("invalid") ||
+			errorMessage.includes("malformed") ||
+			errorMessage.includes("cleanup")
+		) {
+			if (workspacePath) {
+				await this.showRepositoryCorruptionError(workspacePath)
+				return
+			}
+		}
+
+		// SVN not found
+		if (
+			errorMessage.includes("not found") ||
+			errorMessage.includes("command not found") ||
+			errorMessage.includes("is not recognized")
+		) {
+			await this.showSvnNotInstalledError()
+			return
+		}
+
+		// Generic error with context
+		vscode.window
+			.showErrorMessage(
+				`SVN ${context} failed`,
+				{
+					modal: false,
+					detail: `Error: ${error.message}\n\nPlease check the SVN Debug output channel for more details.`,
+				},
+				"Show Output",
+			)
+			.then((action) => {
+				if (action === "Show Output") {
+					SvnLogger.showOutput()
+				}
+			})
 	}
 }
 
@@ -225,10 +402,39 @@ export async function checkSvnInstalled(): Promise<boolean> {
 		SvnLogger.debug("SVN is installed", { version: stdout.split("\n")[0] })
 		return true
 	} catch (error) {
-		SvnLogger.error(
-			"SVN is not installed or not available",
-			error instanceof Error ? error : new Error(String(error)),
-		)
+		const svnError = error instanceof Error ? error : new Error(String(error))
+		SvnLogger.error("SVN is not installed or not available", svnError)
+
+		// Show user-friendly error message
+		await SvnErrorHandler.showSvnNotInstalledError()
+		return false
+	}
+}
+
+/**
+ * Checks if the given directory is an SVN repository
+ * @param cwd The directory to check
+ * @returns True if it's an SVN repository, false otherwise
+ */
+export async function checkSvnRepo(cwd: string): Promise<boolean> {
+	SvnLogger.debug("checkSvnRepo called", { cwd })
+
+	try {
+		const svnDir = path.join(cwd, ".svn")
+		await fs.access(svnDir)
+		SvnLogger.debug("SVN repository detected", { svnDir })
+		return true
+	} catch (error) {
+		const svnError = error instanceof Error ? error : new Error(String(error))
+		SvnLogger.debug("Not an SVN repository", {
+			cwd,
+			error: svnError.toString(),
+		})
+
+		// Show user-friendly message for workspace operations
+		if (cwd === vscode.workspace.workspaceFolders?.[0]?.uri.fsPath) {
+			await SvnErrorHandler.showNotSvnRepositoryError(cwd)
+		}
 		return false
 	}
 }
@@ -245,14 +451,18 @@ export async function searchSvnCommits(query: string, cwd: string): Promise<SvnC
 	try {
 		// Check if SVN is available
 		const svnInstalled = await checkSvnInstalled()
-		const isSvnRepo = await checkSvnRepo(cwd)
-
-		SvnLogger.debug("SVN availability check", { svnInstalled, isSvnRepo })
-
-		if (!svnInstalled || !isSvnRepo) {
-			SvnLogger.debug("SVN not available or not a repository, returning empty array")
+		if (!svnInstalled) {
+			SvnErrorHandler.showFeatureUnavailable("search", "SVN is not installed")
 			return []
 		}
+
+		const isSvnRepo = await checkSvnRepo(cwd)
+		if (!isSvnRepo) {
+			SvnErrorHandler.showFeatureUnavailable("search", "Not an SVN repository")
+			return []
+		}
+
+		SvnLogger.debug("SVN availability check", { svnInstalled, isSvnRepo })
 
 		const commits: SvnCommit[] = []
 
@@ -273,9 +483,11 @@ export async function searchSvnCommits(query: string, cwd: string): Promise<SvnC
 					commits: revisionCommits,
 				})
 			} catch (error) {
+				const svnError = error instanceof Error ? error : new Error(String(error))
 				SvnLogger.debug("Revision search failed, continuing with general search", {
-					error: (error instanceof Error ? error : new Error(String(error))).toString(),
+					error: svnError.toString(),
 				})
+				await SvnErrorHandler.handleSvnError(svnError, "revision search", cwd)
 			}
 		}
 
@@ -303,7 +515,9 @@ export async function searchSvnCommits(query: string, cwd: string): Promise<SvnC
 				}
 			})
 		} catch (error) {
-			SvnLogger.error("Message search failed", error instanceof Error ? error : new Error(String(error)))
+			const svnError = error instanceof Error ? error : new Error(String(error))
+			SvnLogger.error("Message search failed", svnError)
+			await SvnErrorHandler.handleSvnError(svnError, "commit search", cwd)
 		}
 
 		const finalCommits = commits.slice(0, 20) // Limit results
@@ -315,7 +529,9 @@ export async function searchSvnCommits(query: string, cwd: string): Promise<SvnC
 		})
 		return finalCommits
 	} catch (error) {
-		SvnLogger.error("Error searching SVN commits", error instanceof Error ? error : new Error(String(error)))
+		const svnError = error instanceof Error ? error : new Error(String(error))
+		SvnLogger.error("Error searching SVN commits", svnError)
+		await SvnErrorHandler.handleSvnError(svnError, "commit search", cwd)
 		return []
 	}
 }
@@ -372,7 +588,15 @@ export async function getSvnCommitInfo(
 	stats: string
 }> {
 	try {
-		if (!(await checkSvnInstalled()) || !(await checkSvnRepo(cwd))) {
+		const svnInstalled = await checkSvnInstalled()
+		const isSvnRepo = await checkSvnRepo(cwd)
+
+		if (!svnInstalled || !isSvnRepo) {
+			if (!svnInstalled) {
+				SvnErrorHandler.showFeatureUnavailable("commit info", "SVN is not installed")
+			} else {
+				SvnErrorHandler.showFeatureUnavailable("commit info", "Not an SVN repository")
+			}
 			return { commit: null, diff: "", stats: "" }
 		}
 
@@ -386,8 +610,9 @@ export async function getSvnCommitInfo(
 		try {
 			const { stdout: diffOutput } = await execAsync(`svn diff -c ${revision}`, { cwd })
 			diff = truncateOutput(diffOutput, SVN_OUTPUT_LINE_LIMIT)
-		} catch {
-			// Diff might not be available
+		} catch (error) {
+			const svnError = error instanceof Error ? error : new Error(String(error))
+			SvnLogger.debug("Diff not available for revision", { revision, error: svnError.message })
 		}
 
 		// Get stats (changed files)
@@ -398,13 +623,16 @@ export async function getSvnCommitInfo(
 			if (changedMatch) {
 				stats = changedMatch[1].trim()
 			}
-		} catch {
-			// Stats might not be available
+		} catch (error) {
+			const svnError = error instanceof Error ? error : new Error(String(error))
+			SvnLogger.debug("Stats not available for revision", { revision, error: svnError.message })
 		}
 
 		return { commit, diff, stats }
 	} catch (error) {
-		console.error("Error getting SVN commit info:", error)
+		const svnError = error instanceof Error ? error : new Error(String(error))
+		SvnLogger.error("Error getting SVN commit info", svnError)
+		await SvnErrorHandler.handleSvnError(svnError, "commit info", cwd)
 		return { commit: null, diff: "", stats: "" }
 	}
 }
@@ -421,73 +649,54 @@ export async function getSvnWorkingState(cwd: string): Promise<{
 	try {
 		console.log("[DEBUG] getSvnWorkingState called with cwd:", cwd)
 
-		if (!(await checkSvnInstalled()) || !(await checkSvnRepo(cwd))) {
+		const svnInstalled = await checkSvnInstalled()
+		const isSvnRepo = await checkSvnRepo(cwd)
+
+		if (!svnInstalled || !isSvnRepo) {
 			console.log("[DEBUG] SVN not installed or not a repository")
+			if (!svnInstalled) {
+				SvnErrorHandler.showFeatureUnavailable("working state", "SVN is not installed")
+			} else {
+				SvnErrorHandler.showFeatureUnavailable("working state", "Not an SVN repository")
+			}
 			return { status: "", diff: "" }
 		}
 
-		// Get status
 		let status = ""
 		try {
 			console.log("[DEBUG] Executing 'svn status' command")
-			const { stdout: statusOutput } = await execAsync("svn status", { cwd })
-			console.log("[DEBUG] SVN status raw output:", JSON.stringify(statusOutput))
-			status = truncateOutput(statusOutput, SVN_OUTPUT_LINE_LIMIT)
+			const { stdout } = await execAsync("svn status", { cwd })
+			console.log("[DEBUG] SVN status raw output:", JSON.stringify(stdout))
+			status = truncateOutput(stdout, SVN_OUTPUT_LINE_LIMIT)
 			console.log("[DEBUG] SVN status after truncation:", JSON.stringify(status))
 		} catch (error) {
-			console.log("[DEBUG] SVN status command failed:", error)
-			// Status might not be available
+			const svnError = error instanceof Error ? error : new Error(String(error))
+			console.log("[DEBUG] SVN status command failed:", svnError)
+			await SvnErrorHandler.handleSvnError(svnError, "status check", cwd)
 		}
 
-		// Get diff of working changes
 		let diff = ""
 		try {
 			console.log("[DEBUG] Executing 'svn diff' command")
-			const { stdout: diffOutput } = await execAsync("svn diff", { cwd })
-			console.log("[DEBUG] SVN diff raw output length:", diffOutput.length)
-			console.log("[DEBUG] SVN diff raw output preview:", JSON.stringify(diffOutput.substring(0, 500)))
-			diff = truncateOutput(diffOutput, SVN_OUTPUT_LINE_LIMIT)
+			const { stdout } = await execAsync("svn diff", { cwd })
+			console.log("[DEBUG] SVN diff raw output length:", stdout.length)
+			console.log("[DEBUG] SVN diff raw output preview:", JSON.stringify(stdout.substring(0, 500)))
+			diff = truncateOutput(stdout, SVN_OUTPUT_LINE_LIMIT)
 			console.log("[DEBUG] SVN diff after truncation length:", diff.length)
 		} catch (error) {
-			console.log("[DEBUG] SVN diff command failed:", error)
-			// Diff might not be available
+			const svnError = error instanceof Error ? error : new Error(String(error))
+			console.log("[DEBUG] SVN diff command failed:", svnError)
+			await SvnErrorHandler.handleSvnError(svnError, "diff check", cwd)
 		}
 
-		// If diff is empty but we have untracked files, provide additional information
+		// If no diff but there are changes, show untracked files info
 		if (!diff.trim() && status.trim()) {
-			const untrackedFiles = status
-				.split("\n")
-				.filter((line) => line.trim().startsWith("?"))
-				.map((line) => line.trim().substring(1).trim())
-
-			if (untrackedFiles.length > 0) {
-				console.log("[DEBUG] Found untracked files, attempting to show content preview")
-				let additionalInfo = "\n\nNote: The following files are untracked (not under version control):\n"
-
-				for (const file of untrackedFiles.slice(0, 3)) {
-					// Limit to first 3 files
-					try {
-						const filePath = path.resolve(cwd, file)
-						const stats = await fs.stat(filePath)
-
-						if (stats.isFile() && stats.size < 10000) {
-							// Only show content for small files
-							const content = await fs.readFile(filePath, "utf-8")
-							const preview = content.length > 500 ? content.substring(0, 500) + "..." : content
-							additionalInfo += `\n--- Content of ${file} ---\n${preview}\n`
-						} else {
-							additionalInfo += `\n--- ${file} (${stats.isFile() ? "file" : "directory"}) ---\n`
-						}
-					} catch (error) {
-						additionalInfo += `\n--- ${file} (unable to read: ${error instanceof Error ? error.message : String(error)}) ---\n`
-					}
-				}
-
-				if (untrackedFiles.length > 3) {
-					additionalInfo += `\n... and ${untrackedFiles.length - 3} more untracked files`
-				}
-
-				diff = additionalInfo
+			const lines = status.split("\n").filter((line) => line.trim())
+			if (lines.length > 3) {
+				const visibleLines = lines.slice(0, 3)
+				diff = visibleLines.join("\n") + `\n... and ${lines.length - 3} more untracked files`
+			} else {
+				diff = status
 			}
 		}
 
@@ -495,112 +704,61 @@ export async function getSvnWorkingState(cwd: string): Promise<{
 		console.log("[DEBUG] getSvnWorkingState returning:", JSON.stringify(result))
 		return result
 	} catch (error) {
-		console.error("[DEBUG] Error in getSvnWorkingState:", error)
+		const svnError = error instanceof Error ? error : new Error(String(error))
+		console.error("[DEBUG] Error in getSvnWorkingState:", svnError)
+		await SvnErrorHandler.handleSvnError(svnError, "working state", cwd)
 		return { status: "", diff: "" }
 	}
 }
 
 /**
- * Gets formatted SVN commit information for mentions
- * @param revision The revision number (can be with or without 'r' prefix)
+ * Gets SVN commit information for mentions with enhanced error handling
+ * @param revision The revision number (with or without 'r' prefix)
  * @param cwd The working directory
- * @returns Formatted commit information string
+ * @returns Formatted commit information or error message
  */
 export async function getSvnCommitInfoForMentions(revision: string, cwd: string): Promise<string> {
 	try {
 		console.log("[DEBUG] getSvnCommitInfoForMentions called with revision:", revision, "cwd:", cwd)
 
-		if (!(await checkSvnInstalled()) || !(await checkSvnRepo(cwd))) {
+		const svnInstalled = await checkSvnInstalled()
+		const isSvnRepo = await checkSvnRepo(cwd)
+
+		if (!svnInstalled || !isSvnRepo) {
 			console.log("[DEBUG] SVN not installed or not a repository")
 			return "Error: SVN not available or not an SVN repository"
 		}
 
-		// Clean revision number (remove 'r' prefix if present)
 		const cleanRevision = revision.replace(/^r/i, "")
 		console.log("[DEBUG] Clean revision:", cleanRevision)
 
-		// Get commit info
-		const { stdout: logOutput } = await execAsync(`svn log -r ${cleanRevision} -v`, { cwd })
-		console.log("[DEBUG] SVN log output:", logOutput)
+		const { stdout } = await execAsync(`svn log -r ${cleanRevision} -v`, { cwd })
+		console.log("[DEBUG] SVN log output:", stdout)
 
-		// Parse the log output
-		const lines = logOutput.split("\n")
-		let commitInfo = ""
-		let author = ""
-		let date = ""
-		let message = ""
-		let changedPaths = ""
-
-		// Find the revision line
-		const revisionLineIndex = lines.findIndex((line) => line.includes(`r${cleanRevision}`))
-		if (revisionLineIndex >= 0) {
-			const revisionLine = lines[revisionLineIndex]
-			const match = revisionLine.match(/r(\d+)\s+\|\s+([^|]+)\s+\|\s+([^|]+)\s+\|/)
-			if (match) {
-				author = match[2].trim()
-				date = match[3].trim()
-			}
+		const lines = stdout.split("\n")
+		const logEntry = lines.find((line) => line.includes("r" + cleanRevision))
+		if (!logEntry) {
+			return `Revision ${revision} not found`
 		}
 
-		// Find changed paths
-		const changedPathsStart = lines.findIndex((line) => line.includes("Changed paths:"))
-		if (changedPathsStart >= 0) {
-			let i = changedPathsStart + 1
-			const pathLines = []
-			while (i < lines.length && lines[i].trim() && !lines[i].startsWith("-")) {
-				if (lines[i].trim()) {
-					pathLines.push(lines[i].trim())
-				}
-				i++
-			}
-			changedPaths = pathLines.join("\n")
+		const parts = logEntry.split("|").map((part) => part.trim())
+		if (parts.length >= 4) {
+			const [rev, author, date] = parts
+			const messageStart = stdout.indexOf("\n\n")
+			const messageEnd = stdout.indexOf("\n---", messageStart)
+			const message =
+				messageStart !== -1 && messageEnd !== -1
+					? stdout.substring(messageStart + 2, messageEnd).trim()
+					: "No message"
+
+			return `${rev} by ${author} on ${date}\n${message}`
 		}
 
-		// Find message
-		const messageStart = lines.findIndex(
-			(line, index) =>
-				index > revisionLineIndex && line.trim() && !line.startsWith("-") && !line.includes("Changed paths:"),
-		)
-		if (messageStart >= 0) {
-			let i = messageStart
-			const messageLines = []
-			while (i < lines.length && !lines[i].startsWith("-")) {
-				if (lines[i].trim()) {
-					messageLines.push(lines[i].trim())
-				}
-				i++
-			}
-			message = messageLines.join("\n")
-		}
-
-		// Get diff
-		let diff = ""
-		try {
-			const { stdout: diffOutput } = await execAsync(`svn diff -c ${cleanRevision}`, { cwd })
-			diff = truncateOutput(diffOutput, SVN_OUTPUT_LINE_LIMIT)
-		} catch (error) {
-			console.log("[DEBUG] SVN diff command failed:", error)
-			diff = "Diff not available"
-		}
-
-		// Format the output
-		commitInfo = `Revision: r${cleanRevision}\n`
-		commitInfo += `Author: ${author}\n`
-		commitInfo += `Date: ${date}\n\n`
-		commitInfo += `Message: ${message}\n\n`
-
-		if (changedPaths) {
-			commitInfo += `Changed Paths:\n${changedPaths}\n\n`
-		}
-
-		if (diff && diff.trim()) {
-			commitInfo += `Full Changes:\n\n${diff}`
-		}
-
-		console.log("[DEBUG] Formatted commit info:", commitInfo)
-		return commitInfo
+		return `Revision ${revision}: Unable to parse commit information`
 	} catch (error) {
-		console.error("[DEBUG] Error getting SVN commit info for mentions:", error)
-		return `Error fetching SVN commit r${revision}: ${error instanceof Error ? error.message : String(error)}`
+		const svnError = error instanceof Error ? error : new Error(String(error))
+		console.error("[DEBUG] Error getting SVN commit info for mentions:", svnError)
+		await SvnErrorHandler.handleSvnError(svnError, "commit info for mentions", cwd)
+		return `Error retrieving revision ${revision}: ${svnError.message}`
 	}
 }
