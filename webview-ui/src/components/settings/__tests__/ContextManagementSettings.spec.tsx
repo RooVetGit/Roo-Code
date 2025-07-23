@@ -96,6 +96,7 @@ describe("ContextManagementSettings", () => {
 		profileThresholds: {},
 		includeDiagnosticMessages: true,
 		maxDiagnosticMessages: 50,
+		writeDelayMs: 1000,
 		setCachedStateField: vi.fn(),
 	}
 
@@ -315,7 +316,6 @@ describe("ContextManagementSettings", () => {
 			})
 		})
 	})
-
 
 	it("renders max read file line controls", () => {
 		const propsWithMaxReadFileLine = {
@@ -553,5 +553,4 @@ describe("ContextManagementSettings", () => {
 			expect(screen.getByText("settings:contextManagement.rooignore.label")).toBeInTheDocument()
 		})
 	})
-
 })
