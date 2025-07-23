@@ -128,12 +128,12 @@
 	"removeConfirm": {
 		"mode": {
 			"title": "删除模式",
-			"message": "您确定要删除“{{modeName}}”模式吗？",
+			"message": "您确定要删除\"{{modeName}}\"模式吗？",
 			"rulesWarning": "这也将删除此模式的任何关联规则文件。"
 		},
 		"mcp": {
 			"title": "删除 MCP 服务器",
-			"message": "您确定要删除 MCP 服务器“{{mcpName}}”吗？"
+			"message": "您确定要删除 MCP 服务器\"{{mcpName}}\"吗？"
 		},
 		"cancel": "取消",
 		"confirm": "删除"

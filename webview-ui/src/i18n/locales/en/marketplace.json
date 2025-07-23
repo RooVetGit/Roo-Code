@@ -71,7 +71,9 @@
 			"removeProjectTooltip": "Remove from current project",
 			"removeGlobalTooltip": "Remove from global configuration",
 			"actionsMenuLabel": "More actions"
-		}
+		},
+		"removeFailed": "Failed to remove item: {{error}}",
+		"unknownError": "Unknown error occurred"
 	},
 	"install": {
 		"title": "Install {{name}}",

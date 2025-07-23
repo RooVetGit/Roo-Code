@@ -41,6 +41,7 @@ export const MarketplaceItemCard: React.FC<MarketplaceItemCardProps> = ({ item, 
 	const [showInstallModal, setShowInstallModal] = useState(false)
 	const [showRemoveConfirm, setShowRemoveConfirm] = useState(false)
 	const [removeTarget, setRemoveTarget] = useState<"project" | "global">("project")
+	const [removeError, setRemoveError] = useState<string | null>(null)
 
 	// Listen for removal result messages
 	useEffect(() => {
@@ -53,15 +54,15 @@ export const MarketplaceItemCard: React.FC<MarketplaceItemCardProps> = ({ item, 
 						type: "fetchMarketplaceData",
 					})
 				} else {
-					// Removal failed - could show an error toast/notification here if needed
-					console.error("Failed to remove marketplace item:", message.error)
+					// Removal failed - show error message to user
+					setRemoveError(message.error || t("marketplace:items.unknownError"))
 				}
 			}
 		}
 
 		window.addEventListener("message", handleMessage)
 		return () => window.removeEventListener("message", handleMessage)
-	}, [item.id])
+	}, [item.id, t])
 
 	const typeLabel = useMemo(() => {
 		const labels: Partial<Record<MarketplaceItem["type"], string>> = {
@@ -140,6 +141,13 @@ export const MarketplaceItemCard: React.FC<MarketplaceItemCardProps> = ({ item, 
 								onClick={handleInstallClick}>
 								{t("marketplace:items.card.install")}
 							</Button>
+						)}
+
+						{/* Error message display */}
+						{removeError && (
+							<div className="text-vscode-errorForeground text-sm mt-2">
+								{t("marketplace:items.removeFailed", { error: removeError })}
+							</div>
 						)}
 					</div>
 				</div>
@@ -221,6 +229,9 @@ export const MarketplaceItemCard: React.FC<MarketplaceItemCardProps> = ({ item, 
 						<AlertDialogCancel>{t("marketplace:removeConfirm.cancel")}</AlertDialogCancel>
 						<AlertDialogAction
 							onClick={() => {
+								// Clear any previous error
+								setRemoveError(null)
+
 								vscode.postMessage({
 									type: "removeInstalledMarketplaceItem",
 									mpItem: item,

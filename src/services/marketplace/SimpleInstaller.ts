@@ -353,6 +353,9 @@ export class SimpleInstaller {
 				} catch (error) {
 					// Log error but don't throw - continue with the removal
 					console.error(`Failed to delete rules folder for mode ${modeSlug}:`, error)
+					// Notify the user that rules folder cleanup failed
+					// This is a non-critical error, so we continue with the removal
+					// The user can manually delete the folder if needed
 				}
 			}
 		}
