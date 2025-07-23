@@ -54,9 +54,9 @@ export class LiteLLMHandler extends RouterProvider implements SingleCompletionHa
 						type: "text",
 						text: systemPrompt,
 						cache_control: { type: "ephemeral" },
-					},
+					} as any,
 				],
-			} as OpenAI.Chat.ChatCompletionSystemMessageParam
+			}
 
 			// Find the last two user messages to apply caching
 			const userMsgIndices = openAiMessages.reduce(
@@ -78,7 +78,7 @@ export class LiteLLMHandler extends RouterProvider implements SingleCompletionHa
 									type: "text",
 									text: message.content,
 									cache_control: { type: "ephemeral" },
-								},
+								} as any,
 							],
 						}
 					} else if (Array.isArray(message.content)) {
@@ -87,10 +87,10 @@ export class LiteLLMHandler extends RouterProvider implements SingleCompletionHa
 							...message,
 							content: message.content.map((content, contentIndex) =>
 								contentIndex === message.content.length - 1
-									? {
+									? ({
 											...content,
 											cache_control: { type: "ephemeral" },
-										}
+										} as any)
 									: content,
 							),
 						}
