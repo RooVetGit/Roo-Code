@@ -27,7 +27,6 @@
 		"checkpoints": "Checkpoint",
 		"notifications": "Notifikasi",
 		"contextManagement": "Konteks",
-		"ui": "Antarmuka",
 		"terminal": "Terminal",
 		"prompts": "Prompt",
 		"experimental": "Eksperimental",
@@ -615,6 +614,10 @@
 		"MULTI_FILE_APPLY_DIFF": {
 			"name": "Aktifkan edit file bersamaan",
 			"description": "Ketika diaktifkan, Roo dapat mengedit beberapa file dalam satu permintaan. Ketika dinonaktifkan, Roo harus mengedit file satu per satu. Menonaktifkan ini dapat membantu saat bekerja dengan model yang kurang mampu atau ketika kamu ingin kontrol lebih terhadap modifikasi file."
+		},
+		"filesChangedOverview": {
+			"name": "Aktifkan Ringkasan File yang Berubah",
+			"description": "Ketika diaktifkan, menampilkan panel yang menunjukkan file yang telah dimodifikasi antara checkpoint. Ini memungkinkan Anda untuk melihat perbedaan, menerima/menolak perubahan individual, dan mengelola status kerja Anda."
 		}
 	},
 	"promptCaching": {
@@ -722,12 +725,5 @@
 		"useCustomArn": "Gunakan ARN kustom..."
 	},
 	"includeMaxOutputTokens": "Sertakan token output maksimum",
-	"includeMaxOutputTokensDescription": "Kirim parameter token output maksimum dalam permintaan API. Beberapa provider mungkin tidak mendukung ini.",
-	"ui": {
-		"description": "Konfigurasikan pengaturan antarmuka dan tampilan untuk menyesuaikan pengalaman pengembangan Anda",
-		"filesChanged": {
-			"label": "Aktifkan Ringkasan File yang Berubah",
-			"description": "Ketika diaktifkan, menampilkan panel yang menunjukkan file yang telah dimodifikasi antara checkpoint. Ini memungkinkan Anda untuk melihat perbedaan, menerima/menolak perubahan individual, dan mengelola status kerja Anda."
-		}
-	}
+	"includeMaxOutputTokensDescription": "Kirim parameter token output maksimum dalam permintaan API. Beberapa provider mungkin tidak mendukung ini."
 }

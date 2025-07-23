@@ -27,7 +27,6 @@
 		"checkpoints": "Điểm kiểm tra",
 		"notifications": "Thông báo",
 		"contextManagement": "Ngữ cảnh",
-		"ui": "Giao diện",
 		"terminal": "Terminal",
 		"prompts": "Lời nhắc",
 		"experimental": "Thử nghiệm",
@@ -586,6 +585,10 @@
 		"MULTI_FILE_APPLY_DIFF": {
 			"name": "Bật chỉnh sửa tệp đồng thời",
 			"description": "Khi được bật, Roo có thể chỉnh sửa nhiều tệp trong một yêu cầu duy nhất. Khi bị tắt, Roo phải chỉnh sửa từng tệp một. Tắt tính năng này có thể hữu ích khi làm việc với các mô hình kém khả năng hơn hoặc khi bạn muốn kiểm soát nhiều hơn đối với các thay đổi tệp."
+		},
+		"filesChangedOverview": {
+			"name": "Bật Tổng quan Tệp đã Thay đổi",
+			"description": "Khi được bật, hiển thị một bảng điều khiển cho thấy các tệp đã được sửa đổi giữa các điểm kiểm tra. Điều này cho phép bạn xem sự khác biệt, chấp nhận/từ chối các thay đổi riêng lẻ và quản lý trạng thái làm việc của bạn."
 		}
 	},
 	"promptCaching": {
@@ -693,12 +696,5 @@
 		"useCustomArn": "Sử dụng ARN tùy chỉnh..."
 	},
 	"includeMaxOutputTokens": "Bao gồm token đầu ra tối đa",
-	"includeMaxOutputTokensDescription": "Gửi tham số token đầu ra tối đa trong các yêu cầu API. Một số nhà cung cấp có thể không hỗ trợ điều này.",
-	"ui": {
-		"description": "Cấu hình giao diện và cài đặt hiển thị để tùy chỉnh trải nghiệm phát triển của bạn",
-		"filesChanged": {
-			"label": "Bật Tổng quan Tệp đã Thay đổi",
-			"description": "Khi được bật, hiển thị một bảng điều khiển cho thấy các tệp đã được sửa đổi giữa các điểm kiểm tra. Điều này cho phép bạn xem sự khác biệt, chấp nhận/từ chối các thay đổi riêng lẻ và quản lý trạng thái làm việc của bạn."
-		}
-	}
+	"includeMaxOutputTokensDescription": "Gửi tham số token đầu ra tối đa trong các yêu cầu API. Một số nhà cung cấp có thể không hỗ trợ điều này."
 }

@@ -27,7 +27,6 @@
 		"checkpoints": "Points de contrôle",
 		"notifications": "Notifications",
 		"contextManagement": "Contexte",
-		"ui": "Interface",
 		"terminal": "Terminal",
 		"prompts": "Invites",
 		"experimental": "Expérimental",
@@ -586,6 +585,10 @@
 		"MULTI_FILE_APPLY_DIFF": {
 			"name": "Activer les éditions de fichiers concurrentes",
 			"description": "Lorsque cette option est activée, Roo peut éditer plusieurs fichiers en une seule requête. Lorsqu'elle est désactivée, Roo doit éditer les fichiers un par un. Désactiver cette option peut aider lorsque tu travailles avec des modèles moins capables ou lorsque tu veux plus de contrôle sur les modifications de fichiers."
+		},
+		"filesChangedOverview": {
+			"name": "Activer l'aperçu des fichiers modifiés",
+			"description": "Lorsque activé, affiche un panneau montrant les fichiers qui ont été modifiés entre les points de contrôle. Cela vous permet de visualiser les différences, d'accepter/rejeter les modifications individuelles et de gérer votre état de travail."
 		}
 	},
 	"promptCaching": {
@@ -693,12 +696,5 @@
 		"useCustomArn": "Utiliser un ARN personnalisé..."
 	},
 	"includeMaxOutputTokens": "Inclure les tokens de sortie maximum",
-	"includeMaxOutputTokensDescription": "Envoyer le paramètre de tokens de sortie maximum dans les requêtes API. Certains fournisseurs peuvent ne pas supporter cela.",
-	"ui": {
-		"description": "Configurez les paramètres d'interface et d'affichage pour personnaliser votre expérience de développement",
-		"filesChanged": {
-			"label": "Activer l'aperçu des fichiers modifiés",
-			"description": "Lorsque activé, affiche un panneau montrant les fichiers qui ont été modifiés entre les points de contrôle. Cela vous permet de visualiser les différences, d'accepter/rejeter les modifications individuelles et de gérer votre état de travail."
-		}
-	}
+	"includeMaxOutputTokensDescription": "Envoyer le paramètre de tokens de sortie maximum dans les requêtes API. Certains fournisseurs peuvent ne pas supporter cela."
 }

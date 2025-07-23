@@ -27,7 +27,6 @@
 		"checkpoints": "檢查點",
 		"notifications": "通知",
 		"contextManagement": "上下文",
-		"ui": "介面",
 		"terminal": "終端機",
 		"prompts": "提示詞",
 		"experimental": "實驗性",
@@ -586,6 +585,10 @@
 		"MULTI_FILE_APPLY_DIFF": {
 			"name": "啟用並行檔案編輯",
 			"description": "啟用後 Roo 可在單個請求中編輯多個檔案。停用後 Roo 必須逐個編輯檔案。停用此功能有助於使用能力較弱的模型或需要更精確控制檔案修改時。"
+		},
+		"filesChangedOverview": {
+			"name": "啟用檔案變更概覽",
+			"description": "啟用後，顯示一個面板，顯示在檢查點之間修改的檔案。這讓您可以檢視差異，接受/拒絕個別變更，並管理您的工作狀態。"
 		}
 	},
 	"promptCaching": {
@@ -693,12 +696,5 @@
 		"useCustomArn": "使用自訂 ARN..."
 	},
 	"includeMaxOutputTokens": "包含最大輸出 Token 數",
-	"includeMaxOutputTokensDescription": "在 API 請求中傳送最大輸出 Token 參數。某些提供商可能不支援此功能。",
-	"ui": {
-		"description": "設定介面和顯示設定以自訂您的開發體驗",
-		"filesChanged": {
-			"label": "啟用檔案變更概覽",
-			"description": "啟用後，顯示一個面板，顯示在檢查點之間修改的檔案。這讓您可以檢視差異，接受/拒絕個別變更，並管理您的工作狀態。"
-		}
-	}
+	"includeMaxOutputTokensDescription": "在 API 請求中傳送最大輸出 Token 參數。某些提供商可能不支援此功能。"
 }

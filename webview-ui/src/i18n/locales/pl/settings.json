@@ -27,7 +27,6 @@
 		"checkpoints": "Punkty kontrolne",
 		"notifications": "Powiadomienia",
 		"contextManagement": "Kontekst",
-		"ui": "Interfejs",
 		"terminal": "Terminal",
 		"prompts": "Podpowiedzi",
 		"experimental": "Eksperymentalne",
@@ -586,6 +585,10 @@
 		"MULTI_FILE_APPLY_DIFF": {
 			"name": "Włącz równoczesne edycje plików",
 			"description": "Gdy włączone, Roo może edytować wiele plików w jednym żądaniu. Gdy wyłączone, Roo musi edytować pliki jeden po drugim. Wyłączenie tego może pomóc podczas pracy z mniej zdolnymi modelami lub gdy chcesz mieć większą kontrolę nad modyfikacjami plików."
+		},
+		"filesChangedOverview": {
+			"name": "Włącz przegląd zmienionych plików",
+			"description": "Po włączeniu wyświetla panel pokazujący pliki, które zostały zmodyfikowane między punktami kontrolnymi. Pozwala to na przeglądanie różnic, akceptowanie/odrzucanie poszczególnych zmian i zarządzanie stanem pracy."
 		}
 	},
 	"promptCaching": {
@@ -693,12 +696,5 @@
 		"useCustomArn": "Użyj niestandardowego ARN..."
 	},
 	"includeMaxOutputTokens": "Uwzględnij maksymalne tokeny wyjściowe",
-	"includeMaxOutputTokensDescription": "Wyślij parametr maksymalnych tokenów wyjściowych w żądaniach API. Niektórzy dostawcy mogą tego nie obsługiwać.",
-	"ui": {
-		"description": "Skonfiguruj ustawienia interfejsu i wyświetlania, aby dostosować swoje doświadczenie programistyczne",
-		"filesChanged": {
-			"label": "Włącz przegląd zmienionych plików",
-			"description": "Po włączeniu wyświetla panel pokazujący pliki, które zostały zmodyfikowane między punktami kontrolnymi. Pozwala to na przeglądanie różnic, akceptowanie/odrzucanie poszczególnych zmian i zarządzanie stanem pracy."
-		}
-	}
+	"includeMaxOutputTokensDescription": "Wyślij parametr maksymalnych tokenów wyjściowych w żądaniach API. Niektórzy dostawcy mogą tego nie obsługiwać."
 }

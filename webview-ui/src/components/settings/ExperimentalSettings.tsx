@@ -8,7 +8,7 @@ import { EXPERIMENT_IDS, experimentConfigsMap } from "@roo/experiments"
 import { useAppTranslation } from "@src/i18n/TranslationContext"
 import { cn } from "@src/lib/utils"
 
-import { SetExperimentEnabled } from "./types"
+import { SetExperimentEnabled, SetCachedStateField } from "./types"
 import { SectionHeader } from "./SectionHeader"
 import { Section } from "./Section"
 import { ExperimentalFeature } from "./ExperimentalFeature"
@@ -16,11 +16,15 @@ import { ExperimentalFeature } from "./ExperimentalFeature"
 type ExperimentalSettingsProps = HTMLAttributes<HTMLDivElement> & {
 	experiments: Experiments
 	setExperimentEnabled: SetExperimentEnabled
+	filesChangedEnabled?: boolean
+	setCachedStateField: SetCachedStateField<"filesChangedEnabled">
 }
 
 export const ExperimentalSettings = ({
 	experiments,
 	setExperimentEnabled,
+	filesChangedEnabled,
+	setCachedStateField,
 	className,
 	...props
 }: ExperimentalSettingsProps) => {
@@ -65,6 +69,11 @@ export const ExperimentalSettings = ({
 							/>
 						)
 					})}
+				<ExperimentalFeature
+					experimentKey="filesChangedOverview"
+					enabled={filesChangedEnabled ?? false}
+					onChange={(enabled) => setCachedStateField("filesChangedEnabled", enabled)}
+				/>
 			</Section>
 		</div>
 	)
