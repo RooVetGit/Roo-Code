@@ -86,7 +86,7 @@ export const generateSystemPrompt = async (provider: ClineProvider, message: Web
 			useAgentRules:
 				provider.context.globalState.get("useAgentRules") ??
 				vscode.workspace.getConfiguration("roo-cline").get<boolean>("useAgentRules") ??
-				true,
+				false,
 		},
 	)
 

@@ -554,7 +554,7 @@ describe("addCustomInstructions", () => {
 		expect(result).not.toContain("Agent rules from AGENTS.md file")
 	})
 
-	it("should load AGENTS.md by default when useAgentRules is undefined", async () => {
+	it("should not load AGENTS.md by default when useAgentRules is undefined", async () => {
 		// Simulate no .roo/rules-test-mode directory
 		statMock.mockRejectedValueOnce({ code: "ENOENT" })
 
@@ -574,8 +574,8 @@ describe("addCustomInstructions", () => {
 			{}, // No useAgentRules specified
 		)
 
-		expect(result).toContain("# Agent Rules Standard (AGENTS.md):")
-		expect(result).toContain("Agent rules from AGENTS.md file")
+		expect(result).not.toContain("# Agent Rules Standard (AGENTS.md):")
+		expect(result).not.toContain("Agent rules from AGENTS.md file")
 	})
 
 	it("should handle missing AGENTS.md gracefully", async () => {

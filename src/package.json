@@ -389,7 +389,7 @@
 				},
 				"roo-cline.useAgentRules": {
 					"type": "boolean",
-					"default": true,
+					"default": false,
 					"description": "%settings.useAgentRules.description%"
 				}
 			}
