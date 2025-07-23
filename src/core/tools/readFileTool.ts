@@ -500,7 +500,7 @@ export async function readFileTool(
 							// Check if adding this image would exceed total memory limit
 							const imageSizeInMB = imageStats.size / (1024 * 1024)
 							if (totalImageMemoryUsed + imageSizeInMB > maxTotalImageMemory) {
-								const notice = `Image skipped to prevent memory issues. Total image memory would exceed ${maxTotalImageMemory}MB limit (current: ${totalImageMemoryUsed.toFixed(1)}MB, this file: ${imageSizeInMB.toFixed(1)}MB). Consider reading fewer images at once or reducing image sizes.`
+								const notice = `Image skipped to avoid memory limit (${maxTotalImageMemory}MB). Current: ${totalImageMemoryUsed.toFixed(1)}MB + this file: ${imageSizeInMB.toFixed(1)}MB. Try fewer or smaller images.`;
 
 								// Track file read
 								await cline.fileContextTracker.trackFileContext(relPath, "read_tool" as RecordSource)
