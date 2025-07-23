@@ -730,6 +730,9 @@ export async function getSvnCommitInfoForMentions(revision: string, cwd: string)
 		}
 
 		const cleanRevision = revision.replace(/^r/i, "")
+		if (!/^\d+$/.test(cleanRevision)) {
+			throw new Error("Invalid revision number format")
+		}
 		console.log("[DEBUG] Clean revision:", cleanRevision)
 
 		const { stdout } = await execAsync(`svn log -r ${cleanRevision} -v`, { cwd })
