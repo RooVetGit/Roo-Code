@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next"
 import { useExtensionState } from "@/context/ExtensionStateContext"
 import { vscode } from "@/utils/vscode"
 import { useDebounce } from "@/hooks/useDebounce"
+import styles from "./FilesChangedOverview.module.css"
 
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
 interface FilesChangedOverviewProps {}
@@ -183,30 +184,10 @@ const FilesChangedOverview: React.FC<FilesChangedOverviewProps> = () => {
 	}
 
 	return (
-		<div
-			className="files-changed-overview"
-			data-testid="files-changed-overview"
-			style={{
-				border: "1px solid var(--vscode-panel-border)",
-				borderTop: 0,
-				borderRadius: 0,
-				padding: "6px 10px",
-				margin: 0,
-				backgroundColor: "var(--vscode-editor-background)",
-			}}>
+		<div className={styles.filesChangedOverview} data-testid="files-changed-overview">
 			{/* Collapsible header */}
 			<div
-				style={{
-					display: "flex",
-					justifyContent: "space-between",
-					alignItems: "center",
-					marginTop: "0 2px",
-					//marginBottom: isCollapsed ? "0" : "6px",
-					borderBottom: isCollapsed ? "none" : "1px solid var(--vscode-panel-border)",
-					// paddingBottom: "0px",
-					cursor: "pointer",
-					userSelect: "none",
-				}}
+				className={`${styles.header} ${!isCollapsed ? styles.headerExpanded : ""}`}
 				onClick={() => setIsCollapsed(!isCollapsed)}
 				onKeyDown={(e) => {
 					if (e.key === "Enter" || e.key === " ") {
@@ -224,15 +205,11 @@ const FilesChangedOverview: React.FC<FilesChangedOverviewProps> = () => {
 						: t("file-changes:accessibility.expanded"),
 				})}
 				title={isCollapsed ? t("file-changes:header.expand") : t("file-changes:header.collapse")}>
-				<div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+				<div className={styles.headerContent}>
 					<span
-						className={`codicon ${isCollapsed ? "codicon-chevron-right" : "codicon-chevron-down"}`}
-						style={{
-							fontSize: "12px",
-							transition: "transform 0.2s ease",
-						}}
+						className={`codicon ${isCollapsed ? "codicon-chevron-right" : "codicon-chevron-down"} ${styles.chevronIcon}`}
 					/>
-					<h3 style={{ margin: 0, fontSize: "14px", fontWeight: "bold" }} data-testid="files-changed-header">
+					<h3 className={styles.headerTitle} data-testid="files-changed-header">
 						{t("file-changes:summary.count_with_changes", {
 							count: files.length,
 							changes: totalChanges,
@@ -242,7 +219,7 @@ const FilesChangedOverview: React.FC<FilesChangedOverviewProps> = () => {
 
 				{/* Action buttons always visible for quick access */}
 				<div
-					style={{ display: "flex", gap: "8px" }}
+					className={styles.actionButtons}
 					onClick={(e) => e.stopPropagation()} // Prevent collapse toggle when clicking buttons
 				>
 					<button
@@ -250,16 +227,7 @@ const FilesChangedOverview: React.FC<FilesChangedOverviewProps> = () => {
 						disabled={isProcessing}
 						tabIndex={0}
 						data-testid="reject-all-button"
-						style={{
-							backgroundColor: "var(--vscode-button-secondaryBackground)",
-							color: "var(--vscode-button-secondaryForeground)",
-							border: "none",
-							borderRadius: "3px",
-							padding: "4px 8px",
-							fontSize: "13px",
-							cursor: isProcessing ? "not-allowed" : "pointer",
-							opacity: isProcessing ? 0.6 : 1,
-						}}
+						className={`${styles.actionButton} ${styles.rejectAllButton}`}
 						title={t("file-changes:actions.reject_all")}>
 						{t("file-changes:actions.reject_all")}
 					</button>
@@ -268,16 +236,7 @@ const FilesChangedOverview: React.FC<FilesChangedOverviewProps> = () => {
 						disabled={isProcessing}
 						tabIndex={0}
 						data-testid="accept-all-button"
-						style={{
-							backgroundColor: "var(--vscode-button-background)",
-							color: "var(--vscode-button-foreground)",
-							border: "none",
-							borderRadius: "3px",
-							padding: "4px 8px",
-							fontSize: "13px",
-							cursor: isProcessing ? "not-allowed" : "pointer",
-							opacity: isProcessing ? 0.6 : 1,
-						}}
+						className={`${styles.actionButton} ${styles.acceptAllButton}`}
 						title={t("file-changes:actions.accept_all")}>
 						{t("file-changes:actions.accept_all")}
 					</button>
@@ -286,19 +245,10 @@ const FilesChangedOverview: React.FC<FilesChangedOverviewProps> = () => {
 
 			{/* Collapsible content area */}
 			{!isCollapsed && (
-				<div
-					style={{
-						maxHeight: "300px",
-						overflowY: "auto",
-						transition: "opacity 0.2s ease-in-out",
-						opacity: isCollapsed ? 0 : 1,
-						position: "relative",
-						paddingTop: "8px",
-					}}
-					onScroll={handleScroll}>
+				<div className={styles.contentArea} style={{ opacity: isCollapsed ? 0 : 1 }} onScroll={handleScroll}>
 					{shouldVirtualize && (
-						<div style={{ height: totalHeight, position: "relative" }}>
-							<div style={{ transform: `translateY(${offsetY}px)` }}>
+						<div className={styles.virtualContainer} style={{ height: totalHeight }}>
+							<div className={styles.virtualContent} style={{ transform: `translateY(${offsetY}px)` }}>
 								{visibleItems.map((file: any) => (
 									<FileItem
 										key={file.uri}
@@ -364,62 +314,20 @@ interface FileItemProps {
  */
 const FileItem: React.FC<FileItemProps> = React.memo(
 	({ file, formatLineChanges, onViewDiff, onAcceptFile, onRejectFile, handleWithDebounce, isProcessing, t }) => (
-		<div
-			data-testid={`file-item-${file.uri}`}
-			style={{
-				display: "flex",
-				justifyContent: "space-between",
-				alignItems: "center",
-				padding: "6px 8px",
-				marginBottom: "3px",
-				backgroundColor: "var(--vscode-list-hoverBackground)",
-				borderRadius: "3px",
-				fontSize: "13px",
-				minHeight: "32px", // Thinner rows
-				lineHeight: "1.3",
-			}}>
-			<div style={{ flex: 1, minWidth: 0 }}>
-				<div
-					style={{
-						fontFamily: "var(--vscode-editor-font-family)",
-						fontSize: "13px",
-						color: "var(--vscode-editor-foreground)",
-						overflow: "hidden",
-						textOverflow: "ellipsis",
-						whiteSpace: "nowrap",
-						fontWeight: 500,
-					}}>
-					{file.uri}
-				</div>
+		<div data-testid={`file-item-${file.uri}`} className={styles.fileItem}>
+			<div className={styles.fileInfo}>
+				<div className={styles.fileName}>{file.uri}</div>
 			</div>
 
-			<div style={{ display: "flex", alignItems: "center", gap: "8px", marginLeft: "8px" }}>
-				<div
-					style={{
-						fontSize: "12px",
-						color: "var(--vscode-descriptionForeground)",
-						whiteSpace: "nowrap",
-						flexShrink: 0,
-					}}>
-					{formatLineChanges(file)}
-				</div>
-				<div style={{ display: "flex", gap: "4px" }}>
+			<div className={styles.fileActions}>
+				<div className={styles.lineChanges}>{formatLineChanges(file)}</div>
+				<div className={styles.fileButtons}>
 					<button
 						onClick={() => handleWithDebounce(() => onViewDiff(file.uri))}
 						disabled={isProcessing}
 						title={t("file-changes:actions.view_diff")}
 						data-testid={`diff-${file.uri}`}
-						style={{
-							backgroundColor: "transparent",
-							color: "var(--vscode-button-foreground)",
-							border: "1px solid var(--vscode-button-border)",
-							borderRadius: "3px",
-							padding: "2px 6px",
-							fontSize: "11px",
-							cursor: isProcessing ? "not-allowed" : "pointer",
-							minWidth: "50px",
-							opacity: isProcessing ? 0.6 : 1,
-						}}>
+						className={`${styles.fileButton} ${styles.diffButton}`}>
 						{t("file-changes:actions.view_diff")}
 					</button>
 					<button
@@ -427,17 +335,7 @@ const FileItem: React.FC<FileItemProps> = React.memo(
 						disabled={isProcessing}
 						title={t("file-changes:actions.reject_file")}
 						data-testid={`reject-${file.uri}`}
-						style={{
-							backgroundColor: "var(--vscode-button-secondaryBackground)",
-							color: "var(--vscode-button-secondaryForeground)",
-							border: "1px solid var(--vscode-button-border)",
-							borderRadius: "3px",
-							padding: "2px 6px",
-							fontSize: "11px",
-							cursor: isProcessing ? "not-allowed" : "pointer",
-							minWidth: "20px",
-							opacity: isProcessing ? 0.6 : 1,
-						}}>
+						className={`${styles.fileButton} ${styles.rejectButton}`}>
 						✗
 					</button>
 					<button
@@ -445,17 +343,7 @@ const FileItem: React.FC<FileItemProps> = React.memo(
 						disabled={isProcessing}
 						title={t("file-changes:actions.accept_file")}
 						data-testid={`accept-${file.uri}`}
-						style={{
-							backgroundColor: "var(--vscode-button-background)",
-							color: "var(--vscode-button-foreground)",
-							border: "1px solid var(--vscode-button-border)",
-							borderRadius: "3px",
-							padding: "2px 6px",
-							fontSize: "11px",
-							cursor: isProcessing ? "not-allowed" : "pointer",
-							minWidth: "20px",
-							opacity: isProcessing ? 0.6 : 1,
-						}}>
+						className={`${styles.fileButton} ${styles.acceptButton}`}>
 						✓
 					</button>
 				</div>

@@ -1,0 +1,162 @@
+/* FilesChangedOverview Component Styles */
+
+.filesChangedOverview {
+	border: 1px solid var(--vscode-panel-border);
+	border-top: 0;
+	border-radius: 0;
+	padding: 6px 10px;
+	margin: 0;
+	background-color: var(--vscode-editor-background);
+}
+
+.header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-top: 0 2px;
+	cursor: pointer;
+	user-select: none;
+}
+
+.headerExpanded {
+	border-bottom: 1px solid var(--vscode-panel-border);
+}
+
+.headerContent {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.chevronIcon {
+	font-size: 12px;
+	transition: transform 0.2s ease;
+}
+
+.headerTitle {
+	margin: 0;
+	font-size: 14px;
+	font-weight: bold;
+}
+
+.actionButtons {
+	display: flex;
+	gap: 8px;
+}
+
+.actionButton {
+	border: none;
+	border-radius: 3px;
+	padding: 4px 8px;
+	font-size: 13px;
+	cursor: pointer;
+}
+
+.actionButton:disabled {
+	cursor: not-allowed;
+	opacity: 0.6;
+}
+
+.rejectAllButton {
+	background-color: var(--vscode-button-secondaryBackground);
+	color: var(--vscode-button-secondaryForeground);
+}
+
+.acceptAllButton {
+	background-color: var(--vscode-button-background);
+	color: var(--vscode-button-foreground);
+}
+
+.contentArea {
+	max-height: 300px;
+	overflow-y: auto;
+	transition: opacity 0.2s ease-in-out;
+	position: relative;
+	padding-top: 8px;
+}
+
+.virtualContainer {
+	position: relative;
+}
+
+.virtualContent {
+	/* Dynamic transform applied via style prop */
+}
+
+/* FileItem Styles */
+.fileItem {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	padding: 6px 8px;
+	margin-bottom: 3px;
+	background-color: var(--vscode-list-hoverBackground);
+	border-radius: 3px;
+	font-size: 13px;
+	min-height: 32px;
+	line-height: 1.3;
+}
+
+.fileInfo {
+	flex: 1;
+	min-width: 0;
+}
+
+.fileName {
+	font-family: var(--vscode-editor-font-family);
+	font-size: 13px;
+	color: var(--vscode-editor-foreground);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	font-weight: 500;
+}
+
+.fileActions {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	margin-left: 8px;
+}
+
+.lineChanges {
+	font-size: 12px;
+	color: var(--vscode-descriptionForeground);
+	white-space: nowrap;
+	flex-shrink: 0;
+}
+
+.fileButtons {
+	display: flex;
+	gap: 4px;
+}
+
+.fileButton {
+	border: 1px solid var(--vscode-button-border);
+	border-radius: 3px;
+	padding: 2px 6px;
+	font-size: 11px;
+	cursor: pointer;
+	min-width: 20px;
+}
+
+.fileButton:disabled {
+	cursor: not-allowed;
+	opacity: 0.6;
+}
+
+.diffButton {
+	background-color: transparent;
+	color: var(--vscode-button-foreground);
+	min-width: 50px;
+}
+
+.rejectButton {
+	background-color: var(--vscode-button-secondaryBackground);
+	color: var(--vscode-button-secondaryForeground);
+}
+
+.acceptButton {
+	background-color: var(--vscode-button-background);
+	color: var(--vscode-button-foreground);
+}
