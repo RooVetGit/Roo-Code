@@ -16,7 +16,7 @@ export const MaxTokensControl: React.FC<MaxTokensControlProps> = ({
 	value,
 	onChange,
 	modelInfo,
-	minValue = 1000,
+	minValue = 2048,
 	maxValue,
 	className,
 }) => {

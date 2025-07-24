@@ -111,7 +111,7 @@ describe("MaxTokensControl", () => {
 	})
 
 	test("should show validation error when value is below minimum", () => {
-		render(<MaxTokensControl {...defaultProps} value={500} minValue={1000} />)
+		render(<MaxTokensControl {...defaultProps} value={500} minValue={2048} />)
 
 		expect(screen.getByText("settings:providers.maxOutputTokens.validation.tooLow")).toBeInTheDocument()
 	})
@@ -163,7 +163,7 @@ describe("MaxTokensControl", () => {
 	})
 
 	test("should apply error styling when validation fails", () => {
-		render(<MaxTokensControl {...defaultProps} value={500} minValue={1000} />)
+		render(<MaxTokensControl {...defaultProps} value={500} minValue={2048} />)
 
 		const input = screen.getByRole("spinbutton")
 		expect(input.className).toContain("border-red-500")

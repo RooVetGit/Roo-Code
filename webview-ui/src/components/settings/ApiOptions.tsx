@@ -579,7 +579,7 @@ const ApiOptions = ({
 							value={apiConfiguration.modelMaxTokens}
 							onChange={(value) => setApiConfigurationField("modelMaxTokens", value)}
 							modelInfo={selectedModelInfo}
-							minValue={1000}
+							minValue={2048}
 							maxValue={selectedModelInfo?.maxTokens || 200000}
 						/>
 						<RateLimitSecondsControl
