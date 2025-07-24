@@ -88,7 +88,9 @@
 		"tooltip": "Cancel the current operation"
 	},
 	"editMessage": {
-		"placeholder": "Edit your message..."
+		"placeholder": "Edit your message...",
+		"doubleClickToEdit": "Double-click to edit message",
+		"editButton": "Edit message"
 	},
 	"scrollToBottom": "Scroll to bottom of chat",
 	"about": "Generate, refactor, and debug code with AI assistance. Check out our <DocsLink>documentation</DocsLink> to learn more.",

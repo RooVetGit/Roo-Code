@@ -93,8 +93,12 @@ const App = () => {
 		messageTs: 0,
 	})
 
-	// Track if the user has seen the edit warning - using ref to persist across renders
-	const hasSeenEditWarningRef = useRef<boolean>(false)
+	/**
+	 * Tracks whether the user has seen the edit warning dialog during the current session.
+	 * Uses a ref to persist the value across renders without triggering re-renders.
+	 * Resets when the VS Code window is reloaded.
+	 */
+	const hasSeenEditWarningInSessionRef = useRef<boolean>(false)
 
 	const [editMessageDialogState, setEditMessageDialogState] = useState<EditMessageDialogState>({
 		isOpen: false,
@@ -127,6 +131,32 @@ const App = () => {
 
 	const [currentSection, setCurrentSection] = useState<string | undefined>(undefined)
 	const [currentMarketplaceTab, setCurrentMarketplaceTab] = useState<string | undefined>(undefined)
+
+	/**
+	 * Handles the edit message dialog logic, determining whether to show the warning
+	 * or proceed directly to editing based on session state.
+	 */
+	const handleEditMessageDialog = useCallback((message: ExtensionMessage) => {
+		if (!message.messageTs || !message.text) return
+
+		// If the user has already seen the warning in this session, skip the dialog
+		if (hasSeenEditWarningInSessionRef.current) {
+			vscode.postMessage({
+				type: "editMessageConfirm",
+				messageTs: message.messageTs,
+				text: message.text,
+				images: message.images || [],
+			})
+		} else {
+			// Show the warning dialog for the first time in this session
+			setEditMessageDialogState({
+				isOpen: true,
+				messageTs: message.messageTs,
+				text: message.text,
+				images: message.images || [],
+			})
+		}
+	}, [])
 
 	const onMessage = useCallback(
 		(e: MessageEvent) => {
@@ -163,30 +193,14 @@ const App = () => {
 			}
 
 			if (message.type === "showEditMessageDialog" && message.messageTs && message.text) {
-				// If the user has already seen the warning, skip the dialog and directly edit
-				if (hasSeenEditWarningRef.current) {
-					vscode.postMessage({
-						type: "editMessageConfirm",
-						messageTs: message.messageTs,
-						text: message.text,
-						images: message.images || [],
-					})
-				} else {
-					// Show the warning dialog for the first time
-					setEditMessageDialogState({
-						isOpen: true,
-						messageTs: message.messageTs,
-						text: message.text,
-						images: message.images || [],
-					})
-				}
+				handleEditMessageDialog(message)
 			}
 
 			if (message.type === "acceptInput") {
 				chatViewRef.current?.acceptInput()
 			}
 		},
-		[switchTab],
+		[switchTab, handleEditMessageDialog],
 	)
 
 	useEvent("message", onMessage)
@@ -297,8 +311,8 @@ const App = () => {
 				open={editMessageDialogState.isOpen}
 				onOpenChange={(open) => setEditMessageDialogState((prev) => ({ ...prev, isOpen: open }))}
 				onConfirm={() => {
-					// Mark that the user has seen the edit warning
-					hasSeenEditWarningRef.current = true
+					// Mark that the user has seen the edit warning in this session
+					hasSeenEditWarningInSessionRef.current = true
 					vscode.postMessage({
 						type: "editMessageConfirm",
 						messageTs: editMessageDialogState.messageTs,
