@@ -253,9 +253,25 @@
 		"getChutesApiKey": "Ottieni chiave API Chutes",
 		"deepSeekApiKey": "Chiave API DeepSeek",
 		"getDeepSeekApiKey": "Ottieni chiave API DeepSeek",
+		"moonshotApiKey": "Chiave API Moonshot",
+		"getMoonshotApiKey": "Ottieni chiave API Moonshot",
+		"moonshotBaseUrl": "Punto di ingresso Moonshot",
 		"geminiApiKey": "Chiave API Gemini",
 		"getGroqApiKey": "Ottieni chiave API Groq",
 		"groqApiKey": "Chiave API Groq",
+		"getHuggingFaceApiKey": "Ottieni chiave API Hugging Face",
+		"huggingFaceApiKey": "Chiave API Hugging Face",
+		"huggingFaceModelId": "ID modello",
+		"huggingFaceLoading": "Caricamento...",
+		"huggingFaceModelsCount": "({{count}} modelli)",
+		"huggingFaceSelectModel": "Seleziona un modello...",
+		"huggingFaceSearchModels": "Cerca modelli...",
+		"huggingFaceNoModelsFound": "Nessun modello trovato",
+		"huggingFaceProvider": "Provider",
+		"huggingFaceProviderAuto": "Automatico",
+		"huggingFaceSelectProvider": "Seleziona un provider...",
+		"huggingFaceSearchProviders": "Cerca provider...",
+		"huggingFaceNoProvidersFound": "Nessun provider trovato",
 		"getGeminiApiKey": "Ottieni chiave API Gemini",
 		"openAiApiKey": "Chiave API OpenAI",
 		"apiKey": "Chiave API",
@@ -485,6 +501,23 @@
 			"label": "Limite letture simultanee",
 			"description": "Numero massimo di file che lo strumento 'read_file' può elaborare contemporaneamente. Valori più alti possono velocizzare la lettura di più file piccoli ma aumentano l'utilizzo della memoria."
 		},
+		"diagnostics": {
+			"includeMessages": {
+				"label": "Includi automaticamente la diagnostica nel contesto",
+				"description": "Quando abilitato, i messaggi diagnostici (errori) dai file modificati verranno automaticamente inclusi nel contesto. Puoi sempre includere manualmente tutta la diagnostica del workspace usando @problems."
+			},
+			"maxMessages": {
+				"label": "Numero massimo di messaggi diagnostici",
+				"description": "Numero massimo di messaggi diagnostici da includere per file. Questo limite si applica sia all'inclusione automatica (quando la casella è abilitata) che alle menzioni manuali di @problems. Valori più alti forniscono più contesto ma aumentano l'utilizzo dei token.",
+				"resetTooltip": "Ripristina al valore predefinito (50)",
+				"unlimited": "Messaggi diagnostici illimitati",
+				"unlimitedLabel": "Illimitato"
+			},
+			"delayAfterWrite": {
+				"label": "Ritardo dopo le scritture per consentire alla diagnostica di rilevare potenziali problemi",
+				"description": "Tempo di attesa dopo la scrittura dei file prima di procedere, consentendo agli strumenti di diagnostica di elaborare le modifiche e rilevare i problemi."
+			}
+		},
 		"condensingThreshold": {
 			"label": "Soglia di attivazione condensazione",
 			"selectProfile": "Configura soglia per profilo",
@@ -577,6 +610,10 @@
 				"label": "Precisione corrispondenza",
 				"description": "Questo cursore controlla quanto precisamente le sezioni di codice devono corrispondere quando si applicano i diff. Valori più bassi consentono corrispondenze più flessibili ma aumentano il rischio di sostituzioni errate. Usa valori inferiori al 100% con estrema cautela."
 			}
+		},
+		"todoList": {
+			"label": "Abilita strumento lista di cose da fare",
+			"description": "Quando abilitato, Roo può creare e gestire liste di cose da fare per tracciare il progresso delle attività. Questo aiuta a organizzare attività complesse in passaggi gestibili."
 		}
 	},
 	"experimental": {
