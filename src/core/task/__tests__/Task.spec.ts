@@ -1494,4 +1494,128 @@ describe("Cline", () => {
 			})
 		})
 	})
+
+	describe("Synthetic message generation for file mentions", () => {
+		it("should handle first message with file mentions using synthetic messages", async () => {
+			const task = new Task({
+				provider: mockProvider,
+				apiConfiguration: mockApiConfig,
+				task: "Please analyze @/src/main.ts and provide feedback",
+				startTask: false,
+			})
+
+			// Mock the API conversation history to track messages
+			const apiMessages: any[] = []
+			vi.spyOn(task as any, "addToApiConversationHistory").mockImplementation(async (message) => {
+				apiMessages.push(message)
+			})
+
+			// Mock processUserContentMentions to return processed content
+			vi.mocked(processUserContentMentions).mockResolvedValue([
+				{
+					type: "text",
+					text: "Please analyze 'src/main.ts' (see below for file content) and provide feedback\n\n<file_content path=\"src/main.ts\">\nfile content here\n</file_content>",
+				},
+			])
+
+			// Start the task
+			await (task as any).startTask("Please analyze @/src/main.ts and provide feedback")
+
+			// Verify the API conversation history has 3 messages
+			expect(apiMessages).toHaveLength(3)
+
+			// First message: Original user message (unprocessed)
+			expect(apiMessages[0].role).toBe("user")
+			expect(apiMessages[0].content[0].text).toContain("@/src/main.ts")
+
+			// Second message: Synthetic assistant message with read_file tool
+			expect(apiMessages[1].role).toBe("assistant")
+			expect(apiMessages[1].content[0].text).toContain("<read_file>")
+			expect(apiMessages[1].content[0].text).toContain("<path>src/main.ts</path>")
+
+			// Third message: User message with processed file content
+			expect(apiMessages[2].role).toBe("user")
+			expect(apiMessages[2].content[0].text).toContain("file content here")
+		})
+
+		it("should not use synthetic messages when no file mentions in first message", async () => {
+			const task = new Task({
+				provider: mockProvider,
+				apiConfiguration: mockApiConfig,
+				task: "Please help me write a function",
+				startTask: false,
+			})
+
+			// Mock the API conversation history to track messages
+			const apiMessages: any[] = []
+			vi.spyOn(task as any, "addToApiConversationHistory").mockImplementation(async (message) => {
+				apiMessages.push(message)
+			})
+
+			// Start the task
+			await (task as any).startTask("Please help me write a function")
+
+			// Should only have one message (the normal flow)
+			expect(apiMessages).toHaveLength(1)
+			expect(apiMessages[0].role).toBe("user")
+			expect(apiMessages[0].content[0].text).toBe("<task>\nPlease help me write a function\n</task>")
+		})
+
+		it("should handle multiple file mentions in first message", async () => {
+			const task = new Task({
+				provider: mockProvider,
+				apiConfiguration: mockApiConfig,
+				task: "Compare @/src/index.ts with @/src/utils.ts",
+				startTask: false,
+			})
+
+			// Mock the API conversation history to track messages
+			const apiMessages: any[] = []
+			vi.spyOn(task as any, "addToApiConversationHistory").mockImplementation(async (message) => {
+				apiMessages.push(message)
+			})
+
+			// Mock processUserContentMentions
+			vi.mocked(processUserContentMentions).mockResolvedValue([
+				{
+					type: "text",
+					text: "Compare 'src/index.ts' (see below for file content) with 'src/utils.ts' (see below for file content)\n\n<file_content path=\"src/index.ts\">\nindex content\n</file_content>\n\n<file_content path=\"src/utils.ts\">\nutils content\n</file_content>",
+				},
+			])
+
+			// Start the task
+			await (task as any).startTask("Compare @/src/index.ts with @/src/utils.ts")
+
+			// Verify synthetic assistant message has multiple read_file calls
+			expect(apiMessages[1].role).toBe("assistant")
+			expect(apiMessages[1].content[0].text).toContain("<path>src/index.ts</path>")
+			expect(apiMessages[1].content[0].text).toContain("<path>src/utils.ts</path>")
+			expect(apiMessages[1].content[0].text).toMatch(/read_file.*read_file/s) // Multiple read_file blocks
+		})
+
+		it("should preserve task history without embedded file content", async () => {
+			const task = new Task({
+				provider: mockProvider,
+				apiConfiguration: mockApiConfig,
+				task: "Analyze @/large-file.ts",
+				startTask: false,
+			})
+
+			// Spy on say method which saves to task history
+			const sayMessages: any[] = []
+			vi.spyOn(task as any, "say").mockImplementation(async (type, text, images) => {
+				sayMessages.push({ type, text, images })
+			})
+
+			// Start the task
+			await (task as any).startTask("Analyze @/large-file.ts")
+
+			// Verify task history only contains the original message
+			expect(sayMessages).toHaveLength(1)
+			expect(sayMessages[0].type).toBe("text")
+			expect(sayMessages[0].text).toBe("Analyze @/large-file.ts")
+			// Should NOT contain processed file content
+			expect(sayMessages[0].text).not.toContain("file_content")
+		})
+	})
 })
