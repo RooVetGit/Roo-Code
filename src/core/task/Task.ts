@@ -80,6 +80,11 @@ import { MultiFileSearchReplaceDiffStrategy } from "../diff/strategies/multi-fil
 import { readApiMessages, saveApiMessages, readTaskMessages, saveTaskMessages, taskMetadata } from "../task-persistence"
 import { getEnvironmentDetails } from "../environment/getEnvironmentDetails"
 import {
+	shouldUseSyntheticMessages,
+	handleFirstMessageWithFileMentions,
+	createSyntheticReadFileMessage,
+} from "./synthetic-messages"
+import {
 	type CheckpointDiffOptions,
 	type CheckpointRestoreOptions,
 	getCheckpointService,
@@ -88,7 +93,6 @@ import {
 	checkpointDiff,
 } from "../checkpoints"
 import { processUserContentMentions } from "../mentions/processUserContentMentions"
-import { extractFileMentions, hasFileMentions } from "../mentions/extractFileMentions"
 import { ApiMessage } from "../task-persistence/apiMessages"
 import { getMessagesSinceLastSummary, summarizeConversation } from "../condense"
 import { maybeRemoveImageBlocks } from "../../api/transform/image-cleaning"
@@ -330,7 +334,7 @@ export class Task extends EventEmitter<ClineEvents> {
 		return readApiMessages({ taskId: this.taskId, globalStoragePath: this.globalStoragePath })
 	}
 
-	private async addToApiConversationHistory(message: Anthropic.MessageParam) {
+	public async addToApiConversationHistory(message: Anthropic.MessageParam) {
 		const messageWithTs = { ...message, ts: Date.now() }
 		this.apiConversationHistory.push(messageWithTs)
 		await this.saveApiConversationHistory()
@@ -1120,102 +1124,6 @@ export class Task extends EventEmitter<ClineEvents> {
 
 	// Helper methods for synthetic message generation
 
-	/**
-	 * Checks if we should use synthetic messages for the first user message.
-	 * This is true when the message contains @filename mentions.
-	 */
-	private shouldUseSyntheticMessages(userContent: Anthropic.Messages.ContentBlockParam[]): boolean {
-		// Only check text blocks for file mentions
-		return hasFileMentions(userContent)
-	}
-
-	/**
-	 * Handles the first message when it contains file mentions by creating synthetic messages.
-	 * This implements the 3-message pattern:
-	 * 1. Original user message (without embedded file content)
-	 * 2. Synthetic assistant message with read_file tool calls
-	 * 3. User message with file contents
-	 */
-	private async handleFirstMessageWithFileMentions(
-		userContent: Anthropic.Messages.ContentBlockParam[],
-	): Promise<void> {
-		// Extract file mentions from the user content
-		const fileMentions: string[] = []
-		for (const block of userContent) {
-			if (block.type === "text" && block.text) {
-				const mentions = extractFileMentions(block.text)
-				fileMentions.push(...mentions.map((m) => m.path))
-			}
-		}
-
-		if (fileMentions.length === 0) {
-			// No file mentions found, proceed normally
-			return
-		}
-
-		// Step 1: Add the original user message to conversation history (without processing mentions)
-		await this.addToApiConversationHistory({ role: "user", content: userContent })
-
-		// Step 2: Create synthetic assistant message with read_file tool calls
-		const syntheticAssistantContent = this.createSyntheticReadFileMessage(fileMentions)
-		await this.addToApiConversationHistory({
-			role: "assistant",
-			content: [{ type: "text", text: syntheticAssistantContent }],
-		})
-
-		// Step 3: Process the mentions to get file contents and create user response
-		const {
-			showRooIgnoredFiles = true,
-			includeDiagnosticMessages = true,
-			maxDiagnosticMessages = 50,
-		} = (await this.providerRef.deref()?.getState()) ?? {}
-
-		const processedContent = await processUserContentMentions({
-			userContent,
-			cwd: this.cwd,
-			urlContentFetcher: this.urlContentFetcher,
-			fileContextTracker: this.fileContextTracker,
-			rooIgnoreController: this.rooIgnoreController,
-			showRooIgnoredFiles,
-			includeDiagnosticMessages,
-			maxDiagnosticMessages,
-		})
-
-		// Add environment details
-		const environmentDetails = await getEnvironmentDetails(this, true)
-		const fileContentResponse = [...processedContent, { type: "text" as const, text: environmentDetails }]
-
-		// Add the file content as a user message
-		await this.addToApiConversationHistory({ role: "user", content: fileContentResponse })
-
-		// Now continue with the normal flow - the model will see all 3 messages
-		// but the task history only stored the original message without embedded content
-	}
-
-	/**
-	 * Creates a synthetic assistant message with read_file tool calls
-	 */
-	private createSyntheticReadFileMessage(filePaths: string[]): string {
-		if (filePaths.length === 0) {
-			return ""
-		}
-
-		// Create read_file tool calls for each file
-		const toolCalls = filePaths
-			.map((path) => {
-				return `<read_file>
-<args>
-  <file>
-    <path>${path}</path>
-  </file>
-</args>
-</read_file>`
-			})
-			.join("\n\n")
-
-		return `I'll help you with that. Let me first read the mentioned file${filePaths.length > 1 ? "s" : ""} to understand the context.\n\n${toolCalls}`
-	}
-
 	// Task Loop
 
 	private async initiateTaskLoop(userContent: Anthropic.Messages.ContentBlockParam[]): Promise<void> {
@@ -1230,9 +1138,9 @@ export class Task extends EventEmitter<ClineEvents> {
 
 		while (!this.abort) {
 			// Check if this is the first message and contains file mentions
-			if (isFirstMessage && this.shouldUseSyntheticMessages(nextUserContent)) {
+			if (isFirstMessage && shouldUseSyntheticMessages(nextUserContent)) {
 				// Handle first message with file mentions using synthetic messages
-				await this.handleFirstMessageWithFileMentions(nextUserContent)
+				await handleFirstMessageWithFileMentions(this, nextUserContent)
 				isFirstMessage = false
 				// The synthetic messages have been processed, continue with normal flow
 				// but skip the first iteration since we've already handled it
