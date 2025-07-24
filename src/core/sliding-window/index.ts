@@ -13,6 +13,16 @@ import { ANTHROPIC_DEFAULT_MAX_TOKENS } from "@roo-code/types"
 export const TOKEN_BUFFER_PERCENTAGE = 0.1
 
 /**
+ * More conservative buffer for models with smaller context windows (like Sonnet with 200k tokens)
+ */
+export const CONSERVATIVE_TOKEN_BUFFER_PERCENTAGE = 0.15
+
+/**
+ * Context window threshold below which we use more conservative buffering
+ */
+export const SMALL_CONTEXT_WINDOW_THRESHOLD = 250_000
+
+/**
  * Counts tokens for user content using the provider's token counting implementation.
  *
  * @param {Array<Anthropic.Messages.ContentBlockParam>} content - The content to count tokens for
@@ -119,8 +129,11 @@ export async function truncateConversationIfNeeded({
 	const prevContextTokens = totalTokens + lastMessageTokens
 
 	// Calculate available tokens for conversation history
-	// Truncate if we're within TOKEN_BUFFER_PERCENTAGE of the context window
-	const allowedTokens = contextWindow * (1 - TOKEN_BUFFER_PERCENTAGE) - reservedTokens
+	// Use more conservative buffer for smaller context windows to prevent "prompt is too long" errors
+	const bufferPercentage = contextWindow <= SMALL_CONTEXT_WINDOW_THRESHOLD
+		? CONSERVATIVE_TOKEN_BUFFER_PERCENTAGE
+		: TOKEN_BUFFER_PERCENTAGE
+	const allowedTokens = contextWindow * (1 - bufferPercentage) - reservedTokens
 
 	// Determine the effective threshold to use
 	let effectiveThreshold = autoCondenseContextPercent

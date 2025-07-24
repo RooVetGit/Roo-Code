@@ -296,4 +296,20 @@ export class AnthropicHandler extends BaseProvider implements SingleCompletionHa
 			return super.countTokens(content)
 		}
 	}
+
+	/**
+		* Checks if an error is a "prompt is too long" error from Anthropic
+		*/
+	private isPromptTooLongError(error: any): boolean {
+		if (!error) return false
+		
+		// Check for the specific error message pattern
+		const errorMessage = error.message || error.error?.message || ""
+		return (
+			errorMessage.includes("prompt is too long") ||
+			errorMessage.includes("tokens > ") ||
+			(error.error?.type === "invalid_request_error" && errorMessage.includes("maximum"))
+		)
+	}
+
 }
