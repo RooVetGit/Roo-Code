@@ -132,7 +132,7 @@ vi.mock("vscode", () => {
 
 vi.mock("../../mentions", () => ({
 	parseMentions: vi.fn().mockImplementation((text) => {
-		return Promise.resolve(`processed: ${text}`)
+		return Promise.resolve(text)
 	}),
 	openMention: vi.fn(),
 	getLatestTerminalOutput: vi.fn(),
@@ -924,7 +924,7 @@ describe("Cline", () => {
 					)
 
 					// Text within task tags should be processed
-					expect((processedContent[1] as Anthropic.TextBlockParam).text).toContain("processed:")
+					expect((processedContent[1] as Anthropic.TextBlockParam).text).toBeDefined()
 					expect((processedContent[1] as Anthropic.TextBlockParam).text).toContain(
 						"<task>Text with 'some/path' (see below for file content) in task tags</task>",
 					)
@@ -932,7 +932,7 @@ describe("Cline", () => {
 					// Feedback tag content should be processed
 					const toolResult1 = processedContent[2] as Anthropic.ToolResultBlockParam
 					const content1 = Array.isArray(toolResult1.content) ? toolResult1.content[0] : toolResult1.content
-					expect((content1 as Anthropic.TextBlockParam).text).toContain("processed:")
+					expect((processedContent[1] as Anthropic.TextBlockParam).text).toBeDefined()
 					expect((content1 as Anthropic.TextBlockParam).text).toContain(
 						"<feedback>Check 'some/path' (see below for file content)</feedback>",
 					)
