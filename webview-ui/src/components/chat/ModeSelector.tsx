@@ -64,28 +64,55 @@ export const ModeSelector = ({
 	// Find the selected mode
 	const selectedMode = React.useMemo(() => modes.find((mode) => mode.slug === value), [modes, value])
 
-	// Memoize searchable items for fuzzy search
-	const searchableItems = React.useMemo(() => {
+	// Memoize searchable items for fuzzy search with separate name and description search
+	const nameSearchItems = React.useMemo(() => {
 		return modes.map((mode) => ({
 			original: mode,
-			searchStr: [mode.name, mode.slug, mode.description].filter(Boolean).join(" "),
+			searchStr: [mode.name, mode.slug].filter(Boolean).join(" "),
 		}))
 	}, [modes])
 
-	// Create a memoized Fzf instance
-	const fzfInstance = React.useMemo(() => {
-		return new Fzf(searchableItems, {
+	const descriptionSearchItems = React.useMemo(() => {
+		return modes.map((mode) => ({
+			original: mode,
+			searchStr: mode.description || "",
+		}))
+	}, [modes])
+
+	// Create memoized Fzf instances for name and description searches
+	const nameFzfInstance = React.useMemo(() => {
+		return new Fzf(nameSearchItems, {
 			selector: (item) => item.searchStr,
 		})
-	}, [searchableItems])
+	}, [nameSearchItems])
 
-	// Filter modes based on search value using fuzzy search
+	const descriptionFzfInstance = React.useMemo(() => {
+		return new Fzf(descriptionSearchItems, {
+			selector: (item) => item.searchStr,
+		})
+	}, [descriptionSearchItems])
+
+	// Filter modes based on search value using fuzzy search with priority
 	const filteredModes = React.useMemo(() => {
 		if (!searchValue) return modes
 
-		const matchingItems = fzfInstance.find(searchValue).map((result) => result.item.original)
-		return matchingItems
-	}, [modes, searchValue, fzfInstance])
+		// First search in names/slugs
+		const nameMatches = nameFzfInstance.find(searchValue)
+		const nameMatchedModes = new Set(nameMatches.map((result) => result.item.original.slug))
+
+		// Then search in descriptions
+		const descriptionMatches = descriptionFzfInstance.find(searchValue)
+
+		// Combine results: name matches first, then description matches
+		const combinedResults = [
+			...nameMatches.map((result) => result.item.original),
+			...descriptionMatches
+				.filter((result) => !nameMatchedModes.has(result.item.original.slug))
+				.map((result) => result.item.original),
+		]
+
+		return combinedResults
+	}, [modes, searchValue, nameFzfInstance, descriptionFzfInstance])
 
 	const onClearSearch = React.useCallback(() => {
 		setSearchValue("")
@@ -97,7 +124,7 @@ export const ModeSelector = ({
 			onChange(modeSlug as Mode)
 			setOpen(false)
 			// Clear search after selection
-			requestAnimationFrame(() => setSearchValue(""))
+			setSearchValue("")
 		},
 		[onChange],
 	)
@@ -108,7 +135,7 @@ export const ModeSelector = ({
 			setOpen(isOpen)
 			// Clear search when closing
 			if (!isOpen) {
-				requestAnimationFrame(() => setSearchValue(""))
+				setSearchValue("")
 			}
 		},
 		[trackModeSelectorOpened],
