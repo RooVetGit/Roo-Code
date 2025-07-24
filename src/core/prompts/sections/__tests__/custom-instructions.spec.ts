@@ -522,7 +522,7 @@ describe("addCustomInstructions", () => {
 			"global instructions",
 			"/fake/path",
 			"test-mode",
-			{ settings: { useAgentRules: true } },
+			{ settings: { maxConcurrentFileReads: 5, todoListEnabled: true, useAgentRules: true } },
 		)
 
 		expect(result).toContain("# Agent Rules Standard (AGENTS.md):")
@@ -547,7 +547,7 @@ describe("addCustomInstructions", () => {
 			"global instructions",
 			"/fake/path",
 			"test-mode",
-			{ settings: { useAgentRules: false } },
+			{ settings: { maxConcurrentFileReads: 5, todoListEnabled: true, useAgentRules: false } },
 		)
 
 		expect(result).not.toContain("# Agent Rules Standard (AGENTS.md):")
@@ -590,7 +590,7 @@ describe("addCustomInstructions", () => {
 			"global instructions",
 			"/fake/path",
 			"test-mode",
-			{ settings: { useAgentRules: true } },
+			{ settings: { maxConcurrentFileReads: 5, todoListEnabled: true, useAgentRules: true } },
 		)
 
 		expect(result).toContain("Global Instructions:\nglobal instructions")
@@ -618,7 +618,7 @@ describe("addCustomInstructions", () => {
 			"global instructions",
 			"/fake/path",
 			"test-mode",
-			{ settings: { useAgentRules: true } },
+			{ settings: { maxConcurrentFileReads: 5, todoListEnabled: true, useAgentRules: true } },
 		)
 
 		// Should contain both AGENTS.md and .roorules content
