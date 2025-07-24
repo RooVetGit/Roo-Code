@@ -28,6 +28,7 @@
 		"could_not_open_file_generic": "Impossible d'ouvrir le fichier !",
 		"checkpoint_timeout": "Expiration du délai lors de la tentative de rétablissement du checkpoint.",
 		"checkpoint_failed": "Échec du rétablissement du checkpoint.",
+		"git_not_installed": "Git est requis pour la fonctionnalité des points de contrôle. Veuillez installer Git pour activer les points de contrôle.",
 		"no_workspace": "Veuillez d'abord ouvrir un espace de travail",
 		"update_support_prompt": "Erreur lors de la mise à jour du prompt de support",
 		"reset_support_prompt": "Erreur lors de la réinitialisation du prompt de support",
@@ -107,7 +108,8 @@
 	},
 	"buttons": {
 		"save": "Enregistrer",
-		"edit": "Modifier"
+		"edit": "Modifier",
+		"learn_more": "En savoir plus"
 	},
 	"tasks": {
 		"canceled": "Erreur de tâche : Elle a été arrêtée et annulée par l'utilisateur.",
@@ -145,11 +147,17 @@
 			"deleteFailed": "Échec de la suppression du mode personnalisé : {{error}}",
 			"resetFailed": "Échec de la réinitialisation des modes personnalisés : {{error}}",
 			"modeNotFound": "Erreur d'écriture : Mode non trouvé",
-			"noWorkspaceForProject": "Aucun dossier d'espace de travail trouvé pour le mode spécifique au projet"
+			"noWorkspaceForProject": "Aucun dossier d'espace de travail trouvé pour le mode spécifique au projet",
+			"rulesCleanupFailed": "Le mode a été supprimé avec succès, mais la suppression du dossier de règles à l'adresse {{rulesFolderPath}} a échoué. Vous devrez peut-être le supprimer manuellement."
 		},
 		"scope": {
 			"project": "projet",
 			"global": "global"
+		}
+	},
+	"marketplace": {
+		"mode": {
+			"rulesCleanupFailed": "Le mode a été supprimé avec succès, mais la suppression du dossier de règles à l'adresse {{rulesFolderPath}} a échoué. Vous devrez peut-être le supprimer manuellement."
 		}
 	},
 	"mdm": {

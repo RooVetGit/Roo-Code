@@ -33,6 +33,7 @@
 		"could_not_open_file_generic": "无法打开文件！",
 		"checkpoint_timeout": "尝试恢复检查点时超时。",
 		"checkpoint_failed": "恢复检查点失败。",
+		"git_not_installed": "存档点功能需要 Git。请安装 Git 以启用存档点。",
 		"no_workspace": "请先打开项目文件夹",
 		"update_support_prompt": "更新支持消息失败",
 		"reset_support_prompt": "重置支持消息失败",
@@ -112,7 +113,8 @@
 	},
 	"buttons": {
 		"save": "保存",
-		"edit": "编辑"
+		"edit": "编辑",
+		"learn_more": "了解更多"
 	},
 	"tasks": {
 		"canceled": "任务错误：它已被用户停止并取消。",
@@ -150,11 +152,17 @@
 			"deleteFailed": "删除自定义模式失败：{{error}}",
 			"resetFailed": "重置自定义模式失败：{{error}}",
 			"modeNotFound": "写入错误：未找到模式",
-			"noWorkspaceForProject": "未找到项目特定模式的工作区文件夹"
+			"noWorkspaceForProject": "未找到项目特定模式的工作区文件夹",
+			"rulesCleanupFailed": "模式删除成功，但无法删除位于 {{rulesFolderPath}} 的规则文件夹。您可能需要手动删除。"
 		},
 		"scope": {
 			"project": "项目",
 			"global": "全局"
+		}
+	},
+	"marketplace": {
+		"mode": {
+			"rulesCleanupFailed": "模式已成功移除，但无法删除位于 {{rulesFolderPath}} 的规则文件夹。您可能需要手动删除。"
 		}
 	},
 	"mdm": {

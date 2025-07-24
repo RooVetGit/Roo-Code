@@ -253,9 +253,25 @@
 		"getChutesApiKey": "Obtener clave API de Chutes",
 		"deepSeekApiKey": "Clave API de DeepSeek",
 		"getDeepSeekApiKey": "Obtener clave API de DeepSeek",
+		"moonshotApiKey": "Clave API de Moonshot",
+		"getMoonshotApiKey": "Obtener clave API de Moonshot",
+		"moonshotBaseUrl": "Punto de entrada de Moonshot",
 		"geminiApiKey": "Clave API de Gemini",
 		"getGroqApiKey": "Obtener clave API de Groq",
 		"groqApiKey": "Clave API de Groq",
+		"getHuggingFaceApiKey": "Obtener clave API de Hugging Face",
+		"huggingFaceApiKey": "Clave API de Hugging Face",
+		"huggingFaceModelId": "ID del modelo",
+		"huggingFaceLoading": "Cargando...",
+		"huggingFaceModelsCount": "({{count}} modelos)",
+		"huggingFaceSelectModel": "Seleccionar un modelo...",
+		"huggingFaceSearchModels": "Buscar modelos...",
+		"huggingFaceNoModelsFound": "No se encontraron modelos",
+		"huggingFaceProvider": "Proveedor",
+		"huggingFaceProviderAuto": "Automático",
+		"huggingFaceSelectProvider": "Seleccionar un proveedor...",
+		"huggingFaceSearchProviders": "Buscar proveedores...",
+		"huggingFaceNoProvidersFound": "No se encontraron proveedores",
 		"getGeminiApiKey": "Obtener clave API de Gemini",
 		"openAiApiKey": "Clave API de OpenAI",
 		"apiKey": "Clave API",
@@ -485,6 +501,22 @@
 			"label": "Límite de lecturas simultáneas",
 			"description": "Número máximo de archivos que la herramienta 'read_file' puede procesar simultáneamente. Valores más altos pueden acelerar la lectura de múltiples archivos pequeños pero aumentan el uso de memoria."
 		},
+		"diagnostics": {
+			"includeMessages": {
+				"label": "Incluir automáticamente diagnósticos en el contexto",
+				"description": "Cuando está habilitado, los mensajes de diagnóstico (errores) de los archivos editados se incluirán automáticamente en el contexto. Siempre puedes incluir manualmente todos los diagnósticos del espacio de trabajo usando @problems."
+			},
+			"maxMessages": {
+				"label": "Máximo de mensajes de diagnóstico",
+				"description": "Número máximo de mensajes de diagnóstico a incluir por archivo. Este límite se aplica tanto a la inclusión automática (cuando la casilla está habilitada) como a las menciones manuales de @problems. Valores más altos proporcionan más contexto pero aumentan el uso de tokens.",
+				"resetTooltip": "Restablecer al valor predeterminado (50)",
+				"unlimitedLabel": "Ilimitado"
+			},
+			"delayAfterWrite": {
+				"label": "Retraso después de escrituras para permitir que los diagnósticos detecten problemas potenciales",
+				"description": "Tiempo de espera después de escrituras de archivos antes de continuar, permitiendo que las herramientas de diagnóstico procesen cambios y detecten problemas."
+			}
+		},
 		"condensingThreshold": {
 			"label": "Umbral de condensación de contexto",
 			"selectProfile": "Configurar umbral para perfil",
@@ -577,6 +609,10 @@
 				"label": "Precisión de coincidencia",
 				"description": "Este control deslizante controla cuán precisamente deben coincidir las secciones de código al aplicar diffs. Valores más bajos permiten coincidencias más flexibles pero aumentan el riesgo de reemplazos incorrectos. Use valores por debajo del 100% con extrema precaución."
 			}
+		},
+		"todoList": {
+			"label": "Habilitar herramienta de lista de tareas",
+			"description": "Cuando está habilitado, Roo puede crear y gestionar listas de tareas para hacer seguimiento del progreso. Esto ayuda a organizar tareas complejas en pasos manejables."
 		}
 	},
 	"experimental": {
