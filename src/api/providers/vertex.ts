@@ -42,6 +42,18 @@ export class VertexHandler extends GeminiHandler implements SingleCompletionHand
 			if (modelId.startsWith("gemini-2.5-pro-exp-")) {
 				return "gemini-2.5-pro"
 			}
+
+			if (modelId === "gemini-2.0-pro-exp-02-05") {
+				return "gemini-2.5-pro"
+			}
+
+			if (
+				modelId === "gemini-2.0-flash-thinking-exp-1219" ||
+				modelId === "gemini-2.0-flash-thinking-exp-01-21" ||
+				modelId === "gemini-2.5-flash-preview-04-17"
+			) {
+				return "gemini-2.5-flash-preview-05-20"
+			}
 		}
 
 		return vertexDefaultModelId
