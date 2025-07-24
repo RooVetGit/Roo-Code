@@ -505,7 +505,7 @@ describe("addCustomInstructions", () => {
 		expect(result).toContain("Rules from .roorules-test-mode:\nmode specific rules")
 	})
 
-	it("should load AGENTS.md when useAgentRules is true", async () => {
+	it("should load AGENTS.md when settings.useAgentRules is true", async () => {
 		// Simulate no .roo/rules-test-mode directory
 		statMock.mockRejectedValueOnce({ code: "ENOENT" })
 
@@ -522,7 +522,7 @@ describe("addCustomInstructions", () => {
 			"global instructions",
 			"/fake/path",
 			"test-mode",
-			{ useAgentRules: true },
+			{ settings: { useAgentRules: true } },
 		)
 
 		expect(result).toContain("# Agent Rules Standard (AGENTS.md):")
@@ -530,7 +530,7 @@ describe("addCustomInstructions", () => {
 		expect(readFileMock).toHaveBeenCalledWith(expect.stringContaining("AGENTS.md"), "utf-8")
 	})
 
-	it("should not load AGENTS.md when useAgentRules is false", async () => {
+	it("should not load AGENTS.md when settings.useAgentRules is false", async () => {
 		// Simulate no .roo/rules-test-mode directory
 		statMock.mockRejectedValueOnce({ code: "ENOENT" })
 
@@ -547,14 +547,14 @@ describe("addCustomInstructions", () => {
 			"global instructions",
 			"/fake/path",
 			"test-mode",
-			{ useAgentRules: false },
+			{ settings: { useAgentRules: false } },
 		)
 
 		expect(result).not.toContain("# Agent Rules Standard (AGENTS.md):")
 		expect(result).not.toContain("Agent rules from AGENTS.md file")
 	})
 
-	it("should load AGENTS.md by default when useAgentRules is undefined", async () => {
+	it("should load AGENTS.md by default when settings.useAgentRules is undefined", async () => {
 		// Simulate no .roo/rules-test-mode directory
 		statMock.mockRejectedValueOnce({ code: "ENOENT" })
 
@@ -571,7 +571,7 @@ describe("addCustomInstructions", () => {
 			"global instructions",
 			"/fake/path",
 			"test-mode",
-			{}, // No useAgentRules specified
+			{}, // No settings.useAgentRules specified
 		)
 
 		expect(result).toContain("# Agent Rules Standard (AGENTS.md):")
@@ -590,7 +590,7 @@ describe("addCustomInstructions", () => {
 			"global instructions",
 			"/fake/path",
 			"test-mode",
-			{ useAgentRules: true },
+			{ settings: { useAgentRules: true } },
 		)
 
 		expect(result).toContain("Global Instructions:\nglobal instructions")
@@ -618,7 +618,7 @@ describe("addCustomInstructions", () => {
 			"global instructions",
 			"/fake/path",
 			"test-mode",
-			{ useAgentRules: true },
+			{ settings: { useAgentRules: true } },
 		)
 
 		// Should contain both AGENTS.md and .roorules content

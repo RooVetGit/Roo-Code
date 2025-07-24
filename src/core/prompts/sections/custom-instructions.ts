@@ -5,6 +5,8 @@ import { Dirent } from "fs"
 
 import { isLanguage } from "@roo-code/types"
 
+import type { SystemPromptSettings } from "../types"
+
 import { LANGUAGES } from "../../../shared/language"
 import { getRooDirectoriesForCwd, getGlobalRooDirectory } from "../../../services/roo-config"
 
@@ -238,8 +240,7 @@ export async function addCustomInstructions(
 	options: {
 		language?: string
 		rooIgnoreInstructions?: string
-		useAgentRules?: boolean
-		settings?: Record<string, any>
+		settings?: SystemPromptSettings
 	} = {},
 ): Promise<string> {
 	const sections = []
@@ -319,7 +320,7 @@ export async function addCustomInstructions(
 	}
 
 	// Add AGENTS.md content if enabled (default: true)
-	if (options.useAgentRules !== false) {
+	if (options.settings?.useAgentRules !== false) {
 		const agentRulesContent = await loadAgentRulesFile(cwd)
 		if (agentRulesContent && agentRulesContent.trim()) {
 			rules.push(agentRulesContent.trim())
