@@ -26,11 +26,28 @@ export class LibSQLVectorStore implements IVectorStore {
 		const dbDirectory = path.dirname(dbPath)
 		fs.mkdirSync(dbDirectory, { recursive: true })
 
-		this.client = createClient({ url: this.connectionUrl })
-		this.client.execute("PRAGMA journal_mode=WAL;").catch((err) => console.warn("Failed to set WAL mode:", err))
-		this.client
-			.execute("PRAGMA busy_timeout=5000;")
-			.catch((err) => console.warn("Failed to set busy timeout:", err))
+		this.client = createClient({ 
+			url: this.connectionUrl,
+			concurrency: 3
+		})
+		this.initializePragmas()
+	}
+
+	private async initializePragmas(): Promise<void> {
+		try {
+			await this.client.execute("PRAGMA journal_mode=TRUNCATE;")
+			await this.client.execute("PRAGMA synchronous=NORMAL;")
+			await this.client.execute("PRAGMA busy_timeout=5000;")
+			await this.client.execute("PRAGMA temp_store=MEMORY;")
+			
+			await this.client.execute("PRAGMA page_size=4096;")
+			await this.client.execute("PRAGMA cache_size=-16000;")
+			await this.client.execute("PRAGMA mmap_size=67108864;")
+			await this.client.execute("PRAGMA auto_vacuum=INCREMENTAL;")
+			await this.client.execute("PRAGMA incremental_vacuum;")
+		} catch (err) {
+			console.warn("Failed to set pragmas:", err)
+		}
 	}
 
 	private async executeWriteOperationWithRetry<T>(operation: () => Promise<T>, isTransaction = false): Promise<T> {
@@ -106,18 +123,22 @@ export class LibSQLVectorStore implements IVectorStore {
                 CREATE TABLE ${this.tableName} (
                     id TEXT PRIMARY KEY,
                     vector F32_BLOB(${this.vectorSize}),
-                    filePath TEXT,
+                    filePath TEXT NOT NULL,
                     codeChunk TEXT,
                     startLine INTEGER,
-                    endLine INTEGER,
-                    pathSegments TEXT
-                )
+                    endLine INTEGER
+                ) WITHOUT ROWID
             `,
 		})
 
+		const maxNeighbors = Math.max(10, Math.floor(Math.sqrt(this.vectorSize)))
+		
+		console.log(`Creating optimized vector index with ${maxNeighbors} neighbors (vs default ${Math.floor(3 * Math.sqrt(this.vectorSize))})`)
+		
 		await this.client.execute({
-			sql: `CREATE INDEX ${this.tableName}_vector_idx ON ${this.tableName} (libsql_vector_idx(vector))`,
+			sql: `CREATE INDEX ${this.tableName}_vector_idx ON ${this.tableName} (libsql_vector_idx(vector, 'compress_neighbors=float8', 'max_neighbors=${maxNeighbors}'))`,
 		})
+		
 	}
 
 	private async getCurrentTableVectorSize(): Promise<number | null> {
@@ -142,54 +163,42 @@ export class LibSQLVectorStore implements IVectorStore {
 		}>,
 	): Promise<void> {
 		await this.executeWriteOperationWithRetry(async () => {
-			const tx = await this.client.transaction("write")
-			try {
-				for (const point of points) {
-					let pathSegments = {}
-					if (point.payload?.filePath) {
-						const segments = path.normalize(point.payload.filePath).split(path.sep).filter(Boolean)
-						pathSegments = segments.reduce(
-							(acc: Record<string, string>, segment: string, index: number) => {
-								acc[index.toString()] = segment
-								return acc
-							},
-							{},
-						)
-					}
-
-					await tx.execute({
-						sql: `
-                            INSERT INTO ${this.tableName} (id, vector, filePath, codeChunk, startLine, endLine, pathSegments)
-                            VALUES (?, vector32(?), ?, ?, ?, ?, ?)
-                            ON CONFLICT(id) DO UPDATE SET
-                                vector = vector32(?),
-                                filePath = ?,
-                                codeChunk = ?,
-                                startLine = ?,
-                                endLine = ?,
-                                pathSegments = ?
-                        `,
-						args: [
-							point.id,
-							JSON.stringify(point.vector),
-							point.payload.filePath,
-							point.payload.codeChunk,
-							point.payload.startLine,
-							point.payload.endLine,
-							JSON.stringify(pathSegments),
-							JSON.stringify(point.vector),
-							point.payload.filePath,
-							point.payload.codeChunk,
-							point.payload.startLine,
-							point.payload.endLine,
-							JSON.stringify(pathSegments),
-						],
-					})
+			const statements = points.map(point => {
+				const vectorStr = JSON.stringify(point.vector)
+				return {
+					sql: `
+						INSERT INTO ${this.tableName} (id, vector, filePath, codeChunk, startLine, endLine)
+						VALUES (?, vector32(?), ?, ?, ?, ?)
+						ON CONFLICT(id) DO UPDATE SET
+							vector = vector32(?),
+							filePath = ?,
+							codeChunk = ?,
+							startLine = ?,
+							endLine = ?
+					`,
+					args: [
+						point.id,
+						vectorStr,
+						point.payload.filePath,
+						point.payload.codeChunk,
+						point.payload.startLine,
+						point.payload.endLine,
+						vectorStr,
+						point.payload.filePath,
+						point.payload.codeChunk,
+						point.payload.startLine,
+						point.payload.endLine,
+					]
 				}
-				await tx.commit()
-			} catch (error) {
-				await tx.rollback()
-				throw error
+			})
+
+			const chunkSize = 50
+			for (let i = 0; i < statements.length; i += chunkSize) {
+				const chunk = statements.slice(i, i + chunkSize)
+				await this.client.batch(chunk, "write")
+				if (i > 0 && i % 500 === 0) {
+					await this.client.execute("PRAGMA incremental_vacuum;")
+				}
 			}
 		}, true)
 	}
@@ -201,48 +210,55 @@ export class LibSQLVectorStore implements IVectorStore {
 		maxResults?: number,
 	): Promise<VectorStoreSearchResult[]> {
 		const vectorStr = JSON.stringify(queryVector)
-		const k = Math.min((maxResults || DEFAULT_MAX_SEARCH_RESULTS) * 10, 1000)
+		const k = Math.min((maxResults || DEFAULT_MAX_SEARCH_RESULTS) * 1.5, 100)
 		const scoreThreshold = minScore ?? DEFAULT_SEARCH_MIN_SCORE
-
+	
 		try {
-			let filterQuery = ""
-			const filterArgs: any[] = []
-
+			let sql: string
+			let args: any[]
+	
 			if (directoryPrefix) {
-				const segments = path.normalize(directoryPrefix).split(path.sep).filter(Boolean)
-				segments.forEach((segment, index) => {
-					filterQuery += ` AND json_extract(pathSegments, '$.${index}') = ?`
-					filterArgs.push(segment)
-				})
+				const normalizedPrefix = path.normalize(directoryPrefix)
+				const likePattern = normalizedPrefix.endsWith(path.sep) 
+					? `${normalizedPrefix}%` 
+					: `${normalizedPrefix}${path.sep}%`
+				
+				sql = `
+					SELECT 
+						t.id,
+						(1 - vector_distance_cos(t.vector, vector32(?))) as score,
+						t.filePath,
+						t.codeChunk,
+						t.startLine,
+						t.endLine
+					FROM vector_top_k('${this.tableName}_vector_idx', vector32(?), ?) AS ann
+					JOIN ${this.tableName} AS t ON t.id = ann.id
+					WHERE t.filePath LIKE ?
+					AND (1 - vector_distance_cos(t.vector, vector32(?))) > ?
+					ORDER BY score DESC
+					LIMIT ?
+				`
+				args = [vectorStr, vectorStr, k, likePattern, vectorStr, scoreThreshold, maxResults || DEFAULT_MAX_SEARCH_RESULTS]
+			} else {
+				sql = `
+					SELECT 
+						t.id,
+						(1 - vector_distance_cos(t.vector, vector32(?))) as score,
+						t.filePath,
+						t.codeChunk,
+						t.startLine,
+						t.endLine
+					FROM vector_top_k('${this.tableName}_vector_idx', vector32(?), ?) AS ann
+					JOIN ${this.tableName} AS t ON t.id = ann.id
+					WHERE (1 - vector_distance_cos(t.vector, vector32(?))) > ?
+					ORDER BY score DESC
+					LIMIT ?
+				`
+				args = [vectorStr, vectorStr, k, vectorStr, scoreThreshold, maxResults || DEFAULT_MAX_SEARCH_RESULTS]
 			}
-
-			const result = await this.client.execute({
-				sql: `
-                    SELECT 
-                        t.id,
-                        (1 - vector_distance_cos(t.vector, vector32(?))) as score,
-                        t.filePath,
-                        t.codeChunk,
-                        t.startLine,
-                        t.endLine
-                    FROM vector_top_k('${this.tableName}_vector_idx', vector32(?), ?) AS ann
-                    JOIN ${this.tableName} AS t ON t.rowid = ann.id
-                    WHERE 1=1 ${filterQuery}
-                    AND (1 - vector_distance_cos(t.vector, vector32(?))) > ?
-                    ORDER BY score DESC
-                    LIMIT ?
-                `,
-				args: [
-					vectorStr,
-					vectorStr,
-					k,
-					...filterArgs,
-					vectorStr,
-					scoreThreshold,
-					maxResults || DEFAULT_MAX_SEARCH_RESULTS,
-				],
-			})
-
+	
+			const result = await this.client.execute({ sql, args })
+	
 			return result.rows.map((row) => ({
 				id: row.id as string,
 				score: row.score as number,
@@ -268,23 +284,28 @@ export class LibSQLVectorStore implements IVectorStore {
 		if (filePaths.length === 0) return
 
 		await this.executeWriteOperationWithRetry(async () => {
-			const tx = await this.client.transaction("write")
-			try {
-				const normalizedPaths = filePaths.map((filePath) => path.normalize(filePath))
+			const normalizedPaths = filePaths.map((filePath) => path.normalize(filePath))
 
-				await tx.execute({
-					sql: `
-                        DELETE FROM ${this.tableName}
-                        WHERE filePath IN (${normalizedPaths.map(() => "?").join(",")})
-                    `,
+			if (normalizedPaths.length > 10) {
+				const statements = normalizedPaths.map(filePath => ({
+					sql: `DELETE FROM ${this.tableName} WHERE filePath = ?`,
+					args: [filePath]
+				}))
+				
+				const chunkSize = 25
+				for (let i = 0; i < statements.length; i += chunkSize) {
+					const chunk = statements.slice(i, i + chunkSize)
+					await this.client.batch(chunk, "write")
+				}
+			} else {
+				await this.client.execute({
+					sql: `DELETE FROM ${this.tableName} WHERE filePath IN (${normalizedPaths.map(() => "?").join(",")})`,
 					args: normalizedPaths,
 				})
-				await tx.commit()
-			} catch (error) {
-				await tx.rollback()
-				throw error
 			}
-		}, true)
+			
+			await this.client.execute("PRAGMA incremental_vacuum;")
+		})
 	}
 
 	async deleteCollection(): Promise<void> {
@@ -300,6 +321,7 @@ export class LibSQLVectorStore implements IVectorStore {
 		await this.executeWriteOperationWithRetry(async () => {
 			if (await this.tableExists()) {
 				await this.client.execute(`DELETE FROM ${this.tableName}`)
+				await this.client.execute("PRAGMA incremental_vacuum;")
 			}
 		})
 	}
