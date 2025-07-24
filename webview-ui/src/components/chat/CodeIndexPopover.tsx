@@ -440,6 +440,23 @@ export const CodeIndexPopover: React.FC<CodeIndexPopoverProps> = ({
 		})
 	}, [checkUnsavedChanges])
 
+	// Add ESC key handler
+	useEffect(() => {
+		const handleKeyDown = (event: KeyboardEvent) => {
+			if (event.key === "Escape" && open) {
+				// Use the same logic as clicking outside - check for unsaved changes
+				handlePopoverClose()
+			}
+		}
+
+		if (open) {
+			document.addEventListener("keydown", handleKeyDown)
+			return () => {
+				document.removeEventListener("keydown", handleKeyDown)
+			}
+		}
+	}, [open, handlePopoverClose])
+
 	const handleSaveSettings = () => {
 		// Validate settings before saving
 		if (!validateSettings()) {

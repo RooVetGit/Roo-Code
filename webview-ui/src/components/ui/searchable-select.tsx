@@ -79,6 +79,22 @@ export function SearchableSelect({
 		return () => clearTimeout(timeoutId)
 	}, [value])
 
+	// Add ESC key handler
+	React.useEffect(() => {
+		const handleKeyDown = (event: KeyboardEvent) => {
+			if (event.key === "Escape" && open) {
+				setOpen(false)
+			}
+		}
+
+		if (open) {
+			document.addEventListener("keydown", handleKeyDown)
+			return () => {
+				document.removeEventListener("keydown", handleKeyDown)
+			}
+		}
+	}, [open])
+
 	const handleOpenChange = (open: boolean) => {
 		setOpen(open)
 		// Reset search when closing

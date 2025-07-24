@@ -194,6 +194,22 @@ const ModesView = ({ onDone }: ModesViewProps) => {
 		}
 	}, [])
 
+	// Add ESC key handler for the popover
+	useEffect(() => {
+		const handleKeyDown = (event: KeyboardEvent) => {
+			if (event.key === "Escape" && open) {
+				setOpen(false)
+			}
+		}
+
+		if (open) {
+			document.addEventListener("keydown", handleKeyDown)
+			return () => {
+				document.removeEventListener("keydown", handleKeyDown)
+			}
+		}
+	}, [open])
+
 	// Handler for clearing search input
 	const onClearSearch = useCallback(() => {
 		setSearchValue("")
