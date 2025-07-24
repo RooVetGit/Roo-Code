@@ -83,10 +83,8 @@ export const generateSystemPrompt = async (provider: ClineProvider, message: Web
 		maxReadFileLine !== -1,
 		{
 			maxConcurrentFileReads,
-			useAgentRules:
-				provider.context.globalState.get("useAgentRules") ??
-				vscode.workspace.getConfiguration("roo-cline").get<boolean>("useAgentRules") ??
-				true,
+			todoListEnabled: apiConfiguration?.todoListEnabled,
+			useAgentRules: vscode.workspace.getConfiguration("roo-cline").get<boolean>("useAgentRules") ?? true,
 		},
 	)
 
