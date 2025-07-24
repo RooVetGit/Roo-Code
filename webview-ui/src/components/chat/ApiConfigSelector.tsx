@@ -41,7 +41,7 @@ export const ApiConfigSelector = ({
 	const searchableItems = useMemo(() => {
 		return listApiConfigMeta.map((config) => ({
 			original: config,
-			searchStr: config.name,
+			searchStr: [config.name, config.id].filter(Boolean).join(" "),
 		}))
 	}, [listApiConfigMeta])
 
