@@ -13,28 +13,24 @@ import { cn } from "@src/lib/utils"
 import { TemperatureControl } from "../TemperatureControl"
 
 import { inputEventTransform } from "../transforms"
+import { formatPrice } from "@/utils/formatPrice"
 
 type HuggingFaceModel = {
-	_id: string
 	id: string
-	inferenceProviderMapping: Array<{
+	object: string
+	created: number
+	owned_by: string
+	providers: Array<{
 		provider: string
-		providerId: string
 		status: "live" | "staging" | "error"
-		task: "conversational"
-	}>
-	trendingScore: number
-	config: {
-		architectures: string[]
-		model_type: string
-		tokenizer_config?: {
-			chat_template?: string | Array<{ name: string; template: string }>
-			model_max_length?: number
+		supports_tools?: boolean
+		supports_structured_output?: boolean
+		context_length?: number
+		pricing?: {
+			input: number
+			output: number
 		}
-	}
-	tags: string[]
-	pipeline_tag: "text-generation" | "image-text-to-text"
-	library_name?: string
+	}>
 }
 
 type HuggingFaceProps = {
@@ -83,10 +79,7 @@ export const HuggingFace = ({ apiConfiguration, setApiConfigurationField }: Hugg
 
 	// Get current model and its providers
 	const currentModel = models.find((m) => m.id === apiConfiguration?.huggingFaceModelId)
-	const availableProviders = useMemo(
-		() => currentModel?.inferenceProviderMapping || [],
-		[currentModel?.inferenceProviderMapping],
-	)
+	const availableProviders = useMemo(() => currentModel?.providers || [], [currentModel?.providers])
 
 	// Set default provider when model changes
 	useEffect(() => {
@@ -142,18 +135,31 @@ export const HuggingFace = ({ apiConfiguration, setApiConfigurationField }: Hugg
 		return nameMap[provider] || provider.charAt(0).toUpperCase() + provider.slice(1)
 	}
 
-	// Get model capabilities
+	// Get current provider
+	const currentProvider = useMemo(() => {
+		if (!currentModel || !selectedProvider || selectedProvider === "auto") return null
+		return currentModel.providers.find((p) => p.provider === selectedProvider)
+	}, [currentModel, selectedProvider])
+
+	// Get model capabilities based on current provider
 	const modelCapabilities = useMemo(() => {
 		if (!currentModel) return null
 
-		const supportsImages = currentModel.pipeline_tag === "image-text-to-text"
-		const maxTokens = currentModel.config.tokenizer_config?.model_max_length
+		// For now, assume text-only models since we don't have pipeline_tag in new API
+		// This could be enhanced by checking model name patterns or adding vision support detection
+		const supportsImages = false
+
+		// Use provider-specific capabilities if a specific provider is selected
+		const maxTokens =
+			currentProvider?.context_length || currentModel.providers.find((p) => p.context_length)?.context_length
+		const supportsTools = currentProvider?.supports_tools || currentModel.providers.some((p) => p.supports_tools)
 
 		return {
 			supportsImages,
 			maxTokens,
+			supportsTools,
 		}
-	}, [currentModel])
+	}, [currentModel, currentProvider])
 
 	// Model capabilities component
 	const ModelCapabilities = () => {
@@ -174,11 +180,35 @@ export const HuggingFace = ({ apiConfiguration, setApiConfigurationField }: Hugg
 						/>
 						{modelCapabilities.supportsImages ? "Supports images" : "Text only"}
 					</div>
+					<div
+						className={cn(
+							"flex items-center gap-1",
+							modelCapabilities.supportsTools
+								? "text-vscode-charts-green"
+								: "text-vscode-errorForeground",
+						)}>
+						<span
+							className={cn("codicon", modelCapabilities.supportsTools ? "codicon-check" : "codicon-x")}
+						/>
+						{modelCapabilities.supportsTools ? "Supports tool calling" : "No tool calling"}
+					</div>
 					{modelCapabilities.maxTokens && (
 						<div className="flex items-center gap-1 text-vscode-descriptionForeground">
-							<span className="codicon codicon-info" />
-							Max context: {modelCapabilities.maxTokens.toLocaleString()} tokens
+							<span className="font-medium">{t("settings:modelInfo.maxOutput")}:</span>{" "}
+							{modelCapabilities.maxTokens.toLocaleString()} tokens
 						</div>
+					)}
+					{currentProvider?.pricing && (
+						<>
+							<div className="flex items-center gap-1 text-vscode-descriptionForeground">
+								<span className="font-medium">{t("settings:modelInfo.inputPrice")}:</span>{" "}
+								{formatPrice(currentProvider.pricing.input)} / 1M tokens
+							</div>
+							<div className="flex items-center gap-1 text-vscode-descriptionForeground">
+								<span className="font-medium">{t("settings:modelInfo.outputPrice")}:</span>{" "}
+								{formatPrice(currentProvider.pricing.output)} / 1M tokens
+							</div>
+						</>
 					)}
 				</div>
 			</div>
