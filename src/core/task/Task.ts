@@ -405,12 +405,17 @@ export class Task extends EventEmitter<ClineEvents> {
 				globalStoragePath: this.globalStoragePath,
 			})
 
+			const provider = this.providerRef.deref()
+			const state = await provider?.getState()
+			const currentMode = state?.mode
+
 			const { historyItem, tokenUsage } = await taskMetadata({
 				messages: this.clineMessages,
 				taskId: this.taskId,
 				taskNumber: this.taskNumber,
 				globalStoragePath: this.globalStoragePath,
 				workspace: this.cwd,
+				mode: currentMode,
 			})
 
 			this.emit("taskTokenUsageUpdated", this.taskId, tokenUsage)
