@@ -190,15 +190,15 @@ export async function applyDiffToolLegacy(
 
 			// Check for single SEARCH/REPLACE block warning
 			const searchBlocks = (diffContent.match(/<<<<<<< SEARCH/g) || []).length
-			const singleBlockWarning =
+			const singleBlockNotice =
 				searchBlocks === 1
-					? "Making multiple related changes in a single apply_diff is more efficient for the LLM. If other changes are needed in this file, please include them as additional SEARCH/REPLACE blocks.\n\n"
+					? "\n<notice>Making multiple related changes in a single apply_diff is more efficient. If other changes are needed in this file, please include them as additional SEARCH/REPLACE blocks.</notice>"
 					: ""
 
 			if (partFailHint) {
-				pushToolResult(partFailHint + message)
+				pushToolResult(partFailHint + message + singleBlockNotice)
 			} else {
-				pushToolResult(singleBlockWarning + message)
+				pushToolResult(message + singleBlockNotice)
 			}
 
 			await cline.diffViewProvider.reset()
