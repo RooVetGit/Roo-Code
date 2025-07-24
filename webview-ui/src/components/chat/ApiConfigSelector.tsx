@@ -134,6 +134,7 @@ export const ApiConfigSelector = ({
 	const triggerContent = (
 		<PopoverTrigger
 			disabled={disabled}
+			data-testid="dropdown-trigger"
 			className={cn(
 				"w-full min-w-0 max-w-full inline-flex items-center gap-1.5 relative whitespace-nowrap px-1.5 py-1 text-xs",
 				"bg-transparent border border-[rgba(255,255,255,0.08)] rounded-md text-vscode-foreground",
