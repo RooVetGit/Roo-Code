@@ -1322,3 +1322,338 @@ describe("Rules directory reading", () => {
 		expect(result).toBe("\n# Rules from .roorules:\nfallback content\n")
 	})
 })
+
+describe("loadCustomInstructionFiles", () => {
+	beforeEach(() => {
+		vi.clearAllMocks()
+	})
+
+	it("should load custom instruction files from specified paths", async () => {
+		// Mock file existence and content
+		statMock.mockImplementation((path) => {
+			const normalizedPath = path.toString().replace(/\\/g, "/")
+			if (
+				normalizedPath.endsWith(".github/copilot-instructions.md") ||
+				normalizedPath.endsWith("docs/ai-instructions.md")
+			) {
+				return Promise.resolve({
+					isFile: vi.fn().mockReturnValue(true),
+					size: 1000, // Less than 1MB
+				} as any)
+			}
+			return Promise.reject({ code: "ENOENT" })
+		})
+
+		readFileMock.mockImplementation((filePath: PathLike) => {
+			const pathStr = filePath.toString()
+			const normalizedPath = pathStr.replace(/\\/g, "/")
+			if (normalizedPath.endsWith(".github/copilot-instructions.md")) {
+				return Promise.resolve("GitHub Copilot instructions content")
+			}
+			if (normalizedPath.endsWith("docs/ai-instructions.md")) {
+				return Promise.resolve("AI instructions content")
+			}
+			return Promise.reject({ code: "ENOENT" })
+		})
+
+		const result = await addCustomInstructions(
+			"mode instructions",
+			"global instructions",
+			"/fake/path",
+			"test-mode",
+			{ customInstructionPaths: [".github/copilot-instructions.md", "docs/ai-instructions.md"] },
+		)
+
+		expect(result).toContain("# Custom instructions from .github/copilot-instructions.md:")
+		expect(result).toContain("GitHub Copilot instructions content")
+		expect(result).toContain("# Custom instructions from docs/ai-instructions.md:")
+		expect(result).toContain("AI instructions content")
+	})
+
+	it("should skip files outside workspace", async () => {
+		// Mock no .roo/rules-test-mode directory
+		statMock.mockRejectedValueOnce({ code: "ENOENT" })
+
+		// Mock file existence for custom instruction paths
+		statMock.mockImplementation((path) => {
+			return Promise.resolve({
+				isFile: vi.fn().mockReturnValue(true),
+				size: 1000,
+			} as any)
+		})
+
+		// Mock file reads - only return content for files that shouldn't be loaded
+		readFileMock.mockImplementation((filePath: PathLike) => {
+			const pathStr = filePath.toString()
+			if (pathStr.includes("/etc/passwd") || pathStr.includes("/root/.ssh/config")) {
+				return Promise.resolve("Should not be loaded")
+			}
+			// Return empty/rejected for other files (like .roorules-test-mode)
+			return Promise.reject({ code: "ENOENT" })
+		})
+
+		// Mock console.warn to verify warning is logged
+		const consoleWarnSpy = vi.spyOn(console, "warn").mockImplementation(() => {})
+
+		const result = await addCustomInstructions(
+			"mode instructions",
+			"global instructions",
+			"/fake/path",
+			"test-mode",
+			{ customInstructionPaths: ["/etc/passwd", "/root/.ssh/config"] },
+		)
+
+		expect(result).not.toContain("Should not be loaded")
+		expect(consoleWarnSpy).toHaveBeenCalledWith(
+			expect.stringContaining("Skipping custom instruction file outside workspace"),
+		)
+
+		consoleWarnSpy.mockRestore()
+	})
+
+	it("should allow files in parent directories for monorepo scenarios", async () => {
+		// Mock no .roo/rules-test-mode directory
+		statMock.mockRejectedValueOnce({ code: "ENOENT" })
+
+		// Mock file existence - need to handle the joined path
+		statMock.mockImplementation((filePath) => {
+			const pathStr = filePath.toString()
+			// Handle both Unix and Windows path separators
+			const normalizedPath = pathStr.replace(/\\/g, "/")
+			// The path.join will create /fake/path/monorepo-instructions.md
+			if (normalizedPath.endsWith("monorepo-instructions.md")) {
+				return Promise.resolve({
+					isFile: vi.fn().mockReturnValue(true),
+					size: 1000,
+				} as any)
+			}
+			return Promise.reject({ code: "ENOENT" })
+		})
+
+		readFileMock.mockImplementation((filePath: PathLike) => {
+			const pathStr = filePath.toString()
+			const normalizedPath = pathStr.replace(/\\/g, "/")
+			if (normalizedPath.endsWith("monorepo-instructions.md")) {
+				return Promise.resolve("Monorepo instructions content")
+			}
+			return Promise.reject({ code: "ENOENT" })
+		})
+
+		const result = await addCustomInstructions(
+			"mode instructions",
+			"global instructions",
+			"/fake/path/subproject",
+			"test-mode",
+			{ customInstructionPaths: ["../monorepo-instructions.md"] },
+		)
+
+		expect(result).toContain("# Custom instructions from ../monorepo-instructions.md:")
+		expect(result).toContain("Monorepo instructions content")
+	})
+
+	it("should skip non-existent files with warning", async () => {
+		// Mock file doesn't exist
+		statMock.mockRejectedValue({ code: "ENOENT" })
+
+		const consoleWarnSpy = vi.spyOn(console, "warn").mockImplementation(() => {})
+
+		const result = await addCustomInstructions(
+			"mode instructions",
+			"global instructions",
+			"/fake/path",
+			"test-mode",
+			{ customInstructionPaths: ["non-existent.md"] },
+		)
+
+		expect(result).not.toContain("non-existent.md")
+		expect(consoleWarnSpy).toHaveBeenCalledWith(expect.stringContaining("Custom instruction file not found"))
+
+		consoleWarnSpy.mockRestore()
+	})
+
+	it("should skip non-markdown/text files", async () => {
+		// Mock file existence
+		statMock.mockImplementation((path) => {
+			return Promise.resolve({
+				isFile: vi.fn().mockReturnValue(true),
+				size: 1000,
+			} as any)
+		})
+
+		const consoleWarnSpy = vi.spyOn(console, "warn").mockImplementation(() => {})
+
+		const result = await addCustomInstructions(
+			"mode instructions",
+			"global instructions",
+			"/fake/path",
+			"test-mode",
+			{ customInstructionPaths: ["binary.exe", "image.png", "data.json"] },
+		)
+
+		expect(result).not.toContain("binary.exe")
+		expect(result).not.toContain("image.png")
+		expect(result).not.toContain("data.json")
+		expect(consoleWarnSpy).toHaveBeenCalledWith(expect.stringContaining("Skipping non-markdown/text file"))
+
+		consoleWarnSpy.mockRestore()
+	})
+
+	it("should skip files larger than 1MB", async () => {
+		// Mock file existence with large size
+		statMock.mockImplementation((path) => {
+			return Promise.resolve({
+				isFile: vi.fn().mockReturnValue(true),
+				size: 2 * 1024 * 1024, // 2MB
+			} as any)
+		})
+
+		const consoleWarnSpy = vi.spyOn(console, "warn").mockImplementation(() => {})
+
+		const result = await addCustomInstructions(
+			"mode instructions",
+			"global instructions",
+			"/fake/path",
+			"test-mode",
+			{ customInstructionPaths: ["large-file.md"] },
+		)
+
+		expect(result).not.toContain("large-file.md")
+		expect(consoleWarnSpy).toHaveBeenCalledWith(expect.stringContaining("Skipping large file (>1MB)"))
+
+		consoleWarnSpy.mockRestore()
+	})
+
+	it("should handle invalid path patterns", async () => {
+		const consoleWarnSpy = vi.spyOn(console, "warn").mockImplementation(() => {})
+
+		const result = await addCustomInstructions(
+			"mode instructions",
+			"global instructions",
+			"/fake/path",
+			"test-mode",
+			{ customInstructionPaths: [null as any, "", "path/../../../etc/passwd"] },
+		)
+
+		expect(consoleWarnSpy).toHaveBeenCalledWith(expect.stringContaining("Invalid custom instruction path"))
+		expect(consoleWarnSpy).toHaveBeenCalledWith(expect.stringContaining("Potentially dangerous path pattern"))
+
+		consoleWarnSpy.mockRestore()
+	})
+
+	it("should handle errors gracefully", async () => {
+		// Mock no .roo/rules-test-mode directory
+		statMock.mockRejectedValueOnce({ code: "ENOENT" })
+
+		// Mock file existence
+		statMock.mockImplementation((path) => {
+			const normalizedPath = path.toString().replace(/\\/g, "/")
+			if (normalizedPath.endsWith("restricted.md")) {
+				return Promise.resolve({
+					isFile: vi.fn().mockReturnValue(true),
+					size: 1000,
+				} as any)
+			}
+			return Promise.reject({ code: "ENOENT" })
+		})
+
+		// Mock read error for specific file
+		readFileMock.mockImplementation((filePath: PathLike) => {
+			const pathStr = filePath.toString()
+			if (pathStr.includes("restricted.md")) {
+				return Promise.reject(new Error("Permission denied"))
+			}
+			return Promise.reject({ code: "ENOENT" })
+		})
+
+		const consoleWarnSpy = vi.spyOn(console, "warn").mockImplementation(() => {})
+
+		const result = await addCustomInstructions(
+			"mode instructions",
+			"global instructions",
+			"/fake/path",
+			"test-mode",
+			{ customInstructionPaths: ["restricted.md"] },
+		)
+
+		expect(result).not.toContain("restricted.md")
+		expect(consoleWarnSpy).toHaveBeenCalledWith(
+			expect.stringContaining("Failed to load custom instruction file"),
+			expect.any(Error),
+		)
+
+		consoleWarnSpy.mockRestore()
+	})
+
+	it("should handle absolute paths correctly", async () => {
+		// Mock file existence
+		statMock.mockImplementation((path) => {
+			const normalizedPath = path.toString().replace(/\\/g, "/")
+			if (normalizedPath === "/fake/path/absolute-instructions.md") {
+				return Promise.resolve({
+					isFile: vi.fn().mockReturnValue(true),
+					size: 1000,
+				} as any)
+			}
+			return Promise.reject({ code: "ENOENT" })
+		})
+
+		readFileMock.mockImplementation((filePath: PathLike) => {
+			const pathStr = filePath.toString()
+			const normalizedPath = pathStr.replace(/\\/g, "/")
+			if (normalizedPath === "/fake/path/absolute-instructions.md") {
+				return Promise.resolve("Absolute path instructions")
+			}
+			return Promise.reject({ code: "ENOENT" })
+		})
+
+		const result = await addCustomInstructions(
+			"mode instructions",
+			"global instructions",
+			"/fake/path",
+			"test-mode",
+			{ customInstructionPaths: ["/fake/path/absolute-instructions.md"] },
+		)
+
+		expect(result).toContain("# Custom instructions from /fake/path/absolute-instructions.md:")
+		expect(result).toContain("Absolute path instructions")
+	})
+
+	it("should return empty string when no paths provided", async () => {
+		const result = await addCustomInstructions(
+			"mode instructions",
+			"global instructions",
+			"/fake/path",
+			"test-mode",
+			{ customInstructionPaths: [] },
+		)
+
+		expect(result).toContain("Mode-specific Instructions:")
+		expect(result).not.toContain("# Custom instructions from")
+	})
+
+	it("should validate that path is a file not a directory", async () => {
+		// Mock path exists but is a directory
+		statMock.mockImplementation((path) => {
+			return Promise.resolve({
+				isFile: vi.fn().mockReturnValue(false),
+				isDirectory: vi.fn().mockReturnValue(true),
+				size: 0,
+			} as any)
+		})
+
+		const consoleWarnSpy = vi.spyOn(console, "warn").mockImplementation(() => {})
+
+		const result = await addCustomInstructions(
+			"mode instructions",
+			"global instructions",
+			"/fake/path",
+			"test-mode",
+			{ customInstructionPaths: ["some-directory"] },
+		)
+
+		expect(result).not.toContain("some-directory")
+		expect(consoleWarnSpy).toHaveBeenCalledWith(expect.stringContaining("Path is not a file"))
+
+		consoleWarnSpy.mockRestore()
+	})
+})

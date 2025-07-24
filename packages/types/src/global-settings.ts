@@ -40,6 +40,13 @@ export const globalSettingsSchema = z.object({
 
 	lastShownAnnouncementId: z.string().optional(),
 	customInstructions: z.string().optional(),
+	/**
+	 * Array of file paths to load custom instructions from.
+	 * Supports relative paths, absolute paths, and parent directory paths (e.g., "../shared-instructions.md").
+	 * Files must be markdown (.md, .markdown) or text (.txt) files.
+	 * Example: [".github/copilot-instructions.md", "../shared/ai-instructions.md"]
+	 */
+	customInstructionPaths: z.array(z.string()).optional(),
 	taskHistory: z.array(historyItemSchema).optional(),
 
 	condensingApiConfigId: z.string().optional(),
