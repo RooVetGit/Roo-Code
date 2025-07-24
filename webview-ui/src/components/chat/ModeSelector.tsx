@@ -243,7 +243,7 @@ export const ModeSelector = ({
 						</div>
 
 						{/* Info icon and title on the right with matching spacing */}
-						<div className="flex items-center gap-1">
+						<div className="flex items-center gap-1 pr-1">
 							<StandardTooltip content={instructionText}>
 								<span className="codicon codicon-info text-xs text-vscode-descriptionForeground opacity-70 hover:opacity-100 cursor-help" />
 							</StandardTooltip>
