@@ -12,7 +12,11 @@
 		"title": "設定",
 		"saveButtonTooltip": "変更を保存",
 		"nothingChangedTooltip": "変更なし",
-		"doneButtonTooltip": "未保存の変更を破棄して設定パネルを閉じる"
+		"doneButtonTooltip": "未保存の変更を破棄して設定パネルを閉じる",
+		"searchPlaceholder": "Search settings...",
+		"searchTooltip": "Search settings",
+		"clearSearchTooltip": "Clear search",
+		"noSearchResults": "No settings match your search"
 	},
 	"unsavedChangesDialog": {
 		"title": "未保存の変更",
@@ -31,10 +35,15 @@
 		"prompts": "プロンプト",
 		"experimental": "実験的",
 		"language": "言語",
-		"about": "Roo Codeについて"
+		"about": "Roo Codeについて",
+		"advanced": "Advanced"
 	},
 	"prompts": {
-		"description": "プロンプトの強化、コードの説明、問題の修正などの迅速なアクションに使用されるサポートプロンプトを設定します。これらのプロンプトは、Rooが一般的な開発タスクでより良いサポートを提供するのに役立ちます。"
+		"description": "プロンプトの強化、コードの説明、問題の修正などの迅速なアクションに使用されるサポートプロンプトを設定します。これらのプロンプトは、Rooが一般的な開発タスクでより良いサポートを提供するのに役立ちます。",
+		"customSupportPrompts": {
+			"label": "Custom Support Prompts",
+			"description": "Add custom instructions or prompts to guide Roo's behavior"
+		}
 	},
 	"codeIndex": {
 		"title": "コードベースのインデックス作成",
@@ -148,7 +157,8 @@
 			"protected": {
 				"label": "保護されたファイルを含める",
 				"description": "Rooが保護されたファイル（.rooignoreや.roo/設定ファイルなど）を承認なしで作成・編集することを許可します。"
-			}
+			},
+			"delayDescription": "Wait time in milliseconds after file writes before diagnostics are updated"
 		},
 		"browser": {
 			"label": "ブラウザ",
@@ -157,7 +167,8 @@
 		"retry": {
 			"label": "再試行",
 			"description": "サーバーがエラーレスポンスを返した場合、自動的に失敗したAPIリクエストを再試行",
-			"delayLabel": "リクエスト再試行前の遅延"
+			"delayLabel": "リクエスト再試行前の遅延",
+			"delayDescription": "Time to wait in seconds before retrying a failed request"
 		},
 		"mcp": {
 			"label": "MCP",
@@ -174,14 +185,21 @@
 		"followupQuestions": {
 			"label": "質問",
 			"description": "設定された時間が経過すると、フォローアップ質問の最初の提案回答を自動的に選択します",
-			"timeoutLabel": "最初の回答を自動選択するまでの待機時間"
+			"timeoutLabel": "最初の回答を自動選択するまでの待機時間",
+			"timeoutDescription": "Time to wait before auto-selecting the first answer"
 		},
 		"execute": {
 			"label": "実行",
 			"description": "承認なしで自動的に許可されたターミナルコマンドを実行",
-			"allowedCommands": "許可された自動実行コマンド",
+			"allowedCommands": {
+				"label": "Allowed Commands",
+				"description": "Commands that Roo can execute automatically (one per line, supports wildcards)"
+			},
 			"allowedCommandsDescription": "「実行操作を常に承認」が有効な場合に自動実行できるコマンドプレフィックス。すべてのコマンドを許可するには * を追加します（注意して使用してください）。",
-			"deniedCommands": "拒否されたコマンド",
+			"deniedCommands": {
+				"label": "Denied Commands",
+				"description": "Commands that Roo is explicitly forbidden from executing (one per line, supports wildcards)"
+			},
 			"deniedCommandsDescription": "承認を求めることなく自動的に拒否されるコマンドプレフィックス。許可されたコマンドとの競合がある場合、最長プレフィックスマッチが優先されます。すべてのコマンドを拒否するには * を追加します。",
 			"commandPlaceholder": "コマンドプレフィックスを入力（例：'git '）",
 			"deniedCommandPlaceholder": "拒否するコマンドプレフィックスを入力（例：'rm -rf'）",
@@ -195,7 +213,8 @@
 		"apiRequestLimit": {
 			"title": "最大リクエスト数",
 			"description": "タスクを続行するための承認を求める前に、自動的にこの数のAPIリクエストを行います。",
-			"unlimited": "無制限"
+			"unlimited": "無制限",
+			"label": "Max Requests"
 		},
 		"selectOptionsFirst": "自動承認を有効にするには、以下のオプションを少なくとも1つ選択してください"
 	},
@@ -242,7 +261,8 @@
 			"hint": "最新のモデルを表示するには設定を再度開いてください。",
 			"loading": "モデルリストを更新中...",
 			"success": "モデルリストが正常に更新されました！",
-			"error": "モデルリストの更新に失敗しました。もう一度お試しください。"
+			"error": "モデルリストの更新に失敗しました。もう一度お試しください。",
+			"missingConfig": "Please configure API settings first"
 		},
 		"getRequestyApiKey": "Requesty APIキーを取得",
 		"openRouterTransformsText": "プロンプトとメッセージチェーンをコンテキストサイズに圧縮 (<a>OpenRouter Transforms</a>)",
@@ -409,7 +429,9 @@
 			"placeholder": "デフォルト：claude",
 			"maxTokensLabel": "最大出力トークン",
 			"maxTokensDescription": "Claude Codeレスポンスの最大出力トークン数。デフォルトは8000です。"
-		}
+		},
+		"apiProviderDescription": "Select the API provider for AI model access",
+		"modelDescription": "Choose the AI model to use for this configuration"
 	},
 	"browser": {
 		"enable": {
@@ -433,7 +455,10 @@
 		"remote": {
 			"label": "リモートブラウザ接続を使用",
 			"description": "リモートデバッグを有効にして実行しているChromeブラウザに接続します（--remote-debugging-port=9222）。",
-			"urlPlaceholder": "カスタムURL（例：http://localhost:9222）",
+			"urlPlaceholder": {
+				"label": "Remote Browser Host",
+				"description": "WebSocket URL for the remote browser connection"
+			},
 			"testButton": "接続テスト",
 			"testingButton": "テスト中...",
 			"instructions": "DevToolsプロトコルホストアドレスを入力するか、Chromeのローカルインスタンスを自動検出するために空のままにします。接続テストボタンは、提供されている場合はカスタムURLを試み、フィールドが空の場合は自動検出します。"
@@ -449,12 +474,14 @@
 		"sound": {
 			"label": "サウンドエフェクトを有効化",
 			"description": "有効にすると、Rooは通知やイベントのためにサウンドエフェクトを再生します。",
-			"volumeLabel": "音量"
+			"volumeLabel": "音量",
+			"volumeDescription": "Adjust the volume level for sound notifications (0-100)"
 		},
 		"tts": {
 			"label": "音声合成を有効化",
 			"description": "有効にすると、Rooは音声合成を使用して応答を音声で読み上げます。",
-			"speedLabel": "速度"
+			"speedLabel": "速度",
+			"speedDescription": "Adjust the speech rate for text-to-speech (0.1-10.0)"
 		}
 	},
 	"contextManagement": {
@@ -525,7 +552,8 @@
 			"defaultDescription": "コンテキストがこの割合に達すると、カスタム設定がない限り、すべてのプロファイルで自動的に圧縮されます",
 			"profileDescription": "このプロファイルのみのカスタムしきい値（グローバルデフォルトを上書き）",
 			"inheritDescription": "このプロファイルはグローバルデフォルトしきい値を継承します（{{threshold}}%）",
-			"usesGlobal": "（グローバル {{threshold}}% を使用）"
+			"usesGlobal": "（グローバル {{threshold}}% を使用）",
+			"description": "Configure when context condensing should be triggered based on token usage"
 		}
 	},
 	"terminal": {
@@ -614,6 +642,10 @@
 		"todoList": {
 			"label": "ToDoリストツールを有効にする",
 			"description": "有効にすると、Rooはタスクの進捗を追跡するためのToDoリストを作成・管理できます。これにより、複雑なタスクを管理しやすいステップに整理できます。"
+		},
+		"mcpEnabled": {
+			"label": "Enable MCP",
+			"description": "Enable Model Context Protocol (MCP) for enhanced model capabilities"
 		}
 	},
 	"experimental": {
@@ -755,5 +787,8 @@
 		"useCustomArn": "カスタム ARN を使用..."
 	},
 	"includeMaxOutputTokens": "最大出力トークンを含める",
-	"includeMaxOutputTokensDescription": "APIリクエストで最大出力トークンパラメータを送信します。一部のプロバイダーはこれをサポートしていない場合があります。"
+	"includeMaxOutputTokensDescription": "APIリクエストで最大出力トークンパラメータを送信します。一部のプロバイダーはこれをサポートしていない場合があります。",
+	"language": {
+		"description": "Select your preferred language for the interface"
+	}
 }

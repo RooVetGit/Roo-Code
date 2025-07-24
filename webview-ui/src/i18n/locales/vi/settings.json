@@ -12,7 +12,11 @@
 		"title": "Cài đặt",
 		"saveButtonTooltip": "Lưu thay đổi",
 		"nothingChangedTooltip": "Không có gì thay đổi",
-		"doneButtonTooltip": "Hủy thay đổi chưa lưu và đóng bảng cài đặt"
+		"doneButtonTooltip": "Hủy thay đổi chưa lưu và đóng bảng cài đặt",
+		"searchPlaceholder": "Search settings...",
+		"searchTooltip": "Search settings",
+		"clearSearchTooltip": "Clear search",
+		"noSearchResults": "No settings match your search"
 	},
 	"unsavedChangesDialog": {
 		"title": "Thay đổi chưa lưu",
@@ -31,10 +35,15 @@
 		"prompts": "Lời nhắc",
 		"experimental": "Thử nghiệm",
 		"language": "Ngôn ngữ",
-		"about": "Giới thiệu"
+		"about": "Giới thiệu",
+		"advanced": "Advanced"
 	},
 	"prompts": {
-		"description": "Cấu hình các lời nhắc hỗ trợ được sử dụng cho các hành động nhanh như cải thiện lời nhắc, giải thích mã và khắc phục sự cố. Những lời nhắc này giúp Roo cung cấp hỗ trợ tốt hơn cho các tác vụ phát triển phổ biến."
+		"description": "Cấu hình các lời nhắc hỗ trợ được sử dụng cho các hành động nhanh như cải thiện lời nhắc, giải thích mã và khắc phục sự cố. Những lời nhắc này giúp Roo cung cấp hỗ trợ tốt hơn cho các tác vụ phát triển phổ biến.",
+		"customSupportPrompts": {
+			"label": "Custom Support Prompts",
+			"description": "Add custom instructions or prompts to guide Roo's behavior"
+		}
 	},
 	"codeIndex": {
 		"title": "Lập chỉ mục mã nguồn",
@@ -148,7 +157,8 @@
 			"protected": {
 				"label": "Bao gồm các tệp được bảo vệ",
 				"description": "Cho phép Roo tạo và chỉnh sửa các tệp được bảo vệ (như .rooignore và các tệp cấu hình .roo/) mà không yêu cầu phê duyệt."
-			}
+			},
+			"delayDescription": "Wait time in milliseconds after file writes before diagnostics are updated"
 		},
 		"browser": {
 			"label": "Trình duyệt",
@@ -157,7 +167,8 @@
 		"retry": {
 			"label": "Thử lại",
 			"description": "Tự động thử lại các yêu cầu API thất bại khi máy chủ trả về phản hồi lỗi",
-			"delayLabel": "Trì hoãn trước khi thử lại yêu cầu"
+			"delayLabel": "Trì hoãn trước khi thử lại yêu cầu",
+			"delayDescription": "Time to wait in seconds before retrying a failed request"
 		},
 		"mcp": {
 			"label": "MCP",
@@ -174,14 +185,21 @@
 		"followupQuestions": {
 			"label": "Câu hỏi",
 			"description": "Tự động chọn câu trả lời đầu tiên được đề xuất cho các câu hỏi tiếp theo sau thời gian chờ đã cấu hình",
-			"timeoutLabel": "Thời gian chờ trước khi tự động chọn câu trả lời đầu tiên"
+			"timeoutLabel": "Thời gian chờ trước khi tự động chọn câu trả lời đầu tiên",
+			"timeoutDescription": "Time to wait before auto-selecting the first answer"
 		},
 		"execute": {
 			"label": "Thực thi",
 			"description": "Tự động thực thi các lệnh terminal được phép mà không cần phê duyệt",
-			"allowedCommands": "Các lệnh tự động thực thi được phép",
+			"allowedCommands": {
+				"label": "Allowed Commands",
+				"description": "Commands that Roo can execute automatically (one per line, supports wildcards)"
+			},
 			"allowedCommandsDescription": "Tiền tố lệnh có thể được tự động thực thi khi \"Luôn phê duyệt các hoạt động thực thi\" được bật. Thêm * để cho phép tất cả các lệnh (sử dụng cẩn thận).",
-			"deniedCommands": "Lệnh bị từ chối",
+			"deniedCommands": {
+				"label": "Denied Commands",
+				"description": "Commands that Roo is explicitly forbidden from executing (one per line, supports wildcards)"
+			},
 			"deniedCommandsDescription": "Tiền tố lệnh sẽ được tự động từ chối mà không yêu cầu phê duyệt. Trong trường hợp xung đột với lệnh được phép, khớp tiền tố dài nhất sẽ được ưu tiên. Thêm * để từ chối tất cả lệnh.",
 			"commandPlaceholder": "Nhập tiền tố lệnh (ví dụ: 'git ')",
 			"deniedCommandPlaceholder": "Nhập tiền tố lệnh để từ chối (ví dụ: 'rm -rf')",
@@ -195,7 +213,8 @@
 		"apiRequestLimit": {
 			"title": "Số lượng yêu cầu tối đa",
 			"description": "Tự động thực hiện số lượng API request này trước khi yêu cầu phê duyệt để tiếp tục với nhiệm vụ.",
-			"unlimited": "Không giới hạn"
+			"unlimited": "Không giới hạn",
+			"label": "Max Requests"
 		},
 		"selectOptionsFirst": "Chọn ít nhất một tùy chọn bên dưới để bật tự động phê duyệt"
 	},
@@ -242,7 +261,8 @@
 			"hint": "Vui lòng mở lại cài đặt để xem các mô hình mới nhất.",
 			"loading": "Đang làm mới danh sách mô hình...",
 			"success": "Danh sách mô hình đã được làm mới thành công!",
-			"error": "Không thể làm mới danh sách mô hình. Vui lòng thử lại."
+			"error": "Không thể làm mới danh sách mô hình. Vui lòng thử lại.",
+			"missingConfig": "Please configure API settings first"
 		},
 		"getRequestyApiKey": "Lấy khóa API Requesty",
 		"openRouterTransformsText": "Nén lời nhắc và chuỗi tin nhắn theo kích thước ngữ cảnh (<a>OpenRouter Transforms</a>)",
@@ -409,7 +429,9 @@
 			"placeholder": "Mặc định: claude",
 			"maxTokensLabel": "Số token đầu ra tối đa",
 			"maxTokensDescription": "Số lượng token đầu ra tối đa cho các phản hồi của Claude Code. Mặc định là 8000."
-		}
+		},
+		"apiProviderDescription": "Select the API provider for AI model access",
+		"modelDescription": "Choose the AI model to use for this configuration"
 	},
 	"browser": {
 		"enable": {
@@ -433,7 +455,10 @@
 		"remote": {
 			"label": "Sử dụng kết nối trình duyệt từ xa",
 			"description": "Kết nối với trình duyệt Chrome đang chạy với tính năng gỡ lỗi từ xa được bật (--remote-debugging-port=9222).",
-			"urlPlaceholder": "URL tùy chỉnh (ví dụ: http://localhost:9222)",
+			"urlPlaceholder": {
+				"label": "Remote Browser Host",
+				"description": "WebSocket URL for the remote browser connection"
+			},
 			"testButton": "Kiểm tra kết nối",
 			"testingButton": "Đang kiểm tra...",
 			"instructions": "Nhập địa chỉ DevTools Protocol hoặc để trống để tự động phát hiện các instance Chrome cục bộ. Nút Kiểm tra kết nối sẽ thử URL tùy chỉnh nếu được cung cấp, hoặc tự động phát hiện nếu trường này trống."
@@ -449,12 +474,14 @@
 		"sound": {
 			"label": "Bật hiệu ứng âm thanh",
 			"description": "Khi được bật, Roo sẽ phát hiệu ứng âm thanh cho thông báo và sự kiện.",
-			"volumeLabel": "Âm lượng"
+			"volumeLabel": "Âm lượng",
+			"volumeDescription": "Adjust the volume level for sound notifications (0-100)"
 		},
 		"tts": {
 			"label": "Bật chuyển văn bản thành giọng nói",
 			"description": "Khi được bật, Roo sẽ đọc to các phản hồi của nó bằng chức năng chuyển văn bản thành giọng nói.",
-			"speedLabel": "Tốc độ"
+			"speedLabel": "Tốc độ",
+			"speedDescription": "Adjust the speech rate for text-to-speech (0.1-10.0)"
 		}
 	},
 	"contextManagement": {
@@ -525,7 +552,8 @@
 			"defaultDescription": "Khi ngữ cảnh đạt đến tỷ lệ phần trăm này, nó sẽ được tự động nén cho tất cả hồ sơ trừ khi chúng có cài đặt tùy chỉnh",
 			"profileDescription": "Ngưỡng tùy chỉnh chỉ cho hồ sơ này (ghi đè mặc định toàn cục)",
 			"inheritDescription": "Hồ sơ này kế thừa ngưỡng mặc định toàn cục ({{threshold}}%)",
-			"usesGlobal": "(sử dụng toàn cục {{threshold}}%)"
+			"usesGlobal": "(sử dụng toàn cục {{threshold}}%)",
+			"description": "Configure when context condensing should be triggered based on token usage"
 		}
 	},
 	"terminal": {
@@ -614,6 +642,10 @@
 		"todoList": {
 			"label": "Bật công cụ danh sách việc cần làm",
 			"description": "Khi được bật, Roo có thể tạo và quản lý danh sách việc cần làm để theo dõi tiến độ công việc. Điều này giúp tổ chức các tác vụ phức tạp thành các bước có thể quản lý được."
+		},
+		"mcpEnabled": {
+			"label": "Enable MCP",
+			"description": "Enable Model Context Protocol (MCP) for enhanced model capabilities"
 		}
 	},
 	"experimental": {
@@ -755,5 +787,8 @@
 		"useCustomArn": "Sử dụng ARN tùy chỉnh..."
 	},
 	"includeMaxOutputTokens": "Bao gồm token đầu ra tối đa",
-	"includeMaxOutputTokensDescription": "Gửi tham số token đầu ra tối đa trong các yêu cầu API. Một số nhà cung cấp có thể không hỗ trợ điều này."
+	"includeMaxOutputTokensDescription": "Gửi tham số token đầu ra tối đa trong các yêu cầu API. Một số nhà cung cấp có thể không hỗ trợ điều này.",
+	"language": {
+		"description": "Select your preferred language for the interface"
+	}
 }

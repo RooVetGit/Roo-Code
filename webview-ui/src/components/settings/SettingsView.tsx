@@ -66,6 +66,8 @@ import { About } from "./About"
 import { Section } from "./Section"
 import PromptsSettings from "./PromptsSettings"
 import { cn } from "@/lib/utils"
+import { SettingsSearchDropdown } from "./SettingsSearchDropdown"
+import { scrollToSetting } from "./scrollToSetting"
 
 export const settingsTabsContainer = "flex flex-1 overflow-hidden [&.narrow_.tab-label]:hidden"
 export const settingsTabList =
@@ -461,13 +463,24 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 		}
 	}, [scrollToActiveTab])
 
+	// Handle search selection
+	const handleSearchSelection = useCallback((sectionId: string, settingId: string) => {
+		setActiveTab(sectionId as SectionName)
+		// Use setTimeout to ensure tab content is rendered before scrolling
+		setTimeout(() => {
+			scrollToSetting(settingId)
+		}, 100)
+	}, [])
+
 	return (
 		<Tab>
 			<TabHeader className="flex justify-between items-center gap-2">
 				<div className="flex items-center gap-1">
 					<h3 className="text-vscode-foreground m-0">{t("settings:header.title")}</h3>
 				</div>
-				<div className="flex gap-2">
+				<div className="flex gap-2 items-center">
+					{/* Search functionality */}
+					<SettingsSearchDropdown onSelectSetting={handleSearchSelection} />
 					<StandardTooltip
 						content={
 							!isSettingValid

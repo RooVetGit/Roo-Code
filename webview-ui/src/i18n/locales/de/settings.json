@@ -1,40 +1,49 @@
 {
 	"common": {
-		"save": "Speichern",
-		"done": "Fertig",
+		"save": "TODO: Save",
+		"done": "TODO: Done",
 		"cancel": "Abbrechen",
 		"reset": "Zurücksetzen",
-		"select": "Auswählen",
+		"select": "TODO: Select",
 		"add": "Header hinzufügen",
 		"remove": "Entfernen"
 	},
 	"header": {
-		"title": "Einstellungen",
-		"saveButtonTooltip": "Änderungen speichern",
-		"nothingChangedTooltip": "Nichts geändert",
-		"doneButtonTooltip": "Ungespeicherte Änderungen verwerfen und Einstellungsbereich schließen"
+		"title": "TODO: Settings",
+		"saveButtonTooltip": "TODO: Save changes",
+		"nothingChangedTooltip": "TODO: No changes to save",
+		"doneButtonTooltip": "TODO: Close settings",
+		"searchPlaceholder": "TODO: Search settings...",
+		"searchTooltip": "TODO: Search settings",
+		"clearSearchTooltip": "TODO: Clear search",
+		"noSearchResults": "TODO: No settings match your search"
 	},
 	"unsavedChangesDialog": {
-		"title": "Ungespeicherte Änderungen",
-		"description": "Möchtest du die Änderungen verwerfen und fortfahren?",
-		"cancelButton": "Abbrechen",
-		"discardButton": "Änderungen verwerfen"
+		"title": "TODO: Unsaved Changes",
+		"description": "TODO: You have unsaved changes. Do you want to discard them?",
+		"cancelButton": "TODO: Cancel",
+		"discardButton": "TODO: Discard Changes"
 	},
 	"sections": {
-		"providers": "Anbieter",
-		"autoApprove": "Auto-Genehmigung",
-		"browser": "Computerzugriff",
-		"checkpoints": "Kontrollpunkte",
-		"notifications": "Benachrichtigungen",
-		"contextManagement": "Kontext",
-		"terminal": "Terminal",
-		"prompts": "Eingabeaufforderungen",
-		"experimental": "Experimentell",
-		"language": "Sprache",
-		"about": "Über Roo Code"
+		"providers": "TODO: Providers",
+		"autoApprove": "TODO: Auto-Approve",
+		"browser": "TODO: Browser",
+		"checkpoints": "TODO: Checkpoints",
+		"notifications": "TODO: Notifications",
+		"contextManagement": "TODO: Context Management",
+		"terminal": "TODO: Terminal",
+		"prompts": "TODO: Prompts",
+		"experimental": "TODO: Experimental",
+		"language": "TODO: Language",
+		"about": "TODO: About",
+		"advanced": "Advanced"
 	},
 	"prompts": {
-		"description": "Konfiguriere Support-Prompts, die für schnelle Aktionen wie das Verbessern von Prompts, das Erklären von Code und das Beheben von Problemen verwendet werden. Diese Prompts helfen Roo dabei, bessere Unterstützung für häufige Entwicklungsaufgaben zu bieten."
+		"description": "TODO: Customize prompts and instructions for Roo",
+		"customSupportPrompts": {
+			"label": "Custom Support Prompts",
+			"description": "Add custom instructions or prompts to guide Roo's behavior"
+		}
 	},
 	"codeIndex": {
 		"title": "Codebase-Indexierung",
@@ -126,38 +135,40 @@
 		"resetToDefault": "Auf Standard zurücksetzen"
 	},
 	"autoApprove": {
-		"description": "Erlaubt Roo, Operationen automatisch ohne Genehmigung durchzuführen. Aktiviere diese Einstellungen nur, wenn du der KI vollständig vertraust und die damit verbundenen Sicherheitsrisiken verstehst.",
-		"toggleAriaLabel": "Automatische Genehmigung umschalten",
-		"disabledAriaLabel": "Automatische Genehmigung deaktiviert - zuerst Optionen auswählen",
+		"description": "TODO: Configure which actions Roo can perform automatically without asking for permission",
+		"toggleAriaLabel": "TODO: Toggle auto-approve",
+		"disabledAriaLabel": "TODO: Auto-approve is disabled",
 		"readOnly": {
-			"label": "Lesen",
+			"label": "TODO: Read-Only Operations",
 			"description": "Wenn aktiviert, wird Roo automatisch Verzeichnisinhalte anzeigen und Dateien lesen, ohne dass du auf die Genehmigen-Schaltfläche klicken musst.",
 			"outsideWorkspace": {
-				"label": "Dateien außerhalb des Arbeitsbereichs einbeziehen",
-				"description": "Roo erlauben, Dateien außerhalb des aktuellen Arbeitsbereichs ohne Genehmigung zu lesen."
+				"label": "TODO: Allow reading files outside workspace",
+				"description": "TODO: Allow Roo to read files outside the current workspace directory"
 			}
 		},
 		"write": {
-			"label": "Schreiben",
+			"label": "TODO: Write Operations",
 			"description": "Dateien automatisch erstellen und bearbeiten ohne Genehmigung",
 			"delayLabel": "Verzögerung nach Schreibvorgängen, damit Diagnosefunktionen potenzielle Probleme erkennen können",
 			"outsideWorkspace": {
-				"label": "Dateien außerhalb des Arbeitsbereichs einbeziehen",
-				"description": "Roo erlauben, Dateien außerhalb des aktuellen Arbeitsbereichs ohne Genehmigung zu erstellen und zu bearbeiten."
+				"label": "TODO: Allow writing files outside workspace",
+				"description": "TODO: Allow Roo to create or modify files outside the current workspace directory"
 			},
 			"protected": {
-				"label": "Geschützte Dateien einbeziehen",
-				"description": "Roo erlauben, geschützte Dateien (wie .rooignore und .roo/ Konfigurationsdateien) ohne Genehmigung zu erstellen und zu bearbeiten."
-			}
+				"label": "TODO: Allow modifying protected files",
+				"description": "TODO: Allow Roo to modify files that are normally protected (e.g., .env, .git)"
+			},
+			"delayDescription": "Wait time in milliseconds after file writes before diagnostics are updated"
 		},
 		"browser": {
 			"label": "Browser",
 			"description": "Browser-Aktionen automatisch ohne Genehmigung durchführen. Hinweis: Gilt nur, wenn das Modell Computer-Nutzung unterstützt"
 		},
 		"retry": {
-			"label": "Wiederholung",
+			"label": "TODO: Retry Failed Operations",
 			"description": "Fehlgeschlagene API-Anfragen automatisch wiederholen, wenn der Server eine Fehlerantwort zurückgibt",
-			"delayLabel": "Verzögerung vor dem Wiederholen der Anfrage"
+			"delayLabel": "TODO: Retry delay (seconds)",
+			"delayDescription": "Time to wait in seconds before retrying a failed request"
 		},
 		"mcp": {
 			"label": "MCP",
@@ -172,20 +183,25 @@
 			"description": "Erstellung und Abschluss von Unteraufgaben ohne Genehmigung erlauben"
 		},
 		"followupQuestions": {
-			"label": "Frage",
+			"label": "TODO: Follow-up Questions",
 			"description": "Automatisch die erste vorgeschlagene Antwort für Folgefragen nach der konfigurierten Zeitüberschreitung auswählen",
-			"timeoutLabel": "Wartezeit vor der automatischen Auswahl der ersten Antwort"
+			"timeoutLabel": "TODO: Question timeout (seconds)",
+			"timeoutDescription": "Wartezeit vor der automatischen Auswahl der ersten Antwort"
 		},
 		"execute": {
-			"label": "Ausführen",
+			"label": "TODO: Execute Commands",
 			"description": "Erlaubte Terminal-Befehle automatisch ohne Genehmigung ausführen",
-			"allowedCommands": "Erlaubte Auto-Ausführungsbefehle",
-			"allowedCommandsDescription": "Befehlspräfixe, die automatisch ausgeführt werden können, wenn 'Ausführungsoperationen immer genehmigen' aktiviert ist. Fügen Sie * hinzu, um alle Befehle zu erlauben (mit Vorsicht verwenden).",
-			"deniedCommands": "Verweigerte Befehle",
-			"deniedCommandsDescription": "Befehlspräfixe, die automatisch verweigert werden, ohne nach Genehmigung zu fragen. Bei Konflikten mit erlaubten Befehlen hat die längste Präfix-Übereinstimmung Vorrang. Fügen Sie * hinzu, um alle Befehle zu verweigern.",
-			"commandPlaceholder": "Befehlspräfix eingeben (z.B. 'git ')",
-			"deniedCommandPlaceholder": "Befehlspräfix zum Verweigern eingeben (z.B. 'rm -rf')",
-			"addButton": "Hinzufügen",
+			"allowedCommands": {
+				"label": "TODO: Allowed Commands",
+				"description": "TODO: Commands that Roo can execute automatically (one per line, supports wildcards)"
+			},
+			"deniedCommands": {
+				"label": "TODO: Denied Commands",
+				"description": "TODO: Commands that Roo is explicitly forbidden from executing (one per line, supports wildcards)"
+			},
+			"commandPlaceholder": "TODO: Enter a command pattern (e.g., npm *, git status)",
+			"deniedCommandPlaceholder": "TODO: Enter a denied command pattern (e.g., rm -rf *, sudo *)",
+			"addButton": "TODO: Add Command",
 			"autoDenied": "Befehle mit dem Präfix `{{prefix}}` wurden vom Benutzer verboten. Umgehe diese Beschränkung nicht durch das Ausführen eines anderen Befehls."
 		},
 		"updateTodoList": {
@@ -193,11 +209,12 @@
 			"description": "To-Do-Liste wird automatisch aktualisiert, ohne dass du zustimmen musst"
 		},
 		"apiRequestLimit": {
+			"label": "Maximale Anfragen",
 			"title": "Maximale Anfragen",
 			"description": "Automatisch so viele API-Anfragen stellen, bevor du um die Erlaubnis gebeten wirst, mit der Aufgabe fortzufahren.",
 			"unlimited": "Unbegrenzt"
 		},
-		"selectOptionsFirst": "Wähle mindestens eine Option unten aus, um die automatische Genehmigung zu aktivieren"
+		"selectOptionsFirst": "TODO: Please select options first"
 	},
 	"providers": {
 		"providerDocumentation": "{{provider}}-Dokumentation",
@@ -225,7 +242,7 @@
 		"awsCustomArnDesc": "Stellen Sie sicher, dass die Region in der ARN mit Ihrer oben ausgewählten AWS-Region übereinstimmt.",
 		"openRouterApiKey": "OpenRouter API-Schlüssel",
 		"getOpenRouterApiKey": "OpenRouter API-Schlüssel erhalten",
-		"apiKeyStorageNotice": "API-Schlüssel werden sicher im VSCode Secret Storage gespeichert",
+		"apiKeyStorageNotice": "TODO: API keys are stored securely in VS Code's secret storage",
 		"glamaApiKey": "Glama API-Schlüssel",
 		"getGlamaApiKey": "Glama API-Schlüssel erhalten",
 		"useCustomBaseUrl": "Benutzerdefinierte Basis-URL verwenden",
@@ -238,11 +255,12 @@
 		"noCustomHeaders": "Keine benutzerdefinierten Headers definiert. Klicke auf die + Schaltfläche, um einen hinzuzufügen.",
 		"requestyApiKey": "Requesty API-Schlüssel",
 		"refreshModels": {
-			"label": "Modelle aktualisieren",
+			"label": "TODO: Refresh Models",
 			"hint": "Bitte öffne die Einstellungen erneut, um die neuesten Modelle zu sehen.",
-			"loading": "Modellliste wird aktualisiert...",
-			"success": "Modellliste erfolgreich aktualisiert!",
-			"error": "Fehler beim Aktualisieren der Modellliste. Bitte versuche es erneut."
+			"loading": "TODO: Loading models...",
+			"success": "TODO: Models refreshed successfully",
+			"error": "TODO: Failed to refresh models",
+			"missingConfig": "TODO: Please configure API settings first"
 		},
 		"getRequestyApiKey": "Requesty API-Schlüssel erhalten",
 		"openRouterTransformsText": "Prompts und Nachrichtenketten auf Kontextgröße komprimieren (<a>OpenRouter Transformationen</a>)",
@@ -283,8 +301,8 @@
 		"codestralBaseUrlDesc": "Legen Sie eine alternative URL für das Codestral-Modell fest.",
 		"xaiApiKey": "xAI API-Schlüssel",
 		"getXaiApiKey": "xAI API-Schlüssel erhalten",
-		"litellmApiKey": "LiteLLM API-Schlüssel",
-		"litellmBaseUrl": "LiteLLM Basis-URL",
+		"litellmApiKey": "TODO: LiteLLM API Key",
+		"litellmBaseUrl": "TODO: LiteLLM Base URL",
 		"awsCredentials": "AWS Anmeldedaten",
 		"awsProfile": "AWS Profil",
 		"awsProfileName": "AWS Profilname",
@@ -409,56 +427,63 @@
 			"placeholder": "Standard: claude",
 			"maxTokensLabel": "Maximale Ausgabe-Tokens",
 			"maxTokensDescription": "Maximale Anzahl an Ausgabe-Tokens für Claude Code-Antworten. Standard ist 8000."
-		}
+		},
+		"apiProviderDescription": "Select the API provider for AI model access",
+		"modelDescription": "Choose the AI model to use for this configuration"
 	},
 	"browser": {
 		"enable": {
-			"label": "Browser-Tool aktivieren",
-			"description": "Wenn aktiviert, kann Roo einen Browser verwenden, um mit Websites zu interagieren, wenn Modelle verwendet werden, die Computer-Nutzung unterstützen. <0>Mehr erfahren</0>"
+			"label": "TODO: Enable Browser Tool",
+			"description": "TODO: Allow Roo to use browser automation for testing and web scraping"
 		},
 		"viewport": {
-			"label": "Viewport-Größe",
-			"description": "Wählen Sie die Viewport-Größe für Browser-Interaktionen. Dies beeinflusst, wie Websites angezeigt und mit ihnen interagiert wird.",
+			"label": "TODO: Default Viewport Size",
+			"description": "TODO: The default browser window size when launching",
 			"options": {
-				"largeDesktop": "Großer Desktop (1280x800)",
-				"smallDesktop": "Kleiner Desktop (900x600)",
-				"tablet": "Tablet (768x1024)",
-				"mobile": "Mobil (360x640)"
+				"largeDesktop": "TODO: Large Desktop (1920x1080)",
+				"smallDesktop": "TODO: Small Desktop (1366x768)",
+				"tablet": "TODO: Tablet (768x1024)",
+				"mobile": "TODO: Mobile (375x667)"
 			}
 		},
 		"screenshotQuality": {
-			"label": "Screenshot-Qualität",
-			"description": "Passen Sie die WebP-Qualität von Browser-Screenshots an. Höhere Werte bieten klarere Screenshots, erhöhen aber den Token-Verbrauch."
+			"label": "TODO: Screenshot Quality",
+			"description": "TODO: Quality of screenshots (0-100, higher is better but larger file size)"
 		},
 		"remote": {
-			"label": "Remote-Browser-Verbindung verwenden",
-			"description": "Verbindung zu einem Chrome-Browser herstellen, der mit aktiviertem Remote-Debugging läuft (--remote-debugging-port=9222).",
-			"urlPlaceholder": "Benutzerdefinierte URL (z.B. http://localhost:9222)",
-			"testButton": "Verbindung testen",
-			"testingButton": "Teste...",
-			"instructions": "Geben Sie die DevTools-Protokoll-Host-Adresse ein oder lassen Sie das Feld leer, um Chrome lokale Instanzen automatisch zu erkennen. Die Schaltfläche 'Verbindung testen' versucht die benutzerdefinierte URL, wenn angegeben, oder erkennt automatisch, wenn das Feld leer ist."
+			"label": "TODO: Remote Browser URL",
+			"description": "TODO: Connect to a remote browser instance instead of launching locally",
+			"urlPlaceholder": {
+				"label": "Remote Browser Host",
+				"description": "WebSocket URL for the remote browser connection"
+			},
+			"testButton": "TODO: Test Connection",
+			"testingButton": "TODO: Testing connection...",
+			"instructions": "TODO: Start Chrome with: chrome --remote-debugging-port=9222"
 		}
 	},
 	"checkpoints": {
 		"enable": {
-			"label": "Automatische Kontrollpunkte aktivieren",
-			"description": "Wenn aktiviert, erstellt Roo automatisch Kontrollpunkte während der Aufgabenausführung, was die Überprüfung von Änderungen oder die Rückkehr zu früheren Zuständen erleichtert. <0>Mehr erfahren</0>"
+			"label": "TODO: Enable Checkpoints",
+			"description": "TODO: Save conversation checkpoints to restore from later"
 		}
 	},
 	"notifications": {
 		"sound": {
-			"label": "Soundeffekte aktivieren",
-			"description": "Wenn aktiviert, spielt Roo Soundeffekte für Benachrichtigungen und Ereignisse ab.",
-			"volumeLabel": "Lautstärke"
+			"label": "TODO: Sound Notifications",
+			"description": "TODO: Play sounds for various events",
+			"volumeLabel": "TODO: Volume",
+			"volumeDescription": "Adjust the volume level for sound notifications (0-100)"
 		},
 		"tts": {
-			"label": "Text-zu-Sprache aktivieren",
-			"description": "Wenn aktiviert, liest Roo seine Antworten mit Text-zu-Sprache laut vor.",
-			"speedLabel": "Geschwindigkeit"
+			"label": "TODO: Text-to-Speech",
+			"description": "TODO: Read Roo's responses aloud",
+			"speedLabel": "TODO: Speech Speed",
+			"speedDescription": "Adjust the speech rate for text-to-speech (0.1-10.0)"
 		}
 	},
 	"contextManagement": {
-		"description": "Steuern Sie, welche Informationen im KI-Kontextfenster enthalten sind, was den Token-Verbrauch und die Antwortqualität beeinflusst",
+		"description": "TODO: Configure how Roo manages and includes context in conversations",
 		"autoCondenseContextPercent": {
 			"label": "Schwellenwert für intelligente Kontextkomprimierung",
 			"description": "Wenn das Kontextfenster diesen Schwellenwert erreicht, wird Roo es automatisch komprimieren."
@@ -476,113 +501,114 @@
 			"hint": "Leer = Standard-Prompt verwenden"
 		},
 		"autoCondenseContext": {
-			"name": "Intelligente Kontextkomprimierung automatisch auslösen",
+			"name": "TODO: Auto-Condense Context",
 			"description": "Wenn aktiviert, wird Roo automatisch den Kontext komprimieren, wenn der Schwellenwert erreicht wird. Wenn deaktiviert, können Sie die Kontextkomprimierung weiterhin manuell auslösen."
 		},
 		"openTabs": {
-			"label": "Geöffnete Tabs Kontextlimit",
-			"description": "Maximale Anzahl von geöffneten VSCode-Tabs, die im Kontext enthalten sein sollen. Höhere Werte bieten mehr Kontext, erhöhen aber den Token-Verbrauch."
+			"label": "TODO: Include Open Tabs",
+			"description": "TODO: Automatically include content from open editor tabs as context"
 		},
 		"workspaceFiles": {
-			"label": "Workspace-Dateien Kontextlimit",
-			"description": "Maximale Anzahl von Dateien, die in den Details des aktuellen Arbeitsverzeichnisses enthalten sein sollen. Höhere Werte bieten mehr Kontext, erhöhen aber den Token-Verbrauch."
+			"label": "TODO: Include Workspace Files",
+			"description": "TODO: Allow Roo to automatically include relevant workspace files as context"
 		},
 		"rooignore": {
-			"label": ".rooignore-Dateien in Listen und Suchen anzeigen",
-			"description": "Wenn aktiviert, werden Dateien, die mit Mustern in .rooignore übereinstimmen, in Listen mit einem Schlosssymbol angezeigt. Wenn deaktiviert, werden diese Dateien vollständig aus Dateilisten und Suchen ausgeblendet."
+			"label": "TODO: Use .rooignore",
+			"description": "TODO: Respect .rooignore file patterns when including context"
 		},
 		"maxConcurrentFileReads": {
-			"label": "Concurrent file reads limit",
-			"description": "Maximum number of files the 'read_file' tool can process concurrently. Higher values may speed up reading multiple small files but increase memory usage."
+			"label": "TODO: Max Concurrent File Reads",
+			"description": "TODO: Maximum number of files to read simultaneously"
 		},
 		"maxReadFile": {
-			"label": "Schwellenwert für automatische Dateilesekürzung",
-			"description": "Roo liest diese Anzahl von Zeilen, wenn das Modell keine Start-/Endwerte angibt. Wenn diese Zahl kleiner als die Gesamtzahl der Zeilen ist, erstellt Roo einen Zeilennummernindex der Codedefinitionen. Spezialfälle: -1 weist Roo an, die gesamte Datei zu lesen (ohne Indexierung), und 0 weist an, keine Zeilen zu lesen und nur Zeilenindizes für minimalen Kontext bereitzustellen. Niedrigere Werte minimieren die anfängliche Kontextnutzung und ermöglichen präzise nachfolgende Zeilenbereich-Lesungen. Explizite Start-/End-Anfragen sind von dieser Einstellung nicht begrenzt.",
-			"lines": "Zeilen",
-			"always_full_read": "Immer die gesamte Datei lesen"
+			"label": "TODO: Max File Read Size",
+			"description": "TODO: Maximum number of lines to read from a single file",
+			"lines": "TODO: lines",
+			"always_full_read": "TODO: Always read full file"
 		},
 		"diagnostics": {
 			"includeMessages": {
-				"label": "Diagnosen automatisch in den Kontext aufnehmen",
-				"description": "Wenn aktiviert, werden Diagnosenachrichten (Fehler) aus bearbeiteten Dateien automatisch in den Kontext aufgenommen. Sie können jederzeit alle Workspace-Diagnosen manuell mit @problems einbeziehen."
+				"label": "TODO: Include Diagnostics",
+				"description": "TODO: Include code diagnostics (errors, warnings) as context"
 			},
 			"maxMessages": {
-				"label": "Maximale Anzahl von Diagnosenachrichten",
-				"description": "Maximale Anzahl von Diagnosenachrichten, die pro Datei eingeschlossen werden. Dieses Limit gilt sowohl für die automatische Einbeziehung (wenn das Kontrollkästchen aktiviert ist) als auch für manuelle @problems-Erwähnungen. Höhere Werte bieten mehr Kontext, erhöhen aber den Token-Verbrauch.",
-				"resetTooltip": "Auf Standardwert zurücksetzen (50)",
-				"unlimitedLabel": "Unbegrenzt"
+				"label": "TODO: Max Diagnostic Messages",
+				"description": "TODO: Maximum number of diagnostic messages to include",
+				"resetTooltip": "TODO: Reset to default",
+				"unlimitedLabel": "TODO: Unlimited"
 			},
 			"delayAfterWrite": {
-				"label": "Verzögerung nach Schreibvorgängen, damit Diagnosen potenzielle Probleme erkennen können",
-				"description": "Wartezeit nach Dateischreibvorgängen vor dem Fortfahren, damit Diagnosetools Änderungen verarbeiten und Probleme erkennen können."
+				"label": "TODO: Diagnostics Delay",
+				"description": "TODO: Wait time (ms) after file changes before updating diagnostics"
 			}
 		},
 		"condensingThreshold": {
-			"label": "Schwellenwert für Kontextkomprimierung",
-			"selectProfile": "Profil für Schwellenwert konfigurieren",
-			"defaultProfile": "Globaler Standard (alle Profile)",
-			"defaultDescription": "Wenn der Kontext diesen Prozentsatz erreicht, wird er automatisch für alle Profile komprimiert, es sei denn, sie haben benutzerdefinierte Einstellungen",
-			"profileDescription": "Benutzerdefinierter Schwellenwert nur für dieses Profil (überschreibt globalen Standard)",
+			"label": "TODO: Context Condensing Threshold",
+			"selectProfile": "TODO: Select a profile",
+			"defaultProfile": "TODO: Default",
+			"defaultDescription": "TODO: Standard context management",
+			"profileDescription": "TODO: Custom threshold: {{threshold}}%",
 			"inheritDescription": "Dieses Profil erbt den globalen Standard-Schwellenwert ({{threshold}}%)",
-			"usesGlobal": "(verwendet global {{threshold}}%)"
+			"usesGlobal": "(verwendet global {{threshold}}%)",
+			"description": "Configure when context condensing should be triggered based on token usage"
 		}
 	},
 	"terminal": {
 		"basic": {
-			"label": "Terminal-Einstellungen: Grundlegend",
+			"label": "TODO: Basic Settings",
 			"description": "Grundlegende Terminal-Einstellungen"
 		},
 		"advanced": {
-			"label": "Terminal-Einstellungen: Erweitert",
-			"description": "Die folgenden Optionen erfordern möglicherweise einen Terminal-Neustart, um die Einstellung zu übernehmen."
+			"label": "TODO: Advanced Settings",
+			"description": "TODO: Advanced terminal configuration options"
 		},
 		"outputLineLimit": {
-			"label": "Terminal-Ausgabelimit",
-			"description": "Maximale Anzahl von Zeilen, die in der Terminal-Ausgabe bei der Ausführung von Befehlen enthalten sein sollen. Bei Überschreitung werden Zeilen aus der Mitte entfernt, wodurch Token gespart werden. <0>Mehr erfahren</0>"
+			"label": "TODO: Output Line Limit",
+			"description": "TODO: Maximum lines to capture from terminal output"
 		},
 		"outputCharacterLimit": {
-			"label": "Terminal-Zeichenlimit",
-			"description": "Maximale Anzahl von Zeichen, die in die Terminalausgabe bei der Ausführung von Befehlen aufgenommen werden sollen. Dieses Limit hat Vorrang vor dem Zeilenlimit, um Speicherprobleme durch extrem lange Zeilen zu vermeiden. Bei Überschreitung wird die Ausgabe abgeschnitten. <0>Mehr erfahren</0>"
+			"label": "TODO: Output Character Limit",
+			"description": "TODO: Maximum characters to capture from terminal output"
 		},
 		"shellIntegrationTimeout": {
-			"label": "Terminal-Shell-Integrationszeit-Limit",
-			"description": "Maximale Wartezeit für die Shell-Integration, bevor Befehle ausgeführt werden. Für Benutzer mit langen Shell-Startzeiten musst du diesen Wert möglicherweise erhöhen, wenn du Fehler vom Typ \"Shell Integration Unavailable\" im Terminal siehst. <0>Mehr erfahren</0>"
+			"label": "TODO: Shell Integration Timeout",
+			"description": "TODO: Timeout (ms) for shell integration initialization"
 		},
 		"shellIntegrationDisabled": {
-			"label": "Terminal-Shell-Integration deaktivieren",
-			"description": "Aktiviere dies, wenn Terminalbefehle nicht korrekt funktionieren oder du Fehler wie 'Shell Integration Unavailable' siehst. Dies verwendet eine einfachere Methode zur Ausführung von Befehlen und umgeht einige erweiterte Terminalfunktionen. <0>Mehr erfahren</0>"
+			"label": "TODO: Disable Shell Integration",
+			"description": "TODO: Disable VS Code shell integration for compatibility"
 		},
 		"commandDelay": {
-			"label": "Terminal-Befehlsverzögerung",
-			"description": "Verzögerung in Millisekunden, die nach der Befehlsausführung hinzugefügt wird. Die Standardeinstellung von 0 deaktiviert die Verzögerung vollständig. Dies kann dazu beitragen, dass die Befehlsausgabe in Terminals mit Timing-Problemen vollständig erfasst wird. In den meisten Terminals wird dies durch Setzen von `PROMPT_COMMAND='sleep N'` und Powershell fügt `start-sleep` am Ende jedes Befehls hinzu. Ursprünglich war dies eine Lösung für VSCode-Bug#237208 und ist möglicherweise nicht mehr erforderlich. <0>Mehr erfahren</0>"
+			"label": "TODO: Command Delay",
+			"description": "TODO: Delay (ms) between sending commands"
 		},
 		"compressProgressBar": {
-			"label": "Fortschrittsbalken-Ausgabe komprimieren",
-			"description": "Wenn aktiviert, verarbeitet diese Option Terminal-Ausgaben mit Wagenrücklaufzeichen (\\r), um zu simulieren, wie ein echtes Terminal Inhalte anzeigen würde. Dies entfernt Zwischenzustände von Fortschrittsbalken und behält nur den Endzustand bei, wodurch Kontextraum für relevantere Informationen gespart wird. <0>Mehr erfahren</0>"
+			"label": "TODO: Compress Progress Bars",
+			"description": "TODO: Compress repetitive progress bar output"
 		},
 		"powershellCounter": {
-			"label": "PowerShell-Zähler-Workaround aktivieren",
-			"description": "Wenn aktiviert, fügt einen Zähler zu PowerShell-Befehlen hinzu, um die korrekte Befehlsausführung sicherzustellen. Dies hilft bei PowerShell-Terminals, die Probleme mit der Ausgabeerfassung haben könnten. <0>Mehr erfahren</0>"
+			"label": "TODO: PowerShell Counter",
+			"description": "TODO: Use counter-based command tracking for PowerShell"
 		},
 		"zshClearEolMark": {
-			"label": "ZSH-Zeilenende-Markierung löschen",
-			"description": "Wenn aktiviert, wird die ZSH-Zeilenende-Markierung durch Setzen von PROMPT_EOL_MARK='' gelöscht. Dies verhindert Probleme bei der Interpretation der Befehlsausgabe, wenn diese mit Sonderzeichen wie '%' endet. <0>Mehr erfahren</0>"
+			"label": "TODO: Clear ZSH EOL Mark",
+			"description": "TODO: Clear end-of-line marks in ZSH"
 		},
 		"zshOhMy": {
-			"label": "Oh My Zsh-Integration aktivieren",
-			"description": "Wenn aktiviert, wird ITERM_SHELL_INTEGRATION_INSTALLED=Yes gesetzt, um die Shell-Integrationsfunktionen von Oh My Zsh zu aktivieren. Das Anwenden dieser Einstellung erfordert möglicherweise einen Neustart der IDE. <0>Mehr erfahren</0>"
+			"label": "TODO: Oh My ZSH Support",
+			"description": "TODO: Enable Oh My ZSH compatibility"
 		},
 		"zshP10k": {
-			"label": "Powerlevel10k-Integration aktivieren",
-			"description": "Wenn aktiviert, wird POWERLEVEL9K_INSTANT_PROMPT=quiet gesetzt, um die Powerlevel10k-Integration zu aktivieren. Dies kann die Leistung verbessern, indem der Prompt sofort angezeigt wird. <0>Mehr erfahren</0>"
+			"label": "TODO: Powerlevel10k Support",
+			"description": "TODO: Enable Powerlevel10k theme compatibility"
 		},
 		"zdotdir": {
-			"label": "ZDOTDIR Handhabung aktivieren",
-			"description": "Wenn aktiviert, wird ein temporäres Verzeichnis für ZDOTDIR erstellt, um die Zsh-Shell-Integration ordnungsgemäß zu handhaben. Dies stellt sicher, dass die VSCode-Shell-Integration mit Zsh korrekt funktioniert, während deine Zsh-Konfiguration erhalten bleibt. <0>Mehr erfahren</0>"
+			"label": "TODO: ZDOTDIR",
+			"description": "TODO: Custom ZSH configuration directory"
 		},
 		"inheritEnv": {
-			"label": "Umgebungsvariablen erben",
-			"description": "Wenn aktiviert, erbt das Terminal Umgebungsvariablen aus dem übergeordneten Prozess von VSCode, wie z.B. benutzerdefinierte Shell-Integrationseinstellungen. Dies schaltet direkt die globale VSCode-Einstellung `terminal.integrated.inheritEnv` um. <0>Mehr erfahren</0>"
+			"label": "TODO: Inherit Environment",
+			"description": "TODO: Inherit environment variables from VS Code"
 		}
 	},
 	"advancedSettings": {
@@ -613,40 +639,44 @@
 		"todoList": {
 			"label": "Todo-Listen-Tool aktivieren",
 			"description": "Wenn aktiviert, kann Roo Todo-Listen erstellen und verwalten, um den Aufgabenfortschritt zu verfolgen. Dies hilft, komplexe Aufgaben in überschaubare Schritte zu organisieren."
+		},
+		"mcpEnabled": {
+			"label": "Enable MCP",
+			"description": "Enable Model Context Protocol (MCP) for enhanced model capabilities"
 		}
 	},
 	"experimental": {
 		"DIFF_STRATEGY_UNIFIED": {
-			"name": "Experimentelle einheitliche Diff-Strategie verwenden",
-			"description": "Aktiviere die experimentelle einheitliche Diff-Strategie. Diese Strategie könnte die Anzahl der durch Modellfehler verursachten Wiederholungsversuche reduzieren, kann aber zu unerwartetem Verhalten oder falschen Bearbeitungen führen. Aktiviere sie nur, wenn du die Risiken verstehst und bereit bist, alle Änderungen sorgfältig zu überprüfen."
+			"name": "TODO: Diff Strategy Unified",
+			"description": "TODO: Enable diff strategy unified functionality"
 		},
 		"SEARCH_AND_REPLACE": {
-			"name": "Experimentelles Such- und Ersetzungswerkzeug verwenden",
-			"description": "Aktiviere das experimentelle Such- und Ersetzungswerkzeug, mit dem Roo mehrere Instanzen eines Suchbegriffs in einer Anfrage ersetzen kann."
+			"name": "TODO: Search And Replace",
+			"description": "TODO: Enable search and replace functionality"
 		},
 		"INSERT_BLOCK": {
-			"name": "Experimentelles Inhalts-Einfügewerkzeug verwenden",
-			"description": "Aktiviere das experimentelle Inhalts-Einfügewerkzeug, mit dem Roo Inhalte an bestimmten Zeilennummern einfügen kann, ohne einen Diff erstellen zu müssen."
+			"name": "TODO: Insert Block",
+			"description": "TODO: Enable insert block functionality"
 		},
 		"POWER_STEERING": {
-			"name": "Experimentellen \"Power Steering\"-Modus verwenden",
-			"description": "Wenn aktiviert, erinnert Roo das Modell häufiger an die Details seiner aktuellen Modusdefinition. Dies führt zu einer stärkeren Einhaltung von Rollendefinitionen und benutzerdefinierten Anweisungen, verbraucht aber mehr Token pro Nachricht."
+			"name": "TODO: Power Steering",
+			"description": "TODO: Enable power steering functionality"
 		},
 		"CONCURRENT_FILE_READS": {
-			"name": "Gleichzeitiges Lesen von Dateien aktivieren",
-			"description": "Wenn aktiviert, kann Roo mehrere Dateien in einer einzigen Anfrage lesen. Wenn deaktiviert, muss Roo Dateien einzeln lesen. Das Deaktivieren kann hilfreich sein, wenn mit weniger fähigen Modellen gearbeitet wird oder wenn du mehr Kontrolle über den Dateizugriff haben möchtest."
+			"name": "TODO: Concurrent File Reads",
+			"description": "TODO: Enable concurrent file reads functionality"
 		},
 		"MULTI_SEARCH_AND_REPLACE": {
-			"name": "Experimentelles Multi-Block-Diff-Tool verwenden",
-			"description": "Wenn aktiviert, wird Roo das Multi-Block-Diff-Tool verwenden. Dies wird versuchen, mehrere Codeblöcke in der Datei in einer Anfrage zu aktualisieren."
+			"name": "TODO: Multi Search And Replace",
+			"description": "TODO: Enable multi search and replace functionality"
 		},
 		"MARKETPLACE": {
-			"name": "Marktplatz aktivieren",
-			"description": "Wenn aktiviert, können Sie MCPs und benutzerdefinierte Modi aus dem Marketplace installieren."
+			"name": "TODO: Marketplace",
+			"description": "TODO: Enable marketplace functionality"
 		},
 		"MULTI_FILE_APPLY_DIFF": {
-			"name": "Gleichzeitige Dateibearbeitungen aktivieren",
-			"description": "Wenn aktiviert, kann Roo mehrere Dateien in einer einzigen Anfrage bearbeiten. Wenn deaktiviert, muss Roo Dateien einzeln bearbeiten. Das Deaktivieren kann hilfreich sein, wenn mit weniger fähigen Modellen gearbeitet wird oder wenn du mehr Kontrolle über Dateiänderungen haben möchtest."
+			"name": "TODO: Multi File Apply Diff",
+			"description": "TODO: Enable multi file apply diff functionality"
 		}
 	},
 	"promptCaching": {
@@ -689,15 +719,15 @@
 		"useCustomModel": "Benutzerdefiniert verwenden: {{modelId}}"
 	},
 	"footer": {
-		"feedback": "Wenn du Fragen oder Feedback hast, kannst du gerne ein Issue auf <githubLink>github.com/RooCodeInc/Roo-Code</githubLink> eröffnen oder <redditLink>reddit.com/r/RooCode</redditLink> oder <discordLink>discord.gg/roocode</discordLink> beitreten",
+		"feedback": "TODO: Send Feedback",
 		"telemetry": {
-			"label": "Anonyme Fehler- und Nutzungsberichte zulassen",
-			"description": "Hilf mit, Roo Code zu verbessern, indem du anonyme Nutzungsdaten und Fehlerberichte sendest. Es werden niemals Code, Prompts oder persönliche Informationen gesendet (es sei denn, du verbindest dich mit Roo Code Cloud). Weitere Einzelheiten findest du in unserer <privacyLink>Datenschutzrichtlinie</privacyLink>."
+			"label": "TODO: Telemetry",
+			"description": "TODO: Help improve Roo Code by sending anonymous usage data"
 		},
 		"settings": {
-			"import": "Importieren",
-			"export": "Exportieren",
-			"reset": "Zurücksetzen"
+			"import": "TODO: Import Settings",
+			"export": "TODO: Export Settings",
+			"reset": "TODO: Reset Settings"
 		}
 	},
 	"thinkingBudget": {
@@ -721,7 +751,7 @@
 		"profileInvalid": "Dieses Profil enthält einen Anbieter oder ein Modell, das von deiner Organisation nicht erlaubt ist"
 	},
 	"placeholders": {
-		"apiKey": "API-Schlüssel eingeben...",
+		"apiKey": "TODO: Enter API key",
 		"profileName": "Profilnamen eingeben",
 		"accessKey": "Zugriffsschlüssel eingeben...",
 		"secretKey": "Geheimschlüssel eingeben...",
@@ -730,7 +760,7 @@
 		"keyFilePath": "Schlüsseldateipfad eingeben...",
 		"projectId": "Projekt-ID eingeben...",
 		"customArn": "ARN eingeben (z.B. arn:aws:bedrock:us-east-1:123456789012:foundation-model/my-model)",
-		"baseUrl": "Basis-URL eingeben...",
+		"baseUrl": "TODO: Enter base URL",
 		"modelId": {
 			"lmStudio": "z.B. meta-llama-3.1-8b-instruct",
 			"lmStudioDraft": "z.B. lmstudio-community/llama-3.2-1b-instruct",
@@ -754,5 +784,8 @@
 		"useCustomArn": "Benutzerdefinierte ARN verwenden..."
 	},
 	"includeMaxOutputTokens": "Maximale Ausgabe-Tokens einbeziehen",
-	"includeMaxOutputTokensDescription": "Senden Sie den Parameter für maximale Ausgabe-Tokens in API-Anfragen. Einige Anbieter unterstützen dies möglicherweise nicht."
+	"includeMaxOutputTokensDescription": "Senden Sie den Parameter für maximale Ausgabe-Tokens in API-Anfragen. Einige Anbieter unterstützen dies möglicherweise nicht.",
+	"language": {
+		"description": "Select your preferred language for the interface"
+	}
 }

@@ -107,7 +107,7 @@ export const BrowserSettings = ({
 			</SectionHeader>
 
 			<Section>
-				<div>
+				<div data-setting-id="browserToolEnabled">
 					<VSCodeCheckbox
 						checked={browserToolEnabled}
 						onChange={(e: any) => setCachedStateField("browserToolEnabled", e.target.checked)}>
@@ -126,7 +126,7 @@ export const BrowserSettings = ({
 
 				{browserToolEnabled && (
 					<div className="flex flex-col gap-3 pl-3 border-l-2 border-vscode-button-background">
-						<div>
+						<div data-setting-id="browserViewportSize">
 							<label className="block font-medium mb-1">{t("settings:browser.viewport.label")}</label>
 							<Select
 								value={browserViewportSize}
@@ -149,7 +149,7 @@ export const BrowserSettings = ({
 							</div>
 						</div>
 
-						<div>
+						<div data-setting-id="screenshotQuality">
 							<label className="block font-medium mb-1">
 								{t("settings:browser.screenshotQuality.label")}
 							</label>
@@ -168,7 +168,7 @@ export const BrowserSettings = ({
 							</div>
 						</div>
 
-						<div>
+						<div data-setting-id="remoteBrowserEnabled">
 							<VSCodeCheckbox
 								checked={remoteBrowserEnabled}
 								onChange={(e: any) => {
@@ -189,7 +189,7 @@ export const BrowserSettings = ({
 
 						{remoteBrowserEnabled && (
 							<>
-								<div className="flex items-center gap-2">
+								<div className="flex items-center gap-2" data-setting-id="remoteBrowserHost">
 									<VSCodeTextField
 										value={remoteBrowserHost ?? ""}
 										onChange={(e: any) =>

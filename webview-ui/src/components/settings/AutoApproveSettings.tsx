@@ -161,7 +161,7 @@ export const AutoApproveSettings = ({
 							<span className="codicon codicon-eye" />
 							<div>{t("settings:autoApprove.readOnly.label")}</div>
 						</div>
-						<div>
+						<div data-setting-id="alwaysAllowReadOnlyOutsideWorkspace">
 							<VSCodeCheckbox
 								checked={alwaysAllowReadOnlyOutsideWorkspace}
 								onChange={(e: any) =>
@@ -185,7 +185,7 @@ export const AutoApproveSettings = ({
 							<span className="codicon codicon-edit" />
 							<div>{t("settings:autoApprove.write.label")}</div>
 						</div>
-						<div>
+						<div data-setting-id="alwaysAllowWriteOutsideWorkspace">
 							<VSCodeCheckbox
 								checked={alwaysAllowWriteOutsideWorkspace}
 								onChange={(e: any) =>
@@ -200,7 +200,7 @@ export const AutoApproveSettings = ({
 								{t("settings:autoApprove.write.outsideWorkspace.description")}
 							</div>
 						</div>
-						<div>
+						<div data-setting-id="alwaysAllowWriteProtected">
 							<VSCodeCheckbox
 								checked={alwaysAllowWriteProtected}
 								onChange={(e: any) =>
@@ -222,7 +222,7 @@ export const AutoApproveSettings = ({
 							<span className="codicon codicon-refresh" />
 							<div>{t("settings:autoApprove.retry.label")}</div>
 						</div>
-						<div>
+						<div data-setting-id="requestDelaySeconds">
 							<div className="flex items-center gap-2">
 								<Slider
 									min={5}
@@ -247,7 +247,7 @@ export const AutoApproveSettings = ({
 							<span className="codicon codicon-question" />
 							<div>{t("settings:autoApprove.followupQuestions.label")}</div>
 						</div>
-						<div>
+						<div data-setting-id="followupAutoApproveTimeoutMs">
 							<div className="flex items-center gap-2">
 								<Slider
 									min={1000}
@@ -275,12 +275,12 @@ export const AutoApproveSettings = ({
 							<div>{t("settings:autoApprove.execute.label")}</div>
 						</div>
 
-						<div>
+						<div data-setting-id="allowedCommands">
 							<label className="block font-medium mb-1" data-testid="allowed-commands-heading">
-								{t("settings:autoApprove.execute.allowedCommands")}
+								{t("settings:autoApprove.execute.allowedCommands.label")}
 							</label>
 							<div className="text-vscode-descriptionForeground text-sm mt-1">
-								{t("settings:autoApprove.execute.allowedCommandsDescription")}
+								{t("settings:autoApprove.execute.allowedCommands.description")}
 							</div>
 						</div>
 
@@ -323,12 +323,12 @@ export const AutoApproveSettings = ({
 						</div>
 
 						{/* Denied Commands Section */}
-						<div className="mt-6">
+						<div className="mt-6" data-setting-id="deniedCommands">
 							<label className="block font-medium mb-1" data-testid="denied-commands-heading">
-								{t("settings:autoApprove.execute.deniedCommands")}
+								{t("settings:autoApprove.execute.deniedCommands.label")}
 							</label>
 							<div className="text-vscode-descriptionForeground text-sm mt-1">
-								{t("settings:autoApprove.execute.deniedCommandsDescription")}
+								{t("settings:autoApprove.execute.deniedCommands.description")}
 							</div>
 						</div>
 

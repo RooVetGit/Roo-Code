@@ -31,21 +31,25 @@ export const LanguageSettings = ({ language, setCachedStateField, className, ...
 			</SectionHeader>
 
 			<Section>
-				<Select value={language} onValueChange={(value) => setCachedStateField("language", value as Language)}>
-					<SelectTrigger className="w-full">
-						<SelectValue placeholder={t("settings:common.select")} />
-					</SelectTrigger>
-					<SelectContent>
-						<SelectGroup>
-							{Object.entries(LANGUAGES).map(([code, name]) => (
-								<SelectItem key={code} value={code}>
-									{name}
-									<span className="text-muted-foreground">({code})</span>
-								</SelectItem>
-							))}
-						</SelectGroup>
-					</SelectContent>
-				</Select>
+				<div data-setting-id="language">
+					<Select
+						value={language}
+						onValueChange={(value) => setCachedStateField("language", value as Language)}>
+						<SelectTrigger className="w-full">
+							<SelectValue placeholder={t("settings:common.select")} />
+						</SelectTrigger>
+						<SelectContent>
+							<SelectGroup>
+								{Object.entries(LANGUAGES).map(([code, name]) => (
+									<SelectItem key={code} value={code}>
+										{name}
+										<span className="text-muted-foreground">({code})</span>
+									</SelectItem>
+								))}
+							</SelectGroup>
+						</SelectContent>
+					</Select>
+				</div>
 			</Section>
 		</div>
 	)

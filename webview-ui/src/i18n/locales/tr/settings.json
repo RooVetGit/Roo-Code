@@ -12,7 +12,11 @@
 		"title": "Ayarlar",
 		"saveButtonTooltip": "Değişiklikleri kaydet",
 		"nothingChangedTooltip": "Hiçbir şey değişmedi",
-		"doneButtonTooltip": "Kaydedilmemiş değişiklikleri at ve ayarlar panelini kapat"
+		"doneButtonTooltip": "Kaydedilmemiş değişiklikleri at ve ayarlar panelini kapat",
+		"searchPlaceholder": "Search settings...",
+		"searchTooltip": "Search settings",
+		"clearSearchTooltip": "Clear search",
+		"noSearchResults": "No settings match your search"
 	},
 	"unsavedChangesDialog": {
 		"title": "Kaydedilmemiş Değişiklikler",
@@ -31,10 +35,15 @@
 		"prompts": "Promptlar",
 		"experimental": "Deneysel",
 		"language": "Dil",
-		"about": "Roo Code Hakkında"
+		"about": "Roo Code Hakkında",
+		"advanced": "Advanced"
 	},
 	"prompts": {
-		"description": "Prompt geliştirme, kod açıklama ve sorun çözme gibi hızlı eylemler için kullanılan destek promptlarını yapılandırın. Bu promptlar, Roo'nun yaygın geliştirme görevleri için daha iyi destek sağlamasına yardımcı olur."
+		"description": "Prompt geliştirme, kod açıklama ve sorun çözme gibi hızlı eylemler için kullanılan destek promptlarını yapılandırın. Bu promptlar, Roo'nun yaygın geliştirme görevleri için daha iyi destek sağlamasına yardımcı olur.",
+		"customSupportPrompts": {
+			"label": "Custom Support Prompts",
+			"description": "Add custom instructions or prompts to guide Roo's behavior"
+		}
 	},
 	"codeIndex": {
 		"title": "Kod Tabanı İndeksleme",
@@ -148,7 +157,8 @@
 			"protected": {
 				"label": "Korumalı dosyaları dahil et",
 				"description": "Roo'nun korumalı dosyaları (.rooignore ve .roo/ yapılandırma dosyaları gibi) onay gerektirmeden oluşturmasına ve düzenlemesine izin ver."
-			}
+			},
+			"delayDescription": "Wait time in milliseconds after file writes before diagnostics are updated"
 		},
 		"browser": {
 			"label": "Tarayıcı",
@@ -157,7 +167,8 @@
 		"retry": {
 			"label": "Yeniden Dene",
 			"description": "Sunucu bir hata yanıtı döndürdüğünde başarısız API isteklerini otomatik olarak yeniden dene",
-			"delayLabel": "İsteği yeniden denemeden önce gecikme"
+			"delayLabel": "İsteği yeniden denemeden önce gecikme",
+			"delayDescription": "Time to wait in seconds before retrying a failed request"
 		},
 		"mcp": {
 			"label": "MCP",
@@ -174,14 +185,21 @@
 		"followupQuestions": {
 			"label": "Soru",
 			"description": "Yapılandırılan zaman aşımından sonra takip sorularına ilişkin ilk önerilen yanıtı otomatik olarak seç",
-			"timeoutLabel": "İlk yanıtı otomatik olarak seçmeden önce beklenecek süre"
+			"timeoutLabel": "İlk yanıtı otomatik olarak seçmeden önce beklenecek süre",
+			"timeoutDescription": "Time to wait before auto-selecting the first answer"
 		},
 		"execute": {
 			"label": "Yürüt",
 			"description": "Onay gerektirmeden otomatik olarak izin verilen terminal komutlarını yürüt",
-			"allowedCommands": "İzin Verilen Otomatik Yürütme Komutları",
+			"allowedCommands": {
+				"label": "Allowed Commands",
+				"description": "Commands that Roo can execute automatically (one per line, supports wildcards)"
+			},
 			"allowedCommandsDescription": "\"Yürütme işlemlerini her zaman onayla\" etkinleştirildiğinde otomatik olarak yürütülebilen komut önekleri. Tüm komutlara izin vermek için * ekleyin (dikkatli kullanın).",
-			"deniedCommands": "Reddedilen komutlar",
+			"deniedCommands": {
+				"label": "Denied Commands",
+				"description": "Commands that Roo is explicitly forbidden from executing (one per line, supports wildcards)"
+			},
 			"deniedCommandsDescription": "Onay istenmeden otomatik olarak reddedilecek komut önekleri. İzin verilen komutlarla çakışma durumunda, en uzun önek eşleşmesi öncelik alır. Tüm komutları reddetmek için * ekleyin.",
 			"commandPlaceholder": "Komut öneki girin (örn. 'git ')",
 			"deniedCommandPlaceholder": "Reddetmek için komut öneki girin (örn. 'rm -rf')",
@@ -195,7 +213,8 @@
 		"apiRequestLimit": {
 			"title": "Maksimum İstek",
 			"description": "Göreve devam etmek için onay istemeden önce bu sayıda API isteği otomatik olarak yap.",
-			"unlimited": "Sınırsız"
+			"unlimited": "Sınırsız",
+			"label": "Max Requests"
 		},
 		"selectOptionsFirst": "Otomatik onayı etkinleştirmek için aşağıdan en az bir seçenek seçin"
 	},
@@ -242,7 +261,8 @@
 			"hint": "En son modelleri görmek için lütfen ayarları yeniden açın.",
 			"loading": "Model listesi yenileniyor...",
 			"success": "Model listesi başarıyla yenilendi!",
-			"error": "Model listesi yenilenemedi. Lütfen tekrar deneyin."
+			"error": "Model listesi yenilenemedi. Lütfen tekrar deneyin.",
+			"missingConfig": "Please configure API settings first"
 		},
 		"getRequestyApiKey": "Requesty API Anahtarı Al",
 		"openRouterTransformsText": "İstem ve mesaj zincirlerini bağlam boyutuna sıkıştır (<a>OpenRouter Dönüşümleri</a>)",
@@ -409,7 +429,9 @@
 			"placeholder": "Varsayılan: claude",
 			"maxTokensLabel": "Maksimum Çıktı Token sayısı",
 			"maxTokensDescription": "Claude Code yanıtları için maksimum çıktı token sayısı. Varsayılan 8000'dir."
-		}
+		},
+		"apiProviderDescription": "Select the API provider for AI model access",
+		"modelDescription": "Choose the AI model to use for this configuration"
 	},
 	"browser": {
 		"enable": {
@@ -433,7 +455,10 @@
 		"remote": {
 			"label": "Uzak tarayıcı bağlantısı kullan",
 			"description": "Uzaktan hata ayıklama etkinleştirilmiş olarak çalışan bir Chrome tarayıcısına bağlanın (--remote-debugging-port=9222).",
-			"urlPlaceholder": "Özel URL (örn. http://localhost:9222)",
+			"urlPlaceholder": {
+				"label": "Remote Browser Host",
+				"description": "WebSocket URL for the remote browser connection"
+			},
 			"testButton": "Bağlantıyı Test Et",
 			"testingButton": "Test Ediliyor...",
 			"instructions": "DevTools protokolü ana bilgisayar adresini girin veya yerel Chrome örneklerini otomatik olarak keşfetmek için boş bırakın. Bağlantıyı Test Et düğmesi, sağlanmışsa özel URL'yi deneyecek veya alan boşsa otomatik olarak keşfedecektir."
@@ -449,12 +474,14 @@
 		"sound": {
 			"label": "Ses efektlerini etkinleştir",
 			"description": "Etkinleştirildiğinde, Roo bildirimler ve olaylar için ses efektleri çalacaktır.",
-			"volumeLabel": "Ses Düzeyi"
+			"volumeLabel": "Ses Düzeyi",
+			"volumeDescription": "Adjust the volume level for sound notifications (0-100)"
 		},
 		"tts": {
 			"label": "Metinden sese özelliğini etkinleştir",
 			"description": "Etkinleştirildiğinde, Roo yanıtlarını metinden sese teknolojisi kullanarak sesli okuyacaktır.",
-			"speedLabel": "Hız"
+			"speedLabel": "Hız",
+			"speedDescription": "Adjust the speech rate for text-to-speech (0.1-10.0)"
 		}
 	},
 	"contextManagement": {
@@ -525,7 +552,8 @@
 			"defaultDescription": "Bağlam bu yüzdeye ulaştığında, özel ayarları olmadıkça tüm profiller için otomatik olarak sıkıştırılacak",
 			"profileDescription": "Sadece bu profil için özel eşik (küresel varsayılanı geçersiz kılar)",
 			"inheritDescription": "Bu profil küresel varsayılan eşiği miras alır ({{threshold}}%)",
-			"usesGlobal": "(küresel {{threshold}}% kullanır)"
+			"usesGlobal": "(küresel {{threshold}}% kullanır)",
+			"description": "Configure when context condensing should be triggered based on token usage"
 		}
 	},
 	"terminal": {
@@ -614,6 +642,10 @@
 		"todoList": {
 			"label": "Yapılacaklar listesi aracını etkinleştir",
 			"description": "Etkinleştirildiğinde, Roo görev ilerlemesini takip etmek için yapılacaklar listeleri oluşturabilir ve yönetebilir. Bu, karmaşık görevleri yönetilebilir adımlara organize etmeye yardımcı olur."
+		},
+		"mcpEnabled": {
+			"label": "Enable MCP",
+			"description": "Enable Model Context Protocol (MCP) for enhanced model capabilities"
 		}
 	},
 	"experimental": {
@@ -755,5 +787,8 @@
 		"useCustomArn": "Özel ARN kullan..."
 	},
 	"includeMaxOutputTokens": "Maksimum çıktı tokenlerini dahil et",
-	"includeMaxOutputTokensDescription": "API isteklerinde maksimum çıktı token parametresini gönder. Bazı sağlayıcılar bunu desteklemeyebilir."
+	"includeMaxOutputTokensDescription": "API isteklerinde maksimum çıktı token parametresini gönder. Bazı sağlayıcılar bunu desteklemeyebilir.",
+	"language": {
+		"description": "Select your preferred language for the interface"
+	}
 }

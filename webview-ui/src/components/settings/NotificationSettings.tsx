@@ -35,7 +35,7 @@ export const NotificationSettings = ({
 			</SectionHeader>
 
 			<Section>
-				<div>
+				<div data-setting-id="ttsEnabled">
 					<VSCodeCheckbox
 						checked={ttsEnabled}
 						onChange={(e: any) => setCachedStateField("ttsEnabled", e.target.checked)}
@@ -49,7 +49,7 @@ export const NotificationSettings = ({
 
 				{ttsEnabled && (
 					<div className="flex flex-col gap-3 pl-3 border-l-2 border-vscode-button-background">
-						<div>
+						<div data-setting-id="ttsSpeed">
 							<label className="block font-medium mb-1">
 								{t("settings:notifications.tts.speedLabel")}
 							</label>
@@ -68,7 +68,7 @@ export const NotificationSettings = ({
 					</div>
 				)}
 
-				<div>
+				<div data-setting-id="soundEnabled">
 					<VSCodeCheckbox
 						checked={soundEnabled}
 						onChange={(e: any) => setCachedStateField("soundEnabled", e.target.checked)}
@@ -82,7 +82,7 @@ export const NotificationSettings = ({
 
 				{soundEnabled && (
 					<div className="flex flex-col gap-3 pl-3 border-l-2 border-vscode-button-background">
-						<div>
+						<div data-setting-id="soundVolume">
 							<label className="block font-medium mb-1">
 								{t("settings:notifications.sound.volumeLabel")}
 							</label>

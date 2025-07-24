@@ -26,7 +26,7 @@ export const CheckpointSettings = ({ enableCheckpoints, setCachedStateField, ...
 			</SectionHeader>
 
 			<Section>
-				<div>
+				<div data-setting-id="enableCheckpoints">
 					<VSCodeCheckbox
 						checked={enableCheckpoints}
 						onChange={(e: any) => {

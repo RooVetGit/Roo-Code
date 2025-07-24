@@ -104,7 +104,7 @@ export const TerminalSettings = ({
 						</div>
 					</div>
 					<div className="flex flex-col gap-3 pl-3 border-l-2 border-vscode-button-background">
-						<div>
+						<div data-setting-id="outputLineLimit">
 							<label className="block font-medium mb-1">
 								{t("settings:terminal.outputLineLimit.label")}
 							</label>
@@ -132,7 +132,7 @@ export const TerminalSettings = ({
 								</Trans>
 							</div>
 						</div>
-						<div>
+						<div data-setting-id="outputCharacterLimit">
 							<label className="block font-medium mb-1">
 								{t("settings:terminal.outputCharacterLimit.label")}
 							</label>
@@ -162,7 +162,7 @@ export const TerminalSettings = ({
 								</Trans>
 							</div>
 						</div>
-						<div>
+						<div data-setting-id="compressProgressBar">
 							<VSCodeCheckbox
 								checked={terminalCompressProgressBar ?? true}
 								onChange={(e: any) =>
@@ -199,7 +199,7 @@ export const TerminalSettings = ({
 						</div>
 					</div>
 					<div className="flex flex-col gap-3 pl-3 border-l-2 border-vscode-button-background">
-						<div>
+						<div data-setting-id="inheritEnv">
 							<VSCodeCheckbox
 								checked={inheritEnv}
 								onChange={(e: any) => {
@@ -227,7 +227,7 @@ export const TerminalSettings = ({
 							</div>
 						</div>
 
-						<div>
+						<div data-setting-id="shellIntegrationDisabled">
 							<VSCodeCheckbox
 								checked={terminalShellIntegrationDisabled ?? false}
 								onChange={(e: any) =>
@@ -253,7 +253,7 @@ export const TerminalSettings = ({
 
 						{!terminalShellIntegrationDisabled && (
 							<>
-								<div>
+								<div data-setting-id="shellIntegrationTimeout">
 									<label className="block font-medium mb-1">
 										{t("settings:terminal.shellIntegrationTimeout.label")}
 									</label>
@@ -288,7 +288,7 @@ export const TerminalSettings = ({
 									</div>
 								</div>
 
-								<div>
+								<div data-setting-id="commandDelay">
 									<label className="block font-medium mb-1">
 										{t("settings:terminal.commandDelay.label")}
 									</label>
@@ -321,7 +321,7 @@ export const TerminalSettings = ({
 									</div>
 								</div>
 
-								<div>
+								<div data-setting-id="powershellCounter">
 									<VSCodeCheckbox
 										checked={terminalPowershellCounter ?? false}
 										onChange={(e: any) =>
@@ -346,7 +346,7 @@ export const TerminalSettings = ({
 									</div>
 								</div>
 
-								<div>
+								<div data-setting-id="zshClearEolMark">
 									<VSCodeCheckbox
 										checked={terminalZshClearEolMark ?? true}
 										onChange={(e: any) =>
@@ -371,7 +371,7 @@ export const TerminalSettings = ({
 									</div>
 								</div>
 
-								<div>
+								<div data-setting-id="zshOhMy">
 									<VSCodeCheckbox
 										checked={terminalZshOhMy ?? false}
 										onChange={(e: any) => setCachedStateField("terminalZshOhMy", e.target.checked)}
@@ -392,7 +392,7 @@ export const TerminalSettings = ({
 									</div>
 								</div>
 
-								<div>
+								<div data-setting-id="zshP10k">
 									<VSCodeCheckbox
 										checked={terminalZshP10k ?? false}
 										onChange={(e: any) => setCachedStateField("terminalZshP10k", e.target.checked)}
@@ -413,7 +413,7 @@ export const TerminalSettings = ({
 									</div>
 								</div>
 
-								<div>
+								<div data-setting-id="zdotdir">
 									<VSCodeCheckbox
 										checked={terminalZdotdir ?? false}
 										onChange={(e: any) => setCachedStateField("terminalZdotdir", e.target.checked)}

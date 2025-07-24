@@ -12,7 +12,11 @@
 		"title": "設定",
 		"saveButtonTooltip": "儲存變更",
 		"nothingChangedTooltip": "無任何變更",
-		"doneButtonTooltip": "捨棄未儲存的變更並關閉設定面板"
+		"doneButtonTooltip": "捨棄未儲存的變更並關閉設定面板",
+		"searchPlaceholder": "Search settings...",
+		"searchTooltip": "Search settings",
+		"clearSearchTooltip": "Clear search",
+		"noSearchResults": "No settings match your search"
 	},
 	"unsavedChangesDialog": {
 		"title": "未儲存的變更",
@@ -31,10 +35,15 @@
 		"prompts": "提示詞",
 		"experimental": "實驗性",
 		"language": "語言",
-		"about": "關於 Roo Code"
+		"about": "關於 Roo Code",
+		"advanced": "Advanced"
 	},
 	"prompts": {
-		"description": "設定用於快速操作的支援提示詞，如增強提示詞、解釋程式碼和修復問題。這些提示詞幫助 Roo 為常見開發工作提供更好的支援。"
+		"description": "設定用於快速操作的支援提示詞，如增強提示詞、解釋程式碼和修復問題。這些提示詞幫助 Roo 為常見開發工作提供更好的支援。",
+		"customSupportPrompts": {
+			"label": "Custom Support Prompts",
+			"description": "Add custom instructions or prompts to guide Roo's behavior"
+		}
 	},
 	"codeIndex": {
 		"title": "程式碼庫索引",
@@ -148,7 +157,8 @@
 			"protected": {
 				"label": "包含受保護的檔案",
 				"description": "允許 Roo 建立和編輯受保護的檔案（如 .rooignore 和 .roo/ 設定檔），無需核准。"
-			}
+			},
+			"delayDescription": "Wait time in milliseconds after file writes before diagnostics are updated"
 		},
 		"browser": {
 			"label": "瀏覽器",
@@ -157,7 +167,8 @@
 		"retry": {
 			"label": "重試",
 			"description": "當伺服器回傳錯誤回應時自動重試失敗的 API 請求",
-			"delayLabel": "重試請求前的延遲"
+			"delayLabel": "重試請求前的延遲",
+			"delayDescription": "Time to wait in seconds before retrying a failed request"
 		},
 		"mcp": {
 			"label": "MCP",
@@ -174,14 +185,21 @@
 		"followupQuestions": {
 			"label": "問題",
 			"description": "在設定的逾時時間後自動選擇後續問題的第一個建議答案",
-			"timeoutLabel": "自動選擇第一個答案前的等待時間"
+			"timeoutLabel": "自動選擇第一個答案前的等待時間",
+			"timeoutDescription": "Time to wait before auto-selecting the first answer"
 		},
 		"execute": {
 			"label": "執行",
 			"description": "自動執行允許的終端機命令而無需核准",
-			"allowedCommands": "允許自動執行的命令",
+			"allowedCommands": {
+				"label": "Allowed Commands",
+				"description": "Commands that Roo can execute automatically (one per line, supports wildcards)"
+			},
 			"allowedCommandsDescription": "當「始終核准執行操作」啟用時可以自動執行的命令前綴。新增 * 以允許所有命令（請謹慎使用）。",
-			"deniedCommands": "拒絕的命令",
+			"deniedCommands": {
+				"label": "Denied Commands",
+				"description": "Commands that Roo is explicitly forbidden from executing (one per line, supports wildcards)"
+			},
 			"deniedCommandsDescription": "將自動拒絕的命令前綴，無需使用者核准。與允許命令衝突時，最長前綴匹配優先。新增 * 拒絕所有命令。",
 			"commandPlaceholder": "輸入命令前綴（例如 'git '）",
 			"deniedCommandPlaceholder": "輸入要拒絕的命令前綴（例如 'rm -rf'）",
@@ -195,7 +213,8 @@
 		"apiRequestLimit": {
 			"title": "最大請求數",
 			"description": "在請求批准以繼續執行工作之前，自動發出此數量的 API 請求。",
-			"unlimited": "無限制"
+			"unlimited": "無限制",
+			"label": "Max Requests"
 		},
 		"selectOptionsFirst": "請至少選擇以下一個選項以啟用自動核准"
 	},
@@ -242,7 +261,8 @@
 			"hint": "請重新開啟設定以查看最新模型。",
 			"loading": "正在重新整理模型列表...",
 			"success": "模型列表重新整理成功！",
-			"error": "重新整理模型列表失敗。請再試一次。"
+			"error": "重新整理模型列表失敗。請再試一次。",
+			"missingConfig": "Please configure API settings first"
 		},
 		"getRequestyApiKey": "取得 Requesty API 金鑰",
 		"openRouterTransformsText": "將提示和訊息鏈壓縮到上下文大小 (<a>OpenRouter 轉換</a>)",
@@ -409,7 +429,9 @@
 			"placeholder": "預設：claude",
 			"maxTokensLabel": "最大輸出 Token",
 			"maxTokensDescription": "Claude Code 回應的最大輸出 Token 數量。預設為 8000。"
-		}
+		},
+		"apiProviderDescription": "Select the API provider for AI model access",
+		"modelDescription": "Choose the AI model to use for this configuration"
 	},
 	"browser": {
 		"enable": {
@@ -433,7 +455,10 @@
 		"remote": {
 			"label": "使用遠端瀏覽器連線",
 			"description": "連線到啟用遠端除錯的 Chrome 瀏覽器（--remote-debugging-port=9222）。",
-			"urlPlaceholder": "自訂 URL（例如 http://localhost:9222）",
+			"urlPlaceholder": {
+				"label": "Remote Browser Host",
+				"description": "WebSocket URL for the remote browser connection"
+			},
 			"testButton": "測試連線",
 			"testingButton": "測試中...",
 			"instructions": "請輸入 DevTools Protocol 主機位址，或留空以自動偵測本機 Chrome 執行個體。「測試連線」按鈕將嘗試連線至您提供的自訂 URL，若未提供則會自動偵測。"
@@ -449,12 +474,14 @@
 		"sound": {
 			"label": "啟用音效",
 			"description": "啟用後，Roo 將為通知和事件播放音效。",
-			"volumeLabel": "音量"
+			"volumeLabel": "音量",
+			"volumeDescription": "Adjust the volume level for sound notifications (0-100)"
 		},
 		"tts": {
 			"label": "啟用文字轉語音",
 			"description": "啟用後，Roo 將使用文字轉語音功能朗讀其回應。",
-			"speedLabel": "速度"
+			"speedLabel": "速度",
+			"speedDescription": "Adjust the speech rate for text-to-speech (0.1-10.0)"
 		}
 	},
 	"contextManagement": {
@@ -525,7 +552,8 @@
 			"defaultDescription": "當上下文達到此百分比時，將自動為所有檔案壓縮，除非它們有自訂設定",
 			"profileDescription": "僅此檔案的自訂閾值（覆蓋全域預設）",
 			"inheritDescription": "此檔案繼承全域預設閾值（{{threshold}}%）",
-			"usesGlobal": "（使用全域 {{threshold}}%）"
+			"usesGlobal": "（使用全域 {{threshold}}%）",
+			"description": "Configure when context condensing should be triggered based on token usage"
 		}
 	},
 	"terminal": {
@@ -614,6 +642,10 @@
 		"todoList": {
 			"label": "啟用待辦事項清單工具",
 			"description": "啟用後，Roo 可以建立和管理待辦事項清單來追蹤任務進度。這有助於將複雜任務組織成可管理的步驟。"
+		},
+		"mcpEnabled": {
+			"label": "Enable MCP",
+			"description": "Enable Model Context Protocol (MCP) for enhanced model capabilities"
 		}
 	},
 	"experimental": {
@@ -755,5 +787,8 @@
 		"useCustomArn": "使用自訂 ARN..."
 	},
 	"includeMaxOutputTokens": "包含最大輸出 Token 數",
-	"includeMaxOutputTokensDescription": "在 API 請求中傳送最大輸出 Token 參數。某些提供商可能不支援此功能。"
+	"includeMaxOutputTokensDescription": "在 API 請求中傳送最大輸出 Token 參數。某些提供商可能不支援此功能。",
+	"language": {
+		"description": "Select your preferred language for the interface"
+	}
 }

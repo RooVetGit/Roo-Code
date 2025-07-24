@@ -140,6 +140,12 @@
 			"NEW_TASK": {
 				"label": "Start New Task",
 				"description": "Start a new task with user input. Available in the Command Palette."
+			},
+			"enhance": {
+				"label": "Enhance"
+			},
+			"condense": {
+				"label": "Condense"
 			}
 		}
 	},

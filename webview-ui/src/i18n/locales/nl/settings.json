@@ -12,7 +12,11 @@
 		"title": "Instellingen",
 		"saveButtonTooltip": "Wijzigingen opslaan",
 		"nothingChangedTooltip": "Niets gewijzigd",
-		"doneButtonTooltip": "Niet-opgeslagen wijzigingen negeren en instellingen sluiten"
+		"doneButtonTooltip": "Niet-opgeslagen wijzigingen negeren en instellingen sluiten",
+		"searchPlaceholder": "Search settings...",
+		"searchTooltip": "Search settings",
+		"clearSearchTooltip": "Clear search",
+		"noSearchResults": "No settings match your search"
 	},
 	"unsavedChangesDialog": {
 		"title": "Niet-opgeslagen wijzigingen",
@@ -31,10 +35,15 @@
 		"prompts": "Prompts",
 		"experimental": "Experimenteel",
 		"language": "Taal",
-		"about": "Over Roo Code"
+		"about": "Over Roo Code",
+		"advanced": "Advanced"
 	},
 	"prompts": {
-		"description": "Configureer ondersteuningsprompts die worden gebruikt voor snelle acties zoals het verbeteren van prompts, het uitleggen van code en het oplossen van problemen. Deze prompts helpen Roo om betere ondersteuning te bieden voor veelvoorkomende ontwikkelingstaken."
+		"description": "Configureer ondersteuningsprompts die worden gebruikt voor snelle acties zoals het verbeteren van prompts, het uitleggen van code en het oplossen van problemen. Deze prompts helpen Roo om betere ondersteuning te bieden voor veelvoorkomende ontwikkelingstaken.",
+		"customSupportPrompts": {
+			"label": "Custom Support Prompts",
+			"description": "Add custom instructions or prompts to guide Roo's behavior"
+		}
 	},
 	"codeIndex": {
 		"title": "Codebase indexering",
@@ -148,7 +157,8 @@
 			"protected": {
 				"label": "Inclusief beschermde bestanden",
 				"description": "Sta Roo toe om beschermde bestanden (zoals .rooignore en .roo/ configuratiebestanden) aan te maken en te bewerken zonder goedkeuring."
-			}
+			},
+			"delayDescription": "Wait time in milliseconds after file writes before diagnostics are updated"
 		},
 		"browser": {
 			"label": "Browser",
@@ -157,7 +167,8 @@
 		"retry": {
 			"label": "Opnieuw proberen",
 			"description": "Automatisch mislukte API-verzoeken opnieuw proberen wanneer de server een foutmelding geeft",
-			"delayLabel": "Vertraging voordat het verzoek opnieuw wordt geprobeerd"
+			"delayLabel": "Vertraging voordat het verzoek opnieuw wordt geprobeerd",
+			"delayDescription": "Time to wait in seconds before retrying a failed request"
 		},
 		"mcp": {
 			"label": "MCP",
@@ -174,14 +185,21 @@
 		"followupQuestions": {
 			"label": "Vraag",
 			"description": "Selecteer automatisch het eerste voorgestelde antwoord voor vervolgvragen na de geconfigureerde time-out",
-			"timeoutLabel": "Wachttijd voordat het eerste antwoord automatisch wordt geselecteerd"
+			"timeoutLabel": "Wachttijd voordat het eerste antwoord automatisch wordt geselecteerd",
+			"timeoutDescription": "Time to wait before auto-selecting the first answer"
 		},
 		"execute": {
 			"label": "Uitvoeren",
 			"description": "Automatisch toegestane terminalcommando's uitvoeren zonder goedkeuring",
-			"allowedCommands": "Toegestane automatisch uit te voeren commando's",
+			"allowedCommands": {
+				"label": "Allowed Commands",
+				"description": "Commands that Roo can execute automatically (one per line, supports wildcards)"
+			},
 			"allowedCommandsDescription": "Commando-prefixen die automatisch kunnen worden uitgevoerd als 'Altijd goedkeuren voor uitvoeren' is ingeschakeld. Voeg * toe om alle commando's toe te staan (gebruik met voorzichtigheid).",
-			"deniedCommands": "Geweigerde commando's",
+			"deniedCommands": {
+				"label": "Denied Commands",
+				"description": "Commands that Roo is explicitly forbidden from executing (one per line, supports wildcards)"
+			},
 			"deniedCommandsDescription": "Commando-prefixen die automatisch worden geweigerd zonder om goedkeuring te vragen. Bij conflicten met toegestane commando's heeft de langste prefixovereenkomst voorrang. Voeg * toe om alle commando's te weigeren.",
 			"commandPlaceholder": "Voer commando-prefix in (bijv. 'git ')",
 			"deniedCommandPlaceholder": "Voer te weigeren commando-prefix in (bijv. 'rm -rf')",
@@ -195,7 +213,8 @@
 		"apiRequestLimit": {
 			"title": "Maximale verzoeken",
 			"description": "Voer automatisch dit aantal API-verzoeken uit voordat om goedkeuring wordt gevraagd om door te gaan met de taak.",
-			"unlimited": "Onbeperkt"
+			"unlimited": "Onbeperkt",
+			"label": "Max Requests"
 		},
 		"selectOptionsFirst": "Selecteer ten minste één optie hieronder om automatische goedkeuring in te schakelen"
 	},
@@ -242,7 +261,8 @@
 			"hint": "Open de instellingen opnieuw om de nieuwste modellen te zien.",
 			"loading": "Modellenlijst wordt vernieuwd...",
 			"success": "Modellenlijst succesvol vernieuwd!",
-			"error": "Kan modellenlijst niet vernieuwen. Probeer het opnieuw."
+			"error": "Kan modellenlijst niet vernieuwen. Probeer het opnieuw.",
+			"missingConfig": "Please configure API settings first"
 		},
 		"getRequestyApiKey": "Requesty API-sleutel ophalen",
 		"openRouterTransformsText": "Comprimeer prompts en berichtreeksen tot de contextgrootte (<a>OpenRouter Transforms</a>)",
@@ -409,7 +429,9 @@
 			"placeholder": "Standaard: claude",
 			"maxTokensLabel": "Max Output Tokens",
 			"maxTokensDescription": "Maximaal aantal output-tokens voor Claude Code-reacties. Standaard is 8000."
-		}
+		},
+		"apiProviderDescription": "Select the API provider for AI model access",
+		"modelDescription": "Choose the AI model to use for this configuration"
 	},
 	"browser": {
 		"enable": {
@@ -433,7 +455,10 @@
 		"remote": {
 			"label": "Gebruik externe browserverbinding",
 			"description": "Verbind met een Chrome-browser die draait met remote debugging ingeschakeld (--remote-debugging-port=9222).",
-			"urlPlaceholder": "Aangepaste URL (bijv. http://localhost:9222)",
+			"urlPlaceholder": {
+				"label": "Remote Browser Host",
+				"description": "WebSocket URL for the remote browser connection"
+			},
 			"testButton": "Verbinding testen",
 			"testingButton": "Bezig met testen...",
 			"instructions": "Voer het DevTools Protocol hostadres in of laat leeg om lokale Chrome-instanties automatisch te detecteren. De knop Verbinding testen probeert de aangepaste URL als opgegeven, of detecteert automatisch als het veld leeg is."
@@ -449,12 +474,14 @@
 		"sound": {
 			"label": "Geluidseffecten inschakelen",
 			"description": "Indien ingeschakeld, speelt Roo geluidseffecten af voor meldingen en gebeurtenissen.",
-			"volumeLabel": "Volume"
+			"volumeLabel": "Volume",
+			"volumeDescription": "Adjust the volume level for sound notifications (0-100)"
 		},
 		"tts": {
 			"label": "Tekst-naar-spraak inschakelen",
 			"description": "Indien ingeschakeld, leest Roo zijn antwoorden hardop voor via tekst-naar-spraak.",
-			"speedLabel": "Snelheid"
+			"speedLabel": "Snelheid",
+			"speedDescription": "Adjust the speech rate for text-to-speech (0.1-10.0)"
 		}
 	},
 	"contextManagement": {
@@ -525,7 +552,8 @@
 			"defaultDescription": "Wanneer de context dit percentage bereikt, wordt het automatisch gecomprimeerd voor alle profielen tenzij ze aangepaste instellingen hebben",
 			"profileDescription": "Aangepaste drempelwaarde alleen voor dit profiel (overschrijft globale standaard)",
 			"inheritDescription": "Dit profiel erft de globale standaard drempelwaarde ({{threshold}}%)",
-			"usesGlobal": "(gebruikt globaal {{threshold}}%)"
+			"usesGlobal": "(gebruikt globaal {{threshold}}%)",
+			"description": "Configure when context condensing should be triggered based on token usage"
 		}
 	},
 	"terminal": {
@@ -614,6 +642,10 @@
 		"todoList": {
 			"label": "Takenlijst-tool inschakelen",
 			"description": "Wanneer ingeschakeld, kan Roo takenlijsten maken en beheren om de voortgang van taken bij te houden. Dit helpt complexe taken te organiseren in beheersbare stappen."
+		},
+		"mcpEnabled": {
+			"label": "Enable MCP",
+			"description": "Enable Model Context Protocol (MCP) for enhanced model capabilities"
 		}
 	},
 	"experimental": {
@@ -755,5 +787,8 @@
 		"useCustomArn": "Aangepaste ARN gebruiken..."
 	},
 	"includeMaxOutputTokens": "Maximale output tokens opnemen",
-	"includeMaxOutputTokensDescription": "Stuur maximale output tokens parameter in API-verzoeken. Sommige providers ondersteunen dit mogelijk niet."
+	"includeMaxOutputTokensDescription": "Stuur maximale output tokens parameter in API-verzoeken. Sommige providers ondersteunen dit mogelijk niet.",
+	"language": {
+		"description": "Select your preferred language for the interface"
+	}
 }

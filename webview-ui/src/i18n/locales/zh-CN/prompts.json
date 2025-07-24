@@ -138,6 +138,12 @@
 			"NEW_TASK": {
 				"label": "新任务",
 				"description": "控制开始新任务时的用户提示词。可在首页对话框中使用。"
+			},
+			"enhance": {
+				"label": "Enhance"
+			},
+			"condense": {
+				"label": "Condense"
 			}
 		}
 	},

@@ -141,6 +141,12 @@
 			"NEW_TASK": {
 				"label": "新しいタスクを開始",
 				"description": "入力内容で新しいタスクを開始できます。コマンドパレットから利用できます。"
+			},
+			"enhance": {
+				"label": "Enhance"
+			},
+			"condense": {
+				"label": "Condense"
 			}
 		}
 	},

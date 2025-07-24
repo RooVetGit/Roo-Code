@@ -141,6 +141,12 @@
 			"NEW_TASK": {
 				"label": "Démarrer une nouvelle tâche",
 				"description": "Démarre une nouvelle tâche avec ton entrée. Disponible dans la palette de commandes."
+			},
+			"enhance": {
+				"label": "Enhance"
+			},
+			"condense": {
+				"label": "Condense"
 			}
 		}
 	},
@@ -205,5 +211,15 @@
 		"descriptionNoRules": "Êtes-vous sûr de vouloir supprimer ce mode personnalisé ?",
 		"confirm": "Supprimer",
 		"cancel": "Annuler"
+	},
+	"TODO: supportPrompts": {
+		"TODO: types": {
+			"TODO: enhance": {
+				"TODO: label": "Enhance"
+			},
+			"TODO: condense": {
+				"TODO: label": "Condense"
+			}
+		}
 	}
 }
