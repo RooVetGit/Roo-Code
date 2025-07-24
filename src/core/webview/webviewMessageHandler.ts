@@ -2252,6 +2252,23 @@ export const webviewMessageHandler = async (
 						slug: message.mpItem.id,
 					})
 				}
+			} else {
+				// MarketplaceManager not available or missing required parameters
+				const errorMessage = !marketplaceManager
+					? "Marketplace manager is not available"
+					: "Missing required parameters for marketplace item removal"
+				console.error(errorMessage)
+
+				vscode.window.showErrorMessage(errorMessage)
+
+				if (message.mpItem?.id) {
+					provider.postMessageToWebview({
+						type: "marketplaceRemoveResult",
+						success: false,
+						error: errorMessage,
+						slug: message.mpItem.id,
+					})
+				}
 			}
 			break
 		}
