@@ -96,11 +96,11 @@ describe("ThinkingBudget", () => {
 	})
 
 	it("should allow max thinking tokens up to 80% of max output tokens", () => {
-		render(<ThinkingBudget {...defaultProps} apiConfiguration={{ modelMaxTokens: 1000 }} />)
+		render(<ThinkingBudget {...defaultProps} apiConfiguration={{ modelMaxTokens: 5000 }} />)
 
 		const slider = screen.getByTestId("slider")
-		// Max should be 80% of 1000 = 800
-		expect(slider.getAttribute("max")).toBe("800")
+		// Max should be 80% of 5000 = 4000
+		expect(slider.getAttribute("max")).toBe("4000")
 	})
 
 	it("should use default thinking tokens if not provided", () => {
@@ -111,23 +111,23 @@ describe("ThinkingBudget", () => {
 		expect(slider).toHaveValue("8000") // 80% of 10000
 	})
 
-	it("should use min thinking tokens of 0", () => {
-		render(<ThinkingBudget {...defaultProps} apiConfiguration={{ modelMaxTokens: 1000 }} />)
+	it("should use min thinking tokens of 1024", () => {
+		render(<ThinkingBudget {...defaultProps} apiConfiguration={{ modelMaxTokens: 3000 }} />)
 
 		const slider = screen.getByTestId("slider")
-		expect(slider.getAttribute("min")).toBe("0")
+		expect(slider.getAttribute("min")).toBe("1024")
 	})
 
 	it("should cap displayed value at 80% even if stored value is higher", () => {
 		render(
 			<ThinkingBudget
 				{...defaultProps}
-				apiConfiguration={{ modelMaxTokens: 1000, modelMaxThinkingTokens: 8192 }}
+				apiConfiguration={{ modelMaxTokens: 5000, modelMaxThinkingTokens: 8192 }}
 			/>,
 		)
 
 		const slider = screen.getByTestId("slider")
-		// Value should be capped at 800 (80% of 1000) even though stored value is 8192
-		expect(slider).toHaveValue("800")
+		// Value should be capped at 4000 (80% of 5000) even though stored value is 8192
+		expect(slider).toHaveValue("4000")
 	})
 })

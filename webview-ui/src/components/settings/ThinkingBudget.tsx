@@ -63,7 +63,7 @@ export const ThinkingBudget = ({ apiConfiguration, setApiConfigurationField, mod
 					<div className="font-medium">{t("settings:thinkingBudget.maxThinkingTokens")}</div>
 					<div className="flex items-center gap-1" data-testid="reasoning-budget">
 						<Slider
-							min={0}
+							min={1024}
 							max={modelMaxThinkingTokens}
 							step={256}
 							value={[Math.min(customMaxThinkingTokens, modelMaxThinkingTokens)]}
