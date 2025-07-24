@@ -179,9 +179,12 @@ const AutoApproveMenu = ({ style }: AutoApproveMenuProps) => {
 									: t("chat:autoApprove.disabledAriaLabel")
 							}
 							onChange={() => {
-								const newValue = !(autoApprovalEnabled ?? false)
-								setAutoApprovalEnabled(newValue)
-								vscode.postMessage({ type: "autoApprovalEnabled", bool: newValue })
+								if (hasEnabledOptions) {
+									const newValue = !(autoApprovalEnabled ?? false)
+									setAutoApprovalEnabled(newValue)
+									vscode.postMessage({ type: "autoApprovalEnabled", bool: newValue })
+								}
+								// If no options enabled, do nothing
 							}}
 						/>
 					</StandardTooltip>
