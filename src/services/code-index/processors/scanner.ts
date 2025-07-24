@@ -431,15 +431,24 @@ export class DirectoryScanner implements IDirectoryScanner {
 				// Preserve the original error message from embedders which now have detailed i18n messages
 				const errorMessage = lastError.message || "Unknown error"
 
-				// For other errors, provide context
-				onError(
-					new Error(
-						t("embeddings:scanner.failedToProcessBatchWithError", {
-							maxRetries: MAX_BATCH_RETRIES,
-							errorMessage,
-						}),
-					),
-				)
+				// Enhanced error context with recovery suggestions
+				let enhancedMessage = t("embeddings:scanner.failedToProcessBatchWithError", {
+					maxRetries: MAX_BATCH_RETRIES,
+					errorMessage,
+				})
+
+				// Add specific guidance based on error type
+				if (errorMessage.includes("rate limit") || errorMessage.includes("429")) {
+					enhancedMessage += "\n\nThis appears to be a rate limiting issue. The indexing process can be restarted once the rate limit resets."
+				} else if (errorMessage.includes("authentication") || errorMessage.includes("401")) {
+					enhancedMessage += "\n\nThis appears to be an authentication issue. Please check your API key configuration."
+				} else if (errorMessage.includes("network") || errorMessage.includes("timeout") || errorMessage.includes("ECONNRESET")) {
+					enhancedMessage += "\n\nThis appears to be a network connectivity issue. Please check your internet connection and try again."
+				} else {
+					enhancedMessage += "\n\nYou can restart the indexing process from the Code Index settings."
+				}
+
+				onError(new Error(enhancedMessage))
 			}
 		}
 	}

@@ -100,6 +100,7 @@ export class CodeIndexOrchestrator {
 			return
 		}
 
+		// Allow restarting from Error state - this fixes the restart issue
 		if (
 			this._isProcessing ||
 			(this.stateManager.state !== "Standby" &&
@@ -110,6 +111,12 @@ export class CodeIndexOrchestrator {
 				`[CodeIndexOrchestrator] Start rejected: Already processing or in state ${this.stateManager.state}.`,
 			)
 			return
+		}
+
+		// Reset error state when restarting
+		if (this.stateManager.state === "Error") {
+			console.log("[CodeIndexOrchestrator] Restarting indexing from error state")
+			this.stateManager.setSystemState("Standby", "Restarting indexing...")
 		}
 
 		this._isProcessing = true
@@ -157,42 +164,64 @@ export class CodeIndexOrchestrator {
 
 			const { stats } = result
 
+			// Enhanced failure handling with better error messages and recovery options
+			const totalBlocksFound = cumulativeBlocksFoundSoFar
+			const totalBlocksIndexed = cumulativeBlocksIndexed
+			const failureRate = totalBlocksFound > 0 ? (totalBlocksFound - totalBlocksIndexed) / totalBlocksFound : 0
+
 			// Check if any blocks were actually indexed successfully
-			// If no blocks were indexed but blocks were found, it means all batches failed
-			if (cumulativeBlocksIndexed === 0 && cumulativeBlocksFoundSoFar > 0) {
+			if (totalBlocksIndexed === 0 && totalBlocksFound > 0) {
 				if (batchErrors.length > 0) {
 					// Use the first batch error as it's likely representative of the main issue
 					const firstError = batchErrors[0]
-					throw new Error(`Indexing failed: ${firstError.message}`)
+					const errorMessage = `Indexing failed: ${firstError.message}`
+					
+					// Add specific guidance for common issues
+					if (firstError.message.includes("rate limit") || firstError.message.includes("429")) {
+						throw new Error(`${errorMessage}\n\nSuggestion: The API rate limit was exceeded. Try again in a few minutes, or consider using a smaller embedding model like text-embedding-3-small for large codebases.`)
+					} else if (firstError.message.includes("authentication") || firstError.message.includes("401")) {
+						throw new Error(`${errorMessage}\n\nSuggestion: Check your API key configuration in the settings.`)
+					} else if (firstError.message.includes("quota") || firstError.message.includes("billing")) {
+						throw new Error(`${errorMessage}\n\nSuggestion: Check your OpenAI account billing and usage limits.`)
+					}
+					
+					throw new Error(errorMessage)
 				} else {
 					throw new Error(
-						"Indexing failed: No code blocks were successfully indexed. This usually indicates an embedder configuration issue.",
+						"Indexing failed: No code blocks were successfully indexed. This usually indicates an embedder configuration issue.\n\nSuggestion: Verify your API settings and try again.",
 					)
 				}
 			}
 
-			// Check for partial failures - if a significant portion of blocks failed
-			const failureRate = (cumulativeBlocksFoundSoFar - cumulativeBlocksIndexed) / cumulativeBlocksFoundSoFar
-			if (batchErrors.length > 0 && failureRate > 0.1) {
-				// More than 10% of blocks failed to index
+			// Handle partial failures more gracefully
+			if (batchErrors.length > 0) {
 				const firstError = batchErrors[0]
-				throw new Error(
-					`Indexing partially failed: Only ${cumulativeBlocksIndexed} of ${cumulativeBlocksFoundSoFar} blocks were indexed. ${firstError.message}`,
-				)
-			}
-
-			// CRITICAL: If there were ANY batch errors and NO blocks were successfully indexed,
-			// this is a complete failure regardless of the failure rate calculation
-			if (batchErrors.length > 0 && cumulativeBlocksIndexed === 0) {
-				const firstError = batchErrors[0]
-				throw new Error(`Indexing failed completely: ${firstError.message}`)
+				
+				// If failure rate is high (>50%), treat as critical failure
+				if (failureRate > 0.5) {
+					throw new Error(
+						`Indexing mostly failed: Only ${totalBlocksIndexed} of ${totalBlocksFound} blocks were indexed (${Math.round(failureRate * 100)}% failure rate). ${firstError.message}\n\nSuggestion: Check your network connection and API configuration, then try again.`,
+					)
+				}
+				
+				// If failure rate is moderate (10-50%), log warning but continue
+				if (failureRate > 0.1) {
+					console.warn(
+						`[CodeIndexOrchestrator] Partial indexing failure: ${totalBlocksIndexed}/${totalBlocksFound} blocks indexed (${Math.round(failureRate * 100)}% failure rate). Error: ${firstError.message}`,
+					)
+					
+					// Set a warning state but don't fail completely
+					this.stateManager.setSystemState("Indexed",
+						`Indexing completed with warnings: ${totalBlocksIndexed}/${totalBlocksFound} blocks indexed. Some files may have been skipped due to API issues.`
+					)
+				}
 			}
 
 			// Final sanity check: If we found blocks but indexed none and somehow no errors were reported,
 			// this is still a failure
-			if (cumulativeBlocksFoundSoFar > 0 && cumulativeBlocksIndexed === 0) {
+			if (totalBlocksFound > 0 && totalBlocksIndexed === 0 && batchErrors.length === 0) {
 				throw new Error(
-					"Indexing failed: No code blocks were successfully indexed despite finding files to process. This indicates a critical embedder failure.",
+					"Indexing failed: No code blocks were successfully indexed despite finding files to process. This indicates a critical embedder failure.\n\nSuggestion: Check your embedder configuration and try again.",
 				)
 			}
 
