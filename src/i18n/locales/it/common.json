@@ -17,12 +17,7 @@
 	"confirmation": {
 		"reset_state": "Sei sicuro di voler reimpostare tutti gli stati e l'archiviazione segreta nell'estensione? Questa azione non può essere annullata.",
 		"delete_config_profile": "Sei sicuro di voler eliminare questo profilo di configurazione?",
-		"delete_custom_mode_with_rules": "Sei sicuro di voler eliminare questa modalità {scope}?\n\nQuesto eliminerà anche la cartella delle regole associata in:\n{rulesFolderPath}",
-		"delete_message": "Cosa desideri eliminare?",
-		"edit_warning": "Modificare questo messaggio eliminerà tutti i messaggi successivi nella conversazione. Vuoi continuare?",
-		"delete_just_this_message": "Solo questo messaggio",
-		"delete_this_and_subsequent": "Questo e tutti i messaggi successivi",
-		"proceed": "Continua"
+		"delete_custom_mode_with_rules": "Sei sicuro di voler eliminare questa modalità {scope}?\n\nQuesto eliminerà anche la cartella delle regole associata in:\n{rulesFolderPath}"
 	},
 	"errors": {
 		"invalid_data_uri": "Formato URI dati non valido",
@@ -33,6 +28,7 @@
 		"could_not_open_file_generic": "Impossibile aprire il file!",
 		"checkpoint_timeout": "Timeout durante il tentativo di ripristinare il checkpoint.",
 		"checkpoint_failed": "Impossibile ripristinare il checkpoint.",
+		"git_not_installed": "Git è richiesto per la funzione di checkpoint. Per favore, installa Git per abilitare i checkpoint.",
 		"no_workspace": "Per favore, apri prima una cartella di progetto",
 		"update_support_prompt": "Errore durante l'aggiornamento del messaggio di supporto",
 		"reset_support_prompt": "Errore durante il ripristino del messaggio di supporto",
@@ -112,7 +108,8 @@
 	},
 	"buttons": {
 		"save": "Salva",
-		"edit": "Modifica"
+		"edit": "Modifica",
+		"learn_more": "Scopri di più"
 	},
 	"tasks": {
 		"canceled": "Errore attività: È stata interrotta e annullata dall'utente.",
@@ -150,11 +147,17 @@
 			"deleteFailed": "Eliminazione modalità personalizzata fallita: {{error}}",
 			"resetFailed": "Reset modalità personalizzate fallito: {{error}}",
 			"modeNotFound": "Errore di scrittura: Modalità non trovata",
-			"noWorkspaceForProject": "Nessuna cartella workspace trovata per la modalità specifica del progetto"
+			"noWorkspaceForProject": "Nessuna cartella workspace trovata per la modalità specifica del progetto",
+			"rulesCleanupFailed": "La modalità è stata eliminata con successo, ma non è stato possibile eliminare la cartella delle regole in {{rulesFolderPath}}. Potrebbe essere necessario eliminarla manualmente."
 		},
 		"scope": {
 			"project": "progetto",
 			"global": "globale"
+		}
+	},
+	"marketplace": {
+		"mode": {
+			"rulesCleanupFailed": "La modalità è stata rimossa con successo, ma non è stato possibile eliminare la cartella delle regole in {{rulesFolderPath}}. Potrebbe essere necessario eliminarla manualmente."
 		}
 	},
 	"mdm": {
@@ -170,6 +173,11 @@
 			"description": "Sei sicuro di voler eliminare questa modalità {{scope}}? Questo eliminerà anche la cartella delle regole associata a: {{rulesFolderPath}}",
 			"descriptionNoRules": "Sei sicuro di voler eliminare questa modalità personalizzata?",
 			"confirm": "Elimina"
+		}
+	},
+	"commands": {
+		"preventCompletionWithOpenTodos": {
+			"description": "Impedire il completamento delle attività quando ci sono todo incompleti nella lista dei todo"
 		}
 	}
 }

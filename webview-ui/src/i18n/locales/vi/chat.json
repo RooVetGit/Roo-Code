@@ -44,7 +44,7 @@
 	},
 	"save": {
 		"title": "Lưu",
-		"tooltip": "Lưu các thay đổi tệp"
+		"tooltip": "Lưu các thay đổi tin nhắn"
 	},
 	"reject": {
 		"title": "Từ chối",
@@ -223,7 +223,10 @@
 	"autoApprove": {
 		"title": "Tự động phê duyệt:",
 		"none": "Không",
-		"description": "Tự động phê duyệt cho phép Roo Code thực hiện hành động mà không cần xin phép. Chỉ bật cho các hành động bạn hoàn toàn tin tưởng. Cấu hình chi tiết hơn có sẵn trong <settingsLink>Cài đặt</settingsLink>."
+		"description": "Tự động phê duyệt cho phép Roo Code thực hiện hành động mà không cần xin phép. Chỉ bật cho các hành động bạn hoàn toàn tin tưởng. Cấu hình chi tiết hơn có sẵn trong <settingsLink>Cài đặt</settingsLink>.",
+		"selectOptionsFirst": "Chọn ít nhất một tùy chọn bên dưới để bật tự động phê duyệt",
+		"toggleAriaLabel": "Chuyển đổi tự động phê duyệt",
+		"disabledAriaLabel": "Tự động phê duyệt bị vô hiệu hóa - hãy chọn các tùy chọn trước"
 	},
 	"reasoning": {
 		"thinking": "Đang suy nghĩ",
@@ -319,5 +322,13 @@
 	},
 	"versionIndicator": {
 		"ariaLabel": "Phiên bản {{version}} - Nhấp để xem ghi chú phát hành"
+	},
+	"rooCloudCTA": {
+		"title": "Roo Code Cloud sắp ra mắt!",
+		"description": "Chạy các agent từ xa trên cloud, truy cập các tác vụ của bạn từ mọi nơi, cộng tác với người khác và nhiều hơn nữa.",
+		"joinWaitlist": "Tham gia danh sách chờ để được truy cập sớm."
+	},
+	"editMessage": {
+		"placeholder": "Chỉnh sửa tin nhắn của bạn..."
 	}
 }

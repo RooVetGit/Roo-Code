@@ -44,7 +44,7 @@
 	},
 	"save": {
 		"title": "Speichern",
-		"tooltip": "Dateiänderungen speichern"
+		"tooltip": "Nachrichtenänderungen speichern"
 	},
 	"reject": {
 		"title": "Ablehnen",
@@ -223,7 +223,10 @@
 	"autoApprove": {
 		"title": "Automatische Genehmigung:",
 		"none": "Keine",
-		"description": "Automatische Genehmigung erlaubt Roo Code, Aktionen ohne Nachfrage auszuführen. Aktiviere dies nur für Aktionen, denen du vollständig vertraust. Detailliertere Konfiguration verfügbar in den <settingsLink>Einstellungen</settingsLink>."
+		"description": "Automatische Genehmigung erlaubt Roo Code, Aktionen ohne Nachfrage auszuführen. Aktiviere dies nur für Aktionen, denen du vollständig vertraust. Detailliertere Konfiguration verfügbar in den <settingsLink>Einstellungen</settingsLink>.",
+		"selectOptionsFirst": "Wähle mindestens eine der folgenden Optionen aus, um die automatische Genehmigung zu aktivieren",
+		"toggleAriaLabel": "Automatische Genehmigung umschalten",
+		"disabledAriaLabel": "Automatische Genehmigung deaktiviert - zuerst Optionen auswählen"
 	},
 	"reasoning": {
 		"thinking": "Denke nach",
@@ -319,5 +322,13 @@
 	},
 	"versionIndicator": {
 		"ariaLabel": "Version {{version}} - Klicken Sie, um die Versionshinweise anzuzeigen"
+	},
+	"rooCloudCTA": {
+		"title": "Roo Code Cloud kommt bald!",
+		"description": "Führe Remote-Agenten in der Cloud aus, greife von überall auf deine Aufgaben zu, arbeite mit anderen zusammen und vieles mehr.",
+		"joinWaitlist": "Tritt der Warteliste bei, um frühen Zugang zu erhalten."
+	},
+	"editMessage": {
+		"placeholder": "Bearbeite deine Nachricht..."
 	}
 }

@@ -44,7 +44,7 @@
 	},
 	"save": {
 		"title": "Enregistrer",
-		"tooltip": "Sauvegarder les modifications du fichier"
+		"tooltip": "Enregistrer les modifications du message"
 	},
 	"reject": {
 		"title": "Rejeter",
@@ -223,7 +223,10 @@
 	"autoApprove": {
 		"title": "Auto-approbation :",
 		"none": "Aucune",
-		"description": "L'auto-approbation permet à Roo Code d'effectuer des actions sans demander d'autorisation. Activez-la uniquement pour les actions auxquelles vous faites entièrement confiance. Configuration plus détaillée disponible dans les <settingsLink>Paramètres</settingsLink>."
+		"description": "L'auto-approbation permet à Roo Code d'effectuer des actions sans demander d'autorisation. Activez-la uniquement pour les actions auxquelles vous faites entièrement confiance. Configuration plus détaillée disponible dans les <settingsLink>Paramètres</settingsLink>.",
+		"selectOptionsFirst": "Sélectionnez au moins une option ci-dessous pour activer l'auto-approbation",
+		"toggleAriaLabel": "Activer/désactiver l'approbation automatique",
+		"disabledAriaLabel": "Approbation automatique désactivée - sélectionnez d'abord les options"
 	},
 	"reasoning": {
 		"thinking": "Réflexion",
@@ -319,5 +322,13 @@
 	},
 	"versionIndicator": {
 		"ariaLabel": "Version {{version}} - Cliquez pour voir les notes de version"
+	},
+	"rooCloudCTA": {
+		"title": "Roo Code Cloud arrive bientôt !",
+		"description": "Exécutez des agents distants dans le cloud, accédez à vos tâches de n'importe où, collaborez avec d'autres et bien plus encore.",
+		"joinWaitlist": "Rejoignez la liste d'attente pour obtenir un accès anticipé."
+	},
+	"editMessage": {
+		"placeholder": "Modifiez votre message..."
 	}
 }

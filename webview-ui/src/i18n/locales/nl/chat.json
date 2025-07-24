@@ -39,7 +39,7 @@
 	},
 	"save": {
 		"title": "Opslaan",
-		"tooltip": "Bestandswijzigingen opslaan"
+		"tooltip": "Berichtwijzigingen opslaan"
 	},
 	"tokenProgress": {
 		"availableSpace": "Beschikbare ruimte: {{amount}} tokens",
@@ -223,7 +223,10 @@
 	"autoApprove": {
 		"title": "Automatisch goedkeuren:",
 		"none": "Geen",
-		"description": "Met automatisch goedkeuren kan Roo Code acties uitvoeren zonder om toestemming te vragen. Schakel dit alleen in voor acties die je volledig vertrouwt. Meer gedetailleerde configuratie beschikbaar in de <settingsLink>Instellingen</settingsLink>."
+		"description": "Met automatisch goedkeuren kan Roo Code acties uitvoeren zonder om toestemming te vragen. Schakel dit alleen in voor acties die je volledig vertrouwt. Meer gedetailleerde configuratie beschikbaar in de <settingsLink>Instellingen</settingsLink>.",
+		"selectOptionsFirst": "Selecteer hieronder minstens één optie om automatische goedkeuring in te schakelen",
+		"toggleAriaLabel": "Automatisch goedkeuren in-/uitschakelen",
+		"disabledAriaLabel": "Automatisch goedkeuren uitgeschakeld - selecteer eerst opties"
 	},
 	"announcement": {
 		"title": "🎉 Roo Code {{version}} uitgebracht",
@@ -319,5 +322,13 @@
 	},
 	"versionIndicator": {
 		"ariaLabel": "Versie {{version}} - Klik om release notes te bekijken"
+	},
+	"rooCloudCTA": {
+		"title": "Roo Code Cloud komt binnenkort!",
+		"description": "Voer externe agenten uit in de cloud, krijg overal toegang tot je taken, werk samen met anderen en nog veel meer.",
+		"joinWaitlist": "Sluit je aan bij de wachtlijst voor vroege toegang."
+	},
+	"editMessage": {
+		"placeholder": "Bewerk je bericht..."
 	}
 }

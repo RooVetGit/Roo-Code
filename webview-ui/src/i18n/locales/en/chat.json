@@ -39,7 +39,7 @@
 	},
 	"save": {
 		"title": "Save",
-		"tooltip": "Save the file changes"
+		"tooltip": "Save the message changes"
 	},
 	"tokenProgress": {
 		"availableSpace": "Available space: {{amount}} tokens",
@@ -86,6 +86,9 @@
 	"cancel": {
 		"title": "Cancel",
 		"tooltip": "Cancel the current operation"
+	},
+	"editMessage": {
+		"placeholder": "Edit your message..."
 	},
 	"scrollToBottom": "Scroll to bottom of chat",
 	"about": "Generate, refactor, and debug code with AI assistance. Check out our <DocsLink>documentation</DocsLink> to learn more.",
@@ -244,7 +247,10 @@
 	"autoApprove": {
 		"title": "Auto-approve:",
 		"none": "None",
-		"description": "Auto-approve allows Roo Code to perform actions without asking for permission. Only enable for actions you fully trust. More detailed configuration available in <settingsLink>Settings</settingsLink>."
+		"description": "Auto-approve allows Roo Code to perform actions without asking for permission. Only enable for actions you fully trust. More detailed configuration available in <settingsLink>Settings</settingsLink>.",
+		"selectOptionsFirst": "Select at least one option below to enable auto-approval",
+		"toggleAriaLabel": "Toggle auto-approval",
+		"disabledAriaLabel": "Auto-approval disabled - select options first"
 	},
 	"announcement": {
 		"title": "🎉 Roo Code {{version}} Released",
@@ -318,5 +324,10 @@
 	},
 	"versionIndicator": {
 		"ariaLabel": "Version {{version}} - Click to view release notes"
+	},
+	"rooCloudCTA": {
+		"title": "Roo Code Cloud is coming soon!",
+		"description": "Run Roomote agents in the cloud, access your tasks from anywhere, collaborate with others, and more.",
+		"joinWaitlist": "Join the waitlist to get early access."
 	}
 }

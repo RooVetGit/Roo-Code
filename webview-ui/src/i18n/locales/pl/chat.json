@@ -44,7 +44,7 @@
 	},
 	"save": {
 		"title": "Zapisz",
-		"tooltip": "Zapisz zmiany w pliku"
+		"tooltip": "Zapisz zmiany wiadomości"
 	},
 	"reject": {
 		"title": "Odrzuć",
@@ -223,7 +223,10 @@
 	"autoApprove": {
 		"title": "Automatyczne zatwierdzanie:",
 		"none": "Brak",
-		"description": "Automatyczne zatwierdzanie pozwala Roo Code wykonywać działania bez pytania o pozwolenie. Włącz tylko dla działań, którym w pełni ufasz. Bardziej szczegółowa konfiguracja dostępna w <settingsLink>Ustawieniach</settingsLink>."
+		"description": "Automatyczne zatwierdzanie pozwala Roo Code wykonywać działania bez pytania o pozwolenie. Włącz tylko dla działań, którym w pełni ufasz. Bardziej szczegółowa konfiguracja dostępna w <settingsLink>Ustawieniach</settingsLink>.",
+		"selectOptionsFirst": "Wybierz co najmniej jedną opcję poniżej, aby włączyć automatyczne zatwierdzanie",
+		"toggleAriaLabel": "Przełącz automatyczne zatwierdzanie",
+		"disabledAriaLabel": "Automatyczne zatwierdzanie wyłączone - najpierw wybierz opcje"
 	},
 	"reasoning": {
 		"thinking": "Myślenie",
@@ -319,5 +322,13 @@
 	},
 	"versionIndicator": {
 		"ariaLabel": "Wersja {{version}} - Kliknij, aby wyświetlić informacje o wydaniu"
+	},
+	"rooCloudCTA": {
+		"title": "Roo Code Cloud już wkrótce!",
+		"description": "Uruchamiaj zdalne agenty w chmurze, uzyskuj dostęp do swoich zadań z dowolnego miejsca, współpracuj z innymi i wiele więcej.",
+		"joinWaitlist": "Dołącz do listy oczekujących, aby uzyskać wczesny dostęp."
+	},
+	"editMessage": {
+		"placeholder": "Edytuj swoją wiadomość..."
 	}
 }

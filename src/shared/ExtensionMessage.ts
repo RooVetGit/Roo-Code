@@ -67,6 +67,7 @@ export interface ExtensionMessage {
 		| "ollamaModels"
 		| "lmStudioModels"
 		| "vsCodeLmModels"
+		| "huggingFaceModels"
 		| "vsCodeLmApiAvailable"
 		| "updatePrompt"
 		| "systemPrompt"
@@ -101,10 +102,13 @@ export interface ExtensionMessage {
 		| "indexCleared"
 		| "codebaseIndexConfig"
 		| "marketplaceInstallResult"
+		| "marketplaceRemoveResult"
 		| "marketplaceData"
 		| "shareTaskSuccess"
 		| "codeIndexSettingsSaved"
 		| "codeIndexSecretStatus"
+		| "showDeleteMessageDialog"
+		| "showEditMessageDialog"
 	text?: string
 	payload?: any // Add a generic payload for now, can refine later
 	action?:
@@ -133,6 +137,28 @@ export interface ExtensionMessage {
 	ollamaModels?: string[]
 	lmStudioModels?: string[]
 	vsCodeLmModels?: { vendor?: string; family?: string; version?: string; id?: string }[]
+	huggingFaceModels?: Array<{
+		_id: string
+		id: string
+		inferenceProviderMapping: Array<{
+			provider: string
+			providerId: string
+			status: "live" | "staging" | "error"
+			task: "conversational"
+		}>
+		trendingScore: number
+		config: {
+			architectures: string[]
+			model_type: string
+			tokenizer_config?: {
+				chat_template?: string | Array<{ name: string; template: string }>
+				model_max_length?: number
+			}
+		}
+		tags: string[]
+		pipeline_tag: "text-generation" | "image-text-to-text"
+		library_name?: string
+	}>
 	mcpServers?: McpServer[]
 	commits?: GitCommit[]
 	listApiConfig?: ProviderSettingsEntry[]
@@ -157,6 +183,8 @@ export interface ExtensionMessage {
 	visibility?: ShareVisibility
 	rulesFolderPath?: string
 	settings?: any
+	messageTs?: number
+	context?: string
 }
 
 export type ExtensionState = Pick<
@@ -201,6 +229,7 @@ export type ExtensionState = Pick<
 	// | "maxReadFileLine" // Optional in GlobalSettings, required here.
 	| "maxConcurrentFileReads" // Optional in GlobalSettings, required here.
 	| "terminalOutputLineLimit"
+	| "terminalOutputCharacterLimit"
 	| "terminalShellIntegrationTimeout"
 	| "terminalShellIntegrationDisabled"
 	| "terminalCommandDelay"
@@ -210,6 +239,7 @@ export type ExtensionState = Pick<
 	| "terminalZshP10k"
 	| "terminalZdotdir"
 	| "terminalCompressProgressBar"
+	| "diagnosticsEnabled"
 	| "diffEnabled"
 	| "fuzzyMatchThreshold"
 	// | "experiments" // Optional in GlobalSettings, required here.
@@ -228,6 +258,8 @@ export type ExtensionState = Pick<
 	| "codebaseIndexConfig"
 	| "codebaseIndexModels"
 	| "profileThresholds"
+	| "includeDiagnosticMessages"
+	| "maxDiagnosticMessages"
 > & {
 	version: string
 	clineMessages: ClineMessage[]

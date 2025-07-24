@@ -52,6 +52,9 @@
 		"geminiProvider": "Gemini",
 		"geminiApiKeyLabel": "API 密钥：",
 		"geminiApiKeyPlaceholder": "输入您的Gemini API密钥",
+		"mistralProvider": "Mistral",
+		"mistralApiKeyLabel": "API 密钥:",
+		"mistralApiKeyPlaceholder": "输入您的 Mistral API 密钥",
 		"openaiCompatibleProvider": "OpenAI 兼容",
 		"openAiKeyLabel": "OpenAI API 密钥",
 		"openAiKeyPlaceholder": "输入你的 OpenAI API 密钥",
@@ -109,6 +112,7 @@
 			"modelIdRequired": "需要模型 ID",
 			"modelDimensionRequired": "需要模型维度",
 			"geminiApiKeyRequired": "需要 Gemini API 密钥",
+			"mistralApiKeyRequired": "需要 Mistral API 密钥",
 			"ollamaBaseUrlRequired": "需要 Ollama 基础 URL",
 			"baseUrlRequired": "需要基础 URL",
 			"modelDimensionMinValue": "模型维度必须大于 0"
@@ -123,6 +127,8 @@
 	},
 	"autoApprove": {
 		"description": "允许 Roo 自动执行操作而无需批准。只有在您完全信任 AI 并了解相关安全风险的情况下才启用这些设置。",
+		"toggleAriaLabel": "切换自动批准",
+		"disabledAriaLabel": "自动批准已禁用 - 请先选择选项",
 		"readOnly": {
 			"label": "读取",
 			"description": "启用后，Roo 将自动浏览目录和读取文件内容，无需人工确认。",
@@ -190,7 +196,8 @@
 			"title": "最大请求数",
 			"description": "在请求批准以继续执行任务之前，自动发出此数量的 API 请求。",
 			"unlimited": "无限制"
-		}
+		},
+		"selectOptionsFirst": "请至少选择以下一个选项以启用自动批准"
 	},
 	"providers": {
 		"providerDocumentation": "{{provider}} 文档",
@@ -246,9 +253,25 @@
 		"getChutesApiKey": "获取 Chutes API 密钥",
 		"deepSeekApiKey": "DeepSeek API 密钥",
 		"getDeepSeekApiKey": "获取 DeepSeek API 密钥",
+		"moonshotApiKey": "Moonshot API 密钥",
+		"getMoonshotApiKey": "获取 Moonshot API 密钥",
+		"moonshotBaseUrl": "Moonshot 服务站点",
 		"geminiApiKey": "Gemini API 密钥",
 		"getGroqApiKey": "获取 Groq API 密钥",
 		"groqApiKey": "Groq API 密钥",
+		"getHuggingFaceApiKey": "获取 Hugging Face API 密钥",
+		"huggingFaceApiKey": "Hugging Face API 密钥",
+		"huggingFaceModelId": "模型 ID",
+		"huggingFaceLoading": "加载中...",
+		"huggingFaceModelsCount": "({{count}} 个模型)",
+		"huggingFaceSelectModel": "选择模型...",
+		"huggingFaceSearchModels": "搜索模型...",
+		"huggingFaceNoModelsFound": "未找到模型",
+		"huggingFaceProvider": "提供商",
+		"huggingFaceProviderAuto": "自动",
+		"huggingFaceSelectProvider": "选择提供商...",
+		"huggingFaceSearchProviders": "搜索提供商...",
+		"huggingFaceNoProvidersFound": "未找到提供商",
 		"getGeminiApiKey": "获取 Gemini API 密钥",
 		"openAiApiKey": "OpenAI API 密钥",
 		"apiKey": "API 密钥",
@@ -367,6 +390,12 @@
 			"label": "API 请求频率限制",
 			"description": "设置API请求的最小间隔时间"
 		},
+		"consecutiveMistakeLimit": {
+			"label": "错误和重复限制",
+			"description": "在显示“Roo遇到问题”对话框前允许的连续错误或重复操作次数",
+			"unlimitedDescription": "已启用无限重试（自动继续）。对话框将永远不会出现。",
+			"warning": "⚠️ 设置为 0 允许无限重试，这可能会消耗大量 API 使用量"
+		},
 		"reasoningEffort": {
 			"label": "模型推理强度",
 			"high": "高",
@@ -472,6 +501,23 @@
 			"label": "并发文件读取限制",
 			"description": "read_file 工具可以同时处理的最大文件数。较高的值可能会加快读取多个小文件的速度，但会增加内存使用量。"
 		},
+		"diagnostics": {
+			"includeMessages": {
+				"label": "自动在上下文中包含诊断",
+				"description": "启用后，来自已编辑文件的诊断消息（错误）将自动包含在上下文中。您始终可以使用 @problems 手动包含所有工作区诊断。"
+			},
+			"maxMessages": {
+				"label": "最大诊断消息数",
+				"description": "每个文件包含的最大诊断消息数。此限制适用于自动包含（启用复选框时）和手动 @problems 提及。较高的值提供更多上下文，但会增加令牌使用量。",
+				"resetTooltip": "重置为默认值 (50)",
+				"unlimited": "无限制诊断消息",
+				"unlimitedLabel": "无限制"
+			},
+			"delayAfterWrite": {
+				"label": "写入后延迟以允许诊断程序检测潜在问题",
+				"description": "在继续之前写入文件后等待的时间，允许诊断工具处理更改并检测问题。"
+			}
+		},
 		"condensingThreshold": {
 			"label": "压缩触发阈值",
 			"selectProfile": "配置配置文件阈值",
@@ -494,6 +540,10 @@
 		"outputLineLimit": {
 			"label": "终端输出限制",
 			"description": "执行命令时在终端输出中包含的最大行数。超过时将从中间删除行，节省 token。 <0>了解更多</0>"
+		},
+		"outputCharacterLimit": {
+			"label": "终端字符限制",
+			"description": "执行命令时在终端输出中包含的最大字符数。此限制优先于行数限制，以防止因行过长而导致的内存问题。超出后，输出将被截断。 <0>了解更多</0>"
 		},
 		"shellIntegrationTimeout": {
 			"label": "终端初始化等待时间",
@@ -536,6 +586,9 @@
 			"description": "启用后，终端将从 VSCode 父进程继承环境变量，如用户配置文件中定义的 shell 集成设置。这直接切换 VSCode 全局设置 `terminal.integrated.inheritEnv`。 <0>了解更多</0>"
 		}
 	},
+	"advancedSettings": {
+		"title": "高级设置"
+	},
 	"advanced": {
 		"diff": {
 			"label": "启用diff更新",
@@ -557,6 +610,10 @@
 				"label": "匹配精度",
 				"description": "控制代码匹配的精确程度。数值越低匹配越宽松（容错率高但风险大），建议保持100%以确保安全。"
 			}
+		},
+		"todoList": {
+			"label": "启用任务清单工具",
+			"description": "启用后，Roo 可以创建和管理任务清单来跟踪任务进度。这有助于将复杂任务组织成可管理的步骤。"
 		}
 	},
 	"experimental": {

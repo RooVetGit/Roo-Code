@@ -1,4 +1,12 @@
 {
+	"errorBoundary": {
+		"title": "Qualcosa è andato storto",
+		"reportText": "Aiutaci a migliorare segnalando questo errore su",
+		"githubText": "la nostra pagina GitHub Issues",
+		"copyInstructions": "Copia e incolla il seguente messaggio di errore per includerlo come parte della tua segnalazione:",
+		"errorStack": "Stack di errore:",
+		"componentStack": "Stack dei componenti:"
+	},
 	"answers": {
 		"yes": "Sì",
 		"no": "No",
@@ -51,5 +59,12 @@
 		"success": {
 			"imageDataUriCopied": "URI dati immagine copiato negli appunti"
 		}
+	},
+	"confirmation": {
+		"deleteMessage": "Elimina Messaggio",
+		"deleteWarning": "Eliminando questo messaggio verranno eliminati tutti i messaggi successivi nella conversazione. Vuoi procedere?",
+		"editMessage": "Modifica Messaggio",
+		"editWarning": "Modificando questo messaggio verranno eliminati tutti i messaggi successivi nella conversazione. Vuoi procedere?",
+		"proceed": "Procedi"
 	}
 }

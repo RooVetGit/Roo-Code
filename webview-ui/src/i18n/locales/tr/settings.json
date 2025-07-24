@@ -47,6 +47,9 @@
 		"geminiProvider": "Gemini",
 		"geminiApiKeyLabel": "API Anahtarı:",
 		"geminiApiKeyPlaceholder": "Gemini API anahtarınızı girin",
+		"mistralProvider": "Mistral",
+		"mistralApiKeyLabel": "API Anahtarı:",
+		"mistralApiKeyPlaceholder": "Mistral API anahtarınızı girin",
 		"openaiCompatibleProvider": "OpenAI Uyumlu",
 		"openAiKeyLabel": "OpenAI API Anahtarı",
 		"openAiKeyPlaceholder": "OpenAI API anahtarınızı girin",
@@ -109,6 +112,7 @@
 			"modelIdRequired": "Model kimliği gereklidir",
 			"modelDimensionRequired": "Model boyutu gereklidir",
 			"geminiApiKeyRequired": "Gemini API anahtarı gereklidir",
+			"mistralApiKeyRequired": "Mistral API anahtarı gereklidir",
 			"ollamaBaseUrlRequired": "Ollama temel URL'si gereklidir",
 			"baseUrlRequired": "Temel URL'si gereklidir",
 			"modelDimensionMinValue": "Model boyutu 0'dan büyük olmalıdır"
@@ -123,6 +127,8 @@
 	},
 	"autoApprove": {
 		"description": "Roo'nun onay gerektirmeden otomatik olarak işlemler gerçekleştirmesine izin verin. Bu ayarları yalnızca yapay zekaya tamamen güveniyorsanız ve ilgili güvenlik risklerini anlıyorsanız etkinleştirin.",
+		"toggleAriaLabel": "Otomatik onayı değiştir",
+		"disabledAriaLabel": "Otomatik onay devre dışı - önce seçenekleri belirleyin",
 		"readOnly": {
 			"label": "Okuma",
 			"description": "Etkinleştirildiğinde, Roo otomatik olarak dizin içeriğini görüntüleyecek ve Onayla düğmesine tıklamanıza gerek kalmadan dosyaları okuyacaktır.",
@@ -190,7 +196,8 @@
 			"title": "Maksimum İstek",
 			"description": "Göreve devam etmek için onay istemeden önce bu sayıda API isteği otomatik olarak yap.",
 			"unlimited": "Sınırsız"
-		}
+		},
+		"selectOptionsFirst": "Otomatik onayı etkinleştirmek için aşağıdan en az bir seçenek seçin"
 	},
 	"providers": {
 		"providerDocumentation": "{{provider}} Dokümantasyonu",
@@ -246,9 +253,25 @@
 		"getChutesApiKey": "Chutes API Anahtarı Al",
 		"deepSeekApiKey": "DeepSeek API Anahtarı",
 		"getDeepSeekApiKey": "DeepSeek API Anahtarı Al",
+		"moonshotApiKey": "Moonshot API Anahtarı",
+		"getMoonshotApiKey": "Moonshot API Anahtarı Al",
+		"moonshotBaseUrl": "Moonshot Giriş Noktası",
 		"geminiApiKey": "Gemini API Anahtarı",
 		"getGroqApiKey": "Groq API Anahtarı Al",
 		"groqApiKey": "Groq API Anahtarı",
+		"getHuggingFaceApiKey": "Hugging Face API Anahtarı Al",
+		"huggingFaceApiKey": "Hugging Face API Anahtarı",
+		"huggingFaceModelId": "Model ID",
+		"huggingFaceLoading": "Yükleniyor...",
+		"huggingFaceModelsCount": "({{count}} model)",
+		"huggingFaceSelectModel": "Bir model seç...",
+		"huggingFaceSearchModels": "Modelleri ara...",
+		"huggingFaceNoModelsFound": "Model bulunamadı",
+		"huggingFaceProvider": "Sağlayıcı",
+		"huggingFaceProviderAuto": "Otomatik",
+		"huggingFaceSelectProvider": "Bir sağlayıcı seç...",
+		"huggingFaceSearchProviders": "Sağlayıcıları ara...",
+		"huggingFaceNoProvidersFound": "Sağlayıcı bulunamadı",
 		"getGeminiApiKey": "Gemini API Anahtarı Al",
 		"openAiApiKey": "OpenAI API Anahtarı",
 		"apiKey": "API Anahtarı",
@@ -367,6 +390,12 @@
 			"label": "Hız sınırı",
 			"description": "API istekleri arasındaki minimum süre."
 		},
+		"consecutiveMistakeLimit": {
+			"label": "Hata ve Tekrar Limiti",
+			"description": "'Roo sorun yaşıyor' iletişim kutusunu göstermeden önceki ardışık hata veya tekrarlanan eylem sayısı",
+			"unlimitedDescription": "Sınırsız yeniden deneme etkin (otomatik devam et). Diyalog asla görünmeyecek.",
+			"warning": "⚠️ 0'a ayarlamak, önemli API kullanımına neden olabilecek sınırsız yeniden denemeye izin verir"
+		},
 		"reasoningEffort": {
 			"label": "Model Akıl Yürütme Çabası",
 			"high": "Yüksek",
@@ -472,6 +501,23 @@
 			"label": "Eşzamanlı dosya okuma sınırı",
 			"description": "'read_file' aracının aynı anda işleyebileceği maksimum dosya sayısı. Daha yüksek değerler birden çok küçük dosyanın okunmasını hızlandırabilir ancak bellek kullanımını artırır."
 		},
+		"diagnostics": {
+			"includeMessages": {
+				"label": "Tanı mesajlarını otomatik olarak bağlama dahil et",
+				"description": "Etkinleştirildiğinde, düzenlenen dosyalardan tanı mesajları (hatalar) otomatik olarak bağlama dahil edilecektir. @problems kullanarak tüm çalışma alanı tanı mesajlarını her zaman manuel olarak dahil edebilirsiniz."
+			},
+			"maxMessages": {
+				"label": "Maksimum tanı mesajı",
+				"description": "Dosya başına dahil edilecek maksimum tanı mesajı sayısı. Bu sınır hem otomatik dahil etme (onay kutusu etkinleştirildiğinde) hem de manuel @problems bahisleri için geçerlidir. Daha yüksek değerler daha fazla bağlam sağlar ancak jeton kullanımını artırır.",
+				"resetTooltip": "Varsayılan değere sıfırla (50)",
+				"unlimited": "Sınırsız tanı mesajları",
+				"unlimitedLabel": "Sınırsız"
+			},
+			"delayAfterWrite": {
+				"label": "Potansiyel sorunları tespit etmek için tanılamaya izin vermek üzere yazmalardan sonra gecikme",
+				"description": "Devam etmeden önce dosya yazımlarından sonra beklenecek süre, tanılama araçlarının değişiklikleri işlemesine ve sorunları tespit etmesine olanak tanır."
+			}
+		},
 		"condensingThreshold": {
 			"label": "Sıkıştırma Tetikleme Eşiği",
 			"selectProfile": "Profil için eşik yapılandır",
@@ -494,6 +540,10 @@
 		"outputLineLimit": {
 			"label": "Terminal çıktısı sınırı",
 			"description": "Komutları yürütürken terminal çıktısına dahil edilecek maksimum satır sayısı. Aşıldığında, token tasarrufu sağlayarak satırlar ortadan kaldırılacaktır. <0>Daha fazla bilgi</0>"
+		},
+		"outputCharacterLimit": {
+			"label": "Terminal karakter sınırı",
+			"description": "Komutları yürütürken terminal çıktısına dahil edilecek maksimum karakter sayısı. Bu sınır, aşırı uzun satırlardan kaynaklanan bellek sorunlarını önlemek için satır sınırına göre önceliklidir. Aşıldığında, çıktı kesilir. <0>Daha fazla bilgi edinin</0>"
 		},
 		"shellIntegrationTimeout": {
 			"label": "Terminal kabuk entegrasyonu zaman aşımı",
@@ -536,6 +586,9 @@
 			"description": "Etkinleştirildiğinde, terminal VSCode üst işleminden ortam değişkenlerini devralır, örneğin kullanıcı profilinde tanımlanan kabuk entegrasyon ayarları gibi. Bu, VSCode'un global ayarı olan `terminal.integrated.inheritEnv` değerini doğrudan değiştirir. <0>Daha fazla bilgi</0>"
 		}
 	},
+	"advancedSettings": {
+		"title": "Gelişmiş ayarlar"
+	},
 	"advanced": {
 		"diff": {
 			"label": "Diff'ler aracılığıyla düzenlemeyi etkinleştir",
@@ -557,6 +610,10 @@
 				"label": "Eşleşme hassasiyeti",
 				"description": "Bu kaydırıcı, diff'ler uygulanırken kod bölümlerinin ne kadar hassas bir şekilde eşleşmesi gerektiğini kontrol eder. Daha düşük değerler daha esnek eşleşmeye izin verir ancak yanlış değiştirme riskini artırır. %100'ün altındaki değerleri son derece dikkatli kullanın."
 			}
+		},
+		"todoList": {
+			"label": "Yapılacaklar listesi aracını etkinleştir",
+			"description": "Etkinleştirildiğinde, Roo görev ilerlemesini takip etmek için yapılacaklar listeleri oluşturabilir ve yönetebilir. Bu, karmaşık görevleri yönetilebilir adımlara organize etmeye yardımcı olur."
 		}
 	},
 	"experimental": {

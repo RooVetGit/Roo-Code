@@ -1,4 +1,12 @@
 {
+	"errorBoundary": {
+		"title": "Terjadi kesalahan",
+		"reportText": "Bantu kami meningkatkan dengan melaporkan kesalahan ini di",
+		"githubText": "halaman GitHub Issues kami",
+		"copyInstructions": "Salin dan tempel pesan kesalahan berikut untuk menyertakannya sebagai bagian dari laporan Anda:",
+		"errorStack": "Stack Error:",
+		"componentStack": "Stack Komponen:"
+	},
 	"answers": {
 		"yes": "Ya",
 		"no": "Tidak",
@@ -51,5 +59,12 @@
 		"success": {
 			"imageDataUriCopied": "Data URI gambar disalin ke clipboard"
 		}
+	},
+	"confirmation": {
+		"deleteMessage": "Hapus Pesan",
+		"deleteWarning": "Menghapus pesan ini akan menghapus semua pesan selanjutnya dalam percakapan. Apakah kamu ingin melanjutkan?",
+		"editMessage": "Edit Pesan",
+		"editWarning": "Mengedit pesan ini akan menghapus semua pesan selanjutnya dalam percakapan. Apakah kamu ingin melanjutkan?",
+		"proceed": "Lanjutkan"
 	}
 }
