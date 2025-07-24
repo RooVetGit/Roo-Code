@@ -402,18 +402,11 @@
 		},
 		"reasoningEffort": {
 			"label": "Upaya Reasoning Model",
-			"high": "Tinggi",
-			"medium": "Sedang",
-			"low": "Rendah"
-		},
-		"setReasoningLevel": "Aktifkan Upaya Reasoning",
-		"claudeCode": {
-			"pathLabel": "Jalur Kode Claude",
-			"description": "Jalur opsional ke Claude Code CLI Anda. Defaultnya adalah 'claude' jika tidak diatur.",
-			"placeholder": "Default: claude",
-			"maxTokensLabel": "Token Output Maks",
-			"maxTokensDescription": "Jumlah maksimum token output untuk respons Claude Code. Default adalah 8000."
+		"setReasoningLevel": "Habilitar esfuerzo de razonamiento"
 		}
+=======
+		"setReasoningLevel": "Aktifkan Upaya Reasoning"
+>>>>>>> 55a7a68ab (refactor: replace stream-json with sax parser for message parsing)
 	},
 	"browser": {
 		"enable": {

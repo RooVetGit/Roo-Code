@@ -29,7 +29,6 @@ import {
 	HuggingFaceHandler,
 	ChutesHandler,
 	LiteLLMHandler,
-	ClaudeCodeHandler,
 } from "./providers"
 
 export interface SingleCompletionHandler {
@@ -67,8 +66,6 @@ export function buildApiHandler(configuration: ProviderSettings): ApiHandler {
 	switch (apiProvider) {
 		case "anthropic":
 			return new AnthropicHandler(options)
-		case "claude-code":
-			return new ClaudeCodeHandler(options)
 		case "glama":
 			return new GlamaHandler(options)
 		case "openrouter":

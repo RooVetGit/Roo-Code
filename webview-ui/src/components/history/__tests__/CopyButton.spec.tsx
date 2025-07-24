@@ -1,4 +1,4 @@
-import { render, screen, fireEvent } from "@/utils/test-utils"
+import { render, screen, fireEvent } from "@testing-library/react"
 
 import { useClipboard } from "@/components/ui/hooks"
 

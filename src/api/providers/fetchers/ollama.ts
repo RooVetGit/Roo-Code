@@ -4,26 +4,26 @@ import { z } from "zod"
 
 const OllamaModelDetailsSchema = z.object({
 	family: z.string(),
-	families: z.array(z.string()).nullable().optional(),
-	format: z.string().optional(),
+	families: z.array(z.string()),
+	format: z.string(),
 	parameter_size: z.string(),
-	parent_model: z.string().optional(),
-	quantization_level: z.string().optional(),
+	parent_model: z.string(),
+	quantization_level: z.string(),
 })
 
 const OllamaModelSchema = z.object({
 	details: OllamaModelDetailsSchema,
-	digest: z.string().optional(),
+	digest: z.string(),
 	model: z.string(),
-	modified_at: z.string().optional(),
+	modified_at: z.string(),
 	name: z.string(),
-	size: z.number().optional(),
+	size: z.number(),
 })
 
 const OllamaModelInfoResponseSchema = z.object({
-	modelfile: z.string().optional(),
-	parameters: z.string().optional(),
-	template: z.string().optional(),
+	modelfile: z.string(),
+	parameters: z.string(),
+	template: z.string(),
 	details: OllamaModelDetailsSchema,
 	model_info: z.record(z.string(), z.any()),
 	capabilities: z.array(z.string()).optional(),

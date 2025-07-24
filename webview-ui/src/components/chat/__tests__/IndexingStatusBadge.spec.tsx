@@ -1,5 +1,5 @@
 import React from "react"
-import { render, screen, fireEvent, waitFor, act } from "@/utils/test-utils"
+import { render, screen, fireEvent, waitFor, act } from "@testing-library/react"
 
 import { vscode } from "@src/utils/vscode"
 

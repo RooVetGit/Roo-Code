@@ -46,7 +46,6 @@ import {
 	TooltipContent,
 	TooltipProvider,
 	TooltipTrigger,
-	StandardTooltip,
 } from "@src/components/ui"
 
 import { Tab, TabContent, TabHeader, TabList, TabTrigger } from "../common/Tab"
@@ -468,28 +467,27 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 					<h3 className="text-vscode-foreground m-0">{t("settings:header.title")}</h3>
 				</div>
 				<div className="flex gap-2">
-					<StandardTooltip
-						content={
+					<Button
+						variant={isSettingValid ? "default" : "secondary"}
+						className={!isSettingValid ? "!border-vscode-errorForeground" : ""}
+						title={
 							!isSettingValid
 								? errorMessage
 								: isChangeDetected
 									? t("settings:header.saveButtonTooltip")
 									: t("settings:header.nothingChangedTooltip")
-						}>
-						<Button
-							variant={isSettingValid ? "default" : "secondary"}
-							className={!isSettingValid ? "!border-vscode-errorForeground" : ""}
-							onClick={handleSubmit}
-							disabled={!isChangeDetected || !isSettingValid}
-							data-testid="save-button">
-							{t("settings:common.save")}
-						</Button>
-					</StandardTooltip>
-					<StandardTooltip content={t("settings:header.doneButtonTooltip")}>
-						<Button variant="secondary" onClick={() => checkUnsaveChanges(onDone)}>
-							{t("settings:common.done")}
-						</Button>
-					</StandardTooltip>
+						}
+						onClick={handleSubmit}
+						disabled={!isChangeDetected || !isSettingValid}
+						data-testid="save-button">
+						{t("settings:common.save")}
+					</Button>
+					<Button
+						variant="secondary"
+						title={t("settings:header.doneButtonTooltip")}
+						onClick={() => checkUnsaveChanges(onDone)}>
+						{t("settings:common.done")}
+					</Button>
 				</div>
 			</TabHeader>
 
@@ -531,7 +529,7 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 						if (isCompactMode) {
 							// Wrap in Tooltip and manually add onClick to the trigger
 							return (
-								<TooltipProvider key={id} delayDuration={300}>
+								<TooltipProvider key={id} delayDuration={0}>
 									<Tooltip>
 										<TooltipTrigger asChild onClick={onSelect}>
 											{/* Clone to avoid ref issues if triggerComponent itself had a key */}

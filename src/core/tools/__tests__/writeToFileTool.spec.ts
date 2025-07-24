@@ -8,8 +8,8 @@ import { isPathOutsideWorkspace } from "../../../utils/pathUtils"
 import { getReadablePath } from "../../../utils/path"
 import { unescapeHtmlEntities } from "../../../utils/text-normalization"
 import { everyLineHasLineNumbers, stripLineNumbers } from "../../../integrations/misc/extract-text"
-import { ToolUse, ToolResponse } from "../../../shared/tools"
 import { writeToFileTool } from "../writeToFileTool"
+import { ToolDirective, ToolResponse, WriteToFileToolDirective } from "../../message-parsing/directives"
 
 vi.mock("path", async () => {
 	const originalPath = await vi.importActual("path")
@@ -200,7 +200,7 @@ describe("writeToFileTool", () => {
 	 * Helper function to execute the write file tool with different parameters
 	 */
 	async function executeWriteFileTool(
-		params: Partial<ToolUse["params"]> = {},
+		params: Partial<ToolDirective["params"]> = {},
 		options: {
 			fileExists?: boolean
 			isPartial?: boolean
@@ -216,7 +216,7 @@ describe("writeToFileTool", () => {
 		mockCline.rooIgnoreController.validateAccess.mockReturnValue(accessAllowed)
 
 		// Create a tool use object
-		const toolUse: ToolUse = {
+		const ToolDirective: WriteToFileToolDirective = {
 			type: "tool_use",
 			name: "write_to_file",
 			params: {
@@ -230,7 +230,7 @@ describe("writeToFileTool", () => {
 
 		await writeToFileTool(
 			mockCline,
-			toolUse,
+			ToolDirective,
 			mockAskApproval,
 			mockHandleError,
 			(result: ToolResponse) => {

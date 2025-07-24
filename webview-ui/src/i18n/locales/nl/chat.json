@@ -16,12 +16,7 @@
 		"shareWithOrganization": "Delen met organisatie",
 		"shareWithOrganizationDescription": "Alleen leden van je organisatie kunnen toegang krijgen",
 		"sharePublicly": "Openbaar delen",
-		"sharePubliclyDescription": "Iedereen met de link kan toegang krijgen",
-		"connectToCloud": "Verbind met Cloud",
-		"connectToCloudDescription": "Meld je aan bij Roo Code Cloud om taken te delen",
-		"sharingDisabledByOrganization": "Delen uitgeschakeld door organisatie",
-		"shareSuccessOrganization": "Organisatielink gekopieerd naar klembord",
-		"shareSuccessPublic": "Openbare link gekopieerd naar klembord"
+		"sharePubliclyDescription": "Iedereen met de link kan toegang krijgen"
 	},
 	"unpin": "Losmaken",
 	"pin": "Vastmaken",
@@ -104,12 +99,6 @@
 	"selectApiConfig": "Selecteer API-configuratie",
 	"enhancePrompt": "Prompt verbeteren met extra context",
 	"enhancePromptDescription": "De knop 'Prompt verbeteren' helpt je prompt te verbeteren door extra context, verduidelijking of herformulering te bieden. Probeer hier een prompt te typen en klik opnieuw op de knop om te zien hoe het werkt.",
-	"modeSelector": {
-		"title": "Modi",
-		"marketplace": "Modus Marktplaats",
-		"settings": "Modus Instellingen",
-		"description": "Gespecialiseerde persona's die het gedrag van Roo aanpassen."
-	},
 	"addImages": "Afbeeldingen toevoegen aan bericht",
 	"sendMessage": "Bericht verzenden",
 	"stopTts": "Stop tekst-naar-spraak",

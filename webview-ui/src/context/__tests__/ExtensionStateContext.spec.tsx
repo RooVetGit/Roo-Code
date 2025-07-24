@@ -1,4 +1,4 @@
-import { render, screen, act } from "@/utils/test-utils"
+import { render, screen, act } from "@testing-library/react"
 
 import { ProviderSettings, ExperimentId } from "@roo-code/types"
 
@@ -208,7 +208,6 @@ describe("mergeExtensionState", () => {
 			cloudIsAuthenticated: false,
 			sharingEnabled: false,
 			profileThresholds: {},
-			hasOpenedModeSelector: false, // Add the new required property
 		}
 
 		const prevState: ExtensionState = {

@@ -1,4 +1,4 @@
-import { render, screen, fireEvent } from "@/utils/test-utils"
+import { render, screen, fireEvent } from "@testing-library/react"
 
 import { TranslationProvider } from "@/i18n/__mocks__/TranslationContext"
 

@@ -5,7 +5,7 @@ import * as vscode from "vscode"
 import { Task } from "../task/Task"
 import { ClineSayTool } from "../../shared/ExtensionMessage"
 import { formatResponse } from "../prompts/responses"
-import { ToolUse, AskApproval, HandleError, PushToolResult, RemoveClosingTag } from "../../shared/tools"
+import { AskApproval, HandleError, PushToolResult, RemoveClosingTag } from "../../shared/tools"
 import { RecordSource } from "../context-tracking/FileContextTrackerTypes"
 import { fileExistsAtPath } from "../../utils/fs"
 import { stripLineNumbers, everyLineHasLineNumbers } from "../../integrations/misc/extract-text"
@@ -13,11 +13,11 @@ import { getReadablePath } from "../../utils/path"
 import { isPathOutsideWorkspace } from "../../utils/pathUtils"
 import { detectCodeOmission } from "../../integrations/editor/detect-omission"
 import { unescapeHtmlEntities } from "../../utils/text-normalization"
-import { DEFAULT_WRITE_DELAY_MS } from "@roo-code/types"
+import { WriteToFileToolDirective } from "../message-parsing/directives"
 
 export async function writeToFileTool(
 	cline: Task,
-	block: ToolUse,
+	block: WriteToFileToolDirective,
 	askApproval: AskApproval,
 	handleError: HandleError,
 	pushToolResult: PushToolResult,
@@ -74,11 +74,11 @@ export async function writeToFileTool(
 	// pre-processing newContent for cases where weaker models might add artifacts like markdown codeblock markers (deepseek/llama) or extra escape characters (gemini)
 	if (newContent.startsWith("```")) {
 		// cline handles cases where it includes language specifiers like ```python ```js
-		newContent = newContent.split("\n").slice(1).join("\n")
+		newContent = newContent.split("\n").slice(1).join("\n").trim()
 	}
 
 	if (newContent.endsWith("```")) {
-		newContent = newContent.split("\n").slice(0, -1).join("\n")
+		newContent = newContent.split("\n").slice(0, -1).join("\n").trim()
 	}
 
 	if (!cline.api.getModel().id.includes("claude")) {
@@ -214,11 +214,7 @@ export async function writeToFileTool(
 			}
 
 			// Call saveChanges to update the DiffViewProvider properties
-			const provider = cline.providerRef.deref()
-			const state = await provider?.getState()
-			const diagnosticsEnabled = state?.diagnosticsEnabled ?? true
-			const writeDelayMs = state?.writeDelayMs ?? DEFAULT_WRITE_DELAY_MS
-			await cline.diffViewProvider.saveChanges(diagnosticsEnabled, writeDelayMs)
+			await cline.diffViewProvider.saveChanges()
 
 			// Track file edit operation
 			if (relPath) {

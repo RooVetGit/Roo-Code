@@ -21,7 +21,10 @@
 	"confirmation": {
 		"reset_state": "Tem certeza de que deseja redefinir todo o estado e armazenamento secreto na extensão? Isso não pode ser desfeito.",
 		"delete_config_profile": "Tem certeza de que deseja excluir este perfil de configuração?",
-		"delete_custom_mode_with_rules": "Tem certeza de que deseja excluir este modo {scope}?\n\nIsso também excluirá a pasta de regras associada em:\n{rulesFolderPath}"
+		"delete_custom_mode": "Tem certeza de que deseja excluir este modo personalizado?",
+		"delete_message": "O que você gostaria de excluir?",
+		"just_this_message": "Apenas esta mensagem",
+		"this_and_subsequent": "Esta e todas as mensagens subsequentes"
 	},
 	"errors": {
 		"invalid_data_uri": "Formato de URI de dados inválido",
@@ -32,7 +35,6 @@
 		"could_not_open_file_generic": "Não foi possível abrir o arquivo!",
 		"checkpoint_timeout": "Tempo esgotado ao tentar restaurar o ponto de verificação.",
 		"checkpoint_failed": "Falha ao restaurar o ponto de verificação.",
-		"git_not_installed": "O Git é necessário para o recurso de checkpoints. Por favor, instale o Git para habilitar os checkpoints.",
 		"no_workspace": "Por favor, abra primeiro uma pasta de projeto",
 		"update_support_prompt": "Falha ao atualizar o prompt de suporte",
 		"reset_support_prompt": "Falha ao redefinir o prompt de suporte",
@@ -54,39 +56,21 @@
 		"cannot_access_path": "Não é possível acessar o caminho {{path}}: {{error}}",
 		"settings_import_failed": "Falha ao importar configurações: {{error}}",
 		"mistake_limit_guidance": "Isso pode indicar uma falha no processo de pensamento do modelo ou incapacidade de usar uma ferramenta adequadamente, o que pode ser mitigado com orientação do usuário (ex. \"Tente dividir a tarefa em etapas menores\").",
-		"violated_organization_allowlist": "Falha ao executar a tarefa: o perfil atual não é compatível com as configurações da sua organização",
+		"violated_organization_allowlist": "Falha ao executar a tarefa: o perfil atual viola as configurações da sua organização",
 		"condense_failed": "Falha ao condensar o contexto",
 		"condense_not_enough_messages": "Não há mensagens suficientes para condensar o contexto",
 		"condensed_recently": "O contexto foi condensado recentemente; pulando esta tentativa",
 		"condense_handler_invalid": "O manipulador de API para condensar o contexto é inválido",
 		"condense_context_grew": "O tamanho do contexto aumentou durante a condensação; pulando esta tentativa",
-		"url_timeout": "O site demorou muito para carregar (timeout). Isso pode ser devido a uma conexão lenta, site pesado ou temporariamente indisponível. Você pode tentar novamente mais tarde ou verificar se a URL está correta.",
-		"url_not_found": "O endereço do site não pôde ser encontrado. Verifique se a URL está correta e tente novamente.",
-		"no_internet": "Sem conexão com a internet. Verifique sua conexão de rede e tente novamente.",
-		"url_forbidden": "O acesso a este site está proibido. O site pode bloquear acesso automatizado ou exigir autenticação.",
-		"url_page_not_found": "A página não foi encontrada. Verifique se a URL está correta.",
-		"url_fetch_failed": "Falha ao buscar conteúdo da URL: {{error}}",
-		"url_fetch_error_with_url": "Erro ao buscar conteúdo para {{url}}: {{error}}",
-		"command_timeout": "A execução do comando excedeu o tempo limite após {{seconds}} segundos",
 		"share_task_failed": "Falha ao compartilhar tarefa",
 		"share_no_active_task": "Nenhuma tarefa ativa para compartilhar",
 		"share_auth_required": "Autenticação necessária. Faça login para compartilhar tarefas.",
 		"share_not_enabled": "O compartilhamento de tarefas não está habilitado para esta organização.",
-		"share_task_not_found": "Tarefa não encontrada ou acesso negado.",
-		"mode_import_failed": "Falha ao importar o modo: {{error}}",
-		"delete_rules_folder_failed": "Falha ao excluir pasta de regras: {{rulesFolderPath}}. Erro: {{error}}",
-		"claudeCode": {
-			"processExited": "O processo Claude Code saiu com código {{exitCode}}.",
-			"errorOutput": "Saída de erro: {{output}}",
-			"processExitedWithError": "O processo Claude Code saiu com código {{exitCode}}. Saída de erro: {{output}}",
-			"stoppedWithReason": "Claude Code parou pela razão: {{reason}}",
-			"apiKeyModelPlanMismatch": "Chaves de API e planos de assinatura permitem modelos diferentes. Certifique-se de que o modelo selecionado esteja incluído no seu plano."
-		}
+		"share_task_not_found": "Tarefa não encontrada ou acesso negado."
 	},
 	"warnings": {
 		"no_terminal_content": "Nenhum conteúdo do terminal selecionado",
-		"missing_task_files": "Os arquivos desta tarefa estão faltando. Deseja removê-la da lista de tarefas?",
-		"auto_import_failed": "Falha ao importar automaticamente as configurações do RooCode: {{error}}"
+		"missing_task_files": "Os arquivos desta tarefa estão faltando. Deseja removê-la da lista de tarefas?"
 	},
 	"info": {
 		"no_changes": "Nenhuma alteração encontrada.",
@@ -95,31 +79,22 @@
 		"custom_storage_path_set": "Caminho de armazenamento personalizado definido: {{path}}",
 		"default_storage_path": "Retornado ao caminho de armazenamento padrão",
 		"settings_imported": "Configurações importadas com sucesso.",
-		"auto_import_success": "Configurações do RooCode importadas automaticamente de {{filename}}",
 		"share_link_copied": "Link de compartilhamento copiado para a área de transferência",
 		"image_copied_to_clipboard": "URI de dados da imagem copiada para a área de transferência",
 		"image_saved": "Imagem salva em {{path}}",
 		"organization_share_link_copied": "Link de compartilhamento da organização copiado para a área de transferência!",
-		"public_share_link_copied": "Link de compartilhamento público copiado para a área de transferência!",
-		"mode_exported": "Modo '{{mode}}' exportado com sucesso",
-		"mode_imported": "Modo importado com sucesso"
+		"public_share_link_copied": "Link de compartilhamento público copiado para a área de transferência!"
 	},
 	"answers": {
 		"yes": "Sim",
 		"no": "Não",
+		"cancel": "Cancelar",
 		"remove": "Remover",
 		"keep": "Manter"
 	},
-	"buttons": {
-		"save": "Salvar",
-		"edit": "Editar",
-		"learn_more": "Saiba Mais"
-	},
 	"tasks": {
 		"canceled": "Erro na tarefa: Foi interrompida e cancelada pelo usuário.",
-		"deleted": "Falha na tarefa: Foi interrompida e excluída pelo usuário.",
-		"incomplete": "Tarefa #{{taskNumber}} (Incompleta)",
-		"no_messages": "Tarefa #{{taskNumber}} (Sem mensagens)"
+		"deleted": "Falha na tarefa: Foi interrompida e excluída pelo usuário."
 	},
 	"storage": {
 		"prompt_custom_path": "Digite o caminho de armazenamento personalizado para o histórico de conversas, deixe em branco para usar o local padrão",
@@ -130,34 +105,7 @@
 	"settings": {
 		"providers": {
 			"groqApiKey": "Chave de API Groq",
-			"getGroqApiKey": "Obter chave de API Groq",
-			"claudeCode": {
-				"pathLabel": "Caminho do Claude Code",
-				"description": "Caminho opcional para sua CLI do Claude Code. Padrão 'claude' se não for definido.",
-				"placeholder": "Padrão: claude"
-			}
-		}
-	},
-	"customModes": {
-		"errors": {
-			"yamlParseError": "YAML inválido no arquivo .roomodes na linha {{line}}. Verifique:\n• Indentação correta (use espaços, não tabs)\n• Aspas e colchetes correspondentes\n• Sintaxe YAML válida",
-			"schemaValidationError": "Formato de modos personalizados inválido em .roomodes:\n{{issues}}",
-			"invalidFormat": "Formato de modos personalizados inválido. Certifique-se de que suas configurações seguem o formato YAML correto.",
-			"updateFailed": "Falha ao atualizar modo personalizado: {{error}}",
-			"deleteFailed": "Falha ao excluir modo personalizado: {{error}}",
-			"resetFailed": "Falha ao redefinir modos personalizados: {{error}}",
-			"modeNotFound": "Erro de escrita: Modo não encontrado",
-			"noWorkspaceForProject": "Nenhuma pasta de workspace encontrada para modo específico do projeto",
-			"rulesCleanupFailed": "O modo foi excluído com sucesso, mas falhou ao excluir a pasta de regras em {{rulesFolderPath}}. Você pode precisar excluí-la manualmente."
-		},
-		"scope": {
-			"project": "projeto",
-			"global": "global"
-		}
-	},
-	"marketplace": {
-		"mode": {
-			"rulesCleanupFailed": "O modo foi removido com sucesso, mas falhou ao excluir a pasta de regras em {{rulesFolderPath}}. Você pode precisar excluí-la manualmente."
+			"getGroqApiKey": "Obter chave de API Groq"
 		}
 	},
 	"mdm": {
@@ -165,19 +113,6 @@
 			"cloud_auth_required": "Sua organização requer autenticação do Roo Code Cloud. Faça login para continuar.",
 			"organization_mismatch": "Você deve estar autenticado com a conta Roo Code Cloud da sua organização.",
 			"verification_failed": "Não foi possível verificar a autenticação da organização."
-		}
-	},
-	"prompts": {
-		"deleteMode": {
-			"title": "Excluir Modo Personalizado",
-			"description": "Tem certeza de que deseja excluir este modo {{scope}}? Isso também excluirá a pasta de regras associada em: {{rulesFolderPath}}",
-			"descriptionNoRules": "Tem certeza de que deseja excluir este modo personalizado?",
-			"confirm": "Excluir"
-		}
-	},
-	"commands": {
-		"preventCompletionWithOpenTodos": {
-			"description": "Impedir a conclusão de tarefas quando há todos incompletos na lista de todos"
 		}
 	}
 }

@@ -1,4 +1,4 @@
-import { render, screen, fireEvent, waitFor } from "@/utils/test-utils"
+import { render, screen, fireEvent, waitFor } from "@testing-library/react"
 
 import { MarketplaceItem } from "@roo-code/types"
 

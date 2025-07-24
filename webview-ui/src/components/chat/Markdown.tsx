@@ -2,7 +2,6 @@ import { memo, useState } from "react"
 import { VSCodeButton } from "@vscode/webview-ui-toolkit/react"
 
 import { useCopyToClipboard } from "@src/utils/clipboard"
-import { StandardTooltip } from "@src/components/ui"
 
 import MarkdownBlock from "../common/MarkdownBlock"
 
@@ -35,31 +34,30 @@ export const Markdown = memo(({ markdown, partial }: { markdown?: string; partia
 						borderRadius: "4px",
 					}}>
 					<style>{`@keyframes fadeIn { from { opacity: 0; } to { opacity: 1.0; } }`}</style>
-					<StandardTooltip content="Copy as markdown">
-						<VSCodeButton
-							className="copy-button"
-							appearance="icon"
-							style={{
-								height: "24px",
-								border: "none",
-								background: "var(--vscode-editor-background)",
-								transition: "background 0.2s ease-in-out",
-							}}
-							onClick={async () => {
-								const success = await copyWithFeedback(markdown)
-								if (success) {
-									const button = document.activeElement as HTMLElement
-									if (button) {
-										button.style.background = "var(--vscode-button-background)"
-										setTimeout(() => {
-											button.style.background = ""
-										}, 200)
-									}
+					<VSCodeButton
+						className="copy-button"
+						appearance="icon"
+						style={{
+							height: "24px",
+							border: "none",
+							background: "var(--vscode-editor-background)",
+							transition: "background 0.2s ease-in-out",
+						}}
+						onClick={async () => {
+							const success = await copyWithFeedback(markdown)
+							if (success) {
+								const button = document.activeElement as HTMLElement
+								if (button) {
+									button.style.background = "var(--vscode-button-background)"
+									setTimeout(() => {
+										button.style.background = ""
+									}, 200)
 								}
-							}}>
-							<span className="codicon codicon-copy" />
-						</VSCodeButton>
-					</StandardTooltip>
+							}
+						}}
+						title="Copy as markdown">
+						<span className="codicon codicon-copy" />
+					</VSCodeButton>
 				</div>
 			)}
 		</div>

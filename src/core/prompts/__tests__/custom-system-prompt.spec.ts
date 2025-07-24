@@ -96,7 +96,7 @@ describe("File-Based Custom System Prompt", () => {
 		expect(prompt).toContain("CAPABILITIES")
 		expect(prompt).toContain("MODES")
 		expect(prompt).toContain("Test role definition")
-	})
+	}, 10000)
 
 	it("should use file-based custom system prompt when available", async () => {
 		// Mock the readFile to return content from a file

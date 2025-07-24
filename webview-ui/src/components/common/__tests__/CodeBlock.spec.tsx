@@ -1,6 +1,6 @@
 // npx vitest run src/components/common/__tests__/CodeBlock.spec.tsx
 
-import { render, screen, fireEvent, act } from "@/utils/test-utils"
+import { render, screen, fireEvent, act } from "@testing-library/react"
 
 import CodeBlock from "../CodeBlock"
 
@@ -207,15 +207,9 @@ describe("CodeBlock", () => {
 			codeBlock.setAttribute("data-partially-visible", "true")
 		}
 
-		// Find the copy button by looking for the button containing the Copy icon
-		const buttons = screen.getAllByRole("button")
-		const copyButton = buttons.find((btn) => btn.querySelector("svg.lucide-copy"))
-
-		expect(copyButton).toBeTruthy()
-		if (copyButton) {
-			await act(async () => {
-				fireEvent.click(copyButton)
-			})
-		}
+		const copyButton = screen.getByTitle("Copy code")
+		await act(async () => {
+			fireEvent.click(copyButton)
+		})
 	})
 })

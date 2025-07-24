@@ -5,10 +5,9 @@ import {
 	VSCodeRadio,
 	VSCodeTextArea,
 	VSCodeLink,
-	VSCodeTextField,
 } from "@vscode/webview-ui-toolkit/react"
 import { Trans } from "react-i18next"
-import { ChevronDown, X, Upload, Download } from "lucide-react"
+import { ChevronsUpDown, X } from "lucide-react"
 
 import { ModeConfig, GroupEntry, PromptComponent, ToolGroup, modeConfigSchema } from "@roo-code/types"
 
@@ -16,7 +15,6 @@ import {
 	Mode,
 	getRoleDefinition,
 	getWhenToUse,
-	getDescription,
 	getCustomInstructions,
 	getAllModes,
 	findModeBySlug as findCustomModeBySlug,
@@ -45,9 +43,7 @@ import {
 	CommandItem,
 	CommandGroup,
 	Input,
-	StandardTooltip,
 } from "@src/components/ui"
-import { DeleteModeDialog } from "@src/components/modes/DeleteModeDialog"
 
 // Get all available groups that should show in prompts view
 const availableGroups = (Object.keys(TOOL_GROUPS) as ToolGroup[]).filter((group) => !TOOL_GROUPS[group].alwaysAvailable)
@@ -93,26 +89,11 @@ const ModesView = ({ onDone }: ModesViewProps) => {
 	const [showConfigMenu, setShowConfigMenu] = useState(false)
 	const [isCreateModeDialogOpen, setIsCreateModeDialogOpen] = useState(false)
 	const [isSystemPromptDisclosureOpen, setIsSystemPromptDisclosureOpen] = useState(false)
-	const [isExporting, setIsExporting] = useState(false)
-	const [isImporting, setIsImporting] = useState(false)
-	const [showImportDialog, setShowImportDialog] = useState(false)
-	const [hasRulesToExport, setHasRulesToExport] = useState<Record<string, boolean>>({})
-	const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
-	const [modeToDelete, setModeToDelete] = useState<{
-		slug: string
-		name: string
-		source?: string
-		rulesFolderPath?: string
-	} | null>(null)
 
 	// State for mode selection popover and search
 	const [open, setOpen] = useState(false)
 	const [searchValue, setSearchValue] = useState("")
 	const searchInputRef = useRef<HTMLInputElement>(null)
-
-	// Local state for mode name input to allow visual emptying
-	const [localModeName, setLocalModeName] = useState<string>("")
-	const [currentEditingModeSlug, setCurrentEditingModeSlug] = useState<string | null>(null)
 
 	// Direct update functions
 	const updateAgentPrompt = useCallback(
@@ -123,9 +104,6 @@ const ModesView = ({ onDone }: ModesViewProps) => {
 			// Only include properties that differ from defaults
 			if (updatedPrompt.roleDefinition === getRoleDefinition(mode)) {
 				delete updatedPrompt.roleDefinition
-			}
-			if (updatedPrompt.description === getDescription(mode)) {
-				delete updatedPrompt.description
 			}
 			if (updatedPrompt.whenToUse === getWhenToUse(mode)) {
 				delete updatedPrompt.whenToUse
@@ -142,7 +120,6 @@ const ModesView = ({ onDone }: ModesViewProps) => {
 
 	const updateCustomMode = useCallback((slug: string, modeConfig: ModeConfig) => {
 		const source = modeConfig.source || "global"
-
 		vscode.postMessage({
 			type: "updateCustomMode",
 			slug,
@@ -206,30 +183,6 @@ const ModesView = ({ onDone }: ModesViewProps) => {
 		return customModes?.find(findMode) || modes.find(findMode)
 	}, [visualMode, customModes, modes])
 
-	// Check if the current mode has rules to export
-	const checkRulesDirectory = useCallback((slug: string) => {
-		vscode.postMessage({
-			type: "checkRulesDirectory",
-			slug: slug,
-		})
-	}, [])
-
-	// Check rules directory when mode changes
-	useEffect(() => {
-		const currentMode = getCurrentMode()
-		if (currentMode?.slug && hasRulesToExport[currentMode.slug] === undefined) {
-			checkRulesDirectory(currentMode.slug)
-		}
-	}, [getCurrentMode, checkRulesDirectory, hasRulesToExport])
-
-	// Reset local name state when mode changes
-	useEffect(() => {
-		if (currentEditingModeSlug && currentEditingModeSlug !== visualMode) {
-			setCurrentEditingModeSlug(null)
-			setLocalModeName("")
-		}
-	}, [visualMode, currentEditingModeSlug])
-
 	// Helper function to safely access mode properties
 	const getModeProperty = <T extends keyof ModeConfig>(
 		mode: ModeConfig | undefined,
@@ -241,7 +194,6 @@ const ModesView = ({ onDone }: ModesViewProps) => {
 	// State for create mode dialog
 	const [newModeName, setNewModeName] = useState("")
 	const [newModeSlug, setNewModeSlug] = useState("")
-	const [newModeDescription, setNewModeDescription] = useState("")
 	const [newModeRoleDefinition, setNewModeRoleDefinition] = useState("")
 	const [newModeWhenToUse, setNewModeWhenToUse] = useState("")
 	const [newModeCustomInstructions, setNewModeCustomInstructions] = useState("")
@@ -251,7 +203,6 @@ const ModesView = ({ onDone }: ModesViewProps) => {
 	// Field-specific error states
 	const [nameError, setNameError] = useState<string>("")
 	const [slugError, setSlugError] = useState<string>("")
-	const [descriptionError, setDescriptionError] = useState<string>("")
 	const [roleDefinitionError, setRoleDefinitionError] = useState<string>("")
 	const [groupsError, setGroupsError] = useState<string>("")
 
@@ -260,7 +211,6 @@ const ModesView = ({ onDone }: ModesViewProps) => {
 		// Reset form fields
 		setNewModeName("")
 		setNewModeSlug("")
-		setNewModeDescription("")
 		setNewModeGroups(availableGroups)
 		setNewModeRoleDefinition("")
 		setNewModeWhenToUse("")
@@ -269,7 +219,6 @@ const ModesView = ({ onDone }: ModesViewProps) => {
 		// Reset error states
 		setNameError("")
 		setSlugError("")
-		setDescriptionError("")
 		setRoleDefinitionError("")
 		setGroupsError("")
 	}, [])
@@ -303,7 +252,6 @@ const ModesView = ({ onDone }: ModesViewProps) => {
 		// Clear previous errors
 		setNameError("")
 		setSlugError("")
-		setDescriptionError("")
 		setRoleDefinitionError("")
 		setGroupsError("")
 
@@ -311,7 +259,6 @@ const ModesView = ({ onDone }: ModesViewProps) => {
 		const newMode: ModeConfig = {
 			slug: newModeSlug,
 			name: newModeName,
-			description: newModeDescription.trim() || undefined,
 			roleDefinition: newModeRoleDefinition.trim(),
 			whenToUse: newModeWhenToUse.trim() || undefined,
 			customInstructions: newModeCustomInstructions.trim() || undefined,
@@ -335,9 +282,6 @@ const ModesView = ({ onDone }: ModesViewProps) => {
 					case "slug":
 						setSlugError(message)
 						break
-					case "description":
-						setDescriptionError(message)
-						break
 					case "roleDefinition":
 						setRoleDefinitionError(message)
 						break
@@ -357,7 +301,6 @@ const ModesView = ({ onDone }: ModesViewProps) => {
 	}, [
 		newModeName,
 		newModeSlug,
-		newModeDescription,
 		newModeRoleDefinition,
 		newModeWhenToUse, // Add whenToUse dependency
 		newModeCustomInstructions,
@@ -405,7 +348,6 @@ const ModesView = ({ onDone }: ModesViewProps) => {
 				}
 				if (customMode) {
 					const source = customMode.source || "global"
-
 					updateCustomMode(customMode.slug, {
 						...customMode,
 						groups: newGroups,
@@ -428,14 +370,6 @@ const ModesView = ({ onDone }: ModesViewProps) => {
 		return () => document.removeEventListener("click", handleClickOutside)
 	}, [showConfigMenu])
 
-	// Use a ref to store the current modeToDelete value
-	const modeToDeleteRef = useRef(modeToDelete)
-
-	// Update the ref whenever modeToDelete changes
-	useEffect(() => {
-		modeToDeleteRef.current = modeToDelete
-	}, [modeToDelete])
-
 	useEffect(() => {
 		const handler = (event: MessageEvent) => {
 			const message = event.data
@@ -445,50 +379,14 @@ const ModesView = ({ onDone }: ModesViewProps) => {
 					setSelectedPromptTitle(`System Prompt (${message.mode} mode)`)
 					setIsDialogOpen(true)
 				}
-			} else if (message.type === "exportModeResult") {
-				setIsExporting(false)
-
-				if (!message.success) {
-					// Show error message
-					console.error("Failed to export mode:", message.error)
-				}
-			} else if (message.type === "importModeResult") {
-				setIsImporting(false)
-				setShowImportDialog(false)
-
-				if (!message.success) {
-					// Only log error if it's not a cancellation
-					if (message.error !== "cancelled") {
-						console.error("Failed to import mode:", message.error)
-					}
-				}
-			} else if (message.type === "checkRulesDirectoryResult") {
-				setHasRulesToExport((prev) => ({
-					...prev,
-					[message.slug]: message.hasContent,
-				}))
-			} else if (message.type === "deleteCustomModeCheck") {
-				// Handle the check response
-				// Use the ref to get the current modeToDelete value
-				const currentModeToDelete = modeToDeleteRef.current
-				if (message.slug && currentModeToDelete && currentModeToDelete.slug === message.slug) {
-					setModeToDelete({
-						...currentModeToDelete,
-						rulesFolderPath: message.rulesFolderPath,
-					})
-					setShowDeleteConfirm(true)
-				}
 			}
 		}
 
 		window.addEventListener("message", handler)
 		return () => window.removeEventListener("message", handler)
-	}, []) // Empty dependency array - only register once
+	}, [])
 
-	const handleAgentReset = (
-		modeSlug: string,
-		type: "roleDefinition" | "description" | "whenToUse" | "customInstructions",
-	) => {
+	const handleAgentReset = (modeSlug: string, type: "roleDefinition" | "whenToUse" | "customInstructions") => {
 		// Only reset for built-in modes
 		const existingPrompt = customModePrompts?.[modeSlug] as PromptComponent
 		const updatedPrompt = { ...existingPrompt }
@@ -513,29 +411,30 @@ const ModesView = ({ onDone }: ModesViewProps) => {
 					<div onClick={(e) => e.stopPropagation()} className="flex justify-between items-center mb-3">
 						<h3 className="text-vscode-foreground m-0">{t("prompts:modes.title")}</h3>
 						<div className="flex gap-2">
-							<StandardTooltip content={t("prompts:modes.createNewMode")}>
-								<Button variant="ghost" size="icon" onClick={openCreateModeDialog}>
-									<span className="codicon codicon-add"></span>
-								</Button>
-							</StandardTooltip>
+							<Button
+								variant="ghost"
+								size="icon"
+								onClick={openCreateModeDialog}
+								title={t("prompts:modes.createNewMode")}>
+								<span className="codicon codicon-add"></span>
+							</Button>
 							<div className="relative inline-block">
-								<StandardTooltip content={t("prompts:modes.editModesConfig")}>
-									<Button
-										variant="ghost"
-										size="icon"
-										className="flex"
-										onClick={(e: React.MouseEvent) => {
-											e.preventDefault()
-											e.stopPropagation()
-											setShowConfigMenu((prev) => !prev)
-										}}
-										onBlur={() => {
-											// Add slight delay to allow menu item clicks to register
-											setTimeout(() => setShowConfigMenu(false), 200)
-										}}>
-										<span className="codicon codicon-json"></span>
-									</Button>
-								</StandardTooltip>
+								<Button
+									variant="ghost"
+									size="icon"
+									title={t("prompts:modes.editModesConfig")}
+									className="flex"
+									onClick={(e: React.MouseEvent) => {
+										e.preventDefault()
+										e.stopPropagation()
+										setShowConfigMenu((prev) => !prev)
+									}}
+									onBlur={() => {
+										// Add slight delay to allow menu item clicks to register
+										setTimeout(() => setShowConfigMenu(false), 200)
+									}}>
+									<span className="codicon codicon-json"></span>
+								</Button>
 								{showConfigMenu && (
 									<div
 										onClick={(e) => e.stopPropagation()}
@@ -573,23 +472,6 @@ const ModesView = ({ onDone }: ModesViewProps) => {
 									</div>
 								)}
 							</div>
-							<StandardTooltip content={t("chat:modeSelector.marketplace")}>
-								<Button
-									variant="ghost"
-									size="icon"
-									onClick={() => {
-										window.postMessage(
-											{
-												type: "action",
-												action: "marketplaceButtonClicked",
-												values: { marketplaceTab: "mode" },
-											},
-											"*",
-										)
-									}}>
-									<span className="codicon codicon-extensions"></span>
-								</Button>
-							</StandardTooltip>
 						</div>
 					</div>
 
@@ -611,10 +493,10 @@ const ModesView = ({ onDone }: ModesViewProps) => {
 									variant="combobox"
 									role="combobox"
 									aria-expanded={open}
-									className="justify-between w-60"
+									className="grow justify-between"
 									data-testid="mode-select-trigger">
 									<div>{getCurrentMode()?.name || t("prompts:modes.selectMode")}</div>
-									<ChevronDown className="opacity-50" />
+									<ChevronsUpDown className="opacity-50" />
 								</Button>
 							</PopoverTrigger>
 							<PopoverContent className="p-0 w-[var(--radix-popover-trigger-width)]">
@@ -700,9 +582,6 @@ const ModesView = ({ onDone }: ModesViewProps) => {
 					{/* API Configuration - Moved Here */}
 					<div className="mb-3">
 						<div className="font-bold mb-1">{t("prompts:apiConfiguration.title")}</div>
-						<div className="text-sm text-vscode-descriptionForeground mb-2">
-							{t("prompts:apiConfiguration.select")}
-						</div>
 						<div className="mb-2">
 							<Select
 								value={currentApiConfigName}
@@ -712,7 +591,7 @@ const ModesView = ({ onDone }: ModesViewProps) => {
 										text: value,
 									})
 								}}>
-								<SelectTrigger className="w-60">
+								<SelectTrigger className="w-full">
 									<SelectValue placeholder={t("settings:common.select")} />
 								</SelectTrigger>
 								<SelectContent>
@@ -723,11 +602,13 @@ const ModesView = ({ onDone }: ModesViewProps) => {
 									))}
 								</SelectContent>
 							</Select>
+							<div className="text-xs mt-1.5 text-vscode-descriptionForeground">
+								{t("prompts:apiConfiguration.select")}
+							</div>
 						</div>
 					</div>
 				</div>
 
-				{/* Name section */}
 				<div className="mb-5">
 					{/* Only show name and delete for custom modes */}
 					{visualMode && findModeBySlug(visualMode, customModes) && (
@@ -737,84 +618,52 @@ const ModesView = ({ onDone }: ModesViewProps) => {
 								<div className="flex gap-2">
 									<Input
 										type="text"
-										value={
-											currentEditingModeSlug === visualMode
-												? localModeName
-												: (getModeProperty(findModeBySlug(visualMode, customModes), "name") ??
-													"")
-										}
-										onFocus={() => {
+										value={getModeProperty(findModeBySlug(visualMode, customModes), "name") ?? ""}
+										onChange={(e) => {
 											const customMode = findModeBySlug(visualMode, customModes)
 											if (customMode) {
-												setCurrentEditingModeSlug(visualMode)
-												setLocalModeName(customMode.name)
-											}
-										}}
-										onChange={(e) => {
-											setLocalModeName(e.target.value)
-										}}
-										onBlur={() => {
-											const customMode = findModeBySlug(visualMode, customModes)
-											if (customMode && localModeName.trim()) {
-												// Only update if the name is not empty
 												updateCustomMode(visualMode, {
 													...customMode,
-													name: localModeName,
+													name: e.target.value,
 													source: customMode.source || "global",
 												})
 											}
-											// Clear the editing state
-											setCurrentEditingModeSlug(null)
 										}}
 										className="w-full"
 									/>
-									<StandardTooltip content={t("prompts:createModeDialog.deleteMode")}>
-										<Button
-											variant="ghost"
-											size="icon"
-											onClick={() => {
-												const customMode = findModeBySlug(visualMode, customModes)
-												if (customMode) {
-													setModeToDelete({
-														slug: customMode.slug,
-														name: customMode.name,
-														source: customMode.source || "global",
-													})
-													// First check if rules folder exists
-													vscode.postMessage({
-														type: "deleteCustomMode",
-														slug: customMode.slug,
-														checkOnly: true,
-													})
-												}
-											}}>
-											<span className="codicon codicon-trash"></span>
-										</Button>
-									</StandardTooltip>
+									<Button
+										variant="ghost"
+										size="icon"
+										title={t("prompts:createModeDialog.deleteMode")}
+										onClick={() => {
+											vscode.postMessage({
+												type: "deleteCustomMode",
+												slug: visualMode,
+											})
+										}}>
+										<span className="codicon codicon-trash"></span>
+									</Button>
 								</div>
 							</div>
 						</div>
 					)}
-
-					{/* Role Definition section */}
 					<div className="mb-4">
 						<div className="flex justify-between items-center mb-1">
 							<div className="font-bold">{t("prompts:roleDefinition.title")}</div>
 							{!findModeBySlug(visualMode, customModes) && (
-								<StandardTooltip content={t("prompts:roleDefinition.resetToDefault")}>
-									<Button
-										variant="ghost"
-										size="icon"
-										onClick={() => {
-											const currentMode = getCurrentMode()
-											if (currentMode?.slug) {
-												handleAgentReset(currentMode.slug, "roleDefinition")
-											}
-										}}
-										data-testid="role-definition-reset">
-										<span className="codicon codicon-discard"></span>
-									</Button>
-								</StandardTooltip>
+								<Button
+									variant="ghost"
+									size="icon"
+									onClick={() => {
+										const currentMode = getCurrentMode()
+										if (currentMode?.slug) {
+											handleAgentReset(currentMode.slug, "roleDefinition")
+										}
+									}}
+									title={t("prompts:roleDefinition.resetToDefault")}
+									data-testid="role-definition-reset">
+									<span className="codicon codicon-discard"></span>
+								</Button>
 							)}
 						</div>
 						<div className="text-sm text-vscode-descriptionForeground mb-2">
@@ -851,62 +700,8 @@ const ModesView = ({ onDone }: ModesViewProps) => {
 								}
 							}}
 							className="w-full"
-							rows={5}
+							rows={4}
 							data-testid={`${getCurrentMode()?.slug || "code"}-prompt-textarea`}
-						/>
-					</div>
-
-					{/* Description section */}
-					<div className="mb-4">
-						<div className="flex justify-between items-center mb-1">
-							<div className="font-bold">{t("prompts:description.title")}</div>
-							{!findModeBySlug(visualMode, customModes) && (
-								<StandardTooltip content={t("prompts:description.resetToDefault")}>
-									<Button
-										variant="ghost"
-										size="icon"
-										onClick={() => {
-											const currentMode = getCurrentMode()
-											if (currentMode?.slug) {
-												handleAgentReset(currentMode.slug, "description")
-											}
-										}}
-										data-testid="description-reset">
-										<span className="codicon codicon-discard"></span>
-									</Button>
-								</StandardTooltip>
-							)}
-						</div>
-						<div className="text-sm text-vscode-descriptionForeground mb-2">
-							{t("prompts:description.description")}
-						</div>
-						<VSCodeTextField
-							value={(() => {
-								const customMode = findModeBySlug(visualMode, customModes)
-								const prompt = customModePrompts?.[visualMode] as PromptComponent
-								return customMode?.description ?? prompt?.description ?? getDescription(visualMode)
-							})()}
-							onChange={(e) => {
-								const value =
-									(e as unknown as CustomEvent)?.detail?.target?.value ||
-									((e as any).target as HTMLTextAreaElement).value
-								const customMode = findModeBySlug(visualMode, customModes)
-								if (customMode) {
-									// For custom modes, update the JSON file
-									updateCustomMode(visualMode, {
-										...customMode,
-										description: value.trim() || undefined,
-										source: customMode.source || "global",
-									})
-								} else {
-									// For built-in modes, update the prompts
-									updateAgentPrompt(visualMode, {
-										description: value.trim() || undefined,
-									})
-								}
-							}}
-							className="w-full"
-							data-testid={`${getCurrentMode()?.slug || "code"}-description-textfield`}
 						/>
 					</div>
 
@@ -915,20 +710,19 @@ const ModesView = ({ onDone }: ModesViewProps) => {
 						<div className="flex justify-between items-center mb-1">
 							<div className="font-bold">{t("prompts:whenToUse.title")}</div>
 							{!findModeBySlug(visualMode, customModes) && (
-								<StandardTooltip content={t("prompts:whenToUse.resetToDefault")}>
-									<Button
-										variant="ghost"
-										size="icon"
-										onClick={() => {
-											const currentMode = getCurrentMode()
-											if (currentMode?.slug) {
-												handleAgentReset(currentMode.slug, "whenToUse")
-											}
-										}}
-										data-testid="when-to-use-reset">
-										<span className="codicon codicon-discard"></span>
-									</Button>
-								</StandardTooltip>
+								<Button
+									variant="ghost"
+									size="icon"
+									onClick={() => {
+										const currentMode = getCurrentMode()
+										if (currentMode?.slug) {
+											handleAgentReset(currentMode.slug, "whenToUse")
+										}
+									}}
+									title={t("prompts:whenToUse.resetToDefault")}
+									data-testid="when-to-use-reset">
+									<span className="codicon codicon-discard"></span>
+								</Button>
 							)}
 						</div>
 						<div className="text-sm text-vscode-descriptionForeground mb-2">
@@ -961,7 +755,7 @@ const ModesView = ({ onDone }: ModesViewProps) => {
 								}
 							}}
 							className="w-full"
-							rows={4}
+							rows={3}
 							data-testid={`${getCurrentMode()?.slug || "code"}-when-to-use-textarea`}
 						/>
 					</div>
@@ -973,20 +767,18 @@ const ModesView = ({ onDone }: ModesViewProps) => {
 							<div className="flex justify-between items-center mb-1">
 								<div className="font-bold">{t("prompts:tools.title")}</div>
 								{findModeBySlug(visualMode, customModes) && (
-									<StandardTooltip
-										content={
+									<Button
+										variant="ghost"
+										size="icon"
+										onClick={() => setIsToolsEditMode(!isToolsEditMode)}
+										title={
 											isToolsEditMode
 												? t("prompts:tools.doneEditing")
 												: t("prompts:tools.editTools")
 										}>
-										<Button
-											variant="ghost"
-											size="icon"
-											onClick={() => setIsToolsEditMode(!isToolsEditMode)}>
-											<span
-												className={`codicon codicon-${isToolsEditMode ? "check" : "edit"}`}></span>
-										</Button>
-									</StandardTooltip>
+										<span
+											className={`codicon codicon-${isToolsEditMode ? "check" : "edit"}`}></span>
+									</Button>
 								)}
 							</div>
 							{!findModeBySlug(visualMode, customModes) && (
@@ -1068,20 +860,19 @@ const ModesView = ({ onDone }: ModesViewProps) => {
 						<div className="flex justify-between items-center mb-1">
 							<div className="font-bold">{t("prompts:customInstructions.title")}</div>
 							{!findModeBySlug(visualMode, customModes) && (
-								<StandardTooltip content={t("prompts:customInstructions.resetToDefault")}>
-									<Button
-										variant="ghost"
-										size="icon"
-										onClick={() => {
-											const currentMode = getCurrentMode()
-											if (currentMode?.slug) {
-												handleAgentReset(currentMode.slug, "customInstructions")
-											}
-										}}
-										data-testid="custom-instructions-reset">
-										<span className="codicon codicon-discard"></span>
-									</Button>
-								</StandardTooltip>
+								<Button
+									variant="ghost"
+									size="icon"
+									onClick={() => {
+										const currentMode = getCurrentMode()
+										if (currentMode?.slug) {
+											handleAgentReset(currentMode.slug, "customInstructions")
+										}
+									}}
+									title={t("prompts:customInstructions.resetToDefault")}
+									data-testid="custom-instructions-reset">
+									<span className="codicon codicon-discard"></span>
+								</Button>
 							)}
 						</div>
 						<div className="text-[13px] text-vscode-descriptionForeground mb-2">
@@ -1121,7 +912,7 @@ const ModesView = ({ onDone }: ModesViewProps) => {
 									})
 								}
 							}}
-							rows={10}
+							rows={4}
 							className="w-full"
 							data-testid={`${getCurrentMode()?.slug || "code"}-custom-instructions-textarea`}
 						/>
@@ -1159,7 +950,7 @@ const ModesView = ({ onDone }: ModesViewProps) => {
 				</div>
 
 				<div className="pb-4 border-b border-vscode-input-border">
-					<div className="flex gap-2 mb-4">
+					<div className="flex gap-2">
 						<Button
 							variant="default"
 							onClick={() => {
@@ -1174,61 +965,25 @@ const ModesView = ({ onDone }: ModesViewProps) => {
 							data-testid="preview-prompt-button">
 							{t("prompts:systemPrompt.preview")}
 						</Button>
-						<StandardTooltip content={t("prompts:systemPrompt.copy")}>
-							<Button
-								variant="ghost"
-								size="icon"
-								onClick={() => {
-									const currentMode = getCurrentMode()
-									if (currentMode) {
-										vscode.postMessage({
-											type: "copySystemPrompt",
-											mode: currentMode.slug,
-										})
-									}
-								}}
-								data-testid="copy-prompt-button">
-								<span className="codicon codicon-copy"></span>
-							</Button>
-						</StandardTooltip>
-					</div>
-
-					{/* Export/Import Mode Buttons */}
-					<div className="flex items-center gap-2">
-						{/* Export button - visible when any mode is selected */}
-						{getCurrentMode() && (
-							<Button
-								variant="default"
-								onClick={() => {
-									const currentMode = getCurrentMode()
-									if (currentMode?.slug && !isExporting) {
-										setIsExporting(true)
-										vscode.postMessage({
-											type: "exportMode",
-											slug: currentMode.slug,
-										})
-									}
-								}}
-								disabled={isExporting}
-								title={t("prompts:exportMode.title")}
-								data-testid="export-mode-button">
-								<Upload className="h-4 w-4" />
-								{isExporting ? t("prompts:exportMode.exporting") : t("prompts:exportMode.title")}
-							</Button>
-						)}
-						{/* Import button - always visible */}
 						<Button
-							variant="default"
-							onClick={() => setShowImportDialog(true)}
-							disabled={isImporting}
-							title={t("prompts:modes.importMode")}
-							data-testid="import-mode-button">
-							<Download className="h-4 w-4" />
-							{isImporting ? t("prompts:importMode.importing") : t("prompts:modes.importMode")}
+							variant="ghost"
+							size="icon"
+							title={t("prompts:systemPrompt.copy")}
+							onClick={() => {
+								const currentMode = getCurrentMode()
+								if (currentMode) {
+									vscode.postMessage({
+										type: "copySystemPrompt",
+										mode: currentMode.slug,
+									})
+								}
+							}}
+							data-testid="copy-prompt-button">
+							<span className="codicon codicon-copy"></span>
 						</Button>
 					</div>
 
-					{/* Advanced Features Disclosure */}
+					{/* Custom System Prompt Disclosure */}
 					<div className="mt-4">
 						<button
 							onClick={() => setIsSystemPromptDisclosureOpen(!isSystemPromptDisclosureOpen)}
@@ -1236,54 +991,46 @@ const ModesView = ({ onDone }: ModesViewProps) => {
 							aria-expanded={isSystemPromptDisclosureOpen}>
 							<span
 								className={`codicon codicon-${isSystemPromptDisclosureOpen ? "chevron-down" : "chevron-right"} mr-1`}></span>
-							<span>{t("prompts:advanced.title")}</span>
+							<span>{t("prompts:advancedSystemPrompt.title")}</span>
 						</button>
 
 						{isSystemPromptDisclosureOpen && (
-							<div className="mt-2 ml-5 space-y-4">
-								{/* Override System Prompt Section */}
-								<div>
-									<h4 className="text-xs font-semibold text-vscode-foreground mb-2">
-										Override System Prompt
-									</h4>
-									<div className="text-xs text-vscode-descriptionForeground">
-										<Trans
-											i18nKey="prompts:advancedSystemPrompt.description"
-											values={{
-												slug: getCurrentMode()?.slug || "code",
-											}}
-											components={{
-												span: (
-													<span
-														className="text-vscode-textLink-foreground cursor-pointer underline"
-														onClick={() => {
-															const currentMode = getCurrentMode()
-															if (!currentMode) return
+							<div className="text-xs text-vscode-descriptionForeground mt-2 ml-5">
+								<Trans
+									i18nKey="prompts:advancedSystemPrompt.description"
+									values={{
+										slug: getCurrentMode()?.slug || "code",
+									}}
+									components={{
+										span: (
+											<span
+												className="text-vscode-textLink-foreground cursor-pointer underline"
+												onClick={() => {
+													const currentMode = getCurrentMode()
+													if (!currentMode) return
 
-															vscode.postMessage({
-																type: "openFile",
-																text: `./.roo/system-prompt-${currentMode.slug}`,
-																values: {
-																	create: true,
-																	content: "",
-																},
-															})
-														}}
-													/>
-												),
-												"1": (
-													<VSCodeLink
-														href={buildDocLink(
-															"features/footgun-prompting",
-															"prompts_advanced_system_prompt",
-														)}
-														style={{ display: "inline" }}></VSCodeLink>
-												),
-												"2": <strong />,
-											}}
-										/>
-									</div>
-								</div>
+													vscode.postMessage({
+														type: "openFile",
+														text: `./.roo/system-prompt-${currentMode.slug}`,
+														values: {
+															create: true,
+															content: "",
+														},
+													})
+												}}
+											/>
+										),
+										"1": (
+											<VSCodeLink
+												href={buildDocLink(
+													"features/footgun-prompting",
+													"prompts_advanced_system_prompt",
+												)}
+												style={{ display: "inline" }}></VSCodeLink>
+										),
+										"2": <strong />,
+									}}
+								/>
 							</div>
 						)}
 					</div>
@@ -1443,23 +1190,6 @@ const ModesView = ({ onDone }: ModesViewProps) => {
 							</div>
 
 							<div className="mb-4">
-								<div className="font-bold mb-1">{t("prompts:createModeDialog.description.label")}</div>
-								<div className="text-[13px] text-vscode-descriptionForeground mb-2">
-									{t("prompts:createModeDialog.description.description")}
-								</div>
-								<VSCodeTextField
-									value={newModeDescription}
-									onChange={(e) => {
-										setNewModeDescription((e.target as HTMLInputElement).value)
-									}}
-									className="w-full"
-								/>
-								{descriptionError && (
-									<div className="text-xs text-vscode-errorForeground mt-1">{descriptionError}</div>
-								)}
-							</div>
-
-							<div className="mb-4">
 								<div className="font-bold mb-1">{t("prompts:createModeDialog.whenToUse.label")}</div>
 								<div className="text-[13px] text-vscode-descriptionForeground mb-2">
 									{t("prompts:createModeDialog.whenToUse.description")}
@@ -1563,85 +1293,6 @@ const ModesView = ({ onDone }: ModesViewProps) => {
 					</div>
 				</div>
 			)}
-
-			{/* Import Mode Dialog */}
-			{showImportDialog && (
-				<div className="fixed inset-0 flex items-center justify-center bg-black/50 z-[1000]">
-					<div className="bg-vscode-editor-background border border-vscode-editor-lineHighlightBorder rounded-lg shadow-lg p-6 max-w-md w-full">
-						<h3 className="text-lg font-semibold mb-4">{t("prompts:modes.importMode")}</h3>
-						<p className="text-sm text-vscode-descriptionForeground mb-4">
-							{t("prompts:importMode.selectLevel")}
-						</p>
-						<div className="space-y-3 mb-6">
-							<label className="flex items-start gap-2 cursor-pointer">
-								<input
-									type="radio"
-									name="importLevel"
-									value="project"
-									className="mt-1"
-									defaultChecked
-								/>
-								<div>
-									<div className="font-medium">{t("prompts:importMode.project.label")}</div>
-									<div className="text-xs text-vscode-descriptionForeground">
-										{t("prompts:importMode.project.description")}
-									</div>
-								</div>
-							</label>
-							<label className="flex items-start gap-2 cursor-pointer">
-								<input type="radio" name="importLevel" value="global" className="mt-1" />
-								<div>
-									<div className="font-medium">{t("prompts:importMode.global.label")}</div>
-									<div className="text-xs text-vscode-descriptionForeground">
-										{t("prompts:importMode.global.description")}
-									</div>
-								</div>
-							</label>
-						</div>
-						<div className="flex justify-end gap-2">
-							<Button variant="secondary" onClick={() => setShowImportDialog(false)}>
-								{t("prompts:createModeDialog.buttons.cancel")}
-							</Button>
-							<Button
-								variant="default"
-								onClick={() => {
-									if (!isImporting) {
-										const selectedLevel = (
-											document.querySelector(
-												'input[name="importLevel"]:checked',
-											) as HTMLInputElement
-										)?.value as "global" | "project"
-										setIsImporting(true)
-										vscode.postMessage({
-											type: "importMode",
-											source: selectedLevel || "project",
-										})
-									}
-								}}
-								disabled={isImporting}>
-								{isImporting ? t("prompts:importMode.importing") : t("prompts:importMode.import")}
-							</Button>
-						</div>
-					</div>
-				</div>
-			)}
-
-			{/* Delete Mode Confirmation Dialog */}
-			<DeleteModeDialog
-				open={showDeleteConfirm}
-				onOpenChange={setShowDeleteConfirm}
-				modeToDelete={modeToDelete}
-				onConfirm={() => {
-					if (modeToDelete) {
-						vscode.postMessage({
-							type: "deleteCustomMode",
-							slug: modeToDelete.slug,
-						})
-						setShowDeleteConfirm(false)
-						setModeToDelete(null)
-					}
-				}}
-			/>
 		</Tab>
 	)
 }

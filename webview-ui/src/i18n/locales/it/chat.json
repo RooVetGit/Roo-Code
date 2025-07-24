@@ -16,12 +16,7 @@
 		"shareWithOrganization": "Condividi con l'organizzazione",
 		"shareWithOrganizationDescription": "Solo i membri della tua organizzazione possono accedere",
 		"sharePublicly": "Condividi pubblicamente",
-		"sharePubliclyDescription": "Chiunque con il link può accedere",
-		"connectToCloud": "Connetti al Cloud",
-		"connectToCloudDescription": "Accedi a Roo Code Cloud per condividere attività",
-		"sharingDisabledByOrganization": "Condivisione disabilitata dall'organizzazione",
-		"shareSuccessOrganization": "Link organizzazione copiato negli appunti",
-		"shareSuccessPublic": "Link pubblico copiato negli appunti"
+		"sharePubliclyDescription": "Chiunque con il link può accedere"
 	},
 	"unpin": "Rilascia",
 	"pin": "Fissa",
@@ -112,12 +107,6 @@
 	"dragFiles": "tieni premuto shift per trascinare file",
 	"dragFilesImages": "tieni premuto shift per trascinare file/immagini",
 	"enhancePromptDescription": "Il pulsante 'Migliora prompt' aiuta a migliorare la tua richiesta fornendo contesto aggiuntivo, chiarimenti o riformulazioni. Prova a digitare una richiesta qui e fai di nuovo clic sul pulsante per vedere come funziona.",
-	"modeSelector": {
-		"title": "Modalità",
-		"marketplace": "Marketplace delle Modalità",
-		"settings": "Impostazioni Modalità",
-		"description": "Personalità specializzate che adattano il comportamento di Roo."
-	},
 	"errorReadingFile": "Errore nella lettura del file:",
 	"noValidImages": "Nessuna immagine valida è stata elaborata",
 	"separator": "Separatore",

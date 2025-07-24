@@ -6,7 +6,6 @@ import type {
 	ModeConfig,
 	InstallMarketplaceItemOptions,
 	MarketplaceItem,
-	ShareVisibility,
 } from "@roo-code/types"
 import { marketplaceItemSchema } from "@roo-code/types"
 
@@ -18,13 +17,8 @@ export type PromptMode = Mode | "enhance"
 
 export type AudioType = "notification" | "celebration" | "progress_loop"
 
-export interface UpdateTodoListPayload {
-	todos: any[]
-}
-
 export interface WebviewMessage {
 	type:
-		| "updateTodoList"
 		| "deleteMultipleTasksWithIds"
 		| "currentApiConfigName"
 		| "saveApiConfiguration"
@@ -36,16 +30,12 @@ export interface WebviewMessage {
 		| "getListApiConfiguration"
 		| "customInstructions"
 		| "allowedCommands"
-		| "deniedCommands"
 		| "alwaysAllowReadOnly"
 		| "alwaysAllowReadOnlyOutsideWorkspace"
 		| "alwaysAllowWrite"
 		| "alwaysAllowWriteOutsideWorkspace"
 		| "alwaysAllowWriteProtected"
 		| "alwaysAllowExecute"
-		| "alwaysAllowFollowupQuestions"
-		| "alwaysAllowUpdateTodoList"
-		| "followupAutoApproveTimeoutMs"
 		| "webviewDidLaunch"
 		| "newTask"
 		| "askResponse"
@@ -67,7 +57,6 @@ export interface WebviewMessage {
 		| "requestOllamaModels"
 		| "requestLmStudioModels"
 		| "requestVsCodeLmModels"
-		| "requestHuggingFaceModels"
 		| "openImage"
 		| "saveImage"
 		| "openFile"
@@ -81,7 +70,6 @@ export interface WebviewMessage {
 		| "alwaysAllowModeSwitch"
 		| "allowedMaxRequests"
 		| "alwaysAllowSubtasks"
-		| "alwaysAllowUpdateTodoList"
 		| "autoCondenseContext"
 		| "autoCondenseContextPercent"
 		| "condensingApiConfigId"
@@ -108,16 +96,11 @@ export interface WebviewMessage {
 		| "updateMcpTimeout"
 		| "fuzzyMatchThreshold"
 		| "writeDelayMs"
-		| "diagnosticsEnabled"
 		| "enhancePrompt"
 		| "enhancedPrompt"
 		| "draggedImages"
 		| "deleteMessage"
-		| "deleteMessageConfirm"
-		| "submitEditedMessage"
-		| "editMessageConfirm"
 		| "terminalOutputLineLimit"
-		| "terminalOutputCharacterLimit"
 		| "terminalShellIntegrationTimeout"
 		| "terminalShellIntegrationDisabled"
 		| "terminalCommandDelay"
@@ -154,7 +137,6 @@ export interface WebviewMessage {
 		| "humanRelayResponse"
 		| "humanRelayCancel"
 		| "browserToolEnabled"
-		| "codebaseIndexEnabled"
 		| "telemetrySetting"
 		| "showRooIgnoredFiles"
 		| "testBrowserConnection"
@@ -163,12 +145,9 @@ export interface WebviewMessage {
 		| "language"
 		| "maxReadFileLine"
 		| "maxConcurrentFileReads"
-		| "includeDiagnosticMessages"
-		| "maxDiagnosticMessages"
 		| "searchFiles"
 		| "toggleApiConfigPin"
 		| "setHistoryPreviewCollapsed"
-		| "hasOpenedModeSelector"
 		| "accountButtonClicked"
 		| "rooCloudSignIn"
 		| "rooCloudSignOut"
@@ -179,6 +158,7 @@ export interface WebviewMessage {
 		| "indexingStatusUpdate"
 		| "indexCleared"
 		| "focusPanelRequest"
+		| "codebaseIndexConfig"
 		| "profileThresholds"
 		| "setHistoryPreviewCollapsed"
 		| "openExternal"
@@ -192,20 +172,9 @@ export interface WebviewMessage {
 		| "fetchMarketplaceData"
 		| "switchTab"
 		| "profileThresholds"
-		| "shareTaskSuccess"
-		| "exportMode"
-		| "exportModeResult"
-		| "importMode"
-		| "importModeResult"
-		| "checkRulesDirectory"
-		| "checkRulesDirectoryResult"
-		| "saveCodeIndexSettingsAtomic"
-		| "requestCodeIndexSecretStatus"
 	text?: string
-	editedMessageContent?: string
 	tab?: "settings" | "history" | "mcp" | "modes" | "chat" | "marketplace" | "account"
 	disabled?: boolean
-	context?: string
 	dataUri?: string
 	askResponse?: ClineAskResponse
 	apiConfiguration?: ProviderSettings
@@ -234,35 +203,13 @@ export interface WebviewMessage {
 	ids?: string[]
 	hasSystemPromptOverride?: boolean
 	terminalOperation?: "continue" | "abort"
-	messageTs?: number
 	historyPreviewCollapsed?: boolean
 	filters?: { type?: string; search?: string; tags?: string[] }
 	url?: string // For openExternal
 	mpItem?: MarketplaceItem
 	mpInstallOptions?: InstallMarketplaceItemOptions
 	config?: Record<string, any> // Add config to the payload
-	visibility?: ShareVisibility // For share visibility
-	hasContent?: boolean // For checkRulesDirectoryResult
-	checkOnly?: boolean // For deleteCustomMode check
-	codeIndexSettings?: {
-		// Global state settings
-		codebaseIndexEnabled: boolean
-		codebaseIndexQdrantUrl: string
-		codebaseIndexEmbedderProvider: "openai" | "ollama" | "openai-compatible" | "gemini" | "mistral"
-		codebaseIndexEmbedderBaseUrl?: string
-		codebaseIndexEmbedderModelId: string
-		codebaseIndexEmbedderModelDimension?: number // Generic dimension for all providers
-		codebaseIndexOpenAiCompatibleBaseUrl?: string
-		codebaseIndexSearchMaxResults?: number
-		codebaseIndexSearchMinScore?: number
-
-		// Secret settings
-		codeIndexOpenAiKey?: string
-		codeIndexQdrantApiKey?: string
-		codebaseIndexOpenAiCompatibleApiKey?: string
-		codebaseIndexGeminiApiKey?: string
-		codebaseIndexMistralApiKey?: string
-	}
+	visibility?: "organization" | "public" // For share visibility
 }
 
 export const checkoutDiffPayloadSchema = z.object({
@@ -307,4 +254,3 @@ export type WebViewMessagePayload =
 	| IndexingStatusPayload
 	| IndexClearedPayload
 	| InstallMarketplaceItemWithParametersPayload
-	| UpdateTodoListPayload

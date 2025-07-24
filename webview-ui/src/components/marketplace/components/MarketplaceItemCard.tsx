@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect } from "react"
+import React, { useMemo, useState } from "react"
 import { MarketplaceItem, TelemetryEventName } from "@roo-code/types"
 import { vscode } from "@/utils/vscode"
 import { telemetryClient } from "@/utils/TelemetryClient"
@@ -7,19 +7,9 @@ import { useAppTranslation } from "@/i18n/TranslationContext"
 import { isValidUrl } from "../../../utils/url"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
-import { StandardTooltip } from "@/components/ui"
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { MarketplaceInstallModal } from "./MarketplaceInstallModal"
 import { useExtensionState } from "@/context/ExtensionStateContext"
-import {
-	AlertDialog,
-	AlertDialogAction,
-	AlertDialogCancel,
-	AlertDialogContent,
-	AlertDialogDescription,
-	AlertDialogFooter,
-	AlertDialogHeader,
-	AlertDialogTitle,
-} from "@/components/ui"
 
 interface ItemInstalledMetadata {
 	type: string
@@ -39,30 +29,6 @@ export const MarketplaceItemCard: React.FC<MarketplaceItemCardProps> = ({ item, 
 	const { t } = useAppTranslation()
 	const { cwd } = useExtensionState()
 	const [showInstallModal, setShowInstallModal] = useState(false)
-	const [showRemoveConfirm, setShowRemoveConfirm] = useState(false)
-	const [removeTarget, setRemoveTarget] = useState<"project" | "global">("project")
-	const [removeError, setRemoveError] = useState<string | null>(null)
-
-	// Listen for removal result messages
-	useEffect(() => {
-		const handleMessage = (event: MessageEvent) => {
-			const message = event.data
-			if (message.type === "marketplaceRemoveResult" && message.slug === item.id) {
-				if (message.success) {
-					// Removal succeeded - refresh marketplace data
-					vscode.postMessage({
-						type: "fetchMarketplaceData",
-					})
-				} else {
-					// Removal failed - show error message to user
-					setRemoveError(message.error || t("marketplace:items.unknownError"))
-				}
-			}
-		}
-
-		window.addEventListener("message", handleMessage)
-		return () => window.removeEventListener("message", handleMessage)
-	}, [item.id, t])
 
 	const typeLabel = useMemo(() => {
 		const labels: Partial<Record<MarketplaceItem["type"], string>> = {
@@ -113,25 +79,37 @@ export const MarketplaceItemCard: React.FC<MarketplaceItemCardProps> = ({ item, 
 					<div className="flex items-center gap-1">
 						{isInstalled ? (
 							/* Single Remove button when installed */
-							<StandardTooltip
-								content={
-									isInstalledInProject
+							<Tooltip>
+								<TooltipTrigger asChild>
+									<span className="inline-block">
+										<Button
+											size="sm"
+											variant="secondary"
+											className="text-xs h-5 py-0 px-2"
+											onClick={() => {
+												// Determine which installation to remove (prefer project over global)
+												const target = isInstalledInProject ? "project" : "global"
+												vscode.postMessage({
+													type: "removeInstalledMarketplaceItem",
+													mpItem: item,
+													mpInstallOptions: { target },
+												})
+
+												// Request fresh marketplace data to update installed status
+												vscode.postMessage({
+													type: "fetchMarketplaceData",
+												})
+											}}>
+											{t("marketplace:items.card.remove")}
+										</Button>
+									</span>
+								</TooltipTrigger>
+								<TooltipContent>
+									{isInstalledInProject
 										? t("marketplace:items.card.removeProjectTooltip")
-										: t("marketplace:items.card.removeGlobalTooltip")
-								}>
-								<Button
-									size="sm"
-									variant="secondary"
-									className="text-xs h-5 py-0 px-2"
-									onClick={() => {
-										// Determine which installation to remove (prefer project over global)
-										const target = isInstalledInProject ? "project" : "global"
-										setRemoveTarget(target)
-										setShowRemoveConfirm(true)
-									}}>
-									{t("marketplace:items.card.remove")}
-								</Button>
-							</StandardTooltip>
+										: t("marketplace:items.card.removeGlobalTooltip")}
+								</TooltipContent>
+							</Tooltip>
 						) : (
 							/* Single Install button when not installed */
 							<Button
@@ -141,13 +119,6 @@ export const MarketplaceItemCard: React.FC<MarketplaceItemCardProps> = ({ item, 
 								onClick={handleInstallClick}>
 								{t("marketplace:items.card.install")}
 							</Button>
-						)}
-
-						{/* Error message display */}
-						{removeError && (
-							<div className="text-vscode-errorForeground text-sm mt-2">
-								{t("marketplace:items.removeFailed", { error: removeError })}
-							</div>
 						)}
 					</div>
 				</div>
@@ -168,28 +139,26 @@ export const MarketplaceItemCard: React.FC<MarketplaceItemCardProps> = ({ item, 
 						{item.tags &&
 							item.tags.length > 0 &&
 							item.tags.map((tag) => (
-								<StandardTooltip
+								<Button
 									key={tag}
-									content={
+									size="sm"
+									variant="secondary"
+									className={cn("rounded-sm capitalize text-xs px-2 h-5", {
+										"border-solid border-primary text-primary": filters.tags.includes(tag),
+									})}
+									onClick={() => {
+										const newTags = filters.tags.includes(tag)
+											? filters.tags.filter((t: string) => t !== tag)
+											: [...filters.tags, tag]
+										setFilters({ tags: newTags })
+									}}
+									title={
 										filters.tags.includes(tag)
 											? t("marketplace:filters.tags.clear", { count: tag })
 											: t("marketplace:filters.tags.clickToFilter")
 									}>
-									<Button
-										size="sm"
-										variant="secondary"
-										className={cn("rounded-sm capitalize text-xs px-2 h-5", {
-											"border-solid border-primary text-primary": filters.tags.includes(tag),
-										})}
-										onClick={() => {
-											const newTags = filters.tags.includes(tag)
-												? filters.tags.filter((t: string) => t !== tag)
-												: [...filters.tags, tag]
-											setFilters({ tags: newTags })
-										}}>
-										{tag}
-									</Button>
-								</StandardTooltip>
+									{tag}
+								</Button>
 							))}
 					</div>
 				)}
@@ -202,49 +171,6 @@ export const MarketplaceItemCard: React.FC<MarketplaceItemCardProps> = ({ item, 
 				onClose={() => setShowInstallModal(false)}
 				hasWorkspace={!!cwd}
 			/>
-
-			{/* Remove Confirmation Dialog */}
-			<AlertDialog open={showRemoveConfirm} onOpenChange={setShowRemoveConfirm}>
-				<AlertDialogContent>
-					<AlertDialogHeader>
-						<AlertDialogTitle>
-							{item.type === "mode"
-								? t("marketplace:removeConfirm.mode.title")
-								: t("marketplace:removeConfirm.mcp.title")}
-						</AlertDialogTitle>
-						<AlertDialogDescription>
-							{item.type === "mode" ? (
-								<>
-									{t("marketplace:removeConfirm.mode.message", { modeName: item.name })}
-									<div className="mt-2 text-sm">
-										{t("marketplace:removeConfirm.mode.rulesWarning")}
-									</div>
-								</>
-							) : (
-								t("marketplace:removeConfirm.mcp.message", { mcpName: item.name })
-							)}
-						</AlertDialogDescription>
-					</AlertDialogHeader>
-					<AlertDialogFooter>
-						<AlertDialogCancel>{t("marketplace:removeConfirm.cancel")}</AlertDialogCancel>
-						<AlertDialogAction
-							onClick={() => {
-								// Clear any previous error
-								setRemoveError(null)
-
-								vscode.postMessage({
-									type: "removeInstalledMarketplaceItem",
-									mpItem: item,
-									mpInstallOptions: { target: removeTarget },
-								})
-
-								setShowRemoveConfirm(false)
-							}}>
-							{t("marketplace:removeConfirm.confirm")}
-						</AlertDialogAction>
-					</AlertDialogFooter>
-				</AlertDialogContent>
-			</AlertDialog>
 		</>
 	)
 }

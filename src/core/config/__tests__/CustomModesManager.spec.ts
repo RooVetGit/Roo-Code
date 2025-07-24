@@ -767,7 +767,7 @@ describe("CustomModesManager", () => {
 
 			await manager.deleteCustomMode("non-existent-mode")
 
-			expect(mockShowError).toHaveBeenCalledWith("customModes.errors.deleteFailed")
+			expect(mockShowError).toHaveBeenCalledWith(expect.stringContaining("Write error"))
 		})
 	})
 

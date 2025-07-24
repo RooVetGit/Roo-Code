@@ -38,13 +38,7 @@ export const handleUri = async (uri: vscode.Uri) => {
 		case "/auth/clerk/callback": {
 			const code = query.get("code")
 			const state = query.get("state")
-			const organizationId = query.get("organizationId")
-
-			await CloudService.instance.handleAuthCallback(
-				code,
-				state,
-				organizationId === "null" ? null : organizationId,
-			)
+			await CloudService.instance.handleAuthCallback(code, state)
 			break
 		}
 		default:

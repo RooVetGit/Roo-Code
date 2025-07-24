@@ -66,7 +66,6 @@ export const modeConfigSchema = z.object({
 	name: z.string().min(1, "Name is required"),
 	roleDefinition: z.string().min(1, "Role definition is required"),
 	whenToUse: z.string().optional(),
-	description: z.string().optional(),
 	customInstructions: z.string().optional(),
 	groups: groupEntryArraySchema,
 	source: z.enum(["global", "project"]).optional(),
@@ -107,7 +106,6 @@ export type CustomModesSettings = z.infer<typeof customModesSettingsSchema>
 export const promptComponentSchema = z.object({
 	roleDefinition: z.string().optional(),
 	whenToUse: z.string().optional(),
-	description: z.string().optional(),
 	customInstructions: z.string().optional(),
 })
 

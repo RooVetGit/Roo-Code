@@ -1,5 +1,4 @@
 import { cn } from "@/lib/utils"
-import { StandardTooltip } from "@/components/ui"
 
 interface IconButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
 	iconClass: string
@@ -36,17 +35,15 @@ export const IconButton: React.FC<IconButtonProps> = ({
 
 	const iconClasses = cn("codicon", iconClass, isLoading && "codicon-modifier-spin")
 
-	const button = (
+	return (
 		<button
 			aria-label={title}
+			title={title}
 			className={buttonClasses}
-			disabled={disabled}
 			onClick={!disabled ? onClick : undefined}
 			style={{ fontSize: 16.5, ...style }}
 			{...props}>
 			<span className={iconClasses} />
 		</button>
 	)
-
-	return <StandardTooltip content={title}>{button}</StandardTooltip>
 }

@@ -402,14 +402,7 @@
 			"medium": "Średni",
 			"low": "Niski"
 		},
-		"setReasoningLevel": "Włącz wysiłek rozumowania",
-		"claudeCode": {
-			"pathLabel": "Ścieżka Claude Code",
-			"description": "Opcjonalna ścieżka do Twojego CLI Claude Code. Domyślnie 'claude', jeśli nie ustawiono.",
-			"placeholder": "Domyślnie: claude",
-			"maxTokensLabel": "Maksymalna liczba tokenów wyjściowych",
-			"maxTokensDescription": "Maksymalna liczba tokenów wyjściowych dla odpowiedzi Claude Code. Domyślnie 8000."
-		}
+		"setReasoningLevel": "Habilitar esfuerzo de razonamiento"
 	},
 	"browser": {
 		"enable": {

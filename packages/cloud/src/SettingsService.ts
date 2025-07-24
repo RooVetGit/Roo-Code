@@ -1,23 +1,121 @@
 import type { OrganizationAllowList, OrganizationSettings } from "@roo-code/types"
+import * as vscode from "vscode"
+import { AuthService } from "./auth"
+import { RefreshTimer } from "./RefreshTimer"
+import { getRooCodeApiUrl } from "./utils"
+import { organizationSettingsSchema } from "@roo-code/types/src/schemas/organization-settings"
+import { ORGANIZATION_ALLOW_ALL } from "@roo-code/types/src/constants"
 
-/**
- * Interface for settings services that provide organization settings
- */
-export interface SettingsService {
-	/**
-	 * Get the organization allow list
-	 * @returns The organization allow list or default if none available
-	 */
-	getAllowList(): OrganizationAllowList
+const ORGANIZATION_SETTINGS_CACHE_KEY = "organization-settings"
 
-	/**
-	 * Get the current organization settings
-	 * @returns The organization settings or undefined if none available
-	 */
-	getSettings(): OrganizationSettings | undefined
+export class SettingsService {
+	private context: vscode.ExtensionContext
+	private authService: AuthService
+	private settings: OrganizationSettings | undefined = undefined
+	private timer: RefreshTimer
 
-	/**
-	 * Dispose of the settings service and clean up resources
-	 */
-	dispose(): void
+	constructor(context: vscode.ExtensionContext, authService: AuthService, callback: () => void) {
+		this.context = context
+		this.authService = authService
+
+		this.timer = new RefreshTimer({
+			callback: async () => {
+				await this.fetchSettings(callback)
+				return true
+			},
+			successInterval: 30000,
+			initialBackoffMs: 1000,
+			maxBackoffMs: 30000,
+		})
+	}
+
+	public initialize(): void {
+		this.loadCachedSettings()
+
+		// Clear cached settings if we have missed a log out.
+		if (this.authService.getState() == "logged-out" && this.settings) {
+			this.removeSettings()
+		}
+
+		this.authService.on("attempting-session", () => {
+			this.timer.start()
+		})
+
+		this.authService.on("active-session", () => {
+			this.timer.start()
+		})
+
+		this.authService.on("logged-out", () => {
+			this.timer.stop()
+			this.removeSettings()
+		})
+
+		if (this.authService.hasOrIsAcquiringActiveSession()) {
+			this.timer.start()
+		}
+	}
+
+	private async fetchSettings(callback: () => void): Promise<void> {
+		const token = this.authService.getSessionToken()
+
+		if (!token) {
+			return
+		}
+
+		try {
+			const response = await fetch(`${getRooCodeApiUrl()}/api/organization-settings`, {
+				headers: {
+					Authorization: `Bearer ${token}`,
+				},
+			})
+
+			if (!response.ok) {
+				console.error(`Failed to fetch organization settings: ${response.status} ${response.statusText}`)
+				return
+			}
+
+			const data = await response.json()
+			const result = organizationSettingsSchema.safeParse(data)
+
+			if (!result.success) {
+				console.error("Invalid organization settings format:", result.error)
+				return
+			}
+
+			const newSettings = result.data
+
+			if (!this.settings || this.settings.version !== newSettings.version) {
+				this.settings = newSettings
+				await this.cacheSettings()
+				callback()
+			}
+		} catch (error) {
+			console.error("Error fetching organization settings:", error)
+		}
+	}
+
+	private async cacheSettings(): Promise<void> {
+		await this.context.globalState.update(ORGANIZATION_SETTINGS_CACHE_KEY, this.settings)
+	}
+
+	private loadCachedSettings(): void {
+		this.settings = this.context.globalState.get<OrganizationSettings>(ORGANIZATION_SETTINGS_CACHE_KEY)
+	}
+
+	public getAllowList(): OrganizationAllowList {
+		return this.settings?.allowList || ORGANIZATION_ALLOW_ALL
+	}
+
+	public getSettings(): OrganizationSettings | undefined {
+		return this.settings
+	}
+
+	public async removeSettings(): Promise<void> {
+		this.settings = undefined
+		await this.cacheSettings()
+	}
+
+	public dispose(): void {
+		this.timer.stop()
+	}
 }

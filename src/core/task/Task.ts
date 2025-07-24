@@ -1,5 +1,4 @@
 import * as path from "path"
-import * as vscode from "vscode"
 import os from "os"
 import crypto from "crypto"
 import EventEmitter from "events"
@@ -19,12 +18,8 @@ import {
 	type ClineMessage,
 	type ClineSay,
 	type ToolProgressStatus,
-	DEFAULT_CONSECUTIVE_MISTAKE_LIMIT,
 	type HistoryItem,
 	TelemetryEventName,
-	TodoItem,
-	getApiProtocol,
-	getModelId,
 } from "@roo-code/types"
 import { TelemetryService } from "@roo-code/telemetry"
 import { CloudService } from "@roo-code/cloud"
@@ -44,7 +39,6 @@ import { ClineAskResponse } from "../../shared/WebviewMessage"
 import { defaultModeSlug } from "../../shared/modes"
 import { DiffStrategy } from "../../shared/tools"
 import { EXPERIMENT_IDS, experiments } from "../../shared/experiments"
-import { getModelMaxOutputTokens } from "../../shared/api"
 
 // services
 import { UrlContentFetcher } from "../../services/browser/UrlContentFetcher"
@@ -71,8 +65,8 @@ import { SYSTEM_PROMPT } from "../prompts/system"
 import { ToolRepetitionDetector } from "../tools/ToolRepetitionDetector"
 import { FileContextTracker } from "../context-tracking/FileContextTracker"
 import { RooIgnoreController } from "../ignore/RooIgnoreController"
+import { presentAssistantMessage } from "../message-parsing"
 import { RooProtectedController } from "../protect/RooProtectedController"
-import { type AssistantMessageContent, parseAssistantMessage, presentAssistantMessage } from "../assistant-message"
 import { truncateConversationIfNeeded } from "../sliding-window"
 import { ClineProvider } from "../webview/ClineProvider"
 import { MultiSearchReplaceDiffStrategy } from "../diff/strategies/multi-search-replace"
@@ -91,12 +85,9 @@ import { processUserContentMentions } from "../mentions/processUserContentMentio
 import { ApiMessage } from "../task-persistence/apiMessages"
 import { getMessagesSinceLastSummary, summarizeConversation } from "../condense"
 import { maybeRemoveImageBlocks } from "../../api/transform/image-cleaning"
-import { restoreTodoListForTask } from "../tools/updateTodoListTool"
+import { Directive, DirectiveStreamingParser } from "../message-parsing"
 
-// Constants
-const MAX_EXPONENTIAL_BACKOFF_SECONDS = 600 // 10 minutes
-
-export type ClineEvents = {
+type ClineEvents = {
 	message: [{ action: "created" | "updated"; message: ClineMessage }]
 	taskStarted: []
 	taskModeSwitched: [taskId: string, mode: string]
@@ -129,7 +120,6 @@ export type TaskOptions = {
 }
 
 export class Task extends EventEmitter<ClineEvents> {
-	todoList?: TodoItem[]
 	readonly taskId: string
 	readonly instanceId: string
 
@@ -204,7 +194,7 @@ export class Task extends EventEmitter<ClineEvents> {
 	isWaitingForFirstChunk = false
 	isStreaming = false
 	currentStreamingContentIndex = 0
-	assistantMessageContent: AssistantMessageContent[] = []
+	assistantMessageContent: Directive[] = []
 	presentAssistantMessageLocked = false
 	presentAssistantMessageHasPendingUpdates = false
 	userMessageContent: (Anthropic.TextBlockParam | Anthropic.ImageBlockParam)[] = []
@@ -219,7 +209,7 @@ export class Task extends EventEmitter<ClineEvents> {
 		enableDiff = false,
 		enableCheckpoints = true,
 		fuzzyMatchThreshold = 1.0,
-		consecutiveMistakeLimit = DEFAULT_CONSECUTIVE_MISTAKE_LIMIT,
+		consecutiveMistakeLimit = 3,
 		task,
 		images,
 		historyItem,
@@ -258,10 +248,10 @@ export class Task extends EventEmitter<ClineEvents> {
 		this.browserSession = new BrowserSession(provider.context)
 		this.diffEnabled = enableDiff
 		this.fuzzyMatchThreshold = fuzzyMatchThreshold
-		this.consecutiveMistakeLimit = consecutiveMistakeLimit ?? DEFAULT_CONSECUTIVE_MISTAKE_LIMIT
+		this.consecutiveMistakeLimit = consecutiveMistakeLimit
 		this.providerRef = new WeakRef(provider)
 		this.globalStoragePath = provider.context.globalStorageUri.fsPath
-		this.diffViewProvider = new DiffViewProvider(this.cwd, this)
+		this.diffViewProvider = new DiffViewProvider(this.cwd)
 		this.enableCheckpoints = enableCheckpoints
 
 		this.rootTask = rootTask
@@ -378,7 +368,6 @@ export class Task extends EventEmitter<ClineEvents> {
 
 	public async overwriteClineMessages(newMessages: ClineMessage[]) {
 		this.clineMessages = newMessages
-		restoreTodoListForTask(this)
 		await this.saveClineMessages()
 	}
 
@@ -1162,7 +1151,7 @@ export class Task extends EventEmitter<ClineEvents> {
 			throw new Error(`[RooCode#recursivelyMakeRooRequests] task ${this.taskId}.${this.instanceId} aborted`)
 		}
 
-		if (this.consecutiveMistakeLimit > 0 && this.consecutiveMistakeCount >= this.consecutiveMistakeLimit) {
+		if (this.consecutiveMistakeCount >= this.consecutiveMistakeLimit) {
 			const { response, text, images } = await this.ask(
 				"mistake_limit_reached",
 				t("common:errors.mistake_limit_guidance"),
@@ -1212,25 +1201,15 @@ export class Task extends EventEmitter<ClineEvents> {
 		// top-down build file structure of project which for large projects can
 		// take a few seconds. For the best UX we show a placeholder api_req_started
 		// message with a loading spinner as this happens.
-
-		// Determine API protocol based on provider and model
-		const modelId = getModelId(this.apiConfiguration)
-		const apiProtocol = getApiProtocol(this.apiConfiguration.apiProvider, modelId)
-
 		await this.say(
 			"api_req_started",
 			JSON.stringify({
 				request:
 					userContent.map((block) => formatContentBlockToMarkdown(block)).join("\n\n") + "\n\nLoading...",
-				apiProtocol,
 			}),
 		)
 
-		const {
-			showRooIgnoredFiles = true,
-			includeDiagnosticMessages = true,
-			maxDiagnosticMessages = 50,
-		} = (await this.providerRef.deref()?.getState()) ?? {}
+		const { showRooIgnoredFiles = true } = (await this.providerRef.deref()?.getState()) ?? {}
 
 		const parsedUserContent = await processUserContentMentions({
 			userContent,
@@ -1239,8 +1218,6 @@ export class Task extends EventEmitter<ClineEvents> {
 			fileContextTracker: this.fileContextTracker,
 			rooIgnoreController: this.rooIgnoreController,
 			showRooIgnoredFiles,
-			includeDiagnosticMessages,
-			maxDiagnosticMessages,
 		})
 
 		const environmentDetails = await getEnvironmentDetails(this, includeFileDetails)
@@ -1260,7 +1237,6 @@ export class Task extends EventEmitter<ClineEvents> {
 
 		this.clineMessages[lastApiReqIndex].text = JSON.stringify({
 			request: finalUserContent.map((block) => formatContentBlockToMarkdown(block)).join("\n\n"),
-			apiProtocol,
 		} satisfies ClineApiReqInfo)
 
 		await this.saveClineMessages()
@@ -1281,9 +1257,8 @@ export class Task extends EventEmitter<ClineEvents> {
 			// of prices in tasks from history (it's worth removing a few months
 			// from now).
 			const updateApiReqMsg = (cancelReason?: ClineApiReqCancelReason, streamingFailedMessage?: string) => {
-				const existingData = JSON.parse(this.clineMessages[lastApiReqIndex].text || "{}")
 				this.clineMessages[lastApiReqIndex].text = JSON.stringify({
-					...existingData,
+					...JSON.parse(this.clineMessages[lastApiReqIndex].text || "{}"),
 					tokensIn: inputTokens,
 					tokensOut: outputTokens,
 					cacheWrites: cacheWriteTokens,
@@ -1369,7 +1344,7 @@ export class Task extends EventEmitter<ClineEvents> {
 			try {
 				for await (const chunk of stream) {
 					if (!chunk) {
-						// Sometimes chunk is undefined, no idea that can cause
+						// Sometimes chunk is undefined, no idea what can cause
 						// it, but this workaround seems to fix it.
 						continue
 					}
@@ -1391,7 +1366,7 @@ export class Task extends EventEmitter<ClineEvents> {
 
 							// Parse raw assistant message into content blocks.
 							const prevLength = this.assistantMessageContent.length
-							this.assistantMessageContent = parseAssistantMessage(assistantMessage)
+							this.assistantMessageContent = DirectiveStreamingParser.parse(assistantMessage)
 
 							if (this.assistantMessageContent.length > prevLength) {
 								// New content we need to present, reset to
@@ -1449,19 +1424,12 @@ export class Task extends EventEmitter<ClineEvents> {
 					// could be in (i.e. could have streamed some tools the user
 					// may have executed), so we just resort to replicating a
 					// cancel task.
+					this.abortTask()
 
-					// Check if this was a user-initiated cancellation BEFORE calling abortTask
-					// If this.abort is already true, it means the user clicked cancel, so we should
-					// treat this as "user_cancelled" rather than "streaming_failed"
-					const cancelReason = this.abort ? "user_cancelled" : "streaming_failed"
-					const streamingFailedMessage = this.abort
-						? undefined
-						: (error.message ?? JSON.stringify(serializeError(error), null, 2))
-
-					// Now call abortTask after determining the cancel reason
-					await this.abortTask()
-
-					await abortStream(cancelReason, streamingFailedMessage)
+					await abortStream(
+						"streaming_failed",
+						error.message ?? JSON.stringify(serializeError(error), null, 2),
+					)
 
 					const history = await provider?.getTaskWithId(this.taskId)
 
@@ -1633,7 +1601,6 @@ export class Task extends EventEmitter<ClineEvents> {
 			language,
 			maxConcurrentFileReads,
 			maxReadFileLine,
-			apiConfiguration,
 		} = state ?? {}
 
 		return await (async () => {
@@ -1661,9 +1628,7 @@ export class Task extends EventEmitter<ClineEvents> {
 				rooIgnoreInstructions,
 				maxReadFileLine !== -1,
 				{
-					maxConcurrentFileReads: maxConcurrentFileReads ?? 5,
-					todoListEnabled: apiConfiguration?.todoListEnabled ?? true,
-					useAgentRules: vscode.workspace.getConfiguration("roo-cline").get<boolean>("useAgentRules") ?? true,
+					maxConcurrentFileReads,
 				},
 			)
 		})()
@@ -1732,19 +1697,17 @@ export class Task extends EventEmitter<ClineEvents> {
 		const { contextTokens } = this.getTokenUsage()
 
 		if (contextTokens) {
+			// Default max tokens value for thinking models when no specific
+			// value is set.
+			const DEFAULT_THINKING_MODEL_MAX_TOKENS = 16_384
+
 			const modelInfo = this.api.getModel().info
 
-			const maxTokens = getModelMaxOutputTokens({
-				modelId: this.api.getModel().id,
-				model: modelInfo,
-				settings: this.apiConfiguration,
-			})
+			const maxTokens = modelInfo.supportsReasoningBudget
+				? this.apiConfiguration.modelMaxTokens || DEFAULT_THINKING_MODEL_MAX_TOKENS
+				: modelInfo.maxTokens
 
 			const contextWindow = modelInfo.contextWindow
-
-			const currentProfileId =
-				state?.listApiConfigMeta.find((profile) => profile.name === state?.currentApiConfigName)?.id ??
-				"default"
 
 			const truncateResult = await truncateConversationIfNeeded({
 				messages: this.apiConversationHistory,
@@ -1759,7 +1722,7 @@ export class Task extends EventEmitter<ClineEvents> {
 				customCondensingPrompt,
 				condensingApiHandler,
 				profileThresholds,
-				currentProfileId,
+				currentProfileId: state?.currentApiConfigName || "default",
 			})
 			if (truncateResult.messages !== this.apiConversationHistory) {
 				await this.overwriteApiConversationHistory(truncateResult.messages)
@@ -1830,10 +1793,7 @@ export class Task extends EventEmitter<ClineEvents> {
 				}
 
 				const baseDelay = requestDelaySeconds || 5
-				let exponentialDelay = Math.min(
-					Math.ceil(baseDelay * Math.pow(2, retryAttempt)),
-					MAX_EXPONENTIAL_BACKOFF_SECONDS,
-				)
+				let exponentialDelay = Math.ceil(baseDelay * Math.pow(2, retryAttempt))
 
 				// If the error is a 429, and the error details contain a retry delay, use that delay instead of exponential backoff
 				if (error.status === 429) {

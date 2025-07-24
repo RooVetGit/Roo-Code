@@ -1,4 +1,4 @@
-import { render, screen } from "@/utils/test-utils"
+import { render, screen } from "@testing-library/react"
 
 import type { HistoryItem } from "@roo-code/types"
 

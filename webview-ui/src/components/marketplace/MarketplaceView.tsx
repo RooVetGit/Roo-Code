@@ -12,9 +12,8 @@ import { TooltipProvider } from "@/components/ui/tooltip"
 interface MarketplaceViewProps {
 	onDone?: () => void
 	stateManager: MarketplaceViewStateManager
-	targetTab?: "mcp" | "mode"
 }
-export function MarketplaceView({ stateManager, onDone, targetTab }: MarketplaceViewProps) {
+export function MarketplaceView({ stateManager, onDone }: MarketplaceViewProps) {
 	const { t } = useAppTranslation()
 	const [state, manager] = useStateManager(stateManager)
 	const [hasReceivedInitialState, setHasReceivedInitialState] = useState(false)
@@ -26,12 +25,6 @@ export function MarketplaceView({ stateManager, onDone, targetTab }: Marketplace
 			setHasReceivedInitialState(true)
 		}
 	}, [state.allItems, hasReceivedInitialState])
-
-	useEffect(() => {
-		if (targetTab && (targetTab === "mcp" || targetTab === "mode")) {
-			manager.transition({ type: "SET_ACTIVE_TAB", payload: { tab: targetTab } })
-		}
-	}, [targetTab, manager])
 
 	// Ensure marketplace state manager processes messages when component mounts
 	useEffect(() => {
@@ -81,7 +74,7 @@ export function MarketplaceView({ stateManager, onDone, targetTab }: Marketplace
 	const filteredTags = useMemo(() => allTags, [allTags])
 
 	return (
-		<TooltipProvider delayDuration={300}>
+		<TooltipProvider>
 			<Tab>
 				<TabHeader className="flex flex-col sticky top-0 z-10 px-3 py-2">
 					<div className="flex justify-between items-center px-2">

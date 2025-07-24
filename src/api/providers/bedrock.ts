@@ -561,47 +561,16 @@ export class AwsBedrockHandler extends BaseProvider implements SingleCompletionH
 			// Clear timeout on error
 			clearTimeout(timeoutId)
 
-			// Check if this is a throttling error that should trigger retry logic
-			const errorType = this.getErrorType(error)
-
-			// For throttling errors, throw immediately without yielding chunks
-			// This allows the retry mechanism in attemptApiRequest() to catch and handle it
-			// The retry logic in Task.ts (around line 1817) expects errors to be thrown
-			// on the first chunk for proper exponential backoff behavior
-			if (errorType === "THROTTLING") {
-				if (error instanceof Error) {
-					throw error
-				} else {
-					throw new Error("Throttling error occurred")
-				}
-			}
-
-			// For non-throttling errors, use the standard error handling with chunks
+			// Use the extracted error handling method for all errors
 			const errorChunks = this.handleBedrockError(error, true) // true for streaming context
 			// Yield each chunk individually to ensure type compatibility
 			for (const chunk of errorChunks) {
 				yield chunk as any // Cast to any to bypass type checking since we know the structure is correct
 			}
 
-			// Re-throw with enhanced error message for retry system
-			const enhancedErrorMessage = this.formatErrorMessage(error, this.getErrorType(error), true)
+			// Re-throw the error
 			if (error instanceof Error) {
-				const enhancedError = new Error(enhancedErrorMessage)
-				// Preserve important properties from the original error
-				enhancedError.name = error.name
-				// Validate and preserve status property
-				if ("status" in error && typeof (error as any).status === "number") {
-					;(enhancedError as any).status = (error as any).status
-				}
-				// Validate and preserve $metadata property
-				if (
-					"$metadata" in error &&
-					typeof (error as any).$metadata === "object" &&
-					(error as any).$metadata !== null
-				) {
-					;(enhancedError as any).$metadata = (error as any).$metadata
-				}
-				throw enhancedError
+				throw error
 			} else {
 				throw new Error("An unknown error occurred")
 			}
@@ -669,26 +638,7 @@ export class AwsBedrockHandler extends BaseProvider implements SingleCompletionH
 			const errorResult = this.handleBedrockError(error, false) // false for non-streaming context
 			// Since we're in a non-streaming context, we know the result is a string
 			const errorMessage = errorResult as string
-
-			// Create enhanced error for retry system
-			const enhancedError = new Error(errorMessage)
-			if (error instanceof Error) {
-				// Preserve important properties from the original error
-				enhancedError.name = error.name
-				// Validate and preserve status property
-				if ("status" in error && typeof (error as any).status === "number") {
-					;(enhancedError as any).status = (error as any).status
-				}
-				// Validate and preserve $metadata property
-				if (
-					"$metadata" in error &&
-					typeof (error as any).$metadata === "object" &&
-					(error as any).$metadata !== null
-				) {
-					;(enhancedError as any).$metadata = (error as any).$metadata
-				}
-			}
-			throw enhancedError
+			throw new Error(errorMessage)
 		}
 	}
 
@@ -1074,32 +1024,19 @@ Please verify:
 			logLevel: "error",
 		},
 		THROTTLING: {
-			patterns: [
-				"throttl",
-				"rate",
-				"limit",
-				"bedrock is unable to process your request", // AWS Bedrock specific throttling message
-				"please wait",
-				"quota exceeded",
-				"service unavailable",
-				"busy",
-				"overloaded",
-				"too many requests",
-				"request limit",
-				"concurrent requests",
-			],
+			patterns: ["throttl", "rate", "limit"],
 			messageTemplate: `Request was throttled or rate limited. Please try:
 1. Reducing the frequency of requests
 2. If using a provisioned model, check its throughput settings
 3. Contact AWS support to request a quota increase if needed
 
-
+{formattedErrorDetails}
 
 `,
 			logLevel: "error",
 		},
 		TOO_MANY_TOKENS: {
-			patterns: ["too many tokens", "token limit exceeded", "context length", "maximum context length"],
+			patterns: ["too many tokens"],
 			messageTemplate: `"Too many tokens" error detected.
 Possible Causes:
 1. Input exceeds model's context window limit
@@ -1112,49 +1049,7 @@ Suggestions:
 2. Split your request into smaller chunks
 3. Use a model with a larger context window
 4. If rate limited, reduce request frequency
-5. Check your Amazon Bedrock quotas and limits
-
-`,
-			logLevel: "error",
-		},
-		SERVICE_QUOTA_EXCEEDED: {
-			patterns: ["service quota exceeded", "service quota", "quota exceeded for model"],
-			messageTemplate: `Service quota exceeded. This error indicates you've reached AWS service limits.
-
-Please try:
-1. Contact AWS support to request a quota increase
-2. Reduce request frequency temporarily
-3. Check your AWS Bedrock quotas in the AWS console
-4. Consider using a different model or region with available capacity
-
-`,
-			logLevel: "error",
-		},
-		MODEL_NOT_READY: {
-			patterns: ["model not ready", "model is not ready", "provisioned throughput not ready", "model loading"],
-			messageTemplate: `Model is not ready or still loading. This can happen with:
-1. Provisioned throughput models that are still initializing
-2. Custom models that are being loaded
-3. Models that are temporarily unavailable
-
-Please try:
-1. Wait a few minutes and retry
-2. Check the model status in AWS Bedrock console
-3. Verify the model is properly provisioned
-
-`,
-			logLevel: "error",
-		},
-		INTERNAL_SERVER_ERROR: {
-			patterns: ["internal server error", "internal error", "server error", "service error"],
-			messageTemplate: `AWS Bedrock internal server error. This is a temporary service issue.
-
-Please try:
-1. Retry the request after a brief delay
-2. If the error persists, check AWS service health
-3. Contact AWS support if the issue continues
-
-`,
+5. Check your Amazon Bedrock quotas and limits`,
 			logLevel: "error",
 		},
 		ON_DEMAND_NOT_SUPPORTED: {
@@ -1213,34 +1108,12 @@ Please check:
 			return "GENERIC"
 		}
 
-		// Check for HTTP 429 status code (Too Many Requests)
-		if ((error as any).status === 429 || (error as any).$metadata?.httpStatusCode === 429) {
-			return "THROTTLING"
-		}
-
-		// Check for AWS Bedrock specific throttling exception names
-		if ((error as any).name === "ThrottlingException" || (error as any).__type === "ThrottlingException") {
-			return "THROTTLING"
-		}
-
 		const errorMessage = error.message.toLowerCase()
 		const errorName = error.name.toLowerCase()
 
-		// Check each error type's patterns in order of specificity (most specific first)
-		const errorTypeOrder = [
-			"SERVICE_QUOTA_EXCEEDED", // Most specific - check before THROTTLING
-			"MODEL_NOT_READY",
-			"TOO_MANY_TOKENS",
-			"INTERNAL_SERVER_ERROR",
-			"ON_DEMAND_NOT_SUPPORTED",
-			"NOT_FOUND",
-			"ACCESS_DENIED",
-			"THROTTLING", // Less specific - check after more specific patterns
-		]
-
-		for (const errorType of errorTypeOrder) {
-			const definition = AwsBedrockHandler.ERROR_TYPES[errorType]
-			if (!definition) continue
+		// Check each error type's patterns
+		for (const [errorType, definition] of Object.entries(AwsBedrockHandler.ERROR_TYPES)) {
+			if (errorType === "GENERIC") continue // Skip the generic type
 
 			// If any pattern matches in either message or name, return this error type
 			if (definition.patterns.some((pattern) => errorMessage.includes(pattern) || errorName.includes(pattern))) {
@@ -1269,6 +1142,37 @@ Please check:
 			const modelConfig = this.getModel()
 			templateVars.modelId = modelConfig.id
 			templateVars.contextWindow = String(modelConfig.info.contextWindow || "unknown")
+
+			// Format error details
+			const errorDetails: Record<string, any> = {}
+			Object.getOwnPropertyNames(error).forEach((prop) => {
+				if (prop !== "stack") {
+					errorDetails[prop] = (error as any)[prop]
+				}
+			})
+
+			// Safely stringify error details to avoid circular references
+			templateVars.formattedErrorDetails = Object.entries(errorDetails)
+				.map(([key, value]) => {
+					let valueStr
+					if (typeof value === "object" && value !== null) {
+						try {
+							// Use a replacer function to handle circular references
+							valueStr = JSON.stringify(value, (k, v) => {
+								if (k && typeof v === "object" && v !== null) {
+									return "[Object]"
+								}
+								return v
+							})
+						} catch (e) {
+							valueStr = "[Complex Object]"
+						}
+					} else {
+						valueStr = String(value)
+					}
+					return `- ${key}: ${valueStr}`
+				})
+				.join("\n")
 		}
 
 		// Add context-specific template variables

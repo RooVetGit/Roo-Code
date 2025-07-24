@@ -17,7 +17,10 @@
 	"confirmation": {
 		"reset_state": "Czy na pewno chcesz zresetować wszystkie stany i tajne magazyny w rozszerzeniu? Tej operacji nie można cofnąć.",
 		"delete_config_profile": "Czy na pewno chcesz usunąć ten profil konfiguracyjny?",
-		"delete_custom_mode_with_rules": "Czy na pewno chcesz usunąć ten tryb {scope}?\n\nSpowoduje to również usunięcie powiązanego folderu reguł pod adresem:\n{rulesFolderPath}"
+		"delete_custom_mode": "Czy na pewno chcesz usunąć ten niestandardowy tryb?",
+		"delete_message": "Co chcesz usunąć?",
+		"just_this_message": "Tylko tę wiadomość",
+		"this_and_subsequent": "Tę i wszystkie kolejne wiadomości"
 	},
 	"errors": {
 		"invalid_data_uri": "Nieprawidłowy format URI danych",
@@ -28,7 +31,6 @@
 		"could_not_open_file_generic": "Nie można otworzyć pliku!",
 		"checkpoint_timeout": "Upłynął limit czasu podczas próby przywrócenia punktu kontrolnego.",
 		"checkpoint_failed": "Nie udało się przywrócić punktu kontrolnego.",
-		"git_not_installed": "Funkcja punktów kontrolnych wymaga oprogramowania Git. Zainstaluj Git, aby włączyć punkty kontrolne.",
 		"no_workspace": "Najpierw otwórz folder projektu",
 		"update_support_prompt": "Nie udało się zaktualizować komunikatu wsparcia",
 		"reset_support_prompt": "Nie udało się zresetować komunikatu wsparcia",
@@ -50,39 +52,21 @@
 		"cannot_access_path": "Nie można uzyskać dostępu do ścieżki {{path}}: {{error}}",
 		"settings_import_failed": "Nie udało się zaimportować ustawień: {{error}}.",
 		"mistake_limit_guidance": "To może wskazywać na błąd w procesie myślowym modelu lub niezdolność do prawidłowego użycia narzędzia, co można złagodzić poprzez wskazówki użytkownika (np. \"Spróbuj podzielić zadanie na mniejsze kroki\").",
-		"violated_organization_allowlist": "Nie udało się uruchomić zadania: bieżący profil nie jest kompatybilny z ustawieniami Twojej organizacji",
+		"violated_organization_allowlist": "Nie udało się uruchomić zadania: bieżący profil narusza ustawienia Twojej organizacji",
 		"condense_failed": "Nie udało się skondensować kontekstu",
 		"condense_not_enough_messages": "Za mało wiadomości do skondensowania kontekstu",
 		"condensed_recently": "Kontekst został niedawno skondensowany; pomijanie tej próby",
 		"condense_handler_invalid": "Nieprawidłowy handler API do kondensowania kontekstu",
 		"condense_context_grew": "Rozmiar kontekstu wzrósł podczas kondensacji; pomijanie tej próby",
-		"url_timeout": "Strona internetowa ładowała się zbyt długo (timeout). Może to być spowodowane wolnym połączeniem, ciężką stroną lub tymczasową niedostępnością. Możesz spróbować ponownie później lub sprawdzić, czy URL jest poprawny.",
-		"url_not_found": "Nie można znaleźć adresu strony internetowej. Sprawdź, czy URL jest poprawny i spróbuj ponownie.",
-		"no_internet": "Brak połączenia z internetem. Sprawdź połączenie sieciowe i spróbuj ponownie.",
-		"url_forbidden": "Dostęp do tej strony internetowej jest zabroniony. Strona może blokować automatyczny dostęp lub wymagać uwierzytelnienia.",
-		"url_page_not_found": "Strona nie została znaleziona. Sprawdź, czy URL jest poprawny.",
-		"url_fetch_failed": "Błąd pobierania zawartości URL: {{error}}",
-		"url_fetch_error_with_url": "Błąd pobierania zawartości dla {{url}}: {{error}}",
-		"command_timeout": "Przekroczono limit czasu wykonania polecenia po {{seconds}} sekundach",
 		"share_task_failed": "Nie udało się udostępnić zadania",
 		"share_no_active_task": "Brak aktywnego zadania do udostępnienia",
 		"share_auth_required": "Wymagana autoryzacja. Zaloguj się, aby udostępniać zadania.",
 		"share_not_enabled": "Udostępnianie zadań nie jest włączone dla tej organizacji.",
-		"share_task_not_found": "Zadanie nie znalezione lub dostęp odmówiony.",
-		"mode_import_failed": "Import trybu nie powiódł się: {{error}}",
-		"delete_rules_folder_failed": "Nie udało się usunąć folderu reguł: {{rulesFolderPath}}. Błąd: {{error}}",
-		"claudeCode": {
-			"processExited": "Proces Claude Code zakończył się kodem {{exitCode}}.",
-			"errorOutput": "Wyjście błędu: {{output}}",
-			"processExitedWithError": "Proces Claude Code zakończył się kodem {{exitCode}}. Wyjście błędu: {{output}}",
-			"stoppedWithReason": "Claude Code zatrzymał się z powodu: {{reason}}",
-			"apiKeyModelPlanMismatch": "Klucze API i plany subskrypcji pozwalają na różne modele. Upewnij się, że wybrany model jest zawarty w twoim planie."
-		}
+		"share_task_not_found": "Zadanie nie znalezione lub dostęp odmówiony."
 	},
 	"warnings": {
 		"no_terminal_content": "Nie wybrano zawartości terminala",
-		"missing_task_files": "Pliki tego zadania są brakujące. Czy chcesz usunąć je z listy zadań?",
-		"auto_import_failed": "Nie udało się automatycznie zaimportować ustawień RooCode: {{error}}"
+		"missing_task_files": "Pliki tego zadania są brakujące. Czy chcesz usunąć je z listy zadań?"
 	},
 	"info": {
 		"no_changes": "Nie znaleziono zmian.",
@@ -91,31 +75,22 @@
 		"custom_storage_path_set": "Ustawiono niestandardową ścieżkę przechowywania: {{path}}",
 		"default_storage_path": "Wznowiono używanie domyślnej ścieżki przechowywania",
 		"settings_imported": "Ustawienia zaimportowane pomyślnie.",
-		"auto_import_success": "Ustawienia RooCode zostały automatycznie zaimportowane z {{filename}}",
 		"share_link_copied": "Link udostępniania skopiowany do schowka",
 		"image_copied_to_clipboard": "URI danych obrazu skopiowane do schowka",
 		"image_saved": "Obraz zapisany w {{path}}",
 		"organization_share_link_copied": "Link udostępniania organizacji skopiowany do schowka!",
-		"public_share_link_copied": "Publiczny link udostępniania skopiowany do schowka!",
-		"mode_exported": "Tryb '{{mode}}' pomyślnie wyeksportowany",
-		"mode_imported": "Tryb pomyślnie zaimportowany"
+		"public_share_link_copied": "Publiczny link udostępniania skopiowany do schowka!"
 	},
 	"answers": {
 		"yes": "Tak",
 		"no": "Nie",
+		"cancel": "Anuluj",
 		"remove": "Usuń",
 		"keep": "Zachowaj"
 	},
-	"buttons": {
-		"save": "Zapisz",
-		"edit": "Edytuj",
-		"learn_more": "Dowiedz się więcej"
-	},
 	"tasks": {
 		"canceled": "Błąd zadania: Zostało zatrzymane i anulowane przez użytkownika.",
-		"deleted": "Niepowodzenie zadania: Zostało zatrzymane i usunięte przez użytkownika.",
-		"incomplete": "Zadanie #{{taskNumber}} (Niekompletne)",
-		"no_messages": "Zadanie #{{taskNumber}} (Brak wiadomości)"
+		"deleted": "Niepowodzenie zadania: Zostało zatrzymane i usunięte przez użytkownika."
 	},
 	"storage": {
 		"prompt_custom_path": "Wprowadź niestandardową ścieżkę przechowywania dla historii konwersacji lub pozostaw puste, aby użyć lokalizacji domyślnej",
@@ -130,34 +105,7 @@
 	"settings": {
 		"providers": {
 			"groqApiKey": "Klucz API Groq",
-			"getGroqApiKey": "Uzyskaj klucz API Groq",
-			"claudeCode": {
-				"pathLabel": "Ścieżka Claude Code",
-				"description": "Opcjonalna ścieżka do Twojego CLI Claude Code. Domyślnie 'claude', jeśli nie ustawiono.",
-				"placeholder": "Domyślnie: claude"
-			}
-		}
-	},
-	"customModes": {
-		"errors": {
-			"yamlParseError": "Nieprawidłowy YAML w pliku .roomodes w linii {{line}}. Sprawdź:\n• Prawidłowe wcięcia (używaj spacji, nie tabulatorów)\n• Pasujące cudzysłowy i nawiasy\n• Prawidłową składnię YAML",
-			"schemaValidationError": "Nieprawidłowy format trybów niestandardowych w .roomodes:\n{{issues}}",
-			"invalidFormat": "Nieprawidłowy format trybów niestandardowych. Upewnij się, że twoje ustawienia są zgodne z prawidłowym formatem YAML.",
-			"updateFailed": "Aktualizacja trybu niestandardowego nie powiodła się: {{error}}",
-			"deleteFailed": "Usunięcie trybu niestandardowego nie powiodło się: {{error}}",
-			"resetFailed": "Resetowanie trybów niestandardowych nie powiodło się: {{error}}",
-			"modeNotFound": "Błąd zapisu: Tryb nie został znaleziony",
-			"noWorkspaceForProject": "Nie znaleziono folderu obszaru roboczego dla trybu specyficznego dla projektu",
-			"rulesCleanupFailed": "Tryb został pomyślnie usunięty, ale nie udało się usunąć folderu reguł w {{rulesFolderPath}}. Może być konieczne ręczne usunięcie."
-		},
-		"scope": {
-			"project": "projekt",
-			"global": "globalny"
-		}
-	},
-	"marketplace": {
-		"mode": {
-			"rulesCleanupFailed": "Tryb został pomyślnie usunięty, ale nie udało się usunąć folderu reguł w {{rulesFolderPath}}. Może być konieczne ręczne usunięcie."
+			"getGroqApiKey": "Uzyskaj klucz API Groq"
 		}
 	},
 	"mdm": {
@@ -165,19 +113,6 @@
 			"cloud_auth_required": "Twoja organizacja wymaga uwierzytelnienia Roo Code Cloud. Zaloguj się, aby kontynuować.",
 			"organization_mismatch": "Musisz być uwierzytelniony kontem Roo Code Cloud swojej organizacji.",
 			"verification_failed": "Nie można zweryfikować uwierzytelnienia organizacji."
-		}
-	},
-	"prompts": {
-		"deleteMode": {
-			"title": "Usuń tryb niestandardowy",
-			"description": "Czy na pewno chcesz usunąć ten tryb {{scope}}? Spowoduje to również usunięcie powiązanego folderu z regułami w {{rulesFolderPath}}",
-			"descriptionNoRules": "Czy na pewno chcesz usunąć ten tryb niestandardowy?",
-			"confirm": "Usuń"
-		}
-	},
-	"commands": {
-		"preventCompletionWithOpenTodos": {
-			"description": "Zapobiegaj ukończeniu zadania gdy na liście zadań są nieukończone zadania"
 		}
 	}
 }

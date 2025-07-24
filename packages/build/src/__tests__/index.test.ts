@@ -70,7 +70,7 @@ describe("generatePackageJson", () => {
 							{
 								command: "roo-cline.accountButtonClicked",
 								group: "navigation@6",
-								when: "activeWebviewPanelId == roo-cline.TabPanelProvider",
+								when: "activeWebviewPanelId == roo-cline.TabPanelProvider && config.roo-cline.rooCodeCloudEnabled",
 							},
 						],
 					},
@@ -183,7 +183,7 @@ describe("generatePackageJson", () => {
 						{
 							command: "roo-code-nightly.accountButtonClicked",
 							group: "navigation@6",
-							when: "activeWebviewPanelId == roo-code-nightly.TabPanelProvider",
+							when: "activeWebviewPanelId == roo-code-nightly.TabPanelProvider && config.roo-code-nightly.rooCodeCloudEnabled",
 						},
 					],
 				},

@@ -1,4 +1,3 @@
-import { safeWriteJson } from "../../utils/safeWriteJson"
 import os from "os"
 import * as path from "path"
 import fs from "fs/promises"
@@ -12,9 +11,8 @@ import { TelemetryService } from "@roo-code/telemetry"
 import { ProviderSettingsManager, providerProfilesSchema } from "./ProviderSettingsManager"
 import { ContextProxy } from "./ContextProxy"
 import { CustomModesManager } from "./CustomModesManager"
-import { t } from "../../i18n"
 
-export type ImportOptions = {
+type ImportOptions = {
 	providerSettingsManager: ProviderSettingsManager
 	contextProxy: ContextProxy
 	customModesManager: CustomModesManager
@@ -24,22 +22,17 @@ type ExportOptions = {
 	providerSettingsManager: ProviderSettingsManager
 	contextProxy: ContextProxy
 }
-type ImportWithProviderOptions = ImportOptions & {
-	provider: {
-		settingsImportedAt?: number
-		postStateToWebview: () => Promise<void>
-	}
-}
 
-/**
- * Imports configuration from a specific file path
- * Shares base functionality for import settings for both the manual
- * and automatic settings importing
- */
-export async function importSettingsFromPath(
-	filePath: string,
-	{ providerSettingsManager, contextProxy, customModesManager }: ImportOptions,
-) {
+export const importSettings = async ({ providerSettingsManager, contextProxy, customModesManager }: ImportOptions) => {
+	const uris = await vscode.window.showOpenDialog({
+		filters: { JSON: ["json"] },
+		canSelectMany: false,
+	})
+
+	if (!uris) {
+		return { success: false }
+	}
+
 	const schema = z.object({
 		providerProfiles: providerProfilesSchema,
 		globalSettings: globalSettingsSchema.optional(),
@@ -48,9 +41,8 @@ export async function importSettingsFromPath(
 	try {
 		const previousProviderProfiles = await providerSettingsManager.export()
 
-		const { providerProfiles: newProviderProfiles, globalSettings = {} } = schema.parse(
-			JSON.parse(await fs.readFile(filePath, "utf-8")),
-		)
+		const data = JSON.parse(await fs.readFile(uris[0].fsPath, "utf-8"))
+		const { providerProfiles: newProviderProfiles, globalSettings = {} } = schema.parse(data)
 
 		const providerProfiles = {
 			currentApiConfigName: newProviderProfiles.currentApiConfigName,
@@ -68,10 +60,7 @@ export async function importSettingsFromPath(
 			(globalSettings.customModes ?? []).map((mode) => customModesManager.updateCustomMode(mode.slug, mode)),
 		)
 
-		// OpenAI Compatible settings are now correctly stored in codebaseIndexConfig
-		// They will be imported automatically with the config - no special handling needed
-
-		await providerSettingsManager.import(providerProfiles)
+		await providerSettingsManager.import(newProviderProfiles)
 		await contextProxy.setValues(globalSettings)
 
 		// Set the current provider.
@@ -103,45 +92,6 @@ export async function importSettingsFromPath(
 	}
 }
 
-/**
- * Import settings from a file using a file dialog
- * @param options - Import options containing managers and proxy
- * @returns Promise resolving to import result
- */
-export const importSettings = async ({ providerSettingsManager, contextProxy, customModesManager }: ImportOptions) => {
-	const uris = await vscode.window.showOpenDialog({
-		filters: { JSON: ["json"] },
-		canSelectMany: false,
-	})
-
-	if (!uris) {
-		return { success: false, error: "User cancelled file selection" }
-	}
-
-	return importSettingsFromPath(uris[0].fsPath, {
-		providerSettingsManager,
-		contextProxy,
-		customModesManager,
-	})
-}
-
-/**
- * Import settings from a specific file
- * @param options - Import options containing managers and proxy
- * @param fileUri - URI of the file to import from
- * @returns Promise resolving to import result
- */
-export const importSettingsFromFile = async (
-	{ providerSettingsManager, contextProxy, customModesManager }: ImportOptions,
-	fileUri: vscode.Uri,
-) => {
-	return importSettingsFromPath(fileUri.fsPath, {
-		providerSettingsManager,
-		contextProxy,
-		customModesManager,
-	})
-}
-
 export const exportSettings = async ({ providerSettingsManager, contextProxy }: ExportOptions) => {
 	const uri = await vscode.window.showSaveDialog({
 		filters: { JSON: ["json"] },
@@ -164,55 +114,8 @@ export const exportSettings = async ({ providerSettingsManager, contextProxy }: 
 			return
 		}
 
-		// OpenAI Compatible settings are now correctly stored in codebaseIndexConfig
-		// No workaround needed - they will be exported automatically with the config
-
 		const dirname = path.dirname(uri.fsPath)
 		await fs.mkdir(dirname, { recursive: true })
-		await safeWriteJson(uri.fsPath, { providerProfiles, globalSettings })
-	} catch (e) {
-		console.error("Failed to export settings:", e)
-		// Don't re-throw - the UI will handle showing error messages
-	}
-}
-
-/**
- * Import settings with complete UI feedback and provider state updates
- * @param options - Import options with provider instance
- * @param filePath - Optional file path to import from. If not provided, a file dialog will be shown.
- * @returns Promise that resolves when import is complete
- */
-export const importSettingsWithFeedback = async (
-	{ providerSettingsManager, contextProxy, customModesManager, provider }: ImportWithProviderOptions,
-	filePath?: string,
-) => {
-	let result
-
-	if (filePath) {
-		// Validate file path and check if file exists
-		try {
-			// Check if file exists and is readable
-			await fs.access(filePath, fs.constants.F_OK | fs.constants.R_OK)
-			result = await importSettingsFromPath(filePath, {
-				providerSettingsManager,
-				contextProxy,
-				customModesManager,
-			})
-		} catch (error) {
-			result = {
-				success: false,
-				error: `Cannot access file at path "${filePath}": ${error instanceof Error ? error.message : "Unknown error"}`,
-			}
-		}
-	} else {
-		result = await importSettings({ providerSettingsManager, contextProxy, customModesManager })
-	}
-
-	if (result.success) {
-		provider.settingsImportedAt = Date.now()
-		await provider.postStateToWebview()
-		await vscode.window.showInformationMessage(t("common:info.settings_imported"))
-	} else if (result.error) {
-		await vscode.window.showErrorMessage(t("common:errors.settings_import_failed", { error: result.error }))
-	}
+		await fs.writeFile(uri.fsPath, JSON.stringify({ providerProfiles, globalSettings }, null, 2), "utf-8")
+	} catch (e) {}
 }

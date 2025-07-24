@@ -1,6 +1,6 @@
 // npx vitest src/components/settings/__tests__/ApiConfigManager.spec.tsx
 
-import { render, screen, fireEvent, within } from "@/utils/test-utils"
+import { render, screen, fireEvent, within } from "@testing-library/react"
 
 import ApiConfigManager from "../ApiConfigManager"
 
@@ -41,7 +41,6 @@ vitest.mock("@/components/ui", () => ({
 			data-testid={dataTestId}
 		/>
 	),
-	StandardTooltip: ({ children, content }: any) => <div title={content}>{children}</div>,
 	// New components for searchable dropdown
 	Popover: ({ children, open }: any) => (
 		<div className="popover" style={{ position: "relative" }}>

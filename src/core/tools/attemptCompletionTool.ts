@@ -1,12 +1,9 @@
 import Anthropic from "@anthropic-ai/sdk"
-import * as vscode from "vscode"
 
 import { TelemetryService } from "@roo-code/telemetry"
 
 import { Task } from "../task/Task"
 import {
-	ToolResponse,
-	ToolUse,
 	AskApproval,
 	HandleError,
 	PushToolResult,
@@ -15,11 +12,11 @@ import {
 	AskFinishSubTaskApproval,
 } from "../../shared/tools"
 import { formatResponse } from "../prompts/responses"
-import { Package } from "../../shared/package"
+import { ToolResponse, AttemptCompletionToolDirective } from "../message-parsing/directives"
 
 export async function attemptCompletionTool(
 	cline: Task,
-	block: ToolUse,
+	block: AttemptCompletionToolDirective,
 	askApproval: AskApproval,
 	handleError: HandleError,
 	pushToolResult: PushToolResult,
@@ -29,25 +26,6 @@ export async function attemptCompletionTool(
 ) {
 	const result: string | undefined = block.params.result
 	const command: string | undefined = block.params.command
-
-	// Get the setting for preventing completion with open todos from VSCode configuration
-	const preventCompletionWithOpenTodos = vscode.workspace
-		.getConfiguration(Package.name)
-		.get<boolean>("preventCompletionWithOpenTodos", false)
-
-	// Check if there are incomplete todos (only if the setting is enabled)
-	const hasIncompleteTodos = cline.todoList && cline.todoList.some((todo) => todo.status !== "completed")
-
-	if (preventCompletionWithOpenTodos && hasIncompleteTodos) {
-		cline.consecutiveMistakeCount++
-		cline.recordToolError("attempt_completion")
-		pushToolResult(
-			formatResponse.toolError(
-				"Cannot complete task while there are incomplete todos. Please finish all todos before attempting completion.",
-			),
-		)
-		return
-	}
 
 	try {
 		const lastMessage = cline.clineMessages.at(-1)

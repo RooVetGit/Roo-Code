@@ -1,4 +1,3 @@
-import { safeWriteJson } from "../../utils/safeWriteJson"
 import * as path from "path"
 import * as fs from "fs/promises"
 
@@ -79,5 +78,5 @@ export async function saveApiMessages({
 }) {
 	const taskDir = await getTaskDirectoryPath(globalStoragePath, taskId)
 	const filePath = path.join(taskDir, GlobalFileNames.apiConversationHistory)
-	await safeWriteJson(filePath, messages)
+	await fs.writeFile(filePath, JSON.stringify(messages))
 }

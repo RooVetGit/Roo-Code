@@ -1,4 +1,4 @@
-import { renderHook, act } from "@/utils/test-utils"
+import { renderHook, act } from "@testing-library/react"
 
 import type { HistoryItem } from "@roo-code/types"
 

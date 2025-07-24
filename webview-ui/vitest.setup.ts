@@ -48,9 +48,6 @@ Object.defineProperty(window, "matchMedia", {
 	})),
 })
 
-// Mock scrollIntoView which is not available in jsdom
-Element.prototype.scrollIntoView = vi.fn()
-
 // Suppress console.log during tests to reduce noise.
 // Keep console.error for actual errors.
 const originalConsoleLog = console.log

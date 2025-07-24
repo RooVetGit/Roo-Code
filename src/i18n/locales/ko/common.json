@@ -17,7 +17,10 @@
 	"confirmation": {
 		"reset_state": "확장 프로그램의 모든 상태와 보안 저장소를 재설정하시겠습니까? 이 작업은 취소할 수 없습니다.",
 		"delete_config_profile": "이 구성 프로필을 삭제하시겠습니까?",
-		"delete_custom_mode_with_rules": "이 {scope} 모드를 삭제하시겠습니까?\n\n이렇게 하면 연결된 규칙 폴더도 다음 위치에서 삭제됩니다:\n{rulesFolderPath}"
+		"delete_custom_mode": "이 사용자 지정 모드를 삭제하시겠습니까?",
+		"delete_message": "무엇을 삭제하시겠습니까?",
+		"just_this_message": "이 메시지만",
+		"this_and_subsequent": "이 메시지와 모든 후속 메시지"
 	},
 	"errors": {
 		"invalid_data_uri": "잘못된 데이터 URI 형식",
@@ -28,7 +31,6 @@
 		"could_not_open_file_generic": "파일을 열 수 없습니다!",
 		"checkpoint_timeout": "체크포인트 복원을 시도하는 중 시간 초과되었습니다.",
 		"checkpoint_failed": "체크포인트 복원에 실패했습니다.",
-		"git_not_installed": "체크포인트 기능을 사용하려면 Git이 필요합니다. 체크포인트를 활성화하려면 Git을 설치하세요.",
 		"no_workspace": "먼저 프로젝트 폴더를 열어주세요",
 		"update_support_prompt": "지원 프롬프트 업데이트에 실패했습니다",
 		"reset_support_prompt": "지원 프롬프트 재설정에 실패했습니다",
@@ -50,39 +52,21 @@
 		"cannot_access_path": "경로 {{path}}에 접근할 수 없습니다: {{error}}",
 		"settings_import_failed": "설정 가져오기 실패: {{error}}.",
 		"mistake_limit_guidance": "이는 모델의 사고 과정 실패나 도구를 제대로 사용하지 못하는 것을 나타낼 수 있으며, 사용자 가이드를 통해 완화할 수 있습니다 (예: \"작업을 더 작은 단계로 나누어 시도해보세요\").",
-		"violated_organization_allowlist": "작업 실행 실패: 현재 프로필이 조직 설정과 호환되지 않습니다",
+		"violated_organization_allowlist": "작업 실행 실패: 현재 프로필이 조직 설정을 위반합니다",
 		"condense_failed": "컨텍스트 압축에 실패했습니다",
 		"condense_not_enough_messages": "컨텍스트를 압축할 메시지가 충분하지 않습니다",
 		"condensed_recently": "컨텍스트가 최근 압축되었습니다; 이 시도를 건너뜁니다",
 		"condense_handler_invalid": "컨텍스트 압축을 위한 API 핸들러가 유효하지 않습니다",
 		"condense_context_grew": "압축 중 컨텍스트 크기가 증가했습니다; 이 시도를 건너뜁니다",
-		"url_timeout": "웹사이트 로딩이 너무 오래 걸렸습니다(타임아웃). 느린 연결, 무거운 웹사이트 또는 일시적으로 사용할 수 없는 상태일 수 있습니다. 나중에 다시 시도하거나 URL이 올바른지 확인해 주세요.",
-		"url_not_found": "웹사이트 주소를 찾을 수 없습니다. URL이 올바른지 확인하고 다시 시도해 주세요.",
-		"no_internet": "인터넷 연결이 없습니다. 네트워크 연결을 확인하고 다시 시도해 주세요.",
-		"url_forbidden": "이 웹사이트에 대한 접근이 금지되었습니다. 사이트가 자동 접근을 차단하거나 인증이 필요할 수 있습니다.",
-		"url_page_not_found": "페이지를 찾을 수 없습니다. URL이 올바른지 확인해 주세요.",
-		"url_fetch_failed": "URL 콘텐츠 가져오기 실패: {{error}}",
-		"url_fetch_error_with_url": "{{url}} 콘텐츠 가져오기 오류: {{error}}",
-		"command_timeout": "명령 실행 시간이 {{seconds}}초 후 초과되었습니다",
 		"share_task_failed": "작업 공유에 실패했습니다",
 		"share_no_active_task": "공유할 활성 작업이 없습니다",
 		"share_auth_required": "인증이 필요합니다. 작업을 공유하려면 로그인하세요.",
 		"share_not_enabled": "이 조직에서는 작업 공유가 활성화되지 않았습니다.",
-		"share_task_not_found": "작업을 찾을 수 없거나 액세스가 거부되었습니다.",
-		"mode_import_failed": "모드 가져오기 실패: {{error}}",
-		"delete_rules_folder_failed": "규칙 폴더 삭제 실패: {{rulesFolderPath}}. 오류: {{error}}",
-		"claudeCode": {
-			"processExited": "Claude Code 프로세스가 코드 {{exitCode}}로 종료되었습니다.",
-			"errorOutput": "오류 출력: {{output}}",
-			"processExitedWithError": "Claude Code 프로세스가 코드 {{exitCode}}로 종료되었습니다. 오류 출력: {{output}}",
-			"stoppedWithReason": "Claude Code가 다음 이유로 중지되었습니다: {{reason}}",
-			"apiKeyModelPlanMismatch": "API 키와 구독 플랜에서 다른 모델을 허용합니다. 선택한 모델이 플랜에 포함되어 있는지 확인하세요."
-		}
+		"share_task_not_found": "작업을 찾을 수 없거나 액세스가 거부되었습니다."
 	},
 	"warnings": {
 		"no_terminal_content": "선택된 터미널 내용이 없습니다",
-		"missing_task_files": "이 작업의 파일이 누락되었습니다. 작업 목록에서 제거하시겠습니까?",
-		"auto_import_failed": "RooCode 설정 자동 가져오기 실패: {{error}}"
+		"missing_task_files": "이 작업의 파일이 누락되었습니다. 작업 목록에서 제거하시겠습니까?"
 	},
 	"info": {
 		"no_changes": "변경 사항이 없습니다.",
@@ -91,31 +75,22 @@
 		"custom_storage_path_set": "사용자 지정 저장 경로 설정됨: {{path}}",
 		"default_storage_path": "기본 저장 경로로 되돌아갔습니다",
 		"settings_imported": "설정이 성공적으로 가져와졌습니다.",
-		"auto_import_success": "{{filename}}에서 RooCode 설정을 자동으로 가져왔습니다",
 		"share_link_copied": "공유 링크가 클립보드에 복사되었습니다",
 		"image_copied_to_clipboard": "이미지 데이터 URI가 클립보드에 복사되었습니다",
 		"image_saved": "이미지가 {{path}}에 저장되었습니다",
 		"organization_share_link_copied": "조직 공유 링크가 클립보드에 복사되었습니다!",
-		"public_share_link_copied": "공개 공유 링크가 클립보드에 복사되었습니다!",
-		"mode_exported": "'{{mode}}' 모드가 성공적으로 내보내졌습니다",
-		"mode_imported": "모드를 성공적으로 가져왔습니다"
+		"public_share_link_copied": "공개 공유 링크가 클립보드에 복사되었습니다!"
 	},
 	"answers": {
 		"yes": "예",
 		"no": "아니오",
+		"cancel": "취소",
 		"remove": "제거",
 		"keep": "유지"
 	},
-	"buttons": {
-		"save": "저장",
-		"edit": "편집",
-		"learn_more": "더 알아보기"
-	},
 	"tasks": {
 		"canceled": "작업 오류: 사용자에 의해 중지 및 취소되었습니다.",
-		"deleted": "작업 실패: 사용자에 의해 중지 및 삭제되었습니다.",
-		"incomplete": "작업 #{{taskNumber}} (미완료)",
-		"no_messages": "작업 #{{taskNumber}} (메시지 없음)"
+		"deleted": "작업 실패: 사용자에 의해 중지 및 삭제되었습니다."
 	},
 	"storage": {
 		"prompt_custom_path": "대화 내역을 위한 사용자 지정 저장 경로를 입력하세요. 기본 위치를 사용하려면 비워두세요",
@@ -130,34 +105,7 @@
 	"settings": {
 		"providers": {
 			"groqApiKey": "Groq API 키",
-			"getGroqApiKey": "Groq API 키 받기",
-			"claudeCode": {
-				"pathLabel": "Claude Code 경로",
-				"description": "Claude Code CLI의 선택적 경로입니다. 설정되지 않은 경우 기본값은 'claude'입니다.",
-				"placeholder": "기본값: claude"
-			}
-		}
-	},
-	"customModes": {
-		"errors": {
-			"yamlParseError": ".roomodes 파일의 {{line}}번째 줄에서 유효하지 않은 YAML입니다. 다음을 확인하세요:\n• 올바른 들여쓰기 (탭이 아닌 공백 사용)\n• 일치하는 따옴표와 괄호\n• 유효한 YAML 구문",
-			"schemaValidationError": ".roomodes의 사용자 정의 모드 형식이 유효하지 않습니다:\n{{issues}}",
-			"invalidFormat": "사용자 정의 모드 형식이 유효하지 않습니다. 설정이 올바른 YAML 형식을 따르는지 확인하세요.",
-			"updateFailed": "사용자 정의 모드 업데이트 실패: {{error}}",
-			"deleteFailed": "사용자 정의 모드 삭제 실패: {{error}}",
-			"resetFailed": "사용자 정의 모드 재설정 실패: {{error}}",
-			"modeNotFound": "쓰기 오류: 모드를 찾을 수 없습니다",
-			"noWorkspaceForProject": "프로젝트별 모드용 작업 공간 폴더를 찾을 수 없습니다",
-			"rulesCleanupFailed": "모드가 성공적으로 삭제되었지만 {{rulesFolderPath}}의 규칙 폴더를 삭제하지 못했습니다. 수동으로 삭제해야 할 수도 있습니다."
-		},
-		"scope": {
-			"project": "프로젝트",
-			"global": "글로벌"
-		}
-	},
-	"marketplace": {
-		"mode": {
-			"rulesCleanupFailed": "모드가 성공적으로 제거되었지만 {{rulesFolderPath}}의 규칙 폴더를 삭제하지 못했습니다. 수동으로 삭제해야 할 수도 있습니다."
+			"getGroqApiKey": "Groq API 키 받기"
 		}
 	},
 	"mdm": {
@@ -165,19 +113,6 @@
 			"cloud_auth_required": "조직에서 Roo Code Cloud 인증이 필요합니다. 계속하려면 로그인하세요.",
 			"organization_mismatch": "조직의 Roo Code Cloud 계정으로 인증해야 합니다.",
 			"verification_failed": "조직 인증을 확인할 수 없습니다."
-		}
-	},
-	"prompts": {
-		"deleteMode": {
-			"title": "사용자 정의 모드 삭제",
-			"description": "이 {{scope}} 모드를 삭제하시겠습니까? 이렇게 하면 {{rulesFolderPath}}의 관련 규칙 폴더도 삭제됩니다.",
-			"descriptionNoRules": "이 사용자 정의 모드를 삭제하시겠습니까?",
-			"confirm": "삭제"
-		}
-	},
-	"commands": {
-		"preventCompletionWithOpenTodos": {
-			"description": "할 일 목록에 미완료된 할 일이 있을 때 작업 완료를 방지"
 		}
 	}
 }

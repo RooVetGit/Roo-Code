@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState, useMemo } from "react"
+import { useCallback, useEffect, useRef, useState, useMemo } from "react"
 import { useEvent } from "react-use"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 
@@ -9,7 +9,6 @@ import { MarketplaceViewStateManager } from "./components/marketplace/Marketplac
 import { vscode } from "./utils/vscode"
 import { telemetryClient } from "./utils/TelemetryClient"
 import { TelemetryEventName } from "@roo-code/types"
-import { initializeSourceMaps, exposeSourceMapsForDebugging } from "./utils/sourceMapInitializer"
 import { ExtensionStateContextProvider, useExtensionState } from "./context/ExtensionStateContext"
 import ChatView, { ChatViewRef } from "./components/chat/ChatView"
 import HistoryView from "./components/history/HistoryView"
@@ -19,37 +18,10 @@ import McpView from "./components/mcp/McpView"
 import { MarketplaceView } from "./components/marketplace/MarketplaceView"
 import ModesView from "./components/modes/ModesView"
 import { HumanRelayDialog } from "./components/human-relay/HumanRelayDialog"
-import { DeleteMessageDialog, EditMessageDialog } from "./components/chat/MessageModificationConfirmationDialog"
-import ErrorBoundary from "./components/ErrorBoundary"
 import { AccountView } from "./components/account/AccountView"
 import { useAddNonInteractiveClickListener } from "./components/ui/hooks/useNonInteractiveClick"
-import { TooltipProvider } from "./components/ui/tooltip"
-import { STANDARD_TOOLTIP_DELAY } from "./components/ui/standard-tooltip"
 
 type Tab = "settings" | "history" | "mcp" | "modes" | "chat" | "marketplace" | "account"
-
-interface HumanRelayDialogState {
-	isOpen: boolean
-	requestId: string
-	promptText: string
-}
-
-interface DeleteMessageDialogState {
-	isOpen: boolean
-	messageTs: number
-}
-
-interface EditMessageDialogState {
-	isOpen: boolean
-	messageTs: number
-	text: string
-	images?: string[]
-}
-
-// Memoize dialog components to prevent unnecessary re-renders
-const MemoizedDeleteMessageDialog = React.memo(DeleteMessageDialog)
-const MemoizedEditMessageDialog = React.memo(EditMessageDialog)
-const MemoizedHumanRelayDialog = React.memo(HumanRelayDialog)
 
 const tabsByMessageAction: Partial<Record<NonNullable<ExtensionMessage["action"]>, Tab>> = {
 	chatButtonClicked: "chat",
@@ -71,7 +43,6 @@ const App = () => {
 		machineId,
 		cloudUserInfo,
 		cloudIsAuthenticated,
-		cloudApiUrl,
 		renderContext,
 		mdmCompliant,
 	} = useExtensionState()
@@ -82,22 +53,14 @@ const App = () => {
 	const [showAnnouncement, setShowAnnouncement] = useState(false)
 	const [tab, setTab] = useState<Tab>("chat")
 
-	const [humanRelayDialogState, setHumanRelayDialogState] = useState<HumanRelayDialogState>({
+	const [humanRelayDialogState, setHumanRelayDialogState] = useState<{
+		isOpen: boolean
+		requestId: string
+		promptText: string
+	}>({
 		isOpen: false,
 		requestId: "",
 		promptText: "",
-	})
-
-	const [deleteMessageDialogState, setDeleteMessageDialogState] = useState<DeleteMessageDialogState>({
-		isOpen: false,
-		messageTs: 0,
-	})
-
-	const [editMessageDialogState, setEditMessageDialogState] = useState<EditMessageDialogState>({
-		isOpen: false,
-		messageTs: 0,
-		text: "",
-		images: [],
 	})
 
 	const settingsRef = useRef<SettingsViewRef>(null)
@@ -111,7 +74,6 @@ const App = () => {
 			}
 
 			setCurrentSection(undefined)
-			setCurrentMarketplaceTab(undefined)
 
 			if (settingsRef.current?.checkUnsaveChanges) {
 				settingsRef.current.checkUnsaveChanges(() => setTab(newTab))
@@ -123,7 +85,6 @@ const App = () => {
 	)
 
 	const [currentSection, setCurrentSection] = useState<string | undefined>(undefined)
-	const [currentMarketplaceTab, setCurrentMarketplaceTab] = useState<string | undefined>(undefined)
 
 	const onMessage = useCallback(
 		(e: MessageEvent) => {
@@ -135,17 +96,14 @@ const App = () => {
 					const targetTab = message.tab as Tab
 					switchTab(targetTab)
 					setCurrentSection(undefined)
-					setCurrentMarketplaceTab(undefined)
 				} else {
 					// Handle other actions using the mapping
 					const newTab = tabsByMessageAction[message.action]
 					const section = message.values?.section as string | undefined
-					const marketplaceTab = message.values?.marketplaceTab as string | undefined
 
 					if (newTab) {
 						switchTab(newTab)
 						setCurrentSection(section)
-						setCurrentMarketplaceTab(marketplaceTab)
 					}
 				}
 			}
@@ -153,19 +111,6 @@ const App = () => {
 			if (message.type === "showHumanRelayDialog" && message.requestId && message.promptText) {
 				const { requestId, promptText } = message
 				setHumanRelayDialogState({ isOpen: true, requestId, promptText })
-			}
-
-			if (message.type === "showDeleteMessageDialog" && message.messageTs) {
-				setDeleteMessageDialogState({ isOpen: true, messageTs: message.messageTs })
-			}
-
-			if (message.type === "showEditMessageDialog" && message.messageTs && message.text) {
-				setEditMessageDialogState({
-					isOpen: true,
-					messageTs: message.messageTs,
-					text: message.text,
-					images: message.images || [],
-				})
 			}
 
 			if (message.type === "acceptInput") {
@@ -192,20 +137,6 @@ const App = () => {
 
 	// Tell the extension that we are ready to receive messages.
 	useEffect(() => vscode.postMessage({ type: "webviewDidLaunch" }), [])
-
-	// Initialize source map support for better error reporting
-	useEffect(() => {
-		// Initialize source maps for better error reporting in production
-		initializeSourceMaps()
-
-		// Expose source map debugging utilities in production
-		if (process.env.NODE_ENV === "production") {
-			exposeSourceMapsForDebugging()
-		}
-
-		// Log initialization for debugging
-		console.debug("App initialized with source map support")
-	}, [])
 
 	// Focus the WebView when non-interactive content is clicked (only in editor/tab mode)
 	useAddNonInteractiveClickListener(
@@ -240,17 +171,12 @@ const App = () => {
 				<SettingsView ref={settingsRef} onDone={() => setTab("chat")} targetSection={currentSection} />
 			)}
 			{tab === "marketplace" && (
-				<MarketplaceView
-					stateManager={marketplaceStateManager}
-					onDone={() => switchTab("chat")}
-					targetTab={currentMarketplaceTab as "mcp" | "mode" | undefined}
-				/>
+				<MarketplaceView stateManager={marketplaceStateManager} onDone={() => switchTab("chat")} />
 			)}
 			{tab === "account" && (
 				<AccountView
 					userInfo={cloudUserInfo}
 					isAuthenticated={cloudIsAuthenticated}
-					cloudApiUrl={cloudApiUrl}
 					onDone={() => switchTab("chat")}
 				/>
 			)}
@@ -260,37 +186,13 @@ const App = () => {
 				showAnnouncement={showAnnouncement}
 				hideAnnouncement={() => setShowAnnouncement(false)}
 			/>
-			<MemoizedHumanRelayDialog
+			<HumanRelayDialog
 				isOpen={humanRelayDialogState.isOpen}
 				requestId={humanRelayDialogState.requestId}
 				promptText={humanRelayDialogState.promptText}
 				onClose={() => setHumanRelayDialogState((prev) => ({ ...prev, isOpen: false }))}
 				onSubmit={(requestId, text) => vscode.postMessage({ type: "humanRelayResponse", requestId, text })}
 				onCancel={(requestId) => vscode.postMessage({ type: "humanRelayCancel", requestId })}
-			/>
-			<MemoizedDeleteMessageDialog
-				open={deleteMessageDialogState.isOpen}
-				onOpenChange={(open) => setDeleteMessageDialogState((prev) => ({ ...prev, isOpen: open }))}
-				onConfirm={() => {
-					vscode.postMessage({
-						type: "deleteMessageConfirm",
-						messageTs: deleteMessageDialogState.messageTs,
-					})
-					setDeleteMessageDialogState((prev) => ({ ...prev, isOpen: false }))
-				}}
-			/>
-			<MemoizedEditMessageDialog
-				open={editMessageDialogState.isOpen}
-				onOpenChange={(open) => setEditMessageDialogState((prev) => ({ ...prev, isOpen: open }))}
-				onConfirm={() => {
-					vscode.postMessage({
-						type: "editMessageConfirm",
-						messageTs: editMessageDialogState.messageTs,
-						text: editMessageDialogState.text,
-						images: editMessageDialogState.images,
-					})
-					setEditMessageDialogState((prev) => ({ ...prev, isOpen: false }))
-				}}
 			/>
 		</>
 	)
@@ -299,17 +201,13 @@ const App = () => {
 const queryClient = new QueryClient()
 
 const AppWithProviders = () => (
-	<ErrorBoundary>
-		<ExtensionStateContextProvider>
-			<TranslationProvider>
-				<QueryClientProvider client={queryClient}>
-					<TooltipProvider delayDuration={STANDARD_TOOLTIP_DELAY}>
-						<App />
-					</TooltipProvider>
-				</QueryClientProvider>
-			</TranslationProvider>
-		</ExtensionStateContextProvider>
-	</ErrorBoundary>
+	<ExtensionStateContextProvider>
+		<TranslationProvider>
+			<QueryClientProvider client={queryClient}>
+				<App />
+			</QueryClientProvider>
+		</TranslationProvider>
+	</ExtensionStateContextProvider>
 )
 
 export default AppWithProviders

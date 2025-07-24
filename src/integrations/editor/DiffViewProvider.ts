@@ -4,7 +4,6 @@ import * as fs from "fs/promises"
 import * as diff from "diff"
 import stripBom from "strip-bom"
 import { XMLBuilder } from "fast-xml-parser"
-import delay from "delay"
 
 import { createDirectoriesForFile } from "../../utils/fs"
 import { arePathsEqual, getReadablePath } from "../../utils/path"
@@ -12,12 +11,10 @@ import { formatResponse } from "../../core/prompts/responses"
 import { diagnosticsToProblemsString, getNewDiagnostics } from "../diagnostics"
 import { ClineSayTool } from "../../shared/ExtensionMessage"
 import { Task } from "../../core/task/Task"
-import { DEFAULT_WRITE_DELAY_MS } from "@roo-code/types"
 
 import { DecorationController } from "./DecorationController"
 
 export const DIFF_VIEW_URI_SCHEME = "cline-diff"
-export const DIFF_VIEW_LABEL_CHANGES = "Original ↔ Roo's Changes"
 
 // TODO: https://github.com/cline/cline/pull/3354
 export class DiffViewProvider {
@@ -36,14 +33,8 @@ export class DiffViewProvider {
 	private activeLineController?: DecorationController
 	private streamedLines: string[] = []
 	private preDiagnostics: [vscode.Uri, vscode.Diagnostic[]][] = []
-	private taskRef: WeakRef<Task>
 
-	constructor(
-		private cwd: string,
-		task: Task,
-	) {
-		this.taskRef = new WeakRef(task)
-	}
+	constructor(private cwd: string) {}
 
 	async open(relPath: string): Promise<void> {
 		this.relPath = relPath
@@ -130,7 +121,7 @@ export class DiffViewProvider {
 		}
 
 		// Place cursor at the beginning of the diff editor to keep it out of
-		// the way of the stream animation, but do this without stealing focus
+		// the way of the stream animation.
 		const beginningOfDocument = new vscode.Position(0, 0)
 		diffEditor.selection = new vscode.Selection(beginningOfDocument, beginningOfDocument)
 
@@ -138,14 +129,13 @@ export class DiffViewProvider {
 		// Replace all content up to the current line with accumulated lines.
 		const edit = new vscode.WorkspaceEdit()
 		const rangeToReplace = new vscode.Range(0, 0, endLine, 0)
-		const contentToReplace =
-			accumulatedLines.slice(0, endLine).join("\n") + (accumulatedLines.length > 0 ? "\n" : "")
+		const contentToReplace = accumulatedLines.slice(0, endLine + 1).join("\n") + "\n"
 		edit.replace(document.uri, rangeToReplace, this.stripAllBOMs(contentToReplace))
 		await vscode.workspace.applyEdit(edit)
 		// Update decorations.
 		this.activeLineController.setActiveLine(endLine)
 		this.fadedOverlayController.updateOverlayAfterLine(endLine, document.lineCount)
-		// Scroll to the current line without stealing focus.
+		// Scroll to the current line.
 		const ranges = this.activeDiffEditor?.visibleRanges
 		if (ranges && ranges.length > 0 && ranges[0].start.line < endLine && ranges[0].end.line > endLine) {
 			this.scrollEditorToLine(endLine)
@@ -187,7 +177,7 @@ export class DiffViewProvider {
 		}
 	}
 
-	async saveChanges(diagnosticsEnabled: boolean = true, writeDelayMs: number = DEFAULT_WRITE_DELAY_MS): Promise<{
+	async saveChanges(): Promise<{
 		newProblemsMessage: string | undefined
 		userEdits: string | undefined
 		finalContent: string | undefined
@@ -222,53 +212,29 @@ export class DiffViewProvider {
 		// and can address them accordingly. If problems don't change immediately after
 		// applying a fix, won't be notified, which is generally fine since the
 		// initial fix is usually correct and it may just take time for linters to catch up.
-		
-		let newProblemsMessage = ""
-		
-		if (diagnosticsEnabled) {
-			// Add configurable delay to allow linters time to process and clean up issues
-			// like unused imports (especially important for Go and other languages)
-			// Ensure delay is non-negative
-			const safeDelayMs = Math.max(0, writeDelayMs)
-			
-			try {
-				await delay(safeDelayMs)
-			} catch (error) {
-				// Log error but continue - delay failure shouldn't break the save operation
-				console.warn(`Failed to apply write delay: ${error}`)
-			}
-			
-			const postDiagnostics = vscode.languages.getDiagnostics()
+		const postDiagnostics = vscode.languages.getDiagnostics()
 
-			// Get diagnostic settings from state
-			const task = this.taskRef.deref()
-			const state = await task?.providerRef.deref()?.getState()
-			const includeDiagnosticMessages = state?.includeDiagnosticMessages ?? true
-			const maxDiagnosticMessages = state?.maxDiagnosticMessages ?? 50
+		const newProblems = await diagnosticsToProblemsString(
+			getNewDiagnostics(this.preDiagnostics, postDiagnostics),
+			[
+				vscode.DiagnosticSeverity.Error, // only including errors since warnings can be distracting (if user wants to fix warnings they can use the @problems mention)
+			],
+			this.cwd,
+		) // Will be empty string if no errors.
 
-			const newProblems = await diagnosticsToProblemsString(
-				getNewDiagnostics(this.preDiagnostics, postDiagnostics),
-				[
-					vscode.DiagnosticSeverity.Error, // only including errors since warnings can be distracting (if user wants to fix warnings they can use the @problems mention)
-				],
-				this.cwd,
-				includeDiagnosticMessages,
-				maxDiagnosticMessages,
-			) // Will be empty string if no errors.
-
-			newProblemsMessage =
-				newProblems.length > 0 ? `\n\nNew problems detected after saving the file:\n${newProblems}` : ""
-		}
+		const newProblemsMessage =
+			newProblems.length > 0 ? `\n\nNew problems detected after saving the file:\n${newProblems}` : ""
 
 		// If the edited content has different EOL characters, we don't want to
 		// show a diff with all the EOL differences.
 		const newContentEOL = this.newContent.includes("\r\n") ? "\r\n" : "\n"
 
-		// Normalize EOL characters without trimming content
-		const normalizedEditedContent = editedContent.replace(/\r\n|\n/g, newContentEOL)
+		// `trimEnd` to fix issue where editor adds in extra new line
+		// automatically.
+		const normalizedEditedContent = editedContent.replace(/\r\n|\n/g, newContentEOL).trimEnd() + newContentEOL
 
 		// Just in case the new content has a mix of varying EOL characters.
-		const normalizedNewContent = this.newContent.replace(/\r\n|\n/g, newContentEOL)
+		const normalizedNewContent = this.newContent.replace(/\r\n|\n/g, newContentEOL).trimEnd() + newContentEOL
 
 		if (normalizedEditedContent !== normalizedNewContent) {
 			// User made changes before approving edit.
@@ -418,25 +384,12 @@ export class DiffViewProvider {
 	private async closeAllDiffViews(): Promise<void> {
 		const closeOps = vscode.window.tabGroups.all
 			.flatMap((group) => group.tabs)
-			.filter((tab) => {
-				// Check for standard diff views with our URI scheme
-				if (
+			.filter(
+				(tab) =>
 					tab.input instanceof vscode.TabInputTextDiff &&
 					tab.input.original.scheme === DIFF_VIEW_URI_SCHEME &&
-					!tab.isDirty
-				) {
-					return true
-				}
-
-				// Also check by tab label for our specific diff views
-				// This catches cases where the diff view might be created differently
-				// when files are pre-opened as text documents
-				if (tab.label.includes(DIFF_VIEW_LABEL_CHANGES) && !tab.isDirty) {
-					return true
-				}
-
-				return false
-			})
+					!tab.isDirty,
+			)
 			.map((tab) =>
 				vscode.window.tabGroups.close(tab).then(
 					() => undefined,
@@ -534,22 +487,17 @@ export class DiffViewProvider {
 				}),
 			)
 
-			// Pre-open the file as a text document to ensure it doesn't open in preview mode
-			// This fixes issues with files that have custom editor associations (like markdown preview)
-			vscode.window
-				.showTextDocument(uri, { preview: false, viewColumn: vscode.ViewColumn.Active, preserveFocus: true })
-				.then(() => {
-					// Execute the diff command after ensuring the file is open as text
-					return vscode.commands.executeCommand(
-						"vscode.diff",
-						vscode.Uri.parse(`${DIFF_VIEW_URI_SCHEME}:${fileName}`).with({
-							query: Buffer.from(this.originalContent ?? "").toString("base64"),
-						}),
-						uri,
-						`${fileName}: ${fileExists ? `${DIFF_VIEW_LABEL_CHANGES}` : "New File"} (Editable)`,
-						{ preserveFocus: true },
-					)
-				})
+			// Execute the diff command
+			vscode.commands
+				.executeCommand(
+					"vscode.diff",
+					vscode.Uri.parse(`${DIFF_VIEW_URI_SCHEME}:${fileName}`).with({
+						query: Buffer.from(this.originalContent ?? "").toString("base64"),
+					}),
+					uri,
+					`${fileName}: ${fileExists ? "Original ↔ Roo's Changes" : "New File"} (Editable)`,
+					{ preserveFocus: true },
+				)
 				.then(
 					() => {
 						// Command executed successfully, now wait for the editor to appear
@@ -585,7 +533,7 @@ export class DiffViewProvider {
 
 		for (const part of diffs) {
 			if (part.added || part.removed) {
-				// Found the first diff, scroll to it without stealing focus.
+				// Found the first diff, scroll to it.
 				this.activeDiffEditor.revealRange(
 					new vscode.Range(lineCount, 0, lineCount, 0),
 					vscode.TextEditorRevealType.InCenter,

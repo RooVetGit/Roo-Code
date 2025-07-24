@@ -47,7 +47,7 @@ const mockCline = {
 
 // Import the function to test AFTER mocks are set up
 import { newTaskTool } from "../newTaskTool"
-import type { ToolUse } from "../../../shared/tools"
+import { NewTaskToolDirective } from "../../message-parsing/directives"
 import { getModeBySlug } from "../../../shared/modes"
 
 describe("newTaskTool", () => {
@@ -66,9 +66,9 @@ describe("newTaskTool", () => {
 	})
 
 	it("should correctly un-escape \\\\@ to \\@ in the message passed to the new task", async () => {
-		const block: ToolUse = {
-			type: "tool_use", // Add required 'type' property
-			name: "new_task", // Correct property name
+		const block: NewTaskToolDirective = {
+			type: "tool_use",
+			name: "new_task",
 			params: {
 				mode: "code",
 				message: "Review this: \\\\@file1.txt and also \\\\\\\\@file2.txt", // Input with \\@ and \\\\@
@@ -103,9 +103,9 @@ describe("newTaskTool", () => {
 	})
 
 	it("should not un-escape single escaped \@", async () => {
-		const block: ToolUse = {
-			type: "tool_use", // Add required 'type' property
-			name: "new_task", // Correct property name
+		const block: NewTaskToolDirective = {
+			type: "tool_use",
+			name: "new_task",
 			params: {
 				mode: "code",
 				message: "This is already unescaped: \\@file1.txt",
@@ -130,9 +130,9 @@ describe("newTaskTool", () => {
 	})
 
 	it("should not un-escape non-escaped @", async () => {
-		const block: ToolUse = {
-			type: "tool_use", // Add required 'type' property
-			name: "new_task", // Correct property name
+		const block: NewTaskToolDirective = {
+			type: "tool_use",
+			name: "new_task",
 			params: {
 				mode: "code",
 				message: "A normal mention @file1.txt",
@@ -157,9 +157,9 @@ describe("newTaskTool", () => {
 	})
 
 	it("should handle mixed escaping scenarios", async () => {
-		const block: ToolUse = {
-			type: "tool_use", // Add required 'type' property
-			name: "new_task", // Correct property name
+		const block: NewTaskToolDirective = {
+			type: "tool_use",
+			name: "new_task",
 			params: {
 				mode: "code",
 				message: "Mix: @file0.txt, \\@file1.txt, \\\\@file2.txt, \\\\\\\\@file3.txt",

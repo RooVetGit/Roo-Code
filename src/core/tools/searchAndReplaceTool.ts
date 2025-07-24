@@ -5,13 +5,13 @@ import delay from "delay"
 
 // Internal imports
 import { Task } from "../task/Task"
-import { AskApproval, HandleError, PushToolResult, RemoveClosingTag, ToolUse } from "../../shared/tools"
+import { AskApproval, HandleError, PushToolResult, RemoveClosingTag } from "../../shared/tools"
 import { formatResponse } from "../prompts/responses"
 import { ClineSayTool } from "../../shared/ExtensionMessage"
 import { getReadablePath } from "../../utils/path"
 import { fileExistsAtPath } from "../../utils/fs"
 import { RecordSource } from "../context-tracking/FileContextTrackerTypes"
-import { DEFAULT_WRITE_DELAY_MS } from "@roo-code/types"
+import { SearchAndReplaceToolDirective } from "../message-parsing/directives"
 
 /**
  * Tool for performing search and replace operations on files
@@ -63,7 +63,7 @@ async function validateParams(
  */
 export async function searchAndReplaceTool(
 	cline: Task,
-	block: ToolUse,
+	block: SearchAndReplaceToolDirective,
 	askApproval: AskApproval,
 	handleError: HandleError,
 	pushToolResult: PushToolResult,
@@ -228,11 +228,7 @@ export async function searchAndReplaceTool(
 		}
 
 		// Call saveChanges to update the DiffViewProvider properties
-		const provider = cline.providerRef.deref()
-		const state = await provider?.getState()
-		const diagnosticsEnabled = state?.diagnosticsEnabled ?? true
-		const writeDelayMs = state?.writeDelayMs ?? DEFAULT_WRITE_DELAY_MS
-		await cline.diffViewProvider.saveChanges(diagnosticsEnabled, writeDelayMs)
+		await cline.diffViewProvider.saveChanges()
 
 		// Track file edit operation
 		if (relPath) {

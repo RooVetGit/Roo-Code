@@ -1,3 +1,4 @@
+import axios from "axios"
 import * as vscode from "vscode"
 
 import { shareResponseSchema } from "@roo-code/types"
@@ -7,13 +8,6 @@ import type { SettingsService } from "./SettingsService"
 import { getUserAgent } from "./utils"
 
 export type ShareVisibility = "organization" | "public"
-
-export class TaskNotFoundError extends Error {
-	constructor(taskId?: string) {
-		super(taskId ? `Task '${taskId}' not found` : "Task not found")
-		Object.setPrototypeOf(this, TaskNotFoundError.prototype)
-	}
-}
 
 export class ShareService {
 	private authService: AuthService
@@ -37,25 +31,19 @@ export class ShareService {
 				throw new Error("Authentication required")
 			}
 
-			const response = await fetch(`${getRooCodeApiUrl()}/api/extension/share`, {
-				method: "POST",
-				headers: {
-					"Content-Type": "application/json",
-					Authorization: `Bearer ${sessionToken}`,
-					"User-Agent": getUserAgent(),
+			const response = await axios.post(
+				`${getRooCodeApiUrl()}/api/extension/share`,
+				{ taskId, visibility },
+				{
+					headers: {
+						"Content-Type": "application/json",
+						Authorization: `Bearer ${sessionToken}`,
+						"User-Agent": getUserAgent(),
+					},
 				},
-				body: JSON.stringify({ taskId, visibility }),
-				signal: AbortSignal.timeout(10000),
-			})
+			)
 
-			if (!response.ok) {
-				if (response.status === 404) {
-					throw new TaskNotFoundError(taskId)
-				}
-				throw new Error(`HTTP ${response.status}: ${response.statusText}`)
-			}
-
-			const data = shareResponseSchema.parse(await response.json())
+			const data = shareResponseSchema.parse(response.data)
 			this.log("[share] Share link created successfully:", data)
 
 			if (data.success && data.shareUrl) {

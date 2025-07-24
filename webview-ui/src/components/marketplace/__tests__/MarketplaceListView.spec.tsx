@@ -1,6 +1,6 @@
 // npx vitest run src/components/marketplace/__tests__/MarketplaceListView.spec.tsx
 
-import { render, screen, fireEvent } from "@/utils/test-utils"
+import { render, screen, fireEvent } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 
 import { TooltipProvider } from "@/components/ui/tooltip"
@@ -49,7 +49,7 @@ describe("MarketplaceListView", () => {
 	const renderWithProviders = (props = {}) =>
 		render(
 			<ExtensionStateContextProvider>
-				<TooltipProvider delayDuration={300}>
+				<TooltipProvider>
 					<MarketplaceListView {...defaultProps} {...props} />
 				</TooltipProvider>
 			</ExtensionStateContextProvider>,

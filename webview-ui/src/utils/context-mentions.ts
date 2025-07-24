@@ -6,14 +6,6 @@ import { mentionRegex } from "@roo/context-mentions"
 
 import { escapeSpaces } from "./path-mentions"
 
-/**
- * Gets the description for a mode, prioritizing description > whenToUse > roleDefinition
- * and taking only the first line
- */
-function getModeDescription(mode: ModeConfig): string {
-	return (mode.description || mode.whenToUse || mode.roleDefinition).split("\n")[0]
-}
-
 export interface SearchResult {
 	path: string
 	type: "file" | "folder"
@@ -145,13 +137,13 @@ export function getContextMenuOptions(
 					type: ContextMenuOptionType.Mode,
 					value: result.item.original.slug,
 					label: result.item.original.name,
-					description: getModeDescription(result.item.original),
+					description: (result.item.original.whenToUse || result.item.original.roleDefinition).split("\n")[0],
 				}))
 			: modes.map((mode) => ({
 					type: ContextMenuOptionType.Mode,
 					value: mode.slug,
 					label: mode.name,
-					description: getModeDescription(mode),
+					description: (mode.whenToUse || mode.roleDefinition).split("\n")[0],
 				}))
 
 		return matchingModes.length > 0 ? matchingModes : [{ type: ContextMenuOptionType.NoResults }]

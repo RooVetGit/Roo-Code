@@ -329,7 +329,7 @@ describe("WebAuthService", () => {
 
 			expect(mockContext.secrets.store).toHaveBeenCalledWith(
 				"clerk-auth-credentials",
-				JSON.stringify({ clientToken: "Bearer token-123", sessionId: "session-123", organizationId: null }),
+				JSON.stringify({ clientToken: "Bearer token-123", sessionId: "session-123" }),
 			)
 			expect(mockShowInfo).toHaveBeenCalledWith("Successfully authenticated with Roo Code Cloud")
 		})
@@ -634,55 +634,9 @@ describe("WebAuthService", () => {
 			expect(authService.getUserInfo()).toBeNull()
 		})
 
-		it("should parse user info correctly for personal accounts", async () => {
-			// Set up with credentials for personal account (no organizationId)
-			const credentials = { clientToken: "test-token", sessionId: "test-session", organizationId: null }
-			mockContext.secrets.get.mockResolvedValue(JSON.stringify(credentials))
-			await authService.initialize()
-
-			// Clear previous mock calls
-			mockFetch.mockClear()
-
-			// Mock successful responses
-			mockFetch
-				.mockResolvedValueOnce({
-					ok: true,
-					json: () => Promise.resolve({ jwt: "jwt-token" }),
-				})
-				.mockResolvedValueOnce({
-					ok: true,
-					json: () =>
-						Promise.resolve({
-							response: {
-								first_name: "Jane",
-								last_name: "Smith",
-								image_url: "https://example.com/jane.jpg",
-								primary_email_address_id: "email-2",
-								email_addresses: [
-									{ id: "email-1", email_address: "jane.old@example.com" },
-									{ id: "email-2", email_address: "jane@example.com" },
-								],
-							},
-						}),
-				})
-
-			const timerCallback = vi.mocked(RefreshTimer).mock.calls[0][0].callback
-			await timerCallback()
-
-			// Wait for async operations to complete
-			await new Promise((resolve) => setTimeout(resolve, 0))
-
-			const userInfo = authService.getUserInfo()
-			expect(userInfo).toEqual({
-				name: "Jane Smith",
-				email: "jane@example.com",
-				picture: "https://example.com/jane.jpg",
-			})
-		})
-
-		it("should parse user info correctly for organization accounts", async () => {
-			// Set up with credentials for organization account
-			const credentials = { clientToken: "test-token", sessionId: "test-session", organizationId: "org_1" }
+		it("should parse user info correctly", async () => {
+			// Set up with credentials
+			const credentials = { clientToken: "test-token", sessionId: "test-session" }
 			mockContext.secrets.get.mockResolvedValue(JSON.stringify(credentials))
 			await authService.initialize()
 
@@ -746,8 +700,8 @@ describe("WebAuthService", () => {
 		})
 
 		it("should handle missing user info fields", async () => {
-			// Set up with credentials for personal account (no organizationId)
-			const credentials = { clientToken: "test-token", sessionId: "test-session", organizationId: null }
+			// Set up with credentials
+			const credentials = { clientToken: "test-token", sessionId: "test-session" }
 			mockContext.secrets.get.mockResolvedValue(JSON.stringify(credentials))
 			await authService.initialize()
 

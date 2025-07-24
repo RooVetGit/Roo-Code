@@ -2,9 +2,6 @@ import * as vscode from "vscode"
 import { createHash } from "crypto"
 import { ICacheManager } from "./interfaces/cache"
 import debounce from "lodash.debounce"
-import { safeWriteJson } from "../../utils/safeWriteJson"
-import { TelemetryService } from "@roo-code/telemetry"
-import { TelemetryEventName } from "@roo-code/types"
 
 /**
  * Manages the cache for code indexing
@@ -41,11 +38,6 @@ export class CacheManager implements ICacheManager {
 			this.fileHashes = JSON.parse(cacheData.toString())
 		} catch (error) {
 			this.fileHashes = {}
-			TelemetryService.instance.captureEvent(TelemetryEventName.CODE_INDEX_ERROR, {
-				error: error instanceof Error ? error.message : String(error),
-				stack: error instanceof Error ? error.stack : undefined,
-				location: "initialize",
-			})
 		}
 	}
 
@@ -54,14 +46,9 @@ export class CacheManager implements ICacheManager {
 	 */
 	private async _performSave(): Promise<void> {
 		try {
-			await safeWriteJson(this.cachePath.fsPath, this.fileHashes)
+			await vscode.workspace.fs.writeFile(this.cachePath, Buffer.from(JSON.stringify(this.fileHashes, null, 2)))
 		} catch (error) {
 			console.error("Failed to save cache:", error)
-			TelemetryService.instance.captureEvent(TelemetryEventName.CODE_INDEX_ERROR, {
-				error: error instanceof Error ? error.message : String(error),
-				stack: error instanceof Error ? error.stack : undefined,
-				location: "_performSave",
-			})
 		}
 	}
 
@@ -70,15 +57,10 @@ export class CacheManager implements ICacheManager {
 	 */
 	async clearCacheFile(): Promise<void> {
 		try {
-			await safeWriteJson(this.cachePath.fsPath, {})
+			await vscode.workspace.fs.writeFile(this.cachePath, Buffer.from("{}"))
 			this.fileHashes = {}
 		} catch (error) {
 			console.error("Failed to clear cache file:", error, this.cachePath)
-			TelemetryService.instance.captureEvent(TelemetryEventName.CODE_INDEX_ERROR, {
-				error: error instanceof Error ? error.message : String(error),
-				stack: error instanceof Error ? error.stack : undefined,
-				location: "clearCacheFile",
-			})
 		}
 	}
 

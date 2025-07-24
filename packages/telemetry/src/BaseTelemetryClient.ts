@@ -25,21 +25,13 @@ export abstract class BaseTelemetryClient implements TelemetryClient {
 			: !this.subscription.events.includes(eventName)
 	}
 
-	/**
-	 * Determines if a specific property should be included in telemetry events
-	 * Override in subclasses to filter specific properties
-	 */
-	protected isPropertyCapturable(_propertyName: string): boolean {
-		return true
-	}
-
 	protected async getEventProperties(event: TelemetryEvent): Promise<TelemetryEvent["properties"]> {
 		let providerProperties: TelemetryEvent["properties"] = {}
 		const provider = this.providerRef?.deref()
 
 		if (provider) {
 			try {
-				// Get properties from the provider
+				// Get the telemetry properties directly from the provider.
 				providerProperties = await provider.getTelemetryProperties()
 			} catch (error) {
 				// Log error but continue with capturing the event.
@@ -51,10 +43,7 @@ export abstract class BaseTelemetryClient implements TelemetryClient {
 
 		// Merge provider properties with event-specific properties.
 		// Event properties take precedence in case of conflicts.
-		const mergedProperties = { ...providerProperties, ...(event.properties || {}) }
-
-		// Filter out properties that shouldn't be captured by this client
-		return Object.fromEntries(Object.entries(mergedProperties).filter(([key]) => this.isPropertyCapturable(key)))
+		return { ...providerProperties, ...(event.properties || {}) }
 	}
 
 	public abstract capture(event: TelemetryEvent): Promise<void>
