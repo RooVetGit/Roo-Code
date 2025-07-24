@@ -663,7 +663,6 @@
 		}
 	},
 	"thinkingBudget": {
-		"maxTokens": "최대 tokens",
 		"maxThinkingTokens": "최대 사고 tokens"
 	},
 	"validation": {

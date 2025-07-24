@@ -663,7 +663,6 @@
 		}
 	},
 	"thinkingBudget": {
-		"maxTokens": "Tokens máximos",
 		"maxThinkingTokens": "Tokens máximos de pensamento"
 	},
 	"validation": {

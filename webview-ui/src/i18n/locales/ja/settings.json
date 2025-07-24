@@ -663,7 +663,6 @@
 		}
 	},
 	"thinkingBudget": {
-		"maxTokens": "最大 tokens",
 		"maxThinkingTokens": "最大思考 tokens"
 	},
 	"validation": {
