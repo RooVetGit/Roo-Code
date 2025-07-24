@@ -329,6 +329,8 @@
 		"joinWaitlist": "얼리 액세스를 받으려면 대기 목록에 가입하세요."
 	},
 	"editMessage": {
-		"placeholder": "메시지 편집..."
+		"placeholder": "메시지 편집...",
+		"doubleClickToEdit": "더블클릭하여 메시지 편집",
+		"editButton": "메시지 편집"
 	}
 }

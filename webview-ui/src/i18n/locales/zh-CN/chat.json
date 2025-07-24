@@ -329,6 +329,8 @@
 		"joinWaitlist": "加入等待列表获取早期访问权限。"
 	},
 	"editMessage": {
-		"placeholder": "编辑消息..."
+		"placeholder": "编辑消息...",
+		"doubleClickToEdit": "双击编辑消息",
+		"editButton": "编辑消息"
 	}
 }

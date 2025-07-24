@@ -329,6 +329,8 @@
 		"joinWaitlist": "Sluit je aan bij de wachtlijst voor vroege toegang."
 	},
 	"editMessage": {
-		"placeholder": "Bewerk je bericht..."
+		"placeholder": "Bewerk je bericht...",
+		"doubleClickToEdit": "Dubbelklik om bericht te bewerken",
+		"editButton": "Bericht bewerken"
 	}
 }

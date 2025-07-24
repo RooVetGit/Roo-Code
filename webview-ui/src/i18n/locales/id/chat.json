@@ -335,6 +335,8 @@
 		"joinWaitlist": "Bergabunglah dengan daftar tunggu untuk mendapatkan akses awal."
 	},
 	"editMessage": {
-		"placeholder": "Edit pesan Anda..."
+		"placeholder": "Edit pesan Anda...",
+		"doubleClickToEdit": "Klik dua kali untuk mengedit pesan",
+		"editButton": "Edit pesan"
 	}
 }

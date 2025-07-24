@@ -329,6 +329,8 @@
 		"joinWaitlist": "Tham gia danh sách chờ để được truy cập sớm."
 	},
 	"editMessage": {
-		"placeholder": "Chỉnh sửa tin nhắn của bạn..."
+		"placeholder": "Chỉnh sửa tin nhắn của bạn...",
+		"doubleClickToEdit": "Nhấp đúp để chỉnh sửa tin nhắn",
+		"editButton": "Chỉnh sửa tin nhắn"
 	}
 }
