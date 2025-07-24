@@ -102,41 +102,6 @@ describe("ContextProxy", () => {
 			const result = proxy.getGlobalState("apiProvider", "deepseek")
 			expect(result).toBe("deepseek")
 		})
-
-		it("should bypass cache for pass-through state keys", async () => {
-			// Setup mock return value
-			mockGlobalState.get.mockReturnValue("pass-through-value")
-
-			// Use a pass-through key (taskHistory)
-			const result = proxy.getGlobalState("taskHistory")
-
-			// Should get value directly from original context
-			expect(result).toBe("pass-through-value")
-			expect(mockGlobalState.get).toHaveBeenCalledWith("taskHistory")
-		})
-
-		it("should respect default values for pass-through state keys", async () => {
-			// Setup mock to return undefined
-			mockGlobalState.get.mockReturnValue(undefined)
-
-			// Use a pass-through key with default value
-			const historyItems = [
-				{
-					id: "1",
-					number: 1,
-					ts: 1,
-					task: "test",
-					tokensIn: 1,
-					tokensOut: 1,
-					totalCost: 1,
-				},
-			]
-
-			const result = proxy.getGlobalState("taskHistory", historyItems)
-
-			// Should return default value when original context returns undefined
-			expect(result).toBe(historyItems)
-		})
 	})
 
 	describe("updateGlobalState", () => {
@@ -149,33 +114,6 @@ describe("ContextProxy", () => {
 			// Should have stored the value in cache
 			const storedValue = await proxy.getGlobalState("apiProvider")
 			expect(storedValue).toBe("deepseek")
-		})
-
-		it("should bypass cache for pass-through state keys", async () => {
-			const historyItems = [
-				{
-					id: "1",
-					number: 1,
-					ts: 1,
-					task: "test",
-					tokensIn: 1,
-					tokensOut: 1,
-					totalCost: 1,
-				},
-			]
-
-			await proxy.updateGlobalState("taskHistory", historyItems)
-
-			// Should update original context
-			expect(mockGlobalState.update).toHaveBeenCalledWith("taskHistory", historyItems)
-
-			// Setup mock for subsequent get
-			mockGlobalState.get.mockReturnValue(historyItems)
-
-			// Should get fresh value from original context
-			const storedValue = proxy.getGlobalState("taskHistory")
-			expect(storedValue).toBe(historyItems)
-			expect(mockGlobalState.get).toHaveBeenCalledWith("taskHistory")
 		})
 	})
 

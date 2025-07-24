@@ -31,7 +31,11 @@
 	"workspace": {
 		"prefix": "Çalışma Alanı:",
 		"current": "Mevcut",
-		"all": "Tümü"
+		"all": "Tümü",
+		"unknown": "Bilinmeyen",
+		"available": "Mevcut Çalışma Alanları",
+		"recent": "Son Çalışma Alanları",
+		"filterPlaceholder": "Çalışma alanlarını filtrele..."
 	},
 	"sort": {
 		"prefix": "Sırala:",
@@ -41,5 +45,15 @@
 		"mostTokens": "En Çok Token",
 		"mostRelevant": "En İlgili"
 	},
-	"viewAllHistory": "Tüm görevleri görüntüle"
+	"viewAllHistory": "Tüm görevleri görüntüle",
+	"limit": {
+		"prefix": "Limit:",
+		"50": "50",
+		"100": "100",
+		"200": "200",
+		"500": "500",
+		"1000": "1000",
+		"all": "Tümü"
+	},
+	"noItemsFound": "Hiçbir öğe bulunamadı"
 }

@@ -62,6 +62,9 @@ import { TerminalRegistry } from "../../integrations/terminal/TerminalRegistry"
 // utils
 import { calculateApiCostAnthropic } from "../../shared/cost"
 import { getWorkspacePath } from "../../utils/path"
+import { safeWriteJson } from "../../utils/safeWriteJson"
+import { getTaskDirectoryPath } from "../../utils/storage"
+import { GlobalFileNames } from "../../shared/globalFileNames"
 
 // prompts
 import { formatResponse } from "../prompts/responses"
@@ -73,11 +76,11 @@ import { FileContextTracker } from "../context-tracking/FileContextTracker"
 import { RooIgnoreController } from "../ignore/RooIgnoreController"
 import { RooProtectedController } from "../protect/RooProtectedController"
 import { type AssistantMessageContent, parseAssistantMessage, presentAssistantMessage } from "../assistant-message"
-import { truncateConversationIfNeeded } from "../sliding-window"
+import { TruncateResponse, truncateConversationIfNeeded } from "../sliding-window"
 import { ClineProvider } from "../webview/ClineProvider"
 import { MultiSearchReplaceDiffStrategy } from "../diff/strategies/multi-search-replace"
 import { MultiFileSearchReplaceDiffStrategy } from "../diff/strategies/multi-file-search-replace"
-import { readApiMessages, saveApiMessages, readTaskMessages, saveTaskMessages, taskMetadata } from "../task-persistence"
+import { readApiMessages, taskMetadata } from "../task-persistence"
 import { getEnvironmentDetails } from "../environment/getEnvironmentDetails"
 import {
 	type CheckpointDiffOptions,
@@ -330,41 +333,46 @@ export class Task extends EventEmitter<ClineEvents> {
 	}
 
 	private async addToApiConversationHistory(message: Anthropic.MessageParam) {
-		const messageWithTs = { ...message, ts: Date.now() }
-		this.apiConversationHistory.push(messageWithTs)
-		await this.saveApiConversationHistory()
+		await this.modifyApiConversationHistory(async (history) => {
+			const messageWithTs = { ...message, ts: Date.now() }
+			history.push(messageWithTs)
+			return history
+		})
 	}
 
-	async overwriteApiConversationHistory(newHistory: ApiMessage[]) {
-		this.apiConversationHistory = newHistory
-		await this.saveApiConversationHistory()
-	}
+	// say() and ask() are not safe to call within modifyFn because they may
+	// try to lock the same file, which would lead to a deadlock
+	async modifyApiConversationHistory(modifyFn: (history: ApiMessage[]) => Promise<ApiMessage[] | undefined>) {
+		const taskDir = await getTaskDirectoryPath(this.globalStoragePath, this.taskId)
+		const filePath = path.join(taskDir, GlobalFileNames.apiConversationHistory)
 
-	private async saveApiConversationHistory() {
-		try {
-			await saveApiMessages({
-				messages: this.apiConversationHistory,
-				taskId: this.taskId,
-				globalStoragePath: this.globalStoragePath,
-			})
-		} catch (error) {
-			// In the off chance this fails, we don't want to stop the task.
-			console.error("Failed to save API conversation history:", error)
-		}
+		await safeWriteJson(filePath, [], async (data) => {
+			// Use the existing data or an empty array if the file doesn't exist yet
+			const result = await modifyFn(data)
+
+			if (result === undefined) {
+				// Abort transaction
+				return undefined
+			}
+
+			// Update the instance variable within the critical section
+			this.apiConversationHistory = result
+
+			// Return the modified data
+			return result
+		})
 	}
 
 	// Cline Messages
-
-	private async getSavedClineMessages(): Promise<ClineMessage[]> {
-		return readTaskMessages({ taskId: this.taskId, globalStoragePath: this.globalStoragePath })
-	}
-
 	private async addToClineMessages(message: ClineMessage) {
-		this.clineMessages.push(message)
+		await this.modifyClineMessages(async (messages) => {
+			messages.push(message)
+			return messages
+		})
+
 		const provider = this.providerRef.deref()
 		await provider?.postStateToWebview()
 		this.emit("message", { action: "created", message })
-		await this.saveClineMessages()
 
 		const shouldCaptureMessage = message.partial !== true && CloudService.isEnabled()
 
@@ -374,12 +382,6 @@ export class Task extends EventEmitter<ClineEvents> {
 				properties: { taskId: this.taskId, message },
 			})
 		}
-	}
-
-	public async overwriteClineMessages(newMessages: ClineMessage[]) {
-		this.clineMessages = newMessages
-		restoreTodoListForTask(this)
-		await this.saveClineMessages()
 	}
 
 	private async updateClineMessage(message: ClineMessage) {
@@ -397,28 +399,107 @@ export class Task extends EventEmitter<ClineEvents> {
 		}
 	}
 
-	private async saveClineMessages() {
-		try {
-			await saveTaskMessages({
-				messages: this.clineMessages,
-				taskId: this.taskId,
-				globalStoragePath: this.globalStoragePath,
+	// say() and ask() are not safe to call within modifyFn because they may
+	// try to lock the same file, which would lead to a deadlock
+	public async modifyClineMessages(modifyFn: (messages: ClineMessage[]) => Promise<ClineMessage[] | undefined>) {
+		const taskDir = await getTaskDirectoryPath(this.globalStoragePath, this.taskId)
+		const filePath = path.join(taskDir, GlobalFileNames.uiMessages)
+
+		await safeWriteJson(filePath, [], async (data) => {
+			// Use the existing data or an empty array if the file doesn't exist yet
+			const result = await modifyFn(data)
+
+			if (result === undefined) {
+				// Abort transaction
+				return undefined
+			}
+
+			// Update the instance variable within the critical section
+			this.clineMessages = result
+
+			// Update task metadata within the same critical section
+			try {
+				const { historyItem, tokenUsage } = await taskMetadata({
+					messages: this.clineMessages,
+					taskId: this.taskId,
+					taskNumber: this.taskNumber,
+					globalStoragePath: this.globalStoragePath,
+					workspace: this.cwd,
+				})
+
+				this.emit("taskTokenUsageUpdated", this.taskId, tokenUsage)
+
+				await this.providerRef.deref()?.updateTaskHistory(historyItem)
+			} catch (error) {
+				console.error("Failed to save Roo messages:", error)
+			}
+
+			restoreTodoListForTask(this)
+
+			// Return the modified data or the original reference
+			return this.clineMessages
+		})
+	}
+
+	/**
+	 * Atomically modifies both clineMessages and apiConversationHistory in a single transaction.
+	 * This ensures that both arrays are updated together or neither is updated.
+	 *
+	 * say() and ask() are not safe to call within modifyFn because they may
+	 * try to lock the same file, which would lead to a deadlock 
+
+	 * @param modifyFn A function that receives the current messages and history arrays and returns
+	 *                 the modified versions of both. Return undefined to abort the transaction.
+	 */
+	public async modifyConversation(
+		modifyFn: (
+			messages: ClineMessage[],
+			history: ApiMessage[],
+		) => Promise<[ClineMessage[], ApiMessage[]] | undefined>,
+	) {
+		// Use the existing modifyClineMessages as the outer transaction
+		await this.modifyClineMessages(async (messages) => {
+			// We need a variable to store the result of modifyFn
+			// This will be initialized in the inner function
+			let modifiedMessages: ClineMessage[] | undefined
+			let modifiedApiHistory: ApiMessage[] | undefined
+			let abortTransaction = false
+
+			// Use modifyApiConversationHistory as the inner transaction
+			await this.modifyApiConversationHistory(async (history) => {
+				// Call modifyFn in the innermost function with both arrays
+				const result = await modifyFn(messages, history)
+
+				// If undefined is returned, abort the transaction
+				if (result === undefined) {
+					abortTransaction = true
+					return undefined
+				}
+
+				// Destructure the result
+				;[modifiedMessages, modifiedApiHistory] = result
+
+				// Check if any of the results are undefined
+				if (modifiedMessages === undefined || modifiedApiHistory === undefined) {
+					throw new Error("modifyConversation: modifyFn must return arrays for both messages and history")
+				}
+
+				// Return the modified history for the inner transaction
+				return modifiedApiHistory
 			})
 
-			const { historyItem, tokenUsage } = await taskMetadata({
-				messages: this.clineMessages,
-				taskId: this.taskId,
-				taskNumber: this.taskNumber,
-				globalStoragePath: this.globalStoragePath,
-				workspace: this.cwd,
-			})
+			if (abortTransaction) {
+				return undefined
+			}
 
-			this.emit("taskTokenUsageUpdated", this.taskId, tokenUsage)
+			// Check if modifiedMessages is still undefined after the inner function
+			if (modifiedMessages === undefined) {
+				throw new Error("modifyConversation: modifiedMessages is undefined after inner transaction")
+			}
 
-			await this.providerRef.deref()?.updateTaskHistory(historyItem)
-		} catch (error) {
-			console.error("Failed to save Roo messages:", error)
-		}
+			// Return the modified messages for the outer transaction
+			return modifiedMessages
+		})
 	}
 
 	// Note that `partial` has three valid states true (partial message),
@@ -446,7 +527,13 @@ export class Task extends EventEmitter<ClineEvents> {
 		let askTs: number
 
 		if (partial !== undefined) {
-			const lastMessage = this.clineMessages.at(-1)
+			let lastMessage = this.clineMessages.at(-1)
+
+			if (lastMessage === undefined) {
+				throw new Error(
+					`[RooCode#ask] task ${this.taskId}.${this.instanceId}: clineMessages is empty? Please report this bug.`,
+				)
+			}
 
 			const isUpdatingPreviousPartial =
 				lastMessage && lastMessage.partial && lastMessage.type === "ask" && lastMessage.ask === type
@@ -493,12 +580,24 @@ export class Task extends EventEmitter<ClineEvents> {
 					// never altered after first setting it.
 					askTs = lastMessage.ts
 					this.lastMessageTs = askTs
-					lastMessage.text = text
-					lastMessage.partial = false
-					lastMessage.progressStatus = progressStatus
-					lastMessage.isProtected = isProtected
-					await this.saveClineMessages()
-					this.updateClineMessage(lastMessage)
+
+					await this.modifyClineMessages(async (messages) => {
+						lastMessage = messages.at(-1) // update ref for transaction
+
+						if (lastMessage) {
+							// update these again in case of a race to guarantee flicker-free:
+							askTs = lastMessage.ts
+							this.lastMessageTs = askTs
+
+							lastMessage.text = text
+							lastMessage.partial = false
+							lastMessage.progressStatus = progressStatus
+							lastMessage.isProtected = isProtected
+
+							this.updateClineMessage(lastMessage)
+						}
+						return messages
+					})
 				} else {
 					// This is a new and complete message, so add it like normal.
 					this.askResponse = undefined
@@ -577,26 +676,40 @@ export class Task extends EventEmitter<ClineEvents> {
 		}
 
 		const { contextTokens: prevContextTokens } = this.getTokenUsage()
-		const {
-			messages,
-			summary,
-			cost,
-			newContextTokens = 0,
-			error,
-		} = await summarizeConversation(
-			this.apiConversationHistory,
-			this.api, // Main API handler (fallback)
-			systemPrompt, // Default summarization prompt (fallback)
-			this.taskId,
-			prevContextTokens,
-			false, // manual trigger
-			customCondensingPrompt, // User's custom prompt
-			condensingApiHandler, // Specific handler for condensing
-		)
-		if (error) {
+
+		let contextCondense: ContextCondense | undefined
+		let errorResult: string | undefined = undefined
+
+		await this.modifyApiConversationHistory(async (history) => {
+			const {
+				messages,
+				summary,
+				cost,
+				newContextTokens = 0,
+				error,
+			} = await summarizeConversation(
+				history,
+				this.api, // Main API handler (fallback)
+				systemPrompt, // Default summarization prompt (fallback)
+				this.taskId,
+				prevContextTokens,
+				false, // manual trigger
+				customCondensingPrompt, // User's custom prompt
+				condensingApiHandler, // Specific handler for condensing
+			)
+			if (error) {
+				errorResult = error
+				return undefined // abort transaction
+			}
+
+			contextCondense = { summary, cost, newContextTokens, prevContextTokens }
+			return messages
+		})
+
+		if (errorResult) {
 			this.say(
 				"condense_context_error",
-				error,
+				errorResult,
 				undefined /* images */,
 				false /* partial */,
 				undefined /* checkpoint */,
@@ -605,8 +718,7 @@ export class Task extends EventEmitter<ClineEvents> {
 			)
 			return
 		}
-		await this.overwriteApiConversationHistory(messages)
-		const contextCondense: ContextCondense = { summary, cost, newContextTokens, prevContextTokens }
+
 		await this.say(
 			"condense_context",
 			undefined /* text */,
@@ -636,7 +748,13 @@ export class Task extends EventEmitter<ClineEvents> {
 		}
 
 		if (partial !== undefined) {
-			const lastMessage = this.clineMessages.at(-1)
+			let lastMessage = this.clineMessages.at(-1)
+
+			if (lastMessage === undefined) {
+				throw new Error(
+					`[RooCode#say] task ${this.taskId}.${this.instanceId}: clineMessages is empty? Please report this bug.`,
+				)
+			}
 
 			const isUpdatingPreviousPartial =
 				lastMessage && lastMessage.partial && lastMessage.type === "say" && lastMessage.say === type
@@ -672,21 +790,25 @@ export class Task extends EventEmitter<ClineEvents> {
 				// This is the complete version of a previously partial
 				// message, so replace the partial with the complete version.
 				if (isUpdatingPreviousPartial) {
-					if (!options.isNonInteractive) {
-						this.lastMessageTs = lastMessage.ts
-					}
-
-					lastMessage.text = text
-					lastMessage.images = images
-					lastMessage.partial = false
-					lastMessage.progressStatus = progressStatus
-
 					// Instead of streaming partialMessage events, we do a save
 					// and post like normal to persist to disk.
-					await this.saveClineMessages()
+					await this.modifyClineMessages(async (messages) => {
+						lastMessage = messages.at(-1) // update ref for transaction
+						if (lastMessage) {
+							if (!options.isNonInteractive) {
+								this.lastMessageTs = lastMessage.ts
+							}
 
-					// More performant than an entire `postStateToWebview`.
-					this.updateClineMessage(lastMessage)
+							lastMessage.text = text
+							lastMessage.images = images
+							lastMessage.partial = false
+							lastMessage.progressStatus = progressStatus
+
+							// More performant than an entire `postStateToWebview`.
+							this.updateClineMessage(lastMessage)
+						}
+						return messages
+					})
 				} else {
 					// This is a new and complete message, so add it like normal.
 					const sayTs = Date.now()
@@ -786,34 +908,33 @@ export class Task extends EventEmitter<ClineEvents> {
 	}
 
 	private async resumeTaskFromHistory() {
-		const modifiedClineMessages = await this.getSavedClineMessages()
+		await this.modifyClineMessages(async (modifiedClineMessages) => {
+			// Remove any resume messages that may have been added before
+			const lastRelevantMessageIndex = findLastIndex(
+				modifiedClineMessages,
+				(m) => !(m.ask === "resume_task" || m.ask === "resume_completed_task"),
+			)
 
-		// Remove any resume messages that may have been added before
-		const lastRelevantMessageIndex = findLastIndex(
-			modifiedClineMessages,
-			(m) => !(m.ask === "resume_task" || m.ask === "resume_completed_task"),
-		)
-
-		if (lastRelevantMessageIndex !== -1) {
-			modifiedClineMessages.splice(lastRelevantMessageIndex + 1)
-		}
-
-		// since we don't use api_req_finished anymore, we need to check if the last api_req_started has a cost value, if it doesn't and no cancellation reason to present, then we remove it since it indicates an api request without any partial content streamed
-		const lastApiReqStartedIndex = findLastIndex(
-			modifiedClineMessages,
-			(m) => m.type === "say" && m.say === "api_req_started",
-		)
-
-		if (lastApiReqStartedIndex !== -1) {
-			const lastApiReqStarted = modifiedClineMessages[lastApiReqStartedIndex]
-			const { cost, cancelReason }: ClineApiReqInfo = JSON.parse(lastApiReqStarted.text || "{}")
-			if (cost === undefined && cancelReason === undefined) {
-				modifiedClineMessages.splice(lastApiReqStartedIndex, 1)
+			if (lastRelevantMessageIndex !== -1) {
+				modifiedClineMessages.splice(lastRelevantMessageIndex + 1)
 			}
-		}
 
-		await this.overwriteClineMessages(modifiedClineMessages)
-		this.clineMessages = await this.getSavedClineMessages()
+			// since we don't use api_req_finished anymore, we need to check if the last api_req_started has a cost value, if it doesn't and no cancellation reason to present, then we remove it since it indicates an api request without any partial content streamed
+			const lastApiReqStartedIndex = findLastIndex(
+				modifiedClineMessages,
+				(m) => m.type === "say" && m.say === "api_req_started",
+			)
+
+			if (lastApiReqStartedIndex !== -1) {
+				const lastApiReqStarted = modifiedClineMessages[lastApiReqStartedIndex]
+				const { cost, cancelReason }: ClineApiReqInfo = JSON.parse(lastApiReqStarted.text || "{}")
+				if (cost === undefined && cancelReason === undefined) {
+					modifiedClineMessages.splice(lastApiReqStartedIndex, 1)
+				}
+			}
+
+			return modifiedClineMessages
+		})
 
 		// Now present the cline messages to the user and ask if they want to
 		// resume (NOTE: we ran into a bug before where the
@@ -848,125 +969,131 @@ export class Task extends EventEmitter<ClineEvents> {
 
 		// Make sure that the api conversation history can be resumed by the API,
 		// even if it goes out of sync with cline messages.
-		let existingApiConversationHistory: ApiMessage[] = await this.getSavedApiConversationHistory()
-
-		// v2.0 xml tags refactor caveat: since we don't use tools anymore, we need to replace all tool use blocks with a text block since the API disallows conversations with tool uses and no tool schema
-		const conversationWithoutToolBlocks = existingApiConversationHistory.map((message) => {
-			if (Array.isArray(message.content)) {
-				const newContent = message.content.map((block) => {
-					if (block.type === "tool_use") {
-						// It's important we convert to the new tool schema
-						// format so the model doesn't get confused about how to
-						// invoke tools.
-						const inputAsXml = Object.entries(block.input as Record<string, string>)
-							.map(([key, value]) => `<${key}>\n${value}\n</${key}>`)
-							.join("\n")
-						return {
-							type: "text",
-							text: `<${block.name}>\n${inputAsXml}\n</${block.name}>`,
-						} as Anthropic.Messages.TextBlockParam
-					} else if (block.type === "tool_result") {
-						// Convert block.content to text block array, removing images
-						const contentAsTextBlocks = Array.isArray(block.content)
-							? block.content.filter((item) => item.type === "text")
-							: [{ type: "text", text: block.content }]
-						const textContent = contentAsTextBlocks.map((item) => item.text).join("\n\n")
-						const toolName = findToolName(block.tool_use_id, existingApiConversationHistory)
-						return {
-							type: "text",
-							text: `[${toolName} Result]\n\n${textContent}`,
-						} as Anthropic.Messages.TextBlockParam
-					}
-					return block
-				})
-				return { ...message, content: newContent }
-			}
-			return message
-		})
-		existingApiConversationHistory = conversationWithoutToolBlocks
-
-		// FIXME: remove tool use blocks altogether
-
-		// if the last message is an assistant message, we need to check if there's tool use since every tool use has to have a tool response
-		// if there's no tool use and only a text block, then we can just add a user message
-		// (note this isn't relevant anymore since we use custom tool prompts instead of tool use blocks, but this is here for legacy purposes in case users resume old tasks)
-
-		// if the last message is a user message, we can need to get the assistant message before it to see if it made tool calls, and if so, fill in the remaining tool responses with 'interrupted'
-
-		let modifiedOldUserContent: Anthropic.Messages.ContentBlockParam[] // either the last message if its user message, or the user message before the last (assistant) message
-		let modifiedApiConversationHistory: ApiMessage[] // need to remove the last user message to replace with new modified user message
-		if (existingApiConversationHistory.length > 0) {
-			const lastMessage = existingApiConversationHistory[existingApiConversationHistory.length - 1]
-
-			if (lastMessage.role === "assistant") {
-				const content = Array.isArray(lastMessage.content)
-					? lastMessage.content
-					: [{ type: "text", text: lastMessage.content }]
-				const hasToolUse = content.some((block) => block.type === "tool_use")
-
-				if (hasToolUse) {
-					const toolUseBlocks = content.filter(
-						(block) => block.type === "tool_use",
-					) as Anthropic.Messages.ToolUseBlock[]
-					const toolResponses: Anthropic.ToolResultBlockParam[] = toolUseBlocks.map((block) => ({
-						type: "tool_result",
-						tool_use_id: block.id,
-						content: "Task was interrupted before this tool call could be completed.",
-					}))
-					modifiedApiConversationHistory = [...existingApiConversationHistory] // no changes
-					modifiedOldUserContent = [...toolResponses]
-				} else {
-					modifiedApiConversationHistory = [...existingApiConversationHistory]
-					modifiedOldUserContent = []
+		let modifiedOldUserContent: Anthropic.Messages.ContentBlockParam[] | undefined
+		await this.modifyApiConversationHistory(async (existingApiConversationHistory) => {
+			const conversationWithoutToolBlocks = existingApiConversationHistory.map((message) => {
+				if (Array.isArray(message.content)) {
+					const newContent = message.content.map((block) => {
+						if (block.type === "tool_use") {
+							// It's important we convert to the new tool schema
+							// format so the model doesn't get confused about how to
+							// invoke tools.
+							const inputAsXml = Object.entries(block.input as Record<string, string>)
+								.map(([key, value]) => `<${key}>\n${value}\n</${key}>`)
+								.join("\n")
+							return {
+								type: "text",
+								text: `<${block.name}>\n${inputAsXml}\n</${block.name}>`,
+							} as Anthropic.Messages.TextBlockParam
+						} else if (block.type === "tool_result") {
+							// Convert block.content to text block array, removing images
+							const contentAsTextBlocks = Array.isArray(block.content)
+								? block.content.filter((item) => item.type === "text")
+								: [{ type: "text", text: block.content }]
+							const textContent = contentAsTextBlocks.map((item) => item.text).join("\n\n")
+							const toolName = findToolName(block.tool_use_id, existingApiConversationHistory)
+							return {
+								type: "text",
+								text: `[${toolName} Result]\n\n${textContent}`,
+							} as Anthropic.Messages.TextBlockParam
+						}
+						return block
+					})
+					return { ...message, content: newContent }
 				}
-			} else if (lastMessage.role === "user") {
-				const previousAssistantMessage: ApiMessage | undefined =
-					existingApiConversationHistory[existingApiConversationHistory.length - 2]
+				return message
+			})
+			existingApiConversationHistory = conversationWithoutToolBlocks
 
-				const existingUserContent: Anthropic.Messages.ContentBlockParam[] = Array.isArray(lastMessage.content)
-					? lastMessage.content
-					: [{ type: "text", text: lastMessage.content }]
-				if (previousAssistantMessage && previousAssistantMessage.role === "assistant") {
-					const assistantContent = Array.isArray(previousAssistantMessage.content)
-						? previousAssistantMessage.content
-						: [{ type: "text", text: previousAssistantMessage.content }]
+			// FIXME: remove tool use blocks altogether
 
-					const toolUseBlocks = assistantContent.filter(
-						(block) => block.type === "tool_use",
-					) as Anthropic.Messages.ToolUseBlock[]
+			// if the last message is an assistant message, we need to check if there's tool use since every tool use has to have a tool response
+			// if there's no tool use and only a text block, then we can just add a user message
+			// (note this isn't relevant anymore since we use custom tool prompts instead of tool use blocks, but this is here for legacy purposes in case users resume old tasks)
 
-					if (toolUseBlocks.length > 0) {
-						const existingToolResults = existingUserContent.filter(
-							(block) => block.type === "tool_result",
-						) as Anthropic.ToolResultBlockParam[]
+			// if the last message is a user message, we can need to get the assistant message before it to see if it made tool calls, and if so, fill in the remaining tool responses with 'interrupted'
 
-						const missingToolResponses: Anthropic.ToolResultBlockParam[] = toolUseBlocks
-							.filter(
-								(toolUse) => !existingToolResults.some((result) => result.tool_use_id === toolUse.id),
-							)
-							.map((toolUse) => ({
-								type: "tool_result",
-								tool_use_id: toolUse.id,
-								content: "Task was interrupted before this tool call could be completed.",
-							}))
+			let modifiedApiConversationHistory: ApiMessage[] // need to remove the last user message to replace with new modified user message
+			if (existingApiConversationHistory.length > 0) {
+				const lastMessage = existingApiConversationHistory[existingApiConversationHistory.length - 1]
 
-						modifiedApiConversationHistory = existingApiConversationHistory.slice(0, -1) // removes the last user message
-						modifiedOldUserContent = [...existingUserContent, ...missingToolResponses]
+				if (lastMessage.role === "assistant") {
+					const content = Array.isArray(lastMessage.content)
+						? lastMessage.content
+						: [{ type: "text", text: lastMessage.content }]
+					const hasToolUse = content.some((block) => block.type === "tool_use")
+
+					if (hasToolUse) {
+						const toolUseBlocks = content.filter(
+							(block) => block.type === "tool_use",
+						) as Anthropic.Messages.ToolUseBlock[]
+						const toolResponses: Anthropic.ToolResultBlockParam[] = toolUseBlocks.map((block) => ({
+							type: "tool_result",
+							tool_use_id: block.id,
+							content: "Task was interrupted before this tool call could be completed.",
+						}))
+						modifiedApiConversationHistory = [...existingApiConversationHistory] // no changes
+						modifiedOldUserContent = [...toolResponses]
+					} else {
+						modifiedApiConversationHistory = [...existingApiConversationHistory]
+						modifiedOldUserContent = []
+					}
+				} else if (lastMessage.role === "user") {
+					const previousAssistantMessage: ApiMessage | undefined =
+						existingApiConversationHistory[existingApiConversationHistory.length - 2]
+
+					const existingUserContent: Anthropic.Messages.ContentBlockParam[] = Array.isArray(
+						lastMessage.content,
+					)
+						? lastMessage.content
+						: [{ type: "text", text: lastMessage.content }]
+					if (previousAssistantMessage && previousAssistantMessage.role === "assistant") {
+						const assistantContent = Array.isArray(previousAssistantMessage.content)
+							? previousAssistantMessage.content
+							: [{ type: "text", text: previousAssistantMessage.content }]
+
+						const toolUseBlocks = assistantContent.filter(
+							(block) => block.type === "tool_use",
+						) as Anthropic.Messages.ToolUseBlock[]
+
+						if (toolUseBlocks.length > 0) {
+							const existingToolResults = existingUserContent.filter(
+								(block) => block.type === "tool_result",
+							) as Anthropic.ToolResultBlockParam[]
+
+							const missingToolResponses: Anthropic.ToolResultBlockParam[] = toolUseBlocks
+								.filter(
+									(toolUse) =>
+										!existingToolResults.some((result) => result.tool_use_id === toolUse.id),
+								)
+								.map((toolUse) => ({
+									type: "tool_result",
+									tool_use_id: toolUse.id,
+									content: "Task was interrupted before this tool call could be completed.",
+								}))
+
+							modifiedApiConversationHistory = existingApiConversationHistory.slice(0, -1) // removes the last user message
+							modifiedOldUserContent = [...existingUserContent, ...missingToolResponses]
+						} else {
+							modifiedApiConversationHistory = existingApiConversationHistory.slice(0, -1)
+							modifiedOldUserContent = [...existingUserContent]
+						}
 					} else {
 						modifiedApiConversationHistory = existingApiConversationHistory.slice(0, -1)
 						modifiedOldUserContent = [...existingUserContent]
 					}
 				} else {
-					modifiedApiConversationHistory = existingApiConversationHistory.slice(0, -1)
-					modifiedOldUserContent = [...existingUserContent]
+					throw new Error("Unexpected: Last message is not a user or assistant message")
 				}
 			} else {
-				throw new Error("Unexpected: Last message is not a user or assistant message")
+				throw new Error("Unexpected: No existing API conversation history")
 			}
-		} else {
-			throw new Error("Unexpected: No existing API conversation history")
-		}
+			return modifiedApiConversationHistory
+		})
 
+		if (!modifiedOldUserContent) {
+			throw new Error("modifiedOldUserContent was not set")
+		}
 		let newUserContent: Anthropic.Messages.ContentBlockParam[] = [...modifiedOldUserContent]
 
 		const agoText = ((): string => {
@@ -1014,8 +1141,6 @@ export class Task extends EventEmitter<ClineEvents> {
 		if (responseImages && responseImages.length > 0) {
 			newUserContent.push(...formatResponse.imageBlocks(responseImages))
 		}
-
-		await this.overwriteApiConversationHistory(modifiedApiConversationHistory)
 
 		console.log(`[subtasks] task ${this.taskId}.${this.instanceId} resuming from history item`)
 
@@ -1091,13 +1216,6 @@ export class Task extends EventEmitter<ClineEvents> {
 		} catch (error) {
 			console.error(`Error during task ${this.taskId}.${this.instanceId} disposal:`, error)
 			// Don't rethrow - we want abort to always succeed
-		}
-		// Save the countdown message in the automatic retry or other content.
-		try {
-			// Save the countdown message in the automatic retry or other content.
-			await this.saveClineMessages()
-		} catch (error) {
-			console.error(`Error saving messages during abort for task ${this.taskId}.${this.instanceId}:`, error)
 		}
 	}
 
@@ -1249,21 +1367,20 @@ export class Task extends EventEmitter<ClineEvents> {
 		// results.
 		const finalUserContent = [...parsedUserContent, { type: "text" as const, text: environmentDetails }]
 
-		await this.addToApiConversationHistory({ role: "user", content: finalUserContent })
+		// Atomically update the request message and add the user message to history
+		await this.modifyConversation(async (messages, history) => {
+			const lastApiReqIndex = findLastIndex(messages, (m) => m.say === "api_req_started")
+			if (lastApiReqIndex > -1) {
+				messages[lastApiReqIndex].text = JSON.stringify({
+					request: finalUserContent.map((block) => formatContentBlockToMarkdown(block)).join("\n\n"),
+					apiProtocol,
+				} satisfies ClineApiReqInfo)
+			}
+			history.push({ role: "user", content: finalUserContent })
+			return [messages, history]
+		})
+
 		TelemetryService.instance.captureConversationMessage(this.taskId, "user")
-
-		// Since we sent off a placeholder api_req_started message to update the
-		// webview while waiting to actually start the API request (to load
-		// potential details for example), we need to update the text of that
-		// message.
-		const lastApiReqIndex = findLastIndex(this.clineMessages, (m) => m.say === "api_req_started")
-
-		this.clineMessages[lastApiReqIndex].text = JSON.stringify({
-			request: finalUserContent.map((block) => formatContentBlockToMarkdown(block)).join("\n\n"),
-			apiProtocol,
-		} satisfies ClineApiReqInfo)
-
-		await this.saveClineMessages()
 		await provider?.postStateToWebview()
 
 		try {
@@ -1280,26 +1397,35 @@ export class Task extends EventEmitter<ClineEvents> {
 			// anyways, so it remains solely for legacy purposes to keep track
 			// of prices in tasks from history (it's worth removing a few months
 			// from now).
-			const updateApiReqMsg = (cancelReason?: ClineApiReqCancelReason, streamingFailedMessage?: string) => {
-				const existingData = JSON.parse(this.clineMessages[lastApiReqIndex].text || "{}")
-				this.clineMessages[lastApiReqIndex].text = JSON.stringify({
-					...existingData,
-					tokensIn: inputTokens,
-					tokensOut: outputTokens,
-					cacheWrites: cacheWriteTokens,
-					cacheReads: cacheReadTokens,
-					cost:
-						totalCost ??
-						calculateApiCostAnthropic(
-							this.api.getModel().info,
-							inputTokens,
-							outputTokens,
-							cacheWriteTokens,
-							cacheReadTokens,
-						),
-					cancelReason,
-					streamingFailedMessage,
-				} satisfies ClineApiReqInfo)
+			const updateApiReqMsg = async (cancelReason?: ClineApiReqCancelReason, streamingFailedMessage?: string) => {
+				await this.modifyClineMessages(async (messages) => {
+					const lastApiReqIndex = findLastIndex(messages, (m) => m.say === "api_req_started")
+					if (lastApiReqIndex === -1) {
+						return undefined // abort transaction
+					}
+
+					const existingData = JSON.parse(messages[lastApiReqIndex].text || "{}")
+					messages[lastApiReqIndex].text = JSON.stringify({
+						...existingData,
+						tokensIn: inputTokens,
+						tokensOut: outputTokens,
+						cacheWrites: cacheWriteTokens,
+						cacheReads: cacheReadTokens,
+						cost:
+							totalCost ??
+							calculateApiCostAnthropic(
+								this.api.getModel().info,
+								inputTokens,
+								outputTokens,
+								cacheWriteTokens,
+								cacheReadTokens,
+							),
+						cancelReason,
+						streamingFailedMessage,
+					} satisfies ClineApiReqInfo)
+
+					return messages
+				})
 			}
 
 			const abortStream = async (cancelReason: ClineApiReqCancelReason, streamingFailedMessage?: string) => {
@@ -1337,8 +1463,7 @@ export class Task extends EventEmitter<ClineEvents> {
 
 				// Update `api_req_started` to have cancelled and cost, so that
 				// we can display the cost of the partial stream.
-				updateApiReqMsg(cancelReason, streamingFailedMessage)
-				await this.saveClineMessages()
+				await updateApiReqMsg(cancelReason, streamingFailedMessage)
 
 				// Signals to provider that it can retrieve the saved messages
 				// from disk, as abortTask can not be awaited on in nature.
@@ -1520,8 +1645,8 @@ export class Task extends EventEmitter<ClineEvents> {
 				presentAssistantMessage(this)
 			}
 
-			updateApiReqMsg()
-			await this.saveClineMessages()
+			await updateApiReqMsg()
+
 			await this.providerRef.deref()?.postStateToWebview()
 
 			// Now add to apiConversationHistory.
@@ -1746,27 +1871,29 @@ export class Task extends EventEmitter<ClineEvents> {
 				state?.listApiConfigMeta.find((profile) => profile.name === state?.currentApiConfigName)?.id ??
 				"default"
 
-			const truncateResult = await truncateConversationIfNeeded({
-				messages: this.apiConversationHistory,
-				totalTokens: contextTokens,
-				maxTokens,
-				contextWindow,
-				apiHandler: this.api,
-				autoCondenseContext,
-				autoCondenseContextPercent,
-				systemPrompt,
-				taskId: this.taskId,
-				customCondensingPrompt,
-				condensingApiHandler,
-				profileThresholds,
-				currentProfileId,
+			let truncateResult: TruncateResponse | undefined
+			await this.modifyApiConversationHistory(async (history) => {
+				truncateResult = await truncateConversationIfNeeded({
+					messages: history,
+					totalTokens: contextTokens,
+					maxTokens,
+					contextWindow,
+					apiHandler: this.api,
+					autoCondenseContext,
+					autoCondenseContextPercent,
+					systemPrompt,
+					taskId: this.taskId,
+					customCondensingPrompt,
+					condensingApiHandler,
+					profileThresholds,
+					currentProfileId,
+				})
+				return truncateResult.messages
 			})
-			if (truncateResult.messages !== this.apiConversationHistory) {
-				await this.overwriteApiConversationHistory(truncateResult.messages)
-			}
-			if (truncateResult.error) {
+
+			if (truncateResult?.error) {
 				await this.say("condense_context_error", truncateResult.error)
-			} else if (truncateResult.summary) {
+			} else if (truncateResult?.summary) {
 				const { summary, cost, prevContextTokens, newContextTokens = 0 } = truncateResult
 				const contextCondense: ContextCondense = { summary, cost, newContextTokens, prevContextTokens }
 				await this.say(

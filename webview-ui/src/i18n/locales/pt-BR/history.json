@@ -31,7 +31,11 @@
 	"workspace": {
 		"prefix": "Espaço de trabalho:",
 		"current": "Atual",
-		"all": "Todos"
+		"all": "Todos",
+		"unknown": "Desconhecido",
+		"available": "Espaços de trabalho disponíveis",
+		"recent": "Espaços de trabalho recentes",
+		"filterPlaceholder": "Filtrar espaços de trabalho..."
 	},
 	"sort": {
 		"prefix": "Ordenar:",
@@ -41,5 +45,15 @@
 		"mostTokens": "Mais tokens",
 		"mostRelevant": "Mais relevantes"
 	},
-	"viewAllHistory": "Ver todo o histórico"
+	"viewAllHistory": "Ver todo o histórico",
+	"limit": {
+		"prefix": "Limite:",
+		"50": "50",
+		"100": "100",
+		"200": "200",
+		"500": "500",
+		"1000": "1000",
+		"all": "Todos"
+	},
+	"noItemsFound": "Nenhum item encontrado"
 }

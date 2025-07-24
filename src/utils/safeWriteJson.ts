@@ -5,6 +5,36 @@ import * as lockfile from "proper-lockfile"
 import Disassembler from "stream-json/Disassembler"
 import Stringer from "stream-json/Stringer"
 
+import { _streamDataFromFile } from "./safeReadJson"
+
+/**
+ * Acquires a lock on a file.
+ *
+ * @param {string} filePath - The path to the file to lock
+ * @param {lockfile.LockOptions} [options] - Optional lock options
+ * @returns {Promise<() => Promise<void>>} - The lock release function
+ */
+export async function _acquireLock(filePath: string, options?: lockfile.LockOptions): Promise<() => Promise<void>> {
+	const absoluteFilePath = path.resolve(filePath)
+
+	return await lockfile.lock(absoluteFilePath, {
+		stale: 31000, // Stale after 31 seconds
+		update: 10000, // Update mtime every 10 seconds
+		realpath: false, // The file may not exist yet
+		retries: {
+			retries: 5,
+			factor: 2,
+			minTimeout: 100,
+			maxTimeout: 1000,
+		},
+		onCompromised: (err) => {
+			console.error(`Lock at ${absoluteFilePath} was compromised:`, err)
+			throw err
+		},
+		...options,
+	})
+}
+
 /**
  * Safely writes JSON data to a file.
  * - Creates parent directories if they don't exist
@@ -12,13 +42,33 @@ import Stringer from "stream-json/Stringer"
  * - Writes to a temporary file first.
  * - If the target file exists, it's backed up before being replaced.
  * - Attempts to roll back and clean up in case of errors.
+ * - Supports atomic read-modify-write transactions via the readModifyFn parameter.
  *
- * @param {string} filePath - The absolute path to the target file.
- * @param {any} data - The data to serialize to JSON and write.
- * @returns {Promise<void>}
+ * @param {string} filePath - The path to the target file.
+ * @param {any} data - The data to serialize to JSON and write. When using readModifyFn, this becomes the default value if file doesn't exist.
+ * @param {(data: any) => Promise<any | undefined>} [readModifyFn] - Optional function for atomic read-modify-write transactions. For efficiency, modify the data object in-place and return the same reference. Alternatively, return a new data structure. Return undefined to abort the write (no error).
+ * @returns {Promise<any>} - The structure that was written to the file
  */
+async function safeWriteJson(
+	filePath: string,
+	data: any,
+	readModifyFn?: (data: any) => Promise<any | undefined>,
+): Promise<any> {
+	if (!readModifyFn && data === undefined) {
+		throw new Error("When not using readModifyFn, data must be provided")
+	}
 
-async function safeWriteJson(filePath: string, data: any): Promise<void> {
+	// If data is provided with readModifyFn, ensure it's a modifiable type
+	if (readModifyFn && data !== undefined) {
+		// JSON can serialize objects, arrays, strings, numbers, booleans, and null,
+		// but only objects and arrays can be modified in-place
+		const isModifiable = data !== null && (typeof data === "object" || Array.isArray(data))
+
+		if (!isModifiable) {
+			throw new Error("When using readModifyFn with default data, it must be a modifiable type (object or array)")
+		}
+	}
+
 	const absoluteFilePath = path.resolve(filePath)
 	let releaseLock = async () => {} // Initialized to a no-op
 
@@ -39,22 +89,7 @@ async function safeWriteJson(filePath: string, data: any): Promise<void> {
 
 	// Acquire the lock before any file operations
 	try {
-		releaseLock = await lockfile.lock(absoluteFilePath, {
-			stale: 31000, // Stale after 31 seconds
-			update: 10000, // Update mtime every 10 seconds to prevent staleness if operation is long
-			realpath: false, // the file may not exist yet, which is acceptable
-			retries: {
-				// Configuration for retrying lock acquisition
-				retries: 5, // Number of retries after the initial attempt
-				factor: 2, // Exponential backoff factor (e.g., 100ms, 200ms, 400ms, ...)
-				minTimeout: 100, // Minimum time to wait before the first retry (in ms)
-				maxTimeout: 1000, // Maximum time to wait for any single retry (in ms)
-			},
-			onCompromised: (err) => {
-				console.error(`Lock at ${absoluteFilePath} was compromised:`, err)
-				throw err
-			},
-		})
+		releaseLock = await _acquireLock(absoluteFilePath)
 	} catch (lockError) {
 		// If lock acquisition fails, we throw immediately.
 		// The releaseLock remains a no-op, so the finally block in the main file operations
@@ -69,6 +104,42 @@ async function safeWriteJson(filePath: string, data: any): Promise<void> {
 	let actualTempBackupFilePath: string | null = null
 
 	try {
+		// If readModifyFn is provided, read the file and call the function
+		if (readModifyFn) {
+			// Read the current data
+			let currentData
+			try {
+				currentData = await _streamDataFromFile(absoluteFilePath)
+			} catch (error: any) {
+				if (error?.code === "ENOENT") {
+					currentData = undefined
+				} else {
+					throw error
+				}
+			}
+
+			// Use either the existing data or the provided default
+			const dataToModify = currentData === undefined ? data : currentData
+
+			// If the file doesn't exist (currentData is undefined) and data is undefined, throw an error
+			if (dataToModify === undefined) {
+				throw new Error(`File ${absoluteFilePath} does not exist and no default data was provided`)
+			}
+
+			// Call the modify function with the current data or default
+			const modifiedData = await readModifyFn(dataToModify)
+
+			// If readModifyFn returns undefined, abort the write without error
+			// The lock will still be released in the finally block
+			if (modifiedData === undefined) {
+				// return undefined because nothing was written
+				return undefined
+			}
+
+			// Use the returned data for writing
+			data = modifiedData
+		}
+
 		// Step 1: Write data to a new temporary file.
 		actualTempNewFilePath = path.join(
 			path.dirname(absoluteFilePath),
@@ -120,6 +191,9 @@ async function safeWriteJson(filePath: string, data: any): Promise<void> {
 				)
 			}
 		}
+
+		// Return the data that was written
+		return data
 	} catch (originalError) {
 		console.error(`Operation failed for ${absoluteFilePath}: [Original Error Caught]`, originalError)
 

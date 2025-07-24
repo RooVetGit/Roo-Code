@@ -55,6 +55,7 @@ export interface ExtensionMessage {
 		| "state"
 		| "selectedImages"
 		| "theme"
+		| "historyItems"
 		| "workspaceUpdated"
 		| "invoke"
 		| "messageUpdated"
@@ -108,6 +109,10 @@ export interface ExtensionMessage {
 		| "codeIndexSecretStatus"
 		| "showDeleteMessageDialog"
 		| "showEditMessageDialog"
+		| "taskDeletedConfirmation"
+		| "loggingOperation"
+		| "upgradeStatus"
+		| "upgradeComplete"
 	text?: string
 	payload?: any // Add a generic payload for now, can refine later
 	action?:
@@ -173,7 +178,8 @@ export interface ExtensionMessage {
 	setting?: string
 	value?: any
 	hasContent?: boolean // For checkRulesDirectoryResult
-	items?: MarketplaceItem[]
+	items?: MarketplaceItem[] | HistoryItem[]
+	log?: string
 	userInfo?: CloudUserInfo
 	organizationAllowList?: OrganizationAllowList
 	tab?: string
@@ -266,8 +272,6 @@ export type ExtensionState = Pick<
 	apiConfiguration?: ProviderSettings
 	uriScheme?: string
 	shouldShowAnnouncement: boolean
-
-	taskHistory: HistoryItem[]
 
 	writeDelayMs: number
 	requestDelaySeconds: number
