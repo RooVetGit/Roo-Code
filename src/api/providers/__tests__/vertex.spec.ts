@@ -199,16 +199,6 @@ describe("VertexHandler", () => {
 			expect(modelInfo.id).toBe("gemini-2.5-pro")
 		})
 
-		it("should map gemini-2.0-flash-thinking-exp-1219 to gemini-2.5-flash-preview-05-20", () => {
-			const legacyHandler = new VertexHandler({
-				apiModelId: "gemini-2.0-flash-thinking-exp-1219",
-				vertexProjectId: "test-project",
-				vertexRegion: "us-central1",
-			})
-			const modelInfo = legacyHandler.getModel()
-			expect(modelInfo.id).toBe("gemini-2.5-flash-preview-05-20")
-		})
-
 		it("should map gemini-2.0-flash-thinking-exp-01-21 to gemini-2.5-flash-preview-05-20", () => {
 			const legacyHandler = new VertexHandler({
 				apiModelId: "gemini-2.0-flash-thinking-exp-01-21",
@@ -222,6 +212,16 @@ describe("VertexHandler", () => {
 		it("should map gemini-2.5-flash-preview-04-17 to gemini-2.5-flash-preview-05-20", () => {
 			const legacyHandler = new VertexHandler({
 				apiModelId: "gemini-2.5-flash-preview-04-17",
+				vertexProjectId: "test-project",
+				vertexRegion: "us-central1",
+			})
+			const modelInfo = legacyHandler.getModel()
+			expect(modelInfo.id).toBe("gemini-2.5-flash-preview-05-20")
+		})
+
+		it("should map gemini-2.5-flash-preview-04-17:thinking to gemini-2.5-flash-preview-05-20", () => {
+			const legacyHandler = new VertexHandler({
+				apiModelId: "gemini-2.5-flash-preview-04-17:thinking",
 				vertexProjectId: "test-project",
 				vertexRegion: "us-central1",
 			})

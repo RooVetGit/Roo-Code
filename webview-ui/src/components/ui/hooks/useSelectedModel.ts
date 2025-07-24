@@ -79,7 +79,8 @@ function mapLegacyGeminiModel(modelId: string): string {
 		if (
 			modelId === "gemini-2.0-flash-thinking-exp-1219" ||
 			modelId === "gemini-2.0-flash-thinking-exp-01-21" ||
-			modelId === "gemini-2.5-flash-preview-04-17"
+			modelId === "gemini-2.5-flash-preview-04-17" ||
+			modelId === "gemini-2.5-flash-preview-04-17:thinking"
 		) {
 			return "gemini-2.5-flash-preview-05-20"
 		}
@@ -124,7 +125,8 @@ function mapLegacyVertexModel(modelId: string): string {
 		if (
 			modelId === "gemini-2.0-flash-thinking-exp-1219" ||
 			modelId === "gemini-2.0-flash-thinking-exp-01-21" ||
-			modelId === "gemini-2.5-flash-preview-04-17"
+			modelId === "gemini-2.5-flash-preview-04-17" ||
+			modelId === "gemini-2.5-flash-preview-04-17:thinking"
 		) {
 			return "gemini-2.5-flash-preview-05-20"
 		}

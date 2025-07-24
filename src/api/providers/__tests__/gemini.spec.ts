@@ -6,7 +6,7 @@ import { type ModelInfo, geminiDefaultModelId } from "@roo-code/types"
 
 import { GeminiHandler } from "../gemini"
 
-const GEMINI_20_FLASH_THINKING_NAME = "gemini-2.0-flash-thinking-exp-1219"
+const GEMINI_25_FLASH_PREVIEW_05_20_NAME = "gemini-2.5-flash-preview-05-20"
 
 describe("GeminiHandler", () => {
 	let handler: GeminiHandler
@@ -19,7 +19,7 @@ describe("GeminiHandler", () => {
 
 		handler = new GeminiHandler({
 			apiKey: "test-key",
-			apiModelId: GEMINI_20_FLASH_THINKING_NAME,
+			apiModelId: GEMINI_25_FLASH_PREVIEW_05_20_NAME,
 			geminiApiKey: "test-key",
 		})
 
@@ -36,7 +36,7 @@ describe("GeminiHandler", () => {
 	describe("constructor", () => {
 		it("should initialize with provided config", () => {
 			expect(handler["options"].geminiApiKey).toBe("test-key")
-			expect(handler["options"].apiModelId).toBe(GEMINI_20_FLASH_THINKING_NAME)
+			expect(handler["options"].apiModelId).toBe(GEMINI_25_FLASH_PREVIEW_05_20_NAME)
 		})
 	})
 
@@ -80,7 +80,7 @@ describe("GeminiHandler", () => {
 			// Verify the call to generateContentStream
 			expect(handler["client"].models.generateContentStream).toHaveBeenCalledWith(
 				expect.objectContaining({
-					model: GEMINI_20_FLASH_THINKING_NAME,
+					model: GEMINI_25_FLASH_PREVIEW_05_20_NAME,
 					config: expect.objectContaining({
 						temperature: 0,
 						systemInstruction: systemPrompt,
@@ -115,7 +115,7 @@ describe("GeminiHandler", () => {
 
 			// Verify the call to generateContent
 			expect(handler["client"].models.generateContent).toHaveBeenCalledWith({
-				model: GEMINI_20_FLASH_THINKING_NAME,
+				model: GEMINI_25_FLASH_PREVIEW_05_20_NAME,
 				contents: [{ role: "user", parts: [{ text: "Test prompt" }] }],
 				config: {
 					httpOptions: undefined,
@@ -147,7 +147,7 @@ describe("GeminiHandler", () => {
 	describe("getModel", () => {
 		it("should return correct model info", () => {
 			const modelInfo = handler.getModel()
-			expect(modelInfo.id).toBe(GEMINI_20_FLASH_THINKING_NAME)
+			expect(modelInfo.id).toBe(GEMINI_25_FLASH_PREVIEW_05_20_NAME)
 			expect(modelInfo.info).toBeDefined()
 			expect(modelInfo.info.maxTokens).toBe(8192)
 			expect(modelInfo.info.contextWindow).toBe(32_767)
@@ -252,6 +252,15 @@ describe("GeminiHandler", () => {
 			})
 			const modelInfo = legacyHandler.getModel()
 			expect(modelInfo.id).toBe("gemini-2.0-flash-001")
+		})
+
+		it("should map gemini-2.5-flash-preview-04-17:thinking to gemini-2.5-flash-preview-05-20", () => {
+			const legacyHandler = new GeminiHandler({
+				apiModelId: "gemini-2.5-flash-preview-04-17:thinking",
+				geminiApiKey: "test-key",
+			})
+			const modelInfo = legacyHandler.getModel()
+			expect(modelInfo.id).toBe("gemini-2.5-flash-preview-05-20")
 		})
 
 		it("should keep current models as-is", () => {
