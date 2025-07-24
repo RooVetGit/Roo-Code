@@ -6,7 +6,7 @@ import { IconButton } from "./IconButton"
 import { useAppTranslation } from "@/i18n/TranslationContext"
 import { vscode } from "@/utils/vscode"
 import { Fzf } from "fzf"
-import { Check, X, Pin } from "lucide-react"
+import { Check, X, Pin, ChevronUp } from "lucide-react"
 import { Button } from "@/components/ui"
 
 interface ApiConfigSelectorProps {
@@ -144,6 +144,7 @@ export const ApiConfigSelector = ({
 					: "opacity-90 hover:opacity-100 hover:bg-[rgba(255,255,255,0.03)] hover:border-[rgba(255,255,255,0.15)] cursor-pointer",
 				triggerClassName,
 			)}>
+			<ChevronUp className="pointer-events-none opacity-80 flex-shrink-0 size-3" />
 			<span className="truncate">{displayName}</span>
 		</PopoverTrigger>
 	)
