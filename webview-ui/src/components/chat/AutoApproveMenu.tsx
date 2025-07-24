@@ -173,6 +173,7 @@ const AutoApproveMenu = ({ style }: AutoApproveMenuProps) => {
 						content={!hasEnabledOptions ? t("chat:autoApprove.selectOptionsFirst") : undefined}>
 						<VSCodeCheckbox
 							checked={effectiveAutoApprovalEnabled}
+							disabled={!hasEnabledOptions}
 							aria-label={
 								hasEnabledOptions
 									? t("chat:autoApprove.toggleAriaLabel")
