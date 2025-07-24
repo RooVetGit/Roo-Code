@@ -881,57 +881,10 @@ export const webviewMessageHandler = async (
 			const mcpEnabled = message.bool ?? true
 			await updateGlobalState("mcpEnabled", mcpEnabled)
 
-			// If MCP is being disabled, disconnect all servers
+			// Delegate MCP enable/disable logic to McpHub
 			const mcpHubInstance = provider.getMcpHub()
-			if (!mcpEnabled && mcpHubInstance) {
-				// Disconnect all existing connections with error handling
-				const existingConnections = [...mcpHubInstance.connections]
-				const disconnectionErrors: Array<{ serverName: string; error: string }> = []
-
-				for (const conn of existingConnections) {
-					try {
-						await mcpHubInstance.deleteConnection(conn.server.name, conn.server.source)
-					} catch (error) {
-						const errorMessage = error instanceof Error ? error.message : String(error)
-						disconnectionErrors.push({
-							serverName: conn.server.name,
-							error: errorMessage,
-						})
-						provider.log(`Failed to disconnect MCP server ${conn.server.name}: ${errorMessage}`)
-					}
-				}
-
-				// If there were errors, notify the user
-				if (disconnectionErrors.length > 0) {
-					const errorSummary = disconnectionErrors.map((e) => `${e.serverName}: ${e.error}`).join("\n")
-					vscode.window.showWarningMessage(
-						t("mcp:errors.disconnect_servers_partial", {
-							count: disconnectionErrors.length,
-							errors: errorSummary,
-						}) ||
-							`Failed to disconnect ${disconnectionErrors.length} MCP server(s). Check the output for details.`,
-					)
-				}
-
-				// Re-initialize servers to track them in disconnected state
-				try {
-					await mcpHubInstance.refreshAllConnections()
-				} catch (error) {
-					provider.log(`Failed to refresh MCP connections after disabling: ${error}`)
-					vscode.window.showErrorMessage(
-						t("mcp:errors.refresh_after_disable") || "Failed to refresh MCP connections after disabling",
-					)
-				}
-			} else if (mcpEnabled && mcpHubInstance) {
-				// If MCP is being enabled, reconnect all servers
-				try {
-					await mcpHubInstance.refreshAllConnections()
-				} catch (error) {
-					provider.log(`Failed to refresh MCP connections after enabling: ${error}`)
-					vscode.window.showErrorMessage(
-						t("mcp:errors.refresh_after_enable") || "Failed to refresh MCP connections after enabling",
-					)
-				}
+			if (mcpHubInstance) {
+				await mcpHubInstance.handleMcpEnabledChange(mcpEnabled)
 			}
 
 			await provider.postStateToWebview()
