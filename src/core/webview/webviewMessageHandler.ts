@@ -2137,15 +2137,94 @@ export const webviewMessageHandler = async (
 		case "startIndexing": {
 			try {
 				const manager = provider.codeIndexManager!
-				if (manager.isFeatureEnabled && manager.isFeatureConfigured) {
-					if (!manager.isInitialized) {
-						await manager.initialize(provider.contextProxy)
-					}
+				if (!manager.isFeatureEnabled) {
+					await provider.postMessageToWebview({
+						type: "indexingStatusUpdate",
+						values: {
+							systemStatus: "Standby",
+							message: "Code indexing is disabled. Please enable it in settings.",
+							processedItems: 0,
+							totalItems: 0,
+							currentItemUnit: "blocks",
+						},
+					})
+					break
+				}
 
-					manager.startIndexing()
+				if (!manager.isFeatureConfigured) {
+					await provider.postMessageToWebview({
+						type: "indexingStatusUpdate",
+						values: {
+							systemStatus: "Standby",
+							message: "Code indexing is not configured. Please configure your embedder settings.",
+							processedItems: 0,
+							totalItems: 0,
+							currentItemUnit: "blocks",
+						},
+					})
+					break
+				}
+
+				// Initialize manager if needed
+				if (!manager.isInitialized) {
+					try {
+						await manager.initialize(provider.contextProxy)
+					} catch (initError) {
+						const errorMessage = initError instanceof Error ? initError.message : String(initError)
+						provider.log(`Error initializing code index manager: ${errorMessage}`)
+						await provider.postMessageToWebview({
+							type: "indexingStatusUpdate",
+							values: {
+								systemStatus: "Error",
+								message: `Failed to initialize: ${errorMessage}`,
+								processedItems: 0,
+								totalItems: 0,
+								currentItemUnit: "blocks",
+							},
+						})
+						break
+					}
+				}
+
+				// Attempt to start indexing with enhanced error recovery
+				try {
+					await manager.startIndexing()
+					// Send updated status to webview
+					await provider.postMessageToWebview({
+						type: "indexingStatusUpdate",
+						values: manager.getCurrentStatus(),
+					})
+				} catch (startError) {
+					const errorMessage = startError instanceof Error ? startError.message : String(startError)
+					provider.log(`Error starting indexing: ${errorMessage}`)
+					
+					// Send error status with recovery suggestion to webview
+					await provider.postMessageToWebview({
+						type: "indexingStatusUpdate",
+						values: {
+							systemStatus: "Error",
+							message: `Failed to start indexing: ${errorMessage}. You can try starting indexing again.`,
+							processedItems: 0,
+							totalItems: 0,
+							currentItemUnit: "blocks",
+						},
+					})
 				}
 			} catch (error) {
-				provider.log(`Error starting indexing: ${error instanceof Error ? error.message : String(error)}`)
+				const errorMessage = error instanceof Error ? error.message : String(error)
+				provider.log(`Unexpected error in startIndexing handler: ${errorMessage}`)
+				
+				// Send generic error status to webview
+				await provider.postMessageToWebview({
+					type: "indexingStatusUpdate",
+					values: {
+						systemStatus: "Error",
+						message: `An unexpected error occurred. Please try again or check your configuration.`,
+						processedItems: 0,
+						totalItems: 0,
+						currentItemUnit: "blocks",
+					},
+				})
 			}
 			break
 		}

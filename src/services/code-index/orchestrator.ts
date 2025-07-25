@@ -100,16 +100,20 @@ export class CodeIndexOrchestrator {
 			return
 		}
 
-		if (
-			this._isProcessing ||
-			(this.stateManager.state !== "Standby" &&
-				this.stateManager.state !== "Error" &&
-				this.stateManager.state !== "Indexed")
-		) {
+		// Check if we can start indexing using the state manager's logic
+		if (this._isProcessing || !this.stateManager.canStartIndexing()) {
 			console.warn(
 				`[CodeIndexOrchestrator] Start rejected: Already processing or in state ${this.stateManager.state}.`,
 			)
 			return
+		}
+
+		// If we're recovering from an error state, reset it first
+		if (this.stateManager.state === "Error") {
+			console.log("[CodeIndexOrchestrator] Recovering from error state, resetting to standby.")
+			this.stateManager.resetFromError()
+			// Stop any existing watcher to ensure clean state
+			this.stopWatcher()
 		}
 
 		this._isProcessing = true
