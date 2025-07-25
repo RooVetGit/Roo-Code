@@ -56,7 +56,7 @@ import ProfileViolationWarning from "./ProfileViolationWarning"
 import { CheckpointWarning } from "./CheckpointWarning"
 import QueuedMessages from "./QueuedMessages"
 import { getLatestTodo } from "@roo/todo"
-import { QueuedMessage } from "./types"
+import { QueuedMessage } from "@roo-code/types"
 
 export interface ChatViewProps {
 	isHidden: boolean
