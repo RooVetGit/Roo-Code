@@ -522,6 +522,7 @@ export const webviewMessageHandler = async (
 				litellm: {},
 				ollama: {},
 				lmstudio: {},
+				huggingface: {},
 			}
 
 			const safeGetModels = async (options: GetModelsOptions): Promise<ModelRecord> => {
@@ -564,9 +565,10 @@ export const webviewMessageHandler = async (
 
 			const fetchedRouterModels: Partial<Record<RouterName, ModelRecord>> = {
 				...routerModels,
-				// Initialize ollama and lmstudio with empty objects since they use separate handlers
+				// Initialize ollama, lmstudio, and huggingface with empty objects since they use separate handlers
 				ollama: {},
 				lmstudio: {},
+				huggingface: {},
 			}
 
 			results.forEach((result, index) => {
@@ -676,11 +678,48 @@ export const webviewMessageHandler = async (
 			break
 		case "requestHuggingFaceModels":
 			try {
-				const { getHuggingFaceModels } = await import("../../api/huggingface-models")
-				const huggingFaceModelsResponse = await getHuggingFaceModels()
+				// Flush cache first to ensure fresh models
+				await flushModels("huggingface")
+
+				const huggingFaceModels = await getModels({
+					provider: "huggingface",
+				})
+
+				// Convert the model record to an array format expected by the webview
+				const modelArray = Object.entries(huggingFaceModels).map(([id, info]) => ({
+					id,
+					_id: id,
+					inferenceProviderMapping: [
+						{
+							provider: "huggingface",
+							providerId: id,
+							status: "live" as const,
+							task: "conversational" as const,
+						},
+					],
+					trendingScore: 0,
+					config: {
+						architectures: [],
+						model_type:
+							info.description
+								?.split(", ")
+								.find((part) => part.startsWith("Type: "))
+								?.replace("Type: ", "") || "",
+						tokenizer_config: {
+							model_max_length: info.contextWindow,
+						},
+					},
+					tags: [],
+					pipeline_tag: info.supportsImages ? ("image-text-to-text" as const) : ("text-generation" as const),
+					library_name: info.description
+						?.split(", ")
+						.find((part) => part.startsWith("Library: "))
+						?.replace("Library: ", ""),
+				}))
+
 				provider.postMessageToWebview({
 					type: "huggingFaceModels",
-					huggingFaceModels: huggingFaceModelsResponse.models,
+					huggingFaceModels: modelArray,
 				})
 			} catch (error) {
 				console.error("Failed to fetch Hugging Face models:", error)

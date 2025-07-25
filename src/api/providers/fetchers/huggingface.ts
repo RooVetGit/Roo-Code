@@ -1,3 +1,7 @@
+import axios from "axios"
+import { ModelInfo } from "@roo-code/types"
+import { z } from "zod"
+
 export interface HuggingFaceModel {
 	_id: string
 	id: string
@@ -52,9 +56,8 @@ const BASE_URL = "https://huggingface.co/api/models"
 const CACHE_DURATION = 1000 * 60 * 60 // 1 hour
 
 interface CacheEntry {
-	data: HuggingFaceModel[]
+	data: Record<string, ModelInfo>
 	timestamp: number
-	status: "success" | "partial" | "error"
 }
 
 let cache: CacheEntry | null = null
@@ -95,7 +98,46 @@ const requestInit: RequestInit = {
 	mode: "cors",
 }
 
-export async function fetchHuggingFaceModels(): Promise<HuggingFaceModel[]> {
+/**
+ * Parse a HuggingFace model into ModelInfo format
+ */
+function parseHuggingFaceModel(model: HuggingFaceModel): ModelInfo {
+	// Extract context window from tokenizer config if available
+	const contextWindow = model.config.tokenizer_config?.model_max_length || 32768 // Default to 32k
+
+	// Determine if model supports images based on pipeline tag
+	const supportsImages = model.pipeline_tag === "image-text-to-text"
+
+	// Create a description from available metadata
+	const description = [
+		model.config.model_type ? `Type: ${model.config.model_type}` : null,
+		model.config.architectures?.length ? `Architecture: ${model.config.architectures[0]}` : null,
+		model.library_name ? `Library: ${model.library_name}` : null,
+		model.inferenceProviderMapping?.length
+			? `Providers: ${model.inferenceProviderMapping.map((p) => p.provider).join(", ")}`
+			: null,
+	]
+		.filter(Boolean)
+		.join(", ")
+
+	const modelInfo: ModelInfo = {
+		maxTokens: Math.min(contextWindow, 8192), // Conservative default, most models support at least 8k output
+		contextWindow,
+		supportsImages,
+		supportsPromptCache: false, // HuggingFace inference API doesn't support prompt caching
+		description,
+		// HuggingFace models through their inference API are generally free
+		inputPrice: 0,
+		outputPrice: 0,
+	}
+
+	return modelInfo
+}
+
+/**
+ * Fetch HuggingFace models and return them in ModelInfo format
+ */
+export async function getHuggingFaceModels(): Promise<Record<string, ModelInfo>> {
 	const now = Date.now()
 
 	// Check cache
@@ -103,6 +145,8 @@ export async function fetchHuggingFaceModels(): Promise<HuggingFaceModel[]> {
 		console.log("Using cached Hugging Face models")
 		return cache.data
 	}
+
+	const models: Record<string, ModelInfo> = {}
 
 	try {
 		console.log("Fetching Hugging Face models from API...")
@@ -115,14 +159,12 @@ export async function fetchHuggingFaceModels(): Promise<HuggingFaceModel[]> {
 
 		let textGenModels: HuggingFaceModel[] = []
 		let imgTextModels: HuggingFaceModel[] = []
-		let hasErrors = false
 
 		// Process text-generation models
 		if (textGenResponse.status === "fulfilled" && textGenResponse.value.ok) {
 			textGenModels = await textGenResponse.value.json()
 		} else {
 			console.error("Failed to fetch text-generation models:", textGenResponse)
-			hasErrors = true
 		}
 
 		// Process image-text-to-text models
@@ -130,42 +172,36 @@ export async function fetchHuggingFaceModels(): Promise<HuggingFaceModel[]> {
 			imgTextModels = await imgTextResponse.value.json()
 		} else {
 			console.error("Failed to fetch image-text-to-text models:", imgTextResponse)
-			hasErrors = true
 		}
 
 		// Combine and filter models
-		const allModels = [...textGenModels, ...imgTextModels]
-			.filter((model) => model.inferenceProviderMapping.length > 0)
-			.sort((a, b) => a.id.toLowerCase().localeCompare(b.id.toLowerCase()))
+		const allModels = [...textGenModels, ...imgTextModels].filter(
+			(model) => model.inferenceProviderMapping.length > 0,
+		)
+
+		// Convert to ModelInfo format
+		for (const model of allModels) {
+			models[model.id] = parseHuggingFaceModel(model)
+		}
 
 		// Update cache
 		cache = {
-			data: allModels,
+			data: models,
 			timestamp: now,
-			status: hasErrors ? "partial" : "success",
 		}
 
-		console.log(`Fetched ${allModels.length} Hugging Face models (status: ${cache.status})`)
-		return allModels
+		console.log(`Fetched ${Object.keys(models).length} Hugging Face models`)
+		return models
 	} catch (error) {
 		console.error("Error fetching Hugging Face models:", error)
 
 		// Return cached data if available
 		if (cache) {
 			console.log("Using stale cached data due to fetch error")
-			cache.status = "error"
 			return cache.data
 		}
 
-		// No cache available, return empty array
-		return []
+		// No cache available, return empty object
+		return {}
 	}
-}
-
-export function getCachedModels(): HuggingFaceModel[] | null {
-	return cache?.data || null
-}
-
-export function clearCache(): void {
-	cache = null
 }
