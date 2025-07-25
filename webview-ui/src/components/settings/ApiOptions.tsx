@@ -85,6 +85,7 @@ import { TodoListSettingsControl } from "./TodoListSettingsControl"
 import { TemperatureControl } from "./TemperatureControl"
 import { RateLimitSecondsControl } from "./RateLimitSecondsControl"
 import { ConsecutiveMistakeLimitControl } from "./ConsecutiveMistakeLimitControl"
+import { MaxTokensControl } from "./MaxTokensControl"
 import { BedrockCustomArn } from "./providers/BedrockCustomArn"
 import { buildDocLink } from "@src/utils/docLinks"
 
@@ -590,6 +591,13 @@ const ApiOptions = ({
 							value={apiConfiguration.modelTemperature}
 							onChange={handleInputChange("modelTemperature", noTransform)}
 							maxValue={2}
+						/>
+						<MaxTokensControl
+							value={apiConfiguration.modelMaxTokens}
+							onChange={(value) => setApiConfigurationField("modelMaxTokens", value)}
+							modelInfo={selectedModelInfo}
+							minValue={2048}
+							maxValue={selectedModelInfo?.maxTokens || 200000}
 						/>
 						<RateLimitSecondsControl
 							value={apiConfiguration.rateLimitSeconds || 0}
