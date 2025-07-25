@@ -129,6 +129,7 @@ export const ORGANIZATION_DEFAULT: OrganizationSettings = {
 		recordTaskMessages: true,
 		enableTaskSharing: true,
 		taskShareExpirationDays: 30,
+		allowMembersViewAllTasks: true,
 	},
 	defaultSettings: {},
 	allowList: ORGANIZATION_ALLOW_ALL,
