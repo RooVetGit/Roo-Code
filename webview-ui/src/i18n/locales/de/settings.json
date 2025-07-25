@@ -648,6 +648,10 @@
 		"MULTI_FILE_APPLY_DIFF": {
 			"name": "Gleichzeitige Dateibearbeitungen aktivieren",
 			"description": "Wenn aktiviert, kann Roo mehrere Dateien in einer einzigen Anfrage bearbeiten. Wenn deaktiviert, muss Roo Dateien einzeln bearbeiten. Das Deaktivieren kann hilfreich sein, wenn mit weniger fähigen Modellen gearbeitet wird oder wenn du mehr Kontrolle über Dateiänderungen haben möchtest."
+		},
+		"PREVENT_FOCUS_DISRUPTION": {
+			"name": "Prevent Editor Focus Disruption",
+			"description": "When enabled, file edits bypass the diff view entirely and are written directly to disk. This prevents the editor from stealing focus during file modifications."
 		}
 	},
 	"promptCaching": {
