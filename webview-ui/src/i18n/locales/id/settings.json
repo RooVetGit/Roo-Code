@@ -488,6 +488,10 @@
 			"label": "Tampilkan file .rooignore'd dalam daftar dan pencarian",
 			"description": "Ketika diaktifkan, file yang cocok dengan pola di .rooignore akan ditampilkan dalam daftar dengan simbol kunci. Ketika dinonaktifkan, file ini akan sepenuhnya disembunyikan dari daftar file dan pencarian."
 		},
+		"svnContext": {
+			"label": "Aktifkan fitur konteks SVN",
+			"description": "Ketika diaktifkan, dalam chat dapat menggunakan cara seperti @svn, @svn-changes dan @r123 untuk mereferensikan catatan commit SVN dan perubahan direktori kerja. Ketika dinonaktifkan, fitur penyebutan konteks terkait SVN ini tidak akan tersedia."
+		},
 		"maxConcurrentFileReads": {
 			"label": "Batas pembacaan file bersamaan",
 			"description": "Jumlah maksimum file yang dapat diproses oleh tool 'read_file' secara bersamaan. Nilai yang lebih tinggi dapat mempercepat pembacaan beberapa file kecil tetapi meningkatkan penggunaan memori."

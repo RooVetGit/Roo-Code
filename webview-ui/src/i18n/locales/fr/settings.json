@@ -475,6 +475,10 @@
 			"label": "Afficher les fichiers .rooignore dans les listes et recherches",
 			"description": "Lorsque cette option est activée, les fichiers correspondant aux modèles dans .rooignore seront affichés dans les listes avec un symbole de cadenas. Lorsqu'elle est désactivée, ces fichiers seront complètement masqués des listes de fichiers et des recherches."
 		},
+		"svnContext": {
+			"label": "Activer les fonctionnalités de contexte SVN",
+			"description": "Lorsque cette option est activée, vous pouvez utiliser @svn, @svn-changes et @r123 dans le chat pour référencer les commits SVN et les changements du répertoire de travail. Lorsqu'elle est désactivée, ces fonctionnalités de mention de contexte liées à SVN ne seront pas disponibles."
+		},
 		"maxReadFile": {
 			"label": "Seuil d'auto-troncature de lecture de fichier",
 			"description": "Roo lit ce nombre de lignes lorsque le modèle omet les valeurs de début/fin. Si ce nombre est inférieur au total du fichier, Roo génère un index des numéros de ligne des définitions de code. Cas spéciaux : -1 indique à Roo de lire le fichier entier (sans indexation), et 0 indique de ne lire aucune ligne et de fournir uniquement les index de ligne pour un contexte minimal. Des valeurs plus basses minimisent l'utilisation initiale du contexte, permettant des lectures ultérieures de plages de lignes précises. Les requêtes avec début/fin explicites ne sont pas limitées par ce paramètre.",

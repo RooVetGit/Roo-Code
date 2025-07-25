@@ -475,6 +475,10 @@
 			"label": ".rooignore-Dateien in Listen und Suchen anzeigen",
 			"description": "Wenn aktiviert, werden Dateien, die mit Mustern in .rooignore übereinstimmen, in Listen mit einem Schlosssymbol angezeigt. Wenn deaktiviert, werden diese Dateien vollständig aus Dateilisten und Suchen ausgeblendet."
 		},
+		"svnContext": {
+			"label": "SVN-Kontextfunktionen aktivieren",
+			"description": "Wenn aktiviert, können Sie @svn, @svn-changes und @r123 im Chat verwenden, um auf SVN-Commits und Arbeitsverzeichnisänderungen zu verweisen. Wenn deaktiviert, sind diese SVN-bezogenen Kontexterwähnungsfunktionen nicht verfügbar."
+		},
 		"maxConcurrentFileReads": {
 			"label": "Concurrent file reads limit",
 			"description": "Maximum number of files the 'read_file' tool can process concurrently. Higher values may speed up reading multiple small files but increase memory usage."

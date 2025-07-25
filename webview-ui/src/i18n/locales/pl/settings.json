@@ -475,6 +475,10 @@
 			"label": "Pokaż pliki .rooignore na listach i w wyszukiwaniach",
 			"description": "Gdy włączone, pliki pasujące do wzorców w .rooignore będą pokazywane na listach z symbolem kłódki. Gdy wyłączone, te pliki będą całkowicie ukryte z list plików i wyszukiwań."
 		},
+		"svnContext": {
+			"label": "Włącz funkcję kontekstu SVN",
+			"description": "Gdy włączone, w czacie można używać metod takich jak @svn, @svn-changes i @r123 do odwoływania się do rekordów commitów SVN i zmian w katalogu roboczym. Gdy wyłączone, te funkcje kontekstowe związane z SVN nie będą dostępne."
+		},
 		"maxReadFile": {
 			"label": "Próg automatycznego skracania odczytu pliku",
 			"description": "Roo odczytuje tę liczbę linii, gdy model nie określa wartości początkowej/końcowej. Jeśli ta liczba jest mniejsza niż całkowita liczba linii pliku, Roo generuje indeks numerów linii definicji kodu. Przypadki specjalne: -1 nakazuje Roo odczytać cały plik (bez indeksowania), a 0 nakazuje nie czytać żadnych linii i dostarczyć tylko indeksy linii dla minimalnego kontekstu. Niższe wartości minimalizują początkowe użycie kontekstu, umożliwiając późniejsze precyzyjne odczyty zakresów linii. Jawne żądania początku/końca nie są ograniczone tym ustawieniem.",
