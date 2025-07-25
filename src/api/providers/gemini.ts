@@ -72,17 +72,19 @@ export class GeminiHandler extends BaseProvider implements SingleCompletionHandl
 		if (this.options.enableUrlContext) {
 			tools.push({ urlContext: {} })
 		}
+
 		if (this.options.enableGrounding) {
 			tools.push({ googleSearch: {} })
 		}
-		const rawConfig = {
+
+		const config: GenerateContentConfig = {
 			systemInstruction,
 			httpOptions: this.options.googleGeminiBaseUrl ? { baseUrl: this.options.googleGeminiBaseUrl } : undefined,
 			thinkingConfig,
+			maxOutputTokens: this.options.modelMaxTokens ?? maxTokens ?? undefined,
 			temperature: this.options.modelTemperature ?? 0,
 			...(tools.length > 0 ? { tools } : {}),
 		}
-		const config = rawConfig as unknown as GenerateContentConfig
 
 		const params: GenerateContentParameters = { model, contents, config }
 
@@ -207,14 +209,13 @@ export class GeminiHandler extends BaseProvider implements SingleCompletionHandl
 			if (this.options.enableGrounding) {
 				tools.push({ googleSearch: {} })
 			}
-			const rawPromptConfig = {
+			const promptConfig: GenerateContentConfig = {
 				httpOptions: this.options.googleGeminiBaseUrl
 					? { baseUrl: this.options.googleGeminiBaseUrl }
 					: undefined,
 				temperature: this.options.modelTemperature ?? 0,
 				...(tools.length > 0 ? { tools } : {}),
 			}
-			const promptConfig = rawPromptConfig as unknown as GenerateContentConfig
 
 			const result = await this.client.models.generateContent({
 				model,
