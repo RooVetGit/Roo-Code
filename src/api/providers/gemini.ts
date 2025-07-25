@@ -14,6 +14,7 @@ import type { ApiHandlerOptions } from "../../shared/api"
 import { safeJsonParse } from "../../shared/safeJsonParse"
 
 import { convertAnthropicContentToGemini, convertAnthropicMessageToGemini } from "../transform/gemini-format"
+import { t } from "i18next"
 import type { ApiStream } from "../transform/stream"
 import { getModelParams } from "../transform/model-params"
 
@@ -154,7 +155,7 @@ export class GeminiHandler extends BaseProvider implements SingleCompletionHandl
 			}
 		} catch (error) {
 			if (error instanceof Error) {
-				throw new Error(`Gemini Generate Context Stream error: ${error.message}`)
+				throw new Error(t("common:errors.gemini.generate_stream", { error: error.message }))
 			}
 
 			throw error
@@ -236,7 +237,7 @@ export class GeminiHandler extends BaseProvider implements SingleCompletionHandl
 			return text
 		} catch (error) {
 			if (error instanceof Error) {
-				throw new Error(`Gemini completion error: ${error.message}`)
+				throw new Error(t("common:errors.gemini.generate_complete_prompt", { error: error.message }))
 			}
 
 			throw error
