@@ -2,7 +2,7 @@ import React from "react"
 import { VSCodeButton } from "@vscode/webview-ui-toolkit/react"
 import { useTranslation } from "react-i18next"
 import Thumbnails from "../common/Thumbnails"
-import { QueuedMessage } from "./types"
+import { QueuedMessage } from "@roo-code/types"
 
 interface QueuedMessagesProps {
 	queue: QueuedMessage[]
