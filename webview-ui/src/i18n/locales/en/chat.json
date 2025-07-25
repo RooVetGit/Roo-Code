@@ -349,5 +349,9 @@
 	},
 	"command": {
 		"triggerDescription": "Trigger the {{name}} command"
+	},
+	"queuedMessages": {
+		"title": "Queued Messages:",
+		"removeMessage": "Remove message"
 	}
 }

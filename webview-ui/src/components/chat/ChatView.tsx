@@ -56,11 +56,7 @@ import ProfileViolationWarning from "./ProfileViolationWarning"
 import { CheckpointWarning } from "./CheckpointWarning"
 import QueuedMessages from "./QueuedMessages"
 import { getLatestTodo } from "@roo/todo"
-
-interface QueuedMessage {
-	text: string
-	images: string[]
-}
+import { QueuedMessage } from "./types"
 
 export interface ChatViewProps {
 	isHidden: boolean
@@ -161,6 +157,7 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 	const [sendingDisabled, setSendingDisabled] = useState(false)
 	const [selectedImages, setSelectedImages] = useState<string[]>([])
 	const [messageQueue, setMessageQueue] = useState<QueuedMessage[]>([])
+	const isProcessingQueueRef = useRef(false)
 
 	// we need to hold on to the ask because useEffect > lastMessage will always let us know when an ask comes in and handle it, but by the time handleMessage is called, the last message might not be the ask anymore (it could be a say that followed)
 	const [clineAsk, setClineAsk] = useState<ClineAsk | undefined>(undefined)
@@ -545,6 +542,12 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 		disableAutoScrollRef.current = false
 	}, [])
 
+	/**
+	 * Handles sending messages to the extension
+	 * @param text - The message text to send
+	 * @param images - Array of image data URLs to send with the message
+	 * @param fromQueue - Internal flag indicating if this message is being sent from the queue (prevents re-queueing)
+	 */
 	const handleSendMessage = useCallback(
 		(text: string, images: string[], fromQueue = false) => {
 			text = text.trim()
@@ -596,10 +599,16 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 	)
 
 	useEffect(() => {
-		if (!sendingDisabled && messageQueue.length > 0) {
+		if (!sendingDisabled && messageQueue.length > 0 && !isProcessingQueueRef.current) {
+			isProcessingQueueRef.current = true
 			const nextMessage = messageQueue[0]
-			handleSendMessage(nextMessage.text, nextMessage.images, true)
-			setMessageQueue((prev) => prev.slice(1))
+
+			// Use setTimeout to ensure state updates are processed
+			setTimeout(() => {
+				handleSendMessage(nextMessage.text, nextMessage.images, true)
+				setMessageQueue((prev) => prev.slice(1))
+				isProcessingQueueRef.current = false
+			}, 0)
 		}
 	}, [sendingDisabled, messageQueue, handleSendMessage])
 
