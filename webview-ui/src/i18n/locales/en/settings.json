@@ -648,6 +648,10 @@
 		"MULTI_FILE_APPLY_DIFF": {
 			"name": "Enable concurrent file edits",
 			"description": "When enabled, Roo can edit multiple files in a single request. When disabled, Roo must edit files one at a time. Disabling this can help when working with less capable models or when you want more control over file modifications."
+		},
+		"SHOW_ENHANCE_PROMPT_BUTTON": {
+			"name": "Show enhance prompt button",
+			"description": "When enabled, displays the enhance prompt button in the chat input area. This button allows you to improve your prompts using AI assistance."
 		}
 	},
 	"promptCaching": {

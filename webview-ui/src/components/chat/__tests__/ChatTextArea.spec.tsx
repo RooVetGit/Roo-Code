@@ -73,6 +73,9 @@ describe("ChatTextArea", () => {
 			},
 			taskHistory: [],
 			cwd: "/test/workspace",
+			experiments: {
+				showEnhancePromptButton: true,
+			},
 		})
 	})
 
@@ -83,10 +86,49 @@ describe("ChatTextArea", () => {
 				openedTabs: [],
 				taskHistory: [],
 				cwd: "/test/workspace",
+				experiments: {
+					showEnhancePromptButton: true,
+				},
 			})
 			render(<ChatTextArea {...defaultProps} sendingDisabled={true} />)
 			const enhanceButton = getEnhancePromptButton()
 			expect(enhanceButton).toHaveClass("cursor-not-allowed")
+		})
+
+		it("should not be visible when experiment is disabled", () => {
+			;(useExtensionState as ReturnType<typeof vi.fn>).mockReturnValue({
+				filePaths: [],
+				openedTabs: [],
+				taskHistory: [],
+				cwd: "/test/workspace",
+				experiments: {
+					showEnhancePromptButton: false,
+				},
+			})
+			render(<ChatTextArea {...defaultProps} />)
+
+			// The button should not exist in the DOM
+			const enhanceButton = screen.queryByRole("button", {
+				name: (_, element) => {
+					return element.querySelector(".lucide-wand-sparkles") !== null
+				},
+			})
+			expect(enhanceButton).not.toBeInTheDocument()
+		})
+
+		it("should be visible when experiment is enabled", () => {
+			;(useExtensionState as ReturnType<typeof vi.fn>).mockReturnValue({
+				filePaths: [],
+				openedTabs: [],
+				taskHistory: [],
+				cwd: "/test/workspace",
+				experiments: {
+					showEnhancePromptButton: true,
+				},
+			})
+			render(<ChatTextArea {...defaultProps} />)
+			const enhanceButton = getEnhancePromptButton()
+			expect(enhanceButton).toBeInTheDocument()
 		})
 	})
 
@@ -103,6 +145,9 @@ describe("ChatTextArea", () => {
 				apiConfiguration,
 				taskHistory: [],
 				cwd: "/test/workspace",
+				experiments: {
+					showEnhancePromptButton: true,
+				},
 			})
 
 			render(<ChatTextArea {...defaultProps} inputValue="Test prompt" />)
@@ -125,6 +170,9 @@ describe("ChatTextArea", () => {
 				},
 				taskHistory: [],
 				cwd: "/test/workspace",
+				experiments: {
+					showEnhancePromptButton: true,
+				},
 			})
 
 			render(<ChatTextArea {...defaultProps} inputValue="" />)
@@ -147,6 +195,9 @@ describe("ChatTextArea", () => {
 				},
 				taskHistory: [],
 				cwd: "/test/workspace",
+				experiments: {
+					showEnhancePromptButton: true,
+				},
 			})
 
 			render(<ChatTextArea {...defaultProps} inputValue="Test prompt" />)
@@ -174,6 +225,9 @@ describe("ChatTextArea", () => {
 				},
 				taskHistory: [],
 				cwd: "/test/workspace",
+				experiments: {
+					showEnhancePromptButton: true,
+				},
 			})
 
 			rerender(<ChatTextArea {...defaultProps} />)
@@ -275,6 +329,9 @@ describe("ChatTextArea", () => {
 				filePaths: [],
 				openedTabs: [],
 				cwd: mockCwd,
+				experiments: {
+					showEnhancePromptButton: true,
+				},
 			})
 			mockConvertToMentionPath.mockClear()
 		})
@@ -506,6 +563,9 @@ describe("ChatTextArea", () => {
 					taskHistory: [],
 					clineMessages: mockClineMessages,
 					cwd: "/test/workspace",
+					experiments: {
+						showEnhancePromptButton: true,
+					},
 				})
 			})
 
@@ -659,6 +719,9 @@ describe("ChatTextArea", () => {
 					taskHistory: [],
 					clineMessages: mixedClineMessages,
 					cwd: "/test/workspace",
+					experiments: {
+						showEnhancePromptButton: true,
+					},
 				})
 
 				const setInputValue = vi.fn()
@@ -687,6 +750,9 @@ describe("ChatTextArea", () => {
 					taskHistory: [],
 					clineMessages: [],
 					cwd: "/test/workspace",
+					experiments: {
+						showEnhancePromptButton: true,
+					},
 				})
 
 				const setInputValue = vi.fn()
@@ -718,6 +784,9 @@ describe("ChatTextArea", () => {
 					taskHistory: [],
 					clineMessages: clineMessagesWithEmpty,
 					cwd: "/test/workspace",
+					experiments: {
+						showEnhancePromptButton: true,
+					},
 				})
 
 				const setInputValue = vi.fn()
@@ -752,6 +821,9 @@ describe("ChatTextArea", () => {
 					taskHistory: mockTaskHistory,
 					clineMessages: [], // No conversation messages
 					cwd: "/test/workspace",
+					experiments: {
+						showEnhancePromptButton: true,
+					},
 				})
 
 				const setInputValue = vi.fn()
@@ -789,6 +861,9 @@ describe("ChatTextArea", () => {
 					],
 					clineMessages: [],
 					cwd: "/test/workspace",
+					experiments: {
+						showEnhancePromptButton: true,
+					},
 				})
 
 				rerender(<ChatTextArea {...defaultProps} setInputValue={setInputValue} inputValue="" />)
@@ -812,6 +887,9 @@ describe("ChatTextArea", () => {
 						{ type: "say", say: "user_feedback", text: "Message 2", ts: 2000 },
 					],
 					cwd: "/test/workspace",
+					experiments: {
+						showEnhancePromptButton: true,
+					},
 				})
 
 				setInputValue.mockClear()
@@ -929,6 +1007,9 @@ describe("ChatTextArea", () => {
 				cwd: "/test/workspace",
 				customModes: [],
 				customModePrompts: {},
+				experiments: {
+					showEnhancePromptButton: true,
+				},
 			})
 
 			render(<ChatTextArea {...defaultProps} isEditMode={true} />)
@@ -953,6 +1034,9 @@ describe("ChatTextArea", () => {
 				openedTabs: [],
 				taskHistory: [],
 				cwd: "/test/workspace",
+				experiments: {
+					showEnhancePromptButton: true,
+				},
 			})
 
 			render(<ChatTextArea {...defaultProps} isEditMode={false} />)
