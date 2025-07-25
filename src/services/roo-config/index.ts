@@ -1,6 +1,7 @@
 import * as path from "path"
 import * as os from "os"
 import fs from "fs/promises"
+import { MAX_CONFIG_FILE_SIZE_BYTES } from "../constants/file-limits"
 
 /**
  * Gets the global .roo directory path based on the current platform
@@ -100,6 +101,15 @@ export async function fileExists(filePath: string): Promise<boolean> {
  */
 export async function readFileIfExists(filePath: string): Promise<string | null> {
 	try {
+		// Check file size before reading
+		const stats = await fs.stat(filePath)
+		if (stats.size > MAX_CONFIG_FILE_SIZE_BYTES) {
+			console.warn(
+				`File ${filePath} exceeds size limit (${stats.size} bytes > ${MAX_CONFIG_FILE_SIZE_BYTES} bytes)`,
+			)
+			return null
+		}
+
 		return await fs.readFile(filePath, "utf-8")
 	} catch (error: any) {
 		// Only catch expected "not found" errors

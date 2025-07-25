@@ -7,6 +7,7 @@ import ignore from "ignore"
 import { arePathsEqual } from "../../utils/path"
 import { getBinPath } from "../../services/ripgrep"
 import { DIRS_TO_IGNORE } from "./constants"
+import { MAX_GITIGNORE_FILE_SIZE_BYTES } from "../constants/file-limits"
 
 /**
  * List files in a directory, with optional recursive traversal
@@ -257,6 +258,15 @@ async function createIgnoreInstance(dirPath: string): Promise<ReturnType<typeof 
 	// Add patterns from all .gitignore files
 	for (const gitignoreFile of gitignoreFiles) {
 		try {
+			// Check file size before reading
+			const stats = await fs.promises.stat(gitignoreFile)
+			if (stats.size > MAX_GITIGNORE_FILE_SIZE_BYTES) {
+				console.warn(
+					`Skipping large .gitignore file: ${gitignoreFile} (${stats.size} bytes > ${MAX_GITIGNORE_FILE_SIZE_BYTES} bytes)`,
+				)
+				continue
+			}
+
 			const content = await fs.promises.readFile(gitignoreFile, "utf8")
 			ignoreInstance.add(content)
 		} catch (err) {

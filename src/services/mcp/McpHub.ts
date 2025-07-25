@@ -32,6 +32,7 @@ import {
 import { fileExistsAtPath } from "../../utils/fs"
 import { arePathsEqual } from "../../utils/path"
 import { injectVariables } from "../../utils/config"
+import { MAX_CONFIG_FILE_SIZE_BYTES } from "../constants/file-limits"
 
 export type McpConnection = {
 	server: McpServer
@@ -276,9 +277,29 @@ export class McpHub {
 		this.configChangeDebounceTimers.set(key, timer)
 	}
 
+	/**
+	 * Safely reads a config file with size validation
+	 * @param filePath Path to the config file
+	 * @returns The file content or null if the file is too large
+	 * @throws Error if file cannot be read (other than size limit)
+	 */
+	private async readConfigFile(filePath: string): Promise<string | null> {
+		const stats = await fs.stat(filePath)
+		if (stats.size > MAX_CONFIG_FILE_SIZE_BYTES) {
+			const errorMessage = `Config file ${filePath} exceeds size limit (${stats.size} bytes > ${MAX_CONFIG_FILE_SIZE_BYTES} bytes)`
+			console.error(errorMessage)
+			vscode.window.showErrorMessage(errorMessage)
+			return null
+		}
+		return await fs.readFile(filePath, "utf-8")
+	}
+
 	private async handleConfigFileChange(filePath: string, source: "global" | "project"): Promise<void> {
 		try {
-			const content = await fs.readFile(filePath, "utf-8")
+			const content = await this.readConfigFile(filePath)
+			if (!content) {
+				return // File too large, error already shown
+			}
 			let config: any
 
 			try {
@@ -364,7 +385,10 @@ export class McpHub {
 			const projectMcpPath = await this.getProjectMcpPath()
 			if (!projectMcpPath) return
 
-			const content = await fs.readFile(projectMcpPath, "utf-8")
+			const content = await this.readConfigFile(projectMcpPath)
+			if (!content) {
+				return // File too large, error already shown
+			}
 			let config: any
 
 			try {
@@ -492,7 +516,10 @@ export class McpHub {
 				return
 			}
 
-			const content = await fs.readFile(configPath, "utf-8")
+			const content = await this.readConfigFile(configPath)
+			if (!content) {
+				return // File too large, error already shown
+			}
 			const config = JSON.parse(content)
 			const result = McpSettingsSchema.safeParse(config)
 
@@ -846,14 +873,18 @@ export class McpHub {
 					const projectMcpPath = await this.getProjectMcpPath()
 					if (projectMcpPath) {
 						configPath = projectMcpPath
-						const content = await fs.readFile(configPath, "utf-8")
-						serverConfigData = JSON.parse(content)
+						const content = await this.readConfigFile(configPath)
+						if (content) {
+							serverConfigData = JSON.parse(content)
+						}
 					}
 				} else {
 					// Get global MCP settings path
 					configPath = await this.getMcpSettingsFilePath()
-					const content = await fs.readFile(configPath, "utf-8")
-					serverConfigData = JSON.parse(content)
+					const content = await this.readConfigFile(configPath)
+					if (content) {
+						serverConfigData = JSON.parse(content)
+					}
 				}
 				if (serverConfigData) {
 					alwaysAllowConfig = serverConfigData.mcpServers?.[serverName]?.alwaysAllow || []
@@ -1118,15 +1149,17 @@ export class McpHub {
 			const globalPath = await this.getMcpSettingsFilePath()
 			let globalServers: Record<string, any> = {}
 			try {
-				const globalContent = await fs.readFile(globalPath, "utf-8")
-				const globalConfig = JSON.parse(globalContent)
-				globalServers = globalConfig.mcpServers || {}
-				const globalServerNames = Object.keys(globalServers)
-				vscode.window.showInformationMessage(
-					t("mcp:info.global_servers_active", {
-						mcpServers: `${globalServerNames.join(", ") || "none"}`,
-					}),
-				)
+				const globalContent = await this.readConfigFile(globalPath)
+				if (globalContent) {
+					const globalConfig = JSON.parse(globalContent)
+					globalServers = globalConfig.mcpServers || {}
+					const globalServerNames = Object.keys(globalServers)
+					vscode.window.showInformationMessage(
+						t("mcp:info.global_servers_active", {
+							mcpServers: `${globalServerNames.join(", ") || "none"}`,
+						}),
+					)
+				}
 			} catch (error) {
 				console.log("Error reading global MCP config:", error)
 			}
@@ -1135,15 +1168,17 @@ export class McpHub {
 			let projectServers: Record<string, any> = {}
 			if (projectPath) {
 				try {
-					const projectContent = await fs.readFile(projectPath, "utf-8")
-					const projectConfig = JSON.parse(projectContent)
-					projectServers = projectConfig.mcpServers || {}
-					const projectServerNames = Object.keys(projectServers)
-					vscode.window.showInformationMessage(
-						t("mcp:info.project_servers_active", {
-							mcpServers: `${projectServerNames.join(", ") || "none"}`,
-						}),
-					)
+					const projectContent = await this.readConfigFile(projectPath)
+					if (projectContent) {
+						const projectConfig = JSON.parse(projectContent)
+						projectServers = projectConfig.mcpServers || {}
+						const projectServerNames = Object.keys(projectServers)
+						vscode.window.showInformationMessage(
+							t("mcp:info.project_servers_active", {
+								mcpServers: `${projectServerNames.join(", ") || "none"}`,
+							}),
+						)
+					}
 				} catch (error) {
 					console.log("Error reading project MCP config:", error)
 				}
@@ -1175,8 +1210,8 @@ export class McpHub {
 	private async notifyWebviewOfServerChanges(): Promise<void> {
 		// Get global server order from settings file
 		const settingsPath = await this.getMcpSettingsFilePath()
-		const content = await fs.readFile(settingsPath, "utf-8")
-		const config = JSON.parse(content)
+		const content = await this.readConfigFile(settingsPath)
+		const config = content ? JSON.parse(content) : { mcpServers: {} }
 		const globalServerOrder = Object.keys(config.mcpServers || {})
 
 		// Get project server order if available
@@ -1184,9 +1219,11 @@ export class McpHub {
 		let projectServerOrder: string[] = []
 		if (projectMcpPath) {
 			try {
-				const projectContent = await fs.readFile(projectMcpPath, "utf-8")
-				const projectConfig = JSON.parse(projectContent)
-				projectServerOrder = Object.keys(projectConfig.mcpServers || {})
+				const projectContent = await this.readConfigFile(projectMcpPath)
+				if (projectContent) {
+					const projectConfig = JSON.parse(projectContent)
+					projectServerOrder = Object.keys(projectConfig.mcpServers || {})
+				}
 			} catch (error) {
 				// Silently continue with empty project server order
 			}
@@ -1310,7 +1347,10 @@ export class McpHub {
 		}
 
 		// Read and parse the config file
-		const content = await fs.readFile(configPath, "utf-8")
+		const content = await this.readConfigFile(configPath)
+		if (!content) {
+			throw new Error("Config file too large or unreadable")
+		}
 		const config = JSON.parse(content)
 
 		// Validate the config structure
@@ -1401,7 +1441,10 @@ export class McpHub {
 				throw new Error("Settings file not accessible")
 			}
 
-			const content = await fs.readFile(configPath, "utf-8")
+			const content = await this.readConfigFile(configPath)
+			if (!content) {
+				throw new Error("Config file too large or unreadable")
+			}
 			const config = JSON.parse(content)
 
 			// Validate the config structure
@@ -1539,7 +1582,10 @@ export class McpHub {
 		const normalizedPath = process.platform === "win32" ? configPath.replace(/\\/g, "/") : configPath
 
 		// Read the appropriate config file
-		const content = await fs.readFile(normalizedPath, "utf-8")
+		const content = await this.readConfigFile(normalizedPath)
+		if (!content) {
+			throw new Error("Config file too large or unreadable")
+		}
 		const config = JSON.parse(content)
 
 		if (!config.mcpServers) {

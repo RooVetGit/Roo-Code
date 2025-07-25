@@ -12,6 +12,7 @@ import { executeRipgrep } from "../../services/search/file-search"
 
 import { CheckpointDiff, CheckpointResult, CheckpointEventMap } from "./types"
 import { getExcludePatterns } from "./excludes"
+import { MAX_CHECKPOINT_FILE_SIZE_BYTES } from "../constants/file-limits"
 
 export abstract class ShadowCheckpointService extends EventEmitter {
 	public readonly taskId: string
@@ -292,9 +293,25 @@ export abstract class ShadowCheckpointService extends EventEmitter {
 			const absPath = path.join(cwdPath, relPath)
 			const before = await this.git.show([`${from}:${relPath}`]).catch(() => "")
 
-			const after = to
-				? await this.git.show([`${to}:${relPath}`]).catch(() => "")
-				: await fs.readFile(absPath, "utf8").catch(() => "")
+			let after = ""
+			if (to) {
+				after = await this.git.show([`${to}:${relPath}`]).catch(() => "")
+			} else {
+				// Check file size before reading from filesystem
+				try {
+					const stats = await fs.stat(absPath)
+					if (stats.size > MAX_CHECKPOINT_FILE_SIZE_BYTES) {
+						console.warn(
+							`Checkpoint file ${absPath} exceeds size limit (${stats.size} bytes > ${MAX_CHECKPOINT_FILE_SIZE_BYTES} bytes)`,
+						)
+						after = `[File too large to display: ${stats.size} bytes]`
+					} else {
+						after = await fs.readFile(absPath, "utf8")
+					}
+				} catch (err) {
+					after = ""
+				}
+			}
 
 			result.push({ paths: { relative: relPath, absolute: absPath }, content: { before, after } })
 		}
