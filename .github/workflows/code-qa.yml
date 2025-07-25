@@ -43,14 +43,7 @@ jobs:
 
     unit-test:
         name: platform-unit-test (${{ matrix.name }})
-        runs-on: ${{ matrix.os }}
-        strategy:
-            matrix:
-                include:
-                    - os: ubuntu-latest
-                      name: ubuntu-latest
-                    - os: windows-latest
-                      name: windows-latest
+        runs-on: self-hosted
         steps:
             - name: Checkout code
               uses: actions/checkout@v4
