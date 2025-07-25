@@ -19,8 +19,13 @@ export class CodeIndexConfigManager {
 	private openAiCompatibleOptions?: { baseUrl: string; apiKey: string }
 	private geminiOptions?: { apiKey: string }
 	private mistralOptions?: { apiKey: string }
+	// Vector database configuration
+	private vectorDBProvider: "qdrant" | "lancedb" | "chromadb" | "sqlite-vector" = "qdrant"
 	private qdrantUrl?: string = "http://localhost:6333"
 	private qdrantApiKey?: string
+	private chromadbUrl?: string = "http://localhost:8000"
+	private chromadbApiKey?: string
+	// Search configuration
 	private searchMinScore?: number
 	private searchMaxResults?: number
 
@@ -44,7 +49,9 @@ export class CodeIndexConfigManager {
 		// Load configuration from storage
 		const codebaseIndexConfig = this.contextProxy?.getGlobalState("codebaseIndexConfig") ?? {
 			codebaseIndexEnabled: true,
+			codebaseIndexVectorDBProvider: "qdrant",
 			codebaseIndexQdrantUrl: "http://localhost:6333",
+			codebaseIndexChromadbUrl: "http://localhost:8000",
 			codebaseIndexEmbedderProvider: "openai",
 			codebaseIndexEmbedderBaseUrl: "",
 			codebaseIndexEmbedderModelId: "",
@@ -62,23 +69,32 @@ export class CodeIndexConfigManager {
 			codebaseIndexSearchMaxResults,
 		} = codebaseIndexConfig
 
+		// Extract new properties with optional chaining
+		const codebaseIndexVectorDBProvider = (codebaseIndexConfig as any).codebaseIndexVectorDBProvider
+		const codebaseIndexChromadbUrl = (codebaseIndexConfig as any).codebaseIndexChromadbUrl
+
 		const openAiKey = this.contextProxy?.getSecret("codeIndexOpenAiKey") ?? ""
 		const qdrantApiKey = this.contextProxy?.getSecret("codeIndexQdrantApiKey") ?? ""
+		// ChromaDB API key is not in the secret keys type yet, so we'll handle it differently
+		const chromadbApiKey = ""
 		// Fix: Read OpenAI Compatible settings from the correct location within codebaseIndexConfig
-		const openAiCompatibleBaseUrl = codebaseIndexConfig.codebaseIndexOpenAiCompatibleBaseUrl ?? ""
+		const openAiCompatibleBaseUrl = (codebaseIndexConfig as any).codebaseIndexOpenAiCompatibleBaseUrl ?? ""
 		const openAiCompatibleApiKey = this.contextProxy?.getSecret("codebaseIndexOpenAiCompatibleApiKey") ?? ""
 		const geminiApiKey = this.contextProxy?.getSecret("codebaseIndexGeminiApiKey") ?? ""
 		const mistralApiKey = this.contextProxy?.getSecret("codebaseIndexMistralApiKey") ?? ""
 
 		// Update instance variables with configuration
 		this.codebaseIndexEnabled = codebaseIndexEnabled ?? true
+		this.vectorDBProvider = codebaseIndexVectorDBProvider ?? "qdrant"
 		this.qdrantUrl = codebaseIndexQdrantUrl
 		this.qdrantApiKey = qdrantApiKey ?? ""
+		this.chromadbUrl = codebaseIndexChromadbUrl ?? "http://localhost:8000"
+		this.chromadbApiKey = chromadbApiKey ?? ""
 		this.searchMinScore = codebaseIndexSearchMinScore
 		this.searchMaxResults = codebaseIndexSearchMaxResults
 
 		// Validate and set model dimension
-		const rawDimension = codebaseIndexConfig.codebaseIndexEmbedderModelDimension
+		const rawDimension = (codebaseIndexConfig as any).codebaseIndexEmbedderModelDimension
 		if (rawDimension !== undefined && rawDimension !== null) {
 			const dimension = Number(rawDimension)
 			if (!isNaN(dimension) && dimension > 0) {
@@ -141,8 +157,11 @@ export class CodeIndexConfigManager {
 			openAiCompatibleOptions?: { baseUrl: string; apiKey: string }
 			geminiOptions?: { apiKey: string }
 			mistralOptions?: { apiKey: string }
+			vectorDBProvider?: "qdrant" | "lancedb" | "chromadb" | "sqlite-vector"
 			qdrantUrl?: string
 			qdrantApiKey?: string
+			chromadbUrl?: string
+			chromadbApiKey?: string
 			searchMinScore?: number
 		}
 		requiresRestart: boolean
@@ -160,8 +179,11 @@ export class CodeIndexConfigManager {
 			openAiCompatibleApiKey: this.openAiCompatibleOptions?.apiKey ?? "",
 			geminiApiKey: this.geminiOptions?.apiKey ?? "",
 			mistralApiKey: this.mistralOptions?.apiKey ?? "",
+			vectorDBProvider: this.vectorDBProvider,
 			qdrantUrl: this.qdrantUrl ?? "",
 			qdrantApiKey: this.qdrantApiKey ?? "",
+			chromadbUrl: this.chromadbUrl ?? "",
+			chromadbApiKey: this.chromadbApiKey ?? "",
 		}
 
 		// Refresh secrets from VSCode storage to ensure we have the latest values
@@ -184,8 +206,11 @@ export class CodeIndexConfigManager {
 				openAiCompatibleOptions: this.openAiCompatibleOptions,
 				geminiOptions: this.geminiOptions,
 				mistralOptions: this.mistralOptions,
+				vectorDBProvider: this.vectorDBProvider,
 				qdrantUrl: this.qdrantUrl,
 				qdrantApiKey: this.qdrantApiKey,
+				chromadbUrl: this.chromadbUrl,
+				chromadbApiKey: this.chromadbApiKey,
 				searchMinScore: this.currentSearchMinScore,
 			},
 			requiresRestart,
@@ -193,36 +218,52 @@ export class CodeIndexConfigManager {
 	}
 
 	/**
-	 * Checks if the service is properly configured based on the embedder type.
+	 * Checks if the service is properly configured based on the embedder type and vector DB provider.
 	 */
 	public isConfigured(): boolean {
+		// First check embedder configuration
+		let embedderConfigured = false
+
 		if (this.embedderProvider === "openai") {
 			const openAiKey = this.openAiOptions?.openAiNativeApiKey
-			const qdrantUrl = this.qdrantUrl
-			return !!(openAiKey && qdrantUrl)
+			embedderConfigured = !!openAiKey
 		} else if (this.embedderProvider === "ollama") {
 			// Ollama model ID has a default, so only base URL is strictly required for config
 			const ollamaBaseUrl = this.ollamaOptions?.ollamaBaseUrl
-			const qdrantUrl = this.qdrantUrl
-			return !!(ollamaBaseUrl && qdrantUrl)
+			embedderConfigured = !!ollamaBaseUrl
 		} else if (this.embedderProvider === "openai-compatible") {
 			const baseUrl = this.openAiCompatibleOptions?.baseUrl
 			const apiKey = this.openAiCompatibleOptions?.apiKey
-			const qdrantUrl = this.qdrantUrl
-			const isConfigured = !!(baseUrl && apiKey && qdrantUrl)
-			return isConfigured
+			embedderConfigured = !!(baseUrl && apiKey)
 		} else if (this.embedderProvider === "gemini") {
 			const apiKey = this.geminiOptions?.apiKey
-			const qdrantUrl = this.qdrantUrl
-			const isConfigured = !!(apiKey && qdrantUrl)
-			return isConfigured
+			embedderConfigured = !!apiKey
 		} else if (this.embedderProvider === "mistral") {
 			const apiKey = this.mistralOptions?.apiKey
-			const qdrantUrl = this.qdrantUrl
-			const isConfigured = !!(apiKey && qdrantUrl)
-			return isConfigured
+			embedderConfigured = !!apiKey
 		}
-		return false // Should not happen if embedderProvider is always set correctly
+
+		// Then check vector database configuration
+		let vectorDBConfigured = false
+
+		switch (this.vectorDBProvider) {
+			case "qdrant":
+				vectorDBConfigured = !!this.qdrantUrl
+				break
+			case "chromadb":
+				vectorDBConfigured = !!this.chromadbUrl
+				break
+			case "lancedb":
+			case "sqlite-vector":
+				// These are embedded databases, no URL needed
+				vectorDBConfigured = true
+				break
+			default:
+				// Default to qdrant for backward compatibility
+				vectorDBConfigured = !!this.qdrantUrl
+		}
+
+		return embedderConfigured && vectorDBConfigured
 	}
 
 	/**
@@ -255,8 +296,11 @@ export class CodeIndexConfigManager {
 		const prevModelDimension = prev?.modelDimension
 		const prevGeminiApiKey = prev?.geminiApiKey ?? ""
 		const prevMistralApiKey = prev?.mistralApiKey ?? ""
+		const prevVectorDBProvider = prev?.vectorDBProvider ?? "qdrant"
 		const prevQdrantUrl = prev?.qdrantUrl ?? ""
 		const prevQdrantApiKey = prev?.qdrantApiKey ?? ""
+		const prevChromadbUrl = prev?.chromadbUrl ?? ""
+		const prevChromadbApiKey = prev?.chromadbApiKey ?? ""
 
 		// 1. Transition from disabled/unconfigured to enabled/configured
 		if ((!prevEnabled || !prevConfigured) && this.codebaseIndexEnabled && nowConfigured) {
@@ -279,12 +323,7 @@ export class CodeIndexConfigManager {
 			return false
 		}
 
-		// Provider change
-		if (prevProvider !== this.embedderProvider) {
-			return true
-		}
-
-		// Authentication changes (API keys)
+		// Get current values
 		const currentOpenAiKey = this.openAiOptions?.openAiNativeApiKey ?? ""
 		const currentOllamaBaseUrl = this.ollamaOptions?.ollamaBaseUrl ?? ""
 		const currentOpenAiCompatibleBaseUrl = this.openAiCompatibleOptions?.baseUrl ?? ""
@@ -292,8 +331,20 @@ export class CodeIndexConfigManager {
 		const currentModelDimension = this.modelDimension
 		const currentGeminiApiKey = this.geminiOptions?.apiKey ?? ""
 		const currentMistralApiKey = this.mistralOptions?.apiKey ?? ""
+		const currentVectorDBProvider = this.vectorDBProvider ?? "qdrant"
 		const currentQdrantUrl = this.qdrantUrl ?? ""
 		const currentQdrantApiKey = this.qdrantApiKey ?? ""
+		const currentChromadbUrl = this.chromadbUrl ?? ""
+		const currentChromadbApiKey = this.chromadbApiKey ?? ""
+
+		// Provider change (embedder or vector DB)
+		if (prevProvider !== this.embedderProvider) {
+			return true
+		}
+
+		if (prevVectorDBProvider !== currentVectorDBProvider) {
+			return true
+		}
 
 		if (prevOpenAiKey !== currentOpenAiKey) {
 			return true
@@ -323,8 +374,17 @@ export class CodeIndexConfigManager {
 			return true
 		}
 
-		if (prevQdrantUrl !== currentQdrantUrl || prevQdrantApiKey !== currentQdrantApiKey) {
-			return true
+		// Vector database connection changes
+		if (prevVectorDBProvider === "qdrant" && currentVectorDBProvider === "qdrant") {
+			if (prevQdrantUrl !== currentQdrantUrl || prevQdrantApiKey !== currentQdrantApiKey) {
+				return true
+			}
+		}
+
+		if (prevVectorDBProvider === "chromadb" && currentVectorDBProvider === "chromadb") {
+			if (prevChromadbUrl !== currentChromadbUrl || prevChromadbApiKey !== currentChromadbApiKey) {
+				return true
+			}
 		}
 
 		// Vector dimension changes (still important for compatibility)
@@ -375,8 +435,11 @@ export class CodeIndexConfigManager {
 			openAiCompatibleOptions: this.openAiCompatibleOptions,
 			geminiOptions: this.geminiOptions,
 			mistralOptions: this.mistralOptions,
+			vectorDBProvider: this.vectorDBProvider,
 			qdrantUrl: this.qdrantUrl,
 			qdrantApiKey: this.qdrantApiKey,
+			chromadbUrl: this.chromadbUrl,
+			chromadbApiKey: this.chromadbApiKey,
 			searchMinScore: this.currentSearchMinScore,
 			searchMaxResults: this.currentSearchMaxResults,
 		}

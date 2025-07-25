@@ -14,8 +14,13 @@ export interface CodeIndexConfig {
 	openAiCompatibleOptions?: { baseUrl: string; apiKey: string }
 	geminiOptions?: { apiKey: string }
 	mistralOptions?: { apiKey: string }
+	// Vector database configuration
+	vectorDBProvider?: "qdrant" | "lancedb" | "chromadb" | "sqlite-vector"
 	qdrantUrl?: string
 	qdrantApiKey?: string
+	chromadbUrl?: string
+	chromadbApiKey?: string
+	// Search configuration
 	searchMinScore?: number
 	searchMaxResults?: number
 }
@@ -35,6 +40,10 @@ export type PreviousConfigSnapshot = {
 	openAiCompatibleApiKey?: string
 	geminiApiKey?: string
 	mistralApiKey?: string
+	// Vector database configuration
+	vectorDBProvider?: "qdrant" | "lancedb" | "chromadb" | "sqlite-vector"
 	qdrantUrl?: string
 	qdrantApiKey?: string
+	chromadbUrl?: string
+	chromadbApiKey?: string
 }

@@ -24,7 +24,16 @@
 	},
 	"vectorStore": {
 		"qdrantConnectionFailed": "Failed to connect to Qdrant vector database. Please ensure Qdrant is running and accessible at {{qdrantUrl}}. Error: {{errorMessage}}",
-		"vectorDimensionMismatch": "Failed to update vector index for new model. Please try clearing the index and starting again. Details: {{errorMessage}}"
+		"vectorDimensionMismatch": "Failed to update vector index for new model. Please try clearing the index and starting again. Details: {{errorMessage}}",
+		"lancedbNotInstalled": "LanceDB is not installed. Please install it with: npm install @lancedb/lancedb. Error: {{errorMessage}}",
+		"lancedbInitFailed": "Failed to initialize LanceDB. Error: {{errorMessage}}",
+		"lancedbConnectionFailed": "Failed to connect to LanceDB. Error: {{errorMessage}}",
+		"chromadbNotInstalled": "ChromaDB is not installed. Please install it with: npm install chromadb. Error: {{errorMessage}}",
+		"chromadbInitFailed": "Failed to initialize ChromaDB at {{chromaUrl}}. Error: {{errorMessage}}",
+		"chromadbConnectionFailed": "Failed to connect to ChromaDB at {{chromaUrl}}. Please ensure ChromaDB is running. Error: {{errorMessage}}",
+		"sqliteNotInstalled": "SQLite is not installed. Please install it with: npm install better-sqlite3. Error: {{errorMessage}}",
+		"sqliteVssNotInstalled": "SQLite VSS extension is not installed. Please install it with: npm install sqlite-vss. Error: {{errorMessage}}",
+		"sqliteInitFailed": "Failed to initialize SQLite vector database. Error: {{errorMessage}}"
 	},
 	"validation": {
 		"authenticationFailed": "Authentication failed. Please check your API key in the settings.",
@@ -51,6 +60,7 @@
 		"vectorDimensionNotDeterminedOpenAiCompatible": "Could not determine vector dimension for model '{{modelId}}' with provider '{{provider}}'. Please ensure the 'Embedding Dimension' is correctly set in the OpenAI-Compatible provider settings.",
 		"vectorDimensionNotDetermined": "Could not determine vector dimension for model '{{modelId}}' with provider '{{provider}}'. Check model profiles or configuration.",
 		"qdrantUrlMissing": "Qdrant URL missing for vector store creation",
-		"codeIndexingNotConfigured": "Cannot create services: Code indexing is not properly configured"
+		"codeIndexingNotConfigured": "Cannot create services: Code indexing is not properly configured",
+		"invalidVectorDBProvider": "Invalid vector database provider: {{provider}}"
 	}
 }

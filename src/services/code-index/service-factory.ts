@@ -6,6 +6,7 @@ import { GeminiEmbedder } from "./embedders/gemini"
 import { MistralEmbedder } from "./embedders/mistral"
 import { EmbedderProvider, getDefaultModelId, getModelDimension } from "../../shared/embeddingModels"
 import { QdrantVectorStore } from "./vector-store/qdrant-client"
+import { QdrantAdapter, LanceDBAdapter, ChromaDBAdapter, SQLiteVectorAdapter } from "./vector-store/adapters"
 import { codeParser, DirectoryScanner, FileWatcher } from "./processors"
 import { ICodeParser, IEmbedder, IFileWatcher, IVectorStore } from "./interfaces"
 import { CodeIndexConfigManager } from "./config-manager"
@@ -14,6 +15,8 @@ import { Ignore } from "ignore"
 import { t } from "../../i18n"
 import { TelemetryService } from "@roo-code/telemetry"
 import { TelemetryEventName } from "@roo-code/types"
+
+export type VectorDBProvider = "qdrant" | "lancedb" | "chromadb" | "sqlite-vector"
 
 /**
  * Factory class responsible for creating and configuring code indexing service dependencies.
@@ -132,12 +135,45 @@ export class CodeIndexServiceFactory {
 			}
 		}
 
-		if (!config.qdrantUrl) {
-			throw new Error(t("embeddings:serviceFactory.qdrantUrlMissing"))
-		}
+		// Get vector database provider from config (default to qdrant for backward compatibility)
+		const vectorDBProvider = (config.vectorDBProvider as VectorDBProvider) || "qdrant"
 
-		// Assuming constructor is updated: new QdrantVectorStore(workspacePath, url, vectorSize, apiKey?)
-		return new QdrantVectorStore(this.workspacePath, config.qdrantUrl, vectorSize, config.qdrantApiKey)
+		// Create appropriate vector store based on provider
+		switch (vectorDBProvider) {
+			case "qdrant":
+				if (!config.qdrantUrl) {
+					throw new Error(t("embeddings:serviceFactory.qdrantUrlMissing"))
+				}
+				return new QdrantAdapter({
+					workspacePath: this.workspacePath,
+					url: config.qdrantUrl,
+					vectorSize,
+					apiKey: config.qdrantApiKey,
+				})
+
+			case "lancedb":
+				return new LanceDBAdapter({
+					workspacePath: this.workspacePath,
+					vectorSize,
+				})
+
+			case "chromadb":
+				return new ChromaDBAdapter({
+					workspacePath: this.workspacePath,
+					url: config.chromadbUrl || "http://localhost:8000",
+					vectorSize,
+					apiKey: config.chromadbApiKey,
+				})
+
+			case "sqlite-vector":
+				return new SQLiteVectorAdapter({
+					workspacePath: this.workspacePath,
+					vectorSize,
+				})
+
+			default:
+				throw new Error(t("embeddings:serviceFactory.invalidVectorDBProvider", { provider: vectorDBProvider }))
+		}
 	}
 
 	/**
