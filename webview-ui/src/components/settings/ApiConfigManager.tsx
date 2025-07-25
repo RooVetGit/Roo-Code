@@ -225,7 +225,7 @@ const ApiConfigManager = ({
 				</div>
 			) : (
 				<>
-					<div className="flex items-center gap-1">
+					<div className="flex items-center gap-1 min-w-0">
 						<SearchableSelect
 							value={currentApiConfigName}
 							onValueChange={handleSelectConfig}
@@ -247,42 +247,51 @@ const ApiConfigManager = ({
 							placeholder={t("settings:common.select")}
 							searchPlaceholder={t("settings:providers.searchPlaceholder")}
 							emptyMessage={t("settings:providers.noMatchFound")}
-							className="grow"
+							className="grow min-w-0"
 							data-testid="select-component"
 						/>
-						<StandardTooltip content={t("settings:providers.addProfile")}>
-							<Button variant="ghost" size="icon" onClick={handleAdd} data-testid="add-profile-button">
-								<span className="codicon codicon-add" />
-							</Button>
-						</StandardTooltip>
-						{currentApiConfigName && (
-							<>
-								<StandardTooltip content={t("settings:providers.renameProfile")}>
-									<Button
-										variant="ghost"
-										size="icon"
-										onClick={handleStartRename}
-										data-testid="rename-profile-button">
-										<span className="codicon codicon-edit" />
-									</Button>
-								</StandardTooltip>
-								<StandardTooltip
-									content={
-										isOnlyProfile
-											? t("settings:providers.cannotDeleteOnlyProfile")
-											: t("settings:providers.deleteProfile")
-									}>
-									<Button
-										variant="ghost"
-										size="icon"
-										onClick={handleDelete}
-										data-testid="delete-profile-button"
-										disabled={isOnlyProfile}>
-										<span className="codicon codicon-trash" />
-									</Button>
-								</StandardTooltip>
-							</>
-						)}
+						<div className="flex items-center gap-0.5 flex-shrink-0 ml-1">
+							<StandardTooltip content={t("settings:providers.addProfile")}>
+								<Button
+									variant="ghost"
+									size="icon"
+									onClick={handleAdd}
+									data-testid="add-profile-button"
+									className="flex-shrink-0 min-w-[32px]">
+									<span className="codicon codicon-add" />
+								</Button>
+							</StandardTooltip>
+							{currentApiConfigName && (
+								<>
+									<StandardTooltip content={t("settings:providers.renameProfile")}>
+										<Button
+											variant="ghost"
+											size="icon"
+											onClick={handleStartRename}
+											data-testid="rename-profile-button"
+											className="flex-shrink-0 min-w-[32px]">
+											<span className="codicon codicon-edit" />
+										</Button>
+									</StandardTooltip>
+									<StandardTooltip
+										content={
+											isOnlyProfile
+												? t("settings:providers.cannotDeleteOnlyProfile")
+												: t("settings:providers.deleteProfile")
+										}>
+										<Button
+											variant="ghost"
+											size="icon"
+											onClick={handleDelete}
+											data-testid="delete-profile-button"
+											disabled={isOnlyProfile}
+											className="flex-shrink-0 min-w-[32px]">
+											<span className="codicon codicon-trash" />
+										</Button>
+									</StandardTooltip>
+								</>
+							)}
+						</div>
 					</div>
 					<div className="text-vscode-descriptionForeground text-sm mt-1">
 						{t("settings:providers.description")}

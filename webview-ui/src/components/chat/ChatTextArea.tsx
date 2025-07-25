@@ -955,7 +955,7 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 							placeholder={displayName}
 							options={getApiConfigOptions}
 							onChange={handleApiConfigChange}
-							triggerClassName="w-full text-ellipsis overflow-hidden"
+							triggerClassName="w-full text-ellipsis overflow-hidden min-w-0"
 							itemClassName="group"
 							renderItem={renderApiConfigItem}
 						/>
