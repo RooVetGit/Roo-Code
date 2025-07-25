@@ -948,16 +948,6 @@ export const webviewMessageHandler = async (
 			await updateGlobalState("diffEnabled", diffEnabled)
 			await provider.postStateToWebview()
 			break
-		case "fileBasedEditing":
-			const fileBasedEditing = message.bool ?? false
-			await provider.context.globalState.update("fileBasedEditing", fileBasedEditing)
-			// Also update workspace settings
-			await vscode.workspace
-				.getConfiguration("roo-cline")
-				.update("fileBasedEditing", fileBasedEditing, vscode.ConfigurationTarget.Global)
-			await updateGlobalState("fileBasedEditing", fileBasedEditing)
-			await provider.postStateToWebview()
-			break
 		case "enableCheckpoints":
 			const enableCheckpoints = message.bool ?? true
 			await updateGlobalState("enableCheckpoints", enableCheckpoints)
