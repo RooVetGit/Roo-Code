@@ -14,6 +14,7 @@ import { isPathOutsideWorkspace } from "../../utils/pathUtils"
 import { detectCodeOmission } from "../../integrations/editor/detect-omission"
 import { unescapeHtmlEntities } from "../../utils/text-normalization"
 import { DEFAULT_WRITE_DELAY_MS } from "@roo-code/types"
+import { EXPERIMENT_IDS, experiments } from "../../shared/experiments"
 
 export async function writeToFileTool(
 	cline: Task,
@@ -198,27 +199,51 @@ export async function writeToFileTool(
 				}
 			}
 
-			const completeMessage = JSON.stringify({
-				...sharedMessageProps,
-				content: fileExists ? undefined : newContent,
-				diff: fileExists
-					? formatResponse.createPrettyPatch(relPath, cline.diffViewProvider.originalContent, newContent)
-					: undefined,
-			} satisfies ClineSayTool)
-
-			const didApprove = await askApproval("tool", completeMessage, undefined, isWriteProtected)
-
-			if (!didApprove) {
-				await cline.diffViewProvider.revertChanges()
-				return
-			}
-
-			// Call saveChanges to update the DiffViewProvider properties
+			// Check if preventFocusDisruption experiment is enabled
 			const provider = cline.providerRef.deref()
 			const state = await provider?.getState()
 			const diagnosticsEnabled = state?.diagnosticsEnabled ?? true
 			const writeDelayMs = state?.writeDelayMs ?? DEFAULT_WRITE_DELAY_MS
-			await cline.diffViewProvider.saveChanges(diagnosticsEnabled, writeDelayMs)
+			const isPreventFocusDisruptionEnabled = experiments.isEnabled(
+				state?.experiments ?? {},
+				EXPERIMENT_IDS.PREVENT_FOCUS_DISRUPTION,
+			)
+
+			if (isPreventFocusDisruptionEnabled) {
+				// Direct file write without diff view
+				const completeMessage = JSON.stringify({
+					...sharedMessageProps,
+					content: newContent,
+				} satisfies ClineSayTool)
+
+				const didApprove = await askApproval("tool", completeMessage, undefined, isWriteProtected)
+
+				if (!didApprove) {
+					return
+				}
+
+				// Save directly without showing diff view
+				await cline.diffViewProvider.saveDirectly(relPath, newContent, true, diagnosticsEnabled, writeDelayMs)
+			} else {
+				// Original behavior with diff view
+				const completeMessage = JSON.stringify({
+					...sharedMessageProps,
+					content: fileExists ? undefined : newContent,
+					diff: fileExists
+						? formatResponse.createPrettyPatch(relPath, cline.diffViewProvider.originalContent, newContent)
+						: undefined,
+				} satisfies ClineSayTool)
+
+				const didApprove = await askApproval("tool", completeMessage, undefined, isWriteProtected)
+
+				if (!didApprove) {
+					await cline.diffViewProvider.revertChanges()
+					return
+				}
+
+				// Call saveChanges to update the DiffViewProvider properties
+				await cline.diffViewProvider.saveChanges(diagnosticsEnabled, writeDelayMs)
+			}
 
 			// Track file edit operation
 			if (relPath) {
