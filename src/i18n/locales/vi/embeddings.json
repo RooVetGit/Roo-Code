@@ -52,5 +52,8 @@
 		"vectorDimensionNotDetermined": "Không thể xác định kích thước vector cho mô hình '{{modelId}}' với nhà cung cấp '{{provider}}'. Kiểm tra hồ sơ mô hình hoặc cấu hình.",
 		"qdrantUrlMissing": "Thiếu URL Qdrant để tạo kho lưu trữ vector",
 		"codeIndexingNotConfigured": "Không thể tạo dịch vụ: Lập chỉ mục mã không được cấu hình đúng cách"
+	},
+	"codeIndex": {
+		"errorState": "Chỉ mục mã đang ở trạng thái lỗi. Vui lòng kiểm tra cấu hình của bạn."
 	}
 }

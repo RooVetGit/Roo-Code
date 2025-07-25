@@ -52,5 +52,8 @@
 		"vectorDimensionNotDetermined": "Kan de vectordimensie voor model '{{modelId}}' met provider '{{provider}}' niet bepalen. Controleer modelprofielen of configuratie.",
 		"qdrantUrlMissing": "Qdrant URL ontbreekt voor het maken van vectoropslag",
 		"codeIndexingNotConfigured": "Kan geen services maken: Code-indexering is niet correct geconfigureerd"
+	},
+	"codeIndex": {
+		"errorState": "De code-index heeft een foutstatus. Controleer uw configuratie."
 	}
 }

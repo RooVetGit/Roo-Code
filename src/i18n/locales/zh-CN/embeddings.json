@@ -52,5 +52,8 @@
 		"vectorDimensionNotDetermined": "无法确定提供商 '{{provider}}' 的模型 '{{modelId}}' 的向量维度。请检查模型配置文件或配置。",
 		"qdrantUrlMissing": "创建向量存储缺少 Qdrant URL",
 		"codeIndexingNotConfigured": "无法创建服务：代码索引未正确配置"
+	},
+	"codeIndex": {
+		"errorState": "代码索引处于错误状态。请检查您的配置。"
 	}
 }

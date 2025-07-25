@@ -52,5 +52,8 @@
 		"vectorDimensionNotDetermined": "Konnte die Vektordimension für Modell '{{modelId}}' mit Anbieter '{{provider}}' nicht bestimmen. Überprüfe die Modellprofile oder Konfiguration.",
 		"qdrantUrlMissing": "Qdrant-URL fehlt für die Erstellung des Vektorspeichers",
 		"codeIndexingNotConfigured": "Kann keine Dienste erstellen: Code-Indizierung ist nicht richtig konfiguriert"
+	},
+	"codeIndex": {
+		"errorState": "Der Code-Index befindet sich in einem Fehlerzustand. Bitte überprüfe deine Konfiguration."
 	}
 }

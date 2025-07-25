@@ -52,5 +52,8 @@
 		"vectorDimensionNotDetermined": "Impossibile determinare la dimensione del vettore per il modello '{{modelId}}' con il provider '{{provider}}'. Controlla i profili del modello o la configurazione.",
 		"qdrantUrlMissing": "URL Qdrant mancante per la creazione dello storage vettoriale",
 		"codeIndexingNotConfigured": "Impossibile creare i servizi: L'indicizzazione del codice non è configurata correttamente"
+	},
+	"codeIndex": {
+		"errorState": "L'indice del codice è in stato di errore. Controlla la tua configurazione."
 	}
 }

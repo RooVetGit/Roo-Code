@@ -6,6 +6,7 @@ import { CodeIndexConfigManager } from "./config-manager"
 import { CodeIndexStateManager } from "./state-manager"
 import { TelemetryService } from "@roo-code/telemetry"
 import { TelemetryEventName } from "@roo-code/types"
+import { t } from "../../i18n"
 
 /**
  * Service responsible for searching the code index.
@@ -34,10 +35,11 @@ export class CodeIndexSearchService {
 		const minScore = this.configManager.currentSearchMinScore
 		const maxResults = this.configManager.currentSearchMaxResults
 
+		// Note: State checking is now handled in the codebaseSearchTool
+		// This allows the tool to provide more user-friendly feedback
 		const currentState = this.stateManager.getCurrentStatus().systemStatus
-		if (currentState !== "Indexed" && currentState !== "Indexing") {
-			// Allow search during Indexing too
-			throw new Error(`Code index is not ready for search. Current state: ${currentState}`)
+		if (currentState === "Error") {
+			throw new Error(t("embeddings:codeIndex.errorState"))
 		}
 
 		try {
