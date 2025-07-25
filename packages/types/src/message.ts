@@ -24,6 +24,7 @@ import { z } from "zod"
  * - `browser_action_launch`: Permission to open or interact with a browser
  * - `use_mcp_server`: Permission to use Model Context Protocol (MCP) server functionality
  * - `auto_approval_max_req_reached`: Auto-approval limit has been reached, manual approval required
+ * - `temperature_tool_error`: Tool failed due to high temperature setting, asking user to reduce temperature and retry
  */
 export const clineAsks = [
 	"followup",
@@ -38,6 +39,7 @@ export const clineAsks = [
 	"browser_action_launch",
 	"use_mcp_server",
 	"auto_approval_max_req_reached",
+	"temperature_tool_error",
 ] as const
 
 export const clineAskSchema = z.enum(clineAsks)

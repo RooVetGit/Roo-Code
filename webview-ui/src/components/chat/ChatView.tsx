@@ -384,6 +384,16 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 							setSecondaryButtonText(undefined)
 							setDidClickCancel(false)
 							break
+						case "temperature_tool_error":
+							if (!isPartial) {
+								playSound("notification")
+							}
+							setSendingDisabled(isPartial)
+							setClineAsk("temperature_tool_error")
+							setEnableButtons(!isPartial)
+							setPrimaryButtonText(t("chat:temperatureError.reduceAndRetry"))
+							setSecondaryButtonText(t("chat:cancel.title"))
+							break
 					}
 					break
 				case "say":
@@ -614,6 +624,7 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 				case "use_mcp_server":
 				case "resume_task":
 				case "mistake_limit_reached":
+				case "temperature_tool_error":
 					// Only send text/images if they exist
 					if (trimmedInput || (images && images.length > 0)) {
 						vscode.postMessage({
@@ -669,6 +680,7 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 				case "tool":
 				case "browser_action_launch":
 				case "use_mcp_server":
+				case "temperature_tool_error":
 					// Only send text/images if they exist
 					if (trimmedInput || (images && images.length > 0)) {
 						vscode.postMessage({
@@ -1796,7 +1808,14 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 																			: primaryButtonText ===
 																				  t("chat:proceedWhileRunning.title")
 																				? t("chat:proceedWhileRunning.tooltip")
-																				: undefined
+																				: primaryButtonText ===
+																					  t(
+																							"chat:temperatureError.reduceAndRetry",
+																					  )
+																					? t(
+																							"chat:temperatureError.reduceAndRetryTooltip",
+																						)
+																					: undefined
 											}>
 											<VSCodeButton
 												appearance="primary"

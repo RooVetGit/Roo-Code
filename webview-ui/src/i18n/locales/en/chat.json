@@ -29,6 +29,10 @@
 		"title": "Retry",
 		"tooltip": "Try the operation again"
 	},
+	"temperatureError": {
+		"reduceAndRetry": "Reduce Temperature to 0.2 & Retry",
+		"reduceAndRetryTooltip": "Lower the temperature setting to 0.2 and retry the operation"
+	},
 	"startNewTask": {
 		"title": "Start New Task",
 		"tooltip": "Begin a new task"
