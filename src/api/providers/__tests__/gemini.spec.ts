@@ -6,7 +6,7 @@ import { type ModelInfo, geminiDefaultModelId } from "@roo-code/types"
 
 import { GeminiHandler } from "../gemini"
 
-const GEMINI_20_FLASH_THINKING_NAME = "gemini-2.0-flash-thinking-exp-1219"
+const GEMINI_25_FLASH_PREVIEW_05_20_NAME = "gemini-2.5-flash-preview-05-20"
 
 describe("GeminiHandler", () => {
 	let handler: GeminiHandler
@@ -19,7 +19,7 @@ describe("GeminiHandler", () => {
 
 		handler = new GeminiHandler({
 			apiKey: "test-key",
-			apiModelId: GEMINI_20_FLASH_THINKING_NAME,
+			apiModelId: GEMINI_25_FLASH_PREVIEW_05_20_NAME,
 			geminiApiKey: "test-key",
 		})
 
@@ -36,7 +36,7 @@ describe("GeminiHandler", () => {
 	describe("constructor", () => {
 		it("should initialize with provided config", () => {
 			expect(handler["options"].geminiApiKey).toBe("test-key")
-			expect(handler["options"].apiModelId).toBe(GEMINI_20_FLASH_THINKING_NAME)
+			expect(handler["options"].apiModelId).toBe(GEMINI_25_FLASH_PREVIEW_05_20_NAME)
 		})
 	})
 
@@ -75,12 +75,19 @@ describe("GeminiHandler", () => {
 			expect(chunks.length).toBe(3)
 			expect(chunks[0]).toEqual({ type: "text", text: "Hello" })
 			expect(chunks[1]).toEqual({ type: "text", text: " world!" })
-			expect(chunks[2]).toEqual({ type: "usage", inputTokens: 10, outputTokens: 5 })
+			expect(chunks[2]).toEqual({
+				type: "usage",
+				inputTokens: 10,
+				outputTokens: 5,
+				cacheReadTokens: undefined,
+				reasoningTokens: undefined,
+				totalCost: expect.any(Number),
+			})
 
 			// Verify the call to generateContentStream
 			expect(handler["client"].models.generateContentStream).toHaveBeenCalledWith(
 				expect.objectContaining({
-					model: GEMINI_20_FLASH_THINKING_NAME,
+					model: GEMINI_25_FLASH_PREVIEW_05_20_NAME,
 					config: expect.objectContaining({
 						temperature: 0,
 						systemInstruction: systemPrompt,
@@ -115,7 +122,7 @@ describe("GeminiHandler", () => {
 
 			// Verify the call to generateContent
 			expect(handler["client"].models.generateContent).toHaveBeenCalledWith({
-				model: GEMINI_20_FLASH_THINKING_NAME,
+				model: GEMINI_25_FLASH_PREVIEW_05_20_NAME,
 				contents: [{ role: "user", parts: [{ text: "Test prompt" }] }],
 				config: {
 					httpOptions: undefined,
@@ -147,10 +154,10 @@ describe("GeminiHandler", () => {
 	describe("getModel", () => {
 		it("should return correct model info", () => {
 			const modelInfo = handler.getModel()
-			expect(modelInfo.id).toBe(GEMINI_20_FLASH_THINKING_NAME)
+			expect(modelInfo.id).toBe(GEMINI_25_FLASH_PREVIEW_05_20_NAME)
 			expect(modelInfo.info).toBeDefined()
-			expect(modelInfo.info.maxTokens).toBe(8192)
-			expect(modelInfo.info.contextWindow).toBe(32_767)
+			expect(modelInfo.info.maxTokens).toBe(65_535)
+			expect(modelInfo.info.contextWindow).toBe(1_048_576)
 		})
 
 		it("should return default model if invalid model specified", () => {
@@ -160,6 +167,116 @@ describe("GeminiHandler", () => {
 			})
 			const modelInfo = invalidHandler.getModel()
 			expect(modelInfo.id).toBe(geminiDefaultModelId) // Default model
+		})
+	})
+
+	describe("legacy model migration", () => {
+		it("should map gemini-2.5-pro-preview-{dates} to gemini-2.5-pro", () => {
+			const legacyHandler = new GeminiHandler({
+				apiModelId: "gemini-2.5-pro-preview-03-25",
+				geminiApiKey: "test-key",
+			})
+			const modelInfo = legacyHandler.getModel()
+			expect(modelInfo.id).toBe("gemini-2.5-pro")
+		})
+
+		it("should map gemini-1.5-pro-{variants} to gemini-2.0-flash-001", () => {
+			const legacyHandler = new GeminiHandler({
+				apiModelId: "gemini-1.5-pro-002",
+				geminiApiKey: "test-key",
+			})
+			const modelInfo = legacyHandler.getModel()
+			expect(modelInfo.id).toBe("gemini-2.0-flash-001")
+		})
+
+		it("should map gemini-1.5-flash-{variants} to gemini-2.0-flash-001", () => {
+			const legacyHandler = new GeminiHandler({
+				apiModelId: "gemini-1.5-flash-002",
+				geminiApiKey: "test-key",
+			})
+			const modelInfo = legacyHandler.getModel()
+			expect(modelInfo.id).toBe("gemini-2.0-flash-001")
+		})
+
+		it("should map experimental gemini-2.5-pro-exp-03-25 to gemini-2.5-pro", () => {
+			const legacyHandler = new GeminiHandler({
+				apiModelId: "gemini-2.5-pro-exp-03-25",
+				geminiApiKey: "test-key",
+			})
+			const modelInfo = legacyHandler.getModel()
+			expect(modelInfo.id).toBe("gemini-2.5-pro")
+		})
+
+		it("should map gemini-exp-1206 to gemini-2.0-flash-001", () => {
+			const legacyHandler = new GeminiHandler({
+				apiModelId: "gemini-exp-1206",
+				geminiApiKey: "test-key",
+			})
+			const modelInfo = legacyHandler.getModel()
+			expect(modelInfo.id).toBe("gemini-2.0-flash-001")
+		})
+
+		it("should map gemini-2.0-pro-exp-02-05 to gemini-2.5-pro", () => {
+			const legacyHandler = new GeminiHandler({
+				apiModelId: "gemini-2.0-pro-exp-02-05",
+				geminiApiKey: "test-key",
+			})
+			const modelInfo = legacyHandler.getModel()
+			expect(modelInfo.id).toBe("gemini-2.5-pro")
+		})
+
+		it("should map gemini-2.0-flash-thinking-exp-1219 to gemini-2.5-flash-preview-05-20", () => {
+			const legacyHandler = new GeminiHandler({
+				apiModelId: "gemini-2.0-flash-thinking-exp-1219",
+				geminiApiKey: "test-key",
+			})
+			const modelInfo = legacyHandler.getModel()
+			expect(modelInfo.id).toBe("gemini-2.5-flash-preview-05-20")
+		})
+
+		it("should map gemini-2.0-flash-thinking-exp-01-21 to gemini-2.5-flash-preview-05-20", () => {
+			const legacyHandler = new GeminiHandler({
+				apiModelId: "gemini-2.0-flash-thinking-exp-01-21",
+				geminiApiKey: "test-key",
+			})
+			const modelInfo = legacyHandler.getModel()
+			expect(modelInfo.id).toBe("gemini-2.5-flash-preview-05-20")
+		})
+
+		it("should map gemini-2.5-flash-preview-04-17 to gemini-2.5-flash-preview-05-20", () => {
+			const legacyHandler = new GeminiHandler({
+				apiModelId: "gemini-2.5-flash-preview-04-17",
+				geminiApiKey: "test-key",
+			})
+			const modelInfo = legacyHandler.getModel()
+			expect(modelInfo.id).toBe("gemini-2.5-flash-preview-05-20")
+		})
+
+		it("should map gemini-2.0-flash-exp to gemini-2.0-flash-001", () => {
+			const legacyHandler = new GeminiHandler({
+				apiModelId: "gemini-2.0-flash-exp",
+				geminiApiKey: "test-key",
+			})
+			const modelInfo = legacyHandler.getModel()
+			expect(modelInfo.id).toBe("gemini-2.0-flash-001")
+		})
+
+		it("should map gemini-2.5-flash-preview-04-17:thinking to gemini-2.5-flash-preview-05-20", () => {
+			const legacyHandler = new GeminiHandler({
+				apiModelId: "gemini-2.5-flash-preview-04-17:thinking",
+				geminiApiKey: "test-key",
+			})
+			const modelInfo = legacyHandler.getModel()
+			expect(modelInfo.id).toBe("gemini-2.5-flash-preview-05-20")
+		})
+
+		it("should keep current models as-is", () => {
+			const currentHandler = new GeminiHandler({
+				apiModelId: "gemini-2.5-pro",
+				geminiApiKey: "test-key",
+			})
+			const modelInfo = currentHandler.getModel()
+			expect(modelInfo.id).toBe("gemini-2.5-pro")
 		})
 	})
 
