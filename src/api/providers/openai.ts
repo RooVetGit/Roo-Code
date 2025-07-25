@@ -35,40 +35,64 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 		super()
 		this.options = options
 
-		const baseURL = this.options.openAiBaseUrl ?? "https://api.openai.com/v1"
 		const apiKey = this.options.openAiApiKey ?? "not-provided"
 		const isAzureAiInference = this._isAzureAiInference(this.options.openAiBaseUrl)
 		const urlHost = this._getUrlHost(this.options.openAiBaseUrl)
-		const isAzureOpenAi = urlHost === "azure.com" || urlHost.endsWith(".azure.com") || options.openAiUseAzure
+		// Use azureApiVersion as primary indicator (like Cline), then fall back to URL patterns
+		const isAzureOpenAi =
+			!!this.options.azureApiVersion ||
+			urlHost === "azure.com" ||
+			urlHost.endsWith(".azure.com") ||
+			options.openAiUseAzure
+
+		// Extract base URL for Azure endpoints that might include full paths
+		let baseURL = this.options.openAiBaseUrl ?? "https://api.openai.com/v1"
+		if (isAzureOpenAi && this.options.openAiBaseUrl) {
+			baseURL = this._extractAzureBaseUrl(this.options.openAiBaseUrl)
+		}
 
 		const headers = {
 			...DEFAULT_HEADERS,
 			...(this.options.openAiHeaders || {}),
 		}
 
-		if (isAzureAiInference) {
-			// Azure AI Inference Service (e.g., for DeepSeek) uses a different path structure
-			this.client = new OpenAI({
-				baseURL,
-				apiKey,
-				defaultHeaders: headers,
-				defaultQuery: { "api-version": this.options.azureApiVersion || "2024-05-01-preview" },
-			})
-		} else if (isAzureOpenAi) {
-			// Azure API shape slightly differs from the core API shape:
-			// https://github.com/openai/openai-node?tab=readme-ov-file#microsoft-azure-openai
-			this.client = new AzureOpenAI({
-				baseURL,
-				apiKey,
-				apiVersion: this.options.azureApiVersion || azureOpenAiDefaultApiVersion,
-				defaultHeaders: headers,
-			})
-		} else {
-			this.client = new OpenAI({
-				baseURL,
-				apiKey,
-				defaultHeaders: headers,
-			})
+		try {
+			if (isAzureAiInference) {
+				// Azure AI Inference Service (e.g., for DeepSeek) uses a different path structure
+				this.client = new OpenAI({
+					baseURL,
+					apiKey,
+					defaultHeaders: headers,
+					defaultQuery: { "api-version": this.options.azureApiVersion || "2024-05-01-preview" },
+				})
+			} else if (isAzureOpenAi) {
+				// Azure API shape slightly differs from the core API shape:
+				// https://github.com/openai/openai-node?tab=readme-ov-file#microsoft-azure-openai
+				this.client = new AzureOpenAI({
+					baseURL,
+					apiKey,
+					apiVersion: this.options.azureApiVersion || azureOpenAiDefaultApiVersion,
+					defaultHeaders: headers,
+				})
+			} else {
+				this.client = new OpenAI({
+					baseURL,
+					apiKey,
+					defaultHeaders: headers,
+				})
+			}
+		} catch (error) {
+			const errorMessage = error instanceof Error ? error.message : String(error)
+			if (isAzureOpenAi) {
+				throw new Error(
+					`Failed to initialize Azure OpenAI client: ${errorMessage}\n` +
+						`Please ensure:\n` +
+						`1. Your base URL is correct (e.g., https://myresource.openai.azure.com)\n` +
+						`2. Your API key is valid\n` +
+						`3. If using a full endpoint URL, try using just the base URL instead`,
+				)
+			}
+			throw new Error(`Failed to initialize OpenAI client: ${errorMessage}`)
 		}
 	}
 
@@ -86,9 +110,33 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 		const deepseekReasoner = modelId.includes("deepseek-reasoner") || enabledR1Format
 		const ark = modelUrl.includes(".volces.com")
 
+		// Check if this is an Azure OpenAI endpoint
+		const urlHost = this._getUrlHost(this.options.openAiBaseUrl)
+		const isAzureOpenAi =
+			!!this.options.azureApiVersion ||
+			urlHost === "azure.com" ||
+			urlHost.endsWith(".azure.com") ||
+			!!this.options.openAiUseAzure
+
 		if (modelId.includes("o1") || modelId.includes("o3") || modelId.includes("o4")) {
-			yield* this.handleO3FamilyMessage(modelId, systemPrompt, messages)
-			return
+			try {
+				yield* this.handleO3FamilyMessage(modelId, systemPrompt, messages, isAzureOpenAi)
+				return
+			} catch (error) {
+				if (isAzureOpenAi && error instanceof Error) {
+					// Check for common Azure-specific errors
+					if (
+						error.message.includes("does not support 'system'") ||
+						error.message.includes("does not support 'developer'")
+					) {
+						throw new Error(
+							`Azure OpenAI reasoning model error: ${error.message}\n` +
+								`This has been fixed in the latest version. Please ensure you're using the updated code.`,
+						)
+					}
+				}
+				throw error
+			}
 		}
 
 		if (this.options.openAiStreamingEnabled ?? true) {
@@ -287,6 +335,7 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 		modelId: string,
 		systemPrompt: string,
 		messages: Anthropic.Messages.MessageParam[],
+		isAzureOpenAi: boolean,
 	): ApiStream {
 		const modelInfo = this.getModel().info
 		const methodIsAzureAiInference = this._isAzureAiInference(this.options.openAiBaseUrl)
@@ -294,15 +343,43 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 		if (this.options.openAiStreamingEnabled ?? true) {
 			const isGrokXAI = this._isGrokXAI(this.options.openAiBaseUrl)
 
-			const requestOptions: OpenAI.Chat.Completions.ChatCompletionCreateParamsStreaming = {
-				model: modelId,
-				messages: [
+			// Azure doesn't support "developer" role, so we need to combine system prompt with first user message
+			let openAiMessages: OpenAI.Chat.ChatCompletionMessageParam[]
+			if (isAzureOpenAi) {
+				const convertedMessages = convertToOpenAiMessages(messages)
+				if (convertedMessages.length > 0 && convertedMessages[0].role === "user") {
+					// Combine system prompt with first user message
+					openAiMessages = [
+						{
+							role: "user",
+							content: `${systemPrompt}\n\n${convertedMessages[0].content}`,
+						},
+						...convertedMessages.slice(1),
+					]
+				} else {
+					// If first message isn't a user message, add system prompt as first user message
+					openAiMessages = [
+						{
+							role: "user",
+							content: systemPrompt,
+						},
+						...convertedMessages,
+					]
+				}
+			} else {
+				// Non-Azure endpoints support "developer" role
+				openAiMessages = [
 					{
 						role: "developer",
 						content: `Formatting re-enabled\n${systemPrompt}`,
 					},
 					...convertToOpenAiMessages(messages),
-				],
+				]
+			}
+
+			const requestOptions: OpenAI.Chat.Completions.ChatCompletionCreateParamsStreaming = {
+				model: modelId,
+				messages: openAiMessages,
 				stream: true,
 				...(isGrokXAI ? {} : { stream_options: { include_usage: true } }),
 				reasoning_effort: modelInfo.reasoningEffort,
@@ -321,15 +398,43 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 
 			yield* this.handleStreamResponse(stream)
 		} else {
-			const requestOptions: OpenAI.Chat.Completions.ChatCompletionCreateParamsNonStreaming = {
-				model: modelId,
-				messages: [
+			// Azure doesn't support "developer" role, so we need to combine system prompt with first user message
+			let openAiMessages: OpenAI.Chat.ChatCompletionMessageParam[]
+			if (isAzureOpenAi) {
+				const convertedMessages = convertToOpenAiMessages(messages)
+				if (convertedMessages.length > 0 && convertedMessages[0].role === "user") {
+					// Combine system prompt with first user message
+					openAiMessages = [
+						{
+							role: "user",
+							content: `${systemPrompt}\n\n${convertedMessages[0].content}`,
+						},
+						...convertedMessages.slice(1),
+					]
+				} else {
+					// If first message isn't a user message, add system prompt as first user message
+					openAiMessages = [
+						{
+							role: "user",
+							content: systemPrompt,
+						},
+						...convertedMessages,
+					]
+				}
+			} else {
+				// Non-Azure endpoints support "developer" role
+				openAiMessages = [
 					{
 						role: "developer",
 						content: `Formatting re-enabled\n${systemPrompt}`,
 					},
 					...convertToOpenAiMessages(messages),
-				],
+				]
+			}
+
+			const requestOptions: OpenAI.Chat.Completions.ChatCompletionCreateParamsNonStreaming = {
+				model: modelId,
+				messages: openAiMessages,
 				reasoning_effort: modelInfo.reasoningEffort,
 				temperature: undefined,
 			}
@@ -374,9 +479,29 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 
 	private _getUrlHost(baseUrl?: string): string {
 		try {
-			return new URL(baseUrl ?? "").host
+			// Extract base URL without query parameters for proper host detection
+			const url = new URL(baseUrl ?? "")
+			return url.host
 		} catch (error) {
 			return ""
+		}
+	}
+
+	/**
+	 * Extracts the base URL from a full Azure endpoint URL
+	 * e.g., "https://myresource.openai.azure.com/openai/deployments/gpt-4/chat/completions?api-version=2024-08-01-preview"
+	 * becomes "https://myresource.openai.azure.com"
+	 */
+	private _extractAzureBaseUrl(fullUrl: string): string {
+		try {
+			const url = new URL(fullUrl)
+			// For Azure OpenAI, we want just the origin (protocol + host)
+			if (url.host.includes("azure.com")) {
+				return url.origin
+			}
+			return fullUrl
+		} catch {
+			return fullUrl
 		}
 	}
 
