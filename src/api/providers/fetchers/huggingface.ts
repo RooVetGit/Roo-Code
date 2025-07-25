@@ -1,4 +1,3 @@
-import axios from "axios"
 import { ModelInfo } from "@roo-code/types"
 import { z } from "zod"
 
