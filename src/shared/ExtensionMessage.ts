@@ -241,7 +241,6 @@ export type ExtensionState = Pick<
 	| "terminalCompressProgressBar"
 	| "diagnosticsEnabled"
 	| "diffEnabled"
-	| "fileBasedEditing"
 	| "fuzzyMatchThreshold"
 	// | "experiments" // Optional in GlobalSettings, required here.
 	| "language"
