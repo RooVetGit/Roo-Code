@@ -177,6 +177,16 @@ export const ChatRowContent = ({
 		vscode.postMessage({ type: "selectImages", context: "edit", messageTs: message.ts })
 	}, [message.ts])
 
+	// Simple double-click handler
+	const handleDoubleClick = useCallback(
+		(e: React.MouseEvent) => {
+			e.stopPropagation()
+			e.preventDefault()
+			handleEditClick()
+		},
+		[handleEditClick],
+	)
+
 	const [cost, apiReqCancelReason, apiReqStreamingFailedMessage] = useMemo(() => {
 		if (message.text !== null && message.text !== undefined && message.say === "api_req_started") {
 			const info = safeJsonParse<ClineApiReqInfo>(message.text)
@@ -1059,6 +1069,7 @@ export const ChatRowContent = ({
 						</div>
 					)
 				case "user_feedback":
+					// For user feedback messages, always allow editing
 					return (
 						<div className="bg-vscode-editor-background border rounded-xs p-1 overflow-hidden whitespace-pre-wrap">
 							{isEditing ? (
@@ -1083,15 +1094,19 @@ export const ChatRowContent = ({
 								</div>
 							) : (
 								<div className="flex justify-between">
-									<div className="flex-grow px-2 py-1 wrap-anywhere">
+									<div
+										className="flex-grow px-2 py-1 wrap-anywhere cursor-pointer"
+										onDoubleClick={handleDoubleClick}
+										title={t("chat:editMessage.doubleClickToEdit")}>
 										<Mention text={message.text} withShadow />
 									</div>
 									<div className="flex">
 										<Button
 											variant="ghost"
 											size="icon"
-											className="shrink-0 hidden"
+											className="shrink-0"
 											disabled={isStreaming}
+											title={t("chat:editMessage.editButton")}
 											onClick={(e) => {
 												e.stopPropagation()
 												handleEditClick()

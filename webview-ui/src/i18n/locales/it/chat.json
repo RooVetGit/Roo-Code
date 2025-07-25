@@ -329,6 +329,8 @@
 		"joinWaitlist": "Unisciti alla lista d'attesa per ottenere l'accesso anticipato."
 	},
 	"editMessage": {
-		"placeholder": "Modifica il tuo messaggio..."
+		"placeholder": "Modifica il tuo messaggio...",
+		"doubleClickToEdit": "Doppio clic per modificare il messaggio",
+		"editButton": "Modifica messaggio"
 	}
 }

@@ -329,6 +329,8 @@
 		"joinWaitlist": "Erken erişim için bekleme listesine katılın."
 	},
 	"editMessage": {
-		"placeholder": "Mesajını düzenle..."
+		"placeholder": "Mesajını düzenle...",
+		"doubleClickToEdit": "Mesajı düzenlemek için çift tıkla",
+		"editButton": "Mesajı düzenle"
 	}
 }

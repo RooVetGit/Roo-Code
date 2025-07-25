@@ -329,6 +329,8 @@
 		"joinWaitlist": "早期アクセスを取得するためにウェイトリストに参加してください。"
 	},
 	"editMessage": {
-		"placeholder": "メッセージを編集..."
+		"placeholder": "メッセージを編集...",
+		"doubleClickToEdit": "ダブルクリックでメッセージを編集",
+		"editButton": "メッセージを編集"
 	}
 }
