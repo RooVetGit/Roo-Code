@@ -13,6 +13,7 @@ import {
 	PopoverContent,
 	PopoverTrigger,
 } from "@/components/ui"
+import { useEscapeKey } from "@/hooks/useEscapeKey"
 
 export interface SearchableSelectOption {
 	value: string
@@ -79,21 +80,8 @@ export function SearchableSelect({
 		return () => clearTimeout(timeoutId)
 	}, [value])
 
-	// Add ESC key handler
-	React.useEffect(() => {
-		const handleKeyDown = (event: KeyboardEvent) => {
-			if (event.key === "Escape" && open) {
-				setOpen(false)
-			}
-		}
-
-		if (open) {
-			document.addEventListener("keydown", handleKeyDown)
-			return () => {
-				document.removeEventListener("keydown", handleKeyDown)
-			}
-		}
-	}, [open])
+	// Use the shared ESC key handler hook
+	useEscapeKey(open, () => setOpen(false))
 
 	const handleOpenChange = (open: boolean) => {
 		setOpen(open)

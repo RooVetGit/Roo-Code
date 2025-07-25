@@ -48,6 +48,7 @@ import {
 	StandardTooltip,
 } from "@src/components/ui"
 import { DeleteModeDialog } from "@src/components/modes/DeleteModeDialog"
+import { useEscapeKey } from "@src/hooks/useEscapeKey"
 
 // Get all available groups that should show in prompts view
 const availableGroups = (Object.keys(TOOL_GROUPS) as ToolGroup[]).filter((group) => !TOOL_GROUPS[group].alwaysAvailable)
@@ -194,21 +195,8 @@ const ModesView = ({ onDone }: ModesViewProps) => {
 		}
 	}, [])
 
-	// Add ESC key handler for the popover
-	useEffect(() => {
-		const handleKeyDown = (event: KeyboardEvent) => {
-			if (event.key === "Escape" && open) {
-				setOpen(false)
-			}
-		}
-
-		if (open) {
-			document.addEventListener("keydown", handleKeyDown)
-			return () => {
-				document.removeEventListener("keydown", handleKeyDown)
-			}
-		}
-	}, [open])
+	// Use the shared ESC key handler hook
+	useEscapeKey(open, () => setOpen(false))
 
 	// Handler for clearing search input
 	const onClearSearch = useCallback(() => {
