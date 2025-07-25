@@ -232,6 +232,111 @@ async function loadAgentRulesFile(cwd: string): Promise<string> {
 	return ""
 }
 
+/**
+ * Load custom instruction files from specified paths
+ *
+ * @param cwd - The current working directory
+ * @param paths - Array of file paths to load instructions from. Paths can be:
+ *   - Relative paths (resolved from cwd)
+ *   - Absolute paths
+ *   - Parent directory paths (e.g., "../shared-instructions.md" for monorepo scenarios)
+ *
+ * @returns Combined content from all valid instruction files
+ *
+ * Security considerations:
+ * - Files must be within the workspace or in parent directories
+ * - Only markdown and text files are allowed
+ * - Files larger than 1MB are skipped
+ * - Invalid paths and non-existent files are skipped with warnings
+ */
+async function loadCustomInstructionFiles(cwd: string, paths?: string[]): Promise<string> {
+	if (!paths || paths.length === 0) {
+		return ""
+	}
+
+	const sections: string[] = []
+
+	for (const filePath of paths) {
+		try {
+			// Validate the file path format
+			if (!filePath || typeof filePath !== "string") {
+				console.warn(`Invalid custom instruction path: ${filePath}`)
+				continue
+			}
+
+			// Check for potentially dangerous path patterns
+			if (filePath.includes("..") && !filePath.startsWith("..")) {
+				console.warn(`Potentially dangerous path pattern detected: ${filePath}`)
+				continue
+			}
+
+			// Resolve the path relative to the workspace
+			const resolvedPath = path.isAbsolute(filePath) ? filePath : path.join(cwd, filePath)
+
+			// Security check: ensure the file is within the workspace or a parent directory
+			const normalizedCwd = path.normalize(cwd)
+			const normalizedPath = path.normalize(resolvedPath)
+
+			// Allow files in the workspace or in parent directories (for monorepo scenarios)
+			const isInWorkspace = normalizedPath.startsWith(normalizedCwd)
+
+			// For parent directory check, we need to check if any parent directory of cwd contains the file
+			let isInParent = false
+			let currentDir = normalizedCwd
+			while (currentDir !== path.dirname(currentDir)) {
+				// Stop at root
+				currentDir = path.dirname(currentDir)
+				if (normalizedPath.startsWith(currentDir + path.sep) || normalizedPath === currentDir) {
+					isInParent = true
+					break
+				}
+			}
+
+			if (!isInWorkspace && !isInParent) {
+				console.warn(`Skipping custom instruction file outside workspace: ${filePath}`)
+				continue
+			}
+
+			// Check if file exists
+			const stats = await fs.stat(resolvedPath).catch(() => null)
+			if (!stats) {
+				console.warn(`Custom instruction file not found: ${filePath}`)
+				continue
+			}
+
+			// Validate file type
+			if (!stats.isFile()) {
+				console.warn(`Path is not a file: ${filePath}`)
+				continue
+			}
+
+			// Validate file extension (optional - only allow markdown and text files)
+			const allowedExtensions = [".md", ".txt", ".markdown"]
+			const fileExt = path.extname(resolvedPath).toLowerCase()
+			if (!allowedExtensions.includes(fileExt)) {
+				console.warn(`Skipping non-markdown/text file: ${filePath}`)
+				continue
+			}
+
+			// Check file size to prevent loading huge files
+			const maxSizeInBytes = 1024 * 1024 // 1MB limit
+			if (stats.size > maxSizeInBytes) {
+				console.warn(`Skipping large file (>1MB): ${filePath}`)
+				continue
+			}
+
+			const content = await safeReadFile(resolvedPath)
+			if (content) {
+				sections.push(`# Custom instructions from ${filePath}:\n${content}`)
+			}
+		} catch (error) {
+			console.warn(`Failed to load custom instruction file: ${filePath}`, error)
+		}
+	}
+
+	return sections.length > 0 ? sections.join("\n\n") : ""
+}
+
 export async function addCustomInstructions(
 	modeCustomInstructions: string,
 	globalCustomInstructions: string,
@@ -241,6 +346,7 @@ export async function addCustomInstructions(
 		language?: string
 		rooIgnoreInstructions?: string
 		settings?: SystemPromptSettings
+		customInstructionPaths?: string[]
 	} = {},
 ): Promise<string> {
 	const sections = []
@@ -301,6 +407,12 @@ export async function addCustomInstructions(
 	// Add mode-specific instructions after
 	if (typeof modeCustomInstructions === "string" && modeCustomInstructions.trim()) {
 		sections.push(`Mode-specific Instructions:\n${modeCustomInstructions.trim()}`)
+	}
+
+	// Add custom instruction files if paths are provided
+	const customFileInstructions = await loadCustomInstructionFiles(cwd, options.customInstructionPaths)
+	if (customFileInstructions) {
+		sections.push(customFileInstructions)
 	}
 
 	// Add rules - include both mode-specific and generic rules if they exist
