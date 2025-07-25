@@ -7,7 +7,11 @@ import { ToolUse } from "../../../shared/tools"
 // Mock dependencies
 vi.mock("../../prompts/responses", () => ({
 	formatResponse: {
-		toolResult: vi.fn((result: string) => `Tool result: ${result}`),
+		toolResult: vi.fn((result: string, images?: string[]) =>
+			images && images.length > 0
+				? `Tool result: ${result} [with ${images.length} image(s)]`
+				: `Tool result: ${result}`,
+		),
 		toolError: vi.fn((error: string) => `Tool error: ${error}`),
 		invalidMcpToolArgumentError: vi.fn((server: string, tool: string) => `Invalid args for ${server}:${tool}`),
 	},
@@ -208,8 +212,114 @@ describe("useMcpToolTool", () => {
 			expect(mockTask.consecutiveMistakeCount).toBe(0)
 			expect(mockAskApproval).toHaveBeenCalled()
 			expect(mockTask.say).toHaveBeenCalledWith("mcp_server_request_started")
-			expect(mockTask.say).toHaveBeenCalledWith("mcp_server_response", "Tool executed successfully")
+			expect(mockTask.say).toHaveBeenCalledWith("mcp_server_response", "Tool executed successfully", [])
 			expect(mockPushToolResult).toHaveBeenCalledWith("Tool result: Tool executed successfully")
+		})
+
+		it("should handle tool response with images", async () => {
+			const block: ToolUse = {
+				type: "tool_use",
+				name: "use_mcp_tool",
+				params: {
+					server_name: "screenshot_server",
+					tool_name: "capture_screenshot",
+					arguments: '{"url": "https://example.com"}',
+				},
+				partial: false,
+			}
+
+			mockAskApproval.mockResolvedValue(true)
+
+			const mockToolResult = {
+				content: [
+					{ type: "text", text: "Screenshot captured successfully" },
+					{
+						type: "image",
+						data: "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==",
+						mimeType: "image/png",
+					},
+				],
+				isError: false,
+			}
+
+			mockProviderRef.deref.mockReturnValue({
+				getMcpHub: () => ({
+					callTool: vi.fn().mockResolvedValue(mockToolResult),
+				}),
+				postMessageToWebview: vi.fn(),
+			})
+
+			await useMcpToolTool(
+				mockTask as Task,
+				block,
+				mockAskApproval,
+				mockHandleError,
+				mockPushToolResult,
+				mockRemoveClosingTag,
+			)
+
+			expect(mockTask.consecutiveMistakeCount).toBe(0)
+			expect(mockAskApproval).toHaveBeenCalled()
+			expect(mockTask.say).toHaveBeenCalledWith("mcp_server_request_started")
+			expect(mockTask.say).toHaveBeenCalledWith(
+				"mcp_server_response",
+				"Screenshot captured successfully\n\n[Image: image/png]",
+				[
+					"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==",
+				],
+			)
+			expect(mockPushToolResult).toHaveBeenCalledWith(
+				"Tool result: Screenshot captured successfully\n\n[Image: image/png] [with 1 image(s)]",
+			)
+		})
+
+		it("should handle tool response with multiple images", async () => {
+			const block: ToolUse = {
+				type: "tool_use",
+				name: "use_mcp_tool",
+				params: {
+					server_name: "image_processor",
+					tool_name: "process_images",
+					arguments: "{}",
+				},
+				partial: false,
+			}
+
+			mockAskApproval.mockResolvedValue(true)
+
+			const mockToolResult = {
+				content: [
+					{ type: "text", text: "Processed 2 images" },
+					{ type: "image", data: "data:image/png;base64,ABC123", mimeType: "image/png" },
+					{ type: "image", data: "XYZ789", mimeType: "image/jpeg" },
+				],
+				isError: false,
+			}
+
+			mockProviderRef.deref.mockReturnValue({
+				getMcpHub: () => ({
+					callTool: vi.fn().mockResolvedValue(mockToolResult),
+				}),
+				postMessageToWebview: vi.fn(),
+			})
+
+			await useMcpToolTool(
+				mockTask as Task,
+				block,
+				mockAskApproval,
+				mockHandleError,
+				mockPushToolResult,
+				mockRemoveClosingTag,
+			)
+
+			expect(mockTask.say).toHaveBeenCalledWith(
+				"mcp_server_response",
+				"Processed 2 images\n\n[Image: image/png]\n\n[Image: image/jpeg]",
+				["data:image/png;base64,ABC123", "data:image/jpeg;base64,XYZ789"],
+			)
+			expect(mockPushToolResult).toHaveBeenCalledWith(
+				"Tool result: Processed 2 images\n\n[Image: image/png]\n\n[Image: image/jpeg] [with 2 image(s)]",
+			)
 		})
 
 		it("should handle user rejection", async () => {

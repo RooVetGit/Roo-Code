@@ -89,15 +89,26 @@ async function sendExecutionStatus(cline: Task, status: McpExecutionStatus): Pro
 	})
 }
 
-function processToolContent(toolResult: any): string {
+function processToolContent(toolResult: any): { text: string; images: string[] } {
+	const images: string[] = []
+
 	if (!toolResult?.content || toolResult.content.length === 0) {
-		return ""
+		return { text: "", images }
 	}
 
-	return toolResult.content
+	const text = toolResult.content
 		.map((item: any) => {
 			if (item.type === "text") {
 				return item.text
+			}
+			if (item.type === "image" && item.data && item.mimeType) {
+				// Handle base64 image data
+				if (item.data.startsWith("data:")) {
+					images.push(item.data)
+				} else {
+					images.push(`data:${item.mimeType};base64,${item.data}`)
+				}
+				return `[Image: ${item.mimeType}]`
 			}
 			if (item.type === "resource") {
 				const { blob: _, ...rest } = item.resource
@@ -107,6 +118,8 @@ function processToolContent(toolResult: any): string {
 		})
 		.filter(Boolean)
 		.join("\n\n")
+
+	return { text, images }
 }
 
 async function executeToolAndProcessResult(
@@ -130,9 +143,12 @@ async function executeToolAndProcessResult(
 	const toolResult = await cline.providerRef.deref()?.getMcpHub()?.callTool(serverName, toolName, parsedArguments)
 
 	let toolResultPretty = "(No response)"
+	let images: string[] = []
 
 	if (toolResult) {
-		const outputText = processToolContent(toolResult)
+		const processedContent = processToolContent(toolResult)
+		const outputText = processedContent.text
+		images = processedContent.images
 
 		if (outputText) {
 			await sendExecutionStatus(cline, {
@@ -160,8 +176,8 @@ async function executeToolAndProcessResult(
 		})
 	}
 
-	await cline.say("mcp_server_response", toolResultPretty)
-	pushToolResult(formatResponse.toolResult(toolResultPretty))
+	await cline.say("mcp_server_response", toolResultPretty, images)
+	pushToolResult(formatResponse.toolResult(toolResultPretty, images))
 }
 
 export async function useMcpToolTool(
