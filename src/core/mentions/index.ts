@@ -90,9 +90,7 @@ export async function parseMentions(
 			return `'${mention}' (see below for site content)`
 		} else if (mention.startsWith("/")) {
 			const mentionPath = mention.slice(1)
-			return mentionPath.endsWith("/")
-				? `'${mentionPath}' (see below for folder content)`
-				: `'${mentionPath}' (see below for file content)`
+			return `'${mentionPath}'`
 		} else if (mention === "problems") {
 			return `Workspace Problems (see below for diagnostics)`
 		} else if (mention === "git-changes") {
