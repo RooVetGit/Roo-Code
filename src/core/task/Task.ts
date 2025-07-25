@@ -213,6 +213,13 @@ export class Task extends EventEmitter<ClineEvents> {
 	didAlreadyUseTool = false
 	didCompleteReadingStream = false
 
+	// Temperature management for tool failure retries
+	private currentTemperature?: number
+	private originalTemperature?: number
+	private temperatureReductionAttempts = 0
+	private readonly maxTemperatureReductions = 3
+	private readonly temperatureReductionFactor = 0.5
+
 	constructor({
 		provider,
 		apiConfiguration,
@@ -1363,7 +1370,7 @@ export class Task extends EventEmitter<ClineEvents> {
 			// Yields only if the first chunk is successful, otherwise will
 			// allow the user to retry the request (most likely due to rate
 			// limit error, which gets thrown on the first chunk).
-			const stream = this.attemptApiRequest()
+			const stream = this.attemptApiRequest(0, this.currentTemperature)
 			let assistantMessage = ""
 			let reasoningMessage = ""
 			this.isStreaming = true
@@ -1567,8 +1574,29 @@ export class Task extends EventEmitter<ClineEvents> {
 					this.consecutiveMistakeCount++
 				}
 
-				const recDidEndLoop = await this.recursivelyMakeClineRequests(this.userMessageContent)
-				didEndLoop = recDidEndLoop
+				// Check if we should retry with reduced temperature due to tool failure
+				if (this.shouldReduceTemperature) {
+					const canRetry = await this.retryWithReducedTemperature()
+					if (canRetry) {
+						// Retry the request with reduced temperature
+						const retryUserContent = [
+							...this.userMessageContent,
+							{
+								type: "text" as const,
+								text: "I've reduced the temperature to help avoid tool errors. Please try again with the same approach.",
+							},
+						]
+						const recDidEndLoop = await this.recursivelyMakeClineRequests(retryUserContent)
+						didEndLoop = recDidEndLoop
+					} else {
+						// Can't reduce temperature further, proceed normally
+						const recDidEndLoop = await this.recursivelyMakeClineRequests(this.userMessageContent)
+						didEndLoop = recDidEndLoop
+					}
+				} else {
+					const recDidEndLoop = await this.recursivelyMakeClineRequests(this.userMessageContent)
+					didEndLoop = recDidEndLoop
+				}
 			} else {
 				// If there's no assistant_responses, that means we got no text
 				// or tool_use content blocks from API which we should assume is
@@ -1671,7 +1699,7 @@ export class Task extends EventEmitter<ClineEvents> {
 		})()
 	}
 
-	public async *attemptApiRequest(retryAttempt: number = 0): ApiStream {
+	public async *attemptApiRequest(retryAttempt: number = 0, temperatureOverride?: number): ApiStream {
 		const state = await this.providerRef.deref()?.getState()
 		const {
 			apiConfiguration,
@@ -1683,6 +1711,22 @@ export class Task extends EventEmitter<ClineEvents> {
 			autoCondenseContextPercent = 100,
 			profileThresholds = {},
 		} = state ?? {}
+
+		// Store original temperature on first attempt
+		if (this.originalTemperature === undefined && apiConfiguration) {
+			this.originalTemperature = apiConfiguration.modelTemperature ?? undefined
+		}
+
+		// Apply temperature override if provided
+		if (temperatureOverride !== undefined && apiConfiguration) {
+			this.currentTemperature = temperatureOverride
+			// Create a modified API configuration with the new temperature
+			const modifiedApiConfig = { ...apiConfiguration, modelTemperature: temperatureOverride }
+			// Rebuild the API handler with the modified configuration
+			this.api = buildApiHandler(modifiedApiConfig)
+		} else {
+			this.currentTemperature = this.originalTemperature
+		}
 
 		// Get condensing configuration for automatic triggers
 		const customCondensingPrompt = state?.customCondensingPrompt
@@ -1949,6 +1993,43 @@ export class Task extends EventEmitter<ClineEvents> {
 		if (error) {
 			this.emit("taskToolFailed", this.taskId, toolName, error)
 		}
+
+		// Trigger temperature reduction for retry
+		this.shouldReduceTemperature = true
+	}
+
+	private shouldReduceTemperature = false
+
+	public async retryWithReducedTemperature(): Promise<boolean> {
+		// Check if we've exceeded max temperature reductions
+		if (this.temperatureReductionAttempts >= this.maxTemperatureReductions) {
+			await this.say(
+				"error",
+				`Maximum temperature reduction attempts (${this.maxTemperatureReductions}) reached. Cannot reduce temperature further.`,
+			)
+			return false
+		}
+
+		// Calculate new temperature
+		const currentTemp = this.currentTemperature ?? this.originalTemperature ?? 1.0
+		const newTemperature = Math.max(0, currentTemp * this.temperatureReductionFactor)
+
+		// Increment attempt counter
+		this.temperatureReductionAttempts++
+
+		// Log the temperature reduction
+		await this.say(
+			"text",
+			`Reducing temperature from ${currentTemp.toFixed(2)} to ${newTemperature.toFixed(2)} due to tool failure (attempt ${this.temperatureReductionAttempts}/${this.maxTemperatureReductions})`,
+		)
+
+		// Store the new temperature for the next API request
+		this.currentTemperature = newTemperature
+
+		// Reset the flag
+		this.shouldReduceTemperature = false
+
+		return true
 	}
 
 	// Getters

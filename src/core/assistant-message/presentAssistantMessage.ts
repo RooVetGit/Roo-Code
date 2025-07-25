@@ -307,9 +307,13 @@ export async function presentAssistantMessage(cline: Task) {
 			const handleError = async (action: string, error: Error) => {
 				const errorString = `Error ${action}: ${JSON.stringify(serializeError(error))}`
 
+				// Include temperature information in error message
+				const currentTemp = (cline as any).currentTemperature ?? (cline as any).originalTemperature ?? "default"
+				const tempInfo = currentTemp !== "default" ? ` (temperature: ${currentTemp})` : ""
+
 				await cline.say(
 					"error",
-					`Error ${action}:\n${error.message ?? JSON.stringify(serializeError(error), null, 2)}`,
+					`Error ${action}${tempInfo}:\n${error.message ?? JSON.stringify(serializeError(error), null, 2)}`,
 				)
 
 				pushToolResult(formatResponse.toolError(errorString))
