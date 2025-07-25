@@ -466,11 +466,17 @@ export async function searchSvnCommits(query: string, cwd: string): Promise<SvnC
 
 		const commits: SvnCommit[] = []
 
-		// If query looks like a revision number, search for that specific revision
-		if (/^\d+$/.test(query)) {
-			SvnLogger.debug("Query looks like revision number, searching for specific revision", { revision: query })
+		// If query looks like a revision number with 'r' prefix, search for that specific revision
+		// Only support "r123" format, not pure numbers
+		const revisionMatch = query.match(/^r(\d+)$/i)
+		if (revisionMatch) {
+			const revisionNumber = revisionMatch[1]
+			SvnLogger.debug("Query looks like revision number, searching for specific revision", {
+				originalQuery: query,
+				revision: revisionNumber,
+			})
 			try {
-				const command = `svn log -r ${query} --xml`
+				const command = `svn log -r ${revisionNumber} --xml`
 				SvnLogger.debug("Executing revision search command", { command, cwd })
 
 				const { stdout } = await execAsync(command, { cwd })
@@ -502,10 +508,21 @@ export async function searchSvnCommits(query: string, cwd: string): Promise<SvnC
 			const allCommits = parseSvnLogXml(stdout)
 			SvnLogger.debug("Parsed all commits", { count: allCommits.length })
 
-			// Filter commits by message content
-			const messageMatches = allCommits.filter(
-				(commit) => commit.message.toLowerCase().includes(query.toLowerCase()) || commit.revision === query,
-			)
+			// Filter commits by message content or revision match
+			const messageMatches = allCommits.filter((commit) => {
+				// Check message content match
+				const messageMatch = commit.message.toLowerCase().includes(query.toLowerCase())
+
+				// Check revision match (only handle "r123" format, not pure numbers)
+				let revisionMatch = false
+				const revisionMatchResult = query.match(/^r(\d+)$/i)
+				if (revisionMatchResult) {
+					const queryRevision = revisionMatchResult[1]
+					revisionMatch = commit.revision === queryRevision
+				}
+
+				return messageMatch || revisionMatch
+			})
 			SvnLogger.debug("Filtered commits by message", { matchCount: messageMatches.length, query })
 
 			// Add unique commits (avoid duplicates from revision search)
@@ -735,29 +752,108 @@ export async function getSvnCommitInfoForMentions(revision: string, cwd: string)
 		}
 		console.log("[DEBUG] Clean revision:", cleanRevision)
 
-		const { stdout } = await execAsync(`svn log -r ${cleanRevision} -v`, { cwd })
+		// Use UTF-8 encoding to handle Chinese characters properly
+		const { stdout } = await execAsync(`svn log -r ${cleanRevision} -v`, {
+			cwd,
+			encoding: "utf8",
+		})
 		console.log("[DEBUG] SVN log output:", stdout)
 
+		// Parse the log output more carefully
 		const lines = stdout.split("\n")
-		const logEntry = lines.find((line) => line.includes("r" + cleanRevision))
-		if (!logEntry) {
+
+		// Find the header line (contains revision info)
+		const headerLineIndex = lines.findIndex((line) => line.includes(`r${cleanRevision} |`))
+		if (headerLineIndex === -1) {
 			return `Revision ${revision} not found`
 		}
 
-		const parts = logEntry.split("|").map((part) => part.trim())
-		if (parts.length >= 4) {
-			const [rev, author, date] = parts
-			const messageStart = stdout.indexOf("\n\n")
-			const messageEnd = stdout.indexOf("\n---", messageStart)
-			const message =
-				messageStart !== -1 && messageEnd !== -1
-					? stdout.substring(messageStart + 2, messageEnd).trim()
-					: "No message"
+		const headerLine = lines[headerLineIndex]
+		const parts = headerLine.split("|").map((part) => part.trim())
 
-			return `${rev} by ${author} on ${date}\n${message}`
+		if (parts.length < 3) {
+			return `Revision ${revision}: Unable to parse commit information`
 		}
 
-		return `Revision ${revision}: Unable to parse commit information`
+		const [rev, author, dateInfo] = parts
+		// Extract just the date part, ignore the Chinese day name to avoid encoding issues
+		const dateMatch = dateInfo.match(/(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2} [+-]\d{4})/)
+		const date = dateMatch ? dateMatch[1] : dateInfo.split("(")[0].trim()
+
+		// Find the commit message (after "Changed paths:" section)
+		let message = "No message"
+		let changedPaths = ""
+
+		// Look for "Changed paths:" section
+		const changedPathsIndex = lines.findIndex((line) => line.includes("Changed paths:"))
+		if (changedPathsIndex !== -1) {
+			// Extract changed paths
+			const pathLines = []
+			for (let i = changedPathsIndex + 1; i < lines.length; i++) {
+				const line = lines[i]
+				if (line.trim() === "" || line.startsWith("---")) {
+					break
+				}
+				if (line.trim().match(/^[AMDRC]\s+\//)) {
+					pathLines.push(line.trim())
+				}
+			}
+			changedPaths = pathLines.join("\n")
+
+			// Find message after the changed paths section
+			for (let i = changedPathsIndex + 1; i < lines.length; i++) {
+				const line = lines[i]
+				if (line.trim() === "" && i + 1 < lines.length) {
+					// Check if next line is not a separator and not empty
+					const nextLine = lines[i + 1]
+					if (nextLine && !nextLine.startsWith("---") && nextLine.trim() !== "") {
+						// Found the message
+						const messageLines = []
+						for (let j = i + 1; j < lines.length; j++) {
+							const msgLine = lines[j]
+							if (msgLine.startsWith("---")) {
+								break
+							}
+							if (msgLine.trim() !== "") {
+								messageLines.push(msgLine)
+							}
+						}
+						if (messageLines.length > 0) {
+							message = messageLines.join("\n").trim()
+						}
+						break
+					}
+				}
+			}
+		}
+
+		// Get diff information (same as getSvnCommitInfo function)
+		let diff = ""
+		try {
+			console.log("[DEBUG] Getting diff for revision:", cleanRevision)
+			const { stdout: diffOutput } = await execAsync(`svn diff -c ${cleanRevision}`, {
+				cwd,
+				encoding: "utf8",
+			})
+			diff = truncateOutput(diffOutput, SVN_OUTPUT_LINE_LIMIT)
+			console.log("[DEBUG] Diff length:", diff.length)
+		} catch (error) {
+			const svnError = error instanceof Error ? error : new Error(String(error))
+			console.log("[DEBUG] Diff not available for revision:", svnError.message)
+		}
+
+		// Format the result with changed files and diff
+		let result = `${rev} by ${author} on ${date}\n${message}`
+
+		if (changedPaths) {
+			result += `\n\nChanged files:\n${changedPaths}`
+		}
+
+		if (diff && diff.trim()) {
+			result += `\n\nDiff:\n${diff}`
+		}
+
+		return result
 	} catch (error) {
 		const svnError = error instanceof Error ? error : new Error(String(error))
 		console.error("[DEBUG] Error getting SVN commit info for mentions:", svnError)

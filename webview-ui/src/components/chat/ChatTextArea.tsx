@@ -158,7 +158,7 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 				} else if (message.type === "svnCommitSearchResults") {
 					const commits = message.svnCommits.map((commit: any) => ({
 						type: ContextMenuOptionType.Svn,
-						value: commit.revision,
+						value: `r${commit.revision}`,
 						label: commit.message,
 						description: `r${commit.revision} by ${commit.author} on ${commit.date}`,
 						icon: "$(git-commit)",
@@ -213,9 +213,9 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 			}
 		}, [selectedType, searchQuery])
 
-		// Fetch SVN commits when SVN is selected or when typing a revision number.
+		// Fetch SVN commits when SVN is selected or when typing a revision number with 'r' prefix.
 		useEffect(() => {
-			if (selectedType === ContextMenuOptionType.Svn || /^r?\d+$/i.test(searchQuery)) {
+			if (selectedType === ContextMenuOptionType.Svn || /^r\d+$/i.test(searchQuery)) {
 				const message: WebviewMessage = {
 					type: "searchSvnCommits",
 					query: searchQuery || "",

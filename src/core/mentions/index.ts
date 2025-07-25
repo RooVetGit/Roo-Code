@@ -103,7 +103,7 @@ export async function parseMentions(
 			return `Working directory changes (see below for details)`
 		} else if (/^[a-f0-9]{7,40}$/.test(mention)) {
 			return `Git commit '${mention}' (see below for commit info)`
-		} else if (enableSvnContext && /^r?\d+$/.test(mention)) {
+		} else if (enableSvnContext && /^r\d+$/.test(mention)) {
 			return `SVN revision '${mention}' (see below for commit info)`
 		} else if (mention === "terminal") {
 			return `Terminal Output (see below for output)`
@@ -215,7 +215,7 @@ export async function parseMentions(
 			} catch (error) {
 				parsedText += `\n\n<git_commit hash="${mention}">\nError fetching commit info: ${error.message}\n</git_commit>`
 			}
-		} else if (enableSvnContext && /^r?\d+$/.test(mention)) {
+		} else if (enableSvnContext && /^r\d+$/.test(mention)) {
 			try {
 				const commitInfo = await getSvnCommitInfoForMentions(mention, cwd)
 				parsedText += `\n\n<svn_commit revision="${mention}">\n${commitInfo}\n</svn_commit>`
