@@ -1,9 +1,8 @@
-import React from "react"
 import { render, screen } from "@/utils/test-utils"
 import { HuggingFace } from "../HuggingFace"
 import { ProviderSettings } from "@roo-code/types"
 
-// Mock the VSCodeTextField component
+// Mock the VSCode components
 vi.mock("@vscode/webview-ui-toolkit/react", () => ({
 	VSCodeTextField: ({
 		children,
@@ -32,6 +31,18 @@ vi.mock("@vscode/webview-ui-toolkit/react", () => ({
 			</div>
 		)
 	},
+	VSCodeCheckbox: ({ children, checked, onChange, ...rest }: any) => (
+		<div data-testid="vscode-checkbox">
+			<input
+				type="checkbox"
+				checked={checked}
+				onChange={onChange}
+				data-testid="vscode-checkbox-input"
+				{...rest}
+			/>
+			{children}
+		</div>
+	),
 	VSCodeLink: ({ children, href, onClick }: any) => (
 		<a href={href} onClick={onClick} data-testid="vscode-link">
 			{children}
