@@ -563,4 +563,134 @@ describe("ClaudeCodeHandler", () => {
 
 		consoleSpy.mockRestore()
 	})
+
+	test("should parse string chunks that are JSON assistant messages", async () => {
+		const systemPrompt = "You are a helpful assistant"
+		const messages = [{ role: "user" as const, content: "Hello" }]
+
+		// Mock async generator that yields a string containing JSON assistant message
+		const mockGenerator = async function* (): AsyncGenerator<ClaudeCodeMessage | string> {
+			// Yield a string that's actually a JSON assistant message
+			yield JSON.stringify({
+				type: "assistant",
+				message: {
+					id: "msg_123",
+					type: "message",
+					role: "assistant",
+					model: "claude-3-5-sonnet-20241022",
+					content: [
+						{
+							type: "text",
+							text: "This is a response from a JSON string",
+						},
+					],
+					stop_reason: null,
+					stop_sequence: null,
+					usage: {
+						input_tokens: 10,
+						output_tokens: 20,
+					},
+				},
+				session_id: "session_123",
+			})
+		}
+
+		mockRunClaudeCode.mockReturnValue(mockGenerator())
+
+		const stream = handler.createMessage(systemPrompt, messages)
+		const results = []
+
+		for await (const chunk of stream) {
+			results.push(chunk)
+		}
+
+		// Should parse the JSON and yield the text content
+		expect(results).toHaveLength(1)
+		expect(results[0]).toEqual({
+			type: "text",
+			text: "This is a response from a JSON string",
+		})
+	})
+
+	test("should handle malformed JSON strings gracefully", async () => {
+		const systemPrompt = "You are a helpful assistant"
+		const messages = [{ role: "user" as const, content: "Hello" }]
+
+		// Mock async generator that yields malformed JSON
+		const mockGenerator = async function* (): AsyncGenerator<ClaudeCodeMessage | string> {
+			// Yield a malformed JSON string with escaped newlines
+			yield '{"type":"assistant","message":{"id":"msg_123"\\n\\n\\n"content":[{"type":"text","text":"Malformed"}]}'
+		}
+
+		mockRunClaudeCode.mockReturnValue(mockGenerator())
+
+		const stream = handler.createMessage(systemPrompt, messages)
+		const results = []
+
+		for await (const chunk of stream) {
+			results.push(chunk)
+		}
+
+		// Should yield the malformed string as text since it can't be parsed
+		expect(results).toHaveLength(1)
+		expect(results[0]).toEqual({
+			type: "text",
+			text: '{"type":"assistant","message":{"id":"msg_123"\\n\\n\\n"content":[{"type":"text","text":"Malformed"}]}',
+		})
+	})
+
+	test("should handle string chunks with thinking content when parsed from JSON", async () => {
+		const systemPrompt = "You are a helpful assistant"
+		const messages = [{ role: "user" as const, content: "Hello" }]
+
+		// Mock async generator that yields a string containing JSON with thinking
+		const mockGenerator = async function* (): AsyncGenerator<ClaudeCodeMessage | string> {
+			yield JSON.stringify({
+				type: "assistant",
+				message: {
+					id: "msg_123",
+					type: "message",
+					role: "assistant",
+					model: "claude-3-5-sonnet-20241022",
+					content: [
+						{
+							type: "thinking",
+							thinking: "Let me think about this...",
+						},
+						{
+							type: "text",
+							text: "Here's my answer",
+						},
+					],
+					stop_reason: null,
+					stop_sequence: null,
+					usage: {
+						input_tokens: 10,
+						output_tokens: 20,
+					},
+				},
+				session_id: "session_123",
+			})
+		}
+
+		mockRunClaudeCode.mockReturnValue(mockGenerator())
+
+		const stream = handler.createMessage(systemPrompt, messages)
+		const results = []
+
+		for await (const chunk of stream) {
+			results.push(chunk)
+		}
+
+		// Should parse and yield both thinking and text content
+		expect(results).toHaveLength(2)
+		expect(results[0]).toEqual({
+			type: "reasoning",
+			text: "Let me think about this...",
+		})
+		expect(results[1]).toEqual({
+			type: "text",
+			text: "Here's my answer",
+		})
+	})
 })

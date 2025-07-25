@@ -54,6 +54,15 @@ export class ClaudeCodeHandler extends BaseProvider implements ApiHandler {
 
 		for await (const chunk of claudeProcess) {
 			if (typeof chunk === "string") {
+				// Try to parse string chunks that might be JSON assistant messages
+				const parsedChunk = this.attemptParseAssistantMessage(chunk)
+				if (parsedChunk) {
+					// Process as assistant message
+					yield* this.processAssistantMessage(parsedChunk, usage, isPaidUsage)
+					continue
+				}
+
+				// If not a JSON message, yield as text
 				yield {
 					type: "text",
 					text: chunk,
@@ -69,64 +78,7 @@ export class ClaudeCodeHandler extends BaseProvider implements ApiHandler {
 			}
 
 			if (chunk.type === "assistant" && "message" in chunk) {
-				const message = chunk.message
-
-				if (message.stop_reason !== null) {
-					const content = "text" in message.content[0] ? message.content[0] : undefined
-
-					const isError = content && content.text.startsWith(`API Error`)
-					if (isError) {
-						// Error messages are formatted as: `API Error: <<status code>> <<json>>`
-						const errorMessageStart = content.text.indexOf("{")
-						const errorMessage = content.text.slice(errorMessageStart)
-
-						const error = this.attemptParse(errorMessage)
-						if (!error) {
-							throw new Error(content.text)
-						}
-
-						if (error.error.message.includes("Invalid model name")) {
-							throw new Error(
-								content.text + `\n\n${t("common:errors.claudeCode.apiKeyModelPlanMismatch")}`,
-							)
-						}
-
-						throw new Error(errorMessage)
-					}
-				}
-
-				for (const content of message.content) {
-					switch (content.type) {
-						case "text":
-							yield {
-								type: "text",
-								text: content.text,
-							}
-							break
-						case "thinking":
-							yield {
-								type: "reasoning",
-								text: content.thinking || "",
-							}
-							break
-						case "redacted_thinking":
-							yield {
-								type: "reasoning",
-								text: "[Redacted thinking block]",
-							}
-							break
-						case "tool_use":
-							console.error(`tool_use is not supported yet. Received: ${JSON.stringify(content)}`)
-							break
-					}
-				}
-
-				usage.inputTokens += message.usage.input_tokens
-				usage.outputTokens += message.usage.output_tokens
-				usage.cacheReadTokens = (usage.cacheReadTokens || 0) + (message.usage.cache_read_input_tokens || 0)
-				usage.cacheWriteTokens =
-					(usage.cacheWriteTokens || 0) + (message.usage.cache_creation_input_tokens || 0)
-
+				yield* this.processAssistantMessage(chunk, usage, isPaidUsage)
 				continue
 			}
 
@@ -169,6 +121,87 @@ export class ClaudeCodeHandler extends BaseProvider implements ApiHandler {
 		try {
 			return JSON.parse(str)
 		} catch (err) {
+			return null
+		}
+	}
+
+	private *processAssistantMessage(
+		chunk: any,
+		usage: ApiStreamUsageChunk,
+		isPaidUsage: boolean,
+	): Generator<any, void, unknown> {
+		const message = chunk.message
+
+		if (message.stop_reason !== null) {
+			const content = "text" in message.content[0] ? message.content[0] : undefined
+
+			const isError = content && content.text.startsWith(`API Error`)
+			if (isError) {
+				// Error messages are formatted as: `API Error: <<status code>> <<json>>`
+				const errorMessageStart = content.text.indexOf("{")
+				const errorMessage = content.text.slice(errorMessageStart)
+
+				const error = this.attemptParse(errorMessage)
+				if (!error) {
+					throw new Error(content.text)
+				}
+
+				if (error.error.message.includes("Invalid model name")) {
+					throw new Error(content.text + `\n\n${t("common:errors.claudeCode.apiKeyModelPlanMismatch")}`)
+				}
+
+				throw new Error(errorMessage)
+			}
+		}
+
+		for (const content of message.content) {
+			switch (content.type) {
+				case "text":
+					yield {
+						type: "text",
+						text: content.text,
+					}
+					break
+				case "thinking":
+					yield {
+						type: "reasoning",
+						text: content.thinking || "",
+					}
+					break
+				case "redacted_thinking":
+					yield {
+						type: "reasoning",
+						text: "[Redacted thinking block]",
+					}
+					break
+				case "tool_use":
+					console.error(`tool_use is not supported yet. Received: ${JSON.stringify(content)}`)
+					break
+			}
+		}
+
+		usage.inputTokens += message.usage.input_tokens
+		usage.outputTokens += message.usage.output_tokens
+		usage.cacheReadTokens = (usage.cacheReadTokens || 0) + (message.usage.cache_read_input_tokens || 0)
+		usage.cacheWriteTokens = (usage.cacheWriteTokens || 0) + (message.usage.cache_creation_input_tokens || 0)
+	}
+
+	private attemptParseAssistantMessage(str: string): any {
+		// Only try to parse if it looks like a JSON assistant message
+		if (!str.trim().startsWith('{"type":"assistant"')) {
+			return null
+		}
+
+		try {
+			const parsed = JSON.parse(str)
+			// Validate it has the expected structure
+			if (parsed.type === "assistant" && parsed.message) {
+				return parsed
+			}
+			return null
+		} catch (err) {
+			// If parsing fails, log the error for debugging but don't throw
+			console.error("Failed to parse potential assistant message:", err)
 			return null
 		}
 	}
