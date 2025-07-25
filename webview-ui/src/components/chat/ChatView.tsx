@@ -554,7 +554,7 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 
 			if (text || images.length > 0) {
 				if (sendingDisabled && !fromQueue) {
-					setMessageQueue((prev) => [...prev, { text, images }])
+					setMessageQueue((prev) => [...prev, { id: Date.now().toString(), text, images }])
 					setInputValue("")
 					setSelectedImages([])
 					return
