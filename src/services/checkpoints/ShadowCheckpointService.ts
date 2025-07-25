@@ -64,6 +64,18 @@ export abstract class ShadowCheckpointService extends EventEmitter {
 			throw new Error("Shadow git repo already initialized")
 		}
 
+		// Additional validation to ensure workspace directory is valid
+		if (!this.workspaceDir || this.workspaceDir.trim() === "") {
+			throw new Error("Invalid workspace directory: empty or undefined")
+		}
+
+		// Ensure workspace directory exists
+		try {
+			await fs.access(this.workspaceDir)
+		} catch (error) {
+			throw new Error(`Workspace directory does not exist: ${this.workspaceDir}`)
+		}
+
 		const hasNestedGitRepos = await this.hasNestedGitRepositories()
 
 		if (hasNestedGitRepos) {
@@ -85,10 +97,24 @@ export abstract class ShadowCheckpointService extends EventEmitter {
 			this.log(`[${this.constructor.name}#initShadowGit] shadow git repo already exists at ${this.dotGitDir}`)
 			const worktree = await this.getShadowGitConfigWorktree(git)
 
-			if (worktree !== this.workspaceDir) {
+			if (!worktree) {
+				// If worktree is not set, try to repair it
+				this.log(
+					`[${this.constructor.name}#initShadowGit] worktree not configured, setting to ${this.workspaceDir}`,
+				)
+				await git.addConfig("core.worktree", this.workspaceDir)
+				this.shadowGitConfigWorktree = this.workspaceDir
+			} else if (worktree !== this.workspaceDir) {
 				throw new Error(
 					`Checkpoints can only be used in the original workspace: ${worktree} !== ${this.workspaceDir}`,
 				)
+			}
+
+			// Validate that the shadow git repo is not corrupted
+			try {
+				await git.status()
+			} catch (statusError) {
+				throw new Error(`Shadow git repository appears to be corrupted: ${statusError.message}`)
 			}
 
 			await this.writeExcludeFile()
@@ -246,9 +272,29 @@ export abstract class ShadowCheckpointService extends EventEmitter {
 				throw new Error("Shadow git repo not initialized")
 			}
 
+			// Validate worktree configuration before proceeding
+			const worktree = await this.getShadowGitConfigWorktree(this.git)
+			if (worktree !== this.workspaceDir) {
+				throw new Error(
+					`Worktree mismatch detected. Expected: ${this.workspaceDir}, Found: ${worktree}. Aborting restore to prevent data loss.`,
+				)
+			}
+
+			// Verify the commit exists
+			try {
+				await this.git.catFile(["-t", commitHash])
+			} catch (error) {
+				throw new Error(`Invalid commit hash: ${commitHash}`)
+			}
+
 			const start = Date.now()
-			await this.git.clean("f", ["-d", "-f"])
+
+			// Simply reset to the target commit
+			// This is much safer than using git clean -d -f
 			await this.git.reset(["--hard", commitHash])
+
+			// Important: We do NOT use git clean here because it would remove untracked files
+			// git reset --hard only affects tracked files, leaving untracked files alone
 
 			// Remove all checkpoints after the specified commitHash.
 			const checkpointIndex = this._checkpoints.indexOf(commitHash)
@@ -320,6 +366,58 @@ export abstract class ShadowCheckpointService extends EventEmitter {
 
 	override once<K extends keyof CheckpointEventMap>(event: K, listener: (data: CheckpointEventMap[K]) => void) {
 		return super.once(event, listener)
+	}
+
+	/**
+	 * Recovery methods for data loss scenarios
+	 */
+
+	public async listStashes(): Promise<Array<{ index: number; message: string; date: string }>> {
+		if (!this.git) {
+			throw new Error("Shadow git repo not initialized")
+		}
+
+		try {
+			const stashList = await this.git.stashList()
+			return stashList.all.map((stash, index) => ({
+				index,
+				message: stash.message,
+				date: stash.date || new Date().toISOString(),
+			}))
+		} catch (error) {
+			const errorMessage = error instanceof Error ? error.message : String(error)
+			this.log(`[${this.constructor.name}#listStashes] failed to list stashes: ${errorMessage}`)
+			return []
+		}
+	}
+
+	public async recoverFromStash(stashIndex: number): Promise<void> {
+		if (!this.git) {
+			throw new Error("Shadow git repo not initialized")
+		}
+
+		try {
+			this.log(`[${this.constructor.name}#recoverFromStash] attempting to recover from stash@{${stashIndex}}`)
+
+			// Apply the stash without removing it from the stash list
+			// Use --index to also restore staged changes
+			await this.git.stash(["apply", "--index", `stash@{${stashIndex}}`])
+
+			this.log(`[${this.constructor.name}#recoverFromStash] successfully recovered from stash@{${stashIndex}}`)
+		} catch (error) {
+			// If applying with --index fails, try without it
+			try {
+				this.log(`[${this.constructor.name}#recoverFromStash] retrying without --index`)
+				await this.git.stash(["apply", `stash@{${stashIndex}}`])
+				this.log(
+					`[${this.constructor.name}#recoverFromStash] successfully recovered from stash@{${stashIndex}} (without --index)`,
+				)
+			} catch (retryError) {
+				const errorMessage = retryError instanceof Error ? retryError.message : String(retryError)
+				this.log(`[${this.constructor.name}#recoverFromStash] failed to recover from stash: ${errorMessage}`)
+				throw new Error(`Failed to recover from stash: ${errorMessage}`)
+			}
+		}
 	}
 
 	/**

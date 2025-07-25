@@ -822,5 +822,137 @@ describe.each([[RepoPerTaskCheckpointService, "RepoPerTaskCheckpointService"]])(
 				expect(await fs.readFile(testFile, "utf-8")).toBe("Hello, world!")
 			})
 		})
+
+		describe(`${klass.name}#restoreCheckpoint safety`, () => {
+			it("does not use dangerous git clean command", async () => {
+				// This test verifies that we don't use git clean -d -f which would
+				// delete untracked files and potentially cause data loss
+
+				// Create initial checkpoint
+				await fs.writeFile(testFile, "Initial content")
+				const commit1 = await service.saveCheckpoint("Initial checkpoint")
+				expect(commit1?.commit).toBeTruthy()
+
+				// Make changes and create another checkpoint
+				await fs.writeFile(testFile, "Modified content")
+				const commit2 = await service.saveCheckpoint("Second checkpoint")
+				expect(commit2?.commit).toBeTruthy()
+
+				// Create a spy to monitor git commands
+				const gitSpy = vitest.spyOn(service["git"]!, "clean")
+
+				// Restore to first checkpoint
+				await service.restoreCheckpoint(commit1!.commit)
+
+				// Verify tracked file was restored
+				expect(await fs.readFile(testFile, "utf-8")).toBe("Initial content")
+
+				// Verify that git clean was NOT called
+				expect(gitSpy).not.toHaveBeenCalled()
+
+				gitSpy.mockRestore()
+			})
+
+			it("validates worktree configuration before restoration", async () => {
+				// Create a checkpoint
+				await fs.writeFile(testFile, "Test content")
+				const commit = await service.saveCheckpoint("Test checkpoint")
+				expect(commit?.commit).toBeTruthy()
+
+				// Create a new service instance with corrupted worktree
+				const corruptedShadowDir = path.join(tmpDir, `corrupted-${Date.now()}`)
+				const corruptedService = await klass.create({
+					taskId: "corrupted-test",
+					shadowDir: corruptedShadowDir,
+					workspaceDir: service.workspaceDir,
+					log: () => {},
+				})
+				await corruptedService.initShadowGit()
+
+				// Manually corrupt the worktree configuration by modifying the internal state
+				// This simulates a corrupted git config without actually setting an invalid path
+				corruptedService["shadowGitConfigWorktree"] = "/some/wrong/path"
+
+				// Attempt to restore should fail with worktree mismatch error
+				await expect(corruptedService.restoreCheckpoint(commit!.commit)).rejects.toThrow(
+					"Worktree mismatch detected",
+				)
+
+				// Using the original service (with correct worktree) should succeed
+				await service.restoreCheckpoint(commit!.commit)
+				expect(await fs.readFile(testFile, "utf-8")).toBe("Test content")
+
+				// Clean up
+				await fs.rm(corruptedShadowDir, { recursive: true, force: true })
+			})
+
+			it("validates commit hash before attempting restoration", async () => {
+				// Try to restore with an invalid commit hash
+				const invalidHash = "invalid-commit-hash-12345"
+
+				await expect(service.restoreCheckpoint(invalidHash)).rejects.toThrow(
+					"Invalid commit hash: " + invalidHash,
+				)
+			})
+
+			it("safely restores without data loss", async () => {
+				// Create initial checkpoint
+				await fs.writeFile(testFile, "Initial content")
+				const commit1 = await service.saveCheckpoint("Initial checkpoint")
+				expect(commit1?.commit).toBeTruthy()
+
+				// Make changes and save another checkpoint
+				await fs.writeFile(testFile, "Modified content")
+				const newFile = path.join(service.workspaceDir, "new-file.txt")
+				await fs.writeFile(newFile, "New file content")
+				const commit2 = await service.saveCheckpoint("Second checkpoint")
+				expect(commit2?.commit).toBeTruthy()
+
+				// Restore to initial checkpoint
+				await service.restoreCheckpoint(commit1!.commit)
+
+				// Verify restoration worked correctly
+				expect(await fs.readFile(testFile, "utf-8")).toBe("Initial content")
+
+				// The new file should not exist in the first checkpoint
+				await expect(fs.readFile(newFile, "utf-8")).rejects.toThrow()
+			})
+
+			it("handles restoration when no changes need to be stashed", async () => {
+				// Create and immediately restore a checkpoint (no changes to stash)
+				await fs.writeFile(testFile, "Test content")
+				const commit = await service.saveCheckpoint("Test checkpoint")
+				expect(commit?.commit).toBeTruthy()
+
+				// Restore immediately without making any changes
+				await expect(service.restoreCheckpoint(commit!.commit)).resolves.not.toThrow()
+				expect(await fs.readFile(testFile, "utf-8")).toBe("Test content")
+			})
+
+			it("properly removes files that should not exist in restored checkpoint", async () => {
+				// Create initial checkpoint
+				await fs.writeFile(testFile, "Initial content")
+				const commit1 = await service.saveCheckpoint("Initial checkpoint")
+				expect(commit1?.commit).toBeTruthy()
+
+				// Add a new tracked file
+				const trackedFile = path.join(service.workspaceDir, "tracked-file.txt")
+				await fs.writeFile(trackedFile, "This file will be tracked")
+				const commit2 = await service.saveCheckpoint("Added tracked file")
+				expect(commit2?.commit).toBeTruthy()
+
+				// Verify file exists
+				expect(await fs.readFile(trackedFile, "utf-8")).toBe("This file will be tracked")
+
+				// Restore to initial checkpoint (before the file existed)
+				await service.restoreCheckpoint(commit1!.commit)
+
+				// Verify the tracked file was removed
+				await expect(fs.readFile(trackedFile, "utf-8")).rejects.toThrow()
+
+				// Verify original file is still correct
+				expect(await fs.readFile(testFile, "utf-8")).toBe("Initial content")
+			})
+		})
 	},
 )
