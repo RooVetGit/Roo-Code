@@ -127,6 +127,7 @@ const vertexSchema = apiModelIdProviderModelSchema.extend({
 	vertexJsonCredentials: z.string().optional(),
 	vertexProjectId: z.string().optional(),
 	vertexRegion: z.string().optional(),
+	vertexCustomModelId: z.string().optional(),
 })
 
 const openAiSchema = baseProviderSettingsSchema.extend({

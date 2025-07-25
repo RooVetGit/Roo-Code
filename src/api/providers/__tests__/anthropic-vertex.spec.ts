@@ -809,4 +809,124 @@ describe("VertexHandler", () => {
 			)
 		})
 	})
+
+	describe("custom model handling", () => {
+		it("should use custom model when vertexCustomModelId is provided", () => {
+			handler = new AnthropicVertexHandler({
+				apiModelId: "claude-3-5-sonnet-v2@20241022",
+				vertexCustomModelId: "claude-sonnet-4@20250514",
+				vertexProjectId: "test-project",
+				vertexRegion: "us-central1",
+			})
+
+			const modelInfo = handler.getModel()
+			expect(modelInfo.id).toBe("claude-sonnet-4@20250514")
+			// Should use default model info as fallback
+			expect(modelInfo.info).toBeDefined()
+			expect(modelInfo.info.maxTokens).toBe(8192)
+			expect(modelInfo.info.contextWindow).toBe(200_000)
+		})
+
+		it("should trim whitespace from custom model ID", () => {
+			handler = new AnthropicVertexHandler({
+				apiModelId: "claude-3-5-sonnet-v2@20241022",
+				vertexCustomModelId: "  claude-sonnet-4@20250514  ",
+				vertexProjectId: "test-project",
+				vertexRegion: "us-central1",
+			})
+
+			const modelInfo = handler.getModel()
+			expect(modelInfo.id).toBe("claude-sonnet-4@20250514")
+		})
+
+		it("should handle custom model with thinking suffix", () => {
+			handler = new AnthropicVertexHandler({
+				apiModelId: "claude-3-5-sonnet-v2@20241022",
+				vertexCustomModelId: "claude-sonnet-4@20250514:thinking",
+				vertexProjectId: "test-project",
+				vertexRegion: "us-central1",
+				modelMaxTokens: 16384,
+				modelMaxThinkingTokens: 4096,
+			})
+
+			const modelInfo = handler.getModel()
+			expect(modelInfo.id).toBe("claude-sonnet-4@20250514")
+			// For custom models with thinking suffix, reasoning parameters should be set
+			expect(modelInfo.reasoningBudget).toBe(4096)
+			expect(modelInfo.temperature).toBe(1.0)
+		})
+
+		it("should fall back to predefined model when custom model is empty", () => {
+			handler = new AnthropicVertexHandler({
+				apiModelId: "claude-3-5-sonnet-v2@20241022",
+				vertexCustomModelId: "",
+				vertexProjectId: "test-project",
+				vertexRegion: "us-central1",
+			})
+
+			const modelInfo = handler.getModel()
+			expect(modelInfo.id).toBe("claude-3-5-sonnet-v2@20241022")
+		})
+
+		it("should fall back to predefined model when custom model is only whitespace", () => {
+			handler = new AnthropicVertexHandler({
+				apiModelId: "claude-3-5-sonnet-v2@20241022",
+				vertexCustomModelId: "   ",
+				vertexProjectId: "test-project",
+				vertexRegion: "us-central1",
+			})
+
+			const modelInfo = handler.getModel()
+			expect(modelInfo.id).toBe("claude-3-5-sonnet-v2@20241022")
+		})
+
+		it("should fall back to default model when custom model is not provided", () => {
+			handler = new AnthropicVertexHandler({
+				vertexProjectId: "test-project",
+				vertexRegion: "us-central1",
+			})
+
+			const modelInfo = handler.getModel()
+			expect(modelInfo.id).toBe("claude-sonnet-4@20250514") // default model
+		})
+
+		it("should use custom model in API calls", async () => {
+			handler = new AnthropicVertexHandler({
+				apiModelId: "claude-3-5-sonnet-v2@20241022",
+				vertexCustomModelId: "claude-sonnet-4@20250514",
+				vertexProjectId: "test-project",
+				vertexRegion: "us-central1",
+			})
+
+			const mockCreate = vitest.fn().mockImplementation(async (options) => {
+				return {
+					async *[Symbol.asyncIterator]() {
+						yield {
+							type: "message_start",
+							message: {
+								usage: {
+									input_tokens: 10,
+									output_tokens: 5,
+								},
+							},
+						}
+					},
+				}
+			})
+			;(handler["client"].messages as any).create = mockCreate
+
+			const stream = handler.createMessage("You are a helpful assistant", [{ role: "user", content: "Hello" }])
+
+			// Consume the stream
+			for await (const _chunk of stream) {
+				// Just consume the stream
+			}
+
+			expect(mockCreate).toHaveBeenCalledWith(
+				expect.objectContaining({
+					model: "claude-sonnet-4@20250514",
+				}),
+			)
+		})
+	})
 })
