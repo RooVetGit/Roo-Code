@@ -87,12 +87,17 @@ export const OpenAICompatible = ({
 	// Add effect to update the parent component's state when local headers change
 	useEffect(() => {
 		const timer = setTimeout(() => {
-			const headerObject = convertHeadersToObject(customHeaders)
-			setApiConfigurationField("openAiHeaders", headerObject)
+			const currentConfigHeaders = apiConfiguration?.openAiHeaders || {}
+			const newHeadersObject = convertHeadersToObject(customHeaders)
+
+			// Only update if the processed object is different from the current config
+			if (JSON.stringify(currentConfigHeaders) !== JSON.stringify(newHeadersObject)) {
+				setApiConfigurationField("openAiHeaders", newHeadersObject)
+			}
 		}, 300)
 
 		return () => clearTimeout(timer)
-	}, [customHeaders, setApiConfigurationField])
+	}, [customHeaders, apiConfiguration?.openAiHeaders, setApiConfigurationField])
 
 	const handleInputChange = useCallback(
 		<K extends keyof ProviderSettings, E>(
