@@ -3,17 +3,24 @@ import { useEvent } from "react-use"
 import { VSCodeTextField, VSCodeCheckbox } from "@vscode/webview-ui-toolkit/react"
 
 import type { ProviderSettings } from "@roo-code/types"
+import {
+	HUGGINGFACE_DEFAULT_MAX_TOKENS,
+	HUGGINGFACE_MAX_TOKENS_FALLBACK,
+	HUGGINGFACE_SLIDER_STEP,
+	HUGGINGFACE_SLIDER_MIN,
+	HUGGINGFACE_TEMPERATURE_MAX_VALUE,
+} from "@roo-code/types"
 
 import { ExtensionMessage } from "@roo/ExtensionMessage"
 import { vscode } from "@src/utils/vscode"
 import { useAppTranslation } from "@src/i18n/TranslationContext"
 import { VSCodeButtonLink } from "@src/components/common/VSCodeButtonLink"
 import { SearchableSelect, type SearchableSelectOption, Slider } from "@src/components/ui"
-import { cn } from "@src/lib/utils"
 import { TemperatureControl } from "../TemperatureControl"
+import { cn } from "@src/lib/utils"
+import { formatPrice } from "@/utils/formatPrice"
 
 import { inputEventTransform } from "../transforms"
-import { formatPrice } from "@/utils/formatPrice"
 
 type HuggingFaceModel = {
 	id: string
@@ -161,60 +168,6 @@ export const HuggingFace = ({ apiConfiguration, setApiConfigurationField }: Hugg
 		}
 	}, [currentModel, currentProvider])
 
-	// Model capabilities component
-	const ModelCapabilities = () => {
-		if (!modelCapabilities) return null
-
-		return (
-			<div className="flex flex-col gap-2">
-				<div className="flex flex-col gap-1 text-sm">
-					<div
-						className={cn(
-							"flex items-center gap-1",
-							modelCapabilities.supportsImages
-								? "text-vscode-charts-green"
-								: "text-vscode-errorForeground",
-						)}>
-						<span
-							className={cn("codicon", modelCapabilities.supportsImages ? "codicon-check" : "codicon-x")}
-						/>
-						{modelCapabilities.supportsImages ? "Supports images" : "Text only"}
-					</div>
-					<div
-						className={cn(
-							"flex items-center gap-1",
-							modelCapabilities.supportsTools
-								? "text-vscode-charts-green"
-								: "text-vscode-errorForeground",
-						)}>
-						<span
-							className={cn("codicon", modelCapabilities.supportsTools ? "codicon-check" : "codicon-x")}
-						/>
-						{modelCapabilities.supportsTools ? "Supports tool calling" : "No tool calling"}
-					</div>
-					{modelCapabilities.maxTokens && (
-						<div className="flex items-center gap-1 text-vscode-descriptionForeground">
-							<span className="font-medium">{t("settings:modelInfo.maxOutput")}:</span>{" "}
-							{modelCapabilities.maxTokens.toLocaleString()} tokens
-						</div>
-					)}
-					{currentProvider?.pricing && (
-						<>
-							<div className="flex items-center gap-1 text-vscode-descriptionForeground">
-								<span className="font-medium">{t("settings:modelInfo.inputPrice")}:</span>{" "}
-								{formatPrice(currentProvider.pricing.input)} / 1M tokens
-							</div>
-							<div className="flex items-center gap-1 text-vscode-descriptionForeground">
-								<span className="font-medium">{t("settings:modelInfo.outputPrice")}:</span>{" "}
-								{formatPrice(currentProvider.pricing.output)} / 1M tokens
-							</div>
-						</>
-					)}
-				</div>
-			</div>
-		)
-	}
-
 	return (
 		<>
 			<VSCodeTextField
@@ -278,42 +231,83 @@ export const HuggingFace = ({ apiConfiguration, setApiConfigurationField }: Hugg
 			)}
 
 			{/* Model capabilities */}
-			{currentModel && <ModelCapabilities />}
+			{currentModel && modelCapabilities && (
+				<div className="text-sm text-vscode-descriptionForeground">
+					<div
+						className={cn(
+							"flex items-center gap-1 font-medium",
+							modelCapabilities.supportsImages
+								? "text-vscode-charts-green"
+								: "text-vscode-errorForeground",
+						)}>
+						<span
+							className={cn("codicon", modelCapabilities.supportsImages ? "codicon-check" : "codicon-x")}
+						/>
+						{modelCapabilities.supportsImages
+							? t("settings:modelInfo.supportsImages")
+							: t("settings:modelInfo.noImages")}
+					</div>
+					{modelCapabilities.maxTokens && (
+						<div>
+							<span className="font-medium">{t("settings:modelInfo.maxOutput")}:</span>{" "}
+							{modelCapabilities.maxTokens.toLocaleString()} tokens
+						</div>
+					)}
+					{currentProvider?.pricing && (
+						<>
+							<div>
+								<span className="font-medium">{t("settings:modelInfo.inputPrice")}:</span>{" "}
+								{formatPrice(currentProvider.pricing.input)} / 1M tokens
+							</div>
+							<div>
+								<span className="font-medium">{t("settings:modelInfo.outputPrice")}:</span>{" "}
+								{formatPrice(currentProvider.pricing.output)} / 1M tokens
+							</div>
+						</>
+					)}
+				</div>
+			)}
 
 			{/* Temperature control */}
 			<TemperatureControl
 				value={apiConfiguration?.modelTemperature}
 				onChange={(value) => setApiConfigurationField("modelTemperature", value)}
-				maxValue={2}
+				maxValue={HUGGINGFACE_TEMPERATURE_MAX_VALUE}
 			/>
 
 			{/* Max tokens control */}
 			<div className="flex flex-col gap-3">
 				<VSCodeCheckbox
 					checked={apiConfiguration?.includeMaxTokens ?? false}
-					onChange={(e: any) => setApiConfigurationField("includeMaxTokens", e.target.checked)}>
-					<label className="block font-medium mb-1">Include max output tokens</label>
+					onChange={(e) =>
+						setApiConfigurationField("includeMaxTokens", (e.target as HTMLInputElement).checked)
+					}>
+					<label className="block font-medium mb-1">{t("settings:includeMaxOutputTokens")}</label>
 				</VSCodeCheckbox>
 				<div className="text-sm text-vscode-descriptionForeground -mt-2">
-					Limit the maximum number of tokens in the response
+					{t("settings:limitMaxTokensDescription")}
 				</div>
 
 				{apiConfiguration?.includeMaxTokens && (
 					<div className="flex flex-col gap-3 pl-3 border-l-2 border-vscode-button-background">
 						<div>
-							<label className="block font-medium mb-2 text-sm">Max output tokens</label>
+							<label className="block font-medium mb-2 text-sm">
+								{t("settings:maxOutputTokensLabel")}
+							</label>
 							<div className="flex items-center gap-2">
 								<Slider
-									min={1}
-									max={modelCapabilities?.maxTokens || 8192}
-									step={256}
-									value={[apiConfiguration?.modelMaxTokens || 2048]}
+									min={HUGGINGFACE_SLIDER_MIN}
+									max={modelCapabilities?.maxTokens || HUGGINGFACE_MAX_TOKENS_FALLBACK}
+									step={HUGGINGFACE_SLIDER_STEP}
+									value={[apiConfiguration?.modelMaxTokens || HUGGINGFACE_DEFAULT_MAX_TOKENS]}
 									onValueChange={([value]) => setApiConfigurationField("modelMaxTokens", value)}
 								/>
-								<span className="w-16 text-sm">{apiConfiguration?.modelMaxTokens || 2048}</span>
+								<span className="w-16 text-sm">
+									{apiConfiguration?.modelMaxTokens || HUGGINGFACE_DEFAULT_MAX_TOKENS}
+								</span>
 							</div>
 							<div className="text-vscode-descriptionForeground text-sm mt-1">
-								Maximum tokens to generate in response
+								{t("settings:maxTokensGenerateDescription")}
 							</div>
 						</div>
 					</div>
