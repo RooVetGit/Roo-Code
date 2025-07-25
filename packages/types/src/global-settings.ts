@@ -72,6 +72,17 @@ export const globalSettingsSchema = z.object({
 	autoCondenseContextPercent: z.number().optional(),
 	maxConcurrentFileReads: z.number().optional(),
 
+	/**
+	 * Whether to include diagnostic messages (errors, warnings) in tool outputs
+	 * @default true
+	 */
+	includeDiagnosticMessages: z.boolean().optional(),
+	/**
+	 * Maximum number of diagnostic messages to include in tool outputs
+	 * @default 50
+	 */
+	maxDiagnosticMessages: z.number().optional(),
+
 	browserToolEnabled: z.boolean().optional(),
 	browserViewportSize: z.string().optional(),
 	screenshotQuality: z.number().optional(),
@@ -154,12 +165,14 @@ export const SECRET_STATE_KEYS = [
 	"glamaApiKey",
 	"openRouterApiKey",
 	"awsAccessKey",
+	"awsApiKey",
 	"awsSecretKey",
 	"awsSessionToken",
 	"openAiApiKey",
 	"geminiApiKey",
 	"openAiNativeApiKey",
 	"deepSeekApiKey",
+	"moonshotApiKey",
 	"mistralApiKey",
 	"unboundApiKey",
 	"requestyApiKey",
@@ -172,6 +185,7 @@ export const SECRET_STATE_KEYS = [
 	"codebaseIndexOpenAiCompatibleApiKey",
 	"codebaseIndexGeminiApiKey",
 	"codebaseIndexMistralApiKey",
+	"huggingFaceApiKey",
 ] as const satisfies readonly (keyof ProviderSettings)[]
 export type SecretState = Pick<ProviderSettings, (typeof SECRET_STATE_KEYS)[number]>
 
@@ -222,7 +236,7 @@ export const EVALS_SETTINGS: RooCodeSettings = {
 	alwaysAllowUpdateTodoList: true,
 	followupAutoApproveTimeoutMs: 0,
 	allowedCommands: ["*"],
-	commandExecutionTimeout: 30_000,
+	commandExecutionTimeout: 20,
 	commandTimeoutAllowlist: [],
 	preventCompletionWithOpenTodos: false,
 
@@ -261,12 +275,15 @@ export const EVALS_SETTINGS: RooCodeSettings = {
 	showRooIgnoredFiles: true,
 	maxReadFileLine: -1, // -1 to enable full file reading.
 
+	includeDiagnosticMessages: true,
+	maxDiagnosticMessages: 50,
+
 	language: "en",
 	telemetrySetting: "enabled",
 
 	mcpEnabled: false,
 
-	mode: "code",
+	mode: "code", // "architect",
 
 	customModes: [],
 }

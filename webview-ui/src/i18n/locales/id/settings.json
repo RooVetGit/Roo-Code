@@ -257,10 +257,26 @@
 		"getChutesApiKey": "Dapatkan Chutes API Key",
 		"deepSeekApiKey": "DeepSeek API Key",
 		"getDeepSeekApiKey": "Dapatkan DeepSeek API Key",
+		"moonshotApiKey": "Kunci API Moonshot",
+		"getMoonshotApiKey": "Dapatkan Kunci API Moonshot",
+		"moonshotBaseUrl": "Titik Masuk Moonshot",
 		"geminiApiKey": "Gemini API Key",
 		"getGroqApiKey": "Dapatkan Groq API Key",
 		"groqApiKey": "Groq API Key",
+		"getHuggingFaceApiKey": "Dapatkan Kunci API Hugging Face",
+		"huggingFaceApiKey": "Kunci API Hugging Face",
+		"huggingFaceModelId": "ID Model",
 		"getGeminiApiKey": "Dapatkan Gemini API Key",
+		"huggingFaceLoading": "Memuat...",
+		"huggingFaceModelsCount": "({{count}} model)",
+		"huggingFaceSelectModel": "Pilih model...",
+		"huggingFaceSearchModels": "Cari model...",
+		"huggingFaceNoModelsFound": "Tidak ada model ditemukan",
+		"huggingFaceProvider": "Penyedia",
+		"huggingFaceProviderAuto": "Otomatis",
+		"huggingFaceSelectProvider": "Pilih penyedia...",
+		"huggingFaceSearchProviders": "Cari penyedia...",
+		"huggingFaceNoProvidersFound": "Tidak ada penyedia ditemukan",
 		"openAiApiKey": "OpenAI API Key",
 		"apiKey": "API Key",
 		"openAiBaseUrl": "Base URL",
@@ -275,6 +291,7 @@
 		"litellmBaseUrl": "LiteLLM Base URL",
 		"awsCredentials": "AWS Credentials",
 		"awsProfile": "AWS Profile",
+		"awsApiKey": "Kunci API Amazon Bedrock",
 		"awsProfileName": "Nama AWS Profile",
 		"awsAccessKey": "AWS Access Key",
 		"awsSecretKey": "AWS Secret Key",
@@ -467,6 +484,23 @@
 			"name": "Secara otomatis memicu kondensasi konteks cerdas",
 			"description": "Ketika diaktifkan, Roo akan secara otomatis mengondensasi konteks ketika ambang batas tercapai. Ketika dinonaktifkan, kamu masih dapat memicu kondensasi konteks secara manual."
 		},
+		"diagnostics": {
+			"includeMessages": {
+				"label": "Secara otomatis sertakan diagnostik dalam konteks",
+				"description": "Ketika diaktifkan, pesan diagnostik (error) dari file yang diedit akan secara otomatis disertakan dalam konteks. Kamu selalu dapat menyertakan semua diagnostik workspace secara manual menggunakan @problems."
+			},
+			"maxMessages": {
+				"label": "Pesan diagnostik maksimum",
+				"description": "Jumlah maksimum pesan diagnostik yang akan disertakan per file. Batas ini berlaku untuk penyertaan otomatis (ketika checkbox diaktifkan) dan penyebutan manual @problems. Nilai yang lebih tinggi memberikan lebih banyak konteks tetapi meningkatkan penggunaan token.",
+				"resetTooltip": "Reset ke nilai default (50)",
+				"unlimited": "Pesan diagnostik tidak terbatas",
+				"unlimitedLabel": "Tak terbatas"
+			},
+			"delayAfterWrite": {
+				"label": "Tunda setelah penulisan untuk memungkinkan diagnostik mendeteksi potensi masalah",
+				"description": "Waktu tunggu setelah penulisan file sebelum melanjutkan, memungkinkan alat diagnostik untuk memproses perubahan dan mendeteksi masalah."
+			}
+		},
 		"condensingThreshold": {
 			"label": "Ambang Batas Pemicu Kondensasi",
 			"selectProfile": "Konfigurasi ambang batas untuk profil",
@@ -585,6 +619,10 @@
 				"label": "Presisi pencocokan",
 				"description": "Slider ini mengontrol seberapa tepat bagian kode harus cocok saat menerapkan diff. Nilai yang lebih rendah memungkinkan pencocokan yang lebih fleksibel tetapi meningkatkan risiko penggantian yang salah. Gunakan nilai di bawah 100% dengan sangat hati-hati."
 			}
+		},
+		"todoList": {
+			"label": "Aktifkan alat daftar tugas",
+			"description": "Saat diaktifkan, Roo dapat membuat dan mengelola daftar tugas untuk melacak kemajuan tugas. Ini membantu mengatur tugas kompleks menjadi langkah-langkah yang dapat dikelola."
 		}
 	},
 	"experimental": {

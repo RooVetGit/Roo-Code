@@ -14,6 +14,8 @@ export async function processUserContentMentions({
 	rooIgnoreController,
 	showRooIgnoredFiles = true,
 	enableSvnContext = false,
+	includeDiagnosticMessages = true,
+	maxDiagnosticMessages = 50,
 }: {
 	userContent: Anthropic.Messages.ContentBlockParam[]
 	cwd: string
@@ -22,6 +24,8 @@ export async function processUserContentMentions({
 	rooIgnoreController?: any
 	showRooIgnoredFiles?: boolean
 	enableSvnContext?: boolean
+	includeDiagnosticMessages?: boolean
+	maxDiagnosticMessages?: number
 }) {
 	// Process userContent array, which contains various block types:
 	// TextBlockParam, ImageBlockParam, ToolUseBlockParam, and ToolResultBlockParam.
@@ -49,6 +53,8 @@ export async function processUserContentMentions({
 							rooIgnoreController,
 							showRooIgnoredFiles,
 							enableSvnContext,
+							includeDiagnosticMessages,
+							maxDiagnosticMessages,
 						),
 					}
 				}
@@ -67,6 +73,8 @@ export async function processUserContentMentions({
 								rooIgnoreController,
 								showRooIgnoredFiles,
 								enableSvnContext,
+								includeDiagnosticMessages,
+								maxDiagnosticMessages,
 							),
 						}
 					}
@@ -86,6 +94,8 @@ export async function processUserContentMentions({
 										rooIgnoreController,
 										showRooIgnoredFiles,
 										enableSvnContext,
+										includeDiagnosticMessages,
+										maxDiagnosticMessages,
 									),
 								}
 							}

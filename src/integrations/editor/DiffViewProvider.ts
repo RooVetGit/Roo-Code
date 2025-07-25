@@ -36,8 +36,14 @@ export class DiffViewProvider {
 	private activeLineController?: DecorationController
 	private streamedLines: string[] = []
 	private preDiagnostics: [vscode.Uri, vscode.Diagnostic[]][] = []
+	private taskRef: WeakRef<Task>
 
-	constructor(private cwd: string) {}
+	constructor(
+		private cwd: string,
+		task: Task,
+	) {
+		this.taskRef = new WeakRef(task)
+	}
 
 	async open(relPath: string): Promise<void> {
 		this.relPath = relPath
@@ -181,7 +187,10 @@ export class DiffViewProvider {
 		}
 	}
 
-	async saveChanges(diagnosticsEnabled: boolean = true, writeDelayMs: number = DEFAULT_WRITE_DELAY_MS): Promise<{
+	async saveChanges(
+		diagnosticsEnabled: boolean = true,
+		writeDelayMs: number = DEFAULT_WRITE_DELAY_MS,
+	): Promise<{
 		newProblemsMessage: string | undefined
 		userEdits: string | undefined
 		finalContent: string | undefined
@@ -216,23 +225,29 @@ export class DiffViewProvider {
 		// and can address them accordingly. If problems don't change immediately after
 		// applying a fix, won't be notified, which is generally fine since the
 		// initial fix is usually correct and it may just take time for linters to catch up.
-		
+
 		let newProblemsMessage = ""
-		
+
 		if (diagnosticsEnabled) {
 			// Add configurable delay to allow linters time to process and clean up issues
 			// like unused imports (especially important for Go and other languages)
 			// Ensure delay is non-negative
 			const safeDelayMs = Math.max(0, writeDelayMs)
-			
+
 			try {
 				await delay(safeDelayMs)
 			} catch (error) {
 				// Log error but continue - delay failure shouldn't break the save operation
 				console.warn(`Failed to apply write delay: ${error}`)
 			}
-			
+
 			const postDiagnostics = vscode.languages.getDiagnostics()
+
+			// Get diagnostic settings from state
+			const task = this.taskRef.deref()
+			const state = await task?.providerRef.deref()?.getState()
+			const includeDiagnosticMessages = state?.includeDiagnosticMessages ?? true
+			const maxDiagnosticMessages = state?.maxDiagnosticMessages ?? 50
 
 			const newProblems = await diagnosticsToProblemsString(
 				getNewDiagnostics(this.preDiagnostics, postDiagnostics),
@@ -240,6 +255,8 @@ export class DiffViewProvider {
 					vscode.DiagnosticSeverity.Error, // only including errors since warnings can be distracting (if user wants to fix warnings they can use the @problems mention)
 				],
 				this.cwd,
+				includeDiagnosticMessages,
+				maxDiagnosticMessages,
 			) // Will be empty string if no errors.
 
 			newProblemsMessage =

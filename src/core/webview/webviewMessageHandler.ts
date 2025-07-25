@@ -675,6 +675,22 @@ export const webviewMessageHandler = async (
 			// TODO: Cache like we do for OpenRouter, etc?
 			provider.postMessageToWebview({ type: "vsCodeLmModels", vsCodeLmModels })
 			break
+		case "requestHuggingFaceModels":
+			try {
+				const { getHuggingFaceModels } = await import("../../api/huggingface-models")
+				const huggingFaceModelsResponse = await getHuggingFaceModels()
+				provider.postMessageToWebview({
+					type: "huggingFaceModels",
+					huggingFaceModels: huggingFaceModelsResponse.models,
+				})
+			} catch (error) {
+				console.error("Failed to fetch Hugging Face models:", error)
+				provider.postMessageToWebview({
+					type: "huggingFaceModels",
+					huggingFaceModels: [],
+				})
+			}
+			break
 		case "openImage":
 			openImage(message.text!, { values: message.values })
 			break
@@ -1257,6 +1273,16 @@ export const webviewMessageHandler = async (
 		case "maxConcurrentFileReads":
 			const valueToSave = message.value // Capture the value intended for saving
 			await updateGlobalState("maxConcurrentFileReads", valueToSave)
+			await provider.postStateToWebview()
+			break
+		case "includeDiagnosticMessages":
+			// Only apply default if the value is truly undefined (not false)
+			const includeValue = message.bool !== undefined ? message.bool : true
+			await updateGlobalState("includeDiagnosticMessages", includeValue)
+			await provider.postStateToWebview()
+			break
+		case "maxDiagnosticMessages":
+			await updateGlobalState("maxDiagnosticMessages", message.value ?? 50)
 			await provider.postStateToWebview()
 			break
 		case "setHistoryPreviewCollapsed": // Add the new case handler
@@ -2226,8 +2252,45 @@ export const webviewMessageHandler = async (
 				try {
 					await marketplaceManager.removeInstalledMarketplaceItem(message.mpItem, message.mpInstallOptions)
 					await provider.postStateToWebview()
+
+					// Send success message to webview
+					provider.postMessageToWebview({
+						type: "marketplaceRemoveResult",
+						success: true,
+						slug: message.mpItem.id,
+					})
 				} catch (error) {
 					console.error(`Error removing marketplace item: ${error}`)
+
+					// Show error message to user
+					vscode.window.showErrorMessage(
+						`Failed to remove marketplace item: ${error instanceof Error ? error.message : String(error)}`,
+					)
+
+					// Send error message to webview
+					provider.postMessageToWebview({
+						type: "marketplaceRemoveResult",
+						success: false,
+						error: error instanceof Error ? error.message : String(error),
+						slug: message.mpItem.id,
+					})
+				}
+			} else {
+				// MarketplaceManager not available or missing required parameters
+				const errorMessage = !marketplaceManager
+					? "Marketplace manager is not available"
+					: "Missing required parameters for marketplace item removal"
+				console.error(errorMessage)
+
+				vscode.window.showErrorMessage(errorMessage)
+
+				if (message.mpItem?.id) {
+					provider.postMessageToWebview({
+						type: "marketplaceRemoveResult",
+						success: false,
+						error: errorMessage,
+						slug: message.mpItem.id,
+					})
 				}
 			}
 			break
