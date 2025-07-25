@@ -542,6 +542,9 @@ describe("ClineProvider", () => {
 			profileThresholds: {},
 			hasOpenedModeSelector: false,
 			diagnosticsEnabled: true,
+			enableSvnContext: true,
+			includeDiagnosticMessages: true,
+			maxDiagnosticMessages: 50,
 		}
 
 		const message: ExtensionMessage = {
