@@ -1,5 +1,10 @@
-import { getHuggingFaceModels as fetchModels, type HuggingFaceModel } from "./providers/fetchers/huggingface"
-import type { ModelRecord } from "../shared/api"
+import {
+	getHuggingFaceModels as fetchModels,
+	getCachedRawHuggingFaceModels,
+	type HuggingFaceModel,
+} from "./providers/fetchers/huggingface"
+import axios from "axios"
+import { HUGGINGFACE_API_URL } from "@roo-code/types"
 
 export interface HuggingFaceModelsResponse {
 	models: HuggingFaceModel[]
@@ -8,35 +13,49 @@ export interface HuggingFaceModelsResponse {
 }
 
 export async function getHuggingFaceModels(): Promise<HuggingFaceModelsResponse> {
-	// Fetch models as ModelRecord
-	const modelRecord = await fetchModels()
+	try {
+		// First, trigger the fetch to populate cache
+		await fetchModels()
 
-	// Convert ModelRecord to array of HuggingFaceModel for backward compatibility
-	// Note: This is a temporary solution to maintain API compatibility
-	const models: HuggingFaceModel[] = Object.entries(modelRecord).map(([id, info]) => ({
-		id,
-		object: "model" as const,
-		created: Date.now(),
-		owned_by: "huggingface",
-		providers: [
-			{
-				provider: "auto",
-				status: "live" as const,
-				context_length: info.contextWindow,
-				pricing:
-					info.inputPrice && info.outputPrice
-						? {
-								input: info.inputPrice,
-								output: info.outputPrice,
-							}
-						: undefined,
+		// Get the raw models from cache
+		const cachedRawModels = getCachedRawHuggingFaceModels()
+
+		if (cachedRawModels) {
+			return {
+				models: cachedRawModels,
+				cached: true,
+				timestamp: Date.now(),
+			}
+		}
+
+		// If no cached raw models, fetch directly from API
+		const response = await axios.get(HUGGINGFACE_API_URL, {
+			headers: {
+				"Upgrade-Insecure-Requests": "1",
+				"Sec-Fetch-Dest": "document",
+				"Sec-Fetch-Mode": "navigate",
+				"Sec-Fetch-Site": "none",
+				"Sec-Fetch-User": "?1",
+				Priority: "u=0, i",
+				Pragma: "no-cache",
+				"Cache-Control": "no-cache",
 			},
-		],
-	}))
+			timeout: 10000,
+		})
 
-	return {
-		models,
-		cached: false,
-		timestamp: Date.now(),
+		const models = response.data?.data || []
+
+		return {
+			models,
+			cached: false,
+			timestamp: Date.now(),
+		}
+	} catch (error) {
+		console.error("Failed to get HuggingFace models:", error)
+		return {
+			models: [],
+			cached: false,
+			timestamp: Date.now(),
+		}
 	}
 }

@@ -80,6 +80,7 @@ type HuggingFaceApiResponse = z.infer<typeof huggingFaceApiResponseSchema>
  */
 interface CacheEntry {
 	data: ModelRecord
+	rawModels?: HuggingFaceModel[]
 	timestamp: number
 }
 
@@ -100,6 +101,9 @@ function parseHuggingFaceModel(model: HuggingFaceModel, provider?: HuggingFacePr
 
 	const pricing = provider?.pricing || model.providers.find((p) => p.pricing)?.pricing
 
+	// Include provider name in description if specific provider is given
+	const description = provider ? `${model.id} via ${provider.provider}` : `${model.id} via HuggingFace`
+
 	return {
 		maxTokens: Math.min(contextLength, HUGGINGFACE_DEFAULT_MAX_TOKENS),
 		contextWindow: contextLength,
@@ -108,7 +112,7 @@ function parseHuggingFaceModel(model: HuggingFaceModel, provider?: HuggingFacePr
 		supportsComputerUse: false,
 		inputPrice: pricing?.input,
 		outputPrice: pricing?.output,
-		description: `${model.id} via HuggingFace`,
+		description,
 	}
 }
 
@@ -123,15 +127,12 @@ export async function getHuggingFaceModels(): Promise<ModelRecord> {
 
 	// Check cache
 	if (cache && now - cache.timestamp < HUGGINGFACE_CACHE_DURATION) {
-		console.log("Using cached HuggingFace models")
 		return cache.data
 	}
 
 	const models: ModelRecord = {}
 
 	try {
-		console.log("Fetching HuggingFace models from API...")
-
 		const response = await axios.get<HuggingFaceApiResponse>(HUGGINGFACE_API_URL, {
 			headers: {
 				"Upgrade-Insecure-Requests": "1",
@@ -159,16 +160,14 @@ export async function getHuggingFaceModels(): Promise<ModelRecord> {
 			// Add the base model
 			models[model.id] = parseHuggingFaceModel(model)
 
-			// Add provider-specific variants if they have different capabilities
+			// Add provider-specific variants for all live providers
 			for (const provider of model.providers) {
 				if (provider.status === "live") {
 					const providerKey = `${model.id}:${provider.provider}`
 					const providerModel = parseHuggingFaceModel(model, provider)
 
-					// Only add provider variant if it differs from base model
-					if (JSON.stringify(models[model.id]) !== JSON.stringify(providerModel)) {
-						models[providerKey] = providerModel
-					}
+					// Always add provider variants to show all available providers
+					models[providerKey] = providerModel
 				}
 			}
 		}
@@ -176,17 +175,16 @@ export async function getHuggingFaceModels(): Promise<ModelRecord> {
 		// Update cache
 		cache = {
 			data: models,
+			rawModels: validModels,
 			timestamp: now,
 		}
 
-		console.log(`Fetched ${Object.keys(models).length} HuggingFace models`)
 		return models
 	} catch (error) {
 		console.error("Error fetching HuggingFace models:", error)
 
 		// Return cached data if available
 		if (cache) {
-			console.log("Using stale cached data due to fetch error")
 			return cache.data
 		}
 
@@ -214,6 +212,13 @@ export async function getHuggingFaceModels(): Promise<ModelRecord> {
  */
 export function getCachedHuggingFaceModels(): ModelRecord | null {
 	return cache?.data || null
+}
+
+/**
+ * Get cached raw models for UI display
+ */
+export function getCachedRawHuggingFaceModels(): HuggingFaceModel[] | null {
+	return cache?.rawModels || null
 }
 
 /**
