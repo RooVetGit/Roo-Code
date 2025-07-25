@@ -154,7 +154,6 @@ vi.mock("../../../i18n", () => ({
 	t: vi.fn((key: string, params?: Record<string, any>) => {
 		// Map translation keys to English text
 		const translations: Record<string, string> = {
-			"tools:readFile.imageWithDimensions": "Image file ({{dimensions}}, {{size}} KB)",
 			"tools:readFile.imageWithSize": "Image file ({{size}} KB)",
 			"tools:readFile.imageTooLarge":
 				"Image file is too large ({{size}} MB). The maximum allowed size is {{max}} MB.",
