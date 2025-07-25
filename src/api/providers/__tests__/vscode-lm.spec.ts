@@ -168,14 +168,19 @@ describe("VsCodeLmHandler", () => {
 				chunks.push(chunk)
 			}
 
-			expect(chunks).toHaveLength(2) // Text chunk + usage chunk
-			expect(chunks[0]).toEqual({
+			expect(chunks).toHaveLength(3) // Initial usage + text chunk + final usage chunk
+			expect(chunks[0]).toMatchObject({
+				type: "usage",
+				inputTokens: expect.any(Number),
+				outputTokens: 0,
+			})
+			expect(chunks[1]).toEqual({
 				type: "text",
 				text: responseText,
 			})
-			expect(chunks[1]).toMatchObject({
+			expect(chunks[2]).toMatchObject({
 				type: "usage",
-				inputTokens: expect.any(Number),
+				inputTokens: 0,
 				outputTokens: expect.any(Number),
 			})
 		})
@@ -216,8 +221,13 @@ describe("VsCodeLmHandler", () => {
 				chunks.push(chunk)
 			}
 
-			expect(chunks).toHaveLength(2) // Tool call chunk + usage chunk
-			expect(chunks[0]).toEqual({
+			expect(chunks).toHaveLength(3) // Initial usage + tool call chunk + final usage chunk
+			expect(chunks[0]).toMatchObject({
+				type: "usage",
+				inputTokens: expect.any(Number),
+				outputTokens: 0,
+			})
+			expect(chunks[1]).toEqual({
 				type: "text",
 				text: JSON.stringify({ type: "tool_call", ...toolCallData }),
 			})
@@ -234,7 +244,17 @@ describe("VsCodeLmHandler", () => {
 
 			mockLanguageModelChat.sendRequest.mockRejectedValueOnce(new Error("API Error"))
 
-			await expect(handler.createMessage(systemPrompt, messages).next()).rejects.toThrow("API Error")
+			const stream = handler.createMessage(systemPrompt, messages)
+			// First chunk should be the initial usage
+			const firstChunk = await stream.next()
+			expect(firstChunk.value).toMatchObject({
+				type: "usage",
+				inputTokens: expect.any(Number),
+				outputTokens: 0,
+			})
+
+			// The error should occur when trying to get the next chunk
+			await expect(stream.next()).rejects.toThrow("API Error")
 		})
 	})
 
@@ -262,6 +282,19 @@ describe("VsCodeLmHandler", () => {
 	})
 
 	describe("completePrompt", () => {
+		beforeEach(() => {
+			// Ensure we have a fresh mock for CancellationTokenSource
+			const mockCancellationTokenSource = {
+				token: {
+					isCancellationRequested: false,
+					onCancellationRequested: vi.fn(),
+				},
+				cancel: vi.fn(),
+				dispose: vi.fn(),
+			}
+			;(vscode.CancellationTokenSource as Mock).mockReturnValue(mockCancellationTokenSource)
+		})
+
 		it("should complete single prompt", async () => {
 			const mockModel = { ...mockLanguageModelChat }
 			;(vscode.lm.selectChatModels as Mock).mockResolvedValueOnce([mockModel])

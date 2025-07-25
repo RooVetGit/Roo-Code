@@ -46,6 +46,12 @@ describe("getApiProtocol", () => {
 			expect(getApiProtocol("litellm", "claude-instant")).toBe("openai")
 			expect(getApiProtocol("ollama", "claude-model")).toBe("openai")
 		})
+
+		it("should return 'openai' for vscode-lm provider", () => {
+			expect(getApiProtocol("vscode-lm")).toBe("openai")
+			expect(getApiProtocol("vscode-lm", "copilot-gpt-4")).toBe("openai")
+			expect(getApiProtocol("vscode-lm", "copilot-gpt-3.5")).toBe("openai")
+		})
 	})
 
 	describe("Edge cases", () => {

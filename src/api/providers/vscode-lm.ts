@@ -361,8 +361,20 @@ export class VsCodeLmHandler extends BaseProvider implements SingleCompletionHan
 		// Calculate input tokens before starting the stream
 		const totalInputTokens: number = await this.calculateTotalInputTokens(systemPrompt, vsCodeLmMessages)
 
+		// Yield initial usage with input tokens (similar to Anthropic's message_start)
+		yield {
+			type: "usage",
+			inputTokens: totalInputTokens,
+			outputTokens: 0,
+			// VS Code LM doesn't provide cache token information, so we set them to 0
+			cacheWriteTokens: 0,
+			cacheReadTokens: 0,
+		}
+
 		// Accumulate the text and count at the end of the stream to reduce token counting overhead.
 		let accumulatedText: string = ""
+		let lastTokenCountUpdate: number = 0
+		const TOKEN_UPDATE_INTERVAL = 500 // Update token count every 500 characters
 
 		try {
 			// Create the response stream with minimal required options
@@ -392,6 +404,19 @@ export class VsCodeLmHandler extends BaseProvider implements SingleCompletionHan
 					yield {
 						type: "text",
 						text: chunk.value,
+					}
+
+					// Periodically yield token updates during streaming
+					if (accumulatedText.length - lastTokenCountUpdate > TOKEN_UPDATE_INTERVAL) {
+						const currentOutputTokens = await this.internalCountTokens(accumulatedText)
+						yield {
+							type: "usage",
+							inputTokens: 0,
+							outputTokens: currentOutputTokens,
+							cacheWriteTokens: 0,
+							cacheReadTokens: 0,
+						}
+						lastTokenCountUpdate = accumulatedText.length
 					}
 				} else if (chunk instanceof vscode.LanguageModelToolCallPart) {
 					try {
@@ -448,10 +473,14 @@ export class VsCodeLmHandler extends BaseProvider implements SingleCompletionHan
 			const totalOutputTokens: number = await this.internalCountTokens(accumulatedText)
 
 			// Report final usage after stream completion
+			// Note: We report the total tokens here, not incremental, as the UI expects the final total
 			yield {
 				type: "usage",
-				inputTokens: totalInputTokens,
-				outputTokens: totalOutputTokens,
+				inputTokens: 0, // Already reported at the start
+				outputTokens: totalOutputTokens, // Report the final total
+				// VS Code LM doesn't provide cache token information, so we set them to 0
+				cacheWriteTokens: 0,
+				cacheReadTokens: 0,
 			}
 		} catch (error: unknown) {
 			this.ensureCleanState()
