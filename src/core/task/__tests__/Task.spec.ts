@@ -1386,6 +1386,7 @@ describe("Cline", () => {
 			})
 
 			it("should not create diff strategy when enableDiff is false", async () => {
+				mockProvider.getState.mockResolvedValue({})
 				const task = new Task({
 					provider: mockProvider,
 					apiConfiguration: mockApiConfig,
