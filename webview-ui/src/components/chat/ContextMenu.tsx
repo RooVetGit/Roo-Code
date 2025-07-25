@@ -23,6 +23,7 @@ interface ContextMenuProps {
 	modes?: ModeConfig[]
 	loading?: boolean
 	dynamicSearchResults?: SearchResult[]
+	enableSvnContext?: boolean
 }
 
 const ContextMenu: React.FC<ContextMenuProps> = ({
@@ -36,13 +37,22 @@ const ContextMenu: React.FC<ContextMenuProps> = ({
 	queryItems,
 	modes,
 	dynamicSearchResults = [],
+	enableSvnContext = false,
 }) => {
 	const [materialIconsBaseUri, setMaterialIconsBaseUri] = useState("")
 	const menuRef = useRef<HTMLDivElement>(null)
 
 	const filteredOptions = useMemo(() => {
-		return getContextMenuOptions(searchQuery, inputValue, selectedType, queryItems, dynamicSearchResults, modes)
-	}, [searchQuery, inputValue, selectedType, queryItems, dynamicSearchResults, modes])
+		return getContextMenuOptions(
+			searchQuery,
+			inputValue,
+			selectedType,
+			queryItems,
+			dynamicSearchResults,
+			modes,
+			enableSvnContext,
+		)
+	}, [searchQuery, inputValue, selectedType, queryItems, dynamicSearchResults, modes, enableSvnContext])
 
 	useEffect(() => {
 		if (menuRef.current) {

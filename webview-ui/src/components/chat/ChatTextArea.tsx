@@ -86,6 +86,7 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 			togglePinnedApiConfig,
 			taskHistory,
 			clineMessages,
+			enableSvnContext,
 		} = useExtensionState()
 
 		// Find the ID and display text for the currently selected API configuration
@@ -374,6 +375,7 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 								queryItems,
 								fileSearchResults,
 								allModes,
+								enableSvnContext,
 							)
 							const optionsLength = options.length
 
@@ -411,6 +413,7 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 							queryItems,
 							fileSearchResults,
 							allModes,
+							enableSvnContext,
 						)[selectedMenuIndex]
 						if (
 							selectedOption &&
@@ -501,6 +504,7 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 				fileSearchResults,
 				handleHistoryNavigation,
 				resetHistoryNavigation,
+				enableSvnContext,
 			],
 		)
 
@@ -1271,6 +1275,7 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 									modes={allModes}
 									loading={searchLoading}
 									dynamicSearchResults={fileSearchResults}
+									enableSvnContext={enableSvnContext}
 								/>
 							</div>
 						)}

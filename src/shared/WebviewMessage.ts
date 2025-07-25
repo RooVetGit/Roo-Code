@@ -157,6 +157,7 @@ export interface WebviewMessage {
 		| "codebaseIndexEnabled"
 		| "telemetrySetting"
 		| "showRooIgnoredFiles"
+		| "enableSvnContext"
 		| "testBrowserConnection"
 		| "browserConnectionResult"
 		| "remoteBrowserEnabled"

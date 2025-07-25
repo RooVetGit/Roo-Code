@@ -209,6 +209,7 @@ describe("mergeExtensionState", () => {
 			sharingEnabled: false,
 			profileThresholds: {},
 			hasOpenedModeSelector: false, // Add the new required property
+			enableSvnContext: false, // Add the SVN context property
 		}
 
 		const prevState: ExtensionState = {

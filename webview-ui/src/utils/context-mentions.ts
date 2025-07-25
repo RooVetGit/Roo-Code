@@ -123,6 +123,7 @@ export function getContextMenuOptions(
 	queryItems: ContextMenuQueryItem[],
 	dynamicSearchResults: SearchResult[] = [],
 	modes?: ModeConfig[],
+	enableSvnContext: boolean = false,
 ): ContextMenuQueryItem[] {
 	// Handle slash commands for modes
 	if (query.startsWith("/") && inputValue.startsWith("/")) {
@@ -200,20 +201,25 @@ export function getContextMenuOptions(
 			return commits.length > 0 ? [workingChanges, ...commits] : [workingChanges]
 		}
 
-		if (selectedType === ContextMenuOptionType.Svn) {
+		if (enableSvnContext && selectedType === ContextMenuOptionType.Svn) {
 			const commits = queryItems.filter((item) => item.type === ContextMenuOptionType.Svn)
 			return commits.length > 0 ? [svnWorkingChanges, ...commits] : [svnWorkingChanges]
 		}
 
-		return [
+		const defaultOptions = [
 			{ type: ContextMenuOptionType.Problems },
 			{ type: ContextMenuOptionType.Terminal },
 			{ type: ContextMenuOptionType.URL },
 			{ type: ContextMenuOptionType.Folder },
 			{ type: ContextMenuOptionType.File },
 			{ type: ContextMenuOptionType.Git },
-			{ type: ContextMenuOptionType.Svn },
 		]
+
+		if (enableSvnContext) {
+			defaultOptions.push({ type: ContextMenuOptionType.Svn })
+		}
+
+		return defaultOptions
 	}
 
 	const lowerQuery = query.toLowerCase()
@@ -230,14 +236,14 @@ export function getContextMenuOptions(
 	} else if ("git-changes".startsWith(lowerQuery)) {
 		suggestions.push(workingChanges)
 	}
-	if ("svn".startsWith(lowerQuery)) {
+	if (enableSvnContext && "svn".startsWith(lowerQuery)) {
 		suggestions.push({
 			type: ContextMenuOptionType.Svn,
 			label: "SVN Commits",
 			description: "Search repository history",
 			icon: "$(git-commit)",
 		})
-	} else if ("svn-changes".startsWith(lowerQuery)) {
+	} else if (enableSvnContext && "svn-changes".startsWith(lowerQuery)) {
 		suggestions.push(svnWorkingChanges)
 	}
 	if ("problems".startsWith(lowerQuery)) {
@@ -287,7 +293,7 @@ export function getContextMenuOptions(
 
 	const gitMatches = matchingItems.filter((item) => item.type === ContextMenuOptionType.Git)
 
-	const svnMatches = matchingItems.filter((item) => item.type === ContextMenuOptionType.Svn)
+	const svnMatches = enableSvnContext ? matchingItems.filter((item) => item.type === ContextMenuOptionType.Svn) : []
 
 	// Convert search results to queryItems format
 	const searchResultItems = dynamicSearchResults.map((result) => {

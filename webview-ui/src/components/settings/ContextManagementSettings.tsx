@@ -19,6 +19,7 @@ type ContextManagementSettingsProps = HTMLAttributes<HTMLDivElement> & {
 	maxOpenTabsContext: number
 	maxWorkspaceFiles: number
 	showRooIgnoredFiles?: boolean
+	enableSvnContext?: boolean
 	maxReadFileLine?: number
 	maxConcurrentFileReads?: number
 	profileThresholds?: Record<string, number>
@@ -28,6 +29,7 @@ type ContextManagementSettingsProps = HTMLAttributes<HTMLDivElement> & {
 		| "maxOpenTabsContext"
 		| "maxWorkspaceFiles"
 		| "showRooIgnoredFiles"
+		| "enableSvnContext"
 		| "maxReadFileLine"
 		| "maxConcurrentFileReads"
 		| "profileThresholds"
@@ -41,6 +43,7 @@ export const ContextManagementSettings = ({
 	maxOpenTabsContext,
 	maxWorkspaceFiles,
 	showRooIgnoredFiles,
+	enableSvnContext,
 	setCachedStateField,
 	maxReadFileLine,
 	maxConcurrentFileReads,
@@ -158,6 +161,20 @@ export const ContextManagementSettings = ({
 					</VSCodeCheckbox>
 					<div className="text-vscode-descriptionForeground text-sm mt-1 mb-3">
 						{t("settings:contextManagement.rooignore.description")}
+					</div>
+				</div>
+
+				<div>
+					<VSCodeCheckbox
+						checked={enableSvnContext}
+						onChange={(e: any) => setCachedStateField("enableSvnContext", e.target.checked)}
+						data-testid="enable-svn-context-checkbox">
+						<label className="block font-medium mb-1">
+							{t("settings:contextManagement.svnContext.label")}
+						</label>
+					</VSCodeCheckbox>
+					<div className="text-vscode-descriptionForeground text-sm mt-1 mb-3">
+						{t("settings:contextManagement.svnContext.description")}
 					</div>
 				</div>
 

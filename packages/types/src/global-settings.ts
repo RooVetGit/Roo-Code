@@ -89,6 +89,7 @@ export const globalSettingsSchema = z.object({
 	maxOpenTabsContext: z.number().optional(),
 	maxWorkspaceFiles: z.number().optional(),
 	showRooIgnoredFiles: z.boolean().optional(),
+	enableSvnContext: z.boolean().optional(),
 	maxReadFileLine: z.number().optional(),
 
 	terminalOutputLineLimit: z.number().optional(),

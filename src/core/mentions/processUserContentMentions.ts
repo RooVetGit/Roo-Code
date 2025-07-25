@@ -13,6 +13,7 @@ export async function processUserContentMentions({
 	fileContextTracker,
 	rooIgnoreController,
 	showRooIgnoredFiles = true,
+	enableSvnContext = false,
 }: {
 	userContent: Anthropic.Messages.ContentBlockParam[]
 	cwd: string
@@ -20,6 +21,7 @@ export async function processUserContentMentions({
 	fileContextTracker: FileContextTracker
 	rooIgnoreController?: any
 	showRooIgnoredFiles?: boolean
+	enableSvnContext?: boolean
 }) {
 	// Process userContent array, which contains various block types:
 	// TextBlockParam, ImageBlockParam, ToolUseBlockParam, and ToolResultBlockParam.
@@ -46,6 +48,7 @@ export async function processUserContentMentions({
 							fileContextTracker,
 							rooIgnoreController,
 							showRooIgnoredFiles,
+							enableSvnContext,
 						),
 					}
 				}
@@ -63,6 +66,7 @@ export async function processUserContentMentions({
 								fileContextTracker,
 								rooIgnoreController,
 								showRooIgnoredFiles,
+								enableSvnContext,
 							),
 						}
 					}
@@ -81,6 +85,7 @@ export async function processUserContentMentions({
 										fileContextTracker,
 										rooIgnoreController,
 										showRooIgnoredFiles,
+										enableSvnContext,
 									),
 								}
 							}

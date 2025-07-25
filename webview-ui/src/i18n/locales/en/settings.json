@@ -475,6 +475,10 @@
 			"label": "Show .rooignore'd files in lists and searches",
 			"description": "When enabled, files matching patterns in .rooignore will be shown in lists with a lock symbol. When disabled, these files will be completely hidden from file lists and searches."
 		},
+		"svnContext": {
+			"label": "Enable SVN context features",
+			"description": "When enabled, you can use @svn, @svn-changes, and @r123 in chat to reference SVN commits and working directory changes. When disabled, these SVN-related context mention features will be unavailable."
+		},
 		"maxConcurrentFileReads": {
 			"label": "Concurrent file reads limit",
 			"description": "Maximum number of files the 'read_file' tool can process concurrently. Higher values may speed up reading multiple small files but increase memory usage."

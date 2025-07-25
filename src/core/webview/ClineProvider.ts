@@ -1440,6 +1440,7 @@ export class ClineProvider
 			alwaysAllowFollowupQuestions,
 			followupAutoApproveTimeoutMs,
 			diagnosticsEnabled,
+			enableSvnContext,
 		} = await this.getState()
 
 		const telemetryKey = process.env.POSTHOG_API_KEY
@@ -1561,6 +1562,7 @@ export class ClineProvider
 			alwaysAllowFollowupQuestions: alwaysAllowFollowupQuestions ?? false,
 			followupAutoApproveTimeoutMs: followupAutoApproveTimeoutMs ?? 60000,
 			diagnosticsEnabled: diagnosticsEnabled ?? true,
+			enableSvnContext: enableSvnContext ?? false,
 		}
 	}
 
@@ -1699,6 +1701,7 @@ export class ClineProvider
 			browserToolEnabled: stateValues.browserToolEnabled ?? true,
 			telemetrySetting: stateValues.telemetrySetting || "unset",
 			showRooIgnoredFiles: stateValues.showRooIgnoredFiles ?? true,
+			enableSvnContext: stateValues.enableSvnContext ?? false,
 			maxReadFileLine: stateValues.maxReadFileLine ?? -1,
 			maxConcurrentFileReads: stateValues.maxConcurrentFileReads ?? 5,
 			historyPreviewCollapsed: stateValues.historyPreviewCollapsed ?? false,

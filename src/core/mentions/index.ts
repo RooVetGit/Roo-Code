@@ -81,6 +81,7 @@ export async function parseMentions(
 	fileContextTracker?: FileContextTracker,
 	rooIgnoreController?: RooIgnoreController,
 	showRooIgnoredFiles: boolean = true,
+	enableSvnContext: boolean = false,
 ): Promise<string> {
 	const mentions: Set<string> = new Set()
 	let parsedText = text.replace(mentionRegexGlobal, (match, mention) => {
@@ -96,11 +97,11 @@ export async function parseMentions(
 			return `Workspace Problems (see below for diagnostics)`
 		} else if (mention === "git-changes") {
 			return `Working directory changes (see below for details)`
-		} else if (mention === "svn-changes") {
+		} else if (enableSvnContext && mention === "svn-changes") {
 			return `Working directory changes (see below for details)`
 		} else if (/^[a-f0-9]{7,40}$/.test(mention)) {
 			return `Git commit '${mention}' (see below for commit info)`
-		} else if (/^r?\d+$/.test(mention)) {
+		} else if (enableSvnContext && /^r?\d+$/.test(mention)) {
 			return `SVN revision '${mention}' (see below for commit info)`
 		} else if (mention === "terminal") {
 			return `Terminal Output (see below for output)`
@@ -182,7 +183,7 @@ export async function parseMentions(
 			} catch (error) {
 				parsedText += `\n\n<git_working_state>\nError fetching working state: ${error.message}\n</git_working_state>`
 			}
-		} else if (mention === "svn-changes") {
+		} else if (enableSvnContext && mention === "svn-changes") {
 			try {
 				const svnWorkingState = await getSvnWorkingState(cwd)
 				console.log("[DEBUG] SVN working state object:", JSON.stringify(svnWorkingState, null, 2))
@@ -212,7 +213,7 @@ export async function parseMentions(
 			} catch (error) {
 				parsedText += `\n\n<git_commit hash="${mention}">\nError fetching commit info: ${error.message}\n</git_commit>`
 			}
-		} else if (/^r?\d+$/.test(mention)) {
+		} else if (enableSvnContext && /^r?\d+$/.test(mention)) {
 			try {
 				const commitInfo = await getSvnCommitInfoForMentions(mention, cwd)
 				parsedText += `\n\n<svn_commit revision="${mention}">\n${commitInfo}\n</svn_commit>`

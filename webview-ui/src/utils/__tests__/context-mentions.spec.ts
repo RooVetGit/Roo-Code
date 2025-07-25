@@ -195,7 +195,7 @@ describe("getContextMenuOptions", () => {
 	]
 
 	it("should return all option types for empty query", () => {
-		const result = getContextMenuOptions("", "", null, [])
+		const result = getContextMenuOptions("", "", null, [], [], undefined, true)
 		expect(result).toHaveLength(7)
 		expect(result.map((item) => item.type)).toEqual([
 			ContextMenuOptionType.Problems,

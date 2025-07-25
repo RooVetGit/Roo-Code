@@ -1242,6 +1242,10 @@ export const webviewMessageHandler = async (
 			await updateGlobalState("showRooIgnoredFiles", message.bool ?? true)
 			await provider.postStateToWebview()
 			break
+		case "enableSvnContext":
+			await updateGlobalState("enableSvnContext", message.bool ?? true)
+			await provider.postStateToWebview()
+			break
 		case "hasOpenedModeSelector":
 			await updateGlobalState("hasOpenedModeSelector", message.bool ?? true)
 			await provider.postStateToWebview()

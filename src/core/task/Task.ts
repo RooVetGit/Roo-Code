@@ -1225,7 +1225,8 @@ export class Task extends EventEmitter<ClineEvents> {
 			}),
 		)
 
-		const { showRooIgnoredFiles = true } = (await this.providerRef.deref()?.getState()) ?? {}
+		const { showRooIgnoredFiles = true, enableSvnContext = false } =
+			(await this.providerRef.deref()?.getState()) ?? {}
 
 		const parsedUserContent = await processUserContentMentions({
 			userContent,
@@ -1234,6 +1235,7 @@ export class Task extends EventEmitter<ClineEvents> {
 			fileContextTracker: this.fileContextTracker,
 			rooIgnoreController: this.rooIgnoreController,
 			showRooIgnoredFiles,
+			enableSvnContext,
 		})
 
 		const environmentDetails = await getEnvironmentDetails(this, includeFileDetails)
