@@ -62,7 +62,7 @@ export const HuggingFace = ({ apiConfiguration, setApiConfigurationField }: Hugg
 	// Fetch models when component mounts
 	useEffect(() => {
 		setLoading(true)
-		vscode.postMessage({ type: "requestHuggingFaceModels" })
+		vscode.postMessage({ type: "requestRouterModels" })
 	}, [])
 
 	// Handle messages from extension
@@ -70,8 +70,46 @@ export const HuggingFace = ({ apiConfiguration, setApiConfigurationField }: Hugg
 		const message: ExtensionMessage = event.data
 
 		switch (message.type) {
-			case "huggingFaceModels":
-				setModels(message.huggingFaceModels || [])
+			case "routerModels":
+				// Extract HuggingFace models from routerModels
+				if (message.routerModels?.huggingface) {
+					// Convert from ModelRecord format to HuggingFaceModel array format
+					const modelArray = Object.entries(message.routerModels.huggingface).map(([id, info]) => ({
+						id,
+						_id: id,
+						inferenceProviderMapping: [
+							{
+								provider: "huggingface",
+								providerId: id,
+								status: "live" as const,
+								task: "conversational" as const,
+							},
+						],
+						trendingScore: 0,
+						config: {
+							architectures: [],
+							model_type:
+								info.description
+									?.split(", ")
+									.find((part: string) => part.startsWith("Type: "))
+									?.replace("Type: ", "") || "",
+							tokenizer_config: {
+								model_max_length: info.contextWindow,
+							},
+						},
+						tags: [],
+						pipeline_tag: info.supportsImages
+							? ("image-text-to-text" as const)
+							: ("text-generation" as const),
+						library_name: info.description
+							?.split(", ")
+							.find((part: string) => part.startsWith("Library: "))
+							?.replace("Library: ", ""),
+					}))
+					setModels(modelArray)
+				} else {
+					setModels([])
+				}
 				setLoading(false)
 				break
 		}
