@@ -12,15 +12,18 @@ import { SetExperimentEnabled } from "./types"
 import { SectionHeader } from "./SectionHeader"
 import { Section } from "./Section"
 import { ExperimentalFeature } from "./ExperimentalFeature"
+import { RulesSettings } from "./RulesSettings"
 
 type ExperimentalSettingsProps = HTMLAttributes<HTMLDivElement> & {
 	experiments: Experiments
 	setExperimentEnabled: SetExperimentEnabled
+	hasUnsavedChanges?: boolean
 }
 
 export const ExperimentalSettings = ({
 	experiments,
 	setExperimentEnabled,
+	hasUnsavedChanges,
 	className,
 	...props
 }: ExperimentalSettingsProps) => {
@@ -66,6 +69,8 @@ export const ExperimentalSettings = ({
 						)
 					})}
 			</Section>
+
+			<RulesSettings className="mt-3" hasUnsavedChanges={hasUnsavedChanges} />
 		</div>
 	)
 }

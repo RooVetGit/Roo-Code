@@ -107,10 +107,14 @@ export interface ExtensionMessage {
 		| "shareTaskSuccess"
 		| "codeIndexSettingsSaved"
 		| "codeIndexSecretStatus"
+		| "rulesGenerationStatus"
+		| "existingRuleFiles"
 		| "showDeleteMessageDialog"
 		| "showEditMessageDialog"
 	text?: string
 	payload?: any // Add a generic payload for now, can refine later
+	files?: string[] // For existingRuleFiles
+	sourceFileCount?: number // For existingRuleFiles to show warning for small repos
 	action?:
 		| "chatButtonClicked"
 		| "mcpButtonClicked"
