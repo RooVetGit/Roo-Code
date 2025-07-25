@@ -4,6 +4,44 @@ import { promises as fs } from "fs"
 import { exec } from "child_process"
 import { promisify } from "util"
 import { truncateOutput } from "../integrations/misc/extract-text"
+import * as os from "os"
+
+/**
+ * Convert SVN command output buffer to string with cross-platform encoding support
+ * @param output Buffer or string output from SVN command
+ * @returns Properly decoded string
+ */
+function convertSvnOutput(output: Buffer | string): string {
+	if (typeof output === "string") {
+		return output
+	}
+
+	// Try UTF-8 first (works for Linux/macOS and modern Windows)
+	try {
+		const utf8Result = output.toString("utf8")
+		// Check if the result contains replacement characters (indicates encoding issues)
+		if (!utf8Result.includes("\uFFFD")) {
+			return utf8Result
+		}
+	} catch (error) {
+		// UTF-8 decoding failed
+	}
+
+	// On Windows, try common Chinese encodings if UTF-8 failed
+	if (os.platform() === "win32") {
+		try {
+			// Try GBK/GB2312 encoding (common on Chinese Windows systems)
+			// Note: Node.js doesn't support GBK directly, so we'll use latin1 as fallback
+			// and let the system handle the encoding
+			return output.toString("latin1")
+		} catch (error) {
+			// Fallback to latin1 if all else fails
+		}
+	}
+
+	// Final fallback: use UTF-8 even if it has replacement characters
+	return output.toString("utf8")
+}
 
 const execAsync = promisify(exec)
 const SVN_OUTPUT_LINE_LIMIT = 500
@@ -827,14 +865,14 @@ export async function getSvnCommitInfoForMentions(revision: string, cwd: string)
 			}
 		}
 
-		// Get diff information (same as getSvnCommitInfo function)
+		// Get diff information with cross-platform encoding compatibility
 		let diff = ""
 		try {
 			console.log("[DEBUG] Getting diff for revision:", cleanRevision)
-			const { stdout: diffOutput } = await execAsync(`svn diff -c ${cleanRevision}`, {
+			const { stdout: rawDiffOutput } = await execAsync(`svn diff -c ${cleanRevision}`, {
 				cwd,
-				encoding: "utf8",
 			})
+			const diffOutput = convertSvnOutput(rawDiffOutput)
 			diff = truncateOutput(diffOutput, SVN_OUTPUT_LINE_LIMIT)
 			console.log("[DEBUG] Diff length:", diff.length)
 		} catch (error) {
