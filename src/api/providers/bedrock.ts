@@ -224,8 +224,8 @@ export class AwsBedrockHandler extends BaseProvider implements SingleCompletionH
 
 		if (this.options.awsUseApiKey && this.options.awsApiKey) {
 			// Use API key/token-based authentication if enabled and API key is set
-			;(clientConfig as any).token = { token: this.options.awsApiKey }
-			;(clientConfig as any).authSchemePreference = ["httpBearerAuth"] // Otherwise there's no end of credential problems.
+			clientConfig.token = { token: this.options.awsApiKey }
+			clientConfig.authSchemePreference = ["httpBearerAuth"] // Otherwise there's no end of credential problems.
 		} else if (this.options.awsUseProfile && this.options.awsProfile) {
 			// Use profile-based credentials if enabled and profile is set
 			clientConfig.credentials = fromIni({

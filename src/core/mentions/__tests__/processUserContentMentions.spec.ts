@@ -52,6 +52,8 @@ describe("processUserContentMentions", () => {
 				mockFileContextTracker,
 				mockRooIgnoreController,
 				true,
+				true, // includeDiagnosticMessages
+				50, // maxDiagnosticMessages
 				100,
 			)
 		})
@@ -79,6 +81,8 @@ describe("processUserContentMentions", () => {
 				mockFileContextTracker,
 				mockRooIgnoreController,
 				true,
+				true, // includeDiagnosticMessages
+				50, // maxDiagnosticMessages
 				undefined,
 			)
 		})
@@ -107,6 +111,8 @@ describe("processUserContentMentions", () => {
 				mockFileContextTracker,
 				mockRooIgnoreController,
 				true,
+				true, // includeDiagnosticMessages
+				50, // maxDiagnosticMessages
 				-1,
 			)
 		})
@@ -309,6 +315,8 @@ describe("processUserContentMentions", () => {
 				mockFileContextTracker,
 				undefined,
 				true, // showRooIgnoredFiles should default to true
+				true, // includeDiagnosticMessages
+				50, // maxDiagnosticMessages
 				undefined,
 			)
 		})
@@ -336,6 +344,8 @@ describe("processUserContentMentions", () => {
 				mockFileContextTracker,
 				undefined,
 				false,
+				true, // includeDiagnosticMessages
+				50, // maxDiagnosticMessages
 				undefined,
 			)
 		})
