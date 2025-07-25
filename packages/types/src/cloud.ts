@@ -96,6 +96,7 @@ export const organizationCloudSettingsSchema = z.object({
 	recordTaskMessages: z.boolean().optional(),
 	enableTaskSharing: z.boolean().optional(),
 	taskShareExpirationDays: z.number().int().positive().optional(),
+	allowMembersViewAllTasks: z.boolean().optional(),
 })
 
 export type OrganizationCloudSettings = z.infer<typeof organizationCloudSettingsSchema>
