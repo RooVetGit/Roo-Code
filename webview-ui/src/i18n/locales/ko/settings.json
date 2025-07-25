@@ -12,7 +12,11 @@
 		"title": "설정",
 		"saveButtonTooltip": "변경 사항 저장",
 		"nothingChangedTooltip": "변경 사항 없음",
-		"doneButtonTooltip": "저장되지 않은 변경 사항을 버리고 설정 패널 닫기"
+		"doneButtonTooltip": "저장되지 않은 변경 사항을 버리고 설정 패널 닫기",
+		"searchPlaceholder": "Search settings...",
+		"searchTooltip": "Search settings",
+		"clearSearchTooltip": "Clear search",
+		"noSearchResults": "No settings match your search"
 	},
 	"unsavedChangesDialog": {
 		"title": "저장되지 않은 변경 사항",
@@ -31,10 +35,15 @@
 		"prompts": "프롬프트",
 		"experimental": "실험적",
 		"language": "언어",
-		"about": "Roo Code 정보"
+		"about": "Roo Code 정보",
+		"advanced": "Advanced"
 	},
 	"prompts": {
-		"description": "프롬프트 향상, 코드 설명, 문제 해결과 같은 빠른 작업에 사용되는 지원 프롬프트를 구성합니다. 이러한 프롬프트는 Roo가 일반적인 개발 작업에 대해 더 나은 지원을 제공하는 데 도움이 됩니다."
+		"description": "프롬프트 향상, 코드 설명, 문제 해결과 같은 빠른 작업에 사용되는 지원 프롬프트를 구성합니다. 이러한 프롬프트는 Roo가 일반적인 개발 작업에 대해 더 나은 지원을 제공하는 데 도움이 됩니다.",
+		"customSupportPrompts": {
+			"label": "Custom Support Prompts",
+			"description": "Add custom instructions or prompts to guide Roo's behavior"
+		}
 	},
 	"codeIndex": {
 		"title": "코드베이스 인덱싱",
@@ -148,7 +157,8 @@
 			"protected": {
 				"label": "보호된 파일 포함",
 				"description": "Roo가 보호된 파일(.rooignore 및 .roo/ 구성 파일 등)을 승인 없이 생성하고 편집할 수 있도록 허용합니다."
-			}
+			},
+			"delayDescription": "Wait time in milliseconds after file writes before diagnostics are updated"
 		},
 		"browser": {
 			"label": "브라우저",
@@ -157,7 +167,8 @@
 		"retry": {
 			"label": "재시도",
 			"description": "서버가 오류 응답을 반환할 때 자동으로 실패한 API 요청 재시도",
-			"delayLabel": "요청 재시도 전 지연"
+			"delayLabel": "요청 재시도 전 지연",
+			"delayDescription": "Time to wait in seconds before retrying a failed request"
 		},
 		"mcp": {
 			"label": "MCP",
@@ -174,14 +185,21 @@
 		"followupQuestions": {
 			"label": "질문",
 			"description": "설정된 시간이 지나면 후속 질문에 대한 첫 번째 제안 답변을 자동으로 선택합니다",
-			"timeoutLabel": "첫 번째 답변을 자동 선택하기 전 대기 시간"
+			"timeoutLabel": "첫 번째 답변을 자동 선택하기 전 대기 시간",
+			"timeoutDescription": "Time to wait before auto-selecting the first answer"
 		},
 		"execute": {
 			"label": "실행",
 			"description": "승인 없이 자동으로 허용된 터미널 명령 실행",
-			"allowedCommands": "허용된 자동 실행 명령",
+			"allowedCommands": {
+				"label": "Allowed Commands",
+				"description": "Commands that Roo can execute automatically (one per line, supports wildcards)"
+			},
 			"allowedCommandsDescription": "\"실행 작업 항상 승인\"이 활성화되었을 때 자동 실행될 수 있는 명령 접두사. 모든 명령을 허용하려면 * 추가(주의해서 사용)",
-			"deniedCommands": "거부된 명령",
+			"deniedCommands": {
+				"label": "Denied Commands",
+				"description": "Commands that Roo is explicitly forbidden from executing (one per line, supports wildcards)"
+			},
 			"deniedCommandsDescription": "승인을 요청하지 않고 자동으로 거부될 명령 접두사. 허용된 명령과 충돌하는 경우 가장 긴 접두사 일치가 우선됩니다. 모든 명령을 거부하려면 * 추가",
 			"commandPlaceholder": "명령 접두사 입력(예: 'git ')",
 			"deniedCommandPlaceholder": "거부할 명령 접두사 입력(예: 'rm -rf')",
@@ -195,7 +213,8 @@
 		"apiRequestLimit": {
 			"title": "최대 요청 수",
 			"description": "작업을 계속하기 위한 승인을 요청하기 전에 자동으로 이 수의 API 요청을 수행합니다.",
-			"unlimited": "무제한"
+			"unlimited": "무제한",
+			"label": "Max Requests"
 		},
 		"selectOptionsFirst": "자동 승인을 활성화하려면 아래에서 하나 이상의 옵션을 선택하세요"
 	},
@@ -242,7 +261,8 @@
 			"hint": "최신 모델을 보려면 설정을 다시 열어주세요.",
 			"loading": "모델 목록 새로고침 중...",
 			"success": "모델 목록이 성공적으로 새로고침되었습니다!",
-			"error": "모델 목록 새로고침에 실패했습니다. 다시 시도해 주세요."
+			"error": "모델 목록 새로고침에 실패했습니다. 다시 시도해 주세요.",
+			"missingConfig": "Please configure API settings first"
 		},
 		"getRequestyApiKey": "Requesty API 키 받기",
 		"openRouterTransformsText": "프롬프트와 메시지 체인을 컨텍스트 크기로 압축 (<a>OpenRouter Transforms</a>)",
@@ -410,7 +430,9 @@
 			"placeholder": "기본값: claude",
 			"maxTokensLabel": "최대 출력 토큰",
 			"maxTokensDescription": "Claude Code 응답의 최대 출력 토큰 수. 기본값은 8000입니다."
-		}
+		},
+		"apiProviderDescription": "Select the API provider for AI model access",
+		"modelDescription": "Choose the AI model to use for this configuration"
 	},
 	"browser": {
 		"enable": {
@@ -434,7 +456,10 @@
 		"remote": {
 			"label": "원격 브라우저 연결 사용",
 			"description": "원격 디버깅이 활성화된 Chrome 브라우저에 연결합니다(--remote-debugging-port=9222).",
-			"urlPlaceholder": "사용자 정의 URL(예: http://localhost:9222)",
+			"urlPlaceholder": {
+				"label": "Remote Browser Host",
+				"description": "WebSocket URL for the remote browser connection"
+			},
 			"testButton": "연결 테스트",
 			"testingButton": "테스트 중...",
 			"instructions": "DevTools 프로토콜 호스트 주소를 입력하거나 Chrome 로컬 인스턴스를 자동으로 발견하기 위해 비워두세요. 연결 테스트 버튼은 제공된 경우 사용자 정의 URL을 시도하거나, 필드가 비어 있으면 자동으로 발견합니다."
@@ -450,12 +475,14 @@
 		"sound": {
 			"label": "사운드 효과 활성화",
 			"description": "활성화되면 Roo는 알림 및 이벤트에 대한 사운드 효과를 재생합니다.",
-			"volumeLabel": "볼륨"
+			"volumeLabel": "볼륨",
+			"volumeDescription": "Adjust the volume level for sound notifications (0-100)"
 		},
 		"tts": {
 			"label": "음성 합성 활성화",
 			"description": "활성화되면 Roo는 음성 합성을 사용하여 응답을 소리내어 읽습니다.",
-			"speedLabel": "속도"
+			"speedLabel": "속도",
+			"speedDescription": "Adjust the speech rate for text-to-speech (0.1-10.0)"
 		}
 	},
 	"contextManagement": {
@@ -526,7 +553,8 @@
 			"defaultDescription": "컨텍스트가 이 비율에 도달하면 사용자 정의 설정이 없는 한 모든 프로필에 대해 자동으로 압축됩니다",
 			"profileDescription": "이 프로필만을 위한 사용자 정의 임계값 (글로벌 기본값 재정의)",
 			"inheritDescription": "이 프로필은 글로벌 기본 임계값을 상속합니다 ({{threshold}}%)",
-			"usesGlobal": "(글로벌 {{threshold}}% 사용)"
+			"usesGlobal": "(글로벌 {{threshold}}% 사용)",
+			"description": "Configure when context condensing should be triggered based on token usage"
 		}
 	},
 	"terminal": {
@@ -615,6 +643,10 @@
 		"todoList": {
 			"label": "할 일 목록 도구 활성화",
 			"description": "활성화하면 Roo가 작업 진행 상황을 추적하기 위한 할 일 목록을 만들고 관리할 수 있습니다. 이는 복잡한 작업을 관리 가능한 단계로 구성하는 데 도움이 됩니다."
+		},
+		"mcpEnabled": {
+			"label": "Enable MCP",
+			"description": "Enable Model Context Protocol (MCP) for enhanced model capabilities"
 		}
 	},
 	"experimental": {
@@ -756,5 +788,8 @@
 		"useCustomArn": "사용자 지정 ARN 사용..."
 	},
 	"includeMaxOutputTokens": "최대 출력 토큰 포함",
-	"includeMaxOutputTokensDescription": "API 요청에서 최대 출력 토큰 매개변수를 전송합니다. 일부 제공업체는 이를 지원하지 않을 수 있습니다."
+	"includeMaxOutputTokensDescription": "API 요청에서 최대 출력 토큰 매개변수를 전송합니다. 일부 제공업체는 이를 지원하지 않을 수 있습니다.",
+	"language": {
+		"description": "Select your preferred language for the interface"
+	}
 }

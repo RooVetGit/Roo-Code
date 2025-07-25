@@ -132,6 +132,10 @@
 	--color-vscode-textLink-foreground: var(--vscode-textLink-foreground);
 	--color-vscode-textCodeBlock-background: var(--vscode-textCodeBlock-background);
 	--color-vscode-button-hoverBackground: var(--vscode-button-hoverBackground);
+
+	--color-vscode-editor-findMatchHighlightBackground: var(--vscode-editor-findMatchHighlightBackground);
+	--color-vscode-icon-foreground: var(--vscode-icon-foreground);
+	--color-vscode-input-placeholderForeground: var(--vscode-input-placeholderForeground);
 }
 
 @layer base {
@@ -478,4 +482,21 @@ input[cmdk-input]:focus {
 	transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
 	transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
 	transition-duration: 150ms;
+}
+
+/* Settings highlight animation */
+@keyframes setting-highlight {
+	0% {
+		background-color: color-mix(in srgb, var(--vscode-list-activeSelectionBackground) 60%, transparent);
+		box-shadow: 0 0 0 2px var(--vscode-focusBorder);
+	}
+	100% {
+		background-color: transparent;
+		box-shadow: 0 0 0 0 transparent;
+	}
+}
+
+.setting-highlight {
+	animation: setting-highlight 2s ease-out;
+	border-radius: 4px;
 }

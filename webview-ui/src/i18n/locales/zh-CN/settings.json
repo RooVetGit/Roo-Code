@@ -12,7 +12,11 @@
 		"title": "设置",
 		"saveButtonTooltip": "保存更改",
 		"nothingChangedTooltip": "暂无更改",
-		"doneButtonTooltip": "放弃未保存的更改并关闭设置面板"
+		"doneButtonTooltip": "放弃未保存的更改并关闭设置面板",
+		"searchPlaceholder": "Search settings...",
+		"searchTooltip": "Search settings",
+		"clearSearchTooltip": "Clear search",
+		"noSearchResults": "No settings match your search"
 	},
 	"unsavedChangesDialog": {
 		"title": "未保存的更改",
@@ -31,10 +35,15 @@
 		"prompts": "提示词",
 		"experimental": "实验性",
 		"language": "语言",
-		"about": "关于 Roo Code"
+		"about": "关于 Roo Code",
+		"advanced": "Advanced"
 	},
 	"prompts": {
-		"description": "配置用于快速操作的支持提示词，如增强提示词、解释代码和修复问题。这些提示词帮助 Roo 为常见开发任务提供更好的支持。"
+		"description": "配置用于快速操作的支持提示词，如增强提示词、解释代码和修复问题。这些提示词帮助 Roo 为常见开发任务提供更好的支持。",
+		"customSupportPrompts": {
+			"label": "Custom Support Prompts",
+			"description": "Add custom instructions or prompts to guide Roo's behavior"
+		}
 	},
 	"codeIndex": {
 		"title": "代码库索引",
@@ -148,7 +157,8 @@
 			"protected": {
 				"label": "包含受保护的文件",
 				"description": "允许 Roo 创建和编辑受保护的文件（如 .rooignore 和 .roo/ 配置文件），无需批准。"
-			}
+			},
+			"delayDescription": "Wait time in milliseconds after file writes before diagnostics are updated"
 		},
 		"browser": {
 			"label": "浏览器",
@@ -157,7 +167,8 @@
 		"retry": {
 			"label": "重试",
 			"description": "当服务器返回错误响应时自动重试失败的 API 请求",
-			"delayLabel": "重试请求前的延迟"
+			"delayLabel": "重试请求前的延迟",
+			"delayDescription": "Time to wait in seconds before retrying a failed request"
 		},
 		"mcp": {
 			"label": "MCP",
@@ -174,14 +185,21 @@
 		"followupQuestions": {
 			"label": "问题",
 			"description": "在配置的超时时间后自动选择后续问题的第一个建议答案",
-			"timeoutLabel": "自动选择第一个答案前的等待时间"
+			"timeoutLabel": "自动选择第一个答案前的等待时间",
+			"timeoutDescription": "Time to wait before auto-selecting the first answer"
 		},
 		"execute": {
 			"label": "执行",
 			"description": "自动执行白名单中的命令而无需批准",
-			"allowedCommands": "命令白名单",
+			"allowedCommands": {
+				"label": "Allowed Commands",
+				"description": "Commands that Roo can execute automatically (one per line, supports wildcards)"
+			},
 			"allowedCommandsDescription": "当\"自动批准命令行操作\"启用时可以自动执行的命令前缀。添加 * 以允许所有命令（谨慎使用）。",
-			"deniedCommands": "拒绝的命令",
+			"deniedCommands": {
+				"label": "Denied Commands",
+				"description": "Commands that Roo is explicitly forbidden from executing (one per line, supports wildcards)"
+			},
 			"deniedCommandsDescription": "将自动拒绝的命令前缀，无需用户批准。与允许命令冲突时，最长前缀匹配优先。添加 * 拒绝所有命令。",
 			"commandPlaceholder": "输入命令前缀（例如 'git '）",
 			"deniedCommandPlaceholder": "输入要拒绝的命令前缀（例如 'rm -rf'）",
@@ -195,7 +213,8 @@
 		"apiRequestLimit": {
 			"title": "最大请求数",
 			"description": "在请求批准以继续执行任务之前，自动发出此数量的 API 请求。",
-			"unlimited": "无限制"
+			"unlimited": "无限制",
+			"label": "Max Requests"
 		},
 		"selectOptionsFirst": "请至少选择以下一个选项以启用自动批准"
 	},
@@ -242,7 +261,8 @@
 			"hint": "请重新打开设置以查看最新模型。",
 			"loading": "正在刷新模型列表...",
 			"success": "模型列表刷新成功！",
-			"error": "刷新模型列表失败。请重试。"
+			"error": "刷新模型列表失败。请重试。",
+			"missingConfig": "Please configure API settings first"
 		},
 		"getRequestyApiKey": "获取 Requesty API 密钥",
 		"openRouterTransformsText": "自动压缩提示词和消息链到上下文长度限制内 (<a>OpenRouter转换</a>)",
@@ -410,7 +430,9 @@
 			"placeholder": "默认：claude",
 			"maxTokensLabel": "最大输出 Token",
 			"maxTokensDescription": "Claude Code 响应的最大输出 Token 数量。默认为 8000。"
-		}
+		},
+		"apiProviderDescription": "Select the API provider for AI model access",
+		"modelDescription": "Choose the AI model to use for this configuration"
 	},
 	"browser": {
 		"enable": {
@@ -434,7 +456,10 @@
 		"remote": {
 			"label": "使用远程浏览器连接",
 			"description": "连接到启用远程调试的 Chrome 浏览器 (--remote-debugging-port=9222)。",
-			"urlPlaceholder": "自定义 URL（例如 http://localhost:9222）",
+			"urlPlaceholder": {
+				"label": "Remote Browser Host",
+				"description": "WebSocket URL for the remote browser connection"
+			},
 			"testButton": "测试连接",
 			"testingButton": "测试中...",
 			"instructions": "输入 DevTools 协议主机地址或留空以自动发现本地 Chrome 实例。测试连接按钮将尝试使用自定义 URL（如果提供），或者如果字段为空则自动发现。"
@@ -450,12 +475,14 @@
 		"sound": {
 			"label": "启用声音通知",
 			"description": "启用后，Roo 将为通知和事件播放音效。",
-			"volumeLabel": "音量"
+			"volumeLabel": "音量",
+			"volumeDescription": "Adjust the volume level for sound notifications (0-100)"
 		},
 		"tts": {
 			"label": "启用文本转语音",
 			"description": "启用后，Roo 将使用文本转语音功能朗读其响应。",
-			"speedLabel": "速度"
+			"speedLabel": "速度",
+			"speedDescription": "Adjust the speech rate for text-to-speech (0.1-10.0)"
 		}
 	},
 	"contextManagement": {
@@ -526,7 +553,8 @@
 			"defaultDescription": "当上下文达到此百分比时，将自动为所有配置文件压缩，除非它们有自定义设置",
 			"profileDescription": "仅此配置文件的自定义阈值（覆盖全局默认）",
 			"inheritDescription": "此配置文件继承全局默认阈值（{{threshold}}%）",
-			"usesGlobal": "（使用全局 {{threshold}}%）"
+			"usesGlobal": "（使用全局 {{threshold}}%）",
+			"description": "Configure when context condensing should be triggered based on token usage"
 		}
 	},
 	"terminal": {
@@ -615,6 +643,10 @@
 		"todoList": {
 			"label": "启用任务清单工具",
 			"description": "启用后，Roo 可以创建和管理任务清单来跟踪任务进度。这有助于将复杂任务组织成可管理的步骤。"
+		},
+		"mcpEnabled": {
+			"label": "Enable MCP",
+			"description": "Enable Model Context Protocol (MCP) for enhanced model capabilities"
 		}
 	},
 	"experimental": {
@@ -756,5 +788,8 @@
 		"useCustomArn": "使用自定义 ARN..."
 	},
 	"includeMaxOutputTokens": "包含最大输出 Token 数",
-	"includeMaxOutputTokensDescription": "在 API 请求中发送最大输出 Token 参数。某些提供商可能不支持此功能。"
+	"includeMaxOutputTokensDescription": "在 API 请求中发送最大输出 Token 参数。某些提供商可能不支持此功能。",
+	"language": {
+		"description": "Select your preferred language for the interface"
+	}
 }

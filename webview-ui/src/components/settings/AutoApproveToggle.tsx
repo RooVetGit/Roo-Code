@@ -124,6 +124,7 @@ export const AutoApproveToggle = ({ onToggle, ...props }: AutoApproveToggleProps
 						aria-label={t(labelKey)}
 						aria-pressed={!!props[key]}
 						data-testid={testId}
+						data-setting-id={key}
 						className={cn(" aspect-square h-[80px]", !props[key] && "opacity-50")}>
 						<span className={cn("flex flex-col items-center gap-1")}>
 							<span className={`codicon codicon-${icon}`} />

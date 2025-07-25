@@ -138,6 +138,12 @@
 			"NEW_TASK": {
 				"label": "Yeni Görev Başlat",
 				"description": "Girdiyle yeni bir görev başlat. Komut paletinde kullanılabilir."
+			},
+			"enhance": {
+				"label": "Enhance"
+			},
+			"condense": {
+				"label": "Condense"
 			}
 		}
 	},

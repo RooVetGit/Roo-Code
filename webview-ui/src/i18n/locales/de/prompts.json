@@ -141,6 +141,12 @@
 			"NEW_TASK": {
 				"label": "Neue Aufgabe starten",
 				"description": "Starte eine neue Aufgabe mit deiner Eingabe. Verfügbar in der Befehlspalette."
+			},
+			"enhance": {
+				"label": "Enhance"
+			},
+			"condense": {
+				"label": "Condense"
 			}
 		}
 	},
@@ -205,5 +211,15 @@
 		"descriptionNoRules": "Möchten Sie diesen benutzerdefinierten Modus wirklich löschen?",
 		"confirm": "Löschen",
 		"cancel": "Abbrechen"
+	},
+	"TODO: supportPrompts": {
+		"TODO: types": {
+			"TODO: enhance": {
+				"TODO: label": "Enhance"
+			},
+			"TODO: condense": {
+				"TODO: label": "Condense"
+			}
+		}
 	}
 }

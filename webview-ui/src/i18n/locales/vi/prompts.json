@@ -138,6 +138,12 @@
 			"NEW_TASK": {
 				"label": "Bắt đầu tác vụ mới",
 				"description": "Bắt đầu tác vụ mới với nội dung đã nhập. Có sẵn trong bảng lệnh."
+			},
+			"enhance": {
+				"label": "Enhance"
+			},
+			"condense": {
+				"label": "Condense"
 			}
 		}
 	},

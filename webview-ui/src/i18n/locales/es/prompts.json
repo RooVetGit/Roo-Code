@@ -141,6 +141,12 @@
 			"NEW_TASK": {
 				"label": "Iniciar nueva tarea",
 				"description": "Inicia una nueva tarea con entrada del usuario. Disponible en la Paleta de comandos."
+			},
+			"enhance": {
+				"label": "Enhance"
+			},
+			"condense": {
+				"label": "Condense"
 			}
 		}
 	},
@@ -205,5 +211,15 @@
 		"descriptionNoRules": "¿Estás seguro de que quieres eliminar este modo personalizado?",
 		"confirm": "Eliminar",
 		"cancel": "Cancelar"
+	},
+	"TODO: supportPrompts": {
+		"TODO: types": {
+			"TODO: enhance": {
+				"TODO: label": "Enhance"
+			},
+			"TODO: condense": {
+				"TODO: label": "Condense"
+			}
+		}
 	}
 }

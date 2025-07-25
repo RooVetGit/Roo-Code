@@ -141,6 +141,12 @@
 			"NEW_TASK": {
 				"label": "Mulai Tugas Baru",
 				"description": "Mulai tugas baru dengan input pengguna. Tersedia di Command Palette."
+			},
+			"enhance": {
+				"label": "Enhance"
+			},
+			"condense": {
+				"label": "Condense"
 			}
 		}
 	},

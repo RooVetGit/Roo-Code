@@ -141,6 +141,12 @@
 			"NEW_TASK": {
 				"label": "Rozpocznij nowe zadanie",
 				"description": "Rozpocznij nowe zadanie z wprowadzonymi danymi. Dostępne w palecie poleceń."
+			},
+			"enhance": {
+				"label": "Enhance"
+			},
+			"condense": {
+				"label": "Condense"
 			}
 		}
 	},

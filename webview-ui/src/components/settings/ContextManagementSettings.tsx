@@ -98,7 +98,7 @@ export const ContextManagementSettings = ({
 			</SectionHeader>
 
 			<Section>
-				<div>
+				<div data-setting-id="maxOpenTabsContext">
 					<span className="block font-medium mb-1">{t("settings:contextManagement.openTabs.label")}</span>
 					<div className="flex items-center gap-2">
 						<Slider
@@ -116,7 +116,7 @@ export const ContextManagementSettings = ({
 					</div>
 				</div>
 
-				<div>
+				<div data-setting-id="maxWorkspaceFiles">
 					<span className="block font-medium mb-1">
 						{t("settings:contextManagement.workspaceFiles.label")}
 					</span>
@@ -136,7 +136,7 @@ export const ContextManagementSettings = ({
 					</div>
 				</div>
 
-				<div>
+				<div data-setting-id="maxConcurrentFileReads">
 					<span className="block font-medium mb-1">
 						{t("settings:contextManagement.maxConcurrentFileReads.label")}
 					</span>
@@ -156,7 +156,7 @@ export const ContextManagementSettings = ({
 					</div>
 				</div>
 
-				<div>
+				<div data-setting-id="showRooIgnoredFiles">
 					<VSCodeCheckbox
 						checked={showRooIgnoredFiles}
 						onChange={(e: any) => setCachedStateField("showRooIgnoredFiles", e.target.checked)}
@@ -170,7 +170,7 @@ export const ContextManagementSettings = ({
 					</div>
 				</div>
 
-				<div>
+				<div data-setting-id="maxReadFileLine">
 					<div className="flex flex-col gap-2">
 						<span className="font-medium">{t("settings:contextManagement.maxReadFile.label")}</span>
 						<div className="flex items-center gap-4">
@@ -296,19 +296,21 @@ export const ContextManagementSettings = ({
 				</div>
 			</Section>
 			<Section className="pt-2">
-				<VSCodeCheckbox
-					checked={autoCondenseContext}
-					onChange={(e: any) => setCachedStateField("autoCondenseContext", e.target.checked)}
-					data-testid="auto-condense-context-checkbox">
-					<span className="font-medium">{t("settings:contextManagement.autoCondenseContext.name")}</span>
-				</VSCodeCheckbox>
+				<div data-setting-id="autoCondenseContext">
+					<VSCodeCheckbox
+						checked={autoCondenseContext}
+						onChange={(e: any) => setCachedStateField("autoCondenseContext", e.target.checked)}
+						data-testid="auto-condense-context-checkbox">
+						<span className="font-medium">{t("settings:contextManagement.autoCondenseContext.name")}</span>
+					</VSCodeCheckbox>
+				</div>
 				{autoCondenseContext && (
 					<div className="flex flex-col gap-3 pl-3 border-l-2 border-vscode-button-background">
 						<div className="flex items-center gap-4 font-bold">
 							<FoldVertical size={16} />
 							<div>{t("settings:contextManagement.condensingThreshold.label")}</div>
 						</div>
-						<div>
+						<div data-setting-id="condensingApiConfigId">
 							<Select
 								value={selectedThresholdProfile || "default"}
 								onValueChange={(value) => {
@@ -353,7 +355,7 @@ export const ContextManagementSettings = ({
 						</div>
 
 						{/* Threshold Slider */}
-						<div>
+						<div data-setting-id="autoCondenseContextPercent">
 							<div className="flex items-center gap-2">
 								<Slider
 									min={10}

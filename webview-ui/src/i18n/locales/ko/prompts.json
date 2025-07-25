@@ -141,6 +141,12 @@
 			"NEW_TASK": {
 				"label": "새 작업 시작",
 				"description": "입력한 내용으로 새 작업을 시작할 수 있습니다. 명령 팔레트에서 이용 가능합니다."
+			},
+			"enhance": {
+				"label": "Enhance"
+			},
+			"condense": {
+				"label": "Condense"
 			}
 		}
 	},

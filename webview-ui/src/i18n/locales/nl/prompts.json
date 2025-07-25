@@ -141,6 +141,12 @@
 			"NEW_TASK": {
 				"label": "Nieuwe taak starten",
 				"description": "Start een nieuwe taak met gebruikersinvoer. Beschikbaar via de Command Palette."
+			},
+			"enhance": {
+				"label": "Enhance"
+			},
+			"condense": {
+				"label": "Condense"
 			}
 		}
 	},

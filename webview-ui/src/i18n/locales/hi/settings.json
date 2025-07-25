@@ -12,7 +12,11 @@
 		"title": "सेटिंग्स",
 		"saveButtonTooltip": "परिवर्तन सहेजें",
 		"nothingChangedTooltip": "कुछ भी नहीं बदला",
-		"doneButtonTooltip": "असहेजे परिवर्तनों को छोड़ें और सेटिंग्स पैनल बंद करें"
+		"doneButtonTooltip": "असहेजे परिवर्तनों को छोड़ें और सेटिंग्स पैनल बंद करें",
+		"searchPlaceholder": "Search settings...",
+		"searchTooltip": "Search settings",
+		"clearSearchTooltip": "Clear search",
+		"noSearchResults": "No settings match your search"
 	},
 	"unsavedChangesDialog": {
 		"title": "असहेजे परिवर्तन",
@@ -31,10 +35,15 @@
 		"prompts": "प्रॉम्प्ट्स",
 		"experimental": "प्रायोगिक",
 		"language": "भाषा",
-		"about": "परिचय"
+		"about": "परिचय",
+		"advanced": "Advanced"
 	},
 	"prompts": {
-		"description": "प्रॉम्प्ट्स को बेहतर बनाना, कोड की व्याख्या करना और समस्याओं को ठीक करना जैसी त्वरित कार्रवाइयों के लिए उपयोग किए जाने वाले सहायक प्रॉम्प्ट्स को कॉन्फ़िगर करें। ये प्रॉम्प्ट्स Roo को सामान्य विकास कार्यों के लिए बेहतर सहायता प्रदान करने में मदद करते हैं।"
+		"description": "प्रॉम्प्ट्स को बेहतर बनाना, कोड की व्याख्या करना और समस्याओं को ठीक करना जैसी त्वरित कार्रवाइयों के लिए उपयोग किए जाने वाले सहायक प्रॉम्प्ट्स को कॉन्फ़िगर करें। ये प्रॉम्प्ट्स Roo को सामान्य विकास कार्यों के लिए बेहतर सहायता प्रदान करने में मदद करते हैं।",
+		"customSupportPrompts": {
+			"label": "Custom Support Prompts",
+			"description": "Add custom instructions or prompts to guide Roo's behavior"
+		}
 	},
 	"codeIndex": {
 		"title": "कोडबेस इंडेक्सिंग",
@@ -148,7 +157,8 @@
 			"protected": {
 				"label": "संरक्षित फाइलें शामिल करें",
 				"description": "Roo को अनुमोदन की आवश्यकता के बिना संरक्षित फाइलें (.rooignore और .roo/ कॉन्फ़िगरेशन फाइलें जैसी) बनाने और संपादित करने की अनुमति दें।"
-			}
+			},
+			"delayDescription": "Wait time in milliseconds after file writes before diagnostics are updated"
 		},
 		"browser": {
 			"label": "ब्राउज़र",
@@ -157,7 +167,8 @@
 		"retry": {
 			"label": "पुनः प्रयास",
 			"description": "जब सर्वर त्रुटि प्रतिक्रिया देता है तो स्वचालित रूप से विफल API अनुरोधों को पुनः प्रयास करें",
-			"delayLabel": "अनुरोध को पुनः प्रयास करने से पहले विलंब"
+			"delayLabel": "अनुरोध को पुनः प्रयास करने से पहले विलंब",
+			"delayDescription": "Time to wait in seconds before retrying a failed request"
 		},
 		"mcp": {
 			"label": "MCP",
@@ -174,14 +185,21 @@
 		"followupQuestions": {
 			"label": "प्रश्न",
 			"description": "कॉन्फ़िगर किए गए टाइमआउट के बाद अनुवर्ती प्रश्नों के लिए पहले सुझाए गए उत्तर को स्वचालित रूप से चुनें",
-			"timeoutLabel": "पहले उत्तर को स्वचालित रूप से चुनने से पहले प्रतीक्षा करने का समय"
+			"timeoutLabel": "पहले उत्तर को स्वचालित रूप से चुनने से पहले प्रतीक्षा करने का समय",
+			"timeoutDescription": "Time to wait before auto-selecting the first answer"
 		},
 		"execute": {
 			"label": "निष्पादित करें",
 			"description": "अनुमोदन की आवश्यकता के बिना स्वचालित रूप से अनुमत टर्मिनल कमांड निष्पादित करें",
-			"allowedCommands": "अनुमत स्वतः-निष्पादन कमांड",
+			"allowedCommands": {
+				"label": "Allowed Commands",
+				"description": "Commands that Roo can execute automatically (one per line, supports wildcards)"
+			},
 			"allowedCommandsDescription": "कमांड प्रीफिक्स जो स्वचालित रूप से निष्पादित किए जा सकते हैं जब \"निष्पादन ऑपरेशन हमेशा अनुमोदित करें\" सक्षम है। सभी कमांड की अनुमति देने के लिए * जोड़ें (सावधानी से उपयोग करें)।",
-			"deniedCommands": "अस्वीकृत कमांड",
+			"deniedCommands": {
+				"label": "Denied Commands",
+				"description": "Commands that Roo is explicitly forbidden from executing (one per line, supports wildcards)"
+			},
 			"deniedCommandsDescription": "कमांड प्रीफिक्स जो स्वचालित रूप से अस्वीकार हो जाएंगे बिना अनुमोदन की आवश्यकता के। अनुमत कमांड के साथ संघर्ष के मामले में, सबसे लंबा प्रीफिक्स मैच प्राथमिकता लेता है। सभी कमांड अस्वीकार करने के लिए * जोड़ें।",
 			"commandPlaceholder": "कमांड प्रीफिक्स दर्ज करें (उदा. 'git ')",
 			"deniedCommandPlaceholder": "अस्वीकार करने के लिए कमांड प्रीफिक्स दर्ज करें (उदा. 'rm -rf')",
@@ -195,7 +213,8 @@
 		"apiRequestLimit": {
 			"title": "अधिकतम अनुरोध",
 			"description": "कार्य जारी रखने के लिए अनुमति मांगने से पहले स्वचालित रूप से इतने API अनुरोध करें।",
-			"unlimited": "असीमित"
+			"unlimited": "असीमित",
+			"label": "Max Requests"
 		},
 		"selectOptionsFirst": "स्वतः-अनुमोदन सक्षम करने के लिए नीचे से कम से कम एक विकल्प चुनें"
 	},
@@ -242,7 +261,8 @@
 			"hint": "नवीनतम मॉडल देखने के लिए कृपया सेटिंग्स को फिर से खोलें।",
 			"loading": "मॉडल सूची अपडेट हो रही है...",
 			"success": "मॉडल सूची सफलतापूर्वक अपडेट की गई!",
-			"error": "मॉडल सूची अपडेट करने में विफल। कृपया पुनः प्रयास करें।"
+			"error": "मॉडल सूची अपडेट करने में विफल। कृपया पुनः प्रयास करें।",
+			"missingConfig": "Please configure API settings first"
 		},
 		"getRequestyApiKey": "Requesty API कुंजी प्राप्त करें",
 		"openRouterTransformsText": "संदर्भ आकार के लिए प्रॉम्प्ट और संदेश श्रृंखलाओं को संपीड़ित करें (<a>OpenRouter ट्रांसफॉर्म</a>)",
@@ -410,7 +430,9 @@
 			"placeholder": "डिफ़ॉल्ट: claude",
 			"maxTokensLabel": "अधिकतम आउटपुट टोकन",
 			"maxTokensDescription": "Claude Code प्रतिक्रियाओं के लिए आउटपुट टोकन की अधिकतम संख्या। डिफ़ॉल्ट 8000 है।"
-		}
+		},
+		"apiProviderDescription": "Select the API provider for AI model access",
+		"modelDescription": "Choose the AI model to use for this configuration"
 	},
 	"browser": {
 		"enable": {
@@ -434,7 +456,10 @@
 		"remote": {
 			"label": "दूरस्थ ब्राउज़र कनेक्शन का उपयोग करें",
 			"description": "रिमोट डीबगिंग सक्षम के साथ चल रहे Chrome ब्राउज़र से कनेक्ट करें (--remote-debugging-port=9222)।",
-			"urlPlaceholder": "कस्टम URL (उदा. http://localhost:9222)",
+			"urlPlaceholder": {
+				"label": "Remote Browser Host",
+				"description": "WebSocket URL for the remote browser connection"
+			},
 			"testButton": "कनेक्शन का परीक्षण करें",
 			"testingButton": "परीक्षण हो रहा है...",
 			"instructions": "DevTools प्रोटोकॉल होस्ट पता दर्ज करें या Chrome स्थानीय इंस्टेंस स्वतः खोजने के लिए खाली छोड़ दें। टेस्ट कनेक्शन बटन यदि प्रदान किया गया है तो कस्टम URL का प्रयास करेगा, या यदि फ़ील्ड खाली है तो स्वतः खोज करेगा।"
@@ -450,12 +475,14 @@
 		"sound": {
 			"label": "ध्वनि प्रभाव सक्षम करें",
 			"description": "जब सक्षम होता है, तो Roo सूचनाओं और घटनाओं के लिए ध्वनि प्रभाव चलाएगा।",
-			"volumeLabel": "वॉल्यूम"
+			"volumeLabel": "वॉल्यूम",
+			"volumeDescription": "Adjust the volume level for sound notifications (0-100)"
 		},
 		"tts": {
 			"label": "टेक्स्ट-टू-स्पीच सक्षम करें",
 			"description": "जब सक्षम होता है, तो Roo टेक्स्ट-टू-स्पीच का उपयोग करके अपनी प्रतिक्रियाओं को बोलकर पढ़ेगा।",
-			"speedLabel": "गति"
+			"speedLabel": "गति",
+			"speedDescription": "Adjust the speech rate for text-to-speech (0.1-10.0)"
 		}
 	},
 	"contextManagement": {
@@ -526,7 +553,8 @@
 			"defaultDescription": "जब संदर्भ इस प्रतिशत तक पहुंचता है, तो यह सभी प्रोफ़ाइल के लिए स्वचालित रूप से संघनित हो जाएगा जब तक कि उनकी कस्टम सेटिंग्स न हों",
 			"profileDescription": "केवल इस प्रोफ़ाइल के लिए कस्टम सीमा (वैश्विक डिफ़ॉल्ट को ओवरराइड करता है)",
 			"inheritDescription": "यह प्रोफ़ाइल वैश्विक डिफ़ॉल्ट सीमा को इनहेरिट करता है ({{threshold}}%)",
-			"usesGlobal": "(वैश्विक {{threshold}}% का उपयोग करता है)"
+			"usesGlobal": "(वैश्विक {{threshold}}% का उपयोग करता है)",
+			"description": "Configure when context condensing should be triggered based on token usage"
 		}
 	},
 	"terminal": {
@@ -615,6 +643,10 @@
 		"todoList": {
 			"label": "टूडू सूची टूल सक्षम करें",
 			"description": "जब सक्षम हो, तो Roo कार्य प्रगति को ट्रैक करने के लिए टूडू सूचियाँ बना और प्रबंधित कर सकता है। यह जटिल कार्यों को प्रबंधनीय चरणों में व्यवस्थित करने में मदद करता है।"
+		},
+		"mcpEnabled": {
+			"label": "Enable MCP",
+			"description": "Enable Model Context Protocol (MCP) for enhanced model capabilities"
 		}
 	},
 	"experimental": {
@@ -756,5 +788,8 @@
 		"useCustomArn": "कस्टम ARN का उपयोग करें..."
 	},
 	"includeMaxOutputTokens": "अधिकतम आउटपुट टोकन शामिल करें",
-	"includeMaxOutputTokensDescription": "API अनुरोधों में अधिकतम आउटपुट टोकन पैरामीटर भेजें। कुछ प्रदाता इसका समर्थन नहीं कर सकते हैं।"
+	"includeMaxOutputTokensDescription": "API अनुरोधों में अधिकतम आउटपुट टोकन पैरामीटर भेजें। कुछ प्रदाता इसका समर्थन नहीं कर सकते हैं।",
+	"language": {
+		"description": "Select your preferred language for the interface"
+	}
 }

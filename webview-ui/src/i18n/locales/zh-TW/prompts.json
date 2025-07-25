@@ -138,6 +138,12 @@
 			"NEW_TASK": {
 				"label": "開始新工作",
 				"description": "開始一個新的工作。可在命令選擇區使用。"
+			},
+			"enhance": {
+				"label": "Enhance"
+			},
+			"condense": {
+				"label": "Condense"
 			}
 		}
 	},

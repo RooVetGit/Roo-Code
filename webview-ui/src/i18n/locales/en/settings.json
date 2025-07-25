@@ -11,14 +11,18 @@
 	"header": {
 		"title": "Settings",
 		"saveButtonTooltip": "Save changes",
-		"nothingChangedTooltip": "Nothing changed",
-		"doneButtonTooltip": "Discard unsaved changes and close settings panel"
+		"nothingChangedTooltip": "No changes to save",
+		"doneButtonTooltip": "Close settings",
+		"searchPlaceholder": "Search settings...",
+		"searchTooltip": "Search settings",
+		"clearSearchTooltip": "Clear search",
+		"noSearchResults": "No settings match your search"
 	},
 	"unsavedChangesDialog": {
 		"title": "Unsaved Changes",
-		"description": "Do you want to discard changes and continue?",
+		"description": "You have unsaved changes. Do you want to discard them?",
 		"cancelButton": "Cancel",
-		"discardButton": "Discard changes"
+		"discardButton": "Discard Changes"
 	},
 	"sections": {
 		"providers": "Providers",
@@ -26,15 +30,23 @@
 		"browser": "Browser",
 		"checkpoints": "Checkpoints",
 		"notifications": "Notifications",
-		"contextManagement": "Context",
+		"contextManagement": "Context Management",
 		"terminal": "Terminal",
 		"prompts": "Prompts",
 		"experimental": "Experimental",
 		"language": "Language",
-		"about": "About Roo Code"
+		"about": "About",
+		"advanced": "Advanced"
+	},
+	"language": {
+		"description": "Select your preferred language for the interface"
 	},
 	"prompts": {
-		"description": "Configure support prompts that are used for quick actions like enhancing prompts, explaining code, and fixing issues. These prompts help Roo provide better assistance for common development tasks."
+		"description": "Customize prompts and instructions for Roo",
+		"customSupportPrompts": {
+			"label": "Custom Support Prompts",
+			"description": "Add custom instructions or prompts to guide Roo's behavior"
+		}
 	},
 	"codeIndex": {
 		"title": "Codebase Indexing",
@@ -126,26 +138,27 @@
 		}
 	},
 	"autoApprove": {
-		"description": "Allow Roo to automatically perform operations without requiring approval. Enable these settings only if you fully trust the AI and understand the associated security risks.",
+		"description": "Configure which actions Roo can perform automatically without asking for permission",
 		"readOnly": {
-			"label": "Read",
+			"label": "Read-Only Operations",
 			"description": "When enabled, Roo will automatically view directory contents and read files without requiring you to click the Approve button.",
 			"outsideWorkspace": {
-				"label": "Include files outside workspace",
-				"description": "Allow Roo to read files outside the current workspace without requiring approval."
+				"label": "Allow reading files outside workspace",
+				"description": "Allow Roo to read files outside the current workspace directory"
 			}
 		},
 		"write": {
-			"label": "Write",
+			"label": "Write Operations",
 			"description": "Automatically create and edit files without requiring approval",
 			"delayLabel": "Delay after writes to allow diagnostics to detect potential problems",
+			"delayDescription": "Wait time in milliseconds after file writes before diagnostics are updated",
 			"outsideWorkspace": {
-				"label": "Include files outside workspace",
-				"description": "Allow Roo to create and edit files outside the current workspace without requiring approval."
+				"label": "Allow writing files outside workspace",
+				"description": "Allow Roo to create or modify files outside the current workspace directory"
 			},
 			"protected": {
-				"label": "Include protected files",
-				"description": "Allow Roo to create and edit protected files (like .rooignore and .roo/ configuration files) without requiring approval."
+				"label": "Allow modifying protected files",
+				"description": "Allow Roo to modify files that are normally protected (e.g., .env, .git)"
 			}
 		},
 		"browser": {
@@ -153,9 +166,10 @@
 			"description": "Automatically perform browser actions without requiring approval. Note: Only applies when the model supports computer use"
 		},
 		"retry": {
-			"label": "Retry",
+			"label": "Retry Failed Operations",
 			"description": "Automatically retry failed API requests when server returns an error response",
-			"delayLabel": "Delay before retrying the request"
+			"delayLabel": "Retry delay (seconds)",
+			"delayDescription": "Time to wait in seconds before retrying a failed request"
 		},
 		"mcp": {
 			"label": "MCP",
@@ -170,20 +184,25 @@
 			"description": "Allow creation and completion of subtasks without requiring approval"
 		},
 		"followupQuestions": {
-			"label": "Question",
+			"label": "Follow-up Questions",
 			"description": "Automatically select the first suggested answer for follow-up questions after the configured timeout",
-			"timeoutLabel": "Time to wait before auto-selecting the first answer"
+			"timeoutLabel": "Question timeout (seconds)",
+			"timeoutDescription": "Time to wait before auto-selecting the first answer"
 		},
 		"execute": {
-			"label": "Execute",
+			"label": "Execute Commands",
 			"description": "Automatically execute allowed terminal commands without requiring approval",
-			"allowedCommands": "Allowed Auto-Execute Commands",
-			"allowedCommandsDescription": "Command prefixes that can be auto-executed when \"Always approve execute operations\" is enabled. Add * to allow all commands (use with caution).",
-			"deniedCommands": "Denied Commands",
-			"deniedCommandsDescription": "Command prefixes that will be automatically denied without asking for approval. In case of conflicts with allowed commands, the longest prefix match takes precedence. Add * to deny all commands.",
-			"commandPlaceholder": "Enter command prefix (e.g., 'git ')",
-			"deniedCommandPlaceholder": "Enter command prefix to deny (e.g., 'rm -rf')",
-			"addButton": "Add",
+			"allowedCommands": {
+				"label": "Allowed Commands",
+				"description": "Commands that Roo can execute automatically (one per line, supports wildcards)"
+			},
+			"deniedCommands": {
+				"label": "Denied Commands",
+				"description": "Commands that Roo is explicitly forbidden from executing (one per line, supports wildcards)"
+			},
+			"commandPlaceholder": "Enter a command pattern (e.g., npm *, git status)",
+			"deniedCommandPlaceholder": "Enter a denied command pattern (e.g., rm -rf *, sudo *)",
+			"addButton": "Add Command",
 			"autoDenied": "Commands with the prefix `{{prefix}}` have been forbidden by the user. Do not bypass this restriction by running another command."
 		},
 		"updateTodoList": {
@@ -191,20 +210,23 @@
 			"description": "Automatically update the to-do list without requiring approval"
 		},
 		"apiRequestLimit": {
+			"label": "Max Requests",
 			"title": "Max Requests",
 			"description": "Automatically make this many API requests before asking for approval to continue with the task.",
 			"unlimited": "Unlimited"
 		},
-		"toggleAriaLabel": "Toggle auto-approval",
-		"disabledAriaLabel": "Auto-approval disabled - select options first",
-		"selectOptionsFirst": "Select at least one option below to enable auto-approval"
+		"toggleAriaLabel": "Toggle auto-approve",
+		"disabledAriaLabel": "Auto-approve is disabled",
+		"selectOptionsFirst": "Please select options first"
 	},
 	"providers": {
 		"providerDocumentation": "{{provider}} documentation",
 		"configProfile": "Configuration Profile",
 		"description": "Save different API configurations to quickly switch between providers and settings.",
 		"apiProvider": "API Provider",
+		"apiProviderDescription": "Select the API provider for AI model access",
 		"model": "Model",
+		"modelDescription": "Choose the AI model to use for this configuration",
 		"nameEmpty": "Name cannot be empty",
 		"nameExists": "A profile with this name already exists",
 		"deleteProfile": "Delete Profile",
@@ -225,7 +247,7 @@
 		"awsCustomArnDesc": "Make sure the region in the ARN matches your selected AWS Region above.",
 		"openRouterApiKey": "OpenRouter API Key",
 		"getOpenRouterApiKey": "Get OpenRouter API Key",
-		"apiKeyStorageNotice": "API keys are stored securely in VSCode's Secret Storage",
+		"apiKeyStorageNotice": "API keys are stored securely in VS Code's secret storage",
 		"glamaApiKey": "Glama API Key",
 		"getGlamaApiKey": "Get Glama API Key",
 		"useCustomBaseUrl": "Use custom base URL",
@@ -240,9 +262,10 @@
 		"refreshModels": {
 			"label": "Refresh Models",
 			"hint": "Please reopen the settings to see the latest models.",
-			"loading": "Refreshing models list...",
-			"success": "Models list refreshed successfully!",
-			"error": "Failed to refresh models list. Please try again."
+			"loading": "Loading models...",
+			"success": "Models refreshed successfully",
+			"error": "Failed to refresh models",
+			"missingConfig": "Please configure API settings first"
 		},
 		"getRequestyApiKey": "Get Requesty API Key",
 		"openRouterTransformsText": "Compress prompts and message chains to the context size (<a>OpenRouter Transforms</a>)",
@@ -414,52 +437,57 @@
 	},
 	"browser": {
 		"enable": {
-			"label": "Enable browser tool",
-			"description": "When enabled, Roo can use a browser to interact with websites when using models that support computer use. <0>Learn more</0>"
+			"label": "Enable Browser Tool",
+			"description": "Allow Roo to use browser automation for testing and web scraping"
 		},
 		"viewport": {
-			"label": "Viewport size",
-			"description": "Select the viewport size for browser interactions. This affects how websites are displayed and interacted with.",
+			"label": "Default Viewport Size",
+			"description": "The default browser window size when launching",
 			"options": {
-				"largeDesktop": "Large Desktop (1280x800)",
-				"smallDesktop": "Small Desktop (900x600)",
+				"largeDesktop": "Large Desktop (1920x1080)",
+				"smallDesktop": "Small Desktop (1366x768)",
 				"tablet": "Tablet (768x1024)",
-				"mobile": "Mobile (360x640)"
+				"mobile": "Mobile (375x667)"
 			}
 		},
 		"screenshotQuality": {
-			"label": "Screenshot quality",
-			"description": "Adjust the WebP quality of browser screenshots. Higher values provide clearer screenshots but increase token usage."
+			"label": "Screenshot Quality",
+			"description": "Quality of screenshots (0-100, higher is better but larger file size)"
 		},
 		"remote": {
-			"label": "Use remote browser connection",
-			"description": "Connect to a Chrome browser running with remote debugging enabled (--remote-debugging-port=9222).",
-			"urlPlaceholder": "Custom URL (e.g., http://localhost:9222)",
+			"label": "Remote Browser URL",
+			"description": "Connect to a remote browser instance instead of launching locally",
+			"urlPlaceholder": {
+				"label": "Remote Browser Host",
+				"description": "WebSocket URL for the remote browser connection"
+			},
 			"testButton": "Test Connection",
-			"testingButton": "Testing...",
-			"instructions": "Enter the DevTools Protocol host address or leave empty to auto-discover Chrome local instances. The Test Connection button will try the custom URL if provided, or auto-discover if the field is empty."
+			"testingButton": "Testing connection...",
+			"instructions": "Start Chrome with: chrome --remote-debugging-port=9222"
 		}
 	},
 	"checkpoints": {
 		"enable": {
-			"label": "Enable automatic checkpoints",
-			"description": "When enabled, Roo will automatically create checkpoints during task execution, making it easy to review changes or revert to earlier states. <0>Learn more</0>"
+			"label": "Enable Checkpoints",
+			"description": "Save conversation checkpoints to restore from later"
 		}
 	},
 	"notifications": {
 		"sound": {
-			"label": "Enable sound effects",
-			"description": "When enabled, Roo will play sound effects for notifications and events.",
-			"volumeLabel": "Volume"
+			"label": "Sound Notifications",
+			"description": "Play sounds for various events",
+			"volumeLabel": "Volume",
+			"volumeDescription": "Adjust the volume level for sound notifications (0-100)"
 		},
 		"tts": {
-			"label": "Enable text-to-speech",
-			"description": "When enabled, Roo will read aloud its responses using text-to-speech.",
-			"speedLabel": "Speed"
+			"label": "Text-to-Speech",
+			"description": "Read Roo's responses aloud",
+			"speedLabel": "Speech Speed",
+			"speedDescription": "Adjust the speech rate for text-to-speech (0.1-10.0)"
 		}
 	},
 	"contextManagement": {
-		"description": "Control what information is included in the AI's context window, affecting token usage and response quality",
+		"description": "Configure how Roo manages and includes context in conversations",
 		"autoCondenseContextPercent": {
 			"label": "Threshold to trigger intelligent context condensing",
 			"description": "When the context window reaches this threshold, Roo will automatically condense it."
@@ -477,113 +505,114 @@
 			"hint": "Empty = use default prompt"
 		},
 		"autoCondenseContext": {
-			"name": "Automatically trigger intelligent context condensing",
+			"name": "Auto-Condense Context",
 			"description": "When enabled, Roo will automatically condense the context when the threshold is reached. When disabled, you can still manually trigger context condensing."
 		},
 		"openTabs": {
-			"label": "Open tabs context limit",
-			"description": "Maximum number of VSCode open tabs to include in context. Higher values provide more context but increase token usage."
+			"label": "Include Open Tabs",
+			"description": "Automatically include content from open editor tabs as context"
 		},
 		"workspaceFiles": {
-			"label": "Workspace files context limit",
-			"description": "Maximum number of files to include in current working directory details. Higher values provide more context but increase token usage."
+			"label": "Include Workspace Files",
+			"description": "Allow Roo to automatically include relevant workspace files as context"
 		},
 		"rooignore": {
-			"label": "Show .rooignore'd files in lists and searches",
-			"description": "When enabled, files matching patterns in .rooignore will be shown in lists with a lock symbol. When disabled, these files will be completely hidden from file lists and searches."
+			"label": "Use .rooignore",
+			"description": "Respect .rooignore file patterns when including context"
 		},
 		"maxConcurrentFileReads": {
-			"label": "Concurrent file reads limit",
-			"description": "Maximum number of files the 'read_file' tool can process concurrently. Higher values may speed up reading multiple small files but increase memory usage."
+			"label": "Max Concurrent File Reads",
+			"description": "Maximum number of files to read simultaneously"
 		},
 		"maxReadFile": {
-			"label": "File read auto-truncate threshold",
-			"description": "Roo reads this number of lines when the model omits start/end values. If this number is less than the file's total, Roo generates a line number index of code definitions. Special cases: -1 instructs Roo to read the entire file (without indexing), and 0 instructs it to read no lines and provides line indexes only for minimal context. Lower values minimize initial context usage, enabling precise subsequent line-range reads. Explicit start/end requests are not limited by this setting.",
+			"label": "Max File Read Size",
+			"description": "Maximum number of lines to read from a single file",
 			"lines": "lines",
-			"always_full_read": "Always read entire file"
+			"always_full_read": "Always read full file"
 		},
 		"diagnostics": {
 			"includeMessages": {
-				"label": "Automatically include diagnostics in context",
-				"description": "When enabled, diagnostic messages (errors) from edited files will be automatically included in the context. You can always manually include all workspace diagnostics using @problems."
+				"label": "Include Diagnostics",
+				"description": "Include code diagnostics (errors, warnings) as context"
 			},
 			"maxMessages": {
-				"label": "Maximum diagnostic messages",
-				"description": "Limits the number of diagnostic messages (errors, warnings) included in the context. When set, only this many diagnostics will be shown, prioritizing errors over warnings. Set to 0 for unlimited diagnostics.",
-				"resetTooltip": "Reset to default value (50)",
+				"label": "Max Diagnostic Messages",
+				"description": "Maximum number of diagnostic messages to include",
+				"resetTooltip": "Reset to default",
 				"unlimitedLabel": "Unlimited"
 			},
 			"delayAfterWrite": {
-				"label": "Delay after writes to allow diagnostics to detect potential problems",
-				"description": "Time to wait after file writes before proceeding, allowing diagnostic tools to process changes and detect issues."
+				"label": "Diagnostics Delay",
+				"description": "Wait time (ms) after file changes before updating diagnostics"
 			}
 		},
 		"condensingThreshold": {
-			"label": "Condensing Trigger Threshold",
-			"selectProfile": "Configure threshold for profile",
-			"defaultProfile": "Global Default (all profiles)",
-			"defaultDescription": "When context reaches this percentage, it will be automatically condensed for all profiles unless they have custom settings",
-			"profileDescription": "Custom threshold for this profile only (overrides global default)",
+			"label": "Context Condensing Threshold",
+			"description": "Configure when context condensing should be triggered based on token usage",
+			"selectProfile": "Select a profile",
+			"defaultProfile": "Default",
+			"defaultDescription": "Standard context management",
+			"profileDescription": "Custom threshold: {{threshold}}%",
 			"inheritDescription": "This profile inherits the global default threshold ({{threshold}}%)",
 			"usesGlobal": "(uses global {{threshold}}%)"
 		}
 	},
 	"terminal": {
 		"basic": {
-			"label": "Terminal Settings: Basic",
+			"label": "Basic Settings",
 			"description": "Basic terminal settings"
 		},
 		"advanced": {
-			"label": "Terminal Settings: Advanced",
-			"description": "The following options may require a terminal restart to apply the setting."
+			"label": "Advanced Settings",
+			"description": "Advanced terminal configuration options"
 		},
 		"outputLineLimit": {
-			"label": "Terminal output limit",
-			"description": "Maximum number of lines to include in terminal output when executing commands. When exceeded lines will be removed from the middle, saving tokens. <0>Learn more</0>"
+			"label": "Output Line Limit",
+			"description": "Maximum lines to capture from terminal output"
 		},
 		"outputCharacterLimit": {
-			"label": "Terminal character limit",
-			"description": "Maximum number of characters to include in terminal output when executing commands. This limit takes precedence over the line limit to prevent memory issues from extremely long lines. When exceeded, output will be truncated. <0>Learn more</0>"
+			"label": "Output Character Limit",
+			"description": "Maximum characters to capture from terminal output"
 		},
 		"shellIntegrationTimeout": {
-			"label": "Terminal shell integration timeout",
-			"description": "Maximum time to wait for shell integration to initialize before executing commands. For users with long shell startup times, this value may need to be increased if you see \"Shell Integration Unavailable\" errors in the terminal. <0>Learn more</0>"
+			"label": "Shell Integration Timeout",
+			"description": "Timeout (ms) for shell integration initialization"
 		},
 		"shellIntegrationDisabled": {
-			"label": "Disable terminal shell integration",
-			"description": "Enable this if terminal commands aren't working correctly or you see 'Shell Integration Unavailable' errors. This uses a simpler method to run commands, bypassing some advanced terminal features. <0>Learn more</0>"
+			"label": "Disable Shell Integration",
+			"description": "Disable VS Code shell integration for compatibility"
 		},
 		"commandDelay": {
-			"label": "Terminal command delay",
-			"description": "Delay in milliseconds to add after command execution. The default setting of 0 disables the delay completely. This can help ensure command output is fully captured in terminals with timing issues. In most terminals it is implemented by setting `PROMPT_COMMAND='sleep N'` and Powershell appends `start-sleep` to the end of each command. Originally was workaround for VSCode bug#237208 and may not be needed. <0>Learn more</0>"
+			"label": "Command Delay",
+			"description": "Delay (ms) between sending commands"
 		},
 		"compressProgressBar": {
-			"label": "Compress progress bar output",
-			"description": "When enabled, processes terminal output with carriage returns (\\r) to simulate how a real terminal would display content. This removes intermediate progress bar states, retaining only the final state, which conserves context space for more relevant information. <0>Learn more</0>"
+			"label": "Compress Progress Bars",
+			"description": "Compress repetitive progress bar output"
 		},
 		"powershellCounter": {
-			"label": "Enable PowerShell counter workaround",
-			"description": "When enabled, adds a counter to PowerShell commands to ensure proper command execution. This helps with PowerShell terminals that might have issues with command output capture. <0>Learn more</0>"
+			"label": "PowerShell Counter",
+			"description": "Use counter-based command tracking for PowerShell"
 		},
 		"zshClearEolMark": {
-			"label": "Clear ZSH EOL mark",
-			"description": "When enabled, clears the ZSH end-of-line mark by setting PROMPT_EOL_MARK=''. This prevents issues with command output interpretation when output ends with special characters like '%'. <0>Learn more</0>"
+			"label": "Clear ZSH EOL Mark",
+			"description": "Clear end-of-line marks in ZSH"
 		},
 		"zshOhMy": {
-			"label": "Enable Oh My Zsh integration",
-			"description": "When enabled, sets ITERM_SHELL_INTEGRATION_INSTALLED=Yes to enable Oh My Zsh shell integration features. Applying this setting might require restarting the IDE. <0>Learn more</0>"
+			"label": "Oh My ZSH Support",
+			"description": "Enable Oh My ZSH compatibility"
 		},
 		"zshP10k": {
-			"label": "Enable Powerlevel10k integration",
-			"description": "When enabled, sets POWERLEVEL9K_TERM_SHELL_INTEGRATION=true to enable Powerlevel10k shell integration features. <0>Learn more</0>"
+			"label": "Powerlevel10k Support",
+			"description": "Enable Powerlevel10k theme compatibility"
 		},
 		"zdotdir": {
-			"label": "Enable ZDOTDIR handling",
-			"description": "When enabled, creates a temporary directory for ZDOTDIR to handle zsh shell integration properly. This ensures VSCode shell integration works correctly with zsh while preserving your zsh configuration. <0>Learn more</0>"
+			"label": "ZDOTDIR",
+			"description": "Custom ZSH configuration directory"
 		},
 		"inheritEnv": {
-			"label": "Inherit environment variables",
-			"description": "When enabled, the terminal will inherit environment variables from VSCode's parent process, such as user-profile-defined shell integration settings. This directly toggles VSCode global setting `terminal.integrated.inheritEnv`. <0>Learn more</0>"
+			"label": "Inherit Environment",
+			"description": "Inherit environment variables from VS Code"
 		}
 	},
 	"advancedSettings": {
@@ -614,40 +643,44 @@
 		"todoList": {
 			"label": "Enable todo list tool",
 			"description": "When enabled, Roo can create and manage todo lists to track task progress. This helps organize complex tasks into manageable steps."
+		},
+		"mcpEnabled": {
+			"label": "Enable MCP",
+			"description": "Enable Model Context Protocol (MCP) for enhanced model capabilities"
 		}
 	},
 	"experimental": {
 		"DIFF_STRATEGY_UNIFIED": {
-			"name": "Use experimental unified diff strategy",
-			"description": "Enable the experimental unified diff strategy. This strategy might reduce the number of retries caused by model errors but may cause unexpected behavior or incorrect edits. Only enable if you understand the risks and are willing to carefully review all changes."
+			"name": "Diff Strategy Unified",
+			"description": "Enable diff strategy unified functionality"
 		},
 		"SEARCH_AND_REPLACE": {
-			"name": "Use experimental search and replace tool",
-			"description": "Enable the experimental search and replace tool, allowing Roo to replace multiple instances of a search term in one request."
+			"name": "Search And Replace",
+			"description": "Enable search and replace functionality"
 		},
 		"INSERT_BLOCK": {
-			"name": "Use experimental insert content tool",
-			"description": "Enable the experimental insert content tool, allowing Roo to insert content at specific line numbers without needing to create a diff."
+			"name": "Insert Block",
+			"description": "Enable insert block functionality"
 		},
 		"POWER_STEERING": {
-			"name": "Use experimental \"power steering\" mode",
-			"description": "When enabled, Roo will remind the model about the details of its current mode definition more frequently. This will lead to stronger adherence to role definitions and custom instructions, but will use more tokens per message."
+			"name": "Power Steering",
+			"description": "Enable power steering functionality"
 		},
 		"CONCURRENT_FILE_READS": {
-			"name": "Enable concurrent file reads",
-			"description": "When enabled, Roo can read multiple files in a single request. When disabled, Roo must read files one at a time. Disabling this can help when working with less capable models or when you want more control over file access."
+			"name": "Concurrent File Reads",
+			"description": "Enable concurrent file reads functionality"
 		},
 		"MULTI_SEARCH_AND_REPLACE": {
-			"name": "Use experimental multi block diff tool",
-			"description": "When enabled, Roo will use multi block diff tool. This will try to update multiple code blocks in the file in one request."
+			"name": "Multi Search And Replace",
+			"description": "Enable multi search and replace functionality"
 		},
 		"MARKETPLACE": {
-			"name": "Enable Marketplace",
-			"description": "When enabled, you can install MCPs and custom modes from the Marketplace."
+			"name": "Marketplace",
+			"description": "Enable marketplace functionality"
 		},
 		"MULTI_FILE_APPLY_DIFF": {
-			"name": "Enable concurrent file edits",
-			"description": "When enabled, Roo can edit multiple files in a single request. When disabled, Roo must edit files one at a time. Disabling this can help when working with less capable models or when you want more control over file modifications."
+			"name": "Multi File Apply Diff",
+			"description": "Enable multi file apply diff functionality"
 		}
 	},
 	"promptCaching": {
@@ -690,15 +723,15 @@
 		"useCustomModel": "Use custom: {{modelId}}"
 	},
 	"footer": {
-		"feedback": "If you have any questions or feedback, feel free to open an issue at <githubLink>github.com/RooCodeInc/Roo-Code</githubLink> or join <redditLink>reddit.com/r/RooCode</redditLink> or <discordLink>discord.gg/roocode</discordLink>",
+		"feedback": "Send Feedback",
 		"telemetry": {
-			"label": "Allow anonymous error and usage reporting",
-			"description": "Help improve Roo Code by sending anonymous usage data and error reports. No code, prompts, or personal information is ever sent (unless you connect to Roo Code Cloud). See our <privacyLink>privacy policy</privacyLink> for more details."
+			"label": "Telemetry",
+			"description": "Help improve Roo Code by sending anonymous usage data"
 		},
 		"settings": {
-			"import": "Import",
-			"export": "Export",
-			"reset": "Reset"
+			"import": "Import Settings",
+			"export": "Export Settings",
+			"reset": "Reset Settings"
 		}
 	},
 	"thinkingBudget": {
@@ -722,7 +755,7 @@
 		"profileInvalid": "This profile contains a provider or model that is not allowed by your organization"
 	},
 	"placeholders": {
-		"apiKey": "Enter API Key...",
+		"apiKey": "Enter API key",
 		"profileName": "Enter profile name",
 		"accessKey": "Enter Access Key...",
 		"secretKey": "Enter Secret Key...",
@@ -731,7 +764,7 @@
 		"keyFilePath": "Enter Key File Path...",
 		"projectId": "Enter Project ID...",
 		"customArn": "Enter ARN (e.g. arn:aws:bedrock:us-east-1:123456789012:foundation-model/my-model)",
-		"baseUrl": "Enter base URL...",
+		"baseUrl": "Enter base URL",
 		"modelId": {
 			"lmStudio": "e.g. meta-llama-3.1-8b-instruct",
 			"lmStudioDraft": "e.g. lmstudio-community/llama-3.2-1b-instruct",

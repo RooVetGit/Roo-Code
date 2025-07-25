@@ -12,7 +12,11 @@
 		"title": "Pengaturan",
 		"saveButtonTooltip": "Simpan perubahan",
 		"nothingChangedTooltip": "Tidak ada yang berubah",
-		"doneButtonTooltip": "Buang perubahan yang belum disimpan dan tutup panel pengaturan"
+		"doneButtonTooltip": "Buang perubahan yang belum disimpan dan tutup panel pengaturan",
+		"searchPlaceholder": "Search settings...",
+		"searchTooltip": "Search settings",
+		"clearSearchTooltip": "Clear search",
+		"noSearchResults": "No settings match your search"
 	},
 	"unsavedChangesDialog": {
 		"title": "Perubahan Belum Disimpan",
@@ -31,10 +35,15 @@
 		"prompts": "Prompt",
 		"experimental": "Eksperimental",
 		"language": "Bahasa",
-		"about": "Tentang Roo Code"
+		"about": "Tentang Roo Code",
+		"advanced": "Advanced"
 	},
 	"prompts": {
-		"description": "Konfigurasi support prompt yang digunakan untuk aksi cepat seperti meningkatkan prompt, menjelaskan kode, dan memperbaiki masalah. Prompt ini membantu Roo memberikan bantuan yang lebih baik untuk tugas pengembangan umum."
+		"description": "Konfigurasi support prompt yang digunakan untuk aksi cepat seperti meningkatkan prompt, menjelaskan kode, dan memperbaiki masalah. Prompt ini membantu Roo memberikan bantuan yang lebih baik untuk tugas pengembangan umum.",
+		"customSupportPrompts": {
+			"label": "Custom Support Prompts",
+			"description": "Add custom instructions or prompts to guide Roo's behavior"
+		}
 	},
 	"codeIndex": {
 		"title": "Pengindeksan Codebase",
@@ -148,7 +157,8 @@
 			"protected": {
 				"label": "Sertakan file yang dilindungi",
 				"description": "Izinkan Roo membuat dan mengedit file yang dilindungi (seperti .rooignore dan file konfigurasi .roo/) tanpa memerlukan persetujuan."
-			}
+			},
+			"delayDescription": "Wait time in milliseconds after file writes before diagnostics are updated"
 		},
 		"browser": {
 			"label": "Browser",
@@ -157,7 +167,8 @@
 		"retry": {
 			"label": "Coba Lagi",
 			"description": "Secara otomatis mencoba ulang permintaan API yang gagal ketika server mengembalikan respons error",
-			"delayLabel": "Delay sebelum mencoba ulang permintaan"
+			"delayLabel": "Delay sebelum mencoba ulang permintaan",
+			"delayDescription": "Time to wait in seconds before retrying a failed request"
 		},
 		"mcp": {
 			"label": "MCP",
@@ -174,14 +185,21 @@
 		"followupQuestions": {
 			"label": "Pertanyaan",
 			"description": "Secara otomatis memilih jawaban pertama yang disarankan untuk pertanyaan lanjutan setelah batas waktu yang dikonfigurasi",
-			"timeoutLabel": "Waktu tunggu sebelum otomatis memilih jawaban pertama"
+			"timeoutLabel": "Waktu tunggu sebelum otomatis memilih jawaban pertama",
+			"timeoutDescription": "Time to wait before auto-selecting the first answer"
 		},
 		"execute": {
 			"label": "Eksekusi",
 			"description": "Secara otomatis mengeksekusi perintah terminal yang diizinkan tanpa memerlukan persetujuan",
-			"allowedCommands": "Perintah Auto-Execute yang Diizinkan",
+			"allowedCommands": {
+				"label": "Allowed Commands",
+				"description": "Commands that Roo can execute automatically (one per line, supports wildcards)"
+			},
 			"allowedCommandsDescription": "Prefix perintah yang dapat di-auto-execute ketika \"Selalu setujui operasi eksekusi\" diaktifkan. Tambahkan * untuk mengizinkan semua perintah (gunakan dengan hati-hati).",
-			"deniedCommands": "Perintah yang ditolak",
+			"deniedCommands": {
+				"label": "Denied Commands",
+				"description": "Commands that Roo is explicitly forbidden from executing (one per line, supports wildcards)"
+			},
 			"deniedCommandsDescription": "Prefix perintah yang akan ditolak secara otomatis tanpa memerlukan persetujuan. Dalam kasus konflik dengan perintah yang diizinkan, pencocokan prefix terpanjang diprioritaskan. Tambahkan * untuk menolak semua perintah.",
 			"commandPlaceholder": "Masukkan prefix perintah (misalnya, 'git ')",
 			"deniedCommandPlaceholder": "Masukkan prefix perintah untuk ditolak (misalnya, 'rm -rf')",
@@ -199,7 +217,8 @@
 		"apiRequestLimit": {
 			"title": "Permintaan Maks",
 			"description": "Secara otomatis membuat sejumlah permintaan API ini sebelum meminta persetujuan untuk melanjutkan tugas.",
-			"unlimited": "Tidak terbatas"
+			"unlimited": "Tidak terbatas",
+			"label": "Max Requests"
 		},
 		"selectOptionsFirst": "Pilih setidaknya satu opsi di bawah ini untuk mengaktifkan persetujuan otomatis"
 	},
@@ -246,7 +265,8 @@
 			"hint": "Silakan buka kembali pengaturan untuk melihat model terbaru.",
 			"loading": "Merefresh daftar model...",
 			"success": "Daftar model berhasil direfresh!",
-			"error": "Gagal merefresh daftar model. Silakan coba lagi."
+			"error": "Gagal merefresh daftar model. Silakan coba lagi.",
+			"missingConfig": "Please configure API settings first"
 		},
 		"getRequestyApiKey": "Dapatkan Requesty API Key",
 		"openRouterTransformsText": "Kompres prompt dan rantai pesan ke ukuran konteks (<a>OpenRouter Transforms</a>)",
@@ -414,7 +434,9 @@
 			"placeholder": "Default: claude",
 			"maxTokensLabel": "Token Output Maks",
 			"maxTokensDescription": "Jumlah maksimum token output untuk respons Claude Code. Default adalah 8000."
-		}
+		},
+		"apiProviderDescription": "Select the API provider for AI model access",
+		"modelDescription": "Choose the AI model to use for this configuration"
 	},
 	"browser": {
 		"enable": {
@@ -438,7 +460,10 @@
 		"remote": {
 			"label": "Gunakan koneksi browser remote",
 			"description": "Hubungkan ke browser Chrome yang berjalan dengan remote debugging diaktifkan (--remote-debugging-port=9222).",
-			"urlPlaceholder": "URL Kustom (misalnya, http://localhost:9222)",
+			"urlPlaceholder": {
+				"label": "Remote Browser Host",
+				"description": "WebSocket URL for the remote browser connection"
+			},
 			"testButton": "Test Koneksi",
 			"testingButton": "Testing...",
 			"instructions": "Masukkan alamat host DevTools Protocol atau biarkan kosong untuk auto-discover instance Chrome lokal. Tombol Test Koneksi akan mencoba URL kustom jika disediakan, atau auto-discover jika field kosong."
@@ -454,12 +479,14 @@
 		"sound": {
 			"label": "Aktifkan efek suara",
 			"description": "Ketika diaktifkan, Roo akan memutar efek suara untuk notifikasi dan event.",
-			"volumeLabel": "Volume"
+			"volumeLabel": "Volume",
+			"volumeDescription": "Adjust the volume level for sound notifications (0-100)"
 		},
 		"tts": {
 			"label": "Aktifkan text-to-speech",
 			"description": "Ketika diaktifkan, Roo akan membacakan responnya menggunakan text-to-speech.",
-			"speedLabel": "Kecepatan"
+			"speedLabel": "Kecepatan",
+			"speedDescription": "Adjust the speech rate for text-to-speech (0.1-10.0)"
 		}
 	},
 	"contextManagement": {
@@ -508,7 +535,8 @@
 			"defaultDescription": "Ketika konteks mencapai persentase ini, akan secara otomatis dikondensasi untuk semua profil kecuali mereka memiliki pengaturan kustom",
 			"profileDescription": "Ambang batas kustom untuk profil ini saja (menimpa default global)",
 			"inheritDescription": "Profil ini mewarisi ambang batas default global ({{threshold}}%)",
-			"usesGlobal": "(menggunakan global {{threshold}}%)"
+			"usesGlobal": "(menggunakan global {{threshold}}%)",
+			"description": "Configure when context condensing should be triggered based on token usage"
 		},
 		"openTabs": {
 			"label": "Batas konteks tab terbuka",
@@ -619,6 +647,10 @@
 		"todoList": {
 			"label": "Aktifkan alat daftar tugas",
 			"description": "Saat diaktifkan, Roo dapat membuat dan mengelola daftar tugas untuk melacak kemajuan tugas. Ini membantu mengatur tugas kompleks menjadi langkah-langkah yang dapat dikelola."
+		},
+		"mcpEnabled": {
+			"label": "Enable MCP",
+			"description": "Enable Model Context Protocol (MCP) for enhanced model capabilities"
 		}
 	},
 	"experimental": {
@@ -785,5 +817,8 @@
 		"useCustomArn": "Gunakan ARN kustom..."
 	},
 	"includeMaxOutputTokens": "Sertakan token output maksimum",
-	"includeMaxOutputTokensDescription": "Kirim parameter token output maksimum dalam permintaan API. Beberapa provider mungkin tidak mendukung ini."
+	"includeMaxOutputTokensDescription": "Kirim parameter token output maksimum dalam permintaan API. Beberapa provider mungkin tidak mendukung ini.",
+	"language": {
+		"description": "Select your preferred language for the interface"
+	}
 }

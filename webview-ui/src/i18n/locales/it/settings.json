@@ -12,7 +12,11 @@
 		"title": "Impostazioni",
 		"saveButtonTooltip": "Salva modifiche",
 		"nothingChangedTooltip": "Nessuna modifica",
-		"doneButtonTooltip": "Scarta le modifiche non salvate e chiudi il pannello delle impostazioni"
+		"doneButtonTooltip": "Scarta le modifiche non salvate e chiudi il pannello delle impostazioni",
+		"searchPlaceholder": "Search settings...",
+		"searchTooltip": "Search settings",
+		"clearSearchTooltip": "Clear search",
+		"noSearchResults": "No settings match your search"
 	},
 	"unsavedChangesDialog": {
 		"title": "Modifiche non salvate",
@@ -31,10 +35,15 @@
 		"prompts": "Prompt",
 		"experimental": "Sperimentale",
 		"language": "Lingua",
-		"about": "Informazioni su Roo Code"
+		"about": "Informazioni su Roo Code",
+		"advanced": "Advanced"
 	},
 	"prompts": {
-		"description": "Configura i prompt di supporto utilizzati per azioni rapide come il miglioramento dei prompt, la spiegazione del codice e la risoluzione dei problemi. Questi prompt aiutano Roo a fornire una migliore assistenza per le attività di sviluppo comuni."
+		"description": "Configura i prompt di supporto utilizzati per azioni rapide come il miglioramento dei prompt, la spiegazione del codice e la risoluzione dei problemi. Questi prompt aiutano Roo a fornire una migliore assistenza per le attività di sviluppo comuni.",
+		"customSupportPrompts": {
+			"label": "Custom Support Prompts",
+			"description": "Add custom instructions or prompts to guide Roo's behavior"
+		}
 	},
 	"codeIndex": {
 		"title": "Indicizzazione del codice",
@@ -148,7 +157,8 @@
 			"protected": {
 				"label": "Includi file protetti",
 				"description": "Permetti a Roo di creare e modificare file protetti (come .rooignore e file di configurazione .roo/) senza richiedere approvazione."
-			}
+			},
+			"delayDescription": "Wait time in milliseconds after file writes before diagnostics are updated"
 		},
 		"browser": {
 			"label": "Browser",
@@ -157,7 +167,8 @@
 		"retry": {
 			"label": "Riprova",
 			"description": "Riprova automaticamente le richieste API fallite quando il server restituisce una risposta di errore",
-			"delayLabel": "Ritardo prima di riprovare la richiesta"
+			"delayLabel": "Ritardo prima di riprovare la richiesta",
+			"delayDescription": "Time to wait in seconds before retrying a failed request"
 		},
 		"mcp": {
 			"label": "MCP",
@@ -174,14 +185,21 @@
 		"followupQuestions": {
 			"label": "Domanda",
 			"description": "Seleziona automaticamente la prima risposta suggerita per le domande di follow-up dopo il timeout configurato",
-			"timeoutLabel": "Tempo di attesa prima di selezionare automaticamente la prima risposta"
+			"timeoutLabel": "Tempo di attesa prima di selezionare automaticamente la prima risposta",
+			"timeoutDescription": "Time to wait before auto-selecting the first answer"
 		},
 		"execute": {
 			"label": "Esegui",
 			"description": "Esegui automaticamente i comandi del terminale consentiti senza richiedere approvazione",
-			"allowedCommands": "Comandi di auto-esecuzione consentiti",
+			"allowedCommands": {
+				"label": "Allowed Commands",
+				"description": "Commands that Roo can execute automatically (one per line, supports wildcards)"
+			},
 			"allowedCommandsDescription": "Prefissi di comando che possono essere auto-eseguiti quando \"Approva sempre operazioni di esecuzione\" è abilitato. Aggiungi * per consentire tutti i comandi (usare con cautela).",
-			"deniedCommands": "Comandi negati",
+			"deniedCommands": {
+				"label": "Denied Commands",
+				"description": "Commands that Roo is explicitly forbidden from executing (one per line, supports wildcards)"
+			},
 			"deniedCommandsDescription": "Prefissi di comandi che verranno automaticamente negati senza richiedere approvazione. In caso di conflitti con comandi consentiti, la corrispondenza del prefisso più lungo ha la precedenza. Aggiungi * per negare tutti i comandi.",
 			"commandPlaceholder": "Inserisci prefisso comando (es. 'git ')",
 			"deniedCommandPlaceholder": "Inserisci prefisso comando da negare (es. 'rm -rf')",
@@ -195,7 +213,8 @@
 		"apiRequestLimit": {
 			"title": "Richieste massime",
 			"description": "Esegui automaticamente questo numero di richieste API prima di chiedere l'approvazione per continuare con l'attività.",
-			"unlimited": "Illimitato"
+			"unlimited": "Illimitato",
+			"label": "Max Requests"
 		},
 		"selectOptionsFirst": "Seleziona almeno un'opzione qui sotto per abilitare l'approvazione automatica"
 	},
@@ -242,7 +261,8 @@
 			"hint": "Riapri le impostazioni per vedere i modelli più recenti.",
 			"loading": "Aggiornamento dell'elenco dei modelli...",
 			"success": "Elenco dei modelli aggiornato con successo!",
-			"error": "Impossibile aggiornare l'elenco dei modelli. Riprova."
+			"error": "Impossibile aggiornare l'elenco dei modelli. Riprova.",
+			"missingConfig": "Please configure API settings first"
 		},
 		"getRequestyApiKey": "Ottieni chiave API Requesty",
 		"openRouterTransformsText": "Comprimi prompt e catene di messaggi alla dimensione del contesto (<a>Trasformazioni OpenRouter</a>)",
@@ -410,7 +430,9 @@
 			"placeholder": "Predefinito: claude",
 			"maxTokensLabel": "Token di output massimi",
 			"maxTokensDescription": "Numero massimo di token di output per le risposte di Claude Code. Il valore predefinito è 8000."
-		}
+		},
+		"apiProviderDescription": "Select the API provider for AI model access",
+		"modelDescription": "Choose the AI model to use for this configuration"
 	},
 	"browser": {
 		"enable": {
@@ -434,7 +456,10 @@
 		"remote": {
 			"label": "Usa connessione browser remoto",
 			"description": "Connettiti a un browser Chrome in esecuzione con debug remoto abilitato (--remote-debugging-port=9222).",
-			"urlPlaceholder": "URL personalizzato (es. http://localhost:9222)",
+			"urlPlaceholder": {
+				"label": "Remote Browser Host",
+				"description": "WebSocket URL for the remote browser connection"
+			},
 			"testButton": "Testa connessione",
 			"testingButton": "Test in corso...",
 			"instructions": "Inserisci l'indirizzo host del protocollo DevTools o lascia vuoto per scoprire automaticamente le istanze Chrome locali. Il pulsante Test Connessione proverà l'URL personalizzato se fornito, o scoprirà automaticamente se il campo è vuoto."
@@ -450,12 +475,14 @@
 		"sound": {
 			"label": "Abilita effetti sonori",
 			"description": "Quando abilitato, Roo riprodurrà effetti sonori per notifiche ed eventi.",
-			"volumeLabel": "Volume"
+			"volumeLabel": "Volume",
+			"volumeDescription": "Adjust the volume level for sound notifications (0-100)"
 		},
 		"tts": {
 			"label": "Abilita sintesi vocale",
 			"description": "Quando abilitato, Roo leggerà ad alta voce le sue risposte utilizzando la sintesi vocale.",
-			"speedLabel": "Velocità"
+			"speedLabel": "Velocità",
+			"speedDescription": "Adjust the speech rate for text-to-speech (0.1-10.0)"
 		}
 	},
 	"contextManagement": {
@@ -526,7 +553,8 @@
 			"defaultDescription": "Quando il contesto raggiunge questa percentuale, verrà automaticamente condensato per tutti i profili a meno che non abbiano impostazioni personalizzate",
 			"profileDescription": "Soglia personalizzata solo per questo profilo (sovrascrive il predefinito globale)",
 			"inheritDescription": "Questo profilo eredita la soglia predefinita globale ({{threshold}}%)",
-			"usesGlobal": "(usa globale {{threshold}}%)"
+			"usesGlobal": "(usa globale {{threshold}}%)",
+			"description": "Configure when context condensing should be triggered based on token usage"
 		}
 	},
 	"terminal": {
@@ -615,6 +643,10 @@
 		"todoList": {
 			"label": "Abilita strumento lista di cose da fare",
 			"description": "Quando abilitato, Roo può creare e gestire liste di cose da fare per tracciare il progresso delle attività. Questo aiuta a organizzare attività complesse in passaggi gestibili."
+		},
+		"mcpEnabled": {
+			"label": "Enable MCP",
+			"description": "Enable Model Context Protocol (MCP) for enhanced model capabilities"
 		}
 	},
 	"experimental": {
@@ -756,5 +788,8 @@
 		"useCustomArn": "Usa ARN personalizzato..."
 	},
 	"includeMaxOutputTokens": "Includi token di output massimi",
-	"includeMaxOutputTokensDescription": "Invia il parametro dei token di output massimi nelle richieste API. Alcuni provider potrebbero non supportarlo."
+	"includeMaxOutputTokensDescription": "Invia il parametro dei token di output massimi nelle richieste API. Alcuni provider potrebbero non supportarlo.",
+	"language": {
+		"description": "Select your preferred language for the interface"
+	}
 }

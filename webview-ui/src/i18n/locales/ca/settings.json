@@ -12,7 +12,11 @@
 		"title": "Configuració",
 		"saveButtonTooltip": "Desar canvis",
 		"nothingChangedTooltip": "No s'ha canviat res",
-		"doneButtonTooltip": "Descartar els canvis no desats i tancar el panell de configuració"
+		"doneButtonTooltip": "Descartar els canvis no desats i tancar el panell de configuració",
+		"searchPlaceholder": "Search settings...",
+		"searchTooltip": "Search settings",
+		"clearSearchTooltip": "Clear search",
+		"noSearchResults": "No settings match your search"
 	},
 	"unsavedChangesDialog": {
 		"title": "Canvis no desats",
@@ -31,10 +35,15 @@
 		"prompts": "Indicacions",
 		"experimental": "Experimental",
 		"language": "Idioma",
-		"about": "Sobre Roo Code"
+		"about": "Sobre Roo Code",
+		"advanced": "Advanced"
 	},
 	"prompts": {
-		"description": "Configura les indicacions de suport utilitzades per a accions ràpides com millorar indicacions, explicar codi i solucionar problemes. Aquestes indicacions ajuden Roo a proporcionar millor assistència per a tasques comunes de desenvolupament."
+		"description": "Configura les indicacions de suport utilitzades per a accions ràpides com millorar indicacions, explicar codi i solucionar problemes. Aquestes indicacions ajuden Roo a proporcionar millor assistència per a tasques comunes de desenvolupament.",
+		"customSupportPrompts": {
+			"label": "Custom Support Prompts",
+			"description": "Add custom instructions or prompts to guide Roo's behavior"
+		}
 	},
 	"codeIndex": {
 		"title": "Indexació de codi",
@@ -148,7 +157,8 @@
 			"protected": {
 				"label": "Incloure fitxers protegits",
 				"description": "Permetre a Roo crear i editar fitxers protegits (com .rooignore i fitxers de configuració .roo/) sense requerir aprovació."
-			}
+			},
+			"delayDescription": "Wait time in milliseconds after file writes before diagnostics are updated"
 		},
 		"browser": {
 			"label": "Navegador",
@@ -157,7 +167,8 @@
 		"retry": {
 			"label": "Reintentar",
 			"description": "Tornar a intentar sol·licituds d'API fallides automàticament quan el servidor retorna una resposta d'error",
-			"delayLabel": "Retard abans de tornar a intentar la sol·licitud"
+			"delayLabel": "Retard abans de tornar a intentar la sol·licitud",
+			"delayDescription": "Time to wait in seconds before retrying a failed request"
 		},
 		"mcp": {
 			"label": "MCP",
@@ -174,14 +185,21 @@
 		"followupQuestions": {
 			"label": "Pregunta",
 			"description": "Seleccionar automàticament la primera resposta suggerida per a preguntes de seguiment després del temps d'espera configurat",
-			"timeoutLabel": "Temps d'espera abans de seleccionar automàticament la primera resposta"
+			"timeoutLabel": "Temps d'espera abans de seleccionar automàticament la primera resposta",
+			"timeoutDescription": "Time to wait before auto-selecting the first answer"
 		},
 		"execute": {
 			"label": "Executar",
 			"description": "Executar automàticament comandes de terminal permeses sense requerir aprovació",
-			"allowedCommands": "Comandes d'auto-execució permeses",
+			"allowedCommands": {
+				"label": "Allowed Commands",
+				"description": "Commands that Roo can execute automatically (one per line, supports wildcards)"
+			},
 			"allowedCommandsDescription": "Prefixos de comandes que poden ser executats automàticament quan \"Aprovar sempre operacions d'execució\" està habilitat. Afegeix * per permetre totes les comandes (usar amb precaució).",
-			"deniedCommands": "Comandes denegades",
+			"deniedCommands": {
+				"label": "Denied Commands",
+				"description": "Commands that Roo is explicitly forbidden from executing (one per line, supports wildcards)"
+			},
 			"deniedCommandsDescription": "Prefixos de comandes que es rebutjaran automàticament sense requerir aprovació. En cas de conflicte amb comandes permeses, la coincidència de prefix més llarga té prioritat. Afegeix * per denegar totes les comandes.",
 			"commandPlaceholder": "Introduïu prefix de comanda (ex. 'git ')",
 			"deniedCommandPlaceholder": "Introduïu prefix de comanda a denegar (ex. 'rm -rf')",
@@ -195,7 +213,8 @@
 		"apiRequestLimit": {
 			"title": "Màximes Sol·licituds",
 			"description": "Fes aquesta quantitat de sol·licituds API automàticament abans de demanar aprovació per continuar amb la tasca.",
-			"unlimited": "Il·limitat"
+			"unlimited": "Il·limitat",
+			"label": "Max Requests"
 		},
 		"selectOptionsFirst": "Seleccioneu almenys una opció a continuació per activar l'aprovació automàtica"
 	},
@@ -242,7 +261,8 @@
 			"hint": "Si us plau, torneu a obrir la configuració per veure els models més recents.",
 			"loading": "Actualitzant la llista de models...",
 			"success": "Llista de models actualitzada correctament!",
-			"error": "No s'ha pogut actualitzar la llista de models. Si us plau, torneu-ho a provar."
+			"error": "No s'ha pogut actualitzar la llista de models. Si us plau, torneu-ho a provar.",
+			"missingConfig": "Please configure API settings first"
 		},
 		"getRequestyApiKey": "Obtenir clau API de Requesty",
 		"openRouterTransformsText": "Comprimir prompts i cadenes de missatges a la mida del context (<a>Transformacions d'OpenRouter</a>)",
@@ -410,7 +430,9 @@
 			"placeholder": "Per defecte: claude",
 			"maxTokensLabel": "Tokens màxims de sortida",
 			"maxTokensDescription": "Nombre màxim de tokens de sortida per a les respostes de Claude Code. El valor per defecte és 8000."
-		}
+		},
+		"apiProviderDescription": "Select the API provider for AI model access",
+		"modelDescription": "Choose the AI model to use for this configuration"
 	},
 	"browser": {
 		"enable": {
@@ -434,7 +456,10 @@
 		"remote": {
 			"label": "Utilitzar connexió remota del navegador",
 			"description": "Connectar a un navegador Chrome que s'executa amb depuració remota habilitada (--remote-debugging-port=9222).",
-			"urlPlaceholder": "URL personalitzada (ex. http://localhost:9222)",
+			"urlPlaceholder": {
+				"label": "Remote Browser Host",
+				"description": "WebSocket URL for the remote browser connection"
+			},
 			"testButton": "Provar connexió",
 			"testingButton": "Provant...",
 			"instructions": "Introduïu l'adreça d'amfitrió del protocol DevTools o deixeu-la buida per descobrir automàticament instàncies locals de Chrome. El botó Provar Connexió provarà la URL personalitzada si es proporciona, o descobrirà automàticament si el camp està buit."
@@ -450,12 +475,14 @@
 		"sound": {
 			"label": "Habilitar efectes de so",
 			"description": "Quan està habilitat, Roo reproduirà efectes de so per a notificacions i esdeveniments.",
-			"volumeLabel": "Volum"
+			"volumeLabel": "Volum",
+			"volumeDescription": "Adjust the volume level for sound notifications (0-100)"
 		},
 		"tts": {
 			"label": "Habilitar text a veu",
 			"description": "Quan està habilitat, Roo llegirà en veu alta les seves respostes utilitzant text a veu.",
-			"speedLabel": "Velocitat"
+			"speedLabel": "Velocitat",
+			"speedDescription": "Adjust the speech rate for text-to-speech (0.1-10.0)"
 		}
 	},
 	"contextManagement": {
@@ -525,7 +552,8 @@
 			"defaultDescription": "Quan el context arribi a aquest percentatge, es condensarà automàticament per a tots els perfils tret que tinguin configuracions personalitzades",
 			"profileDescription": "Llindar personalitzat només per a aquest perfil (substitueix el per defecte global)",
 			"inheritDescription": "Aquest perfil hereta el llindar per defecte global ({{threshold}}%)",
-			"usesGlobal": "(utilitza global {{threshold}}%)"
+			"usesGlobal": "(utilitza global {{threshold}}%)",
+			"description": "Configure when context condensing should be triggered based on token usage"
 		}
 	},
 	"terminal": {
@@ -614,6 +642,10 @@
 		"todoList": {
 			"label": "Habilitar eina de llista de tasques",
 			"description": "Quan està habilitat, Roo pot crear i gestionar llistes de tasques per fer el seguiment del progrés de les tasques. Això ajuda a organitzar tasques complexes en passos manejables."
+		},
+		"mcpEnabled": {
+			"label": "Enable MCP",
+			"description": "Enable Model Context Protocol (MCP) for enhanced model capabilities"
 		}
 	},
 	"experimental": {
@@ -755,5 +787,8 @@
 		"useCustomArn": "Utilitza ARN personalitzat..."
 	},
 	"includeMaxOutputTokens": "Incloure tokens màxims de sortida",
-	"includeMaxOutputTokensDescription": "Enviar el paràmetre de tokens màxims de sortida a les sol·licituds API. Alguns proveïdors poden no admetre això."
+	"includeMaxOutputTokensDescription": "Enviar el paràmetre de tokens màxims de sortida a les sol·licituds API. Alguns proveïdors poden no admetre això.",
+	"language": {
+		"description": "Select your preferred language for the interface"
+	}
 }

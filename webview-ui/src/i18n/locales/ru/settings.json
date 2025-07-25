@@ -12,7 +12,11 @@
 		"title": "Настройки",
 		"saveButtonTooltip": "Сохранить изменения",
 		"nothingChangedTooltip": "Изменений нет",
-		"doneButtonTooltip": "Отменить несохранённые изменения и закрыть панель настроек"
+		"doneButtonTooltip": "Отменить несохранённые изменения и закрыть панель настроек",
+		"searchPlaceholder": "Search settings...",
+		"searchTooltip": "Search settings",
+		"clearSearchTooltip": "Clear search",
+		"noSearchResults": "No settings match your search"
 	},
 	"unsavedChangesDialog": {
 		"title": "Несохранённые изменения",
@@ -31,10 +35,15 @@
 		"prompts": "Промпты",
 		"experimental": "Экспериментальное",
 		"language": "Язык",
-		"about": "О Roo Code"
+		"about": "О Roo Code",
+		"advanced": "Advanced"
 	},
 	"prompts": {
-		"description": "Настройте промпты поддержки, используемые для быстрых действий, таких как улучшение промптов, объяснение кода и исправление проблем. Эти промпты помогают Roo обеспечить лучшую поддержку для общих задач разработки."
+		"description": "Настройте промпты поддержки, используемые для быстрых действий, таких как улучшение промптов, объяснение кода и исправление проблем. Эти промпты помогают Roo обеспечить лучшую поддержку для общих задач разработки.",
+		"customSupportPrompts": {
+			"label": "Custom Support Prompts",
+			"description": "Add custom instructions or prompts to guide Roo's behavior"
+		}
 	},
 	"codeIndex": {
 		"title": "Индексация кодовой базы",
@@ -148,7 +157,8 @@
 			"protected": {
 				"label": "Включить защищенные файлы",
 				"description": "Разрешить Roo создавать и редактировать защищенные файлы (такие как .rooignore и файлы конфигурации .roo/) без необходимости одобрения."
-			}
+			},
+			"delayDescription": "Wait time in milliseconds after file writes before diagnostics are updated"
 		},
 		"browser": {
 			"label": "Браузер",
@@ -157,7 +167,8 @@
 		"retry": {
 			"label": "Повтор",
 			"description": "Автоматически повторять неудачные запросы к API при ошибке сервера",
-			"delayLabel": "Задержка перед повтором запроса"
+			"delayLabel": "Задержка перед повтором запроса",
+			"delayDescription": "Time to wait in seconds before retrying a failed request"
 		},
 		"mcp": {
 			"label": "MCP",
@@ -174,14 +185,21 @@
 		"followupQuestions": {
 			"label": "Вопрос",
 			"description": "Автоматически выбирать первый предложенный ответ на дополнительные вопросы после настроенного тайм-аута",
-			"timeoutLabel": "Время ожидания перед автоматическим выбором первого ответа"
+			"timeoutLabel": "Время ожидания перед автоматическим выбором первого ответа",
+			"timeoutDescription": "Time to wait before auto-selecting the first answer"
 		},
 		"execute": {
 			"label": "Выполнение",
 			"description": "Автоматически выполнять разрешённые команды терминала без необходимости одобрения",
-			"allowedCommands": "Разрешённые авто-выполняемые команды",
+			"allowedCommands": {
+				"label": "Allowed Commands",
+				"description": "Commands that Roo can execute automatically (one per line, supports wildcards)"
+			},
 			"allowedCommandsDescription": "Префиксы команд, которые могут быть автоматически выполнены при включённом параметре \"Всегда одобрять выполнение операций\". Добавьте * для разрешения всех команд (используйте с осторожностью).",
-			"deniedCommands": "Запрещенные команды",
+			"deniedCommands": {
+				"label": "Denied Commands",
+				"description": "Commands that Roo is explicitly forbidden from executing (one per line, supports wildcards)"
+			},
 			"deniedCommandsDescription": "Префиксы команд, которые будут автоматически отклонены без запроса одобрения. В случае конфликтов с разрешенными командами, приоритет имеет самое длинное совпадение префикса. Добавьте * чтобы запретить все команды.",
 			"commandPlaceholder": "Введите префикс команды (например, 'git ')",
 			"deniedCommandPlaceholder": "Введите префикс команды для запрета (например, 'rm -rf')",
@@ -195,7 +213,8 @@
 		"apiRequestLimit": {
 			"title": "Максимум запросов",
 			"description": "Автоматически выполнять это количество API-запросов перед запросом разрешения на продолжение задачи.",
-			"unlimited": "Без ограничений"
+			"unlimited": "Без ограничений",
+			"label": "Max Requests"
 		},
 		"selectOptionsFirst": "Выберите хотя бы один вариант ниже, чтобы включить автоодобрение"
 	},
@@ -242,7 +261,8 @@
 			"hint": "Пожалуйста, откройте настройки заново, чтобы увидеть последние модели.",
 			"loading": "Обновление списка моделей...",
 			"success": "Список моделей успешно обновлен!",
-			"error": "Не удалось обновить список моделей. Пожалуйста, попробуйте снова."
+			"error": "Не удалось обновить список моделей. Пожалуйста, попробуйте снова.",
+			"missingConfig": "Please configure API settings first"
 		},
 		"getRequestyApiKey": "Получить Requesty API-ключ",
 		"openRouterTransformsText": "Сжимать подсказки и цепочки сообщений до размера контекста (<a>OpenRouter Transforms</a>)",
@@ -410,7 +430,9 @@
 			"placeholder": "По умолчанию: claude",
 			"maxTokensLabel": "Макс. выходных токенов",
 			"maxTokensDescription": "Максимальное количество выходных токенов для ответов Claude Code. По умолчанию 8000."
-		}
+		},
+		"apiProviderDescription": "Select the API provider for AI model access",
+		"modelDescription": "Choose the AI model to use for this configuration"
 	},
 	"browser": {
 		"enable": {
@@ -434,7 +456,10 @@
 		"remote": {
 			"label": "Использовать удалённое подключение к браузеру",
 			"description": "Подключиться к Chrome с включённым удалённым дебагом (--remote-debugging-port=9222).",
-			"urlPlaceholder": "Пользовательский URL (например, http://localhost:9222)",
+			"urlPlaceholder": {
+				"label": "Remote Browser Host",
+				"description": "WebSocket URL for the remote browser connection"
+			},
 			"testButton": "Проверить соединение",
 			"testingButton": "Проверка...",
 			"instructions": "Введите адрес DevTools Protocol или оставьте поле пустым для автоматического поиска локальных экземпляров Chrome. Кнопка проверки попробует пользовательский URL, если он указан, или выполнит автопоиск."
@@ -450,12 +475,14 @@
 		"sound": {
 			"label": "Включить звуковые эффекты",
 			"description": "Если включено, Roo будет воспроизводить звуковые эффекты для уведомлений и событий.",
-			"volumeLabel": "Громкость"
+			"volumeLabel": "Громкость",
+			"volumeDescription": "Adjust the volume level for sound notifications (0-100)"
 		},
 		"tts": {
 			"label": "Включить озвучивание",
 			"description": "Если включено, Roo будет озвучивать свои ответы с помощью преобразования текста в речь.",
-			"speedLabel": "Скорость"
+			"speedLabel": "Скорость",
+			"speedDescription": "Adjust the speech rate for text-to-speech (0.1-10.0)"
 		}
 	},
 	"contextManagement": {
@@ -526,7 +553,8 @@
 			"defaultDescription": "Когда контекст достигнет этого процента, он будет автоматически сжат для всех профилей, если у них нет пользовательских настроек",
 			"profileDescription": "Пользовательский порог только для этого профиля (переопределяет глобальный по умолчанию)",
 			"inheritDescription": "Этот профиль наследует глобальный порог по умолчанию ({{threshold}}%)",
-			"usesGlobal": "(использует глобальный {{threshold}}%)"
+			"usesGlobal": "(использует глобальный {{threshold}}%)",
+			"description": "Configure when context condensing should be triggered based on token usage"
 		}
 	},
 	"terminal": {
@@ -615,6 +643,10 @@
 		"todoList": {
 			"label": "Включить инструмент списка задач",
 			"description": "При включении Roo может создавать и управлять списками задач для отслеживания прогресса. Это помогает организовать сложные задачи в управляемые шаги."
+		},
+		"mcpEnabled": {
+			"label": "Enable MCP",
+			"description": "Enable Model Context Protocol (MCP) for enhanced model capabilities"
 		}
 	},
 	"experimental": {
@@ -756,5 +788,8 @@
 		"useCustomArn": "Использовать пользовательский ARN..."
 	},
 	"includeMaxOutputTokens": "Включить максимальные выходные токены",
-	"includeMaxOutputTokensDescription": "Отправлять параметр максимальных выходных токенов в API-запросах. Некоторые провайдеры могут не поддерживать это."
+	"includeMaxOutputTokensDescription": "Отправлять параметр максимальных выходных токенов в API-запросах. Некоторые провайдеры могут не поддерживать это.",
+	"language": {
+		"description": "Select your preferred language for the interface"
+	}
 }
