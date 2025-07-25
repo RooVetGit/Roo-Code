@@ -267,6 +267,62 @@ describe("DiffViewProvider", () => {
 				"Failed to execute diff command for /mock/cwd/test.md: Cannot open file",
 			)
 		})
+
+		it("should resolve immediately if diff editor is already visible after command", async () => {
+			// Setup
+			const mockEditor = {
+				document: {
+					uri: { fsPath: `${mockCwd}/test.md` },
+					getText: vi.fn().mockReturnValue(""),
+					lineCount: 0,
+				},
+				selection: {
+					active: { line: 0, character: 0 },
+					anchor: { line: 0, character: 0 },
+				},
+				edit: vi.fn().mockResolvedValue(true),
+				revealRange: vi.fn(),
+			}
+
+			// Mock showTextDocument
+			vi.mocked(vscode.window.showTextDocument).mockResolvedValue(mockEditor as any)
+
+			// Mock executeCommand to succeed
+			vi.mocked(vscode.commands.executeCommand).mockResolvedValue(undefined)
+
+			// Mock workspace.onDidOpenTextDocument - don't trigger callback
+			vi.mocked(vscode.workspace.onDidOpenTextDocument).mockReturnValue({ dispose: vi.fn() })
+
+			// Mock window.onDidChangeVisibleTextEditors - don't trigger callback
+			vi.mocked(vscode.window.onDidChangeVisibleTextEditors).mockReturnValue({ dispose: vi.fn() })
+
+			// Mock window.visibleTextEditors to return our editor immediately after command
+			vi.mocked(vscode.window).visibleTextEditors = [mockEditor as any]
+
+			// Set up for file
+			;(diffViewProvider as any).editType = "modify"
+
+			// Execute open - should complete successfully
+			await diffViewProvider.open("test.md")
+
+			// Verify that showTextDocument was called
+			expect(vscode.window.showTextDocument).toHaveBeenCalledWith(
+				expect.objectContaining({ fsPath: `${mockCwd}/test.md` }),
+				{ preview: false, viewColumn: vscode.ViewColumn.Active, preserveFocus: true },
+			)
+
+			// Verify that the diff command was executed
+			expect(vscode.commands.executeCommand).toHaveBeenCalledWith(
+				"vscode.diff",
+				expect.any(Object),
+				expect.any(Object),
+				`test.md: ${DIFF_VIEW_LABEL_CHANGES} (Editable)`,
+				{ preserveFocus: true },
+			)
+
+			// Verify that the activeDiffEditor was set
+			expect((diffViewProvider as any).activeDiffEditor).toBe(mockEditor)
+		})
 	})
 
 	describe("closeAllDiffViews method", () => {
