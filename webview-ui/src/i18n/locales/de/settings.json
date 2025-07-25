@@ -31,19 +31,10 @@
 		"prompts": "Eingabeaufforderungen",
 		"experimental": "Experimentell",
 		"language": "Sprache",
-		"about": "Über Roo Code",
-		"editingType": "Bearbeitungstyp",
-		"diffSettings": "Diff-Einstellungen",
-		"fileEditing": "Dateibearbeitung"
+		"about": "Über Roo Code"
 	},
 	"prompts": {
 		"description": "Konfiguriere Support-Prompts, die für schnelle Aktionen wie das Verbessern von Prompts, das Erklären von Code und das Beheben von Problemen verwendet werden. Diese Prompts helfen Roo dabei, bessere Unterstützung für häufige Entwicklungsaufgaben zu bieten."
-	},
-	"editingType": {
-		"description": "Wähle deinen bevorzugten Bearbeitungsworkflow."
-	},
-	"diffSettings": {
-		"description": "Konfiguriere, wie Diffs während der Bearbeitung angewendet werden."
 	},
 	"codeIndex": {
 		"title": "Codebase-Indexierung",
@@ -262,9 +253,25 @@
 		"getChutesApiKey": "Chutes API-Schlüssel erhalten",
 		"deepSeekApiKey": "DeepSeek API-Schlüssel",
 		"getDeepSeekApiKey": "DeepSeek API-Schlüssel erhalten",
+		"moonshotApiKey": "Moonshot API-Schlüssel",
+		"getMoonshotApiKey": "Moonshot API-Schlüssel erhalten",
+		"moonshotBaseUrl": "Moonshot-Einstiegspunkt",
 		"geminiApiKey": "Gemini API-Schlüssel",
 		"getGroqApiKey": "Groq API-Schlüssel erhalten",
 		"groqApiKey": "Groq API-Schlüssel",
+		"getHuggingFaceApiKey": "Hugging Face API-Schlüssel erhalten",
+		"huggingFaceApiKey": "Hugging Face API-Schlüssel",
+		"huggingFaceModelId": "Modell-ID",
+		"huggingFaceLoading": "Lädt...",
+		"huggingFaceModelsCount": "({{count}} Modelle)",
+		"huggingFaceSelectModel": "Modell auswählen...",
+		"huggingFaceSearchModels": "Modelle durchsuchen...",
+		"huggingFaceNoModelsFound": "Keine Modelle gefunden",
+		"huggingFaceProvider": "Anbieter",
+		"huggingFaceProviderAuto": "Automatisch",
+		"huggingFaceSelectProvider": "Anbieter auswählen...",
+		"huggingFaceSearchProviders": "Anbieter durchsuchen...",
+		"huggingFaceNoProvidersFound": "Keine Anbieter gefunden",
 		"getGeminiApiKey": "Gemini API-Schlüssel erhalten",
 		"openAiApiKey": "OpenAI API-Schlüssel",
 		"apiKey": "API-Schlüssel",
@@ -280,6 +287,7 @@
 		"litellmBaseUrl": "LiteLLM Basis-URL",
 		"awsCredentials": "AWS Anmeldedaten",
 		"awsProfile": "AWS Profil",
+		"awsApiKey": "Amazon Bedrock API-Schlüssel",
 		"awsProfileName": "AWS Profilname",
 		"awsAccessKey": "AWS Zugangsschlüssel",
 		"awsSecretKey": "AWS Geheimschlüssel",
@@ -494,6 +502,22 @@
 			"lines": "Zeilen",
 			"always_full_read": "Immer die gesamte Datei lesen"
 		},
+		"diagnostics": {
+			"includeMessages": {
+				"label": "Diagnosen automatisch in den Kontext aufnehmen",
+				"description": "Wenn aktiviert, werden Diagnosenachrichten (Fehler) aus bearbeiteten Dateien automatisch in den Kontext aufgenommen. Sie können jederzeit alle Workspace-Diagnosen manuell mit @problems einbeziehen."
+			},
+			"maxMessages": {
+				"label": "Maximale Anzahl von Diagnosenachrichten",
+				"description": "Maximale Anzahl von Diagnosenachrichten, die pro Datei eingeschlossen werden. Dieses Limit gilt sowohl für die automatische Einbeziehung (wenn das Kontrollkästchen aktiviert ist) als auch für manuelle @problems-Erwähnungen. Höhere Werte bieten mehr Kontext, erhöhen aber den Token-Verbrauch.",
+				"resetTooltip": "Auf Standardwert zurücksetzen (50)",
+				"unlimitedLabel": "Unbegrenzt"
+			},
+			"delayAfterWrite": {
+				"label": "Verzögerung nach Schreibvorgängen, damit Diagnosen potenzielle Probleme erkennen können",
+				"description": "Wartezeit nach Dateischreibvorgängen vor dem Fortfahren, damit Diagnosetools Änderungen verarbeiten und Probleme erkennen können."
+			}
+		},
 		"condensingThreshold": {
 			"label": "Schwellenwert für Kontextkomprimierung",
 			"selectProfile": "Profil für Schwellenwert konfigurieren",
@@ -587,12 +611,9 @@
 				"description": "Dieser Schieberegler steuert, wie genau Codeabschnitte bei der Anwendung von Diffs übereinstimmen müssen. Niedrigere Werte ermöglichen eine flexiblere Übereinstimmung, erhöhen aber das Risiko falscher Ersetzungen. Verwenden Sie Werte unter 100 % mit äußerster Vorsicht."
 			}
 		},
-		"fileEditing": {
-			"fileBasedEditing": {
-				"label": "Dateisystem-basierte Bearbeitung aktivieren",
-				"description": "Wenn aktiviert, bearbeitet Roo Dateien direkt im Dateisystem anstatt Diff-Ansichten zu verwenden. Dies deaktiviert alle anderen Bearbeitungsverhalten-Schalter für eine einfachere, direktere Bearbeitungserfahrung."
-			},
-			"exclusivityNotice": "Dateisystem-basierter Bearbeitungsmodus ist aktiviert. Alle anderen Bearbeitungsverhalten-Schalter sind deaktiviert, um eine konsistente Erfahrung zu gewährleisten."
+		"todoList": {
+			"label": "Todo-Listen-Tool aktivieren",
+			"description": "Wenn aktiviert, kann Roo Todo-Listen erstellen und verwalten, um den Aufgabenfortschritt zu verfolgen. Dies hilft, komplexe Aufgaben in überschaubare Schritte zu organisieren."
 		}
 	},
 	"experimental": {

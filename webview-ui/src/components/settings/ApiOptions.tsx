@@ -18,6 +18,7 @@ import {
 	claudeCodeDefaultModelId,
 	geminiDefaultModelId,
 	deepSeekDefaultModelId,
+	moonshotDefaultModelId,
 	mistralDefaultModelId,
 	xaiDefaultModelId,
 	groqDefaultModelId,
@@ -58,9 +59,11 @@ import {
 	Gemini,
 	Glama,
 	Groq,
+	HuggingFace,
 	LMStudio,
 	LiteLLM,
 	Mistral,
+	Moonshot,
 	Ollama,
 	OpenAI,
 	OpenAICompatible,
@@ -77,6 +80,8 @@ import { inputEventTransform, noTransform } from "./transforms"
 import { ModelInfoView } from "./ModelInfoView"
 import { ApiErrorMessage } from "./ApiErrorMessage"
 import { ThinkingBudget } from "./ThinkingBudget"
+import { DiffSettingsControl } from "./DiffSettingsControl"
+import { TodoListSettingsControl } from "./TodoListSettingsControl"
 import { TemperatureControl } from "./TemperatureControl"
 import { RateLimitSecondsControl } from "./RateLimitSecondsControl"
 import { ConsecutiveMistakeLimitControl } from "./ConsecutiveMistakeLimitControl"
@@ -285,6 +290,7 @@ const ApiOptions = ({
 				"openai-native": { field: "apiModelId", default: openAiNativeDefaultModelId },
 				gemini: { field: "apiModelId", default: geminiDefaultModelId },
 				deepseek: { field: "apiModelId", default: deepSeekDefaultModelId },
+				moonshot: { field: "apiModelId", default: moonshotDefaultModelId },
 				mistral: { field: "apiModelId", default: mistralDefaultModelId },
 				xai: { field: "apiModelId", default: xaiDefaultModelId },
 				groq: { field: "apiModelId", default: groqDefaultModelId },
@@ -462,6 +468,10 @@ const ApiOptions = ({
 				<DeepSeek apiConfiguration={apiConfiguration} setApiConfigurationField={setApiConfigurationField} />
 			)}
 
+			{selectedProvider === "moonshot" && (
+				<Moonshot apiConfiguration={apiConfiguration} setApiConfigurationField={setApiConfigurationField} />
+			)}
+
 			{selectedProvider === "vscode-lm" && (
 				<VSCodeLM apiConfiguration={apiConfiguration} setApiConfigurationField={setApiConfigurationField} />
 			)}
@@ -476,6 +486,10 @@ const ApiOptions = ({
 
 			{selectedProvider === "groq" && (
 				<Groq apiConfiguration={apiConfiguration} setApiConfigurationField={setApiConfigurationField} />
+			)}
+
+			{selectedProvider === "huggingface" && (
+				<HuggingFace apiConfiguration={apiConfiguration} setApiConfigurationField={setApiConfigurationField} />
 			)}
 
 			{selectedProvider === "chutes" && (
@@ -563,6 +577,15 @@ const ApiOptions = ({
 						<span className="font-medium">{t("settings:advancedSettings.title")}</span>
 					</CollapsibleTrigger>
 					<CollapsibleContent className="space-y-3">
+						<TodoListSettingsControl
+							todoListEnabled={apiConfiguration.todoListEnabled}
+							onChange={(field, value) => setApiConfigurationField(field, value)}
+						/>
+						<DiffSettingsControl
+							diffEnabled={apiConfiguration.diffEnabled}
+							fuzzyMatchThreshold={apiConfiguration.fuzzyMatchThreshold}
+							onChange={(field, value) => setApiConfigurationField(field, value)}
+						/>
 						<TemperatureControl
 							value={apiConfiguration.modelTemperature}
 							onChange={handleInputChange("modelTemperature", noTransform)}

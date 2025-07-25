@@ -28,6 +28,7 @@
 		"could_not_open_file_generic": "ファイルを開けませんでした！",
 		"checkpoint_timeout": "チェックポイントの復元を試みる際にタイムアウトしました。",
 		"checkpoint_failed": "チェックポイントの復元に失敗しました。",
+		"git_not_installed": "チェックポイント機能にはGitが必要です。チェックポイントを有効にするにはGitをインストールしてください。",
 		"no_workspace": "まずプロジェクトフォルダを開いてください",
 		"update_support_prompt": "サポートメッセージの更新に失敗しました",
 		"reset_support_prompt": "サポートメッセージのリセットに失敗しました",
@@ -107,7 +108,8 @@
 	},
 	"buttons": {
 		"save": "保存",
-		"edit": "編集"
+		"edit": "編集",
+		"learn_more": "詳細"
 	},
 	"tasks": {
 		"canceled": "タスクエラー：ユーザーによって停止およびキャンセルされました。",
@@ -145,11 +147,17 @@
 			"deleteFailed": "カスタムモードの削除に失敗しました：{{error}}",
 			"resetFailed": "カスタムモードのリセットに失敗しました：{{error}}",
 			"modeNotFound": "書き込みエラー：モードが見つかりません",
-			"noWorkspaceForProject": "プロジェクト固有モード用のワークスペースフォルダーが見つかりません"
+			"noWorkspaceForProject": "プロジェクト固有モード用のワークスペースフォルダーが見つかりません",
+			"rulesCleanupFailed": "モードは正常に削除されましたが、{{rulesFolderPath}} にあるルールフォルダの削除に失敗しました。手動で削除する必要がある場合があります。"
 		},
 		"scope": {
 			"project": "プロジェクト",
 			"global": "グローバル"
+		}
+	},
+	"marketplace": {
+		"mode": {
+			"rulesCleanupFailed": "モードは正常に削除されましたが、{{rulesFolderPath}} にあるルールフォルダの削除に失敗しました。手動で削除する必要がある場合があります。"
 		}
 	},
 	"mdm": {

@@ -31,20 +31,10 @@
 		"prompts": "Indicaciones",
 		"experimental": "Experimental",
 		"language": "Idioma",
-		"about": "Acerca de Roo Code",
-		"editingType": "Tipo de edición",
-		"diffSettings": "Configuración de diff",
-		"diffViewAutoFocusBehavior": "Auto-enfoque de vista diff",
-		"fileEditing": "Edición de archivos"
+		"about": "Acerca de Roo Code"
 	},
 	"prompts": {
 		"description": "Configura indicaciones de soporte que se utilizan para acciones rápidas como mejorar indicaciones, explicar código y solucionar problemas. Estas indicaciones ayudan a Roo a brindar mejor asistencia para tareas comunes de desarrollo."
-	},
-	"editingType": {
-		"description": "Elige tu flujo de trabajo de edición preferido."
-	},
-	"diffSettings": {
-		"description": "Configura cómo se aplican los diffs durante la edición."
 	},
 	"codeIndex": {
 		"title": "Indexación de código",
@@ -263,9 +253,25 @@
 		"getChutesApiKey": "Obtener clave API de Chutes",
 		"deepSeekApiKey": "Clave API de DeepSeek",
 		"getDeepSeekApiKey": "Obtener clave API de DeepSeek",
+		"moonshotApiKey": "Clave API de Moonshot",
+		"getMoonshotApiKey": "Obtener clave API de Moonshot",
+		"moonshotBaseUrl": "Punto de entrada de Moonshot",
 		"geminiApiKey": "Clave API de Gemini",
 		"getGroqApiKey": "Obtener clave API de Groq",
 		"groqApiKey": "Clave API de Groq",
+		"getHuggingFaceApiKey": "Obtener clave API de Hugging Face",
+		"huggingFaceApiKey": "Clave API de Hugging Face",
+		"huggingFaceModelId": "ID del modelo",
+		"huggingFaceLoading": "Cargando...",
+		"huggingFaceModelsCount": "({{count}} modelos)",
+		"huggingFaceSelectModel": "Seleccionar un modelo...",
+		"huggingFaceSearchModels": "Buscar modelos...",
+		"huggingFaceNoModelsFound": "No se encontraron modelos",
+		"huggingFaceProvider": "Proveedor",
+		"huggingFaceProviderAuto": "Automático",
+		"huggingFaceSelectProvider": "Seleccionar un proveedor...",
+		"huggingFaceSearchProviders": "Buscar proveedores...",
+		"huggingFaceNoProvidersFound": "No se encontraron proveedores",
 		"getGeminiApiKey": "Obtener clave API de Gemini",
 		"openAiApiKey": "Clave API de OpenAI",
 		"apiKey": "Clave API",
@@ -281,6 +287,7 @@
 		"litellmBaseUrl": "URL base de LiteLLM",
 		"awsCredentials": "Credenciales de AWS",
 		"awsProfile": "Perfil de AWS",
+		"awsApiKey": "Clave de API de Amazon Bedrock",
 		"awsProfileName": "Nombre del perfil de AWS",
 		"awsAccessKey": "Clave de acceso de AWS",
 		"awsSecretKey": "Clave secreta de AWS",
@@ -495,6 +502,22 @@
 			"label": "Límite de lecturas simultáneas",
 			"description": "Número máximo de archivos que la herramienta 'read_file' puede procesar simultáneamente. Valores más altos pueden acelerar la lectura de múltiples archivos pequeños pero aumentan el uso de memoria."
 		},
+		"diagnostics": {
+			"includeMessages": {
+				"label": "Incluir automáticamente diagnósticos en el contexto",
+				"description": "Cuando está habilitado, los mensajes de diagnóstico (errores) de los archivos editados se incluirán automáticamente en el contexto. Siempre puedes incluir manualmente todos los diagnósticos del espacio de trabajo usando @problems."
+			},
+			"maxMessages": {
+				"label": "Máximo de mensajes de diagnóstico",
+				"description": "Número máximo de mensajes de diagnóstico a incluir por archivo. Este límite se aplica tanto a la inclusión automática (cuando la casilla está habilitada) como a las menciones manuales de @problems. Valores más altos proporcionan más contexto pero aumentan el uso de tokens.",
+				"resetTooltip": "Restablecer al valor predeterminado (50)",
+				"unlimitedLabel": "Ilimitado"
+			},
+			"delayAfterWrite": {
+				"label": "Retraso después de escrituras para permitir que los diagnósticos detecten problemas potenciales",
+				"description": "Tiempo de espera después de escrituras de archivos antes de continuar, permitiendo que las herramientas de diagnóstico procesen cambios y detecten problemas."
+			}
+		},
 		"condensingThreshold": {
 			"label": "Umbral de condensación de contexto",
 			"selectProfile": "Configurar umbral para perfil",
@@ -588,12 +611,9 @@
 				"description": "Este control deslizante controla cuán precisamente deben coincidir las secciones de código al aplicar diffs. Valores más bajos permiten coincidencias más flexibles pero aumentan el riesgo de reemplazos incorrectos. Use valores por debajo del 100% con extrema precaución."
 			}
 		},
-		"fileEditing": {
-			"fileBasedEditing": {
-				"label": "Habilitar edición basada en sistema de archivos",
-				"description": "Cuando está habilitado, Roo editará archivos directamente en el sistema de archivos en lugar de usar vistas de diff. Esto deshabilita todos los demás toggles de comportamiento de edición para una experiencia de edición más simple y directa."
-			},
-			"exclusivityNotice": "El modo de edición basado en archivos está habilitado. Todos los demás toggles de comportamiento de edición están deshabilitados para garantizar una experiencia consistente."
+		"todoList": {
+			"label": "Habilitar herramienta de lista de tareas",
+			"description": "Cuando está habilitado, Roo puede crear y gestionar listas de tareas para hacer seguimiento del progreso. Esto ayuda a organizar tareas complejas en pasos manejables."
 		}
 	},
 	"experimental": {

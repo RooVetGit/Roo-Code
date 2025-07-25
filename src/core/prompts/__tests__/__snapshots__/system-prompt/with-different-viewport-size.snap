@@ -473,7 +473,7 @@ Replace the entire TODO list with an updated checklist reflecting the current st
 </update_todo_list>
 
 **When to Use:**
-- The task involves multiple steps or requires ongoing tracking.
+- The task is complicated or involves multiple steps or requires ongoing tracking.
 - You need to update the status of several todos at once.
 - New actionable items are discovered during task execution.
 - The user requests a todo list or provides multiple tasks.
@@ -610,6 +610,8 @@ Mode-specific Instructions:
    - Listed in logical execution order
    - Focused on a single, well-defined outcome
    - Clear enough that another mode could execute it independently
+
+   **Note:** If the `update_todo_list` tool is not available, write the plan to a markdown file (e.g., `plan.md` or `todo.md`) instead.
 
 4. As you gather more information or discover new requirements, update the todo list to reflect the current understanding of what needs to be accomplished.
 
