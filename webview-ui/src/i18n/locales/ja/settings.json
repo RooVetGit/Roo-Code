@@ -410,7 +410,8 @@
 			"placeholder": "デフォルト：claude",
 			"maxTokensLabel": "最大出力トークン",
 			"maxTokensDescription": "Claude Codeレスポンスの最大出力トークン数。デフォルトは8000です。"
-		}
+		},
+		"apiKeyUseEnvVar": "環境変数{{name}}からAPIキーを使用"
 	},
 	"browser": {
 		"enable": {

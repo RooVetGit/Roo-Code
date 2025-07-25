@@ -22,6 +22,7 @@ import { inputEventTransform, noTransform } from "../transforms"
 import { ModelPicker } from "../ModelPicker"
 import { R1FormatSetting } from "../R1FormatSetting"
 import { ThinkingBudget } from "../ThinkingBudget"
+import { ApiKey } from "../ApiKey"
 
 type OpenAICompatibleProps = {
 	apiConfiguration: ProviderSettings
@@ -129,14 +130,14 @@ export const OpenAICompatible = ({
 				className="w-full">
 				<label className="block font-medium mb-1">{t("settings:providers.openAiBaseUrl")}</label>
 			</VSCodeTextField>
-			<VSCodeTextField
-				value={apiConfiguration?.openAiApiKey || ""}
-				type="password"
-				onInput={handleInputChange("openAiApiKey")}
-				placeholder={t("settings:placeholders.apiKey")}
-				className="w-full">
-				<label className="block font-medium mb-1">{t("settings:providers.apiKey")}</label>
-			</VSCodeTextField>
+			<ApiKey
+				apiKey={apiConfiguration?.openAiApiKey || ""}
+				apiKeyEnvVar="OPEN_AI_API_KEY"
+				apiKeyUseEnvVar={!!apiConfiguration?.openAiApiKeyUseEnvVar}
+				setApiKey={(value: string) => setApiConfigurationField("openAiApiKey", value)}
+				setApiKeyUseEnvVar={(value: boolean) => setApiConfigurationField("openAiApiKeyUseEnvVar", value)}
+				apiKeyLabel={t("settings:providers.openAiApiKey")}
+			/>
 			<ModelPicker
 				apiConfiguration={apiConfiguration}
 				setApiConfigurationField={setApiConfigurationField}

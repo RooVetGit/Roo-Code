@@ -410,7 +410,8 @@
 			"placeholder": "기본값: claude",
 			"maxTokensLabel": "최대 출력 토큰",
 			"maxTokensDescription": "Claude Code 응답의 최대 출력 토큰 수. 기본값은 8000입니다."
-		}
+		},
+		"apiKeyUseEnvVar": "환경 변수 {{name}}에서 API 키 사용"
 	},
 	"browser": {
 		"enable": {

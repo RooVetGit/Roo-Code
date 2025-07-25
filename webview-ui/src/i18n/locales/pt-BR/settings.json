@@ -410,7 +410,8 @@
 			"placeholder": "Padrão: claude",
 			"maxTokensLabel": "Tokens de saída máximos",
 			"maxTokensDescription": "Número máximo de tokens de saída para respostas do Claude Code. O padrão é 8000."
-		}
+		},
+		"apiKeyUseEnvVar": "Usar chave API da variável de ambiente {{name}}"
 	},
 	"browser": {
 		"enable": {

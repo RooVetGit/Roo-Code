@@ -410,7 +410,8 @@
 			"placeholder": "Standaard: claude",
 			"maxTokensLabel": "Max Output Tokens",
 			"maxTokensDescription": "Maximaal aantal output-tokens voor Claude Code-reacties. Standaard is 8000."
-		}
+		},
+		"apiKeyUseEnvVar": "Gebruik API-sleutel van omgevingsvariabele {{name}}"
 	},
 	"browser": {
 		"enable": {

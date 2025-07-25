@@ -410,7 +410,8 @@
 			"placeholder": "Mặc định: claude",
 			"maxTokensLabel": "Số token đầu ra tối đa",
 			"maxTokensDescription": "Số lượng token đầu ra tối đa cho các phản hồi của Claude Code. Mặc định là 8000."
-		}
+		},
+		"apiKeyUseEnvVar": "Sử dụng khóa API từ biến môi trường {{name}}"
 	},
 	"browser": {
 		"enable": {

@@ -771,6 +771,7 @@ export class ClineProvider
 				window.IMAGES_BASE_URI = "${imagesUri}"
 				window.AUDIO_BASE_URI = "${audioUri}"
 				window.MATERIAL_ICONS_BASE_URI = "${materialIconsUri}"
+				window.PROCESS_ENV = ${JSON.stringify(process.env)}
 			</script>
             <title>Roo Code</title>
           </head>

@@ -414,7 +414,8 @@
 			"placeholder": "Default: claude",
 			"maxTokensLabel": "Token Output Maks",
 			"maxTokensDescription": "Jumlah maksimum token output untuk respons Claude Code. Default adalah 8000."
-		}
+		},
+		"apiKeyUseEnvVar": "Gunakan kunci API dari variabel lingkungan {{name}}"
 	},
 	"browser": {
 		"enable": {

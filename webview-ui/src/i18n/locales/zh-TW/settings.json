@@ -410,7 +410,8 @@
 			"placeholder": "預設：claude",
 			"maxTokensLabel": "最大輸出 Token",
 			"maxTokensDescription": "Claude Code 回應的最大輸出 Token 數量。預設為 8000。"
-		}
+		},
+		"apiKeyUseEnvVar": "使用環境變數 {{name}} 中的 API 密鑰"
 	},
 	"browser": {
 		"enable": {

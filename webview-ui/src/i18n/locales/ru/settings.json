@@ -410,7 +410,8 @@
 			"placeholder": "По умолчанию: claude",
 			"maxTokensLabel": "Макс. выходных токенов",
 			"maxTokensDescription": "Максимальное количество выходных токенов для ответов Claude Code. По умолчанию 8000."
-		}
+		},
+		"apiKeyUseEnvVar": "Использовать API-ключ из переменной окружения {{name}}"
 	},
 	"browser": {
 		"enable": {

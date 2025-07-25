@@ -1,16 +1,12 @@
-import { useCallback } from "react"
-import { VSCodeTextField } from "@vscode/webview-ui-toolkit/react"
-
 import { type ProviderSettings, type OrganizationAllowList, glamaDefaultModelId } from "@roo-code/types"
 
 import type { RouterModels } from "@roo/api"
 
 import { useAppTranslation } from "@src/i18n/TranslationContext"
 import { getGlamaAuthUrl } from "@src/oauth/urls"
-import { VSCodeButtonLink } from "@src/components/common/VSCodeButtonLink"
 
-import { inputEventTransform } from "../transforms"
 import { ModelPicker } from "../ModelPicker"
+import { ApiKey } from "../ApiKey"
 
 type GlamaProps = {
 	apiConfiguration: ProviderSettings
@@ -31,35 +27,18 @@ export const Glama = ({
 }: GlamaProps) => {
 	const { t } = useAppTranslation()
 
-	const handleInputChange = useCallback(
-		<K extends keyof ProviderSettings, E>(
-			field: K,
-			transform: (event: E) => ProviderSettings[K] = inputEventTransform,
-		) =>
-			(event: E | Event) => {
-				setApiConfigurationField(field, transform(event as E))
-			},
-		[setApiConfigurationField],
-	)
-
 	return (
 		<>
-			<VSCodeTextField
-				value={apiConfiguration?.glamaApiKey || ""}
-				type="password"
-				onInput={handleInputChange("glamaApiKey")}
-				placeholder={t("settings:placeholders.apiKey")}
-				className="w-full">
-				<label className="block font-medium mb-1">{t("settings:providers.glamaApiKey")}</label>
-			</VSCodeTextField>
-			<div className="text-sm text-vscode-descriptionForeground -mt-2">
-				{t("settings:providers.apiKeyStorageNotice")}
-			</div>
-			{!apiConfiguration?.glamaApiKey && (
-				<VSCodeButtonLink href={getGlamaAuthUrl(uriScheme)} style={{ width: "100%" }} appearance="primary">
-					{t("settings:providers.getGlamaApiKey")}
-				</VSCodeButtonLink>
-			)}
+			<ApiKey
+				apiKey={apiConfiguration?.glamaApiKey || ""}
+				apiKeyEnvVar="GLAMA_API_KEY"
+				apiKeyUseEnvVar={!!apiConfiguration?.glamaApiKeyUseEnvVar}
+				setApiKey={(value: string) => setApiConfigurationField("glamaApiKey", value)}
+				setApiKeyUseEnvVar={(value: boolean) => setApiConfigurationField("glamaApiKeyUseEnvVar", value)}
+				apiKeyLabel={t("settings:providers.glamaApiKey")}
+				getApiKeyUrl={getGlamaAuthUrl(uriScheme)}
+				getApiKeyLabel={t("settings:providers.getGlamaApiKey")}
+			/>
 			<ModelPicker
 				apiConfiguration={apiConfiguration}
 				setApiConfigurationField={setApiConfigurationField}

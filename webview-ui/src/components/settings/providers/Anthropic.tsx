@@ -5,9 +5,9 @@ import { VSCodeTextField } from "@vscode/webview-ui-toolkit/react"
 import type { ProviderSettings } from "@roo-code/types"
 
 import { useAppTranslation } from "@src/i18n/TranslationContext"
-import { VSCodeButtonLink } from "@src/components/common/VSCodeButtonLink"
 
 import { inputEventTransform, noTransform } from "../transforms"
+import { ApiKey } from "../ApiKey"
 
 type AnthropicProps = {
 	apiConfiguration: ProviderSettings
@@ -16,7 +16,6 @@ type AnthropicProps = {
 
 export const Anthropic = ({ apiConfiguration, setApiConfigurationField }: AnthropicProps) => {
 	const { t } = useAppTranslation()
-
 	const [anthropicBaseUrlSelected, setAnthropicBaseUrlSelected] = useState(!!apiConfiguration?.anthropicBaseUrl)
 
 	const handleInputChange = useCallback(
@@ -32,22 +31,16 @@ export const Anthropic = ({ apiConfiguration, setApiConfigurationField }: Anthro
 
 	return (
 		<>
-			<VSCodeTextField
-				value={apiConfiguration?.apiKey || ""}
-				type="password"
-				onInput={handleInputChange("apiKey")}
-				placeholder={t("settings:placeholders.apiKey")}
-				className="w-full">
-				<label className="block font-medium mb-1">{t("settings:providers.anthropicApiKey")}</label>
-			</VSCodeTextField>
-			<div className="text-sm text-vscode-descriptionForeground -mt-2">
-				{t("settings:providers.apiKeyStorageNotice")}
-			</div>
-			{!apiConfiguration?.apiKey && (
-				<VSCodeButtonLink href="https://console.anthropic.com/settings/keys" appearance="secondary">
-					{t("settings:providers.getAnthropicApiKey")}
-				</VSCodeButtonLink>
-			)}
+			<ApiKey
+				apiKey={apiConfiguration?.apiKey || ""}
+				apiKeyEnvVar="ANTHROPIC_API_KEY"
+				apiKeyUseEnvVar={!!apiConfiguration?.anthropicApiKeyUseEnvVar}
+				setApiKey={(value: string) => setApiConfigurationField("apiKey", value)}
+				setApiKeyUseEnvVar={(value: boolean) => setApiConfigurationField("anthropicApiKeyUseEnvVar", value)}
+				apiKeyLabel={t("settings:providers.anthropicApiKey")}
+				getApiKeyUrl="https://console.anthropic.com/settings/keys"
+				getApiKeyLabel={t("settings:providers.getAnthropicApiKey")}
+			/>
 			<div>
 				<Checkbox
 					checked={anthropicBaseUrlSelected}

@@ -410,7 +410,8 @@
 			"placeholder": "Domyślnie: claude",
 			"maxTokensLabel": "Maksymalna liczba tokenów wyjściowych",
 			"maxTokensDescription": "Maksymalna liczba tokenów wyjściowych dla odpowiedzi Claude Code. Domyślnie 8000."
-		}
+		},
+		"apiKeyUseEnvVar": "Użyj klucza API ze zmiennej środowiskowej {{name}}"
 	},
 	"browser": {
 		"enable": {

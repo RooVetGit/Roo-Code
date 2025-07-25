@@ -5,9 +5,9 @@ import { VSCodeTextField } from "@vscode/webview-ui-toolkit/react"
 import type { ProviderSettings } from "@roo-code/types"
 
 import { useAppTranslation } from "@src/i18n/TranslationContext"
-import { VSCodeButtonLink } from "@src/components/common/VSCodeButtonLink"
 
 import { inputEventTransform } from "../transforms"
+import { ApiKey } from "../ApiKey"
 
 type OpenAIProps = {
 	apiConfiguration: ProviderSettings
@@ -56,22 +56,16 @@ export const OpenAI = ({ apiConfiguration, setApiConfigurationField }: OpenAIPro
 					/>
 				</>
 			)}
-			<VSCodeTextField
-				value={apiConfiguration?.openAiNativeApiKey || ""}
-				type="password"
-				onInput={handleInputChange("openAiNativeApiKey")}
-				placeholder={t("settings:placeholders.apiKey")}
-				className="w-full">
-				<label className="block font-medium mb-1">{t("settings:providers.openAiApiKey")}</label>
-			</VSCodeTextField>
-			<div className="text-sm text-vscode-descriptionForeground -mt-2">
-				{t("settings:providers.apiKeyStorageNotice")}
-			</div>
-			{!apiConfiguration?.openAiNativeApiKey && (
-				<VSCodeButtonLink href="https://platform.openai.com/api-keys" appearance="secondary">
-					{t("settings:providers.getOpenAiApiKey")}
-				</VSCodeButtonLink>
-			)}
+			<ApiKey
+				apiKey={apiConfiguration?.openAiNativeApiKey || ""}
+				apiKeyEnvVar="OPEN_AI_NATIVE_API_KEY"
+				apiKeyUseEnvVar={!!apiConfiguration?.openAiNativeApiKeyUseEnvVar}
+				setApiKey={(value: string) => setApiConfigurationField("openAiNativeApiKey", value)}
+				setApiKeyUseEnvVar={(value: boolean) => setApiConfigurationField("openAiNativeApiKeyUseEnvVar", value)}
+				apiKeyLabel={t("settings:providers.openAiApiKey")}
+				getApiKeyUrl="https://platform.openai.com/api-keys"
+				getApiKeyLabel={t("settings:providers.getOpenAiApiKey")}
+			/>
 		</>
 	)
 }

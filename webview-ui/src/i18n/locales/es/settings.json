@@ -410,7 +410,8 @@
 			"placeholder": "Por defecto: claude",
 			"maxTokensLabel": "Tokens máximos de salida",
 			"maxTokensDescription": "Número máximo de tokens de salida para las respuestas de Claude Code. El valor predeterminado es 8000."
-		}
+		},
+		"apiKeyUseEnvVar": "Usar clave API de la variable de entorno {{name}}"
 	},
 	"browser": {
 		"enable": {
