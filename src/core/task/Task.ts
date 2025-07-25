@@ -288,6 +288,7 @@ export class Task extends EventEmitter<ClineEvents> {
 					this.cwd,
 					this.editingProvider,
 					state.experiments ?? {},
+					this,
 				)
 			}
 		})
@@ -782,7 +783,7 @@ export class Task extends EventEmitter<ClineEvents> {
 	public async resumePausedTask(lastMessage: string) {
 		// Release this Cline instance from paused state.
 		const context = await this.providerRef.deref()?.getState()
-		this.editingProvider = EditingProviderFactory.createEditingProvider(this.cwd, context?.experiments ?? {})
+		this.editingProvider = EditingProviderFactory.createEditingProvider(this.cwd, context?.experiments ?? {}, this)
 		this.isPaused = false
 		this.emit("taskUnpaused")
 
@@ -1186,6 +1187,7 @@ export class Task extends EventEmitter<ClineEvents> {
 			this.cwd,
 			this.editingProvider,
 			context?.experiments ?? {},
+			this,
 		)
 
 		if (this.consecutiveMistakeLimit > 0 && this.consecutiveMistakeCount >= this.consecutiveMistakeLimit) {
