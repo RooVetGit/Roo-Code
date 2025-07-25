@@ -34,16 +34,16 @@ export function NavBar({ stars, downloads }: NavBarProps) {
 				</div>
 
 				{/* Desktop Navigation */}
-				<nav className="hidden text-sm font-medium md:flex md:items-center md:space-x-3 xl:space-x-8">
+				<nav className="hidden text-sm font-medium md:flex md:items-center md:space-x-3 xl:space-x-4">
 					{/* note: features and testimonials links are hidden for screen sizes smaller than lg */}
 					<ScrollButton
 						targetId="features"
-						className="text-muted-foreground transition-transform duration-200 hover:scale-105 hover:text-foreground max-lg:hidden">
+						className="text-muted-foreground transition-transform duration-200 hover:scale-105 hover:text-foreground max-xl:hidden">
 						Features
 					</ScrollButton>
 					<ScrollButton
 						targetId="testimonials"
-						className="text-muted-foreground transition-transform duration-200 hover:scale-105 hover:text-foreground max-lg:hidden">
+						className="text-muted-foreground transition-transform duration-200 hover:scale-105 hover:text-foreground max-xl:hidden">
 						Testimonials
 					</ScrollButton>
 					<ScrollButton
@@ -53,7 +53,7 @@ export function NavBar({ stars, downloads }: NavBarProps) {
 					</ScrollButton>
 					<Link
 						href="/evals"
-						className="text-muted-foreground transition-transform duration-200 hover:scale-105 hover:text-foreground">
+						className="text-muted-foreground transition-transform duration-200 hover:scale-105 hover:text-foreground max-lg:hidden">
 						Evals
 					</Link>
 					<Link
@@ -70,10 +70,10 @@ export function NavBar({ stars, downloads }: NavBarProps) {
 					<a
 						href={EXTERNAL_LINKS.CAREERS}
 						target="_blank"
-						className="text-muted-foreground transition-transform duration-200 hover:scale-105 hover:text-foreground">
+						className="text-muted-foreground transition-transform duration-200 hover:scale-105 hover:text-foreground max-lg:hidden">
 						Careers
 					</a>
-					<div className="flex items-center rounded-full bg-gradient-to-r from-blue-400 to-cyan-400 p-0.5 text-xs">
+					<div className="flex items-center rounded-full bg-gradient-to-r from-blue-400 to-cyan-400 p-0.5 text-xs max-md:hidden">
 						<div className="rounded-full bg-background px-2 py-1.5">
 							<span className="text-muted-foreground border-r-2 border-foreground/50 pr-1.5">
 								Roo Code Cloud is coming
