@@ -227,7 +227,7 @@ const AutoApproveMenu = ({ style }: AutoApproveMenuProps) => {
 			</div>
 
 			{isExpanded && (
-				<div className="flex flex-col gap-2">
+				<div className="flex flex-col gap-2 max-h-[400px] overflow-y-auto">
 					<div
 						style={{
 							color: "var(--vscode-descriptionForeground)",
