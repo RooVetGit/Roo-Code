@@ -602,6 +602,39 @@ describe("ChatTextArea", () => {
 				expect(setInputValue).toHaveBeenCalledWith("New input")
 			})
 
+			it("should allow navigating back to original input after typing in history mode", () => {
+				const setInputValue = vi.fn()
+				const { container } = render(
+					<ChatTextArea {...defaultProps} setInputValue={setInputValue} inputValue="My original input" />,
+				)
+
+				const textarea = container.querySelector("textarea")!
+				// Ensure cursor is at the beginning
+				textarea.setSelectionRange(0, 0)
+
+				// Navigate to history (saves "My original input" as tempInput)
+				fireEvent.keyDown(textarea, { key: "ArrowUp" })
+				expect(setInputValue).toHaveBeenCalledWith("Third prompt")
+				setInputValue.mockClear()
+
+				// Type something to modify the historical prompt
+				fireEvent.change(textarea, { target: { value: "Modified third prompt", selectionStart: 21 } })
+				expect(setInputValue).toHaveBeenCalledWith("Modified third prompt")
+				setInputValue.mockClear()
+
+				// Now press down arrow - should go back to the first history item
+				textarea.setSelectionRange(0, 0) // Cursor at beginning
+				fireEvent.keyDown(textarea, { key: "ArrowDown" })
+
+				// After typing, pressing down goes back to the first history item
+				expect(setInputValue).toHaveBeenCalledWith("Third prompt")
+				setInputValue.mockClear()
+
+				// Navigate down to return to original input
+				fireEvent.keyDown(textarea, { key: "ArrowDown" })
+				expect(setInputValue).toHaveBeenCalledWith("My original input")
+			})
+
 			it("should reset history navigation when sending message", () => {
 				const onSend = vi.fn()
 				const setInputValue = vi.fn()

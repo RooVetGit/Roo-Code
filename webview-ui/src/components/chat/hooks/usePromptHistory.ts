@@ -74,14 +74,16 @@ export const usePromptHistory = ({
 		setPromptHistory(filteredPromptHistory)
 		// Reset navigation state when switching between history sources
 		setHistoryIndex(-1)
+		// Clear tempInput when history source changes (e.g., switching tasks)
 		setTempInput("")
 	}, [filteredPromptHistory])
 
 	// Reset history navigation when user types (but not when we're setting it programmatically)
 	const resetOnInputChange = useCallback(() => {
 		if (historyIndex !== -1) {
+			// Don't clear tempInput - preserve it so user can navigate back to their original input
 			setHistoryIndex(-1)
-			setTempInput("")
+			// Keep tempInput as is, don't clear it
 		}
 	}, [historyIndex])
 
@@ -151,27 +153,38 @@ export const usePromptHistory = ({
 						return navigateToHistory(historyIndex + 1, textarea, "start")
 					}
 
-					// Handle DOWN arrow - only in history navigation mode
-					if (event.key === "ArrowDown" && historyIndex >= 0 && (isAtBeginning || isAtEnd)) {
+					// Handle DOWN arrow - allow navigation back even after typing
+					if (event.key === "ArrowDown" && (isAtBeginning || isAtEnd)) {
 						event.preventDefault()
 
-						if (historyIndex > 0) {
-							// Keep cursor position consistent with where we started
-							return navigateToHistory(historyIndex - 1, textarea, isAtBeginning ? "start" : "end")
-						} else if (historyIndex === 0) {
-							returnToCurrentInput(textarea, isAtBeginning ? "start" : "end")
-							return true
+						// If we're not in history mode but have tempInput, it means user typed after navigating
+						// Allow them to go back to history
+						if (historyIndex === -1 && tempInput !== "") {
+							// User typed something after navigating history, but wants to go back
+							// Save their current edits
+							setTempInput(inputValue)
+							// Go to the first history item
+							return navigateToHistory(0, textarea, isAtBeginning ? "start" : "end")
+						} else if (historyIndex >= 0) {
+							if (historyIndex > 0) {
+								// Keep cursor position consistent with where we started
+								return navigateToHistory(historyIndex - 1, textarea, isAtBeginning ? "start" : "end")
+							} else if (historyIndex === 0) {
+								returnToCurrentInput(textarea, isAtBeginning ? "start" : "end")
+								return true
+							}
 						}
 					}
 				}
 			}
 			return false
 		},
-		[promptHistory, historyIndex, inputValue, navigateToHistory, returnToCurrentInput],
+		[promptHistory, historyIndex, inputValue, tempInput, navigateToHistory, returnToCurrentInput],
 	)
 
 	const resetHistoryNavigation = useCallback(() => {
 		setHistoryIndex(-1)
+		// Clear tempInput when explicitly resetting (e.g., when sending a message)
 		setTempInput("")
 	}, [])
 
