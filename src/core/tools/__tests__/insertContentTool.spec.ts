@@ -82,7 +82,7 @@ describe("insertContentTool", () => {
 			rooIgnoreController: {
 				validateAccess: vi.fn().mockReturnValue(true),
 			},
-			diffViewProvider: {
+			editingProvider: {
 				editType: undefined,
 				isEditing: false,
 				originalContent: "",
@@ -180,9 +180,9 @@ describe("insertContentTool", () => {
 			const calledPath = mockedFileExistsAtPath.mock.calls[0][0]
 			expect(toPosix(calledPath)).toContain(testFilePath)
 			expect(mockedFsReadFile).not.toHaveBeenCalled() // Should not read if file doesn't exist
-			expect(mockCline.diffViewProvider.update).toHaveBeenCalledWith(contentToInsert, true)
-			expect(mockCline.diffViewProvider.editType).toBe("create")
-			expect(mockCline.diffViewProvider.pushToolWriteResult).toHaveBeenCalledWith(mockCline, mockCline.cwd, true)
+			expect(mockCline.editingProvider.update).toHaveBeenCalledWith(contentToInsert, true)
+			expect(mockCline.editingProvider.editType).toBe("create")
+			expect(mockCline.editingProvider.pushToolWriteResult).toHaveBeenCalledWith(mockCline, mockCline.cwd, true)
 		})
 
 		it("creates a new file and inserts content at line 1 (beginning)", async () => {
@@ -196,9 +196,9 @@ describe("insertContentTool", () => {
 			const calledPath = mockedFileExistsAtPath.mock.calls[0][0]
 			expect(toPosix(calledPath)).toContain(testFilePath)
 			expect(mockedFsReadFile).not.toHaveBeenCalled()
-			expect(mockCline.diffViewProvider.update).toHaveBeenCalledWith(contentToInsert, true)
-			expect(mockCline.diffViewProvider.editType).toBe("create")
-			expect(mockCline.diffViewProvider.pushToolWriteResult).toHaveBeenCalledWith(mockCline, mockCline.cwd, true)
+			expect(mockCline.editingProvider.update).toHaveBeenCalledWith(contentToInsert, true)
+			expect(mockCline.editingProvider.editType).toBe("create")
+			expect(mockCline.editingProvider.pushToolWriteResult).toHaveBeenCalledWith(mockCline, mockCline.cwd, true)
 		})
 
 		it("creates an empty new file if content is empty string", async () => {
@@ -208,9 +208,9 @@ describe("insertContentTool", () => {
 			const calledPath = mockedFileExistsAtPath.mock.calls[0][0]
 			expect(toPosix(calledPath)).toContain(testFilePath)
 			expect(mockedFsReadFile).not.toHaveBeenCalled()
-			expect(mockCline.diffViewProvider.update).toHaveBeenCalledWith("", true)
-			expect(mockCline.diffViewProvider.editType).toBe("create")
-			expect(mockCline.diffViewProvider.pushToolWriteResult).toHaveBeenCalledWith(mockCline, mockCline.cwd, true)
+			expect(mockCline.editingProvider.update).toHaveBeenCalledWith("", true)
+			expect(mockCline.editingProvider.editType).toBe("create")
+			expect(mockCline.editingProvider.pushToolWriteResult).toHaveBeenCalledWith(mockCline, mockCline.cwd, true)
 		})
 
 		it("returns an error when inserting content at an arbitrary line number into a new file", async () => {
@@ -227,8 +227,8 @@ describe("insertContentTool", () => {
 			expect(mockCline.consecutiveMistakeCount).toBe(1)
 			expect(mockCline.recordToolError).toHaveBeenCalledWith("insert_content")
 			expect(mockCline.say).toHaveBeenCalledWith("error", expect.stringContaining("non-existent file"))
-			expect(mockCline.diffViewProvider.update).not.toHaveBeenCalled()
-			expect(mockCline.diffViewProvider.pushToolWriteResult).not.toHaveBeenCalled()
+			expect(mockCline.editingProvider.update).not.toHaveBeenCalled()
+			expect(mockCline.editingProvider.pushToolWriteResult).not.toHaveBeenCalled()
 		})
 	})
 })

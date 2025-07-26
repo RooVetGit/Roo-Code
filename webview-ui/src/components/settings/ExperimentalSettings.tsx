@@ -36,6 +36,7 @@ export const ExperimentalSettings = ({
 			</SectionHeader>
 
 			<Section>
+				{/* Existing experimental features */}
 				{Object.entries(experimentConfigsMap)
 					.filter(([key]) => key in EXPERIMENT_IDS)
 					.map((config) => {

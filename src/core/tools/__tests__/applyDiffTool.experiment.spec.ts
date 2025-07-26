@@ -34,7 +34,7 @@ describe("applyDiffTool experiment routing", () => {
 				applyDiff: vi.fn(),
 				getProgressStatus: vi.fn(),
 			},
-			diffViewProvider: {
+			editingProvider: {
 				reset: vi.fn(),
 			},
 			api: {
