@@ -210,6 +210,7 @@ export class LibSQLVectorStore implements IVectorStore {
 		await this.executeWriteOperationWithRetry(async () => {
 			const statements = points.map((point) => {
 				const vectorStr = JSON.stringify(point.vector)
+				const normalizedFilePath = path.normalize(point.payload.filePath)
 				return {
 					sql: `
 						INSERT INTO ${this.tableName} (id, vector, filePath, codeChunk, startLine, endLine)
@@ -224,12 +225,12 @@ export class LibSQLVectorStore implements IVectorStore {
 					args: [
 						point.id,
 						vectorStr,
-						point.payload.filePath,
+						normalizedFilePath,
 						point.payload.codeChunk,
 						point.payload.startLine,
 						point.payload.endLine,
 						vectorStr,
-						point.payload.filePath,
+						normalizedFilePath,
 						point.payload.codeChunk,
 						point.payload.startLine,
 						point.payload.endLine,
@@ -389,5 +390,18 @@ export class LibSQLVectorStore implements IVectorStore {
 
 	public async collectionExists(): Promise<boolean> {
 		return this.tableExists()
+	}
+
+	public async close(): Promise<void> {
+		if (this.client) {
+			try {
+				await this.client.close()
+				this.client = null
+				console.log("LibSQL client closed.")
+			} catch (error) {
+				console.error("Failed to close LibSQL client:", error)
+				throw error
+			}
+		}
 	}
 }

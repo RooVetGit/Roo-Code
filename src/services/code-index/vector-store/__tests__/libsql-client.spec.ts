@@ -23,8 +23,31 @@ describe("LibSQLVectorStore", () => {
 
 	afterAll(async () => {
 		await vectorStore.deleteCollection()
-		if (fs.existsSync(testBasePath)) {
-			fs.rmSync(testBasePath, { recursive: true, force: true })
+		await vectorStore.close()
+
+		// On Windows, file handles might not be released immediately.
+		// Retry fs.rmSync a few times with a delay.
+		let attempts = 0
+		const maxAttempts = 5
+		const delayMs = 200
+
+		while (attempts < maxAttempts) {
+			try {
+				if (fs.existsSync(testBasePath)) {
+					fs.rmSync(testBasePath, { recursive: true, force: true })
+				}
+				break
+			} catch (error: any) {
+				if (error.code === "EBUSY" || error.code === "EPERM") {
+					attempts++
+					console.warn(
+						`Attempt ${attempts} to remove ${testBasePath} failed due to file lock. Retrying in ${delayMs}ms...`,
+					)
+					await new Promise((resolve) => setTimeout(resolve, delayMs))
+				} else {
+					throw error
+				}
+			}
 		}
 	})
 
