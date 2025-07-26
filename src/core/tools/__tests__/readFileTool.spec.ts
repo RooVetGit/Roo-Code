@@ -739,8 +739,8 @@ describe("read_file tool XML output structure", () => {
 
 				// Mock file stats for each image
 				fsPromises.stat = vi.fn().mockImplementation((filePath) => {
-					const fileName = filePath.split("/").pop()
-					const image = smallImages.find((img) => img.path.includes(fileName.split(".")[0]))
+					const normalizedFilePath = path.normalize(filePath.toString())
+					const image = smallImages.find((img) => normalizedFilePath.includes(path.normalize(img.path)))
 					return Promise.resolve({ size: (image?.sizeKB || 1024) * 1024 })
 				})
 
@@ -815,9 +815,8 @@ describe("read_file tool XML output structure", () => {
 
 				// Mock file stats for each image
 				fsPromises.stat = vi.fn().mockImplementation((filePath) => {
-					const fileName = path.basename(filePath)
-					const baseName = path.parse(fileName).name
-					const image = largeImages.find((img) => img.path.includes(baseName))
+					const normalizedFilePath = path.normalize(filePath.toString())
+					const image = largeImages.find((img) => normalizedFilePath.includes(path.normalize(img.path)))
 					return Promise.resolve({ size: (image?.sizeKB || 1024) * 1024 })
 				})
 
@@ -899,12 +898,10 @@ describe("read_file tool XML output structure", () => {
 
 				// Mock file stats with simpler logic
 				fsPromises.stat = vi.fn().mockImplementation((filePath) => {
-					if (filePath.includes("exact1")) {
-						return Promise.resolve({ size: 10240 * 1024 }) // 10MB
-					} else if (filePath.includes("exact2")) {
-						return Promise.resolve({ size: 10240 * 1024 }) // 10MB
-					} else if (filePath.includes("exact3")) {
-						return Promise.resolve({ size: 1024 * 1024 }) // 1MB
+					const normalizedFilePath = path.normalize(filePath.toString())
+					const image = exactLimitImages.find((img) => normalizedFilePath.includes(path.normalize(img.path)))
+					if (image) {
+						return Promise.resolve({ size: image.sizeKB * 1024 })
 					}
 					return Promise.resolve({ size: 1024 * 1024 }) // Default 1MB
 				})
@@ -1026,7 +1023,8 @@ describe("read_file tool XML output structure", () => {
 				mockedFsReadFile.mockResolvedValue(imageBuffer)
 
 				fsPromises.stat.mockImplementation(async (filePath) => {
-					const file = testImages.find((f) => filePath.toString().includes(f.path))
+					const normalizedFilePath = path.normalize(filePath.toString())
+					const file = testImages.find((f) => normalizedFilePath.includes(path.normalize(f.path)))
 					if (file) {
 						return { size: file.sizeMB * 1024 * 1024 }
 					}
