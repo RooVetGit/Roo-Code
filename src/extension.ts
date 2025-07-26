@@ -1,3 +1,16 @@
+// Polyfill for getDefaultHighWaterMark to support older VS Code versions
+// VS Code 1.85.x uses Node.js 16.14.2 which doesn't have getDefaultHighWaterMark
+// (introduced in Node.js 16.7.0). This polyfill ensures compatibility.
+// This must be added before any imports that might use the stream module.
+// See: https://github.com/RooCodeInc/Roo-Code/issues/6240
+if (!require("stream").getDefaultHighWaterMark) {
+	const stream = require("stream")
+	stream.getDefaultHighWaterMark = function (objectMode: boolean): number {
+		// Default values from Node.js source
+		return objectMode ? 16 : 16 * 1024
+	}
+}
+
 import * as vscode from "vscode"
 import * as dotenvx from "@dotenvx/dotenvx"
 import * as path from "path"
