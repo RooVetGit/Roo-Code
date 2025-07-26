@@ -13,6 +13,9 @@ import { telemetryClient } from "@/utils/TelemetryClient"
 import { TelemetryEventName } from "@roo-code/types"
 import { Fzf } from "fzf"
 
+// Minimum number of modes required to show search functionality
+const SEARCH_THRESHOLD = 6
+
 interface ModeSelectorProps {
 	value: Mode
 	onChange: (value: Mode) => void
@@ -22,6 +25,7 @@ interface ModeSelectorProps {
 	modeShortcutText: string
 	customModes?: ModeConfig[]
 	customModePrompts?: CustomModePrompts
+	disableSearch?: boolean
 }
 
 export const ModeSelector = ({
@@ -33,6 +37,7 @@ export const ModeSelector = ({
 	modeShortcutText,
 	customModes,
 	customModePrompts,
+	disableSearch = false,
 }: ModeSelectorProps) => {
 	const [open, setOpen] = React.useState(false)
 	const [searchValue, setSearchValue] = React.useState("")
@@ -148,6 +153,9 @@ export const ModeSelector = ({
 		}
 	}, [open])
 
+	// Determine if search should be shown
+	const showSearch = !disableSearch && modes.length > SEARCH_THRESHOLD
+
 	// Combine instruction text for tooltip
 	const instructionText = `${t("chat:modeSelector.description")} ${modeShortcutText}`
 
@@ -182,8 +190,8 @@ export const ModeSelector = ({
 				container={portalContainer}
 				className="p-0 overflow-hidden min-w-80 max-w-9/10">
 				<div className="flex flex-col w-full">
-					{/* Show search bar only when there are more than 6 items, otherwise show info blurb */}
-					{modes.length > 6 ? (
+					{/* Show search bar only when there are more than SEARCH_THRESHOLD items, otherwise show info blurb */}
+					{showSearch ? (
 						<div className="relative p-2 border-b border-vscode-dropdown-border">
 							<input
 								aria-label="Search modes"
@@ -277,7 +285,7 @@ export const ModeSelector = ({
 
 						{/* Info icon and title on the right - only show info icon when search bar is visible */}
 						<div className="flex items-center gap-1 pr-1">
-							{modes.length > 6 && (
+							{showSearch && (
 								<StandardTooltip content={instructionText}>
 									<span className="codicon codicon-info text-xs text-vscode-descriptionForeground opacity-70 hover:opacity-100 cursor-help" />
 								</StandardTooltip>
