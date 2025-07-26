@@ -1,5 +1,6 @@
 import path from "path"
 import { isBinaryFile } from "isbinaryfile"
+import { stat } from "fs/promises"
 
 import { Task } from "../task/Task"
 import { ClineSayTool } from "../../shared/ExtensionMessage"
@@ -14,6 +15,7 @@ import { readLines } from "../../integrations/misc/read-lines"
 import { extractTextFromFile, addLineNumbers, getSupportedBinaryFormats } from "../../integrations/misc/extract-text"
 import { parseSourceCodeDefinitionsForFile } from "../../services/tree-sitter"
 import { parseXml } from "../../utils/xml"
+import { tiktoken } from "../../utils/tiktoken"
 
 export function getReadFileToolDescription(blockName: string, blockParams: any): string {
 	// Handle both single path and multiple files via args
@@ -516,13 +518,69 @@ export async function readFileTool(
 					continue
 				}
 
-				// Handle normal file read
-				const content = await extractTextFromFile(fullPath)
-				const lineRangeAttr = ` lines="1-${totalLines}"`
+				// Handle normal file read with safeguard for large files
+				// Define thresholds for the safeguard
+				const LARGE_FILE_SIZE_THRESHOLD = 100 * 1024 // 100KB - files larger than this will be checked for token count
+				const VERY_LARGE_FILE_SIZE = 1024 * 1024 // 1MB - apply safeguard automatically
+				const FALLBACK_MAX_LINES = 2000 // Default number of lines to read when applying safeguard
+
+				// Get the actual context window size from the model
+				const contextWindow = cline.api.getModel().info.contextWindow || 100000 // Default to 100k if not available
+				const MAX_TOKEN_THRESHOLD = Math.floor(contextWindow * 0.5) // Use 50% of the actual context window
+
+				// Check if we should apply the safeguard
+				let shouldApplySafeguard = false
+				let safeguardNotice = ""
+				let linesToRead = totalLines
+
+				if (maxReadFileLine === -1) {
+					// Get file size
+					const fileStats = await stat(fullPath)
+					const fileSizeKB = Math.round(fileStats.size / 1024)
+
+					if (fileStats.size > LARGE_FILE_SIZE_THRESHOLD) {
+						// File is large enough to warrant token count check
+						try {
+							const fullContent = await extractTextFromFile(fullPath)
+							const tokenCount = await tiktoken([{ type: "text", text: fullContent }])
+
+							if (tokenCount > MAX_TOKEN_THRESHOLD) {
+								shouldApplySafeguard = true
+								linesToRead = FALLBACK_MAX_LINES
+								safeguardNotice = `<notice>This file is ${fileSizeKB}KB and contains approximately ${tokenCount.toLocaleString()} tokens, which could consume a significant portion of the context window. Showing only the first ${FALLBACK_MAX_LINES} lines to preserve context space. Use line_range if you need to read specific sections.</notice>\n`
+							}
+						} catch (error) {
+							// If token counting fails, apply safeguard based on file size alone
+							console.warn(`Failed to count tokens for large file ${relPath}:`, error)
+							if (fileStats.size > VERY_LARGE_FILE_SIZE) {
+								// For very large files (>1MB), apply safeguard anyway
+								shouldApplySafeguard = true
+								linesToRead = FALLBACK_MAX_LINES
+								safeguardNotice = `<notice>This file is ${fileSizeKB}KB, which could consume a significant portion of the context window. Showing only the first ${FALLBACK_MAX_LINES} lines to preserve context space. Use line_range if you need to read specific sections.</notice>\n`
+							}
+						}
+					}
+				}
+
+				let content: string
+				let lineRangeAttr: string
+
+				if (shouldApplySafeguard) {
+					// Read partial file with safeguard
+					content = addLineNumbers(await readLines(fullPath, linesToRead - 1, 0))
+					lineRangeAttr = ` lines="1-${linesToRead}"`
+				} else {
+					// Read full file as normal
+					content = await extractTextFromFile(fullPath)
+					lineRangeAttr = ` lines="1-${totalLines}"`
+				}
+
 				let xmlInfo = totalLines > 0 ? `<content${lineRangeAttr}>\n${content}</content>\n` : `<content/>`
 
 				if (totalLines === 0) {
 					xmlInfo += `<notice>File is empty</notice>\n`
+				} else if (safeguardNotice) {
+					xmlInfo += safeguardNotice
 				}
 
 				// Track file read
