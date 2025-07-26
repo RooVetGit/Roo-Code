@@ -276,7 +276,6 @@ describe("XAIHandler", () => {
 				temperature: 0,
 				messages: expect.arrayContaining([{ role: "system", content: systemPrompt }]),
 				stream: true,
-				stream_options: { include_usage: true },
 			}),
 		)
 	})
