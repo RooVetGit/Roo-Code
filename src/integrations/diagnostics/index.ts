@@ -1,73 +1,67 @@
 import * as vscode from "vscode"
 import * as path from "path"
-import deepEqual from "fast-deep-equal"
+
+export type NewDiagnosticsByKind = {
+	problems: [vscode.Uri, vscode.Diagnostic[]][]
+	warnings: [vscode.Uri, vscode.Diagnostic[]][]
+}
+
+function areDiagnosticsEqual(d1: vscode.Diagnostic, d2: vscode.Diagnostic): boolean {
+	return (
+		d1.message === d2.message &&
+		d1.severity === d2.severity &&
+		d1.source === d2.source &&
+		d1.range.start.line === d2.range.start.line &&
+		d1.range.start.character === d2.range.start.character &&
+		d1.range.end.line === d2.range.end.line &&
+		d1.range.end.character === d2.range.end.character
+	)
+}
 
 export function getNewDiagnostics(
 	oldDiagnostics: [vscode.Uri, vscode.Diagnostic[]][],
 	newDiagnostics: [vscode.Uri, vscode.Diagnostic[]][],
-): [vscode.Uri, vscode.Diagnostic[]][] {
-	const newProblems: [vscode.Uri, vscode.Diagnostic[]][] = []
-	const oldMap = new Map(oldDiagnostics)
+): NewDiagnosticsByKind {
+	const LINTER_DIAGNOSTIC_SOURCES = new Set(["pylance", "pyright", "eslint", "flake8", "mypy", "ruff"])
+
+	const problems: [vscode.Uri, vscode.Diagnostic[]][] = []
+	const warnings: [vscode.Uri, vscode.Diagnostic[]][] = []
+
+	const oldMap = new Map<string, vscode.Diagnostic[]>()
+	for (const [uri, diags] of oldDiagnostics) {
+		oldMap.set(uri.toString(), diags)
+	}
 
 	for (const [uri, newDiags] of newDiagnostics) {
-		const oldDiags = oldMap.get(uri) || []
-		const newProblemsForUri = newDiags.filter((newDiag) => !oldDiags.some((oldDiag) => deepEqual(oldDiag, newDiag)))
+		const oldDiags = oldMap.get(uri.toString()) || []
+		const newProblemsForUri = newDiags.filter(
+			(newDiag) => !oldDiags.some((oldDiag) => areDiagnosticsEqual(oldDiag, newDiag)),
+		)
 
 		if (newProblemsForUri.length > 0) {
-			newProblems.push([uri, newProblemsForUri])
+			const fatalErrorsForUri = newProblemsForUri.filter(
+				(diag) =>
+					diag.severity === vscode.DiagnosticSeverity.Error &&
+					!LINTER_DIAGNOSTIC_SOURCES.has(diag.source ?? ""),
+			)
+
+			const linterWarningsForUri = newProblemsForUri.filter(
+				(diag) =>
+					diag.severity === vscode.DiagnosticSeverity.Error &&
+					LINTER_DIAGNOSTIC_SOURCES.has(diag.source ?? ""),
+			)
+
+			if (fatalErrorsForUri.length > 0) {
+				problems.push([uri, fatalErrorsForUri])
+			}
+			if (linterWarningsForUri.length > 0) {
+				warnings.push([uri, linterWarningsForUri])
+			}
 		}
 	}
 
-	return newProblems
+	return { problems, warnings }
 }
-
-// Usage:
-// const oldDiagnostics = // ... your old diagnostics array
-// const newDiagnostics = // ... your new diagnostics array
-// const newProblems = getNewDiagnostics(oldDiagnostics, newDiagnostics);
-
-// Example usage with mocks:
-//
-// // Mock old diagnostics
-// const oldDiagnostics: [vscode.Uri, vscode.Diagnostic[]][] = [
-//     [vscode.Uri.file("/path/to/file1.ts"), [
-//         new vscode.Diagnostic(new vscode.Range(0, 0, 0, 10), "Old error in file1", vscode.DiagnosticSeverity.Error)
-//     ]],
-//     [vscode.Uri.file("/path/to/file2.ts"), [
-//         new vscode.Diagnostic(new vscode.Range(5, 5, 5, 15), "Old warning in file2", vscode.DiagnosticSeverity.Warning)
-//     ]]
-// ];
-//
-// // Mock new diagnostics
-// const newDiagnostics: [vscode.Uri, vscode.Diagnostic[]][] = [
-//     [vscode.Uri.file("/path/to/file1.ts"), [
-//         new vscode.Diagnostic(new vscode.Range(0, 0, 0, 10), "Old error in file1", vscode.DiagnosticSeverity.Error),
-//         new vscode.Diagnostic(new vscode.Range(2, 2, 2, 12), "New error in file1", vscode.DiagnosticSeverity.Error)
-//     ]],
-//     [vscode.Uri.file("/path/to/file2.ts"), [
-//         new vscode.Diagnostic(new vscode.Range(5, 5, 5, 15), "Old warning in file2", vscode.DiagnosticSeverity.Warning)
-//     ]],
-//     [vscode.Uri.file("/path/to/file3.ts"), [
-//         new vscode.Diagnostic(new vscode.Range(1, 1, 1, 11), "New error in file3", vscode.DiagnosticSeverity.Error)
-//     ]]
-// ];
-//
-// const newProblems = getNewProblems(oldDiagnostics, newDiagnostics);
-//
-// console.log("New problems:");
-// for (const [uri, diagnostics] of newProblems) {
-//     console.log(`File: ${uri.fsPath}`);
-//     for (const diagnostic of diagnostics) {
-//         console.log(`- ${diagnostic.message} (${diagnostic.range.start.line}:${diagnostic.range.start.character})`);
-//     }
-// }
-//
-// // Expected output:
-// // New problems:
-// // File: /path/to/file1.ts
-// // - New error in file1 (2:2)
-// // File: /path/to/file3.ts
-// // - New error in file3 (1:1)
 
 // will return empty string if no problems with the given severity are found
 export async function diagnosticsToProblemsString(

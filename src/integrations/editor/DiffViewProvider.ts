@@ -23,6 +23,7 @@ export const DIFF_VIEW_LABEL_CHANGES = "Original ↔ Roo's Changes"
 export class DiffViewProvider {
 	// Properties to store the results of saveChanges
 	newProblemsMessage?: string
+	newWarningsMessage?: string
 	userEdits?: string
 	editType?: "create" | "modify"
 	isEditing = false
@@ -187,13 +188,22 @@ export class DiffViewProvider {
 		}
 	}
 
-	async saveChanges(diagnosticsEnabled: boolean = true, writeDelayMs: number = DEFAULT_WRITE_DELAY_MS): Promise<{
+	async saveChanges(
+		diagnosticsEnabled: boolean = true,
+		writeDelayMs: number = DEFAULT_WRITE_DELAY_MS,
+	): Promise<{
 		newProblemsMessage: string | undefined
+		newWarningsMessage: string | undefined
 		userEdits: string | undefined
 		finalContent: string | undefined
 	}> {
 		if (!this.relPath || !this.newContent || !this.activeDiffEditor) {
-			return { newProblemsMessage: undefined, userEdits: undefined, finalContent: undefined }
+			return {
+				newProblemsMessage: undefined,
+				newWarningsMessage: undefined,
+				userEdits: undefined,
+				finalContent: undefined,
+			}
 		}
 
 		const absolutePath = path.resolve(this.cwd, this.relPath)
@@ -222,22 +232,23 @@ export class DiffViewProvider {
 		// and can address them accordingly. If problems don't change immediately after
 		// applying a fix, won't be notified, which is generally fine since the
 		// initial fix is usually correct and it may just take time for linters to catch up.
-		
+
 		let newProblemsMessage = ""
-		
+		let newWarningsMessage = ""
+
 		if (diagnosticsEnabled) {
 			// Add configurable delay to allow linters time to process and clean up issues
 			// like unused imports (especially important for Go and other languages)
 			// Ensure delay is non-negative
 			const safeDelayMs = Math.max(0, writeDelayMs)
-			
+
 			try {
 				await delay(safeDelayMs)
 			} catch (error) {
 				// Log error but continue - delay failure shouldn't break the save operation
 				console.warn(`Failed to apply write delay: ${error}`)
 			}
-			
+
 			const postDiagnostics = vscode.languages.getDiagnostics()
 
 			// Get diagnostic settings from state
@@ -246,50 +257,63 @@ export class DiffViewProvider {
 			const includeDiagnosticMessages = state?.includeDiagnosticMessages ?? true
 			const maxDiagnosticMessages = state?.maxDiagnosticMessages ?? 50
 
-			const newProblems = await diagnosticsToProblemsString(
-				getNewDiagnostics(this.preDiagnostics, postDiagnostics),
-				[
-					vscode.DiagnosticSeverity.Error, // only including errors since warnings can be distracting (if user wants to fix warnings they can use the @problems mention)
-				],
+			const { problems: newProblemsDiagnostics, warnings: newWarningsDiagnostics } = getNewDiagnostics(
+				this.preDiagnostics,
+				postDiagnostics,
+			)
+
+			const newProblemsString = await diagnosticsToProblemsString(
+				newProblemsDiagnostics,
+				[vscode.DiagnosticSeverity.Error],
 				this.cwd,
 				includeDiagnosticMessages,
 				maxDiagnosticMessages,
-			) // Will be empty string if no errors.
+			)
 
-			newProblemsMessage =
-				newProblems.length > 0 ? `\n\nNew problems detected after saving the file:\n${newProblems}` : ""
+			const newWarningsString = await diagnosticsToProblemsString(
+				newWarningsDiagnostics,
+				[vscode.DiagnosticSeverity.Error],
+				this.cwd,
+				includeDiagnosticMessages,
+				maxDiagnosticMessages,
+			)
+
+			if (newProblemsString.length > 0) {
+				newProblemsMessage = `\n\nNew problems detected after saving the file:\n${newProblemsString}`
+			}
+
+			if (newWarningsString.length > 0) {
+				newWarningsMessage = `\n\nNew warnings detected after saving the file:\n${newWarningsString}`
+			}
 		}
 
-		// If the edited content has different EOL characters, we don't want to
-		// show a diff with all the EOL differences.
 		const newContentEOL = this.newContent.includes("\r\n") ? "\r\n" : "\n"
-
-		// Normalize EOL characters without trimming content
 		const normalizedEditedContent = editedContent.replace(/\r\n|\n/g, newContentEOL)
-
-		// Just in case the new content has a mix of varying EOL characters.
 		const normalizedNewContent = this.newContent.replace(/\r\n|\n/g, newContentEOL)
 
 		if (normalizedEditedContent !== normalizedNewContent) {
-			// User made changes before approving edit.
 			const userEdits = formatResponse.createPrettyPatch(
 				this.relPath.toPosix(),
 				normalizedNewContent,
 				normalizedEditedContent,
 			)
 
-			// Store the results as class properties for formatFileWriteResponse to use
 			this.newProblemsMessage = newProblemsMessage
+			this.newWarningsMessage = newWarningsMessage
 			this.userEdits = userEdits
 
-			return { newProblemsMessage, userEdits, finalContent: normalizedEditedContent }
+			return { newProblemsMessage, newWarningsMessage, userEdits, finalContent: normalizedEditedContent }
 		} else {
-			// No changes to Roo's edits.
-			// Store the results as class properties for formatFileWriteResponse to use
 			this.newProblemsMessage = newProblemsMessage
+			this.newWarningsMessage = newWarningsMessage
 			this.userEdits = undefined
 
-			return { newProblemsMessage, userEdits: undefined, finalContent: normalizedEditedContent }
+			return {
+				newProblemsMessage,
+				newWarningsMessage,
+				userEdits: undefined,
+				finalContent: normalizedEditedContent,
+			}
 		}
 	}
 
@@ -325,6 +349,7 @@ export class DiffViewProvider {
 				operation: isNewFile ? "created" : "modified",
 				user_edits: this.userEdits ? this.userEdits : undefined,
 				problems: this.newProblemsMessage || undefined,
+				warnings: this.newWarningsMessage || undefined,
 				notice: {
 					i: [
 						"You do not need to re-read the file, as you have seen all changes",
@@ -346,15 +371,13 @@ export class DiffViewProvider {
 			processEntities: false,
 			tagValueProcessor: (name, value) => {
 				if (typeof value === "string") {
-					// Only escape <, >, and & characters
-					return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+					return value.replace(/&/g, "&").replace(/</g, "<").replace(/>/g, ">")
 				}
 				return value
 			},
 			attributeValueProcessor: (name, value) => {
 				if (typeof value === "string") {
-					// Only escape <, >, and & characters
-					return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+					return value.replace(/&/g, "&").replace(/</g, "<").replace(/>/g, ">")
 				}
 				return value
 			},
