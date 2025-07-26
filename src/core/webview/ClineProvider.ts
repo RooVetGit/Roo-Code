@@ -1167,6 +1167,8 @@ export class ClineProvider
 		}
 
 		await this.postMessageToWebview({ type: "action", action: "chatButtonClicked" })
+		// Focus the input after loading the task
+		await this.postMessageToWebview({ type: "action", action: "focusInput" })
 	}
 
 	async exportTaskWithId(id: string) {

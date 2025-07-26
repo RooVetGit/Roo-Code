@@ -288,6 +288,8 @@ export const webviewMessageHandler = async (
 			// agentically running promises in old instance don't affect our new
 			// task. This essentially creates a fresh slate for the new task.
 			await provider.initClineWithTask(message.text, message.images)
+			// Focus the input after creating a new task
+			await provider.postMessageToWebview({ type: "action", action: "focusInput" })
 			break
 		case "customInstructions":
 			await provider.updateCustomInstructions(message.text)
