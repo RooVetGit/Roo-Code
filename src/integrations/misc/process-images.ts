@@ -1,6 +1,6 @@
 import * as vscode from "vscode"
 import fs from "fs/promises"
-import * as path from "path"
+import { getMimeType } from "../../shared/utils/media"
 
 export async function selectImages(): Promise<string[]> {
 	const options: vscode.OpenDialogOptions = {
@@ -23,23 +23,11 @@ export async function selectImages(): Promise<string[]> {
 			const buffer = await fs.readFile(imagePath)
 			const base64 = buffer.toString("base64")
 			const mimeType = getMimeType(imagePath)
+			if (!mimeType) {
+				throw new Error(`Unsupported file type: ${imagePath}`)
+			}
 			const dataUrl = `data:${mimeType};base64,${base64}`
 			return dataUrl
 		}),
 	)
-}
-
-function getMimeType(filePath: string): string {
-	const ext = path.extname(filePath).toLowerCase()
-	switch (ext) {
-		case ".png":
-			return "image/png"
-		case ".jpeg":
-		case ".jpg":
-			return "image/jpeg"
-		case ".webp":
-			return "image/webp"
-		default:
-			throw new Error(`Unsupported file type: ${ext}`)
-	}
 }

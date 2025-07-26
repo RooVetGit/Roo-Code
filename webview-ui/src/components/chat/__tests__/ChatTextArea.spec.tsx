@@ -5,6 +5,7 @@ import { defaultModeSlug } from "@roo/modes"
 import { useExtensionState } from "@src/context/ExtensionStateContext"
 import { vscode } from "@src/utils/vscode"
 import * as pathMentions from "@src/utils/path-mentions"
+import { BASE_IMAGE_FORMATS, VIDEO_FORMATS } from "@src/utils/media-config"
 
 import ChatTextArea from "../ChatTextArea"
 
@@ -54,12 +55,13 @@ describe("ChatTextArea", () => {
 		onSelectImages: vi.fn(),
 		shouldDisableImages: false,
 		placeholderText: "Type a message...",
-		selectedImages: [],
-		setSelectedImages: vi.fn(),
+		selectedMedia: [],
+		setSelectedMedia: vi.fn(),
 		onHeightChange: vi.fn(),
 		mode: defaultModeSlug,
 		setMode: vi.fn(),
 		modeShortcutText: "(⌘. for next mode)",
+		acceptedFileTypes: [...BASE_IMAGE_FORMATS, ...VIDEO_FORMATS],
 	}
 
 	beforeEach(() => {

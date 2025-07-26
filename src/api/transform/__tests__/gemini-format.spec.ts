@@ -71,13 +71,77 @@ describe("convertAnthropicMessageToGemini", () => {
 		expect(result).toEqual({
 			role: "user",
 			parts: [
-				{ text: "Check out this image:" },
 				{
 					inlineData: {
 						data: "base64encodeddata",
 						mimeType: "image/jpeg",
 					},
 				},
+				{ text: "Check out this image:" },
+			],
+		})
+	})
+
+	it("should convert a message with a video", () => {
+		const anthropicMessage: Anthropic.Messages.MessageParam = {
+			role: "user",
+			content: [
+				{ type: "text", text: "Check out this video:" },
+				{
+					type: "video",
+					source: {
+						type: "base64",
+						media_type: "video/mp4",
+						data: "base64encodedvideodata",
+					},
+				} as any,
+			],
+		}
+
+		const result = convertAnthropicMessageToGemini(anthropicMessage)
+
+		expect(result).toEqual({
+			role: "user",
+			parts: [
+				{
+					inlineData: {
+						data: "base64encodedvideodata",
+						mimeType: "video/mp4",
+					},
+				},
+				{ text: "Check out this video:" },
+			],
+		})
+	})
+
+	it("should handle text after inlineData", () => {
+		const anthropicMessage: Anthropic.Messages.MessageParam = {
+			role: "user",
+			content: [
+				{
+					type: "image",
+					source: {
+						type: "base64",
+						media_type: "image/jpeg",
+						data: "base64encodeddata",
+					},
+				},
+				{ type: "text", text: "Check out this image:" },
+			],
+		}
+
+		const result = convertAnthropicMessageToGemini(anthropicMessage)
+
+		expect(result).toEqual({
+			role: "user",
+			parts: [
+				{
+					inlineData: {
+						data: "base64encodeddata",
+						mimeType: "image/jpeg",
+					},
+				},
+				{ text: "Check out this image:" },
 			],
 		})
 	})
