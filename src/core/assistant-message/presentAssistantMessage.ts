@@ -34,6 +34,7 @@ import { Task } from "../task/Task"
 import { codebaseSearchTool } from "../tools/codebaseSearchTool"
 import { experiments, EXPERIMENT_IDS } from "../../shared/experiments"
 import { applyDiffToolLegacy } from "../tools/applyDiffTool"
+import { applyCodeTool } from "../tools/applyCodeTool"
 
 /**
  * Processes and presents assistant message content to the user interface.
@@ -214,6 +215,8 @@ export async function presentAssistantMessage(cline: Task) {
 						const modeName = getModeBySlug(mode, customModes)?.name ?? mode
 						return `[${block.name} in ${modeName} mode: '${message}']`
 					}
+					case "apply_code":
+						return `[${block.name} for '${block.params.path}' with instruction: '${block.params.instruction}']`
 				}
 			}
 
@@ -521,6 +524,9 @@ export async function presentAssistantMessage(cline: Task) {
 						toolDescription,
 						askFinishSubTaskApproval,
 					)
+					break
+				case "apply_code":
+					await applyCodeTool(cline, block, askApproval, handleError, pushToolResult, removeClosingTag)
 					break
 			}
 

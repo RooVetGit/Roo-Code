@@ -23,6 +23,7 @@ import { getSwitchModeDescription } from "./switch-mode"
 import { getNewTaskDescription } from "./new-task"
 import { getCodebaseSearchDescription } from "./codebase-search"
 import { getUpdateTodoListDescription } from "./update-todo-list"
+import { getApplyCodeDescription } from "./apply-code"
 import { CodeIndexManager } from "../../../services/code-index/manager"
 
 // Map of tool names to their description functions
@@ -46,6 +47,7 @@ const toolDescriptionMap: Record<string, (args: ToolArgs) => string | undefined>
 	search_and_replace: (args) => getSearchAndReplaceDescription(args),
 	apply_diff: (args) =>
 		args.diffStrategy ? args.diffStrategy.getToolDescription({ cwd: args.cwd, toolOptions: args.toolOptions }) : "",
+	apply_code: (args) => getApplyCodeDescription(args),
 	update_todo_list: (args) => getUpdateTodoListDescription(args),
 }
 
@@ -114,6 +116,11 @@ export function getToolDescriptionsForMode(
 		tools.delete("update_todo_list")
 	}
 
+	// Conditionally exclude apply_code if disabled in settings
+	if (settings?.applyEnabled === false) {
+		tools.delete("apply_code")
+	}
+
 	// Map tool descriptions for allowed tools
 	const descriptions = Array.from(tools).map((toolName) => {
 		const descriptionFn = toolDescriptionMap[toolName]
@@ -148,4 +155,5 @@ export {
 	getInsertContentDescription,
 	getSearchAndReplaceDescription,
 	getCodebaseSearchDescription,
+	getApplyCodeDescription,
 }
