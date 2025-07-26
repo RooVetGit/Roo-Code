@@ -6,6 +6,7 @@ import { GeminiEmbedder } from "./embedders/gemini"
 import { MistralEmbedder } from "./embedders/mistral"
 import { EmbedderProvider, getDefaultModelId, getModelDimension } from "../../shared/embeddingModels"
 import { QdrantVectorStore } from "./vector-store/qdrant-client"
+import { LocalVectorStore } from "./vector-store/local-vector-store"
 import { codeParser, DirectoryScanner, FileWatcher } from "./processors"
 import { ICodeParser, IEmbedder, IFileWatcher, IVectorStore } from "./interfaces"
 import { CodeIndexConfigManager } from "./config-manager"
@@ -14,6 +15,7 @@ import { Ignore } from "ignore"
 import { t } from "../../i18n"
 import { TelemetryService } from "@roo-code/telemetry"
 import { TelemetryEventName } from "@roo-code/types"
+import { getLocalVectorStoreDirectoryPath } from "../../utils/storage"
 
 /**
  * Factory class responsible for creating and configuring code indexing service dependencies.
@@ -104,7 +106,7 @@ export class CodeIndexServiceFactory {
 	/**
 	 * Creates a vector store instance using the current configuration.
 	 */
-	public createVectorStore(): IVectorStore {
+	public createVectorStore(context: vscode.ExtensionContext): IVectorStore {
 		const config = this.configManager.getConfig()
 
 		const provider = config.embedderProvider as EmbedderProvider
@@ -131,7 +133,15 @@ export class CodeIndexServiceFactory {
 				throw new Error(t("embeddings:serviceFactory.vectorDimensionNotDetermined", { modelId, provider }))
 			}
 		}
-
+		// Use Local
+		if (config.vectorStoreProvider === "local") {
+			const { workspacePath } = this
+			const globalStorageUri = this.configManager.getContextProxy().globalStorageUri.fsPath
+			const localVectorStoreDirectoryPlaceholder =
+				config.localVectorStoreDirectoryPlaceholder || getLocalVectorStoreDirectoryPath(globalStorageUri)
+			return new LocalVectorStore(workspacePath, vectorSize, localVectorStoreDirectoryPlaceholder, context)
+		}
+		// Use Qdrant
 		if (!config.qdrantUrl) {
 			throw new Error(t("embeddings:serviceFactory.qdrantUrlMissing"))
 		}
@@ -185,7 +195,7 @@ export class CodeIndexServiceFactory {
 		}
 
 		const embedder = this.createEmbedder()
-		const vectorStore = this.createVectorStore()
+		const vectorStore = this.createVectorStore(context)
 		const parser = codeParser
 		const scanner = this.createDirectoryScanner(embedder, vectorStore, parser, ignoreInstance)
 		const fileWatcher = this.createFileWatcher(context, embedder, vectorStore, cacheManager, ignoreInstance)

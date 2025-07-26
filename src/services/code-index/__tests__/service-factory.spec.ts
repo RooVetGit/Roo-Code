@@ -1,3 +1,4 @@
+import * as vscode from "vscode"
 import type { MockedClass, MockedFunction } from "vitest"
 import { CodeIndexServiceFactory } from "../service-factory"
 import { OpenAiEmbedder } from "../embedders/openai"
@@ -28,6 +29,7 @@ vitest.mock("@roo-code/telemetry", () => ({
 	},
 }))
 
+let mockContext: vscode.ExtensionContext
 const MockedOpenAiEmbedder = OpenAiEmbedder as MockedClass<typeof OpenAiEmbedder>
 const MockedCodeIndexOllamaEmbedder = CodeIndexOllamaEmbedder as MockedClass<typeof CodeIndexOllamaEmbedder>
 const MockedOpenAICompatibleEmbedder = OpenAICompatibleEmbedder as MockedClass<typeof OpenAICompatibleEmbedder>
@@ -43,6 +45,9 @@ describe("CodeIndexServiceFactory", () => {
 	let factory: CodeIndexServiceFactory
 	let mockConfigManager: any
 	let mockCacheManager: any
+	mockContext = {
+		globalStorageUri: { scheme: "file", path: "/mock/globalStorage" },
+	} as unknown as vscode.ExtensionContext
 
 	beforeEach(() => {
 		vitest.clearAllMocks()
@@ -358,7 +363,7 @@ describe("CodeIndexServiceFactory", () => {
 			mockGetModelDimension.mockReturnValue(3072)
 
 			// Act
-			factory.createVectorStore()
+			factory.createVectorStore(mockContext)
 
 			// Assert
 			expect(mockGetModelDimension).toHaveBeenCalledWith("openai", testModelId)
@@ -383,7 +388,7 @@ describe("CodeIndexServiceFactory", () => {
 			mockGetModelDimension.mockReturnValue(768)
 
 			// Act
-			factory.createVectorStore()
+			factory.createVectorStore(mockContext)
 
 			// Assert
 			expect(mockGetModelDimension).toHaveBeenCalledWith("ollama", testModelId)
@@ -408,7 +413,7 @@ describe("CodeIndexServiceFactory", () => {
 			mockGetModelDimension.mockReturnValue(3072)
 
 			// Act
-			factory.createVectorStore()
+			factory.createVectorStore(mockContext)
 
 			// Assert
 			expect(mockGetModelDimension).toHaveBeenCalledWith("openai-compatible", testModelId)
@@ -440,7 +445,7 @@ describe("CodeIndexServiceFactory", () => {
 			mockGetModelDimension.mockReturnValue(modelDimension) // This should be used
 
 			// Act
-			factory.createVectorStore()
+			factory.createVectorStore(mockContext)
 
 			// Assert
 			expect(mockGetModelDimension).toHaveBeenCalledWith("openai-compatible", testModelId)
@@ -471,7 +476,7 @@ describe("CodeIndexServiceFactory", () => {
 			mockGetModelDimension.mockReturnValue(undefined) // Model has no built-in dimension
 
 			// Act
-			factory.createVectorStore()
+			factory.createVectorStore(mockContext)
 
 			// Assert
 			expect(mockGetModelDimension).toHaveBeenCalledWith("openai-compatible", testModelId)
@@ -500,7 +505,7 @@ describe("CodeIndexServiceFactory", () => {
 			mockGetModelDimension.mockReturnValue(768)
 
 			// Act
-			factory.createVectorStore()
+			factory.createVectorStore(mockContext)
 
 			// Assert
 			expect(mockGetModelDimension).toHaveBeenCalledWith("openai-compatible", testModelId)
@@ -530,7 +535,7 @@ describe("CodeIndexServiceFactory", () => {
 			mockGetModelDimension.mockReturnValue(undefined)
 
 			// Act & Assert
-			expect(() => factory.createVectorStore()).toThrow(
+			expect(() => factory.createVectorStore(mockContext)).toThrow(
 				"serviceFactory.vectorDimensionNotDeterminedOpenAiCompatible",
 			)
 		})
@@ -552,7 +557,7 @@ describe("CodeIndexServiceFactory", () => {
 			mockGetModelDimension.mockReturnValue(undefined)
 
 			// Act & Assert
-			expect(() => factory.createVectorStore()).toThrow(
+			expect(() => factory.createVectorStore(mockContext)).toThrow(
 				"serviceFactory.vectorDimensionNotDeterminedOpenAiCompatible",
 			)
 		})
@@ -569,7 +574,7 @@ describe("CodeIndexServiceFactory", () => {
 			mockGetModelDimension.mockReturnValue(3072)
 
 			// Act
-			factory.createVectorStore()
+			factory.createVectorStore(mockContext)
 
 			// Assert
 			expect(mockGetModelDimension).toHaveBeenCalledWith("gemini", "gemini-embedding-001")
@@ -593,7 +598,7 @@ describe("CodeIndexServiceFactory", () => {
 			mockGetModelDimension.mockReturnValue(3072)
 
 			// Act
-			factory.createVectorStore()
+			factory.createVectorStore(mockContext)
 
 			// Assert
 			expect(mockGetDefaultModelId).toHaveBeenCalledWith("gemini")
@@ -618,7 +623,7 @@ describe("CodeIndexServiceFactory", () => {
 			mockGetModelDimension.mockReturnValue(1536)
 
 			// Act
-			factory.createVectorStore()
+			factory.createVectorStore(mockContext)
 
 			// Assert
 			expect(mockGetModelDimension).toHaveBeenCalledWith("openai", "default-model")
@@ -642,7 +647,7 @@ describe("CodeIndexServiceFactory", () => {
 			mockGetModelDimension.mockReturnValue(undefined)
 
 			// Act & Assert
-			expect(() => factory.createVectorStore()).toThrow("serviceFactory.vectorDimensionNotDetermined")
+			expect(() => factory.createVectorStore(mockContext)).toThrow("serviceFactory.vectorDimensionNotDetermined")
 		})
 
 		it("should throw error when Qdrant URL is missing", () => {
@@ -657,7 +662,7 @@ describe("CodeIndexServiceFactory", () => {
 			mockGetModelDimension.mockReturnValue(1536)
 
 			// Act & Assert
-			expect(() => factory.createVectorStore()).toThrow("serviceFactory.qdrantUrlMissing")
+			expect(() => factory.createVectorStore(mockContext)).toThrow("serviceFactory.qdrantUrlMissing")
 		})
 	})
 
