@@ -268,7 +268,14 @@ async function getFileOrFolderContent(
 						fileContentPromises.push(
 							(async () => {
 								try {
-									const isBinary = await isBinaryFile(absoluteFilePath).catch(() => false)
+									let isBinary = false
+									try {
+										isBinary = await isBinaryFile(absoluteFilePath)
+									} catch (error) {
+										// If isBinaryFile throws an error (e.g., RangeError), treat as binary
+										console.warn(`Error checking if file is binary for ${absoluteFilePath}:`, error)
+										isBinary = true
+									}
 									if (isBinary) {
 										return undefined
 									}

@@ -433,7 +433,17 @@ export async function readFileTool(
 
 			// Process approved files
 			try {
-				const [totalLines, isBinary] = await Promise.all([countFileLines(fullPath), isBinaryFile(fullPath)])
+				let totalLines: number
+				let isBinary: boolean
+
+				try {
+					;[totalLines, isBinary] = await Promise.all([countFileLines(fullPath), isBinaryFile(fullPath)])
+				} catch (error) {
+					// If isBinaryFile throws an error (e.g., RangeError), treat the file as binary
+					console.warn(`Error checking if file is binary for ${relPath}:`, error)
+					totalLines = await countFileLines(fullPath)
+					isBinary = true
+				}
 
 				// Handle binary files (but allow specific file types that extractTextFromFile can handle)
 				if (isBinary) {

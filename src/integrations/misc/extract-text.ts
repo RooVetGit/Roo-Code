@@ -86,7 +86,14 @@ export async function extractTextFromFile(filePath: string, maxReadFileLine?: nu
 	}
 
 	// Handle other files
-	const isBinary = await isBinaryFile(filePath).catch(() => false)
+	let isBinary = false
+	try {
+		isBinary = await isBinaryFile(filePath)
+	} catch (error) {
+		// If isBinaryFile throws an error (e.g., RangeError), treat as binary
+		console.warn(`Error checking if file is binary for ${filePath}:`, error)
+		isBinary = true
+	}
 
 	if (!isBinary) {
 		// Check if we need to apply line limit
