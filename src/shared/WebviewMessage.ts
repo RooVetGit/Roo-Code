@@ -162,6 +162,8 @@ export interface WebviewMessage {
 		| "remoteBrowserEnabled"
 		| "language"
 		| "maxReadFileLine"
+		| "maxImageFileSize"
+		| "maxTotalImageMemory"
 		| "maxConcurrentFileReads"
 		| "includeDiagnosticMessages"
 		| "maxDiagnosticMessages"

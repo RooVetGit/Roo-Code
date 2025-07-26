@@ -526,6 +526,16 @@
 			"profileDescription": "Benutzerdefinierter Schwellenwert nur für dieses Profil (überschreibt globalen Standard)",
 			"inheritDescription": "Dieses Profil erbt den globalen Standard-Schwellenwert ({{threshold}}%)",
 			"usesGlobal": "(verwendet global {{threshold}}%)"
+		},
+		"maxImageFileSize": {
+			"label": "Maximale Bilddateigröße",
+			"mb": "MB",
+			"description": "Maximale Größe (in MB) für Bilddateien, die vom read file Tool verarbeitet werden können."
+		},
+		"maxTotalImageMemory": {
+			"label": "Maximaler Gesamtspeicher für Bilder",
+			"mb": "MB",
+			"description": "Maximaler Gesamtspeicher (in MB) für alle Bilder in einem einzelnen Lesevorgang. Verhindert Speicherprobleme beim gleichzeitigen Lesen mehrerer großer Bilder."
 		}
 	},
 	"terminal": {

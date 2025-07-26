@@ -527,6 +527,16 @@
 			"profileDescription": "Sadece bu profil için özel eşik (küresel varsayılanı geçersiz kılar)",
 			"inheritDescription": "Bu profil küresel varsayılan eşiği miras alır ({{threshold}}%)",
 			"usesGlobal": "(küresel {{threshold}}% kullanır)"
+		},
+		"maxImageFileSize": {
+			"label": "Maksimum görüntü dosyası boyutu",
+			"mb": "MB",
+			"description": "Dosya okuma aracı tarafından işlenebilecek görüntü dosyaları için maksimum boyut (MB cinsinden)."
+		},
+		"maxTotalImageMemory": {
+			"label": "Görüntüler için maksimum toplam bellek",
+			"mb": "MB",
+			"description": "Tek bir okuma işlemindeki tüm görüntüler için maksimum toplam bellek (MB cinsinden). Birden çok büyük görüntüyü eş zamanlı okurken bellek sorunlarını önler."
 		}
 	},
 	"terminal": {

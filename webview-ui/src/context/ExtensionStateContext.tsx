@@ -120,6 +120,10 @@ export interface ExtensionStateContextType extends ExtensionState {
 	setAwsUsePromptCache: (value: boolean) => void
 	maxReadFileLine: number
 	setMaxReadFileLine: (value: number) => void
+	maxImageFileSize: number
+	setMaxImageFileSize: (value: number) => void
+	maxTotalImageMemory: number
+	setMaxTotalImageMemory: (value: number) => void
 	machineId?: string
 	pinnedApiConfigs?: Record<string, boolean>
 	setPinnedApiConfigs: (value: Record<string, boolean>) => void
@@ -208,6 +212,8 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 		showRooIgnoredFiles: true, // Default to showing .rooignore'd files with lock symbol (current behavior).
 		renderContext: "sidebar",
 		maxReadFileLine: -1, // Default max read file line limit
+		maxImageFileSize: 5, // Default max image file size in MB
+		maxTotalImageMemory: 20, // Default max total image memory in MB
 		pinnedApiConfigs: {}, // Empty object for pinned API configs
 		terminalZshOhMy: false, // Default Oh My Zsh integration setting
 		maxConcurrentFileReads: 5, // Default concurrent file reads
@@ -448,6 +454,8 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 		setRemoteBrowserEnabled: (value) => setState((prevState) => ({ ...prevState, remoteBrowserEnabled: value })),
 		setAwsUsePromptCache: (value) => setState((prevState) => ({ ...prevState, awsUsePromptCache: value })),
 		setMaxReadFileLine: (value) => setState((prevState) => ({ ...prevState, maxReadFileLine: value })),
+		setMaxImageFileSize: (value) => setState((prevState) => ({ ...prevState, maxImageFileSize: value })),
+		setMaxTotalImageMemory: (value) => setState((prevState) => ({ ...prevState, maxTotalImageMemory: value })),
 		setPinnedApiConfigs: (value) => setState((prevState) => ({ ...prevState, pinnedApiConfigs: value })),
 		setTerminalCompressProgressBar: (value) =>
 			setState((prevState) => ({ ...prevState, terminalCompressProgressBar: value })),
