@@ -29,17 +29,14 @@ export class CodeIndexManager {
 	private _cacheManager: CacheManager | undefined
 
 	public static getInstance(context: vscode.ExtensionContext): CodeIndexManager | undefined {
-		// Use first workspace folder consistently
-		const workspaceFolders = vscode.workspace.workspaceFolders
-		if (!workspaceFolders || workspaceFolders.length === 0) {
+		// Get the workspace path based on the active editor or current context
+		const workspacePath = getWorkspacePath()
+		if (!workspacePath) {
 			return undefined
 		}
 
-		// Always use the first workspace folder for consistency across all indexing operations.
-		// This ensures that the same workspace context is used throughout the indexing pipeline,
-		// preventing path resolution errors in multi-workspace scenarios.
-		const workspacePath = workspaceFolders[0].uri.fsPath
-
+		// Use the workspace folder of the active editor to support multi-folder workspaces.
+		// This ensures that the codebase index corresponds to the folder the user is currently working in.
 		if (!CodeIndexManager.instances.has(workspacePath)) {
 			CodeIndexManager.instances.set(workspacePath, new CodeIndexManager(workspacePath, context))
 		}

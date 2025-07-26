@@ -82,7 +82,8 @@ describe("WorkspaceTracker", () => {
 		// Create provider mock
 		mockProvider = {
 			postMessageToWebview: vitest.fn().mockResolvedValue(undefined),
-		} as unknown as ClineProvider & { postMessageToWebview: Mock }
+			handleWorkspaceFolderChange: vitest.fn().mockResolvedValue(undefined),
+		} as unknown as ClineProvider & { postMessageToWebview: Mock; handleWorkspaceFolderChange: Mock }
 
 		// Create tracker instance
 		workspaceTracker = new WorkspaceTracker(mockProvider)
@@ -225,8 +226,13 @@ describe("WorkspaceTracker", () => {
 		// Simulate tab change event
 		await registeredTabChangeCallback!()
 
-		// Run the debounce timer for workspaceDidReset
+		// Run the debounce timer for workspaceDidReset (300ms)
 		vitest.advanceTimersByTime(300)
+
+		// Wait for the async operations in the timeout callback to complete
+		await Promise.resolve() // For the setTimeout callback
+		await Promise.resolve() // For the async operations inside
+		await Promise.resolve() // For handleWorkspaceFolderChange
 
 		// Should clear file paths and reset workspace
 		expect(mockProvider.postMessageToWebview).toHaveBeenCalledWith({
@@ -235,13 +241,17 @@ describe("WorkspaceTracker", () => {
 			openedTabs: [],
 		})
 
+		// Should have called handleWorkspaceFolderChange
+		expect(mockProvider.handleWorkspaceFolderChange).toHaveBeenCalled()
+
 		// Run all remaining timers to complete initialization
-		await Promise.resolve() // Wait for initializeFilePaths to complete
 		vitest.runAllTimers()
+
+		// Wait for initializeFilePaths to complete
+		await Promise.resolve()
 
 		// Should initialize file paths for new workspace
 		expect(listFiles).toHaveBeenCalledWith("/test/new-workspace", true, 1000)
-		vitest.runAllTimers()
 	})
 
 	it("should not update file paths if workspace changes during initialization", async () => {

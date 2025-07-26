@@ -97,11 +97,16 @@ class WorkspaceTracker {
 		}
 		this.resetTimer = setTimeout(async () => {
 			if (this.prevWorkSpacePath !== this.cwd) {
-				await this.providerRef.deref()?.postMessageToWebview({
-					type: "workspaceUpdated",
-					filePaths: [],
-					openedTabs: this.getOpenedTabsInfo(),
-				})
+				const provider = this.providerRef.deref()
+				if (provider) {
+					await provider.postMessageToWebview({
+						type: "workspaceUpdated",
+						filePaths: [],
+						openedTabs: this.getOpenedTabsInfo(),
+					})
+					// Trigger code index re-initialization for the new workspace
+					await provider.handleWorkspaceFolderChange()
+				}
 				this.filePaths.clear()
 				this.prevWorkSpacePath = this.cwd
 				this.initializeFilePaths()

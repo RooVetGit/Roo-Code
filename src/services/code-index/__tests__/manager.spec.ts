@@ -13,6 +13,9 @@ vi.mock("vscode", () => ({
 			},
 		],
 	},
+	window: {
+		activeTextEditor: undefined,
+	},
 }))
 
 // Mock only the essential dependencies

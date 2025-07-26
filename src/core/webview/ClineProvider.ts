@@ -1826,6 +1826,58 @@ export class ClineProvider
 	}
 
 	/**
+	 * Handle workspace folder change by re-initializing the CodeIndexManager
+	 * This ensures the code index corresponds to the currently active workspace folder
+	 */
+	public async handleWorkspaceFolderChange() {
+		if (!this.codeIndexManager) {
+			return
+		}
+
+		try {
+			// Dispose of the old code index status subscription
+			if (this.codeIndexStatusSubscription) {
+				this.codeIndexStatusSubscription.dispose()
+				this.codeIndexStatusSubscription = undefined
+			}
+
+			// Get a new instance of CodeIndexManager for the current workspace
+			const newManager = CodeIndexManager.getInstance(this.context)
+			if (!newManager) {
+				this.log("No workspace folder available for code index")
+				return
+			}
+
+			// Re-initialize the manager
+			await newManager.initialize(this.contextProxy)
+
+			// Re-subscribe to status updates
+			this.codeIndexStatusSubscription = newManager.onProgressUpdate((update: IndexProgressUpdate) => {
+				this.postMessageToWebview({
+					type: "indexingStatusUpdate",
+					values: update,
+				})
+			})
+			if (this.webviewDisposables && this.codeIndexStatusSubscription) {
+				this.webviewDisposables.push(this.codeIndexStatusSubscription)
+			}
+
+			// Update the reference
+			;(this as any).codeIndexManager = newManager
+
+			// Send the current status to the webview
+			this.postMessageToWebview({
+				type: "indexingStatusUpdate",
+				values: newManager.getCurrentStatus(),
+			})
+
+			this.log(`Code index re-initialized for workspace: ${getWorkspacePath()}`)
+		} catch (error) {
+			this.log(`Failed to re-initialize code index: ${error}`)
+		}
+	}
+
+	/**
 	 * Check if the current state is compliant with MDM policy
 	 * @returns true if compliant, false if blocked
 	 */
