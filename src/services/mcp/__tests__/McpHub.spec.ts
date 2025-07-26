@@ -65,6 +65,23 @@ vi.mock("vscode", () => ({
 	Disposable: {
 		from: vi.fn(),
 	},
+	Uri: {
+		file: vi.fn((path: string) => ({
+			scheme: "file",
+			authority: "",
+			path,
+			query: "",
+			fragment: "",
+			fsPath: path,
+			with: vi.fn(),
+			toJSON: vi.fn(),
+		})),
+		parse: vi.fn(),
+	},
+	RelativePattern: vi.fn((base: string, pattern: string) => ({
+		base,
+		pattern,
+	})),
 }))
 vi.mock("fs/promises")
 vi.mock("../../../core/webview/ClineProvider")

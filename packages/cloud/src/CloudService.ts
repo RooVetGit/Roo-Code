@@ -76,7 +76,7 @@ export class CloudService {
 				this.settingsService = cloudSettingsService
 			}
 
-			this.telemetryClient = new TelemetryClient(this.authService, this.settingsService)
+			this.telemetryClient = new TelemetryClient(this.authService, this.settingsService, this.context)
 
 			this.shareService = new ShareService(this.authService, this.settingsService, this.log)
 
@@ -179,6 +179,31 @@ export class CloudService {
 	public captureEvent(event: TelemetryEvent): void {
 		this.ensureInitialized()
 		this.telemetryClient!.capture(event)
+	}
+
+	public getTelemetryConnectionStatus(): boolean {
+		this.ensureInitialized()
+		return this.telemetryClient!.getConnectionStatus()
+	}
+
+	public async getTelemetryQueueMetadata() {
+		this.ensureInitialized()
+		return this.telemetryClient!.getQueueMetadata()
+	}
+
+	public async triggerTelemetryRetry(): Promise<void> {
+		this.ensureInitialized()
+		return this.telemetryClient!.triggerRetry()
+	}
+
+	public setTelemetryConnectionStatusCallback(callback: (isConnected: boolean) => void): void {
+		this.ensureInitialized()
+		this.telemetryClient!.setConnectionStatusCallback(callback)
+	}
+
+	public setTelemetryQueueSizeCallback(callback: (size: number, isAboveThreshold: boolean) => void): void {
+		this.ensureInitialized()
+		this.telemetryClient!.setQueueSizeCallback(callback)
 	}
 
 	// ShareService

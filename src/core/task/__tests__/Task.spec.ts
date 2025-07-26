@@ -116,6 +116,7 @@ vi.mock("vscode", () => {
 				stat: vi.fn().mockResolvedValue({ type: 1 }), // FileType.File = 1
 			},
 			onDidSaveTextDocument: vi.fn(() => mockDisposable),
+			onDidChangeWorkspaceFolders: vi.fn(() => mockDisposable),
 			getConfiguration: vi.fn(() => ({ get: (key: string, defaultValue: any) => defaultValue })),
 		},
 		env: {
@@ -127,6 +128,23 @@ vi.mock("vscode", () => {
 			from: vi.fn(),
 		},
 		TabInputText: vi.fn(),
+		Uri: {
+			file: vi.fn((path: string) => ({
+				scheme: "file",
+				authority: "",
+				path,
+				query: "",
+				fragment: "",
+				fsPath: path,
+				with: vi.fn(),
+				toJSON: vi.fn(),
+			})),
+			parse: vi.fn(),
+		},
+		RelativePattern: vi.fn((base: string, pattern: string) => ({
+			base,
+			pattern,
+		})),
 	}
 })
 

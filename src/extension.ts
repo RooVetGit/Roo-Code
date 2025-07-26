@@ -27,6 +27,7 @@ import { TerminalRegistry } from "./integrations/terminal/TerminalRegistry"
 import { McpServerManager } from "./services/mcp/McpServerManager"
 import { CodeIndexManager } from "./services/code-index/manager"
 import { MdmService } from "./services/mdm/MdmService"
+import { TelemetryStatusMonitor } from "./services/telemetry/TelemetryStatusMonitor"
 import { migrateSettings } from "./utils/migrateSettings"
 import { autoImportSettings } from "./utils/autoImportSettings"
 import { API } from "./extension/api"
@@ -79,6 +80,15 @@ export async function activate(context: vscode.ExtensionContext) {
 		stateChanged: () => ClineProvider.getVisibleInstance()?.postStateToWebview(),
 		log: cloudLogger,
 	})
+
+	// Initialize telemetry status monitor
+	try {
+		const telemetryStatusMonitor = new TelemetryStatusMonitor(context)
+		telemetryStatusMonitor.initialize()
+		context.subscriptions.push(telemetryStatusMonitor)
+	} catch (error) {
+		outputChannel.appendLine(`[TelemetryStatusMonitor] Failed to initialize: ${error}`)
+	}
 
 	// Initialize MDM service
 	const mdmService = await MdmService.createInstance(cloudLogger)

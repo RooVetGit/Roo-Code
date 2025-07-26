@@ -52,7 +52,7 @@ describe("TelemetryClient", () => {
 
 	describe("isEventCapturable", () => {
 		it("should return true for events not in exclude list", () => {
-			const client = new TelemetryClient(mockAuthService, mockSettingsService)
+			const client = new TelemetryClient(mockAuthService, mockSettingsService, undefined)
 
 			const isEventCapturable = getPrivateProperty<(eventName: TelemetryEventName) => boolean>(
 				client,
@@ -66,7 +66,7 @@ describe("TelemetryClient", () => {
 		})
 
 		it("should return false for events in exclude list", () => {
-			const client = new TelemetryClient(mockAuthService, mockSettingsService)
+			const client = new TelemetryClient(mockAuthService, mockSettingsService, undefined)
 
 			const isEventCapturable = getPrivateProperty<(eventName: TelemetryEventName) => boolean>(
 				client,
@@ -83,7 +83,7 @@ describe("TelemetryClient", () => {
 				},
 			})
 
-			const client = new TelemetryClient(mockAuthService, mockSettingsService)
+			const client = new TelemetryClient(mockAuthService, mockSettingsService, undefined)
 
 			const isEventCapturable = getPrivateProperty<(eventName: TelemetryEventName) => boolean>(
 				client,
@@ -100,7 +100,7 @@ describe("TelemetryClient", () => {
 				},
 			})
 
-			const client = new TelemetryClient(mockAuthService, mockSettingsService)
+			const client = new TelemetryClient(mockAuthService, mockSettingsService, undefined)
 
 			const isEventCapturable = getPrivateProperty<(eventName: TelemetryEventName) => boolean>(
 				client,
@@ -115,7 +115,7 @@ describe("TelemetryClient", () => {
 				cloudSettings: {},
 			})
 
-			const client = new TelemetryClient(mockAuthService, mockSettingsService)
+			const client = new TelemetryClient(mockAuthService, mockSettingsService, undefined)
 
 			const isEventCapturable = getPrivateProperty<(eventName: TelemetryEventName) => boolean>(
 				client,
@@ -128,7 +128,7 @@ describe("TelemetryClient", () => {
 		it("should return false for TASK_MESSAGE events when cloudSettings is undefined", () => {
 			mockSettingsService.getSettings.mockReturnValue({})
 
-			const client = new TelemetryClient(mockAuthService, mockSettingsService)
+			const client = new TelemetryClient(mockAuthService, mockSettingsService, undefined)
 
 			const isEventCapturable = getPrivateProperty<(eventName: TelemetryEventName) => boolean>(
 				client,
@@ -141,7 +141,7 @@ describe("TelemetryClient", () => {
 		it("should return false for TASK_MESSAGE events when getSettings returns undefined", () => {
 			mockSettingsService.getSettings.mockReturnValue(undefined)
 
-			const client = new TelemetryClient(mockAuthService, mockSettingsService)
+			const client = new TelemetryClient(mockAuthService, mockSettingsService, undefined)
 
 			const isEventCapturable = getPrivateProperty<(eventName: TelemetryEventName) => boolean>(
 				client,
@@ -154,7 +154,7 @@ describe("TelemetryClient", () => {
 
 	describe("getEventProperties", () => {
 		it("should merge provider properties with event properties", async () => {
-			const client = new TelemetryClient(mockAuthService, mockSettingsService)
+			const client = new TelemetryClient(mockAuthService, mockSettingsService, undefined)
 
 			const mockProvider: TelemetryPropertiesProvider = {
 				getTelemetryProperties: vi.fn().mockResolvedValue({
@@ -195,7 +195,7 @@ describe("TelemetryClient", () => {
 		})
 
 		it("should handle errors from provider gracefully", async () => {
-			const client = new TelemetryClient(mockAuthService, mockSettingsService)
+			const client = new TelemetryClient(mockAuthService, mockSettingsService, undefined)
 
 			const mockProvider: TelemetryPropertiesProvider = {
 				getTelemetryProperties: vi.fn().mockRejectedValue(new Error("Provider error")),
@@ -221,7 +221,7 @@ describe("TelemetryClient", () => {
 		})
 
 		it("should return event properties when no provider is set", async () => {
-			const client = new TelemetryClient(mockAuthService, mockSettingsService)
+			const client = new TelemetryClient(mockAuthService, mockSettingsService, undefined)
 
 			const getEventProperties = getPrivateProperty<
 				(event: { event: TelemetryEventName; properties?: Record<string, any> }) => Promise<Record<string, any>>
@@ -238,7 +238,7 @@ describe("TelemetryClient", () => {
 
 	describe("capture", () => {
 		it("should not capture events that are not capturable", async () => {
-			const client = new TelemetryClient(mockAuthService, mockSettingsService)
+			const client = new TelemetryClient(mockAuthService, mockSettingsService, undefined)
 
 			await client.capture({
 				event: TelemetryEventName.TASK_CONVERSATION_MESSAGE, // In exclude list.
@@ -255,7 +255,7 @@ describe("TelemetryClient", () => {
 				},
 			})
 
-			const client = new TelemetryClient(mockAuthService, mockSettingsService)
+			const client = new TelemetryClient(mockAuthService, mockSettingsService, undefined)
 
 			await client.capture({
 				event: TelemetryEventName.TASK_MESSAGE,
@@ -278,7 +278,7 @@ describe("TelemetryClient", () => {
 				cloudSettings: {},
 			})
 
-			const client = new TelemetryClient(mockAuthService, mockSettingsService)
+			const client = new TelemetryClient(mockAuthService, mockSettingsService, undefined)
 
 			await client.capture({
 				event: TelemetryEventName.TASK_MESSAGE,
@@ -297,7 +297,7 @@ describe("TelemetryClient", () => {
 		})
 
 		it("should not send request when schema validation fails", async () => {
-			const client = new TelemetryClient(mockAuthService, mockSettingsService)
+			const client = new TelemetryClient(mockAuthService, mockSettingsService, undefined)
 
 			await client.capture({
 				event: TelemetryEventName.TASK_CREATED,
@@ -309,7 +309,7 @@ describe("TelemetryClient", () => {
 		})
 
 		it("should send request when event is capturable and validation passes", async () => {
-			const client = new TelemetryClient(mockAuthService, mockSettingsService)
+			const client = new TelemetryClient(mockAuthService, mockSettingsService, undefined)
 
 			const providerProperties = {
 				appName: "roo-code",
@@ -382,7 +382,7 @@ describe("TelemetryClient", () => {
 				properties: eventProperties,
 			}
 
-			const client = new TelemetryClient(mockAuthService, mockSettingsService)
+			const client = new TelemetryClient(mockAuthService, mockSettingsService, undefined)
 
 			await client.capture({
 				event: TelemetryEventName.TASK_MESSAGE,
@@ -399,7 +399,7 @@ describe("TelemetryClient", () => {
 		})
 
 		it("should handle fetch errors gracefully", async () => {
-			const client = new TelemetryClient(mockAuthService, mockSettingsService)
+			const client = new TelemetryClient(mockAuthService, mockSettingsService, undefined)
 
 			mockFetch.mockRejectedValue(new Error("Network error"))
 
@@ -414,12 +414,12 @@ describe("TelemetryClient", () => {
 
 	describe("telemetry state methods", () => {
 		it("should always return true for isTelemetryEnabled", () => {
-			const client = new TelemetryClient(mockAuthService, mockSettingsService)
+			const client = new TelemetryClient(mockAuthService, mockSettingsService, undefined)
 			expect(client.isTelemetryEnabled()).toBe(true)
 		})
 
 		it("should have empty implementations for updateTelemetryState and shutdown", async () => {
-			const client = new TelemetryClient(mockAuthService, mockSettingsService)
+			const client = new TelemetryClient(mockAuthService, mockSettingsService, undefined)
 			client.updateTelemetryState(true)
 			await client.shutdown()
 		})
@@ -428,7 +428,7 @@ describe("TelemetryClient", () => {
 	describe("backfillMessages", () => {
 		it("should not send request when not authenticated", async () => {
 			mockAuthService.isAuthenticated.mockReturnValue(false)
-			const client = new TelemetryClient(mockAuthService, mockSettingsService)
+			const client = new TelemetryClient(mockAuthService, mockSettingsService, undefined)
 
 			const messages = [
 				{
@@ -446,7 +446,7 @@ describe("TelemetryClient", () => {
 
 		it("should not send request when no session token available", async () => {
 			mockAuthService.getSessionToken.mockReturnValue(null)
-			const client = new TelemetryClient(mockAuthService, mockSettingsService)
+			const client = new TelemetryClient(mockAuthService, mockSettingsService, undefined)
 
 			const messages = [
 				{
@@ -466,7 +466,7 @@ describe("TelemetryClient", () => {
 		})
 
 		it("should send FormData request with correct structure when authenticated", async () => {
-			const client = new TelemetryClient(mockAuthService, mockSettingsService)
+			const client = new TelemetryClient(mockAuthService, mockSettingsService, undefined)
 
 			const providerProperties = {
 				appName: "roo-code",
@@ -537,7 +537,7 @@ describe("TelemetryClient", () => {
 		})
 
 		it("should handle provider errors gracefully", async () => {
-			const client = new TelemetryClient(mockAuthService, mockSettingsService)
+			const client = new TelemetryClient(mockAuthService, mockSettingsService, undefined)
 
 			const mockProvider: TelemetryPropertiesProvider = {
 				getTelemetryProperties: vi.fn().mockRejectedValue(new Error("Provider error")),
@@ -589,7 +589,7 @@ describe("TelemetryClient", () => {
 		})
 
 		it("should work without provider set", async () => {
-			const client = new TelemetryClient(mockAuthService, mockSettingsService)
+			const client = new TelemetryClient(mockAuthService, mockSettingsService, undefined)
 
 			const messages = [
 				{
@@ -635,7 +635,7 @@ describe("TelemetryClient", () => {
 		})
 
 		it("should handle fetch errors gracefully", async () => {
-			const client = new TelemetryClient(mockAuthService, mockSettingsService)
+			const client = new TelemetryClient(mockAuthService, mockSettingsService, undefined)
 
 			mockFetch.mockRejectedValue(new Error("Network error"))
 
@@ -658,7 +658,7 @@ describe("TelemetryClient", () => {
 		})
 
 		it("should handle HTTP error responses", async () => {
-			const client = new TelemetryClient(mockAuthService, mockSettingsService)
+			const client = new TelemetryClient(mockAuthService, mockSettingsService, undefined)
 
 			mockFetch.mockResolvedValue({
 				ok: false,
@@ -683,7 +683,7 @@ describe("TelemetryClient", () => {
 		})
 
 		it("should log debug information when debug is enabled", async () => {
-			const client = new TelemetryClient(mockAuthService, mockSettingsService, true)
+			const client = new TelemetryClient(mockAuthService, mockSettingsService, undefined, true)
 
 			const messages = [
 				{
@@ -705,7 +705,7 @@ describe("TelemetryClient", () => {
 		})
 
 		it("should handle empty messages array", async () => {
-			const client = new TelemetryClient(mockAuthService, mockSettingsService)
+			const client = new TelemetryClient(mockAuthService, mockSettingsService, undefined)
 
 			await client.backfillMessages([], "test-task-id")
 
