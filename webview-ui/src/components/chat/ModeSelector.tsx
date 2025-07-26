@@ -182,26 +182,32 @@ export const ModeSelector = ({
 				container={portalContainer}
 				className="p-0 overflow-hidden min-w-80 max-w-9/10">
 				<div className="flex flex-col w-full">
-					{/* Search input only */}
-					<div className="relative p-2 border-b border-vscode-dropdown-border">
-						<input
-							aria-label="Search modes"
-							ref={searchInputRef}
-							value={searchValue}
-							onChange={(e) => setSearchValue(e.target.value)}
-							placeholder={t("chat:modeSelector.searchPlaceholder")}
-							className="w-full h-8 px-2 py-1 text-xs bg-vscode-input-background text-vscode-input-foreground border border-vscode-input-border rounded focus:outline-0"
-							data-testid="mode-search-input"
-						/>
-						{searchValue.length > 0 && (
-							<div className="absolute right-4 top-0 bottom-0 flex items-center justify-center">
-								<X
-									className="text-vscode-input-foreground opacity-50 hover:opacity-100 size-4 p-0.5 cursor-pointer"
-									onClick={onClearSearch}
-								/>
-							</div>
-						)}
-					</div>
+					{/* Show search bar only when there are more than 6 items, otherwise show info blurb */}
+					{modes.length > 6 ? (
+						<div className="relative p-2 border-b border-vscode-dropdown-border">
+							<input
+								aria-label="Search modes"
+								ref={searchInputRef}
+								value={searchValue}
+								onChange={(e) => setSearchValue(e.target.value)}
+								placeholder={t("chat:modeSelector.searchPlaceholder")}
+								className="w-full h-8 px-2 py-1 text-xs bg-vscode-input-background text-vscode-input-foreground border border-vscode-input-border rounded focus:outline-0"
+								data-testid="mode-search-input"
+							/>
+							{searchValue.length > 0 && (
+								<div className="absolute right-4 top-0 bottom-0 flex items-center justify-center">
+									<X
+										className="text-vscode-input-foreground opacity-50 hover:opacity-100 size-4 p-0.5 cursor-pointer"
+										onClick={onClearSearch}
+									/>
+								</div>
+							)}
+						</div>
+					) : (
+						<div className="p-3 border-b border-vscode-dropdown-border">
+							<p className="m-0 text-xs text-vscode-descriptionForeground">{instructionText}</p>
+						</div>
+					)}
 
 					{/* Mode List */}
 					<div className="max-h-[300px] overflow-y-auto">
@@ -269,11 +275,13 @@ export const ModeSelector = ({
 							/>
 						</div>
 
-						{/* Info icon and title on the right with matching spacing */}
+						{/* Info icon and title on the right - only show info icon when search bar is visible */}
 						<div className="flex items-center gap-1 pr-1">
-							<StandardTooltip content={instructionText}>
-								<span className="codicon codicon-info text-xs text-vscode-descriptionForeground opacity-70 hover:opacity-100 cursor-help" />
-							</StandardTooltip>
+							{modes.length > 6 && (
+								<StandardTooltip content={instructionText}>
+									<span className="codicon codicon-info text-xs text-vscode-descriptionForeground opacity-70 hover:opacity-100 cursor-help" />
+								</StandardTooltip>
+							)}
 							<h4 className="m-0 font-medium text-sm text-vscode-descriptionForeground">
 								{t("chat:modeSelector.title")}
 							</h4>
