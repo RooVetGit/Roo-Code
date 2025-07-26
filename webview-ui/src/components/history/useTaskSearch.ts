@@ -59,6 +59,11 @@ export const useTaskSearch = () => {
 
 		// Then sort the results
 		return [...results].sort((a, b) => {
+			// Always sort starred items to the top
+			if (a.starred && !b.starred) return -1
+			if (!a.starred && b.starred) return 1
+
+			// If both are starred or both are not starred, apply the selected sort
 			switch (sortOption) {
 				case "oldest":
 					return (a.ts || 0) - (b.ts || 0)

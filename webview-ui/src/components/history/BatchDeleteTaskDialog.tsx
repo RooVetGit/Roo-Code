@@ -1,4 +1,4 @@
-import { useCallback } from "react"
+import { useCallback, useMemo } from "react"
 import { useAppTranslation } from "@/i18n/TranslationContext"
 import {
 	AlertDialog,
@@ -13,6 +13,7 @@ import {
 } from "@/components/ui"
 import { vscode } from "@/utils/vscode"
 import { AlertDialogProps } from "@radix-ui/react-alert-dialog"
+import { useExtensionState } from "@/context/ExtensionStateContext"
 
 interface BatchDeleteTaskDialogProps extends AlertDialogProps {
 	taskIds: string[]
@@ -21,13 +22,31 @@ interface BatchDeleteTaskDialogProps extends AlertDialogProps {
 export const BatchDeleteTaskDialog = ({ taskIds, ...props }: BatchDeleteTaskDialogProps) => {
 	const { t } = useAppTranslation()
 	const { onOpenChange } = props
+	const { taskHistory } = useExtensionState()
+
+	// Filter out starred tasks
+	const { deletableTaskIds, starredCount } = useMemo(() => {
+		const deletable: string[] = []
+		let starred = 0
+
+		taskIds.forEach((id) => {
+			const task = taskHistory.find((item) => item.id === id)
+			if (task?.starred) {
+				starred++
+			} else {
+				deletable.push(id)
+			}
+		})
+
+		return { deletableTaskIds: deletable, starredCount: starred }
+	}, [taskIds, taskHistory])
 
 	const onDelete = useCallback(() => {
-		if (taskIds.length > 0) {
-			vscode.postMessage({ type: "deleteMultipleTasksWithIds", ids: taskIds })
+		if (deletableTaskIds.length > 0) {
+			vscode.postMessage({ type: "deleteMultipleTasksWithIds", ids: deletableTaskIds })
 			onOpenChange?.(false)
 		}
-	}, [taskIds, onOpenChange])
+	}, [deletableTaskIds, onOpenChange])
 
 	return (
 		<AlertDialog {...props}>
@@ -35,22 +54,41 @@ export const BatchDeleteTaskDialog = ({ taskIds, ...props }: BatchDeleteTaskDial
 				<AlertDialogHeader>
 					<AlertDialogTitle>{t("history:deleteTasks")}</AlertDialogTitle>
 					<AlertDialogDescription className="text-vscode-foreground">
-						<div className="mb-2">{t("history:confirmDeleteTasks", { count: taskIds.length })}</div>
-						<div className="text-vscode-editor-foreground bg-vscode-editor-background p-2 rounded text-sm">
-							{t("history:deleteTasksWarning")}
-						</div>
+						{starredCount > 0 ? (
+							<>
+								<div className="mb-2 text-vscode-notificationsWarningIcon-foreground">
+									{t("history:starredTasksExcluded", { count: starredCount })}
+								</div>
+								{deletableTaskIds.length > 0 && (
+									<div className="mb-2">
+										{t("history:confirmDeleteTasks", { count: deletableTaskIds.length })}
+									</div>
+								)}
+							</>
+						) : (
+							<div className="mb-2">
+								{t("history:confirmDeleteTasks", { count: deletableTaskIds.length })}
+							</div>
+						)}
+						{deletableTaskIds.length > 0 && (
+							<div className="text-vscode-editor-foreground bg-vscode-editor-background p-2 rounded text-sm">
+								{t("history:deleteTasksWarning")}
+							</div>
+						)}
 					</AlertDialogDescription>
 				</AlertDialogHeader>
 				<AlertDialogFooter>
 					<AlertDialogCancel asChild>
 						<Button variant="secondary">{t("history:cancel")}</Button>
 					</AlertDialogCancel>
-					<AlertDialogAction asChild>
-						<Button variant="destructive" onClick={onDelete}>
-							<span className="codicon codicon-trash mr-1"></span>
-							{t("history:deleteItems", { count: taskIds.length })}
-						</Button>
-					</AlertDialogAction>
+					{deletableTaskIds.length > 0 && (
+						<AlertDialogAction asChild>
+							<Button variant="destructive" onClick={onDelete}>
+								<span className="codicon codicon-trash mr-1"></span>
+								{t("history:deleteItems", { count: deletableTaskIds.length })}
+							</Button>
+						</AlertDialogAction>
+					)}
 				</AlertDialogFooter>
 			</AlertDialogContent>
 		</AlertDialog>

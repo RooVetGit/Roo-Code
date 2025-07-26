@@ -59,6 +59,7 @@ export interface WebviewMessage {
 		| "deleteTaskWithId"
 		| "exportTaskWithId"
 		| "importSettings"
+		| "toggleTaskStar"
 		| "exportSettings"
 		| "resetState"
 		| "flushRouterModels"
