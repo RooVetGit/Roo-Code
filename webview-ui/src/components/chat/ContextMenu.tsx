@@ -23,6 +23,8 @@ interface ContextMenuProps {
 	modes?: ModeConfig[]
 	loading?: boolean
 	dynamicSearchResults?: SearchResult[]
+	exportLabel?: string
+	exportDescription?: string
 }
 
 const ContextMenu: React.FC<ContextMenuProps> = ({
@@ -36,13 +38,24 @@ const ContextMenu: React.FC<ContextMenuProps> = ({
 	queryItems,
 	modes,
 	dynamicSearchResults = [],
+	exportLabel = "Export current mode",
+	exportDescription = "Export the current mode configuration",
 }) => {
 	const [materialIconsBaseUri, setMaterialIconsBaseUri] = useState("")
 	const menuRef = useRef<HTMLDivElement>(null)
 
 	const filteredOptions = useMemo(() => {
-		return getContextMenuOptions(searchQuery, inputValue, selectedType, queryItems, dynamicSearchResults, modes)
-	}, [searchQuery, inputValue, selectedType, queryItems, dynamicSearchResults, modes])
+		return getContextMenuOptions(
+			searchQuery,
+			inputValue,
+			selectedType,
+			queryItems,
+			dynamicSearchResults,
+			modes,
+			exportLabel,
+			exportDescription,
+		)
+	}, [searchQuery, inputValue, selectedType, queryItems, dynamicSearchResults, modes, exportLabel, exportDescription])
 
 	useEffect(() => {
 		if (menuRef.current) {
@@ -69,6 +82,7 @@ const ContextMenu: React.FC<ContextMenuProps> = ({
 	const renderOptionContent = (option: ContextMenuQueryItem) => {
 		switch (option.type) {
 			case ContextMenuOptionType.Mode:
+			case ContextMenuOptionType.Export:
 				return (
 					<div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
 						<span style={{ lineHeight: "1.2" }}>{option.label}</span>
@@ -163,6 +177,8 @@ const ContextMenu: React.FC<ContextMenuProps> = ({
 		switch (option.type) {
 			case ContextMenuOptionType.Mode:
 				return "symbol-misc"
+			case ContextMenuOptionType.Export:
+				return "export"
 			case ContextMenuOptionType.OpenedFile:
 				return "window"
 			case ContextMenuOptionType.File:
@@ -263,7 +279,20 @@ const ContextMenu: React.FC<ContextMenuProps> = ({
 										}}
 									/>
 								)}
+								{(option.type === ContextMenuOptionType.Mode ||
+									option.type === ContextMenuOptionType.Export) && (
+									<i
+										className={`codicon codicon-${getIconForOption(option)}`}
+										style={{
+											marginRight: "6px",
+											flexShrink: 0,
+											fontSize: "14px",
+											marginTop: 0,
+										}}
+									/>
+								)}
 								{option.type !== ContextMenuOptionType.Mode &&
+									option.type !== ContextMenuOptionType.Export &&
 									option.type !== ContextMenuOptionType.File &&
 									option.type !== ContextMenuOptionType.Folder &&
 									option.type !== ContextMenuOptionType.OpenedFile &&

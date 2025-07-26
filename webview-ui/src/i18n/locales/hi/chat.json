@@ -346,5 +346,7 @@
 	},
 	"editMessage": {
 		"placeholder": "अपना संदेश संपादित करें..."
-	}
+	},
+	"exportCurrentMode": "Export current mode",
+	"exportModeDescription": "Export the current mode configuration"
 }

@@ -195,7 +195,16 @@ describe("getContextMenuOptions", () => {
 	]
 
 	it("should return all option types for empty query", () => {
-		const result = getContextMenuOptions("", "", null, [])
+		const result = getContextMenuOptions(
+			"",
+			"",
+			null,
+			[],
+			[],
+			undefined,
+			"Export current mode",
+			"Export the current mode configuration",
+		)
 		expect(result).toHaveLength(6)
 		expect(result.map((item) => item.type)).toEqual([
 			ContextMenuOptionType.Problems,
@@ -208,7 +217,16 @@ describe("getContextMenuOptions", () => {
 	})
 
 	it("should filter by selected type when query is empty", () => {
-		const result = getContextMenuOptions("", "", ContextMenuOptionType.File, mockQueryItems)
+		const result = getContextMenuOptions(
+			"",
+			"",
+			ContextMenuOptionType.File,
+			mockQueryItems,
+			[],
+			undefined,
+			"Export current mode",
+			"Export the current mode configuration",
+		)
 		expect(result).toHaveLength(2)
 		expect(result.map((item) => item.type)).toContain(ContextMenuOptionType.File)
 		expect(result.map((item) => item.type)).toContain(ContextMenuOptionType.OpenedFile)
@@ -217,19 +235,46 @@ describe("getContextMenuOptions", () => {
 	})
 
 	it("should match git commands", () => {
-		const result = getContextMenuOptions("git", "git", null, mockQueryItems)
+		const result = getContextMenuOptions(
+			"git",
+			"git",
+			null,
+			mockQueryItems,
+			[],
+			undefined,
+			"Export current mode",
+			"Export the current mode configuration",
+		)
 		expect(result[0].type).toBe(ContextMenuOptionType.Git)
 		expect(result[0].label).toBe("Git Commits")
 	})
 
 	it("should match git commit hashes", () => {
-		const result = getContextMenuOptions("abc1234", "abc1234", null, mockQueryItems)
+		const result = getContextMenuOptions(
+			"abc1234",
+			"abc1234",
+			null,
+			mockQueryItems,
+			[],
+			undefined,
+			"Export current mode",
+			"Export the current mode configuration",
+		)
 		expect(result[0].type).toBe(ContextMenuOptionType.Git)
 		expect(result[0].value).toBe("abc1234")
 	})
 
 	it("should return NoResults when no matches found", () => {
-		const result = getContextMenuOptions("nonexistent", "nonexistent", null, mockQueryItems)
+		const result = getContextMenuOptions(
+			"nonexistent",
+			"nonexistent",
+			null,
+			mockQueryItems,
+			[],
+			undefined,
+			"Export current mode",
+			"Export the current mode configuration",
+		)
 		expect(result).toHaveLength(1)
 		expect(result[0].type).toBe(ContextMenuOptionType.NoResults)
 	})
@@ -250,7 +295,16 @@ describe("getContextMenuOptions", () => {
 			},
 		]
 
-		const result = getContextMenuOptions("test", "test", null, testItems, mockDynamicSearchResults)
+		const result = getContextMenuOptions(
+			"test",
+			"test",
+			null,
+			testItems,
+			mockDynamicSearchResults,
+			undefined,
+			"Export current mode",
+			"Export the current mode configuration",
+		)
 
 		// Check if opened files and dynamic search results are included
 		expect(result.some((item) => item.type === ContextMenuOptionType.OpenedFile)).toBe(true)
@@ -259,7 +313,16 @@ describe("getContextMenuOptions", () => {
 
 	it("should maintain correct result ordering according to implementation", () => {
 		// Add multiple item types to test ordering
-		const result = getContextMenuOptions("t", "t", null, mockQueryItems, mockDynamicSearchResults)
+		const result = getContextMenuOptions(
+			"t",
+			"t",
+			null,
+			mockQueryItems,
+			mockDynamicSearchResults,
+			undefined,
+			"Export current mode",
+			"Export the current mode configuration",
+		)
 
 		// Find the different result types
 		const fileResults = result.filter(
@@ -290,7 +353,16 @@ describe("getContextMenuOptions", () => {
 	})
 
 	it("should include opened files when dynamic search results exist", () => {
-		const result = getContextMenuOptions("open", "open", null, mockQueryItems, mockDynamicSearchResults)
+		const result = getContextMenuOptions(
+			"open",
+			"open",
+			null,
+			mockQueryItems,
+			mockDynamicSearchResults,
+			undefined,
+			"Export current mode",
+			"Export the current mode configuration",
+		)
 
 		// Verify opened files are included
 		expect(result.some((item) => item.type === ContextMenuOptionType.OpenedFile)).toBe(true)
@@ -299,7 +371,16 @@ describe("getContextMenuOptions", () => {
 	})
 
 	it("should include git results when dynamic search results exist", () => {
-		const result = getContextMenuOptions("commit", "commit", null, mockQueryItems, mockDynamicSearchResults)
+		const result = getContextMenuOptions(
+			"commit",
+			"commit",
+			null,
+			mockQueryItems,
+			mockDynamicSearchResults,
+			undefined,
+			"Export current mode",
+			"Export the current mode configuration",
+		)
 
 		// Verify git results are included
 		expect(result.some((item) => item.type === ContextMenuOptionType.Git)).toBe(true)
@@ -320,7 +401,16 @@ describe("getContextMenuOptions", () => {
 			},
 		]
 
-		const result = getContextMenuOptions("test", "test", null, mockQueryItems, duplicateSearchResults)
+		const result = getContextMenuOptions(
+			"test",
+			"test",
+			null,
+			mockQueryItems,
+			duplicateSearchResults,
+			undefined,
+			"Export current mode",
+			"Export the current mode configuration",
+		)
 
 		// Count occurrences of src/test.ts in results
 		const duplicateCount = result.filter(
@@ -343,6 +433,9 @@ describe("getContextMenuOptions", () => {
 			null,
 			mockQueryItems,
 			[], // Empty dynamic search results
+			undefined,
+			"Export current mode",
+			"Export the current mode configuration",
 		)
 
 		expect(result).toHaveLength(1)
@@ -387,7 +480,16 @@ describe("getContextMenuOptions", () => {
 		]
 
 		// Get results for "test" query
-		const result = getContextMenuOptions(testQuery, testQuery, null, testItems, testSearchResults)
+		const result = getContextMenuOptions(
+			testQuery,
+			testQuery,
+			null,
+			testItems,
+			testSearchResults,
+			undefined,
+			"Export current mode",
+			"Export the current mode configuration",
+		)
 
 		// Verify we have results
 		expect(result.length).toBeGreaterThan(0)
@@ -433,17 +535,122 @@ describe("getContextMenuOptions", () => {
 			},
 		]
 
-		const result = getContextMenuOptions("/co", "/co", null, [], [], mockModes)
+		const result = getContextMenuOptions(
+			"/co",
+			"/co",
+			null,
+			[],
+			[],
+			mockModes,
+			"Export current mode",
+			"Export the current mode configuration",
+		)
 
-		// Verify mode results are returned
+		// When searching for "co", only the "code" mode should match (export doesn't contain "co")
+		expect(result).toHaveLength(1)
 		expect(result[0].type).toBe(ContextMenuOptionType.Mode)
 		expect(result[0].value).toBe("code")
+	})
+
+	it("should always show Export option at the top when typing slash command", () => {
+		const mockModes = [
+			{
+				slug: "code",
+				name: "Code",
+				roleDefinition: "You are a coding assistant",
+				groups: ["read" as const, "edit" as const],
+			},
+		]
+
+		const result = getContextMenuOptions(
+			"/",
+			"/",
+			null,
+			[],
+			[],
+			mockModes,
+			"Export current mode",
+			"Export the current mode configuration",
+		)
+
+		// Modes should be first, then Export
+		expect(result[0].type).toBe(ContextMenuOptionType.Mode)
+		expect(result[0].value).toBe("code")
+		// Export should be after modes
+		expect(result[1].type).toBe(ContextMenuOptionType.Export)
+		expect(result[1].label).toBe("Export current mode")
+		expect(result[1].description).toBe("Export the current mode configuration")
+	})
+
+	it("should filter Export option based on search query", () => {
+		const mockModes = [
+			{
+				slug: "code",
+				name: "Code",
+				roleDefinition: "You are a coding assistant",
+				groups: ["read" as const, "edit" as const],
+			},
+		]
+
+		// Should match "export"
+		const result1 = getContextMenuOptions(
+			"/exp",
+			"/exp",
+			null,
+			[],
+			[],
+			mockModes,
+			"Export current mode",
+			"Export the current mode configuration",
+		)
+		expect(result1[0].type).toBe(ContextMenuOptionType.Export)
+
+		// Should match "code" when searching for "cod"
+		const result2 = getContextMenuOptions(
+			"/cod",
+			"/cod",
+			null,
+			[],
+			[],
+			mockModes,
+			"Export current mode",
+			"Export the current mode configuration",
+		)
+		expect(result2[0].type).toBe(ContextMenuOptionType.Mode)
+		expect(result2[0].value).toBe("code")
+		// Export should not appear when it doesn't match the search
+		expect(result2.find((item) => item.type === ContextMenuOptionType.Export)).toBeUndefined()
+	})
+
+	it("should show only Export option when no modes are available", () => {
+		const result = getContextMenuOptions(
+			"/",
+			"/",
+			null,
+			[],
+			[],
+			[],
+			"Export current mode",
+			"Export the current mode configuration",
+		)
+
+		expect(result).toHaveLength(1)
+		expect(result[0].type).toBe(ContextMenuOptionType.Export)
 	})
 
 	it("should not process slash commands when query starts with slash but inputValue doesn't", () => {
 		// Use a completely non-matching query to ensure we get NoResults
 		// and provide empty query items to avoid any matches
-		const result = getContextMenuOptions("/nonexistentquery", "Hello /code", null, [], [])
+		const result = getContextMenuOptions(
+			"/nonexistentquery",
+			"Hello /code",
+			null,
+			[],
+			[],
+			undefined,
+			"Export current mode",
+			"Export the current mode configuration",
+		)
 
 		// Should not process as a mode command
 		expect(result[0].type).not.toBe(ContextMenuOptionType.Mode)
@@ -453,7 +660,16 @@ describe("getContextMenuOptions", () => {
 
 	// --- Tests for Escaped Spaces (Focus on how paths are presented) ---
 	it("should return search results with correct labels/descriptions (no escaping needed here)", () => {
-		const options = getContextMenuOptions("@search", "search", null, mockQueryItems, mockSearchResults)
+		const options = getContextMenuOptions(
+			"@search",
+			"search",
+			null,
+			mockQueryItems,
+			mockSearchResults,
+			undefined,
+			"Export current mode",
+			"Export the current mode configuration",
+		)
 		const fileResult = options.find((o) => o.label === "search result spaces.ts")
 		expect(fileResult).toBeDefined()
 		// Value should be the normalized path, description might be the same or label
@@ -466,7 +682,16 @@ describe("getContextMenuOptions", () => {
 	})
 
 	it("should return query items (like opened files) with correct labels/descriptions", () => {
-		const options = getContextMenuOptions("open", "@open", null, mockQueryItems, [])
+		const options = getContextMenuOptions(
+			"open",
+			"@open",
+			null,
+			mockQueryItems,
+			[],
+			undefined,
+			"Export current mode",
+			"Export the current mode configuration",
+		)
 		const openedFile = options.find((o) => o.label === "open file.ts")
 		expect(openedFile).toBeDefined()
 		expect(openedFile?.value).toBe("src/open file.ts")
@@ -483,7 +708,16 @@ describe("getContextMenuOptions", () => {
 		]
 
 		// The formatting happens in getContextMenuOptions when converting search results to menu items
-		const formattedItems = getContextMenuOptions("spaces", "@spaces", null, [], searchResults)
+		const formattedItems = getContextMenuOptions(
+			"spaces",
+			"@spaces",
+			null,
+			[],
+			searchResults,
+			undefined,
+			"Export current mode",
+			"Export the current mode configuration",
+		)
 
 		// Verify we get some results back that aren't "No Results"
 		expect(formattedItems.length).toBeGreaterThan(0)

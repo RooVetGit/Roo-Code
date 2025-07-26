@@ -346,5 +346,7 @@
 	},
 	"editMessage": {
 		"placeholder": "Edytuj swoją wiadomość..."
-	}
+	},
+	"exportCurrentMode": "Export current mode",
+	"exportModeDescription": "Export the current mode configuration"
 }

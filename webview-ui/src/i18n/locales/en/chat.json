@@ -346,5 +346,7 @@
 		"title": "Roo Code Cloud is coming soon!",
 		"description": "Run Roomote agents in the cloud, access your tasks from anywhere, collaborate with others, and more.",
 		"joinWaitlist": "Join the waitlist to get early access."
-	}
+	},
+	"exportCurrentMode": "Export current mode",
+	"exportModeDescription": "Export the current mode configuration"
 }

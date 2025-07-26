@@ -352,5 +352,7 @@
 	},
 	"editMessage": {
 		"placeholder": "Edit pesan Anda..."
-	}
+	},
+	"exportCurrentMode": "Export current mode",
+	"exportModeDescription": "Export the current mode configuration"
 }

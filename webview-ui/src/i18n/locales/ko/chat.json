@@ -346,5 +346,7 @@
 	},
 	"editMessage": {
 		"placeholder": "메시지 편집..."
-	}
+	},
+	"exportCurrentMode": "Export current mode",
+	"exportModeDescription": "Export the current mode configuration"
 }

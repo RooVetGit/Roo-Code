@@ -264,6 +264,14 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 					return
 				}
 
+				if (type === ContextMenuOptionType.Export) {
+					// Handle export action for current mode
+					setInputValue("")
+					setShowContextMenu(false)
+					vscode.postMessage({ type: "exportMode", slug: mode })
+					return
+				}
+
 				if (type === ContextMenuOptionType.Mode && value) {
 					// Handle mode selection.
 					setMode(value)
@@ -325,7 +333,7 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 				}
 			},
 			// eslint-disable-next-line react-hooks/exhaustive-deps
-			[setInputValue, cursorPosition],
+			[setInputValue, cursorPosition, mode],
 		)
 
 		const handleKeyDown = useCallback(
@@ -348,6 +356,8 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 								queryItems,
 								fileSearchResults,
 								allModes,
+								t("chat:exportCurrentMode"),
+								t("chat:exportModeDescription"),
 							)
 							const optionsLength = options.length
 
@@ -385,6 +395,8 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 							queryItems,
 							fileSearchResults,
 							allModes,
+							t("chat:exportCurrentMode"),
+							t("chat:exportModeDescription"),
 						)[selectedMenuIndex]
 						if (
 							selectedOption &&
@@ -475,6 +487,7 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 				fileSearchResults,
 				handleHistoryNavigation,
 				resetHistoryNavigation,
+				t,
 			],
 		)
 
@@ -1245,6 +1258,8 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 									modes={allModes}
 									loading={searchLoading}
 									dynamicSearchResults={fileSearchResults}
+									exportLabel={t("chat:exportCurrentMode")}
+									exportDescription={t("chat:exportModeDescription")}
 								/>
 							</div>
 						)}

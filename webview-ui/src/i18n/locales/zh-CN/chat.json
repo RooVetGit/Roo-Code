@@ -346,5 +346,7 @@
 	},
 	"editMessage": {
 		"placeholder": "编辑消息..."
-	}
+	},
+	"exportCurrentMode": "Export current mode",
+	"exportModeDescription": "Export the current mode configuration"
 }
