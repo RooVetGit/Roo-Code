@@ -578,6 +578,11 @@ export class ClineProvider
 	public async initClineWithHistoryItem(historyItem: HistoryItem & { rootTask?: Task; parentTask?: Task }) {
 		await this.removeClineFromStack()
 
+		// If the history item has a saved mode, restore it
+		if (historyItem.mode) {
+			await this.updateGlobalState("mode", historyItem.mode)
+		}
+
 		const {
 			apiConfiguration,
 			diffEnabled: enableDiff,
@@ -807,6 +812,14 @@ export class ClineProvider
 		if (cline) {
 			TelemetryService.instance.captureModeSwitch(cline.taskId, newMode)
 			cline.emit("taskModeSwitched", cline.taskId, newMode)
+
+			// Update the task history with the new mode
+			const history = this.getGlobalState("taskHistory") ?? []
+			const taskHistoryItem = history.find((item) => item.id === cline.taskId)
+			if (taskHistoryItem) {
+				taskHistoryItem.mode = newMode
+				await this.updateTaskHistory(taskHistoryItem)
+			}
 		}
 
 		await this.updateGlobalState("mode", newMode)
