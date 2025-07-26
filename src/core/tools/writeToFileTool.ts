@@ -71,6 +71,29 @@ export async function writeToFileTool(
 		cline.diffViewProvider.editType = fileExists ? "modify" : "create"
 	}
 
+	// Check for potential truncation in large files
+	const actualLineCount = newContent.split("\n").length
+	const LARGE_FILE_THRESHOLD = 7000
+
+	// If the file has many lines and no line_count was provided, it might be truncated
+	if (actualLineCount > LARGE_FILE_THRESHOLD && predictedLineCount === 0) {
+		cline.consecutiveMistakeCount++
+		cline.recordToolError("write_to_file")
+
+		await cline.say(
+			"error",
+			`The file content appears to be very large (${actualLineCount} lines). The assistant may have reached its output limit and the content could be truncated. Please verify the file is complete or consider using a different approach for large files.`,
+		)
+
+		pushToolResult(
+			formatResponse.toolError(
+				`Large file detected (${actualLineCount} lines). The content may be truncated due to output limits. Consider breaking the file into smaller chunks or using a different approach.`,
+			),
+		)
+		await cline.diffViewProvider.reset()
+		return
+	}
+
 	// pre-processing newContent for cases where weaker models might add artifacts like markdown codeblock markers (deepseek/llama) or extra escape characters (gemini)
 	if (newContent.startsWith("```")) {
 		// cline handles cases where it includes language specifiers like ```python ```js
@@ -143,6 +166,42 @@ export async function writeToFileTool(
 						formatResponse.lineCountTruncationError(actualLineCount, isNewFile, diffStrategyEnabled),
 					),
 				)
+				await cline.diffViewProvider.revertChanges()
+				return
+			}
+
+			// Validate line count matches actual content
+			const actualLineCount = newContent.split("\n").length
+			const lineCountMismatchThreshold = 0.1 // 10% tolerance
+			const lineCountDifference = Math.abs(actualLineCount - predictedLineCount)
+			const lineCountDifferencePercent = lineCountDifference / predictedLineCount
+
+			// Check for significant mismatch that might indicate truncation
+			if (predictedLineCount > 100 && lineCountDifferencePercent > lineCountMismatchThreshold) {
+				cline.consecutiveMistakeCount++
+				cline.recordToolError("write_to_file")
+
+				await cline.say(
+					"error",
+					`Line count mismatch detected. Expected ${predictedLineCount} lines but got ${actualLineCount} lines. This may indicate the content was truncated.`,
+				)
+
+				// Check if this looks like truncation at output limit
+				const TYPICAL_OUTPUT_LIMIT_LINES = 7000
+				if (actualLineCount > TYPICAL_OUTPUT_LIMIT_LINES && actualLineCount < predictedLineCount) {
+					pushToolResult(
+						formatResponse.toolError(
+							`Content appears to be truncated. The file should have ${predictedLineCount} lines but only ${actualLineCount} lines were provided. This often happens when files exceed ~7000 lines due to output token limits. Consider using apply_diff for large file modifications or breaking the content into smaller chunks.`,
+						),
+					)
+				} else {
+					pushToolResult(
+						formatResponse.toolError(
+							`Line count mismatch: expected ${predictedLineCount} lines but got ${actualLineCount} lines. Please verify the content is complete.`,
+						),
+					)
+				}
+
 				await cline.diffViewProvider.revertChanges()
 				return
 			}

@@ -339,10 +339,81 @@ describe("writeToFileTool", () => {
 		})
 
 		it("processes files with very large line counts", async () => {
-			await executeWriteFileTool({ line_count: "999999" })
+			// Create content that matches the line count to avoid mismatch error
+			const largeContent = Array(999).fill("Line content").join("\n")
+			await executeWriteFileTool({
+				content: largeContent,
+				line_count: "999",
+			})
 
 			// Should process normally without issues
 			expect(mockCline.consecutiveMistakeCount).toBe(0)
+		})
+
+		it("detects potential truncation when line count is 0 and content exceeds 7000 lines", async () => {
+			// Create content with more than 7000 lines
+			const largeContent = Array(7500).fill("Line content").join("\n")
+
+			await executeWriteFileTool({
+				content: largeContent,
+				line_count: "0", // Missing line count
+			})
+
+			expect(mockCline.consecutiveMistakeCount).toBe(1)
+			expect(mockCline.recordToolError).toHaveBeenCalledWith("write_to_file")
+			expect(mockCline.say).toHaveBeenCalledWith("error", expect.stringContaining("7500 lines"))
+			expect(mockCline.diffViewProvider.reset).toHaveBeenCalled()
+		})
+
+		it("detects line count mismatch indicating truncation", async () => {
+			// Create content with 7001 lines but claim it should have 10000
+			const truncatedContent = Array(7001).fill("Line content").join("\n")
+
+			// Need to capture the tool result
+			mockPushToolResult = vi.fn((result: ToolResponse) => {
+				toolResult = result
+			})
+
+			await executeWriteFileTool({
+				content: truncatedContent,
+				line_count: "10000", // Expected more lines
+			})
+
+			expect(mockCline.consecutiveMistakeCount).toBe(1)
+			expect(mockCline.recordToolError).toHaveBeenCalledWith("write_to_file")
+			expect(mockCline.say).toHaveBeenCalledWith("error", expect.stringContaining("Line count mismatch"))
+			// The error message should mention truncation since we have >7000 lines
+			expect(toolResult).toContain("Content appears to be truncated")
+			expect(toolResult).toContain("7001 lines")
+			expect(mockCline.diffViewProvider.revertChanges).toHaveBeenCalled()
+		})
+
+		it("allows small line count differences within tolerance", async () => {
+			// Create content with 95 lines when expecting 100 (5% difference)
+			const content = Array(95).fill("Line content").join("\n")
+
+			await executeWriteFileTool({
+				content: content,
+				line_count: "100",
+			})
+
+			// Should process normally as difference is within 10% tolerance
+			expect(mockCline.consecutiveMistakeCount).toBe(0)
+			expect(mockCline.diffViewProvider.saveChanges).toHaveBeenCalled()
+		})
+
+		it("handles exact line count match for large files", async () => {
+			// Create content with exactly 8000 lines
+			const largeContent = Array(8000).fill("Line content").join("\n")
+
+			await executeWriteFileTool({
+				content: largeContent,
+				line_count: "8000",
+			})
+
+			// Should process normally
+			expect(mockCline.consecutiveMistakeCount).toBe(0)
+			expect(mockCline.diffViewProvider.saveChanges).toHaveBeenCalled()
 		})
 	})
 
