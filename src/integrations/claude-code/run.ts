@@ -144,22 +144,35 @@ function runProcess({
 		args.push("--model", modelId)
 	}
 
-	const child = execa(claudePath, args, {
-		stdin: "pipe",
-		stdout: "pipe",
-		stderr: "pipe",
-		env: {
-			...process.env,
-			// Use the configured value, or the environment variable, or default to CLAUDE_CODE_DEFAULT_MAX_OUTPUT_TOKENS
-			CLAUDE_CODE_MAX_OUTPUT_TOKENS:
-				maxOutputTokens?.toString() ||
-				process.env.CLAUDE_CODE_MAX_OUTPUT_TOKENS ||
-				CLAUDE_CODE_DEFAULT_MAX_OUTPUT_TOKENS.toString(),
-		},
-		cwd,
-		maxBuffer: 1024 * 1024 * 1000,
-		timeout: CLAUDE_CODE_TIMEOUT,
-	})
+	let child
+	try {
+		child = execa(claudePath, args, {
+			stdin: "pipe",
+			stdout: "pipe",
+			stderr: "pipe",
+			env: {
+				...process.env,
+				// Use the configured value, or the environment variable, or default to CLAUDE_CODE_DEFAULT_MAX_OUTPUT_TOKENS
+				CLAUDE_CODE_MAX_OUTPUT_TOKENS:
+					maxOutputTokens?.toString() ||
+					process.env.CLAUDE_CODE_MAX_OUTPUT_TOKENS ||
+					CLAUDE_CODE_DEFAULT_MAX_OUTPUT_TOKENS.toString(),
+			},
+			cwd,
+			maxBuffer: 1024 * 1024 * 1000,
+			timeout: CLAUDE_CODE_TIMEOUT,
+		})
+	} catch (error: any) {
+		if (error.code === "ENOENT") {
+			throw new Error(
+				`Claude CLI command not found at '${claudePath}'. ` +
+					`Please ensure the Claude CLI is installed and available in your system PATH. ` +
+					`You can install it from https://github.com/anthropics/claude-cli or ` +
+					`specify a custom path in the extension settings.`,
+			)
+		}
+		throw error
+	}
 
 	// Prepare stdin data: Windows gets both system prompt & messages (avoids 8191 char limit),
 	// other platforms get messages only (avoids Linux E2BIG error from ~128KiB execve limit)

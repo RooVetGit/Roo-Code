@@ -110,10 +110,12 @@ export const About = ({ telemetrySetting, setTelemetrySetting, className, ...pro
 					</Button>
 
 					{/* Test button for ErrorBoundary - only visible in development */}
-					<Button variant="destructive" onClick={triggerTestError} className="w-auto">
-						<TriangleAlert className="p-0.5" />
-						Test ErrorBoundary
-					</Button>
+					{process.env.NODE_ENV !== "production" && (
+						<Button variant="destructive" onClick={triggerTestError} className="w-auto">
+							<TriangleAlert className="p-0.5" />
+							Test ErrorBoundary
+						</Button>
+					)}
 				</div>
 			</Section>
 		</div>

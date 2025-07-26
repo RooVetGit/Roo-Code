@@ -289,4 +289,94 @@ describe("runClaudeCode", () => {
 		consoleErrorSpy.mockRestore()
 		await generator.return(undefined)
 	})
+
+	test("should handle ENOENT error with helpful message", async () => {
+		const { runClaudeCode } = await import("../run")
+
+		// Mock execa to throw ENOENT error
+		const enoentError = new Error("spawn claude ENOENT") as any
+		enoentError.code = "ENOENT"
+		mockExeca.mockImplementationOnce(() => {
+			throw enoentError
+		})
+
+		const options = {
+			systemPrompt: "You are a helpful assistant",
+			messages: [{ role: "user" as const, content: "Hello" }],
+		}
+
+		const generator = runClaudeCode(options)
+
+		// Try to consume the generator
+		try {
+			await generator.next()
+			expect.fail("Should have thrown an error")
+		} catch (error: any) {
+			expect(error.message).toContain("Claude CLI command not found")
+			expect(error.message).toContain("Please ensure the Claude CLI is installed")
+			expect(error.message).toContain("https://github.com/anthropics/claude-cli")
+		}
+
+		// Clean up
+		await generator.return(undefined)
+	})
+
+	test("should handle ENOENT error with custom path in message", async () => {
+		const { runClaudeCode } = await import("../run")
+
+		// Mock execa to throw ENOENT error
+		const enoentError = new Error("spawn /custom/claude ENOENT") as any
+		enoentError.code = "ENOENT"
+		mockExeca.mockImplementationOnce(() => {
+			throw enoentError
+		})
+
+		const options = {
+			systemPrompt: "You are a helpful assistant",
+			messages: [{ role: "user" as const, content: "Hello" }],
+			path: "/custom/claude",
+		}
+
+		const generator = runClaudeCode(options)
+
+		// Try to consume the generator
+		try {
+			await generator.next()
+			expect.fail("Should have thrown an error")
+		} catch (error: any) {
+			expect(error.message).toContain("Claude CLI command not found at '/custom/claude'")
+		}
+
+		// Clean up
+		await generator.return(undefined)
+	})
+
+	test("should rethrow non-ENOENT errors unchanged", async () => {
+		const { runClaudeCode } = await import("../run")
+
+		// Mock execa to throw a different error
+		const otherError = new Error("Some other error")
+		mockExeca.mockImplementationOnce(() => {
+			throw otherError
+		})
+
+		const options = {
+			systemPrompt: "You are a helpful assistant",
+			messages: [{ role: "user" as const, content: "Hello" }],
+		}
+
+		const generator = runClaudeCode(options)
+
+		// Try to consume the generator
+		try {
+			await generator.next()
+			expect.fail("Should have thrown an error")
+		} catch (error: any) {
+			expect(error.message).toBe("Some other error")
+			expect(error.message).not.toContain("Claude CLI command not found")
+		}
+
+		// Clean up
+		await generator.return(undefined)
+	})
 })
