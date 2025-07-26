@@ -16,6 +16,7 @@ export const historyItemSchema = z.object({
 	totalCost: z.number(),
 	size: z.number().optional(),
 	workspace: z.string().optional(),
+	isStarred: z.boolean().optional(),
 })
 
 export type HistoryItem = z.infer<typeof historyItemSchema>

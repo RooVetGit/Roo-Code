@@ -24,6 +24,15 @@ vi.mock("react-use", () => ({
 	useKeyPress: vi.fn(),
 }))
 
+vi.mock("@/context/ExtensionStateContext", () => ({
+	useExtensionState: () => ({
+		taskHistory: [
+			{ id: "test-task-id", isStarred: false },
+			{ id: "starred-task-id", isStarred: true },
+		],
+	}),
+}))
+
 import { useKeyPress } from "react-use"
 
 const mockUseKeyPress = useKeyPress as any

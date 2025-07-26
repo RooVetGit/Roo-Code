@@ -2345,6 +2345,38 @@ export const webviewMessageHandler = async (
 			break
 		}
 
+		case "toggleTaskStar": {
+			if (message.text) {
+				const taskId = message.text
+				const starredTaskIds = getGlobalState("starredTaskIds") || []
+				const isCurrentlyStarred = starredTaskIds.includes(taskId)
+
+				let updatedStarredTaskIds: string[]
+				if (isCurrentlyStarred) {
+					// Unstar the task
+					updatedStarredTaskIds = starredTaskIds.filter((id) => id !== taskId)
+				} else {
+					// Star the task
+					updatedStarredTaskIds = [...starredTaskIds, taskId]
+				}
+
+				await updateGlobalState("starredTaskIds", updatedStarredTaskIds)
+
+				// Update the task history to reflect the starred status
+				const taskHistory = getGlobalState("taskHistory") || []
+				const updatedTaskHistory = taskHistory.map((task) => {
+					if (task.id === taskId) {
+						return { ...task, isStarred: !isCurrentlyStarred }
+					}
+					return task
+				})
+				await updateGlobalState("taskHistory", updatedTaskHistory)
+
+				await provider.postStateToWebview()
+			}
+			break
+		}
+
 		case "switchTab": {
 			if (message.tab) {
 				// Capture tab shown event for all switchTab messages (which are user-initiated)

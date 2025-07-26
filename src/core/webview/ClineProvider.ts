@@ -1478,7 +1478,11 @@ export class ClineProvider
 			clineMessages: this.getCurrentCline()?.clineMessages || [],
 			taskHistory: (taskHistory || [])
 				.filter((item: HistoryItem) => item.ts && item.task)
-				.sort((a: HistoryItem, b: HistoryItem) => b.ts - a.ts),
+				.sort((a: HistoryItem, b: HistoryItem) => b.ts - a.ts)
+				.map((item: HistoryItem) => ({
+					...item,
+					isStarred: (this.getGlobalState("starredTaskIds") || []).includes(item.id),
+				})),
 			soundEnabled: soundEnabled ?? false,
 			ttsEnabled: ttsEnabled ?? false,
 			ttsSpeed: ttsSpeed ?? 1.0,

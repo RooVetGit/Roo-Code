@@ -21,6 +21,16 @@ vi.mock("@/i18n/TranslationContext", () => ({
 	}),
 }))
 
+vi.mock("@/context/ExtensionStateContext", () => ({
+	useExtensionState: () => ({
+		taskHistory: [
+			{ id: "task-1", isStarred: false },
+			{ id: "task-2", isStarred: false },
+			{ id: "task-3", isStarred: false },
+		],
+	}),
+}))
+
 describe("BatchDeleteTaskDialog", () => {
 	const mockTaskIds = ["task-1", "task-2", "task-3"]
 	const mockOnOpenChange = vi.fn()
@@ -65,8 +75,13 @@ describe("BatchDeleteTaskDialog", () => {
 	it("does not call vscode.postMessage when taskIds is empty", () => {
 		render(<BatchDeleteTaskDialog taskIds={[]} open={true} onOpenChange={mockOnOpenChange} />)
 
-		const deleteButton = screen.getByText("Delete 0 items")
-		fireEvent.click(deleteButton)
+		// When there are no tasks, there should be no delete button
+		const deleteButton = screen.queryByText("Delete 0 items")
+		expect(deleteButton).not.toBeInTheDocument()
+
+		// Cancel button should still work
+		const cancelButton = screen.getByText("Cancel")
+		fireEvent.click(cancelButton)
 
 		expect(vscode.postMessage).not.toHaveBeenCalled()
 		expect(mockOnOpenChange).toHaveBeenCalledWith(false)

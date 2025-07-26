@@ -58,6 +58,7 @@ export interface WebviewMessage {
 		| "showTaskWithId"
 		| "deleteTaskWithId"
 		| "exportTaskWithId"
+		| "toggleTaskStar"
 		| "importSettings"
 		| "exportSettings"
 		| "resetState"
