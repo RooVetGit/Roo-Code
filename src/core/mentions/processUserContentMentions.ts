@@ -13,6 +13,7 @@ export async function processUserContentMentions({
 	fileContextTracker,
 	rooIgnoreController,
 	showRooIgnoredFiles = true,
+	enableSvnContext = false,
 	includeDiagnosticMessages = true,
 	maxDiagnosticMessages = 50,
 	maxReadFileLine,
@@ -23,6 +24,7 @@ export async function processUserContentMentions({
 	fileContextTracker: FileContextTracker
 	rooIgnoreController?: any
 	showRooIgnoredFiles?: boolean
+	enableSvnContext?: boolean
 	includeDiagnosticMessages?: boolean
 	maxDiagnosticMessages?: number
 	maxReadFileLine?: number
@@ -52,6 +54,7 @@ export async function processUserContentMentions({
 							fileContextTracker,
 							rooIgnoreController,
 							showRooIgnoredFiles,
+							enableSvnContext,
 							includeDiagnosticMessages,
 							maxDiagnosticMessages,
 							maxReadFileLine,
@@ -72,6 +75,7 @@ export async function processUserContentMentions({
 								fileContextTracker,
 								rooIgnoreController,
 								showRooIgnoredFiles,
+								enableSvnContext,
 								includeDiagnosticMessages,
 								maxDiagnosticMessages,
 								maxReadFileLine,
@@ -93,6 +97,7 @@ export async function processUserContentMentions({
 										fileContextTracker,
 										rooIgnoreController,
 										showRooIgnoredFiles,
+										enableSvnContext,
 										includeDiagnosticMessages,
 										maxDiagnosticMessages,
 										maxReadFileLine,

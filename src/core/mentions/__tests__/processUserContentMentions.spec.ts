@@ -52,6 +52,7 @@ describe("processUserContentMentions", () => {
 				mockFileContextTracker,
 				mockRooIgnoreController,
 				true,
+				false, // enableSvnContext
 				true, // includeDiagnosticMessages
 				50, // maxDiagnosticMessages
 				100,
@@ -81,6 +82,7 @@ describe("processUserContentMentions", () => {
 				mockFileContextTracker,
 				mockRooIgnoreController,
 				true,
+				false, // enableSvnContext
 				true, // includeDiagnosticMessages
 				50, // maxDiagnosticMessages
 				undefined,
@@ -111,6 +113,7 @@ describe("processUserContentMentions", () => {
 				mockFileContextTracker,
 				mockRooIgnoreController,
 				true,
+				false, // enableSvnContext
 				true, // includeDiagnosticMessages
 				50, // maxDiagnosticMessages
 				-1,
@@ -315,6 +318,7 @@ describe("processUserContentMentions", () => {
 				mockFileContextTracker,
 				undefined,
 				true, // showRooIgnoredFiles should default to true
+				false, // enableSvnContext
 				true, // includeDiagnosticMessages
 				50, // maxDiagnosticMessages
 				undefined,
@@ -344,6 +348,7 @@ describe("processUserContentMentions", () => {
 				mockFileContextTracker,
 				undefined,
 				false,
+				false, // enableSvnContext
 				true, // includeDiagnosticMessages
 				50, // maxDiagnosticMessages
 				undefined,

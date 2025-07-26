@@ -98,6 +98,8 @@ export async function executeRipgrepForFiles(
 		"-g",
 		"!**/.git/**",
 		"-g",
+		"!**/.svn/**",
+		"-g",
 		"!**/out/**",
 		"-g",
 		"!**/dist/**",
