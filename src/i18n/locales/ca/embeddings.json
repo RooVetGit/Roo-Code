@@ -55,7 +55,7 @@
 	},
 	"orchestrator": {
 		"indexingFailedNoBlocks": "Indexació fallida: No s'ha indexat cap bloc de codi amb èxit. Això normalment indica un problema de configuració de l'embedder.",
-		"indexingFailedCritical": "Indexació fallida: No s'ha indexat cap bloc de codi amb èxit malgrat trobar fitxers per processar. Això indica una fallada crítica de l'embedder.",
+		"indexingFailedCritical": "Indexació fallida: No s'ha indexat cap bloc de codi amb èxit malgrat trobar fitxers per processar. Això indica una fallida crítica de l'embedder.",
 		"fileWatcherStarted": "Monitor de fitxers iniciat.",
 		"fileWatcherStopped": "Monitor de fitxers aturat.",
 		"failedDuringInitialScan": "Ha fallat durant l'escaneig inicial: {{errorMessage}}",
