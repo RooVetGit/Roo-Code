@@ -263,7 +263,7 @@ export class LibSQLVectorStore implements IVectorStore {
 		}
 
 		const vectorStr = JSON.stringify(queryVector)
-		const k = Math.min((maxResults || DEFAULT_MAX_SEARCH_RESULTS) * 1.5, 100)
+		const k = Math.floor(Math.min((maxResults || DEFAULT_MAX_SEARCH_RESULTS) * 1.5, 100))
 		const scoreThreshold = minScore ?? DEFAULT_SEARCH_MIN_SCORE
 
 		try {

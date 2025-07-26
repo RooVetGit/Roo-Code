@@ -217,7 +217,7 @@ describe("LibSQLVectorStore", () => {
 			expect(results[0].id).toBe("test-path-segments")
 			expect(results[0].payload!.filePath).toBe(filePath)
 
-			const resultsExact = await vectorStore.search([0.1, 0.2, 0.3], filePath)
+			const resultsExact = await vectorStore.search([0.1, 0.2, 0.3], path.dirname(filePath))
 			expect(resultsExact).toHaveLength(1)
 			expect(resultsExact[0].id).toBe("test-path-segments")
 		})
@@ -506,16 +506,16 @@ describe("LibSQLVectorStore", () => {
 		})
 
 		it("should throw when deletePointsByMultipleFilePaths fails", async () => {
-			const mockTransaction = vi.spyOn(vectorStore["client"], "transaction").mockImplementation(() => {
-				throw new Error("Simulated database transaction failure during delete")
-			})
+			const mockExecute = vi
+				.spyOn(vectorStore["client"], "execute")
+				.mockRejectedValue(new Error("Simulated database transaction failure during delete"))
 
 			await expect(vectorStore.deletePointsByMultipleFilePaths(["test/file1.ts"])).rejects.toThrow(
 				"Simulated database transaction failure during delete",
 			)
-			expect(mockTransaction).toHaveBeenCalled()
+			expect(mockExecute).toHaveBeenCalled()
 
-			mockTransaction.mockRestore()
+			mockExecute.mockRestore()
 		})
 
 		it("should throw when collectionExists fails", async () => {
@@ -536,18 +536,14 @@ describe("LibSQLVectorStore", () => {
 			;(vectorStore as any).maxRetries = 3
 
 			let callCount = 0
-			const mockTransaction = vi.spyOn(vectorStore["client"], "transaction").mockImplementation(async () => {
+			const mockBatch = vi.spyOn(vectorStore["client"], "batch").mockImplementation(async () => {
 				callCount++
 				if (callCount <= (vectorStore as any).maxRetries) {
 					const error: any = new Error("database is locked")
 					error.code = "SQLITE_BUSY"
 					throw error
 				}
-				return {
-					execute: vi.fn(),
-					commit: vi.fn(),
-					rollback: vi.fn(),
-				} as any
+				return [] as any // batch returns an array of results
 			})
 
 			const points = [
@@ -564,9 +560,9 @@ describe("LibSQLVectorStore", () => {
 			]
 
 			await expect(vectorStore.upsertPoints(points)).rejects.toThrow("database is locked")
-			expect(mockTransaction).toHaveBeenCalledTimes((vectorStore as any).maxRetries)
+			expect(mockBatch).toHaveBeenCalledTimes((vectorStore as any).maxRetries)
 
-			mockTransaction.mockRestore()
+			mockBatch.mockRestore()
 			;(vectorStore as any).maxRetries = originalMaxRetries
 		}, 10000)
 	})
