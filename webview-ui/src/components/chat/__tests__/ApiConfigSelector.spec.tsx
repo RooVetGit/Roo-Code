@@ -115,8 +115,20 @@ describe("ApiConfigSelector", () => {
 		expect(popoverContent).toBeInTheDocument()
 	})
 
-	test("renders search input when popover is open", () => {
-		render(<ApiConfigSelector {...defaultProps} />)
+	test("renders search input when popover is open and more than 6 configs", () => {
+		const props = {
+			...defaultProps,
+			listApiConfigMeta: [
+				{ id: "config1", name: "Config 1" },
+				{ id: "config2", name: "Config 2" },
+				{ id: "config3", name: "Config 3" },
+				{ id: "config4", name: "Config 4" },
+				{ id: "config5", name: "Config 5" },
+				{ id: "config6", name: "Config 6" },
+				{ id: "config7", name: "Config 7" },
+			],
+		}
+		render(<ApiConfigSelector {...props} />)
 
 		const trigger = screen.getByTestId("dropdown-trigger")
 		fireEvent.click(trigger)
@@ -125,8 +137,32 @@ describe("ApiConfigSelector", () => {
 		expect(searchInput).toBeInTheDocument()
 	})
 
-	test("filters configs based on search input", async () => {
+	test("renders info blurb instead of search when 6 or fewer configs", () => {
 		render(<ApiConfigSelector {...defaultProps} />)
+
+		const trigger = screen.getByTestId("dropdown-trigger")
+		fireEvent.click(trigger)
+
+		// Should not have search input
+		expect(screen.queryByPlaceholderText("common:ui.search_placeholder")).not.toBeInTheDocument()
+		// Should have info blurb
+		expect(screen.getByText("prompts:apiConfiguration.select")).toBeInTheDocument()
+	})
+
+	test("filters configs based on search input", async () => {
+		const props = {
+			...defaultProps,
+			listApiConfigMeta: [
+				{ id: "config1", name: "Config 1" },
+				{ id: "config2", name: "Config 2" },
+				{ id: "config3", name: "Config 3" },
+				{ id: "config4", name: "Config 4" },
+				{ id: "config5", name: "Config 5" },
+				{ id: "config6", name: "Config 6" },
+				{ id: "config7", name: "Config 7" },
+			],
+		}
+		render(<ApiConfigSelector {...props} />)
 
 		const trigger = screen.getByTestId("dropdown-trigger")
 		fireEvent.click(trigger)
@@ -144,7 +180,19 @@ describe("ApiConfigSelector", () => {
 	})
 
 	test("shows no results message when search has no matches", async () => {
-		render(<ApiConfigSelector {...defaultProps} />)
+		const props = {
+			...defaultProps,
+			listApiConfigMeta: [
+				{ id: "config1", name: "Config 1" },
+				{ id: "config2", name: "Config 2" },
+				{ id: "config3", name: "Config 3" },
+				{ id: "config4", name: "Config 4" },
+				{ id: "config5", name: "Config 5" },
+				{ id: "config6", name: "Config 6" },
+				{ id: "config7", name: "Config 7" },
+			],
+		}
+		render(<ApiConfigSelector {...props} />)
 
 		const trigger = screen.getByTestId("dropdown-trigger")
 		fireEvent.click(trigger)
@@ -158,7 +206,19 @@ describe("ApiConfigSelector", () => {
 	})
 
 	test("clears search when X button is clicked", async () => {
-		render(<ApiConfigSelector {...defaultProps} />)
+		const props = {
+			...defaultProps,
+			listApiConfigMeta: [
+				{ id: "config1", name: "Config 1" },
+				{ id: "config2", name: "Config 2" },
+				{ id: "config3", name: "Config 3" },
+				{ id: "config4", name: "Config 4" },
+				{ id: "config5", name: "Config 5" },
+				{ id: "config6", name: "Config 6" },
+				{ id: "config7", name: "Config 7" },
+			],
+		}
+		render(<ApiConfigSelector {...props} />)
 
 		const trigger = screen.getByTestId("dropdown-trigger")
 		fireEvent.click(trigger)
@@ -267,8 +327,20 @@ describe("ApiConfigSelector", () => {
 		})
 	})
 
-	test("renders bottom bar with title and info icon", () => {
-		render(<ApiConfigSelector {...defaultProps} />)
+	test("renders bottom bar with title and info icon when more than 6 configs", () => {
+		const props = {
+			...defaultProps,
+			listApiConfigMeta: [
+				{ id: "config1", name: "Config 1" },
+				{ id: "config2", name: "Config 2" },
+				{ id: "config3", name: "Config 3" },
+				{ id: "config4", name: "Config 4" },
+				{ id: "config5", name: "Config 5" },
+				{ id: "config6", name: "Config 6" },
+				{ id: "config7", name: "Config 7" },
+			],
+		}
+		render(<ApiConfigSelector {...props} />)
 
 		const trigger = screen.getByTestId("dropdown-trigger")
 		fireEvent.click(trigger)
@@ -279,6 +351,20 @@ describe("ApiConfigSelector", () => {
 		// Check for the info icon
 		const infoIcon = screen.getByTestId("popover-content").querySelector(".codicon-info")
 		expect(infoIcon).toBeInTheDocument()
+	})
+
+	test("renders bottom bar with title but no info icon when 6 or fewer configs", () => {
+		render(<ApiConfigSelector {...defaultProps} />)
+
+		const trigger = screen.getByTestId("dropdown-trigger")
+		fireEvent.click(trigger)
+
+		// Check for the title
+		expect(screen.getByText("prompts:apiConfiguration.title")).toBeInTheDocument()
+
+		// Check that info icon is not present
+		const infoIcon = screen.getByTestId("popover-content").querySelector(".codicon-info")
+		expect(infoIcon).not.toBeInTheDocument()
 	})
 
 	test("handles empty config list gracefully", () => {
@@ -292,13 +378,26 @@ describe("ApiConfigSelector", () => {
 		const trigger = screen.getByTestId("dropdown-trigger")
 		fireEvent.click(trigger)
 
-		// Should still render the search and bottom bar
-		expect(screen.getByPlaceholderText("common:ui.search_placeholder")).toBeInTheDocument()
+		// Should render info blurb instead of search for empty list
+		expect(screen.queryByPlaceholderText("common:ui.search_placeholder")).not.toBeInTheDocument()
+		expect(screen.getByText("prompts:apiConfiguration.select")).toBeInTheDocument()
 		expect(screen.getByText("prompts:apiConfiguration.title")).toBeInTheDocument()
 	})
 
 	test("maintains search value when pinning/unpinning", async () => {
-		render(<ApiConfigSelector {...defaultProps} />)
+		const props = {
+			...defaultProps,
+			listApiConfigMeta: [
+				{ id: "config1", name: "Config 1" },
+				{ id: "config2", name: "Config 2" },
+				{ id: "config3", name: "Config 3" },
+				{ id: "config4", name: "Config 4" },
+				{ id: "config5", name: "Config 5" },
+				{ id: "config6", name: "Config 6" },
+				{ id: "config7", name: "Config 7" },
+			],
+		}
+		render(<ApiConfigSelector {...props} />)
 
 		const trigger = screen.getByTestId("dropdown-trigger")
 		fireEvent.click(trigger)

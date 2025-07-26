@@ -158,25 +158,33 @@ export const ApiConfigSelector = ({
 				container={portalContainer}
 				className="p-0 overflow-hidden w-[300px]">
 				<div className="flex flex-col w-full">
-					{/* Search input */}
-					<div className="relative p-2 border-b border-vscode-dropdown-border">
-						<input
-							aria-label={t("common:ui.search_placeholder")}
-							value={searchValue}
-							onChange={(e) => setSearchValue(e.target.value)}
-							placeholder={t("common:ui.search_placeholder")}
-							className="w-full h-8 px-2 py-1 text-xs bg-vscode-input-background text-vscode-input-foreground border border-vscode-input-border rounded focus:outline-0"
-							autoFocus
-						/>
-						{searchValue.length > 0 && (
-							<div className="absolute right-4 top-0 bottom-0 flex items-center justify-center">
-								<X
-									className="text-vscode-input-foreground opacity-50 hover:opacity-100 size-4 p-0.5 cursor-pointer"
-									onClick={() => setSearchValue("")}
-								/>
-							</div>
-						)}
-					</div>
+					{/* Search input or info blurb */}
+					{listApiConfigMeta.length > 6 ? (
+						<div className="relative p-2 border-b border-vscode-dropdown-border">
+							<input
+								aria-label={t("common:ui.search_placeholder")}
+								value={searchValue}
+								onChange={(e) => setSearchValue(e.target.value)}
+								placeholder={t("common:ui.search_placeholder")}
+								className="w-full h-8 px-2 py-1 text-xs bg-vscode-input-background text-vscode-input-foreground border border-vscode-input-border rounded focus:outline-0"
+								autoFocus
+							/>
+							{searchValue.length > 0 && (
+								<div className="absolute right-4 top-0 bottom-0 flex items-center justify-center">
+									<X
+										className="text-vscode-input-foreground opacity-50 hover:opacity-100 size-4 p-0.5 cursor-pointer"
+										onClick={() => setSearchValue("")}
+									/>
+								</div>
+							)}
+						</div>
+					) : (
+						<div className="p-3 border-b border-vscode-dropdown-border">
+							<p className="text-xs text-vscode-descriptionForeground m-0">
+								{t("prompts:apiConfiguration.select")}
+							</p>
+						</div>
+					)}
 
 					{/* Config list */}
 					<div className="max-h-[300px] overflow-y-auto">
@@ -212,9 +220,11 @@ export const ApiConfigSelector = ({
 
 						{/* Info icon and title on the right with matching spacing */}
 						<div className="flex items-center gap-1 pr-1">
-							<StandardTooltip content={t("prompts:apiConfiguration.select")}>
-								<span className="codicon codicon-info text-xs text-vscode-descriptionForeground opacity-70 hover:opacity-100 cursor-help" />
-							</StandardTooltip>
+							{listApiConfigMeta.length > 6 && (
+								<StandardTooltip content={t("prompts:apiConfiguration.select")}>
+									<span className="codicon codicon-info text-xs text-vscode-descriptionForeground opacity-70 hover:opacity-100 cursor-help" />
+								</StandardTooltip>
+							)}
 							<h4 className="m-0 font-medium text-sm text-vscode-descriptionForeground">
 								{t("prompts:apiConfiguration.title")}
 							</h4>
