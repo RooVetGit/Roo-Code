@@ -66,6 +66,7 @@
 		"qdrantUrlLabel": "Qdrant URL",
 		"qdrantKeyLabel": "Qdrant 키:",
 		"startIndexingButton": "시작",
+		"resumeIndexingButton": "Resume",
 		"clearIndexDataButton": "인덱스 지우기",
 		"unsavedSettingsMessage": "인덱싱 프로세스를 시작하기 전에 설정을 저장해 주세요.",
 		"clearDataDialog": {

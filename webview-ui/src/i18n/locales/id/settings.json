@@ -66,6 +66,7 @@
 		"qdrantUrlLabel": "Qdrant URL",
 		"qdrantKeyLabel": "Qdrant Key:",
 		"startIndexingButton": "Mulai",
+		"resumeIndexingButton": "Resume",
 		"clearIndexDataButton": "Hapus Indeks",
 		"unsavedSettingsMessage": "Silakan simpan pengaturan kamu sebelum memulai proses pengindeksan.",
 		"clearDataDialog": {
