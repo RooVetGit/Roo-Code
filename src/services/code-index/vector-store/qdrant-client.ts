@@ -488,4 +488,12 @@ export class QdrantVectorStore implements IVectorStore {
 		const collectionInfo = await this.getCollectionInfo()
 		return collectionInfo !== null
 	}
+
+	public async dropVectorIndex(): Promise<void> {
+		console.log("Qdrant: Index optimization not needed - Qdrant handles indexing automatically")
+	}
+
+	public async createVectorIndex(): Promise<void> {
+		console.log("Qdrant: Index creation not needed - Qdrant handles indexing automatically")
+	}
 }

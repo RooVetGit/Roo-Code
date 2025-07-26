@@ -32,7 +32,7 @@ import { sanitizeErrorMessage } from "../shared/validation-helpers"
 export class DirectoryScanner implements IDirectoryScanner {
 	constructor(
 		private readonly embedder: IEmbedder,
-		private readonly qdrantClient: IVectorStore,
+		private readonly vectorStore: IVectorStore,
 		private readonly codeParser: ICodeParser,
 		private readonly cacheManager: CacheManager,
 		private readonly ignoreInstance: Ignore,
@@ -102,6 +102,15 @@ export class DirectoryScanner implements IDirectoryScanner {
 		// Initialize block counter
 		let totalBlockCount = 0
 
+		console.log("Dropping vector index for faster bulk insertions...")
+		try {
+			if (this.vectorStore) {
+				await this.vectorStore.dropVectorIndex()
+			}
+		} catch (error) {
+			console.warn("Failed to drop vector index (might not exist):", error)
+		}
+
 		// Process all files in parallel with concurrency control
 		const parsePromises = supportedPaths.map((filePath) =>
 			parseLimiter(async () => {
@@ -138,7 +147,7 @@ export class DirectoryScanner implements IDirectoryScanner {
 					processedCount++
 
 					// Process embeddings if configured
-					if (this.embedder && this.qdrantClient && blocks.length > 0) {
+					if (this.embedder && this.vectorStore && blocks.length > 0) {
 						// Add to batch accumulators
 						let addedBlocksFromFile = false
 						for (const block of blocks) {
@@ -256,14 +265,38 @@ export class DirectoryScanner implements IDirectoryScanner {
 		// Wait for all batch processing to complete
 		await Promise.all(activeBatchPromises)
 
+		console.log("Recreating vector index after bulk insertions...")
+		try {
+			if (this.vectorStore) {
+				await this.vectorStore.createVectorIndex()
+				console.log("Vector index successfully recreated")
+			}
+		} catch (error) {
+			console.error("Failed to recreate vector index:", error)
+			TelemetryService.instance.captureEvent(TelemetryEventName.CODE_INDEX_ERROR, {
+				error: sanitizeErrorMessage(error instanceof Error ? error.message : String(error)),
+				stack: error instanceof Error ? sanitizeErrorMessage(error.stack || "") : undefined,
+				location: "scanDirectory:createVectorIndex",
+			})
+			if (onError) {
+				onError(
+					new Error(
+						`Failed to recreate vector index after bulk insertions: ${
+							error instanceof Error ? error.message : String(error)
+						}`,
+					),
+				)
+			}
+		}
+
 		// Handle deleted files
 		const oldHashes = this.cacheManager.getAllHashes()
 		for (const cachedFilePath of Object.keys(oldHashes)) {
 			if (!processedFiles.has(cachedFilePath)) {
 				// File was deleted or is no longer supported/indexed
-				if (this.qdrantClient) {
+				if (this.vectorStore) {
 					try {
-						await this.qdrantClient.deletePointsByFilePath(cachedFilePath)
+						await this.vectorStore.deletePointsByFilePath(cachedFilePath)
 						await this.cacheManager.deleteHash(cachedFilePath)
 					} catch (error) {
 						console.error(
@@ -330,7 +363,7 @@ export class DirectoryScanner implements IDirectoryScanner {
 				]
 				if (uniqueFilePaths.length > 0) {
 					try {
-						await this.qdrantClient.deletePointsByMultipleFilePaths(uniqueFilePaths)
+						await this.vectorStore.deletePointsByMultipleFilePaths(uniqueFilePaths)
 					} catch (deleteError) {
 						console.error(
 							`[DirectoryScanner] Failed to delete points for ${uniqueFilePaths.length} files before upsert in workspace ${scanWorkspace}:`,
@@ -359,7 +392,7 @@ export class DirectoryScanner implements IDirectoryScanner {
 				// Create embeddings for batch
 				const { embeddings } = await this.embedder.createEmbeddings(batchTexts)
 
-				// Prepare points for Qdrant
+				// Prepare points for Vector Store
 				const points = batchBlocks.map((block, index) => {
 					const normalizedAbsolutePath = generateNormalizedAbsolutePath(block.file_path, scanWorkspace)
 
@@ -379,8 +412,8 @@ export class DirectoryScanner implements IDirectoryScanner {
 					}
 				})
 
-				// Upsert points to Qdrant
-				await this.qdrantClient.upsertPoints(points)
+				// Upsert points to Vector Store
+				await this.vectorStore.upsertPoints(points)
 				onBlocksIndexed?.(batchBlocks.length)
 
 				// Update hashes for successfully processed files in this batch

@@ -6,13 +6,12 @@ import { VectorStoreSearchResult } from "../interfaces"
 import { DEFAULT_MAX_SEARCH_RESULTS, DEFAULT_SEARCH_MIN_SCORE } from "../constants"
 import * as fs from "fs"
 
-type LibSQLClient = any
-
 export class LibSQLVectorStore implements IVectorStore {
 	private readonly vectorSize: number
-	private client: LibSQLClient | null = null
+	private client: any = null
 	private readonly tableName: string
 	private readonly connectionUrl: string
+	private readonly indexName: string
 	private initialBackoffMs = 100
 	private maxRetries = 3
 	private libsqlModule: any = null
@@ -24,6 +23,7 @@ export class LibSQLVectorStore implements IVectorStore {
 		const dbPath = path.join(resolvedBasePath, `ws_${hash.substring(0, 16)}.db`)
 		this.connectionUrl = `file:${dbPath}`
 		this.tableName = "code_vectors"
+		this.indexName = `${this.tableName}_vector_idx`
 
 		const dbDirectory = path.dirname(dbPath)
 		fs.mkdirSync(dbDirectory, { recursive: true })
@@ -51,7 +51,6 @@ export class LibSQLVectorStore implements IVectorStore {
 			await this.client.execute("PRAGMA synchronous=NORMAL;")
 			await this.client.execute("PRAGMA busy_timeout=5000;")
 			await this.client.execute("PRAGMA temp_store=MEMORY;")
-
 			await this.client.execute("PRAGMA page_size=4096;")
 			await this.client.execute("PRAGMA cache_size=-16000;")
 			await this.client.execute("PRAGMA mmap_size=67108864;")
@@ -97,7 +96,7 @@ export class LibSQLVectorStore implements IVectorStore {
 		throw new Error("LibSQLVector: Max retries reached, but no error was re-thrown from the loop.")
 	}
 
-	async initialize(): Promise<boolean> {
+	public async initialize(): Promise<boolean> {
 		await this.ensureClient()
 
 		try {
@@ -148,15 +147,7 @@ export class LibSQLVectorStore implements IVectorStore {
             `,
 		})
 
-		const maxNeighbors = Math.max(10, Math.floor(Math.sqrt(this.vectorSize)))
-
-		console.log(
-			`Creating optimized vector index with ${maxNeighbors} neighbors (vs default ${Math.floor(3 * Math.sqrt(this.vectorSize))})`,
-		)
-
-		await this.client!.execute({
-			sql: `CREATE INDEX ${this.tableName}_vector_idx ON ${this.tableName} (libsql_vector_idx(vector, 'compress_neighbors=float8', 'max_neighbors=${maxNeighbors}'))`,
-		})
+		console.log(`Created table ${this.tableName} without vector index for faster bulk inserts`)
 	}
 
 	private async getCurrentTableVectorSize(): Promise<number | null> {
@@ -173,7 +164,43 @@ export class LibSQLVectorStore implements IVectorStore {
 		return null
 	}
 
-	async upsertPoints(
+	public async dropVectorIndex(): Promise<void> {
+		await this.executeWriteOperationWithRetry(async () => {
+			try {
+				await this.client!.execute(`DROP INDEX IF EXISTS ${this.indexName}`)
+				console.log(`Dropped vector index ${this.indexName}`)
+			} catch (error) {
+				console.warn(`Failed to drop vector index ${this.indexName}:`, error)
+			}
+		})
+	}
+
+	public async createVectorIndex(): Promise<void> {
+		await this.executeWriteOperationWithRetry(async () => {
+			const maxNeighbors = Math.max(10, Math.floor(Math.sqrt(this.vectorSize)))
+
+			console.log(
+				`Creating optimized vector index ${this.indexName} with ${maxNeighbors} neighbors (vs default ${Math.floor(3 * Math.sqrt(this.vectorSize))})`,
+			)
+
+			await this.client!.execute({
+				sql: `CREATE INDEX ${this.indexName} ON ${this.tableName} (libsql_vector_idx(vector, 'compress_neighbors=float8', 'max_neighbors=${maxNeighbors}'))`,
+			})
+
+			console.log(`Successfully created vector index ${this.indexName}`)
+		})
+	}
+
+	private async hasVectorIndex(): Promise<boolean> {
+		await this.ensureClient()
+		const result = await this.client!.execute({
+			sql: `SELECT name FROM sqlite_master WHERE type='index' AND name=?`,
+			args: [this.indexName],
+		})
+		return result.rows.length > 0
+	}
+
+	public async upsertPoints(
 		points: Array<{
 			id: string
 			vector: number[]
@@ -210,24 +237,30 @@ export class LibSQLVectorStore implements IVectorStore {
 				}
 			})
 
-			const chunkSize = 50
+			const chunkSize = 100
 			for (let i = 0; i < statements.length; i += chunkSize) {
 				const chunk = statements.slice(i, i + chunkSize)
 				await this.client!.batch(chunk, "write")
-				if (i > 0 && i % 500 === 0) {
+				if (i > 0 && i % 1000 === 0) {
 					await this.client!.execute("PRAGMA incremental_vacuum;")
 				}
 			}
 		}, true)
 	}
 
-	async search(
+	public async search(
 		queryVector: number[],
 		directoryPrefix?: string,
 		minScore?: number,
 		maxResults?: number,
 	): Promise<VectorStoreSearchResult[]> {
 		await this.ensureClient()
+
+		const hasIndex = await this.hasVectorIndex()
+		if (!hasIndex) {
+			console.warn(`Vector index ${this.indexName} does not exist. Creating it now for search operation...`)
+			await this.createVectorIndex()
+		}
 
 		const vectorStr = JSON.stringify(queryVector)
 		const k = Math.min((maxResults || DEFAULT_MAX_SEARCH_RESULTS) * 1.5, 100)
@@ -251,7 +284,7 @@ export class LibSQLVectorStore implements IVectorStore {
 						t.codeChunk,
 						t.startLine,
 						t.endLine
-					FROM vector_top_k('${this.tableName}_vector_idx', vector32(?), ?) AS ann
+					FROM vector_top_k('${this.indexName}', vector32(?), ?) AS ann
 					JOIN ${this.tableName} AS t ON t.id = ann.id
 					WHERE t.filePath LIKE ?
 					AND (1 - vector_distance_cos(t.vector, vector32(?))) > ?
@@ -276,7 +309,7 @@ export class LibSQLVectorStore implements IVectorStore {
 						t.codeChunk,
 						t.startLine,
 						t.endLine
-					FROM vector_top_k('${this.tableName}_vector_idx', vector32(?), ?) AS ann
+					FROM vector_top_k('${this.indexName}', vector32(?), ?) AS ann
 					JOIN ${this.tableName} AS t ON t.id = ann.id
 					WHERE (1 - vector_distance_cos(t.vector, vector32(?))) > ?
 					ORDER BY score DESC
@@ -304,11 +337,11 @@ export class LibSQLVectorStore implements IVectorStore {
 		}
 	}
 
-	async deletePointsByFilePath(filePath: string): Promise<void> {
+	public async deletePointsByFilePath(filePath: string): Promise<void> {
 		return this.deletePointsByMultipleFilePaths([filePath])
 	}
 
-	async deletePointsByMultipleFilePaths(filePaths: string[]): Promise<void> {
+	public async deletePointsByMultipleFilePaths(filePaths: string[]): Promise<void> {
 		if (filePaths.length === 0) return
 
 		await this.executeWriteOperationWithRetry(async () => {
@@ -320,7 +353,7 @@ export class LibSQLVectorStore implements IVectorStore {
 					args: [filePath],
 				}))
 
-				const chunkSize = 25
+				const chunkSize = 50
 				for (let i = 0; i < statements.length; i += chunkSize) {
 					const chunk = statements.slice(i, i + chunkSize)
 					await this.client!.batch(chunk, "write")
@@ -336,7 +369,7 @@ export class LibSQLVectorStore implements IVectorStore {
 		})
 	}
 
-	async deleteCollection(): Promise<void> {
+	public async deleteCollection(): Promise<void> {
 		await this.executeWriteOperationWithRetry(async () => {
 			if (await this.tableExists()) {
 				await this.client!.execute(`DROP TABLE ${this.tableName}`)
@@ -345,7 +378,7 @@ export class LibSQLVectorStore implements IVectorStore {
 		})
 	}
 
-	async clearCollection(): Promise<void> {
+	public async clearCollection(): Promise<void> {
 		await this.executeWriteOperationWithRetry(async () => {
 			if (await this.tableExists()) {
 				await this.client!.execute(`DELETE FROM ${this.tableName}`)
@@ -354,7 +387,7 @@ export class LibSQLVectorStore implements IVectorStore {
 		})
 	}
 
-	async collectionExists(): Promise<boolean> {
+	public async collectionExists(): Promise<boolean> {
 		return this.tableExists()
 	}
 }
