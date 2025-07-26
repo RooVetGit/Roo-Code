@@ -1235,6 +1235,145 @@ describe("CustomModesManager", () => {
 				const newRulePath = Object.keys(writtenFiles).find((p) => p.includes("new-rule.md"))
 				expect(writtenFiles[newRulePath!]).toBe("New rule content")
 			})
+
+			it("should handle slug renaming during import (backwards compatibility)", async () => {
+				// Export YAML with old format (includes rules-old-slug prefix)
+				const exportYamlOldFormat = yaml.stringify({
+					customModes: [
+						{
+							slug: "new-slug", // User changed this from "old-slug"
+							name: "Renamed Mode",
+							roleDefinition: "Test Role",
+							groups: ["read"],
+							rulesFiles: [
+								{
+									// Old format: includes rules-old-slug prefix
+									relativePath: "rules-old-slug/rule1.md",
+									content: "Rule 1 content",
+								},
+								{
+									relativePath: "rules-old-slug/subfolder/rule2.md",
+									content: "Rule 2 content",
+								},
+							],
+						},
+					],
+				})
+
+				let roomodesContent: any = null
+				let writtenFiles: Record<string, string> = {}
+				;(fs.readFile as Mock).mockImplementation(async (path: string) => {
+					if (path === mockSettingsPath) {
+						return yaml.stringify({ customModes: [] })
+					}
+					if (path === mockRoomodes && roomodesContent) {
+						return yaml.stringify(roomodesContent)
+					}
+					throw new Error("File not found")
+				})
+				;(fs.writeFile as Mock).mockImplementation(async (path: string, content: string) => {
+					if (path === mockRoomodes) {
+						roomodesContent = yaml.parse(content)
+					} else {
+						writtenFiles[path] = content
+					}
+					return Promise.resolve()
+				})
+				;(fs.mkdir as Mock).mockResolvedValue(undefined)
+				;(fs.rm as Mock).mockResolvedValue(undefined)
+
+				const result = await manager.importModeWithRules(exportYamlOldFormat)
+
+				expect(result.success).toBe(true)
+
+				// Verify mode was imported with new slug
+				expect(roomodesContent.customModes[0].slug).toBe("new-slug")
+
+				// Verify rules files were created in the NEW slug's directory
+				expect(fs.mkdir).toHaveBeenCalledWith(expect.stringContaining(path.join(".roo", "rules-new-slug")), {
+					recursive: true,
+				})
+
+				// Verify files are in the correct location (rules-new-slug, not rules-old-slug)
+				const rule1Path = Object.keys(writtenFiles).find((p) => p.includes("rule1.md"))
+				const rule2Path = Object.keys(writtenFiles).find((p) => p.includes("rule2.md"))
+
+				expect(rule1Path).toContain("rules-new-slug")
+				expect(rule1Path).not.toContain("rules-old-slug")
+				expect(rule2Path).toContain("rules-new-slug")
+				expect(rule2Path).not.toContain("rules-old-slug")
+
+				// Verify content is preserved
+				expect(writtenFiles[rule1Path!]).toBe("Rule 1 content")
+				expect(writtenFiles[rule2Path!]).toBe("Rule 2 content")
+			})
+
+			it("should handle new export format without rules prefix", async () => {
+				// Export YAML with new format (no rules-slug prefix)
+				const exportYamlNewFormat = yaml.stringify({
+					customModes: [
+						{
+							slug: "test-mode",
+							name: "Test Mode",
+							roleDefinition: "Test Role",
+							groups: ["read"],
+							rulesFiles: [
+								{
+									// New format: no prefix, just relative path within rules directory
+									relativePath: "rule1.md",
+									content: "Rule 1 content",
+								},
+								{
+									relativePath: "subfolder/rule2.md",
+									content: "Rule 2 content",
+								},
+							],
+						},
+					],
+				})
+
+				let roomodesContent: any = null
+				let writtenFiles: Record<string, string> = {}
+				;(fs.readFile as Mock).mockImplementation(async (path: string) => {
+					if (path === mockSettingsPath) {
+						return yaml.stringify({ customModes: [] })
+					}
+					if (path === mockRoomodes && roomodesContent) {
+						return yaml.stringify(roomodesContent)
+					}
+					throw new Error("File not found")
+				})
+				;(fs.writeFile as Mock).mockImplementation(async (path: string, content: string) => {
+					if (path === mockRoomodes) {
+						roomodesContent = yaml.parse(content)
+					} else {
+						writtenFiles[path] = content
+					}
+					return Promise.resolve()
+				})
+				;(fs.mkdir as Mock).mockResolvedValue(undefined)
+				;(fs.rm as Mock).mockResolvedValue(undefined)
+
+				const result = await manager.importModeWithRules(exportYamlNewFormat)
+
+				expect(result.success).toBe(true)
+
+				// Verify rules files were created in the correct directory
+				expect(fs.mkdir).toHaveBeenCalledWith(expect.stringContaining(path.join(".roo", "rules-test-mode")), {
+					recursive: true,
+				})
+
+				// Verify files are in the correct location
+				const rule1Path = Object.keys(writtenFiles).find((p) => p.includes("rule1.md"))
+				const rule2Path = Object.keys(writtenFiles).find((p) => p.includes("rule2.md"))
+
+				expect(rule1Path).toContain("rules-test-mode")
+				expect(rule2Path).toContain(path.join("rules-test-mode", "subfolder"))
+
+				// Verify content is preserved
+				expect(writtenFiles[rule1Path!]).toBe("Rule 1 content")
+				expect(writtenFiles[rule2Path!]).toBe("Rule 2 content")
+			})
 		})
 	})
 
@@ -1491,6 +1630,13 @@ describe("CustomModesManager", () => {
 			expect(result.yaml).toContain("test-mode")
 			expect(result.yaml).toContain("Existing instructions")
 			expect(result.yaml).toContain("New rule content from files")
+
+			// Parse the YAML to check the relativePath format
+			const exportedData = yaml.parse(result.yaml!)
+			const rulesFiles = exportedData.customModes[0].rulesFiles
+			expect(rulesFiles).toBeDefined()
+			expect(rulesFiles[0].relativePath).toBe("rule1.md") // Should NOT include "rules-test-mode/" prefix
+
 			// Should NOT delete the rules directory
 			expect(fs.rm).not.toHaveBeenCalled()
 		})
@@ -1616,6 +1762,12 @@ describe("CustomModesManager", () => {
 			expect(result.yaml).toContain("global-test-mode")
 			expect(result.yaml).toContain("Global Test Mode")
 			expect(result.yaml).toContain("Global rule content")
+
+			// Parse the YAML to check the relativePath format
+			const exportedData = yaml.parse(result.yaml!)
+			const rulesFiles = exportedData.customModes[0].rulesFiles
+			expect(rulesFiles).toBeDefined()
+			expect(rulesFiles[0].relativePath).toBe("rule1.md") // Should NOT include "rules-global-test-mode/" prefix
 		})
 
 		it("should successfully export global mode without rules when global rules directory doesn't exist", async () => {

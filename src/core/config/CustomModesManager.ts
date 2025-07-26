@@ -782,10 +782,9 @@ export class CustomModesManager {
 							const filePath = path.join(modeRulesDir, entry.name)
 							const content = await fs.readFile(filePath, "utf-8")
 							if (content.trim()) {
-								// Calculate relative path based on mode source
-								const relativePath = isGlobalMode
-									? path.relative(baseDir, filePath)
-									: path.relative(path.join(baseDir, ".roo"), filePath)
+								// Calculate relative path from the mode's rules directory
+								// This makes the path slug-independent (e.g., "rule.md" instead of "rules-slug/rule.md")
+								const relativePath = path.relative(modeRulesDir, filePath)
 								rulesFiles.push({ relativePath, content: content.trim() })
 							}
 						}
@@ -872,8 +871,18 @@ export class CustomModesManager {
 		// Import the new rules files with path validation
 		for (const ruleFile of rulesFiles) {
 			if (ruleFile.relativePath && ruleFile.content) {
+				// Strip rules-<slug> prefix for backwards compatibility
+				let cleanRelativePath = ruleFile.relativePath
+				const rulesPrefix = cleanRelativePath.match(/^rules-[^\/]+\/(.*)$/)
+				if (rulesPrefix) {
+					cleanRelativePath = rulesPrefix[1]
+					logger.info(
+						`Stripping old format prefix from path: ${ruleFile.relativePath} -> ${cleanRelativePath}`,
+					)
+				}
+
 				// Validate the relative path to prevent path traversal attacks
-				const normalizedRelativePath = path.normalize(ruleFile.relativePath)
+				const normalizedRelativePath = path.normalize(cleanRelativePath)
 
 				// Ensure the path doesn't contain traversal sequences
 				if (normalizedRelativePath.includes("..") || path.isAbsolute(normalizedRelativePath)) {
@@ -881,11 +890,12 @@ export class CustomModesManager {
 					continue // Skip this file but continue with others
 				}
 
-				const targetPath = path.join(baseDir, normalizedRelativePath)
+				// Use the rules folder path as base, not the general base directory
+				const targetPath = path.join(rulesFolderPath, normalizedRelativePath)
 				const normalizedTargetPath = path.normalize(targetPath)
-				const expectedBasePath = path.normalize(baseDir)
+				const expectedBasePath = path.normalize(rulesFolderPath)
 
-				// Ensure the resolved path stays within the base directory
+				// Ensure the resolved path stays within the rules folder
 				if (!normalizedTargetPath.startsWith(expectedBasePath)) {
 					logger.error(`Path traversal attempt detected: ${ruleFile.relativePath}`)
 					continue // Skip this file but continue with others
