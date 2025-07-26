@@ -54,7 +54,9 @@ import AutoApproveMenu from "./AutoApproveMenu"
 import SystemPromptWarning from "./SystemPromptWarning"
 import ProfileViolationWarning from "./ProfileViolationWarning"
 import { CheckpointWarning } from "./CheckpointWarning"
+import QueuedMessages from "./QueuedMessages"
 import { getLatestTodo } from "@roo/todo"
+import { QueuedMessage } from "@roo-code/types"
 
 export interface ChatViewProps {
 	isHidden: boolean
@@ -154,6 +156,8 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 	const textAreaRef = useRef<HTMLTextAreaElement>(null)
 	const [sendingDisabled, setSendingDisabled] = useState(false)
 	const [selectedImages, setSelectedImages] = useState<string[]>([])
+	const [messageQueue, setMessageQueue] = useState<QueuedMessage[]>([])
+	const isProcessingQueueRef = useRef(false)
 
 	// we need to hold on to the ask because useEffect > lastMessage will always let us know when an ask comes in and handle it, but by the time handleMessage is called, the last message might not be the ask anymore (it could be a say that followed)
 	const [clineAsk, setClineAsk] = useState<ClineAsk | undefined>(undefined)
@@ -538,11 +542,23 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 		disableAutoScrollRef.current = false
 	}, [])
 
+	/**
+	 * Handles sending messages to the extension
+	 * @param text - The message text to send
+	 * @param images - Array of image data URLs to send with the message
+	 * @param fromQueue - Internal flag indicating if this message is being sent from the queue (prevents re-queueing)
+	 */
 	const handleSendMessage = useCallback(
-		(text: string, images: string[]) => {
+		(text: string, images: string[], fromQueue = false) => {
 			text = text.trim()
 
 			if (text || images.length > 0) {
+				if (sendingDisabled && !fromQueue) {
+					setMessageQueue((prev) => [...prev, { id: Date.now().toString(), text, images }])
+					setInputValue("")
+					setSelectedImages([])
+					return
+				}
 				// Mark that user has responded - this prevents any pending auto-approvals
 				userRespondedRef.current = true
 
@@ -571,13 +587,30 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 							break
 						// There is no other case that a textfield should be enabled.
 					}
+				} else {
+					// This is a new message in an ongoing task.
+					vscode.postMessage({ type: "askResponse", askResponse: "messageResponse", text, images })
 				}
 
 				handleChatReset()
 			}
 		},
-		[handleChatReset, markFollowUpAsAnswered], // messagesRef and clineAskRef are stable
+		[handleChatReset, markFollowUpAsAnswered, sendingDisabled], // messagesRef and clineAskRef are stable
 	)
+
+	useEffect(() => {
+		if (!sendingDisabled && messageQueue.length > 0 && !isProcessingQueueRef.current) {
+			isProcessingQueueRef.current = true
+			const nextMessage = messageQueue[0]
+
+			// Use setTimeout to ensure state updates are processed
+			setTimeout(() => {
+				handleSendMessage(nextMessage.text, nextMessage.images, true)
+				setMessageQueue((prev) => prev.slice(1))
+				isProcessingQueueRef.current = false
+			}, 0)
+		}
+	}, [sendingDisabled, messageQueue, handleSendMessage])
 
 	const handleSetChatBoxMessage = useCallback(
 		(text: string, images: string[]) => {
@@ -1630,7 +1663,9 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 	const areButtonsVisible = showScrollToBottom || primaryButtonText || secondaryButtonText || isStreaming
 
 	return (
-		<div className={isHidden ? "hidden" : "fixed top-0 left-0 right-0 bottom-0 flex flex-col overflow-hidden"}>
+		<div
+			data-testid="chat-view"
+			className={isHidden ? "hidden" : "fixed top-0 left-0 right-0 bottom-0 flex flex-col overflow-hidden"}>
 			{(showAnnouncement || showAnnouncementModal) && (
 				<Announcement
 					hideAnnouncement={() => {
@@ -1836,6 +1871,10 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 				</>
 			)}
 
+			<QueuedMessages
+				queue={messageQueue}
+				onRemove={(index) => setMessageQueue((prev) => prev.filter((_, i) => i !== index))}
+			/>
 			<ChatTextArea
 				ref={textAreaRef}
 				inputValue={inputValue}
