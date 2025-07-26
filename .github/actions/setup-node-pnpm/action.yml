@@ -6,7 +6,7 @@ inputs:
     node-version:
         description: "Node.js version to use"
         required: false
-        default: "22.17.1"
+        default: "20.19.2"
     pnpm-version:
         description: "pnpm version to use"
         required: false

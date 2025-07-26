@@ -106,7 +106,7 @@ export class CodeIndexServiceFactory {
 	/**
 	 * Creates a vector store instance using the current configuration.
 	 */
-	public createVectorStore(): IVectorStore {
+	public createVectorStore(context: vscode.ExtensionContext): IVectorStore {
 		const config = this.configManager.getConfig()
 
 		const provider = config.embedderProvider as EmbedderProvider
@@ -139,7 +139,7 @@ export class CodeIndexServiceFactory {
 			const globalStorageUri = this.configManager.getContextProxy().globalStorageUri.fsPath
 			const localVectorStoreDirectoryPlaceholder =
 				config.localVectorStoreDirectoryPlaceholder || getLocalVectorStoreDirectoryPath(globalStorageUri)
-			return new LocalVectorStore(workspacePath, vectorSize, localVectorStoreDirectoryPlaceholder)
+			return new LocalVectorStore(workspacePath, vectorSize, localVectorStoreDirectoryPlaceholder, context)
 		}
 		// Use Qdrant
 		if (!config.qdrantUrl) {
@@ -195,7 +195,7 @@ export class CodeIndexServiceFactory {
 		}
 
 		const embedder = this.createEmbedder()
-		const vectorStore = this.createVectorStore()
+		const vectorStore = this.createVectorStore(context)
 		const parser = codeParser
 		const scanner = this.createDirectoryScanner(embedder, vectorStore, parser, ignoreInstance)
 		const fileWatcher = this.createFileWatcher(context, embedder, vectorStore, cacheManager, ignoreInstance)
