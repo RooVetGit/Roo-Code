@@ -649,6 +649,10 @@
 		"MULTI_FILE_APPLY_DIFF": {
 			"name": "Habilitar edições de arquivos concorrentes",
 			"description": "Quando habilitado, o Roo pode editar múltiplos arquivos em uma única solicitação. Quando desabilitado, o Roo deve editar arquivos um de cada vez. Desabilitar isso pode ajudar ao trabalhar com modelos menos capazes ou quando você quer mais controle sobre modificações de arquivos."
+		},
+		"PREVENT_FOCUS_DISRUPTION": {
+			"name": "Prevent Editor Focus Disruption",
+			"description": "When enabled, file edits bypass the diff view entirely and are written directly to disk. This prevents the editor from stealing focus during file modifications."
 		}
 	},
 	"promptCaching": {

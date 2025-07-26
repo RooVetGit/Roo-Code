@@ -648,6 +648,10 @@
 		"MULTI_FILE_APPLY_DIFF": {
 			"name": "Habilita edicions de fitxers concurrents",
 			"description": "Quan està activat, Roo pot editar múltiples fitxers en una sola petició. Quan està desactivat, Roo ha d'editar fitxers d'un en un. Desactivar això pot ajudar quan es treballa amb models menys capaços o quan vols més control sobre les modificacions de fitxers."
+		},
+		"PREVENT_FOCUS_DISRUPTION": {
+			"name": "Prevent Editor Focus Disruption",
+			"description": "When enabled, file edits bypass the diff view entirely and are written directly to disk. This prevents the editor from stealing focus during file modifications."
 		}
 	},
 	"promptCaching": {

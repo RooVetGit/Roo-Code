@@ -187,7 +187,10 @@ export class DiffViewProvider {
 		}
 	}
 
-	async saveChanges(diagnosticsEnabled: boolean = true, writeDelayMs: number = DEFAULT_WRITE_DELAY_MS): Promise<{
+	async saveChanges(
+		diagnosticsEnabled: boolean = true,
+		writeDelayMs: number = DEFAULT_WRITE_DELAY_MS,
+	): Promise<{
 		newProblemsMessage: string | undefined
 		userEdits: string | undefined
 		finalContent: string | undefined
@@ -222,22 +225,22 @@ export class DiffViewProvider {
 		// and can address them accordingly. If problems don't change immediately after
 		// applying a fix, won't be notified, which is generally fine since the
 		// initial fix is usually correct and it may just take time for linters to catch up.
-		
+
 		let newProblemsMessage = ""
-		
+
 		if (diagnosticsEnabled) {
 			// Add configurable delay to allow linters time to process and clean up issues
 			// like unused imports (especially important for Go and other languages)
 			// Ensure delay is non-negative
 			const safeDelayMs = Math.max(0, writeDelayMs)
-			
+
 			try {
 				await delay(safeDelayMs)
 			} catch (error) {
 				// Log error but continue - delay failure shouldn't break the save operation
 				console.warn(`Failed to apply write delay: ${error}`)
 			}
-			
+
 			const postDiagnostics = vscode.languages.getDiagnostics()
 
 			// Get diagnostic settings from state
@@ -624,5 +627,87 @@ export class DiffViewProvider {
 		this.activeLineController = undefined
 		this.streamedLines = []
 		this.preDiagnostics = []
+	}
+
+	/**
+	 * Directly save content to a file without showing diff view
+	 * Used when preventFocusDisruption experiment is enabled
+	 *
+	 * @param relPath - Relative path to the file
+	 * @param content - Content to write to the file
+	 * @param openWithoutFocus - Whether to open the file without stealing focus (for diagnostics)
+	 * @returns Result of the save operation including any new problems detected
+	 */
+	async saveDirectly(
+		relPath: string,
+		content: string,
+		openWithoutFocus: boolean = true,
+		diagnosticsEnabled: boolean = true,
+		writeDelayMs: number = DEFAULT_WRITE_DELAY_MS,
+	): Promise<{
+		newProblemsMessage: string | undefined
+		userEdits: string | undefined
+		finalContent: string | undefined
+	}> {
+		const absolutePath = path.resolve(this.cwd, relPath)
+
+		// Get diagnostics before editing the file
+		this.preDiagnostics = vscode.languages.getDiagnostics()
+
+		// Write the content directly to the file
+		await createDirectoriesForFile(absolutePath)
+		await fs.writeFile(absolutePath, content, "utf-8")
+
+		// Open the file without focus if requested (to capture diagnostics)
+		if (openWithoutFocus) {
+			await vscode.window.showTextDocument(vscode.Uri.file(absolutePath), {
+				preview: false,
+				preserveFocus: true,
+			})
+		}
+
+		let newProblemsMessage = ""
+
+		if (diagnosticsEnabled) {
+			// Add configurable delay to allow linters time to process
+			const safeDelayMs = Math.max(0, writeDelayMs)
+
+			try {
+				await delay(safeDelayMs)
+			} catch (error) {
+				console.warn(`Failed to apply write delay: ${error}`)
+			}
+
+			const postDiagnostics = vscode.languages.getDiagnostics()
+
+			// Get diagnostic settings from state
+			const task = this.taskRef.deref()
+			const state = await task?.providerRef.deref()?.getState()
+			const includeDiagnosticMessages = state?.includeDiagnosticMessages ?? true
+			const maxDiagnosticMessages = state?.maxDiagnosticMessages ?? 50
+
+			const newProblems = await diagnosticsToProblemsString(
+				getNewDiagnostics(this.preDiagnostics, postDiagnostics),
+				[vscode.DiagnosticSeverity.Error],
+				this.cwd,
+				includeDiagnosticMessages,
+				maxDiagnosticMessages,
+			)
+
+			newProblemsMessage =
+				newProblems.length > 0 ? `\n\nNew problems detected after saving the file:\n${newProblems}` : ""
+		}
+
+		// Store the results for formatFileWriteResponse
+		this.newProblemsMessage = newProblemsMessage
+		this.userEdits = undefined
+		this.relPath = relPath
+		this.newContent = content
+
+		return {
+			newProblemsMessage,
+			userEdits: undefined,
+			finalContent: content,
+		}
 	}
 }
