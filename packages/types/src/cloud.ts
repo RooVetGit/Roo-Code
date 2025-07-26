@@ -1,6 +1,7 @@
 import { z } from "zod"
 
 import { globalSettingsSchema } from "./global-settings.js"
+import { providerNamesSchema, providerSettingsSchemaDiscriminated } from "./provider-settings.js"
 
 /**
  * CloudUserInfo
@@ -110,6 +111,7 @@ export const organizationSettingsSchema = z.object({
 	cloudSettings: organizationCloudSettingsSchema.optional(),
 	defaultSettings: organizationDefaultSettingsSchema,
 	allowList: organizationAllowListSchema,
+	defaultProviderSettings: z.record(providerNamesSchema, providerSettingsSchemaDiscriminated).optional(),
 })
 
 export type OrganizationSettings = z.infer<typeof organizationSettingsSchema>
@@ -133,6 +135,7 @@ export const ORGANIZATION_DEFAULT: OrganizationSettings = {
 	},
 	defaultSettings: {},
 	allowList: ORGANIZATION_ALLOW_ALL,
+	defaultProviderSettings: {},
 } as const
 
 /**

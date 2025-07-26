@@ -106,7 +106,7 @@ const ApiOptions = ({
 	setErrorMessage,
 }: ApiOptionsProps) => {
 	const { t } = useAppTranslation()
-	const { organizationAllowList } = useExtensionState()
+	const { organizationAllowList, organizationDefaultProviderSettings } = useExtensionState()
 
 	const [customHeaders, setCustomHeaders] = useState<[string, string][]>(() => {
 		const headers = apiConfiguration?.openAiHeaders || {}
@@ -246,6 +246,23 @@ const ApiOptions = ({
 		(value: ProviderName) => {
 			setApiConfigurationField("apiProvider", value)
 
+			// Apply organization default settings if available
+			const orgDefaults = organizationDefaultProviderSettings?.[value]
+
+			if (orgDefaults) {
+				// Apply each default setting from the organization
+				Object.entries(orgDefaults).forEach(([key, defaultValue]) => {
+					// Skip apiProvider as we've already set it
+					if (key === "apiProvider") return
+
+					// Only apply defaults if the current value is undefined or empty
+					const currentValue = apiConfiguration[key as keyof ProviderSettings]
+					if (!currentValue || (typeof currentValue === "string" && currentValue.trim() === "")) {
+						setApiConfigurationField(key as keyof ProviderSettings, defaultValue)
+					}
+				})
+			}
+
 			// It would be much easier to have a single attribute that stores
 			// the modelId, but we have a separate attribute for each of
 			// OpenRouter, Glama, Unbound, and Requesty.
@@ -311,7 +328,7 @@ const ApiOptions = ({
 				)
 			}
 		},
-		[setApiConfigurationField, apiConfiguration],
+		[setApiConfigurationField, apiConfiguration, organizationDefaultProviderSettings],
 	)
 
 	const modelValidationError = useMemo(() => {

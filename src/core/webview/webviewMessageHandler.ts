@@ -1474,7 +1474,28 @@ export const webviewMessageHandler = async (
 			break
 		case "upsertApiConfiguration":
 			if (message.text && message.apiConfiguration) {
-				await provider.upsertProviderProfile(message.text, message.apiConfiguration)
+				// Get organization default settings
+				let organizationDefaults: Partial<ProviderSettings> = {}
+				try {
+					const orgSettings = await CloudService.instance.getOrganizationSettings()
+					const selectedProvider = message.apiConfiguration.apiProvider
+					if (orgSettings?.defaultProviderSettings && selectedProvider) {
+						organizationDefaults = orgSettings.defaultProviderSettings[selectedProvider] || {}
+					}
+				} catch (error) {
+					provider.log(
+						`[upsertApiConfiguration] Failed to get organization defaults: ${error instanceof Error ? error.message : String(error)}`,
+					)
+				}
+
+				// Merge organization defaults with the provided configuration
+				// User-provided values take precedence over organization defaults
+				const mergedConfiguration: ProviderSettings = {
+					...organizationDefaults,
+					...message.apiConfiguration,
+				}
+
+				await provider.upsertProviderProfile(message.text, mergedConfiguration)
 			}
 			break
 		case "renameApiConfiguration":

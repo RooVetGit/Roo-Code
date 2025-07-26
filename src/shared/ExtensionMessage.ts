@@ -10,6 +10,7 @@ import type {
 	OrganizationAllowList,
 	CloudUserInfo,
 	ShareVisibility,
+	ProviderName,
 } from "@roo-code/types"
 
 import { GitCommit } from "../utils/git"
@@ -297,6 +298,7 @@ export type ExtensionState = Pick<
 	cloudApiUrl?: string
 	sharingEnabled: boolean
 	organizationAllowList: OrganizationAllowList
+	organizationDefaultProviderSettings?: Partial<Record<ProviderName, ProviderSettings>>
 
 	autoCondenseContext: boolean
 	autoCondenseContextPercent: number

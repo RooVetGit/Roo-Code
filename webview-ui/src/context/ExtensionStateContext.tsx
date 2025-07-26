@@ -8,6 +8,7 @@ import {
 	type ExperimentId,
 	type OrganizationAllowList,
 	ORGANIZATION_ALLOW_ALL,
+	type ProviderName,
 } from "@roo-code/types"
 
 import { ExtensionMessage, ExtensionState, MarketplaceInstalledMetadata } from "@roo/ExtensionMessage"
@@ -34,6 +35,7 @@ export interface ExtensionStateContextType extends ExtensionState {
 	filePaths: string[]
 	openedTabs: Array<{ label: string; isActive: boolean; path?: string }>
 	organizationAllowList: OrganizationAllowList
+	organizationDefaultProviderSettings: Partial<Record<ProviderName, ProviderSettings>>
 	cloudIsAuthenticated: boolean
 	sharingEnabled: boolean
 	maxConcurrentFileReads?: number
@@ -219,6 +221,7 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 		cloudIsAuthenticated: false,
 		sharingEnabled: false,
 		organizationAllowList: ORGANIZATION_ALLOW_ALL,
+		organizationDefaultProviderSettings: {},
 		autoCondenseContext: true,
 		autoCondenseContextPercent: 100,
 		profileThresholds: {},
@@ -379,6 +382,7 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 		screenshotQuality: state.screenshotQuality,
 		routerModels: extensionRouterModels,
 		cloudIsAuthenticated: state.cloudIsAuthenticated ?? false,
+		organizationDefaultProviderSettings: state.organizationDefaultProviderSettings ?? {},
 		marketplaceItems,
 		marketplaceInstalledMetadata,
 		profileThresholds: state.profileThresholds ?? {},

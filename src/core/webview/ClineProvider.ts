@@ -1453,6 +1453,17 @@ export class ClineProvider
 		const currentMode = mode ?? defaultModeSlug
 		const hasSystemPromptOverride = await this.hasFileBasedSystemPromptOverride(currentMode)
 
+		// Get organization settings including default provider settings
+		let organizationDefaultProviderSettings: Record<string, any> = {}
+		try {
+			const orgSettings = await CloudService.instance.getOrganizationSettings()
+			organizationDefaultProviderSettings = orgSettings?.defaultProviderSettings || {}
+		} catch (error) {
+			console.error(
+				`[getStateToPostToWebview] failed to get organization settings: ${error instanceof Error ? error.message : String(error)}`,
+			)
+		}
+
 		return {
 			version: this.context.extension?.packageJSON?.version ?? "",
 			apiConfiguration,
@@ -1541,6 +1552,7 @@ export class ClineProvider
 			cloudIsAuthenticated: cloudIsAuthenticated ?? false,
 			sharingEnabled: sharingEnabled ?? false,
 			organizationAllowList,
+			organizationDefaultProviderSettings,
 			condensingApiConfigId,
 			customCondensingPrompt,
 			codebaseIndexModels: codebaseIndexModels ?? EMBEDDING_MODEL_PROFILES,
