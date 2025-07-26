@@ -350,7 +350,7 @@ describe("SYSTEM_PROMPT", () => {
 			"/test/path",
 			false, // supportsComputerUse
 			undefined, // mcpHub
-			new MultiSearchReplaceDiffStrategy(), // Use actual diff strategy from the codebase
+			undefined, // diffStrategy - should be undefined when diffEnabled is false
 			undefined, // browserViewportSize
 			defaultModeSlug, // mode
 			undefined, // customModePrompts
@@ -374,7 +374,7 @@ describe("SYSTEM_PROMPT", () => {
 			"/test/path",
 			false, // supportsComputerUse
 			undefined, // mcpHub
-			new MultiSearchReplaceDiffStrategy(), // Use actual diff strategy from the codebase
+			undefined, // diffStrategy - should be undefined when diffEnabled is undefined
 			undefined, // browserViewportSize
 			defaultModeSlug, // mode
 			undefined, // customModePrompts

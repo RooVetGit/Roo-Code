@@ -1,5 +1,3 @@
-/* eslint-disable no-irregular-whitespace */
-
 import { distance } from "fastest-levenshtein"
 
 import { ToolProgressStatus } from "@roo-code/types"
@@ -92,11 +90,22 @@ export class MultiSearchReplaceDiffStrategy implements DiffStrategy {
 
 	getToolDescription(args: { cwd: string; toolOptions?: { [key: string]: string } }): string {
 		return `## apply_diff
-Description: Request to apply targeted modifications to an existing file by searching for specific sections of content and replacing them. This tool is ideal for precise, surgical edits when you know the exact content to change. It helps maintain proper indentation and formatting.
+Description: Request to apply PRECISE, TARGETED modifications to an existing file by searching for specific sections of content and replacing them. This tool is for SURGICAL EDITS ONLY - small, specific changes to existing code.
+
+**CRITICAL: This tool is NOT for rewriting entire files or making large-scale changes. Use write_to_file for that purpose.**
+
+Key characteristics:
+- Ideal for changing specific lines, functions, or small code blocks
+- Preserves the rest of the file unchanged
+- Requires exact matching of existing content (including whitespace)
+- Can perform multiple small edits in one operation
+
 You can perform multiple distinct search and replace operations within a single \`apply_diff\` call by providing multiple SEARCH/REPLACE blocks in the \`diff\` parameter. This is the preferred way to make several targeted changes efficiently.
-The SEARCH section must exactly match existing content including whitespace and indentation.
-If you're not confident in the exact content to search for, use the read_file tool first to get the exact content.
+
+IMPORTANT: The SEARCH section must exactly match existing content including whitespace and indentation. If you're not confident in the exact content to search for, use the read_file tool first to get the exact content.
+
 When applying the diffs, be extra careful to remember to change any closing brackets or other syntax that may be affected by the diff farther down in the file.
+
 ALWAYS make as many changes in a single 'apply_diff' request as possible using multiple SEARCH/REPLACE blocks
 
 Parameters:
@@ -116,7 +125,7 @@ Diff format:
 \`\`\`
 
 
-Example:
+Example of GOOD use (surgical edit - changing a single line):
 
 Original file:
 \`\`\`
@@ -129,7 +138,18 @@ Original file:
 
 Search/Replace content:
 \`\`\`
-<<<<<<< SEARCH
+\\<<<<<<< SEARCH
+:start_line:2
+-------
+    total = 0
+\\=======
+    total = 0  # Initialize sum
+\\>>>>>>> REPLACE
+\`\`\`
+
+Example of BAD use (trying to rewrite entire file - use write_to_file instead):
+\`\`\`
+\\<<<<<<< SEARCH
 :start_line:1
 -------
 def calculate_total(items):
@@ -137,35 +157,34 @@ def calculate_total(items):
     for item in items:
         total += item
     return total
-=======
+\\=======
 def calculate_total(items):
     """Calculate total with 10% markup"""
     return sum(item * 1.1 for item in items)
->>>>>>> REPLACE
-
+\\>>>>>>> REPLACE
 \`\`\`
 
-Search/Replace content with multiple edits:
+Example with multiple surgical edits:
 \`\`\`
-<<<<<<< SEARCH
+\\<<<<<<< SEARCH
 :start_line:1
 -------
 def calculate_total(items):
     sum = 0
-=======
+\\=======
 def calculate_sum(items):
     sum = 0
->>>>>>> REPLACE
+\\>>>>>>> REPLACE
 
-<<<<<<< SEARCH
+\\<<<<<<< SEARCH
 :start_line:4
 -------
         total += item
     return total
-=======
+\\=======
         sum += item
     return sum 
->>>>>>> REPLACE
+\\>>>>>>> REPLACE
 \`\`\`
 
 
@@ -349,31 +368,31 @@ Only use a single line of '=======' between search and replacement content, beca
 			Regex parts:
 			
 			1. (?:^|\n)  
-			  Ensures the first marker starts at the beginning of the file or right after a newline.
+			  Ensures the first marker starts at the beginning of the file or right after a newline.
 
 			2. (?<!\\)<<<<<<< SEARCH\s*\n  
-			  Matches the line “<<<<<<< SEARCH” (ignoring any trailing spaces) – the negative lookbehind makes sure it isn’t escaped.
+			  Matches the line "<<<<<<< SEARCH" (ignoring any trailing spaces) – the negative lookbehind makes sure it isn't escaped.
 
 			3. ((?:\:start_line:\s*(\d+)\s*\n))?  
-			  Optionally matches a “:start_line:” line. The outer capturing group is group 1 and the inner (\d+) is group 2.
+			  Optionally matches a ":start_line:" line. The outer capturing group is group 1 and the inner (\d+) is group 2.
 
 			4. ((?:\:end_line:\s*(\d+)\s*\n))?  
-			  Optionally matches a “:end_line:” line. Group 3 is the whole match and group 4 is the digits.
+			  Optionally matches a ":end_line:" line. Group 3 is the whole match and group 4 is the digits.
 
 			5. ((?<!\\)-------\s*\n)?  
-			  Optionally matches the “-------” marker line (group 5).
+			  Optionally matches the "-------" marker line (group 5).
 
 			6. ([\s\S]*?)(?:\n)?  
-			  Non‐greedy match for the “search content” (group 6) up to the next marker.
+			  Non‐greedy match for the "search content" (group 6) up to the next marker.
 
 			7. (?:(?<=\n)(?<!\\)=======\s*\n)  
-			  Matches the “=======” marker on its own line.
+			  Matches the "=======" marker on its own line.
 
 			8. ([\s\S]*?)(?:\n)?  
-			  Non‐greedy match for the “replace content” (group 7).
+			  Non‐greedy match for the "replace content" (group 7).
 
 			9. (?:(?<=\n)(?<!\\)>>>>>>> REPLACE)(?=\n|$)  
-			  Matches the final “>>>>>>> REPLACE” marker on its own line (and requires a following newline or the end of file).
+			  Matches the final ">>>>>>> REPLACE" marker on its own line (and requires a following newline or the end of file).
 		*/
 
 		let matches = [
