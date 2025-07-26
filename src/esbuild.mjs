@@ -5,7 +5,7 @@ import { fileURLToPath } from "url"
 import process from "node:process"
 import * as console from "node:console"
 
-import { copyPaths, copyWasms, copyLocales, setupLocaleWatcher } from "@roo-code/build"
+import { copyPaths, copyWasms, copyLocales, setupLocaleWatcher, copyLibSQLVersion } from "@roo-code/build"
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -60,6 +60,12 @@ async function main() {
 						buildDir,
 					)
 				})
+			},
+		},
+		{
+			name: "libsqlVersion",
+			setup(build) {
+				build.onEnd(() => copyLibSQLVersion(srcDir, distDir))
 			},
 		},
 		{

@@ -275,3 +275,16 @@ function transformRecord<T>(obj: Record<string, any>, from: string, to: string):
 		{} as T,
 	)
 }
+
+export function copyLibSQLVersion(srcDir: string, distDir: string): void {
+	try {
+		const libsqlClientPackageJsonPath = path.join(srcDir, "node_modules", "@libsql", "client", "package.json")
+		const libsqlClientPackageJson = JSON.parse(fs.readFileSync(libsqlClientPackageJsonPath, "utf8"))
+		const libsqlVersion = libsqlClientPackageJson.dependencies.libsql.replace(/^\^/, "")
+		const versionFilePath = path.join(distDir, "libsql-version.txt")
+		fs.writeFileSync(versionFilePath, libsqlVersion)
+		console.log(`[LibSQLVersion] Extracted libsql version ${libsqlVersion} and wrote to ${versionFilePath}`)
+	} catch (error) {
+		console.error("[LibSQLVersion] Error extracting or writing libsql version:", error)
+	}
+}

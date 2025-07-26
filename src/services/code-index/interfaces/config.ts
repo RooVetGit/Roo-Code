@@ -18,6 +18,8 @@ export interface CodeIndexConfig {
 	qdrantApiKey?: string
 	searchMinScore?: number
 	searchMaxResults?: number
+	vectorStoreProvider?: "libsql" | "qdrant"
+	libSQLDirectory?: string
 }
 
 /**
@@ -37,4 +39,6 @@ export type PreviousConfigSnapshot = {
 	mistralApiKey?: string
 	qdrantUrl?: string
 	qdrantApiKey?: string
+	vectorStoreProvider?: "libsql" | "qdrant"
+	libSQLDirectory?: string
 }

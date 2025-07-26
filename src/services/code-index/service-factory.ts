@@ -14,6 +14,7 @@ import { Ignore } from "ignore"
 import { t } from "../../i18n"
 import { TelemetryService } from "@roo-code/telemetry"
 import { TelemetryEventName } from "@roo-code/types"
+import { LibSQLVectorStore } from "./vector-store/libsql-client"
 
 /**
  * Factory class responsible for creating and configuring code indexing service dependencies.
@@ -130,6 +131,10 @@ export class CodeIndexServiceFactory {
 			} else {
 				throw new Error(t("embeddings:serviceFactory.vectorDimensionNotDetermined", { modelId, provider }))
 			}
+		}
+
+		if (config.vectorStoreProvider === "libsql") {
+			return new LibSQLVectorStore(this.workspacePath, config.libSQLDirectory, vectorSize)
 		}
 
 		if (!config.qdrantUrl) {

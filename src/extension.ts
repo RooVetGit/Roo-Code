@@ -25,7 +25,6 @@ import { ClineProvider } from "./core/webview/ClineProvider"
 import { DIFF_VIEW_URI_SCHEME } from "./integrations/editor/DiffViewProvider"
 import { TerminalRegistry } from "./integrations/terminal/TerminalRegistry"
 import { McpServerManager } from "./services/mcp/McpServerManager"
-import { CodeIndexManager } from "./services/code-index/manager"
 import { MdmService } from "./services/mdm/MdmService"
 import { migrateSettings } from "./utils/migrateSettings"
 import { autoImportSettings } from "./utils/autoImportSettings"
@@ -39,6 +38,7 @@ import {
 	CodeActionProvider,
 } from "./activate"
 import { initializeI18n } from "./i18n"
+import { downloadLibsqlNative } from "./utils/libsql-download"
 
 /**
  * Built using https://github.com/microsoft/vscode-webview-ui-toolkit
@@ -51,13 +51,13 @@ import { initializeI18n } from "./i18n"
 let outputChannel: vscode.OutputChannel
 let extensionContext: vscode.ExtensionContext
 
-// This method is called when your extension is activated.
-// Your extension is activated the very first time the command is executed.
 export async function activate(context: vscode.ExtensionContext) {
 	extensionContext = context
 	outputChannel = vscode.window.createOutputChannel(Package.outputChannel)
 	context.subscriptions.push(outputChannel)
 	outputChannel.appendLine(`${Package.name} extension activated - ${JSON.stringify(Package)}`)
+
+	await downloadLibsqlNative(context.extensionPath, outputChannel)
 
 	// Migrate old settings to new
 	await migrateSettings(context, outputChannel)
@@ -98,6 +98,8 @@ export async function activate(context: vscode.ExtensionContext) {
 	}
 
 	const contextProxy = await ContextProxy.getInstance(context)
+
+	const { CodeIndexManager } = await import("./services/code-index/manager")
 	const codeIndexManager = CodeIndexManager.getInstance(context)
 
 	try {

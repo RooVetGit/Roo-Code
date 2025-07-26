@@ -23,6 +23,8 @@ export class CodeIndexConfigManager {
 	private qdrantApiKey?: string
 	private searchMinScore?: number
 	private searchMaxResults?: number
+	private vectorStoreProvider: "libsql" | "qdrant" = "qdrant"
+	private libSQLDirectory?: string
 
 	constructor(private readonly contextProxy: ContextProxy) {
 		// Initialize with current configuration to avoid false restart triggers
@@ -50,6 +52,8 @@ export class CodeIndexConfigManager {
 			codebaseIndexEmbedderModelId: "",
 			codebaseIndexSearchMinScore: undefined,
 			codebaseIndexSearchMaxResults: undefined,
+			codebaseIndexVectorStoreProvider: "qdrant",
+			codebaseIndexLibSQLDirectory: undefined,
 		}
 
 		const {
@@ -60,6 +64,7 @@ export class CodeIndexConfigManager {
 			codebaseIndexEmbedderModelId,
 			codebaseIndexSearchMinScore,
 			codebaseIndexSearchMaxResults,
+			codebaseIndexLibSQLDirectory,
 		} = codebaseIndexConfig
 
 		const openAiKey = this.contextProxy?.getSecret("codeIndexOpenAiKey") ?? ""
@@ -68,6 +73,7 @@ export class CodeIndexConfigManager {
 		const openAiCompatibleBaseUrl = codebaseIndexConfig.codebaseIndexOpenAiCompatibleBaseUrl ?? ""
 		const openAiCompatibleApiKey = this.contextProxy?.getSecret("codebaseIndexOpenAiCompatibleApiKey") ?? ""
 		const geminiApiKey = this.contextProxy?.getSecret("codebaseIndexGeminiApiKey") ?? ""
+		const codebaseIndexVectorStoreProvider = codebaseIndexConfig.codebaseIndexVectorStoreProvider ?? "qdrant"
 		const mistralApiKey = this.contextProxy?.getSecret("codebaseIndexMistralApiKey") ?? ""
 
 		// Update instance variables with configuration
@@ -76,6 +82,8 @@ export class CodeIndexConfigManager {
 		this.qdrantApiKey = qdrantApiKey ?? ""
 		this.searchMinScore = codebaseIndexSearchMinScore
 		this.searchMaxResults = codebaseIndexSearchMaxResults
+		this.vectorStoreProvider = codebaseIndexVectorStoreProvider ?? "qdrant"
+		this.libSQLDirectory = codebaseIndexLibSQLDirectory
 
 		// Validate and set model dimension
 		const rawDimension = codebaseIndexConfig.codebaseIndexEmbedderModelDimension
@@ -162,6 +170,8 @@ export class CodeIndexConfigManager {
 			mistralApiKey: this.mistralOptions?.apiKey ?? "",
 			qdrantUrl: this.qdrantUrl ?? "",
 			qdrantApiKey: this.qdrantApiKey ?? "",
+			vectorStoreProvider: this.vectorStoreProvider,
+			libSQLDirectory: this.libSQLDirectory,
 		}
 
 		// Refresh secrets from VSCode storage to ensure we have the latest values
@@ -257,6 +267,8 @@ export class CodeIndexConfigManager {
 		const prevMistralApiKey = prev?.mistralApiKey ?? ""
 		const prevQdrantUrl = prev?.qdrantUrl ?? ""
 		const prevQdrantApiKey = prev?.qdrantApiKey ?? ""
+		const prevVectorStoreProvider = prev?.vectorStoreProvider ?? "qdrant"
+		const prevLibSQLDirectory = prev?.libSQLDirectory ?? ""
 
 		// 1. Transition from disabled/unconfigured to enabled/configured
 		if ((!prevEnabled || !prevConfigured) && this.codebaseIndexEnabled && nowConfigured) {
@@ -284,6 +296,16 @@ export class CodeIndexConfigManager {
 			return true
 		}
 
+		// Vector store provider change
+		if (prevVectorStoreProvider !== this.vectorStoreProvider) {
+			return true
+		}
+
+		// LibSQL directory change
+		if (this.vectorStoreProvider === "libsql" && prevLibSQLDirectory !== (this.libSQLDirectory ?? "")) {
+			return true
+		}
+
 		// Authentication changes (API keys)
 		const currentOpenAiKey = this.openAiOptions?.openAiNativeApiKey ?? ""
 		const currentOllamaBaseUrl = this.ollamaOptions?.ollamaBaseUrl ?? ""
@@ -294,6 +316,7 @@ export class CodeIndexConfigManager {
 		const currentMistralApiKey = this.mistralOptions?.apiKey ?? ""
 		const currentQdrantUrl = this.qdrantUrl ?? ""
 		const currentQdrantApiKey = this.qdrantApiKey ?? ""
+		const currentLibSQLDirectory = this.libSQLDirectory ?? ""
 
 		if (prevOpenAiKey !== currentOpenAiKey) {
 			return true
@@ -324,6 +347,11 @@ export class CodeIndexConfigManager {
 		}
 
 		if (prevQdrantUrl !== currentQdrantUrl || prevQdrantApiKey !== currentQdrantApiKey) {
+			return true
+		}
+
+		// Check for LibSQL directory changes
+		if (prevLibSQLDirectory !== currentLibSQLDirectory) {
 			return true
 		}
 
@@ -379,6 +407,8 @@ export class CodeIndexConfigManager {
 			qdrantApiKey: this.qdrantApiKey,
 			searchMinScore: this.currentSearchMinScore,
 			searchMaxResults: this.currentSearchMaxResults,
+			vectorStoreProvider: this.vectorStoreProvider ?? "qdrant",
+			libSQLDirectory: this.libSQLDirectory,
 		}
 	}
 

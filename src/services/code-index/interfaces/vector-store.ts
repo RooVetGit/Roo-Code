@@ -62,6 +62,19 @@ export interface IVectorStore {
 	 * @returns Promise resolving to boolean indicating if the collection exists
 	 */
 	collectionExists(): Promise<boolean>
+
+	/**
+	 * Drops the vector index to speed up bulk insertions.
+	 * This should be called before performing large batch operations.
+	 * After bulk operations are complete, call createVectorIndex() to restore search performance.
+	 */
+	dropVectorIndex(): Promise<void>
+
+	/**
+	 * Creates the vector index after bulk insertions are complete.
+	 * This should be called after dropVectorIndex() and bulk operations to restore search performance.
+	 */
+	createVectorIndex(): Promise<void>
 }
 
 export interface VectorStoreSearchResult {
