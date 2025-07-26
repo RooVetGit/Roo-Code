@@ -1369,7 +1369,11 @@ export class Task extends EventEmitter<ClineEvents> {
 			this.isStreaming = true
 
 			try {
-				for await (const chunk of stream) {
+				const iterator = stream[Symbol.asyncIterator]()
+				let item = await iterator.next()
+				while (!item.done) {
+					const chunk = item.value
+					item = await iterator.next()
 					if (!chunk) {
 						// Sometimes chunk is undefined, no idea that can cause
 						// it, but this workaround seems to fix it.
@@ -1432,16 +1436,86 @@ export class Task extends EventEmitter<ClineEvents> {
 						break
 					}
 
-					// PREV: We need to let the request finish for openrouter to
-					// get generation details.
-					// UPDATE: It's better UX to interrupt the request at the
-					// cost of the API cost not being retrieved.
 					if (this.didAlreadyUseTool) {
 						assistantMessage +=
 							"\n\n[Response interrupted by a tool use result. Only one tool may be used at a time and should be placed at the end of the message.]"
 						break
 					}
 				}
+
+				const drainStreamInBackgroundToFindAllUsage = async () => {
+					const timeoutMs = 30000 // 30 second timeout
+					const startTime = Date.now()
+
+					try {
+						let usageFound = false
+						while (!item.done) {
+							// Check for timeout
+							if (Date.now() - startTime > timeoutMs) {
+								console.warn(`Background usage collection timed out after ${timeoutMs}ms`)
+								break
+							}
+
+							const chunk = item.value
+							item = await iterator.next()
+							if (chunk && chunk.type === "usage") {
+								usageFound = true
+								inputTokens += chunk.inputTokens
+								outputTokens += chunk.outputTokens
+								cacheWriteTokens += chunk.cacheWriteTokens ?? 0
+								cacheReadTokens += chunk.cacheReadTokens ?? 0
+								totalCost = chunk.totalCost
+							}
+						}
+						if (usageFound) {
+							updateApiReqMsg()
+							await this.saveClineMessages()
+						}
+						if (inputTokens > 0 || outputTokens > 0 || cacheWriteTokens > 0 || cacheReadTokens > 0) {
+							TelemetryService.instance.captureLlmCompletion(this.taskId, {
+								inputTokens,
+								outputTokens,
+								cacheWriteTokens,
+								cacheReadTokens,
+								cost:
+									totalCost ??
+									calculateApiCostAnthropic(
+										this.api.getModel().info,
+										inputTokens,
+										outputTokens,
+										cacheWriteTokens,
+										cacheReadTokens,
+									),
+							})
+						} else {
+							const modelId = getModelId(this.apiConfiguration)
+							console.warn(
+								`Suspicious: request ${lastApiReqIndex} is complete, but no usage info was found. Model: ${modelId}`,
+							)
+						}
+					} catch (error) {
+						console.error("Error draining stream for usage data:", error)
+						// Still try to capture whatever usage data we have collected so far
+						if (inputTokens > 0 || outputTokens > 0 || cacheWriteTokens > 0 || cacheReadTokens > 0) {
+							TelemetryService.instance.captureLlmCompletion(this.taskId, {
+								inputTokens,
+								outputTokens,
+								cacheWriteTokens,
+								cacheReadTokens,
+								cost:
+									totalCost ??
+									calculateApiCostAnthropic(
+										this.api.getModel().info,
+										inputTokens,
+										outputTokens,
+										cacheWriteTokens,
+										cacheReadTokens,
+									),
+							})
+						}
+					}
+				}
+				const backgroundDrainPromise = drainStreamInBackgroundToFindAllUsage() // Store promise reference
 			} catch (error) {
 				// Abandoned happens when extension is no longer waiting for the
 				// Cline instance to finish aborting (error is thrown here when
@@ -1475,24 +1549,6 @@ export class Task extends EventEmitter<ClineEvents> {
 				this.isStreaming = false
 			}
 
-			if (inputTokens > 0 || outputTokens > 0 || cacheWriteTokens > 0 || cacheReadTokens > 0) {
-				TelemetryService.instance.captureLlmCompletion(this.taskId, {
-					inputTokens,
-					outputTokens,
-					cacheWriteTokens,
-					cacheReadTokens,
-					cost:
-						totalCost ??
-						calculateApiCostAnthropic(
-							this.api.getModel().info,
-							inputTokens,
-							outputTokens,
-							cacheWriteTokens,
-							cacheReadTokens,
-						),
-				})
-			}
-
 			// Need to call here in case the stream was aborted.
 			if (this.abort || this.abandoned) {
 				throw new Error(`[RooCode#recursivelyMakeRooRequests] task ${this.taskId}.${this.instanceId} aborted`)
@@ -1522,7 +1578,8 @@ export class Task extends EventEmitter<ClineEvents> {
 				presentAssistantMessage(this)
 			}
 
-			updateApiReqMsg()
+			// Note: updateApiReqMsg() is now called from within drainStreamInBackgroundToFindAllUsage
+			// to avoid race conditions with the background task
 			await this.saveClineMessages()
 			await this.providerRef.deref()?.postStateToWebview()
 
