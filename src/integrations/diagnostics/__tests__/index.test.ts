@@ -21,7 +21,16 @@ vi.mock("vscode", async () => {
 			}
 		},
 		Diagnostic: class {
-			constructor(public range: any, public message: string, public severity: number, public source?: string) {}
+			range: any;
+			message: string;
+			severity: number;
+			source?: string;
+
+			constructor(range: any, message: string, severity: number) {
+				this.range = range;
+				this.message = message;
+				this.severity = severity;
+			}
 		},
 		Uri: {
 			file: (path: string) => ({
@@ -56,7 +65,7 @@ describe("getNewDiagnostics", () => {
 		const oldDiagnostics: [vscode.Uri, vscode.Diagnostic[]][] = [];
 		const newDiagnostics: [vscode.Uri, vscode.Diagnostic[]][] = [
 			[vscode.Uri.file("/path/to/file1.ts"), [
-				new vscode.Diagnostic(new vscode.Range(0, 0, 0, 10), "New fatal error", vscode.DiagnosticSeverity.Error, "typescript")
+				Object.assign(new vscode.Diagnostic(new vscode.Range(0, 0, 0, 10), "New fatal error", vscode.DiagnosticSeverity.Error), { source: "typescript" })
 			]],
 		];
 
@@ -70,7 +79,7 @@ describe("getNewDiagnostics", () => {
 		const oldDiagnostics: [vscode.Uri, vscode.Diagnostic[]][] = [];
 		const newDiagnostics: [vscode.Uri, vscode.Diagnostic[]][] = [
 			[vscode.Uri.file("/path/to/file1.ts"), [
-				new vscode.Diagnostic(new vscode.Range(0, 0, 0, 10), "New linter warning", vscode.DiagnosticSeverity.Error, "pylance")
+				Object.assign(new vscode.Diagnostic(new vscode.Range(0, 0, 0, 10), "New linter warning", vscode.DiagnosticSeverity.Error), { source: "pylance" })
 			]],
 		];
 
@@ -84,8 +93,8 @@ describe("getNewDiagnostics", () => {
 		const oldDiagnostics: [vscode.Uri, vscode.Diagnostic[]][] = [];
 		const newDiagnostics: [vscode.Uri, vscode.Diagnostic[]][] = [
 			[vscode.Uri.file("/path/to/file1.ts"), [
-				new vscode.Diagnostic(new vscode.Range(0, 0, 0, 10), "New fatal error", vscode.DiagnosticSeverity.Error, "typescript"),
-				new vscode.Diagnostic(new vscode.Range(1, 0, 1, 10), "New linter warning", vscode.DiagnosticSeverity.Error, "eslint")
+				Object.assign(new vscode.Diagnostic(new vscode.Range(0, 0, 0, 10), "New fatal error", vscode.DiagnosticSeverity.Error), { source: "typescript" }),
+				Object.assign(new vscode.Diagnostic(new vscode.Range(1, 0, 1, 10), "New linter warning", vscode.DiagnosticSeverity.Error), { source: "eslint" })
 			]],
 		];
 
