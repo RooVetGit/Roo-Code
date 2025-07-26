@@ -18,6 +18,7 @@ export class CodeIndexConfigManager {
 	private ollamaOptions?: ApiHandlerOptions
 	private openAiCompatibleOptions?: { baseUrl: string; apiKey: string }
 	private geminiOptions?: { apiKey: string }
+	private mistralOptions?: { apiKey: string }
 	private qdrantUrl?: string = "http://localhost:6333"
 	private qdrantApiKey?: string
 	private searchMinScore?: number
@@ -73,6 +74,7 @@ export class CodeIndexConfigManager {
 		const openAiCompatibleApiKey = this.contextProxy?.getSecret("codebaseIndexOpenAiCompatibleApiKey") ?? ""
 		const geminiApiKey = this.contextProxy?.getSecret("codebaseIndexGeminiApiKey") ?? ""
 		const codebaseIndexVectorStoreProvider = codebaseIndexConfig.codebaseIndexVectorStoreProvider ?? "qdrant"
+		const mistralApiKey = this.contextProxy?.getSecret("codebaseIndexMistralApiKey") ?? ""
 
 		// Update instance variables with configuration
 		this.codebaseIndexEnabled = codebaseIndexEnabled ?? true
@@ -108,6 +110,8 @@ export class CodeIndexConfigManager {
 			this.embedderProvider = "openai-compatible"
 		} else if (codebaseIndexEmbedderProvider === "gemini") {
 			this.embedderProvider = "gemini"
+		} else if (codebaseIndexEmbedderProvider === "mistral") {
+			this.embedderProvider = "mistral"
 		} else {
 			this.embedderProvider = "openai"
 		}
@@ -127,6 +131,7 @@ export class CodeIndexConfigManager {
 				: undefined
 
 		this.geminiOptions = geminiApiKey ? { apiKey: geminiApiKey } : undefined
+		this.mistralOptions = mistralApiKey ? { apiKey: mistralApiKey } : undefined
 	}
 
 	/**
@@ -143,6 +148,7 @@ export class CodeIndexConfigManager {
 			ollamaOptions?: ApiHandlerOptions
 			openAiCompatibleOptions?: { baseUrl: string; apiKey: string }
 			geminiOptions?: { apiKey: string }
+			mistralOptions?: { apiKey: string }
 			qdrantUrl?: string
 			qdrantApiKey?: string
 			searchMinScore?: number
@@ -161,6 +167,7 @@ export class CodeIndexConfigManager {
 			openAiCompatibleBaseUrl: this.openAiCompatibleOptions?.baseUrl ?? "",
 			openAiCompatibleApiKey: this.openAiCompatibleOptions?.apiKey ?? "",
 			geminiApiKey: this.geminiOptions?.apiKey ?? "",
+			mistralApiKey: this.mistralOptions?.apiKey ?? "",
 			qdrantUrl: this.qdrantUrl ?? "",
 			qdrantApiKey: this.qdrantApiKey ?? "",
 			vectorStoreProvider: this.vectorStoreProvider,
@@ -186,6 +193,7 @@ export class CodeIndexConfigManager {
 				ollamaOptions: this.ollamaOptions,
 				openAiCompatibleOptions: this.openAiCompatibleOptions,
 				geminiOptions: this.geminiOptions,
+				mistralOptions: this.mistralOptions,
 				qdrantUrl: this.qdrantUrl,
 				qdrantApiKey: this.qdrantApiKey,
 				searchMinScore: this.currentSearchMinScore,
@@ -215,6 +223,11 @@ export class CodeIndexConfigManager {
 			return isConfigured
 		} else if (this.embedderProvider === "gemini") {
 			const apiKey = this.geminiOptions?.apiKey
+			const qdrantUrl = this.qdrantUrl
+			const isConfigured = !!(apiKey && qdrantUrl)
+			return isConfigured
+		} else if (this.embedderProvider === "mistral") {
+			const apiKey = this.mistralOptions?.apiKey
 			const qdrantUrl = this.qdrantUrl
 			const isConfigured = !!(apiKey && qdrantUrl)
 			return isConfigured
@@ -251,6 +264,7 @@ export class CodeIndexConfigManager {
 		const prevOpenAiCompatibleApiKey = prev?.openAiCompatibleApiKey ?? ""
 		const prevModelDimension = prev?.modelDimension
 		const prevGeminiApiKey = prev?.geminiApiKey ?? ""
+		const prevMistralApiKey = prev?.mistralApiKey ?? ""
 		const prevQdrantUrl = prev?.qdrantUrl ?? ""
 		const prevQdrantApiKey = prev?.qdrantApiKey ?? ""
 		const prevVectorStoreProvider = prev?.vectorStoreProvider ?? "qdrant"
@@ -299,6 +313,7 @@ export class CodeIndexConfigManager {
 		const currentOpenAiCompatibleApiKey = this.openAiCompatibleOptions?.apiKey ?? ""
 		const currentModelDimension = this.modelDimension
 		const currentGeminiApiKey = this.geminiOptions?.apiKey ?? ""
+		const currentMistralApiKey = this.mistralOptions?.apiKey ?? ""
 		const currentQdrantUrl = this.qdrantUrl ?? ""
 		const currentQdrantApiKey = this.qdrantApiKey ?? ""
 		const currentLibSQLDirectory = this.libSQLDirectory ?? ""
@@ -315,6 +330,14 @@ export class CodeIndexConfigManager {
 			prevOpenAiCompatibleBaseUrl !== currentOpenAiCompatibleBaseUrl ||
 			prevOpenAiCompatibleApiKey !== currentOpenAiCompatibleApiKey
 		) {
+			return true
+		}
+
+		if (prevGeminiApiKey !== currentGeminiApiKey) {
+			return true
+		}
+
+		if (prevMistralApiKey !== currentMistralApiKey) {
 			return true
 		}
 
@@ -379,6 +402,7 @@ export class CodeIndexConfigManager {
 			ollamaOptions: this.ollamaOptions,
 			openAiCompatibleOptions: this.openAiCompatibleOptions,
 			geminiOptions: this.geminiOptions,
+			mistralOptions: this.mistralOptions,
 			qdrantUrl: this.qdrantUrl,
 			qdrantApiKey: this.qdrantApiKey,
 			searchMinScore: this.currentSearchMinScore,

@@ -13,6 +13,7 @@ export interface CodeIndexConfig {
 	ollamaOptions?: ApiHandlerOptions
 	openAiCompatibleOptions?: { baseUrl: string; apiKey: string }
 	geminiOptions?: { apiKey: string }
+	mistralOptions?: { apiKey: string }
 	qdrantUrl?: string
 	qdrantApiKey?: string
 	searchMinScore?: number
@@ -35,6 +36,7 @@ export type PreviousConfigSnapshot = {
 	openAiCompatibleBaseUrl?: string
 	openAiCompatibleApiKey?: string
 	geminiApiKey?: string
+	mistralApiKey?: string
 	qdrantUrl?: string
 	qdrantApiKey?: string
 	vectorStoreProvider?: "libsql" | "qdrant"

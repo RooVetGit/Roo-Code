@@ -451,7 +451,7 @@ Diff ${i + 1} failed for file: ${relPath}
 Error: ${failPart.error}
 
 Suggested fixes:
-1. Verify the search content exactly matches the file content (including whitespace)
+1. Verify the search content exactly matches the file content (including whitespace and case)
 2. Check for correct indentation and line endings
 3. Use <read_file> to see the current file content
 4. Consider breaking complex changes into smaller diffs
@@ -601,8 +601,22 @@ ${errorDetails ? `\nTechnical details:\n${errorDetails}\n` : ""}
 			await cline.say("diff_error", allDiffErrors.join("\n"))
 		}
 
+		// Check for single SEARCH/REPLACE block warning
+		let totalSearchBlocks = 0
+		for (const operation of operations) {
+			for (const diffItem of operation.diff) {
+				const searchBlocks = (diffItem.content.match(/<<<<<<< SEARCH/g) || []).length
+				totalSearchBlocks += searchBlocks
+			}
+		}
+
+		const singleBlockNotice =
+			totalSearchBlocks === 1
+				? "\n<notice>Making multiple related changes in a single apply_diff is more efficient. If other changes are needed in this file, please include them as additional SEARCH/REPLACE blocks.</notice>"
+				: ""
+
 		// Push the final result combining all operation results
-		pushToolResult(results.join("\n\n"))
+		pushToolResult(results.join("\n\n") + singleBlockNotice)
 		return
 	} catch (error) {
 		await handleError("applying diff", error)

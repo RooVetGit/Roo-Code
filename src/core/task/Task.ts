@@ -1,4 +1,5 @@
 import * as path from "path"
+import * as vscode from "vscode"
 import os from "os"
 import crypto from "crypto"
 import EventEmitter from "events"
@@ -260,7 +261,7 @@ export class Task extends EventEmitter<ClineEvents> {
 		this.consecutiveMistakeLimit = consecutiveMistakeLimit ?? DEFAULT_CONSECUTIVE_MISTAKE_LIMIT
 		this.providerRef = new WeakRef(provider)
 		this.globalStoragePath = provider.context.globalStorageUri.fsPath
-		this.diffViewProvider = new DiffViewProvider(this.cwd)
+		this.diffViewProvider = new DiffViewProvider(this.cwd, this)
 		this.enableCheckpoints = enableCheckpoints
 
 		this.rootTask = rootTask
@@ -1225,7 +1226,12 @@ export class Task extends EventEmitter<ClineEvents> {
 			}),
 		)
 
-		const { showRooIgnoredFiles = true } = (await this.providerRef.deref()?.getState()) ?? {}
+		const {
+			showRooIgnoredFiles = true,
+			includeDiagnosticMessages = true,
+			maxDiagnosticMessages = 50,
+			maxReadFileLine = -1,
+		} = (await this.providerRef.deref()?.getState()) ?? {}
 
 		const parsedUserContent = await processUserContentMentions({
 			userContent,
@@ -1234,6 +1240,9 @@ export class Task extends EventEmitter<ClineEvents> {
 			fileContextTracker: this.fileContextTracker,
 			rooIgnoreController: this.rooIgnoreController,
 			showRooIgnoredFiles,
+			includeDiagnosticMessages,
+			maxDiagnosticMessages,
+			maxReadFileLine,
 		})
 
 		const environmentDetails = await getEnvironmentDetails(this, includeFileDetails)
@@ -1442,15 +1451,17 @@ export class Task extends EventEmitter<ClineEvents> {
 					// could be in (i.e. could have streamed some tools the user
 					// may have executed), so we just resort to replicating a
 					// cancel task.
-					this.abortTask()
 
-					// Check if this was a user-initiated cancellation
-					// If this.abort is true, it means the user clicked cancel, so we should
+					// Check if this was a user-initiated cancellation BEFORE calling abortTask
+					// If this.abort is already true, it means the user clicked cancel, so we should
 					// treat this as "user_cancelled" rather than "streaming_failed"
 					const cancelReason = this.abort ? "user_cancelled" : "streaming_failed"
 					const streamingFailedMessage = this.abort
 						? undefined
 						: (error.message ?? JSON.stringify(serializeError(error), null, 2))
+
+					// Now call abortTask after determining the cancel reason
+					await this.abortTask()
 
 					await abortStream(cancelReason, streamingFailedMessage)
 
@@ -1624,6 +1635,7 @@ export class Task extends EventEmitter<ClineEvents> {
 			language,
 			maxConcurrentFileReads,
 			maxReadFileLine,
+			apiConfiguration,
 		} = state ?? {}
 
 		return await (async () => {
@@ -1651,7 +1663,9 @@ export class Task extends EventEmitter<ClineEvents> {
 				rooIgnoreInstructions,
 				maxReadFileLine !== -1,
 				{
-					maxConcurrentFileReads,
+					maxConcurrentFileReads: maxConcurrentFileReads ?? 5,
+					todoListEnabled: apiConfiguration?.todoListEnabled ?? true,
+					useAgentRules: vscode.workspace.getConfiguration("roo-cline").get<boolean>("useAgentRules") ?? true,
 				},
 			)
 		})()

@@ -67,6 +67,7 @@ export interface WebviewMessage {
 		| "requestOllamaModels"
 		| "requestLmStudioModels"
 		| "requestVsCodeLmModels"
+		| "requestHuggingFaceModels"
 		| "openImage"
 		| "saveImage"
 		| "openFile"
@@ -116,6 +117,7 @@ export interface WebviewMessage {
 		| "submitEditedMessage"
 		| "editMessageConfirm"
 		| "terminalOutputLineLimit"
+		| "terminalOutputCharacterLimit"
 		| "terminalShellIntegrationTimeout"
 		| "terminalShellIntegrationDisabled"
 		| "terminalCommandDelay"
@@ -161,6 +163,8 @@ export interface WebviewMessage {
 		| "language"
 		| "maxReadFileLine"
 		| "maxConcurrentFileReads"
+		| "includeDiagnosticMessages"
+		| "maxDiagnosticMessages"
 		| "searchFiles"
 		| "toggleApiConfigPin"
 		| "setHistoryPreviewCollapsed"
@@ -244,7 +248,7 @@ export interface WebviewMessage {
 		// Global state settings
 		codebaseIndexEnabled: boolean
 		codebaseIndexQdrantUrl: string
-		codebaseIndexEmbedderProvider: "openai" | "ollama" | "openai-compatible" | "gemini"
+		codebaseIndexEmbedderProvider: "openai" | "ollama" | "openai-compatible" | "gemini" | "mistral"
 		codebaseIndexEmbedderBaseUrl?: string
 		codebaseIndexEmbedderModelId: string
 		codebaseIndexEmbedderModelDimension?: number // Generic dimension for all providers
@@ -259,6 +263,7 @@ export interface WebviewMessage {
 		codeIndexQdrantApiKey?: string
 		codebaseIndexOpenAiCompatibleApiKey?: string
 		codebaseIndexGeminiApiKey?: string
+		codebaseIndexMistralApiKey?: string
 	}
 }
 

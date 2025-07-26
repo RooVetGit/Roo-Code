@@ -47,6 +47,9 @@
 		"geminiProvider": "Gemini",
 		"geminiApiKeyLabel": "APIキー：",
 		"geminiApiKeyPlaceholder": "Gemini APIキーを入力してください",
+		"mistralProvider": "Mistral",
+		"mistralApiKeyLabel": "APIキー:",
+		"mistralApiKeyPlaceholder": "Mistral APIキーを入力してください",
 		"openaiCompatibleProvider": "OpenAI互換",
 		"openAiKeyLabel": "OpenAI APIキー",
 		"openAiKeyPlaceholder": "OpenAI APIキーを入力してください",
@@ -109,6 +112,7 @@
 			"modelIdRequired": "モデルIDが必要です",
 			"modelDimensionRequired": "モデルの次元が必要です",
 			"geminiApiKeyRequired": "Gemini APIキーが必要です",
+			"mistralApiKeyRequired": "Mistral APIキーが必要です",
 			"ollamaBaseUrlRequired": "OllamaのベースURLが必要です",
 			"baseUrlRequired": "ベースURLが必要です",
 			"modelDimensionMinValue": "モデルの次元は0より大きくなければなりません"
@@ -253,9 +257,25 @@
 		"getChutesApiKey": "Chutes APIキーを取得",
 		"deepSeekApiKey": "DeepSeek APIキー",
 		"getDeepSeekApiKey": "DeepSeek APIキーを取得",
+		"moonshotApiKey": "Moonshot APIキー",
+		"getMoonshotApiKey": "Moonshot APIキーを取得",
+		"moonshotBaseUrl": "Moonshot エントリーポイント",
 		"geminiApiKey": "Gemini APIキー",
 		"getGroqApiKey": "Groq APIキーを取得",
 		"groqApiKey": "Groq APIキー",
+		"getHuggingFaceApiKey": "Hugging Face APIキーを取得",
+		"huggingFaceApiKey": "Hugging Face APIキー",
+		"huggingFaceModelId": "モデルID",
+		"huggingFaceLoading": "読み込み中...",
+		"huggingFaceModelsCount": "({{count}}個のモデル)",
+		"huggingFaceSelectModel": "モデルを選択...",
+		"huggingFaceSearchModels": "モデルを検索...",
+		"huggingFaceNoModelsFound": "モデルが見つかりません",
+		"huggingFaceProvider": "プロバイダー",
+		"huggingFaceProviderAuto": "自動",
+		"huggingFaceSelectProvider": "プロバイダーを選択...",
+		"huggingFaceSearchProviders": "プロバイダーを検索...",
+		"huggingFaceNoProvidersFound": "プロバイダーが見つかりません",
 		"getGeminiApiKey": "Gemini APIキーを取得",
 		"openAiApiKey": "OpenAI APIキー",
 		"apiKey": "APIキー",
@@ -271,6 +291,7 @@
 		"litellmBaseUrl": "LiteLLM ベースURL",
 		"awsCredentials": "AWS認証情報",
 		"awsProfile": "AWSプロファイル",
+		"awsApiKey": "Amazon Bedrock APIキー",
 		"awsProfileName": "AWSプロファイル名",
 		"awsAccessKey": "AWSアクセスキー",
 		"awsSecretKey": "AWSシークレットキー",
@@ -485,6 +506,23 @@
 			"label": "同時ファイル読み取り制限",
 			"description": "read_file ツールが同時に処理できるファイルの最大数。値を高くすると複数の小さなファイルの読み取りが速くなる可能性がありますが、メモリ使用量が増加します。"
 		},
+		"diagnostics": {
+			"includeMessages": {
+				"label": "診断を自動的にコンテキストに含める",
+				"description": "有効にすると、編集されたファイルからの診断メッセージ（エラー）が自動的にコンテキストに含まれます。@problemsを使用して、いつでも手動ですべてのワークスペース診断を含めることができます。"
+			},
+			"maxMessages": {
+				"label": "最大診断メッセージ数",
+				"description": "ファイルごとに含める診断メッセージの最大数。この制限は、自動インクルード（チェックボックスが有効な場合）と手動の@problemsメンションの両方に適用されます。値を高くするとより多くのコンテキストが提供されますが、トークンの使用量が増加します。",
+				"resetTooltip": "デフォルト値（50）にリセット",
+				"unlimited": "無制限の診断メッセージ",
+				"unlimitedLabel": "無制限"
+			},
+			"delayAfterWrite": {
+				"label": "書き込み後に診断が潜在的な問題を検出できるように遅延させる",
+				"description": "ファイルの書き込み後に処理を続行するまでの待機時間。これにより、診断ツールが変更を処理して問題を検出できます。"
+			}
+		},
 		"condensingThreshold": {
 			"label": "圧縮トリガーしきい値",
 			"selectProfile": "プロファイルのしきい値を設定",
@@ -507,6 +545,10 @@
 		"outputLineLimit": {
 			"label": "ターミナル出力制限",
 			"description": "コマンド実行時にターミナル出力に含める最大行数。超過すると中央から行が削除され、tokenを節約します。 <0>詳細情報</0>"
+		},
+		"outputCharacterLimit": {
+			"label": "ターミナルの文字数制限",
+			"description": "コマンド実行時にターミナル出力に含める最大文字数。この制限は、非常に長い行によるメモリ問題を回避するため、行数制限よりも優先されます。超過した場合、出力は切り捨てられます。<0>詳細</0>"
 		},
 		"shellIntegrationTimeout": {
 			"label": "ターミナルシェル統合タイムアウト",
@@ -573,6 +615,10 @@
 				"label": "マッチ精度",
 				"description": "このスライダーは、diffを適用する際にコードセクションがどれだけ正確に一致する必要があるかを制御します。低い値はより柔軟なマッチングを可能にしますが、誤った置換のリスクが高まります。100%未満の値は細心の注意を払って使用してください。"
 			}
+		},
+		"todoList": {
+			"label": "ToDoリストツールを有効にする",
+			"description": "有効にすると、Rooはタスクの進捗を追跡するためのToDoリストを作成・管理できます。これにより、複雑なタスクを管理しやすいステップに整理できます。"
 		}
 	},
 	"experimental": {
@@ -714,5 +760,8 @@
 		"useCustomArn": "カスタム ARN を使用..."
 	},
 	"includeMaxOutputTokens": "最大出力トークンを含める",
-	"includeMaxOutputTokensDescription": "APIリクエストで最大出力トークンパラメータを送信します。一部のプロバイダーはこれをサポートしていない場合があります。"
+	"includeMaxOutputTokensDescription": "APIリクエストで最大出力トークンパラメータを送信します。一部のプロバイダーはこれをサポートしていない場合があります。",
+	"limitMaxTokensDescription": "レスポンスの最大トークン数を制限する",
+	"maxOutputTokensLabel": "最大出力トークン",
+	"maxTokensGenerateDescription": "レスポンスで生成する最大トークン数"
 }

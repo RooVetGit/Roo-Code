@@ -28,6 +28,7 @@
 		"could_not_open_file_generic": "Could not open file!",
 		"checkpoint_timeout": "Timed out when attempting to restore checkpoint.",
 		"checkpoint_failed": "Failed to restore checkpoint.",
+		"git_not_installed": "Git is required for the checkpoints feature. Please install Git to enable checkpoints.",
 		"no_workspace": "Please open a project folder first",
 		"update_support_prompt": "Failed to update support prompt",
 		"reset_support_prompt": "Failed to reset support prompt",
@@ -107,7 +108,8 @@
 	},
 	"buttons": {
 		"save": "Save",
-		"edit": "Edit"
+		"edit": "Edit",
+		"learn_more": "Learn More"
 	},
 	"tasks": {
 		"canceled": "Task error: It was stopped and canceled by the user.",
@@ -134,11 +136,17 @@
 			"deleteFailed": "Failed to delete custom mode: {{error}}",
 			"resetFailed": "Failed to reset custom modes: {{error}}",
 			"modeNotFound": "Write error: Mode not found",
-			"noWorkspaceForProject": "No workspace folder found for project-specific mode"
+			"noWorkspaceForProject": "No workspace folder found for project-specific mode",
+			"rulesCleanupFailed": "Mode deleted successfully, but failed to delete rules folder at {{rulesFolderPath}}. You may need to delete it manually."
 		},
 		"scope": {
 			"project": "project",
 			"global": "global"
+		}
+	},
+	"marketplace": {
+		"mode": {
+			"rulesCleanupFailed": "Mode removed successfully, but failed to delete rules folder at {{rulesFolderPath}}. You may need to delete it manually."
 		}
 	},
 	"mdm": {

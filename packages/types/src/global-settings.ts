@@ -23,6 +23,13 @@ import { languagesSchema } from "./vscode.js"
 export const DEFAULT_WRITE_DELAY_MS = 1000
 
 /**
+ * Default terminal output character limit constant.
+ * This provides a reasonable default that aligns with typical terminal usage
+ * while preventing context window explosions from extremely long lines.
+ */
+export const DEFAULT_TERMINAL_OUTPUT_CHARACTER_LIMIT = 50_000
+
+/**
  * GlobalSettings
  */
 
@@ -65,6 +72,17 @@ export const globalSettingsSchema = z.object({
 	autoCondenseContextPercent: z.number().optional(),
 	maxConcurrentFileReads: z.number().optional(),
 
+	/**
+	 * Whether to include diagnostic messages (errors, warnings) in tool outputs
+	 * @default true
+	 */
+	includeDiagnosticMessages: z.boolean().optional(),
+	/**
+	 * Maximum number of diagnostic messages to include in tool outputs
+	 * @default 50
+	 */
+	maxDiagnosticMessages: z.number().optional(),
+
 	browserToolEnabled: z.boolean().optional(),
 	browserViewportSize: z.string().optional(),
 	screenshotQuality: z.number().optional(),
@@ -85,6 +103,7 @@ export const globalSettingsSchema = z.object({
 	maxReadFileLine: z.number().optional(),
 
 	terminalOutputLineLimit: z.number().optional(),
+	terminalOutputCharacterLimit: z.number().optional(),
 	terminalShellIntegrationTimeout: z.number().optional(),
 	terminalShellIntegrationDisabled: z.boolean().optional(),
 	terminalCommandDelay: z.number().optional(),
@@ -145,12 +164,14 @@ export const SECRET_STATE_KEYS = [
 	"glamaApiKey",
 	"openRouterApiKey",
 	"awsAccessKey",
+	"awsApiKey",
 	"awsSecretKey",
 	"awsSessionToken",
 	"openAiApiKey",
 	"geminiApiKey",
 	"openAiNativeApiKey",
 	"deepSeekApiKey",
+	"moonshotApiKey",
 	"mistralApiKey",
 	"unboundApiKey",
 	"requestyApiKey",
@@ -162,6 +183,8 @@ export const SECRET_STATE_KEYS = [
 	"codeIndexQdrantApiKey",
 	"codebaseIndexOpenAiCompatibleApiKey",
 	"codebaseIndexGeminiApiKey",
+	"codebaseIndexMistralApiKey",
+	"huggingFaceApiKey",
 ] as const satisfies readonly (keyof ProviderSettings)[]
 export type SecretState = Pick<ProviderSettings, (typeof SECRET_STATE_KEYS)[number]>
 
@@ -212,7 +235,7 @@ export const EVALS_SETTINGS: RooCodeSettings = {
 	alwaysAllowUpdateTodoList: true,
 	followupAutoApproveTimeoutMs: 0,
 	allowedCommands: ["*"],
-	commandExecutionTimeout: 30_000,
+	commandExecutionTimeout: 20,
 	commandTimeoutAllowlist: [],
 	preventCompletionWithOpenTodos: false,
 
@@ -227,6 +250,7 @@ export const EVALS_SETTINGS: RooCodeSettings = {
 	soundVolume: 0.5,
 
 	terminalOutputLineLimit: 500,
+	terminalOutputCharacterLimit: DEFAULT_TERMINAL_OUTPUT_CHARACTER_LIMIT,
 	terminalShellIntegrationTimeout: 30000,
 	terminalCommandDelay: 0,
 	terminalPowershellCounter: false,
@@ -250,12 +274,15 @@ export const EVALS_SETTINGS: RooCodeSettings = {
 	showRooIgnoredFiles: true,
 	maxReadFileLine: -1, // -1 to enable full file reading.
 
+	includeDiagnosticMessages: true,
+	maxDiagnosticMessages: 50,
+
 	language: "en",
 	telemetrySetting: "enabled",
 
 	mcpEnabled: false,
 
-	mode: "code",
+	mode: "code", // "architect",
 
 	customModes: [],
 }

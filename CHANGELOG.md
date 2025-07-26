@@ -1,5 +1,62 @@
 # Roo Code Changelog
 
+## [3.24.0] - 2025-07-25
+
+- Add Hugging Face provider with support for open source models (thanks @TGlide!)
+- Add terminal command permissions UI to chat interface
+- Add support for Agent Rules standard via AGENTS.md (thanks @sgryphon!)
+- Add settings to control diagnostic messages
+- Fix auto-approve checkbox to be toggled at any time (thanks @KJ7LNW!)
+- Add efficiency warning for single SEARCH/REPLACE blocks in apply_diff (thanks @KJ7LNW!)
+- Fix respect maxReadFileLine setting for file mentions to prevent context exhaustion (thanks @sebinseban!)
+- Fix Ollama API URL normalization by removing trailing slashes (thanks @Naam!)
+- Fix restore list styles for markdown lists in chat interface (thanks @village-way!)
+- Add support for bedrock api keys
+- Add confirmation dialog and proper cleanup for marketplace mode removal
+- Fix cancel auto-approve timer when editing follow-up suggestion (thanks @hassoncs!)
+- Fix add error message when no workspace folder is open for code indexing
+
+## [3.23.19] - 2025-07-23
+
+- Add Roo Code Cloud Waitlist CTAs (thanks @brunobergher!)
+- Split commands on newlines when evaluating auto-approve
+- Smarter auto-deny of commands
+
+## [3.23.18] - 2025-07-23
+
+- Fix: Resolve 'Bad substitution' error in command parsing (#5978 by @KJ7LNW, PR by @daniel-lxs)
+- Fix: Add ErrorBoundary component for better error handling (#5731 by @elianiva, PR by @KJ7LNW)
+- Fix: Todo list toggle not working (thanks @chrarnoldus!)
+- Improve: Use SIGKILL for command execution timeouts in the "execa" variant (thanks @cte!)
+
+## [3.23.17] - 2025-07-22
+
+- Add: todo list tool enable checkbox to provider advanced settings
+- Add: Moonshot provider (thanks @CellenLee!)
+- Add: Qwen/Qwen3-235B-A22B-Instruct-2507 model to Chutes AI provider
+- Fix: move context condensing prompt to Prompts section (thanks @SannidhyaSah!)
+- Add: jump icon for newly created files
+- Fix: add character limit to prevent terminal output context explosion
+- Fix: resolve global mode export not including rules files
+- Fix: enable export, share, and copy buttons during API operations (thanks @MuriloFP!)
+- Add: configurable timeout for evals (5-10 min)
+- Add: auto-omit MCP content when no servers are configured
+- Fix: sort symlinked rules files by symlink names, not target names
+- Docs: clarify when to use update_todo_list tool
+- Add: Mistral embedding provider (thanks @SannidhyaSah!)
+- Fix: add run parameter to vitest command in rules (thanks @KJ7LNW!)
+- Update: the max_tokens fallback logic in the sliding window
+- Fix: Bedrock and Vertext token counting improvements (thanks @daniel-lxs!)
+- Add: llama-4-maverick model to Vertex AI provider (thanks @MuriloFP!)
+- Fix: properly distinguish between user cancellations and API failures
+- Fix: add case sensitivity mention to suggested fixes in apply_diff error message
+
+## [3.23.16] - 2025-07-19
+
+- Add global rate limiting for OpenAI-compatible embeddings (thanks @daniel-lxs!)
+- Add batch limiting to code indexer (thanks @daniel-lxs!)
+- Fix Docker port conflicts for evals services
+
 ## [3.23.15] - 2025-07-18
 
 - Fix configurable delay for diagnostics to prevent premature error reporting
