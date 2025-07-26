@@ -1,0 +1,43 @@
+{
+	"name": "@roo-code/mcp-server-mysql",
+	"version": "0.1.0",
+	"description": "MySQL MCP server for Roo Code",
+	"type": "module",
+	"main": "dist/index.js",
+	"types": "dist/index.d.ts",
+	"scripts": {
+		"build": "tsc",
+		"dev": "tsx src/index.ts",
+		"start": "node dist/index.js",
+		"test": "vitest run",
+		"test:watch": "vitest",
+		"lint": "eslint src --ext .ts",
+		"typecheck": "tsc --noEmit"
+	},
+	"keywords": [
+		"mcp",
+		"mysql",
+		"database",
+		"model-context-protocol"
+	],
+	"author": "Roo Code Inc",
+	"license": "MIT",
+	"dependencies": {
+		"@modelcontextprotocol/sdk": "^1.9.0",
+		"mysql2": "^3.11.5",
+		"zod": "^3.24.1"
+	},
+	"devDependencies": {
+		"@roo-code/config-eslint": "workspace:*",
+		"@types/node": "^22.10.5",
+		"@typescript-eslint/eslint-plugin": "^8.20.0",
+		"@typescript-eslint/parser": "^8.20.0",
+		"eslint": "^9.18.0",
+		"tsx": "^4.19.2",
+		"typescript": "^5.7.3",
+		"vitest": "^2.1.8"
+	},
+	"engines": {
+		"node": ">=18"
+	}
+}
