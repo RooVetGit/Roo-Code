@@ -421,6 +421,7 @@
 		"@roo-code/telemetry": "workspace:^",
 		"@roo-code/types": "workspace:^",
 		"@types/lodash.debounce": "^4.0.9",
+		"@types/tar": "^6.1.13",
 		"@vscode/codicons": "^0.0.36",
 		"async-mutex": "^0.5.0",
 		"axios": "^1.7.4",
@@ -467,6 +468,7 @@
 		"string-similarity": "^4.0.4",
 		"strip-ansi": "^7.1.0",
 		"strip-bom": "^5.0.0",
+		"tar": "^7.4.3",
 		"tiktoken": "^1.0.21",
 		"tmp": "^0.2.3",
 		"tree-sitter-wasms": "^0.1.12",
@@ -476,7 +478,8 @@
 		"web-tree-sitter": "^0.25.6",
 		"workerpool": "^9.2.0",
 		"yaml": "^2.8.0",
-		"zod": "^3.25.61"
+		"zod": "^3.25.61",
+		"detect-libc": "2.0.2"
 	},
 	"devDependencies": {
 		"@roo-code/build": "workspace:^",

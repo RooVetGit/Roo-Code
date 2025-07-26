@@ -5,7 +5,7 @@ import { fileURLToPath } from "url"
 import process from "node:process"
 import * as console from "node:console"
 
-import { copyPaths, copyWasms, copyLocales, setupLocaleWatcher, copyLibsqlNativeModules } from "@roo-code/build"
+import { copyPaths, copyWasms, copyLocales, setupLocaleWatcher, copyLibSQLVersion } from "@roo-code/build"
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -63,6 +63,12 @@ async function main() {
 			},
 		},
 		{
+			name: "libsqlVersion",
+			setup(build) {
+				build.onEnd(() => copyLibSQLVersion(srcDir, distDir))
+			},
+		},
+		{
 			name: "copyWasms",
 			setup(build) {
 				build.onEnd(() => copyWasms(srcDir, distDir))
@@ -72,12 +78,6 @@ async function main() {
 			name: "copyLocales",
 			setup(build) {
 				build.onEnd(() => copyLocales(srcDir, distDir))
-			},
-		},
-		{
-			name: "copyLibsqlNativeModules",
-			setup(build) {
-				build.onEnd(() => copyLibsqlNativeModules(srcDir, distDir))
 			},
 		},
 		{

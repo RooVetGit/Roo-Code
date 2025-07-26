@@ -5,5 +5,5 @@ export {
 	copyLocales,
 	setupLocaleWatcher,
 	generatePackageJson,
-	copyLibsqlNativeModules,
+	copyLibSQLVersion,
 } from "./esbuild.js"
