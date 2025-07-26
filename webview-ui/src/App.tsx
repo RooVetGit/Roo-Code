@@ -25,6 +25,7 @@ import { AccountView } from "./components/account/AccountView"
 import { useAddNonInteractiveClickListener } from "./components/ui/hooks/useNonInteractiveClick"
 import { TooltipProvider } from "./components/ui/tooltip"
 import { STANDARD_TOOLTIP_DELAY } from "./components/ui/standard-tooltip"
+import { LoadingScreen } from "./components/common/LoadingScreen"
 
 type Tab = "settings" | "history" | "mcp" | "modes" | "chat" | "marketplace" | "account"
 
@@ -81,6 +82,7 @@ const App = () => {
 
 	const [showAnnouncement, setShowAnnouncement] = useState(false)
 	const [tab, setTab] = useState<Tab>("chat")
+	const [showTimeout, setShowTimeout] = useState(false)
 
 	const [humanRelayDialogState, setHumanRelayDialogState] = useState<HumanRelayDialogState>({
 		isOpen: false,
@@ -207,6 +209,27 @@ const App = () => {
 		console.debug("App initialized with source map support")
 	}, [])
 
+	// Add timeout handling for extension state
+	useEffect(() => {
+		if (!didHydrateState) {
+			// Show timeout message after 5 seconds
+			const timeoutTimer = setTimeout(() => {
+				setShowTimeout(true)
+			}, 5000)
+
+			// Retry sending webviewDidLaunch after 3 seconds
+			const retryTimer = setTimeout(() => {
+				console.debug("Retrying webviewDidLaunch message...")
+				vscode.postMessage({ type: "webviewDidLaunch" })
+			}, 3000)
+
+			return () => {
+				clearTimeout(timeoutTimer)
+				clearTimeout(retryTimer)
+			}
+		}
+	}, [didHydrateState])
+
 	// Focus the WebView when non-interactive content is clicked (only in editor/tab mode)
 	useAddNonInteractiveClickListener(
 		useCallback(() => {
@@ -224,7 +247,7 @@ const App = () => {
 	}, [tab])
 
 	if (!didHydrateState) {
-		return null
+		return <LoadingScreen showTimeout={showTimeout} />
 	}
 
 	// Do not conditionally load ChatView, it's expensive and there's state we

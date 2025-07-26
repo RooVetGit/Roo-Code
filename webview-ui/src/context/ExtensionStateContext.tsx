@@ -360,8 +360,19 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 	}, [handleMessage])
 
 	useEffect(() => {
+		// Send initial launch message
 		vscode.postMessage({ type: "webviewDidLaunch" })
-	}, [])
+
+		// If we don't get a response within 2 seconds, try again
+		const retryTimer = setTimeout(() => {
+			if (!didHydrateState) {
+				console.warn("No state received from extension, retrying webviewDidLaunch...")
+				vscode.postMessage({ type: "webviewDidLaunch" })
+			}
+		}, 2000)
+
+		return () => clearTimeout(retryTimer)
+	}, [didHydrateState])
 
 	const contextValue: ExtensionStateContextType = {
 		...state,
