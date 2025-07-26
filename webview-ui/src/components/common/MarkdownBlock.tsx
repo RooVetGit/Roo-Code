@@ -16,68 +16,6 @@ interface MarkdownBlockProps {
 	markdown?: string
 }
 
-/**
- * Custom remark plugin that converts plain URLs in text into clickable links
- *
- * The original bug: We were converting text nodes into paragraph nodes,
- * which broke the markdown structure because text nodes should remain as text nodes
- * within their parent elements (like paragraphs, list items, etc.).
- * This caused the entire content to disappear because the structure became invalid.
- */
-const remarkUrlToLink = () => {
-	return (tree: any) => {
-		// Visit all "text" nodes in the markdown AST (Abstract Syntax Tree)
-		visit(tree, "text", (node: any, index, parent) => {
-			const urlRegex = /https?:\/\/[^\s<>)"]+/g
-			const matches = node.value.match(urlRegex)
-
-			if (!matches || !parent) {
-				return
-			}
-
-			const parts = node.value.split(urlRegex)
-			const children: any[] = []
-			const cleanedMatches = matches.map((url: string) => url.replace(/[.,;:!?'"]+$/, ""))
-
-			parts.forEach((part: string, i: number) => {
-				if (part) {
-					children.push({ type: "text", value: part })
-				}
-
-				if (cleanedMatches[i]) {
-					const originalUrl = matches[i]
-					const cleanedUrl = cleanedMatches[i]
-					const removedPunctuation = originalUrl.substring(cleanedUrl.length)
-
-					// Create a proper link node with all required properties
-					children.push({
-						type: "link",
-						url: cleanedUrl,
-						title: null,
-						children: [{ type: "text", value: cleanedUrl }],
-						data: {
-							hProperties: {
-								href: cleanedUrl,
-							},
-						},
-					})
-
-					if (removedPunctuation) {
-						children.push({ type: "text", value: removedPunctuation })
-					}
-				}
-			})
-
-			// Replace the original text node with our new nodes in the parent's children array.
-			// This preserves the document structure while adding our links.
-			parent.children.splice(index!, 1, ...children)
-
-			// Return SKIP to prevent visiting the newly created nodes
-			return ["skip", index! + children.length]
-		})
-	}
-}
-
 const StyledMarkdown = styled.div`
 	code:not(pre > code) {
 		font-family: var(--vscode-editor-font-family, monospace);
@@ -321,7 +259,6 @@ const MarkdownBlock = memo(({ markdown }: MarkdownBlockProps) => {
 			<ReactMarkdown
 				remarkPlugins={[
 					remarkGfm,
-					remarkUrlToLink,
 					remarkMath,
 					() => {
 						return (tree: any) => {
