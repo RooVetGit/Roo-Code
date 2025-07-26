@@ -109,6 +109,7 @@ export const ApiConfigSelector = ({
 							<Button
 								variant="ghost"
 								size="icon"
+								tabIndex={-1}
 								onClick={(e) => {
 									e.stopPropagation()
 									togglePinnedApiConfig(config.id)
