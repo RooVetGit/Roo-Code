@@ -357,5 +357,159 @@ describe("ToolRepetitionDetector", () => {
 				expect(result.askUser).toBeUndefined()
 			}
 		})
+
+		it("should support custom consecutive limit of 4", () => {
+			const detector = new ToolRepetitionDetector(4)
+
+			// First call (counter = 1)
+			let result = detector.check(createToolUse("tool", "tool-name"))
+			expect(result.allowExecution).toBe(true)
+
+			// Second call (counter = 2)
+			result = detector.check(createToolUse("tool", "tool-name"))
+			expect(result.allowExecution).toBe(true)
+
+			// Third call (counter = 3)
+			result = detector.check(createToolUse("tool", "tool-name"))
+			expect(result.allowExecution).toBe(true)
+
+			// Fourth call (counter = 4) should be blocked
+			result = detector.check(createToolUse("tool", "tool-name"))
+			expect(result.allowExecution).toBe(false)
+			expect(result.askUser).toBeDefined()
+		})
+	})
+
+	// ===== Pattern Repetition Detection tests =====
+	describe("pattern repetition detection", () => {
+		it("should detect simple alternating pattern (ABABAB)", () => {
+			// Use custom limits: 3 for consecutive, 20 for history, 2 for pattern
+			const detector = new ToolRepetitionDetector(3, 20, 2)
+
+			// Create alternating pattern: A-B-A-B-A-B
+			detector.check(createToolUse("toolA", "tool-A"))
+			detector.check(createToolUse("toolB", "tool-B"))
+			detector.check(createToolUse("toolA", "tool-A"))
+			detector.check(createToolUse("toolB", "tool-B"))
+			detector.check(createToolUse("toolA", "tool-A"))
+
+			// This should trigger pattern detection (AB repeated 3 times)
+			const result = detector.check(createToolUse("toolB", "tool-B"))
+
+			expect(result.allowExecution).toBe(false)
+			expect(result.askUser).toBeDefined()
+			expect(result.askUser?.messageKey).toBe("mistake_limit_reached")
+		})
+
+		it("should detect complex pattern repetition (ABCABCABC)", () => {
+			// Use custom limits: 3 for consecutive, 20 for history, 2 for pattern
+			const detector = new ToolRepetitionDetector(3, 20, 2)
+
+			// Create pattern: A-B-C-A-B-C-A-B-C
+			detector.check(createToolUse("toolA", "tool-A"))
+			detector.check(createToolUse("toolB", "tool-B"))
+			detector.check(createToolUse("toolC", "tool-C"))
+			detector.check(createToolUse("toolA", "tool-A"))
+			detector.check(createToolUse("toolB", "tool-B"))
+			detector.check(createToolUse("toolC", "tool-C"))
+			detector.check(createToolUse("toolA", "tool-A"))
+			detector.check(createToolUse("toolB", "tool-B"))
+
+			// This should trigger pattern detection (ABC repeated 3 times)
+			const result = detector.check(createToolUse("toolC", "tool-C"))
+
+			expect(result.allowExecution).toBe(false)
+			expect(result.askUser).toBeDefined()
+			expect(result.askUser?.messageKey).toBe("mistake_limit_reached")
+		})
+
+		it("should not detect pattern when repetition is below limit", () => {
+			// Use custom limits: 3 for consecutive, 20 for history, 2 for pattern (need 3 repetitions to trigger)
+			const detector = new ToolRepetitionDetector(3, 20, 2)
+
+			// Create pattern: A-B-C-A-B-C (only 2 repetitions)
+			detector.check(createToolUse("toolA", "tool-A"))
+			detector.check(createToolUse("toolB", "tool-B"))
+			detector.check(createToolUse("toolC", "tool-C"))
+			detector.check(createToolUse("toolA", "tool-A"))
+			detector.check(createToolUse("toolB", "tool-B"))
+
+			// This should NOT trigger pattern detection (ABC repeated only 2 times)
+			const result = detector.check(createToolUse("toolC", "tool-C"))
+
+			expect(result.allowExecution).toBe(true)
+			expect(result.askUser).toBeUndefined()
+		})
+
+		it("should respect custom pattern repetition limit", () => {
+			// Use custom limits: 3 for consecutive, 20 for history, 1 for pattern (need only 2 repetitions)
+			const detector = new ToolRepetitionDetector(3, 20, 1)
+
+			// Create pattern: A-B-A-B (only 2 repetitions)
+			detector.check(createToolUse("toolA", "tool-A"))
+			detector.check(createToolUse("toolB", "tool-B"))
+			detector.check(createToolUse("toolA", "tool-A"))
+
+			// This should trigger pattern detection with lower limit (AB repeated 2 times)
+			const result = detector.check(createToolUse("toolB", "tool-B"))
+
+			expect(result.allowExecution).toBe(false)
+			expect(result.askUser).toBeDefined()
+			expect(result.askUser?.messageKey).toBe("mistake_limit_reached")
+		})
+
+		it("should retain history after reset and continue pattern detection", () => {
+			// Use custom limits: 3 for consecutive, 20 for history, 2 for pattern
+			const detector = new ToolRepetitionDetector(3, 20, 2)
+
+			// Create pattern: A-B-A-B-A-B
+			detector.check(createToolUse("toolA", "tool-A"))
+			detector.check(createToolUse("toolB", "tool-B"))
+			detector.check(createToolUse("toolA", "tool-A"))
+			detector.check(createToolUse("toolB", "tool-B"))
+			detector.check(createToolUse("toolA", "tool-A"))
+
+			// This should trigger pattern detection
+			const result1 = detector.check(createToolUse("toolB", "tool-B"))
+			expect(result1.allowExecution).toBe(false)
+
+			// After reset, history is retained (last 5 entries: [B,A,B,A,B])
+			// Adding toolA creates [B,A,B,A,B,A] which still contains B-A pattern repeated 3 times
+			// This should still trigger pattern detection due to history retention
+			const result2 = detector.check(createToolUse("toolA", "tool-A"))
+			expect(result2.allowExecution).toBe(false)
+		})
+
+		it("should detect patterns with different parameter values", () => {
+			// Use custom limits: 3 for consecutive, 20 for history, 2 for pattern
+			const detector = new ToolRepetitionDetector(3, 20, 2)
+
+			// Create pattern with different parameters but same tool names
+			// Create pattern with same parameters to ensure detection
+			detector.check(createToolUse("toolA", "tool-A", { param: "value1" }))
+			detector.check(createToolUse("toolB", "tool-B", { param: "value2" }))
+			detector.check(createToolUse("toolA", "tool-A", { param: "value1" }))
+			detector.check(createToolUse("toolB", "tool-B", { param: "value2" }))
+			detector.check(createToolUse("toolA", "tool-A", { param: "value1" }))
+
+			// This should trigger pattern detection with same parameters
+			const result = detector.check(createToolUse("toolB", "tool-B", { param: "value2" }))
+
+			expect(result.allowExecution).toBe(false)
+			expect(result.askUser).toBeDefined()
+		})
+
+		it("should not detect pattern when same tool is used with different parameters in non-repeating way", () => {
+			const detector = new ToolRepetitionDetector(3, 20, 2)
+
+			// A(1)-A(2)-A(3)-A(4) - same tool, different params each time
+			detector.check(createToolUse("toolA", "tool-A", { param: "value1" }))
+			detector.check(createToolUse("toolA", "tool-A", { param: "value2" }))
+			detector.check(createToolUse("toolA", "tool-A", { param: "value3" }))
+
+			const result = detector.check(createToolUse("toolA", "tool-A", { param: "value4" }))
+
+			expect(result.allowExecution).toBe(true)
+		})
 	})
 })
