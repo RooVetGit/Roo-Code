@@ -137,39 +137,85 @@ export class OpenRouterHandler extends BaseProvider implements SingleCompletionH
 		const stream = await this.client.chat.completions.create(completionParams)
 
 		let lastUsage: CompletionUsage | undefined = undefined
+		let lastChunkTime = Date.now()
+		const CHUNK_TIMEOUT_MS = 30000 // 30 seconds timeout between chunks
 
-		for await (const chunk of stream) {
-			// OpenRouter returns an error object instead of the OpenAI SDK throwing an error.
-			if ("error" in chunk) {
-				const error = chunk.error as { message?: string; code?: number }
-				console.error(`OpenRouter API Error: ${error?.code} - ${error?.message}`)
-				throw new Error(`OpenRouter API Error ${error?.code}: ${error?.message}`)
+		// Set up a timeout check
+		const timeoutCheck = setInterval(() => {
+			const timeSinceLastChunk = Date.now() - lastChunkTime
+			if (timeSinceLastChunk > CHUNK_TIMEOUT_MS) {
+				clearInterval(timeoutCheck)
+				console.error(`OpenRouter stream timeout: No chunks received for ${CHUNK_TIMEOUT_MS}ms`, {
+					modelId,
+					timeSinceLastChunk,
+				})
+			}
+		}, 5000) // Check every 5 seconds
+
+		try {
+			for await (const chunk of stream) {
+				lastChunkTime = Date.now() // Reset timeout on each chunk
+				// OpenRouter returns an error object instead of the OpenAI SDK throwing an error.
+				if ("error" in chunk) {
+					const error = chunk.error as { message?: string; code?: number; type?: string }
+					const errorMessage = error?.message || "Unknown error"
+					const errorCode = error?.code || "unknown"
+					const errorType = error?.type || "unknown"
+
+					// Log detailed error information
+					console.error(`OpenRouter API Error:`, {
+						code: errorCode,
+						type: errorType,
+						message: errorMessage,
+						modelId,
+						chunk: JSON.stringify(chunk),
+					})
+
+					// Provide more specific error messages for common issues
+					let userFriendlyMessage = `OpenRouter API Error ${errorCode}: ${errorMessage}`
+
+					if (
+						errorMessage.toLowerCase().includes("model not found") ||
+						errorMessage.toLowerCase().includes("invalid model") ||
+						errorCode === 404
+					) {
+						userFriendlyMessage = `Model "${modelId}" is not available on OpenRouter. Please check if the model ID is correct and if you have access to this model.`
+					} else if (errorMessage.toLowerCase().includes("rate limit")) {
+						userFriendlyMessage = `OpenRouter rate limit exceeded. Please wait a moment and try again.`
+					} else if (errorMessage.toLowerCase().includes("unauthorized") || errorCode === 401) {
+						userFriendlyMessage = `OpenRouter authentication failed. Please check your API key.`
+					}
+
+					throw new Error(userFriendlyMessage)
+				}
+
+				const delta = chunk.choices[0]?.delta
+
+				if ("reasoning" in delta && delta.reasoning && typeof delta.reasoning === "string") {
+					yield { type: "reasoning", text: delta.reasoning }
+				}
+
+				if (delta?.content) {
+					yield { type: "text", text: delta.content }
+				}
+
+				if (chunk.usage) {
+					lastUsage = chunk.usage
+				}
 			}
 
-			const delta = chunk.choices[0]?.delta
-
-			if ("reasoning" in delta && delta.reasoning && typeof delta.reasoning === "string") {
-				yield { type: "reasoning", text: delta.reasoning }
+			if (lastUsage) {
+				yield {
+					type: "usage",
+					inputTokens: lastUsage.prompt_tokens || 0,
+					outputTokens: lastUsage.completion_tokens || 0,
+					cacheReadTokens: lastUsage.prompt_tokens_details?.cached_tokens,
+					reasoningTokens: lastUsage.completion_tokens_details?.reasoning_tokens,
+					totalCost: (lastUsage.cost_details?.upstream_inference_cost || 0) + (lastUsage.cost || 0),
+				}
 			}
-
-			if (delta?.content) {
-				yield { type: "text", text: delta.content }
-			}
-
-			if (chunk.usage) {
-				lastUsage = chunk.usage
-			}
-		}
-
-		if (lastUsage) {
-			yield {
-				type: "usage",
-				inputTokens: lastUsage.prompt_tokens || 0,
-				outputTokens: lastUsage.completion_tokens || 0,
-				cacheReadTokens: lastUsage.prompt_tokens_details?.cached_tokens,
-				reasoningTokens: lastUsage.completion_tokens_details?.reasoning_tokens,
-				totalCost: (lastUsage.cost_details?.upstream_inference_cost || 0) + (lastUsage.cost || 0),
-			}
+		} finally {
+			clearInterval(timeoutCheck)
 		}
 	}
 
@@ -235,8 +281,36 @@ export class OpenRouterHandler extends BaseProvider implements SingleCompletionH
 		const response = await this.client.chat.completions.create(completionParams)
 
 		if ("error" in response) {
-			const error = response.error as { message?: string; code?: number }
-			throw new Error(`OpenRouter API Error ${error?.code}: ${error?.message}`)
+			const error = response.error as { message?: string; code?: number; type?: string }
+			const errorMessage = error?.message || "Unknown error"
+			const errorCode = error?.code || "unknown"
+			const errorType = error?.type || "unknown"
+
+			// Log detailed error information
+			console.error(`OpenRouter API Error:`, {
+				code: errorCode,
+				type: errorType,
+				message: errorMessage,
+				modelId,
+				response: JSON.stringify(response),
+			})
+
+			// Provide more specific error messages for common issues
+			let userFriendlyMessage = `OpenRouter API Error ${errorCode}: ${errorMessage}`
+
+			if (
+				errorMessage.toLowerCase().includes("model not found") ||
+				errorMessage.toLowerCase().includes("invalid model") ||
+				errorCode === 404
+			) {
+				userFriendlyMessage = `Model "${modelId}" is not available on OpenRouter. Please check if the model ID is correct and if you have access to this model.`
+			} else if (errorMessage.toLowerCase().includes("rate limit")) {
+				userFriendlyMessage = `OpenRouter rate limit exceeded. Please wait a moment and try again.`
+			} else if (errorMessage.toLowerCase().includes("unauthorized") || errorCode === 401) {
+				userFriendlyMessage = `OpenRouter authentication failed. Please check your API key.`
+			}
+
+			throw new Error(userFriendlyMessage)
 		}
 
 		const completion = response as OpenAI.Chat.ChatCompletion

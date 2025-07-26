@@ -265,6 +265,42 @@ describe("OpenRouterHandler", () => {
 			const generator = handler.createMessage("test", [])
 			await expect(generator.next()).rejects.toThrow("OpenRouter API Error 500: API Error")
 		})
+
+		it("handles model not found errors with user-friendly message", async () => {
+			const handler = new OpenRouterHandler(mockOptions)
+			const mockStream = {
+				async *[Symbol.asyncIterator]() {
+					yield { error: { message: "Model not found", code: 404 } }
+				},
+			}
+
+			const mockCreate = vitest.fn().mockResolvedValue(mockStream)
+			;(OpenAI as any).prototype.chat = {
+				completions: { create: mockCreate },
+			} as any
+
+			const generator = handler.createMessage("test", [])
+			await expect(generator.next()).rejects.toThrow(
+				`Model "${mockOptions.openRouterModelId}" is not available on OpenRouter`,
+			)
+		})
+
+		it("handles rate limit errors with user-friendly message", async () => {
+			const handler = new OpenRouterHandler(mockOptions)
+			const mockStream = {
+				async *[Symbol.asyncIterator]() {
+					yield { error: { message: "Rate limit exceeded", code: 429 } }
+				},
+			}
+
+			const mockCreate = vitest.fn().mockResolvedValue(mockStream)
+			;(OpenAI as any).prototype.chat = {
+				completions: { create: mockCreate },
+			} as any
+
+			const generator = handler.createMessage("test", [])
+			await expect(generator.next()).rejects.toThrow("OpenRouter rate limit exceeded")
+		})
 	})
 
 	describe("completePrompt", () => {
@@ -306,6 +342,25 @@ describe("OpenRouterHandler", () => {
 			} as any
 
 			await expect(handler.completePrompt("test prompt")).rejects.toThrow("OpenRouter API Error 500: API Error")
+		})
+
+		it("handles model not found errors in completePrompt", async () => {
+			const handler = new OpenRouterHandler(mockOptions)
+			const mockError = {
+				error: {
+					message: "Invalid model",
+					code: 404,
+				},
+			}
+
+			const mockCreate = vitest.fn().mockResolvedValue(mockError)
+			;(OpenAI as any).prototype.chat = {
+				completions: { create: mockCreate },
+			} as any
+
+			await expect(handler.completePrompt("test prompt")).rejects.toThrow(
+				`Model "${mockOptions.openRouterModelId}" is not available on OpenRouter`,
+			)
 		})
 
 		it("handles unexpected errors", async () => {
