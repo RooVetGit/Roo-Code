@@ -351,7 +351,6 @@
 		"triggerDescription": "Déclencher la commande {{name}}"
 	},
 	"queuedMessages": {
-		"title": "Messages en file d'attente :",
-		"removeMessage": "Supprimer le message"
+		"title": "Messages en file d'attente :"
 	}
 }

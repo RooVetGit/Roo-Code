@@ -351,7 +351,6 @@
 		"triggerDescription": "Kích hoạt lệnh {{name}}"
 	},
 	"queuedMessages": {
-		"title": "Tin nhắn trong hàng đợi:",
-		"removeMessage": "Xóa tin nhắn"
+		"title": "Tin nhắn trong hàng đợi:"
 	}
 }

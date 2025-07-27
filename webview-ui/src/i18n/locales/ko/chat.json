@@ -351,7 +351,6 @@
 		"triggerDescription": "{{name}} 명령 트리거"
 	},
 	"queuedMessages": {
-		"title": "대기열 메시지:",
-		"removeMessage": "메시지 제거"
+		"title": "대기열 메시지:"
 	}
 }
