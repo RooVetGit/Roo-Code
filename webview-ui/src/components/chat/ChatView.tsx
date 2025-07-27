@@ -158,6 +158,8 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 	const [selectedImages, setSelectedImages] = useState<string[]>([])
 	const [messageQueue, setMessageQueue] = useState<QueuedMessage[]>([])
 	const isProcessingQueueRef = useRef(false)
+	const retryCountRef = useRef<Map<string, number>>(new Map())
+	const MAX_RETRY_ATTEMPTS = 3
 
 	// we need to hold on to the ask because useEffect > lastMessage will always let us know when an ask comes in and handle it, but by the time handleMessage is called, the last message might not be the ask anymore (it could be a say that followed)
 	const [clineAsk, setClineAsk] = useState<ClineAsk | undefined>(undefined)
@@ -443,6 +445,11 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 		}
 		// Reset user response flag for new task
 		userRespondedRef.current = false
+
+		// Clear message queue when starting a new task
+		setMessageQueue([])
+		// Clear retry counts
+		retryCountRef.current.clear()
 	}, [task?.ts])
 
 	useEffect(() => {
@@ -616,36 +623,58 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 	)
 
 	useEffect(() => {
-		if (!sendingDisabled && messageQueue.length > 0 && !isProcessingQueueRef.current) {
-			isProcessingQueueRef.current = true
-
-			// Use setTimeout to ensure state updates are processed
-			setTimeout(() => {
-				// Re-check the queue inside the timeout to avoid race conditions
-				setMessageQueue((prev) => {
-					if (prev.length > 0) {
-						const [nextMessage, ...remaining] = prev
-						// Process the message asynchronously to avoid blocking
-						Promise.resolve()
-							.then(() => {
-								handleSendMessage(nextMessage.text, nextMessage.images, true)
-							})
-							.catch((error) => {
-								console.error("Failed to send queued message:", error)
-								// Re-add the message to the queue on error
-								setMessageQueue((current) => [nextMessage, ...current])
-							})
-							.finally(() => {
-								isProcessingQueueRef.current = false
-							})
-						return remaining
-					}
-					isProcessingQueueRef.current = false
-					return prev
-				})
-			}, 0)
+		// Early return if conditions aren't met
+		// Also don't process queue if there's an API error (clineAsk === "api_req_failed")
+		if (
+			sendingDisabled ||
+			messageQueue.length === 0 ||
+			isProcessingQueueRef.current ||
+			clineAsk === "api_req_failed"
+		) {
+			return
 		}
-	}, [sendingDisabled, messageQueue, handleSendMessage])
+
+		// Mark as processing immediately to prevent race conditions
+		isProcessingQueueRef.current = true
+
+		// Process the first message in the queue
+		const [nextMessage, ...remaining] = messageQueue
+
+		// Update queue immediately to prevent duplicate processing
+		setMessageQueue(remaining)
+
+		// Process the message
+		Promise.resolve()
+			.then(() => {
+				handleSendMessage(nextMessage.text, nextMessage.images, true)
+				// Clear retry count on success
+				retryCountRef.current.delete(nextMessage.id)
+			})
+			.catch((error) => {
+				console.error("Failed to send queued message:", error)
+
+				// Get current retry count
+				const retryCount = retryCountRef.current.get(nextMessage.id) || 0
+
+				// Only re-add if under retry limit
+				if (retryCount < MAX_RETRY_ATTEMPTS) {
+					retryCountRef.current.set(nextMessage.id, retryCount + 1)
+					// Re-add the message to the end of the queue
+					setMessageQueue((current) => [...current, nextMessage])
+				} else {
+					console.error(`Message ${nextMessage.id} failed after ${MAX_RETRY_ATTEMPTS} attempts, discarding`)
+					retryCountRef.current.delete(nextMessage.id)
+				}
+			})
+			.finally(() => {
+				isProcessingQueueRef.current = false
+			})
+
+		// Cleanup function to handle component unmount
+		return () => {
+			isProcessingQueueRef.current = false
+		}
+	}, [sendingDisabled, messageQueue, handleSendMessage, clineAsk])
 
 	const handleSetChatBoxMessage = useCallback(
 		(text: string, images: string[]) => {
@@ -661,6 +690,18 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 		},
 		[inputValue, selectedImages],
 	)
+
+	// Cleanup retry count map on unmount
+	useEffect(() => {
+		// Store refs in variables to avoid stale closure issues
+		const retryCountMap = retryCountRef.current
+		const isProcessingRef = isProcessingQueueRef
+
+		return () => {
+			retryCountMap.clear()
+			isProcessingRef.current = false
+		}
+	}, [])
 
 	const startNewTask = useCallback(() => vscode.postMessage({ type: "clearTask" }), [])
 
