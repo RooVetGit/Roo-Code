@@ -1,8 +1,9 @@
 import React from "react"
-import { VSCodeButton } from "@vscode/webview-ui-toolkit/react"
 import { useTranslation } from "react-i18next"
 import Thumbnails from "../common/Thumbnails"
 import { QueuedMessage } from "@roo-code/types"
+import { Mention } from "./Mention"
+import { Button } from "@src/components/ui"
 
 interface QueuedMessagesProps {
 	queue: QueuedMessage[]
@@ -17,32 +18,33 @@ const QueuedMessages: React.FC<QueuedMessagesProps> = ({ queue, onRemove }) => {
 	}
 
 	return (
-		<div className="p-2 border-t border-vscode-panel-border" data-testid="queued-messages">
-			<div className="text-vscode-descriptionForeground mb-2">{t("queuedMessages.title")}</div>
+		<div className="px-[15px] py-[10px] pr-[6px]" data-testid="queued-messages">
+			<div className="text-vscode-descriptionForeground text-md mb-2">{t("queuedMessages.title")}</div>
 			<div className="flex flex-col gap-2">
 				{queue.map((message, index) => (
-					<div key={index} className="flex items-center gap-2 p-2 rounded-md bg-vscode-input-background">
-						<div className="flex-grow">
-							<p className="text-vscode-input-foreground">{message.text}</p>
-							{message.images.length > 0 && (
-								<div className="mt-2">
-									<Thumbnails images={message.images} />
-								</div>
-							)}
+					<div
+						key={index}
+						className="bg-vscode-editor-background border rounded-xs p-1 overflow-hidden whitespace-pre-wrap">
+						<div className="flex justify-between">
+							<div className="flex-grow px-2 py-1 wrap-anywhere">
+								<Mention text={message.text} withShadow />
+							</div>
+							<div className="flex">
+								<Button
+									variant="ghost"
+									size="icon"
+									className="shrink-0"
+									onClick={(e) => {
+										e.stopPropagation()
+										onRemove(index)
+									}}>
+									<span className="codicon codicon-trash" />
+								</Button>
+							</div>
 						</div>
-						<VSCodeButton
-							appearance="icon"
-							aria-label={t("queuedMessages.removeMessage")}
-							onClick={() => onRemove(index)}
-							onKeyDown={(e: React.KeyboardEvent) => {
-								if (e.key === "Enter" || e.key === " ") {
-									e.preventDefault()
-									onRemove(index)
-								}
-							}}
-							tabIndex={0}>
-							<span className="codicon codicon-close"></span>
-						</VSCodeButton>
+						{message.images && message.images.length > 0 && (
+							<Thumbnails images={message.images} style={{ marginTop: "8px" }} />
+						)}
 					</div>
 				))}
 			</div>
