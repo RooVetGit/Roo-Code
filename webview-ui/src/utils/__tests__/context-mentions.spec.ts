@@ -350,8 +350,8 @@ describe("getContextMenuOptions", () => {
 
 	it("should include opened files when dynamic search results exist", () => {
 		const result = getContextMenuOptions(
-			"open",
-			"open",
+			"test",
+			"test",
 			mockT,
 			null,
 			mockQueryItems,
