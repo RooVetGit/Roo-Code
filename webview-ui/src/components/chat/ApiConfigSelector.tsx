@@ -6,7 +6,6 @@ import { IconButton } from "./IconButton"
 import { useAppTranslation } from "@/i18n/TranslationContext"
 import { vscode } from "@/utils/vscode"
 import { Fzf } from "fzf"
-import { Check, X, Pin, ChevronUp } from "lucide-react"
 import { Button } from "@/components/ui"
 
 interface ApiConfigSelectorProps {
@@ -41,7 +40,7 @@ export const ApiConfigSelector = ({
 	const searchableItems = useMemo(() => {
 		return listApiConfigMeta.map((config) => ({
 			original: config,
-			searchStr: [config.name, config.id].filter(Boolean).join(" "),
+			searchStr: config.name,
 		}))
 	}, [listApiConfigMeta])
 
@@ -101,8 +100,8 @@ export const ApiConfigSelector = ({
 					<span className="flex-1 truncate">{config.name}</span>
 					<div className="flex items-center gap-1">
 						{isCurrentConfig && (
-							<div className="size-5 p-1">
-								<Check className="size-3" />
+							<div className="size-5 p-1 flex items-center justify-center">
+								<span className="codicon codicon-check text-xs" />
 							</div>
 						)}
 						<StandardTooltip content={isPinned ? t("chat:unpin") : t("chat:pin")}>
@@ -118,11 +117,11 @@ export const ApiConfigSelector = ({
 										text: config.id,
 									})
 								}}
-								className={cn("size-5", {
-									"hidden group-hover:flex": !isPinned && !isCurrentConfig,
-									"bg-accent": isPinned,
+								className={cn("size-5 flex items-center justify-center", {
+									"opacity-0 group-hover:opacity-100": !isPinned && !isCurrentConfig,
+									"bg-accent opacity-100": isPinned,
 								})}>
-								<Pin className="size-3 p-0.5 opacity-50" />
+								<span className="codicon codicon-pin text-xs opacity-50" />
 							</Button>
 						</StandardTooltip>
 					</div>
@@ -145,7 +144,12 @@ export const ApiConfigSelector = ({
 					: "opacity-90 hover:opacity-100 hover:bg-[rgba(255,255,255,0.03)] hover:border-[rgba(255,255,255,0.15)] cursor-pointer",
 				triggerClassName,
 			)}>
-			<ChevronUp className="pointer-events-none opacity-80 flex-shrink-0 size-3" />
+			<span
+				className={cn(
+					"codicon codicon-chevron-up pointer-events-none opacity-80 flex-shrink-0 text-xs transition-transform duration-200",
+					open && "rotate-180",
+				)}
+			/>
 			<span className="truncate">{displayName}</span>
 		</PopoverTrigger>
 	)
@@ -172,8 +176,8 @@ export const ApiConfigSelector = ({
 							/>
 							{searchValue.length > 0 && (
 								<div className="absolute right-4 top-0 bottom-0 flex items-center justify-center">
-									<X
-										className="text-vscode-input-foreground opacity-50 hover:opacity-100 size-4 p-0.5 cursor-pointer"
+									<span
+										className="codicon codicon-close text-vscode-input-foreground opacity-50 hover:opacity-100 text-xs cursor-pointer"
 										onClick={() => setSearchValue("")}
 									/>
 								</div>
