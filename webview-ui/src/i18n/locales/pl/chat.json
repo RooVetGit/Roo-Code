@@ -351,6 +351,7 @@
 		"triggerDescription": "Uruchom polecenie {{name}}"
 	},
 	"queuedMessages": {
-		"title": "Wiadomości w kolejce:"
+		"title": "Wiadomości w kolejce:",
+		"clickToEdit": "Kliknij, aby edytować wiadomość"
 	}
 }

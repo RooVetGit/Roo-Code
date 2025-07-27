@@ -351,6 +351,7 @@
 		"triggerDescription": "Activeer de {{name}} opdracht"
 	},
 	"queuedMessages": {
-		"title": "Berichten in wachtrij:"
+		"title": "Berichten in wachtrij:",
+		"clickToEdit": "Klik om bericht te bewerken"
 	}
 }

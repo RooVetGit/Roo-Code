@@ -351,6 +351,7 @@
 		"triggerDescription": "Kích hoạt lệnh {{name}}"
 	},
 	"queuedMessages": {
-		"title": "Tin nhắn trong hàng đợi:"
+		"title": "Tin nhắn trong hàng đợi:",
+		"clickToEdit": "Nhấp để chỉnh sửa tin nhắn"
 	}
 }

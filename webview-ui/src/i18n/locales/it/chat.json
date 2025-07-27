@@ -351,6 +351,7 @@
 		"triggerDescription": "Attiva il comando {{name}}"
 	},
 	"queuedMessages": {
-		"title": "Messaggi in coda:"
+		"title": "Messaggi in coda:",
+		"clickToEdit": "Clicca per modificare il messaggio"
 	}
 }

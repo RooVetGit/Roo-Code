@@ -351,6 +351,7 @@
 		"triggerDescription": "{{name}}コマンドをトリガー"
 	},
 	"queuedMessages": {
-		"title": "キューメッセージ:"
+		"title": "キューメッセージ:",
+		"clickToEdit": "クリックしてメッセージを編集"
 	}
 }

@@ -351,6 +351,7 @@
 		"triggerDescription": "{{name}} कमांड को ट्रिगर करें"
 	},
 	"queuedMessages": {
-		"title": "कतार में संदेश:"
+		"title": "कतार में संदेश:",
+		"clickToEdit": "संदेश संपादित करने के लिए क्लिक करें"
 	}
 }

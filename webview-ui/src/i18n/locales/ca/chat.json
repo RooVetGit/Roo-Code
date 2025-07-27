@@ -351,6 +351,7 @@
 		"triggerDescription": "Activa la comanda {{name}}"
 	},
 	"queuedMessages": {
-		"title": "Missatges en cua:"
+		"title": "Missatges en cua:",
+		"clickToEdit": "Feu clic per editar el missatge"
 	}
 }
