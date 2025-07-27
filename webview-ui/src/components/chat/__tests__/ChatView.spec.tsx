@@ -72,7 +72,7 @@ const mockVersionIndicator = vi.mocked(
 	(await import("../../common/VersionIndicator")).default,
 )
 
-vi.mock("@src/components/modals/Announcement", () => ({
+vi.mock("../Announcement", () => ({
 	default: function MockAnnouncement({ hideAnnouncement }: { hideAnnouncement: () => void }) {
 		// eslint-disable-next-line @typescript-eslint/no-require-imports
 		const React = require("react")
@@ -363,7 +363,7 @@ describe("ChatView - Auto Approval Tests", () => {
 		})
 	})
 
-	it("auto-approves browser actions when alwaysAllowBrowser is enabled", () => {
+	it("auto-approves browser actions when alwaysAllowBrowser is enabled", async () => {
 		renderChatView()
 
 		// First hydrate state with initial task
@@ -403,14 +403,16 @@ describe("ChatView - Auto Approval Tests", () => {
 			],
 		})
 
-		// Should auto-approve browser action
-		expect(vscode.postMessage).toHaveBeenCalledWith({
-			type: "askResponse",
-			askResponse: "yesButtonClicked",
+		// Wait for auto-approval to happen
+		await waitFor(() => {
+			expect(vscode.postMessage).toHaveBeenCalledWith({
+				type: "askResponse",
+				askResponse: "yesButtonClicked",
+			})
 		})
 	})
 
-	it("auto-approves read-only tools when alwaysAllowReadOnly is enabled", () => {
+	it("auto-approves read-only tools when alwaysAllowReadOnly is enabled", async () => {
 		renderChatView()
 
 		// First hydrate state with initial task
@@ -450,21 +452,24 @@ describe("ChatView - Auto Approval Tests", () => {
 			],
 		})
 
-		// Should auto-approve read-only tool
-		expect(vscode.postMessage).toHaveBeenCalledWith({
-			type: "askResponse",
-			askResponse: "yesButtonClicked",
+		// Wait for auto-approval to happen
+		await waitFor(() => {
+			expect(vscode.postMessage).toHaveBeenCalledWith({
+				type: "askResponse",
+				askResponse: "yesButtonClicked",
+			})
 		})
 	})
 
 	describe("Write Tool Auto-Approval Tests", () => {
-		it("auto-approves write tools when alwaysAllowWrite is enabled and message is a tool request", () => {
+		it("auto-approves write tools when alwaysAllowWrite is enabled and message is a tool request", async () => {
 			renderChatView()
 
 			// First hydrate state with initial task
 			mockPostMessage({
 				autoApprovalEnabled: true,
 				alwaysAllowWrite: true,
+				writeDelayMs: 100, // Short delay for testing
 				clineMessages: [
 					{
 						type: "say",
@@ -482,6 +487,7 @@ describe("ChatView - Auto Approval Tests", () => {
 			mockPostMessage({
 				autoApprovalEnabled: true,
 				alwaysAllowWrite: true,
+				writeDelayMs: 100, // Short delay for testing
 				clineMessages: [
 					{
 						type: "say",
@@ -494,15 +500,21 @@ describe("ChatView - Auto Approval Tests", () => {
 						ask: "tool",
 						ts: Date.now(),
 						text: JSON.stringify({ tool: "editedExistingFile", path: "test.txt" }),
+						partial: false,
 					},
 				],
 			})
 
-			// Should auto-approve write tool
-			expect(vscode.postMessage).toHaveBeenCalledWith({
-				type: "askResponse",
-				askResponse: "yesButtonClicked",
-			})
+			// Wait for auto-approval to happen (with delay for write tools)
+			await waitFor(
+				() => {
+					expect(vscode.postMessage).toHaveBeenCalledWith({
+						type: "askResponse",
+						askResponse: "yesButtonClicked",
+					})
+				},
+				{ timeout: 1000 },
+			)
 		})
 
 		it("does not auto-approve write operations when alwaysAllowWrite is enabled but message is not a tool request", () => {
@@ -553,7 +565,7 @@ describe("ChatView - Auto Approval Tests", () => {
 		})
 	})
 
-	it("auto-approves allowed commands when alwaysAllowExecute is enabled", () => {
+	it("auto-approves allowed commands when alwaysAllowExecute is enabled", async () => {
 		renderChatView()
 
 		// First hydrate state with initial task
@@ -595,10 +607,12 @@ describe("ChatView - Auto Approval Tests", () => {
 			],
 		})
 
-		// Should auto-approve allowed command
-		expect(vscode.postMessage).toHaveBeenCalledWith({
-			type: "askResponse",
-			askResponse: "yesButtonClicked",
+		// Wait for auto-approval to happen
+		await waitFor(() => {
+			expect(vscode.postMessage).toHaveBeenCalledWith({
+				type: "askResponse",
+				askResponse: "yesButtonClicked",
+			})
 		})
 	})
 
@@ -652,7 +666,7 @@ describe("ChatView - Auto Approval Tests", () => {
 	})
 
 	describe("Command Chaining Tests", () => {
-		it("auto-approves chained commands when all parts are allowed", () => {
+		it("auto-approves chained commands when all parts are allowed", async () => {
 			renderChatView()
 
 			// First hydrate state with initial task
@@ -680,7 +694,7 @@ describe("ChatView - Auto Approval Tests", () => {
 				"npm test; npm run build",
 			]
 
-			chainedCommands.forEach((command) => {
+			for (const command of chainedCommands) {
 				vi.mocked(vscode.postMessage).mockClear()
 
 				mockPostMessage({
@@ -703,12 +717,14 @@ describe("ChatView - Auto Approval Tests", () => {
 					],
 				})
 
-				// Should auto-approve chained command
-				expect(vscode.postMessage).toHaveBeenCalledWith({
-					type: "askResponse",
-					askResponse: "yesButtonClicked",
+				// Wait for auto-approval to happen
+				await waitFor(() => {
+					expect(vscode.postMessage).toHaveBeenCalledWith({
+						type: "askResponse",
+						askResponse: "yesButtonClicked",
+					})
 				})
-			})
+			}
 		})
 
 		it("does not auto-approve chained commands when any part is disallowed", () => {
@@ -760,7 +776,7 @@ describe("ChatView - Auto Approval Tests", () => {
 			})
 		})
 
-		it("handles complex PowerShell command chains correctly", () => {
+		it("handles complex PowerShell command chains correctly", async () => {
 			renderChatView()
 
 			// First hydrate state with initial task
@@ -802,10 +818,12 @@ describe("ChatView - Auto Approval Tests", () => {
 				],
 			})
 
-			// Should auto-approve PowerShell piped command
-			expect(vscode.postMessage).toHaveBeenCalledWith({
-				type: "askResponse",
-				askResponse: "yesButtonClicked",
+			// Wait for auto-approval to happen
+			await waitFor(() => {
+				expect(vscode.postMessage).toHaveBeenCalledWith({
+					type: "askResponse",
+					askResponse: "yesButtonClicked",
+				})
 			})
 		})
 	})
@@ -858,13 +876,14 @@ describe("ChatView - Sound Playing Tests", () => {
 		expect(mockPlayFunction).not.toHaveBeenCalled()
 	})
 
-	it("plays notification sound for non-auto-approved browser actions", () => {
+	it("plays notification sound for non-auto-approved browser actions", async () => {
 		renderChatView()
 
 		// First hydrate state with initial task
 		mockPostMessage({
 			autoApprovalEnabled: true,
 			alwaysAllowBrowser: false, // Browser actions not auto-approved
+			soundEnabled: true, // Enable sound
 			clineMessages: [
 				{
 					type: "say",
@@ -882,6 +901,7 @@ describe("ChatView - Sound Playing Tests", () => {
 		mockPostMessage({
 			autoApprovalEnabled: true,
 			alwaysAllowBrowser: false,
+			soundEnabled: true, // Enable sound
 			clineMessages: [
 				{
 					type: "say",
@@ -894,19 +914,23 @@ describe("ChatView - Sound Playing Tests", () => {
 					ask: "browser_action_launch",
 					ts: Date.now(),
 					text: JSON.stringify({ action: "launch", url: "http://example.com" }),
+					partial: false, // Ensure it's not partial
 				},
 			],
 		})
 
-		// Should play notification sound
-		expect(mockPlayFunction).toHaveBeenCalled()
+		// Wait for sound to be played
+		await waitFor(() => {
+			expect(mockPlayFunction).toHaveBeenCalled()
+		})
 	})
 
-	it("plays celebration sound for completion results", () => {
+	it("plays celebration sound for completion results", async () => {
 		renderChatView()
 
 		// First hydrate state with initial task
 		mockPostMessage({
+			soundEnabled: true, // Enable sound
 			clineMessages: [
 				{
 					type: "say",
@@ -922,6 +946,7 @@ describe("ChatView - Sound Playing Tests", () => {
 
 		// Add completion result
 		mockPostMessage({
+			soundEnabled: true, // Enable sound
 			clineMessages: [
 				{
 					type: "say",
@@ -934,19 +959,23 @@ describe("ChatView - Sound Playing Tests", () => {
 					ask: "completion_result",
 					ts: Date.now(),
 					text: "Task completed successfully",
+					partial: false, // Ensure it's not partial
 				},
 			],
 		})
 
-		// Should play celebration sound
-		expect(mockPlayFunction).toHaveBeenCalled()
+		// Wait for sound to be played
+		await waitFor(() => {
+			expect(mockPlayFunction).toHaveBeenCalled()
+		})
 	})
 
-	it("plays progress_loop sound for api failures", () => {
+	it("plays progress_loop sound for api failures", async () => {
 		renderChatView()
 
 		// First hydrate state with initial task
 		mockPostMessage({
+			soundEnabled: true, // Enable sound
 			clineMessages: [
 				{
 					type: "say",
@@ -962,6 +991,7 @@ describe("ChatView - Sound Playing Tests", () => {
 
 		// Add API failure
 		mockPostMessage({
+			soundEnabled: true, // Enable sound
 			clineMessages: [
 				{
 					type: "say",
@@ -974,12 +1004,15 @@ describe("ChatView - Sound Playing Tests", () => {
 					ask: "api_req_failed",
 					ts: Date.now(),
 					text: "API request failed",
+					partial: false, // Ensure it's not partial
 				},
 			],
 		})
 
-		// Should play progress_loop sound
-		expect(mockPlayFunction).toHaveBeenCalled()
+		// Wait for sound to be played
+		await waitFor(() => {
+			expect(mockPlayFunction).toHaveBeenCalled()
+		})
 	})
 
 	it("does not play sound when resuming a task from history", () => {
@@ -1119,7 +1152,7 @@ describe("ChatView - Version Indicator Tests", () => {
 		expect(getByTestId("version-indicator")).toBeInTheDocument()
 	})
 
-	it("opens announcement modal when version indicator is clicked", () => {
+	it("opens announcement modal when version indicator is clicked", async () => {
 		// Mock VersionIndicator to return a button with onClick
 		mockVersionIndicator.mockImplementation(({ onClick }: { onClick?: () => void }) =>
 			React.createElement("button", {
@@ -1136,14 +1169,21 @@ describe("ChatView - Version Indicator Tests", () => {
 			clineMessages: [],
 		})
 
+		// Wait for component to render
+		await waitFor(() => {
+			expect(getByTestId("version-indicator")).toBeInTheDocument()
+		})
+
 		// Click version indicator
 		const versionIndicator = getByTestId("version-indicator")
 		act(() => {
 			versionIndicator.click()
 		})
 
-		// Should open announcement modal
-		expect(queryByTestId("announcement-modal")).toBeInTheDocument()
+		// Wait for announcement modal to appear
+		await waitFor(() => {
+			expect(queryByTestId("announcement-modal")).toBeInTheDocument()
+		})
 	})
 
 	it("version indicator has correct styling classes", () => {
@@ -1273,7 +1313,7 @@ describe("ChatView - RooCloudCTA Display Tests", () => {
 		expect(queryByTestId("roo-cloud-cta")).not.toBeInTheDocument()
 	})
 
-	it("shows RooCloudCTA when user is not authenticated and has run 4 or more tasks", () => {
+	it("shows RooCloudCTA when user is not authenticated and has run 4 or more tasks", async () => {
 		const { getByTestId } = renderChatView()
 
 		// Hydrate state with user not authenticated and 4 tasks
@@ -1288,11 +1328,13 @@ describe("ChatView - RooCloudCTA Display Tests", () => {
 			clineMessages: [], // No active task
 		})
 
-		// Should show RooCloudCTA
-		expect(getByTestId("roo-cloud-cta")).toBeInTheDocument()
+		// Wait for component to render and show RooCloudCTA
+		await waitFor(() => {
+			expect(getByTestId("roo-cloud-cta")).toBeInTheDocument()
+		})
 	})
 
-	it("shows RooCloudCTA when user is not authenticated and has run 5 tasks", () => {
+	it("shows RooCloudCTA when user is not authenticated and has run 5 tasks", async () => {
 		const { getByTestId } = renderChatView()
 
 		// Hydrate state with user not authenticated and 5 tasks
@@ -1308,11 +1350,13 @@ describe("ChatView - RooCloudCTA Display Tests", () => {
 			clineMessages: [], // No active task
 		})
 
-		// Should show RooCloudCTA
-		expect(getByTestId("roo-cloud-cta")).toBeInTheDocument()
+		// Wait for component to render and show RooCloudCTA
+		await waitFor(() => {
+			expect(getByTestId("roo-cloud-cta")).toBeInTheDocument()
+		})
 	})
 
-	it("does not show RooCloudCTA when there is an active task (regardless of auth status)", () => {
+	it("does not show RooCloudCTA when there is an active task (regardless of auth status)", async () => {
 		const { queryByTestId } = renderChatView()
 
 		// Hydrate state with active task
@@ -1334,12 +1378,15 @@ describe("ChatView - RooCloudCTA Display Tests", () => {
 			],
 		})
 
-		// Should not show RooCloudCTA during active task
-		expect(queryByTestId("roo-cloud-cta")).not.toBeInTheDocument()
-		// Should not show RooTips either since the entire welcome screen is hidden during active tasks
-		expect(queryByTestId("roo-tips")).not.toBeInTheDocument()
-		// Should not show RooHero either since the entire welcome screen is hidden during active tasks
-		expect(queryByTestId("roo-hero")).not.toBeInTheDocument()
+		// Wait for component to render with active task
+		await waitFor(() => {
+			// Should not show RooCloudCTA during active task
+			expect(queryByTestId("roo-cloud-cta")).not.toBeInTheDocument()
+			// Should not show RooTips either since the entire welcome screen is hidden during active tasks
+			expect(queryByTestId("roo-tips")).not.toBeInTheDocument()
+			// Should not show RooHero either since the entire welcome screen is hidden during active tasks
+			expect(queryByTestId("roo-hero")).not.toBeInTheDocument()
+		})
 	})
 
 	it("shows RooTips when user is authenticated (instead of RooCloudCTA)", () => {
@@ -1392,27 +1439,31 @@ describe("ChatView - Message Queueing Tests", () => {
 	it("shows sending is disabled when task is active", async () => {
 		const { getByTestId } = renderChatView()
 
-		// Hydrate state with active task
+		// Hydrate state with active task that should disable sending
 		mockPostMessage({
 			clineMessages: [
 				{
 					type: "say",
 					say: "task",
-					ts: Date.now(),
+					ts: Date.now() - 1000,
 					text: "Task in progress",
+				},
+				{
+					type: "ask",
+					ask: "tool",
+					ts: Date.now(),
+					text: JSON.stringify({ tool: "readFile", path: "test.txt" }),
+					partial: true, // Partial messages disable sending
 				},
 			],
 		})
 
-		// Wait for state to be updated
+		// Wait for state to be updated and check that sending is disabled
 		await waitFor(() => {
-			expect(getByTestId("chat-textarea")).toBeInTheDocument()
+			const chatTextArea = getByTestId("chat-textarea")
+			const input = chatTextArea.querySelector("input")!
+			expect(input.getAttribute("data-sending-disabled")).toBe("true")
 		})
-
-		// Check that sending is disabled
-		const chatTextArea = getByTestId("chat-textarea")
-		const input = chatTextArea.querySelector("input")!
-		expect(input.getAttribute("data-sending-disabled")).toBe("true")
 	})
 
 	it("shows sending is enabled when no task is active", async () => {
