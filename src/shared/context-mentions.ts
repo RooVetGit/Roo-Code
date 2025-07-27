@@ -58,7 +58,7 @@ export const mentionRegex =
 export const mentionRegexGlobal = new RegExp(mentionRegex.source, "g")
 
 // Regex to match command mentions like /command-name (only at start of message)
-export const commandRegexGlobal = /^\/([a-zA-Z0-9_\.-]+)(?=\s|$)/g
+export const commandRegexGlobal = /\/([a-zA-Z0-9_\.-]+)(?=\s|$)/g
 
 export interface MentionSuggestion {
 	type: "file" | "folder" | "git" | "problems"

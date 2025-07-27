@@ -27,11 +27,58 @@ export async function getCommands(cwd: string): Promise<Command[]> {
 }
 
 /**
- * Get a specific command by name
+ * Get a specific command by name (optimized to avoid scanning all commands)
  */
 export async function getCommand(cwd: string, name: string): Promise<Command | undefined> {
-	const commands = await getCommands(cwd)
-	return commands.find((cmd) => cmd.name === name)
+	// Try to find the command directly without scanning all commands
+	const projectDir = path.join(getProjectRooDirectoryForCwd(cwd), "commands")
+	const globalDir = path.join(getGlobalRooDirectory(), "commands")
+
+	// Check project directory first (project commands override global ones)
+	const projectCommand = await tryLoadCommand(projectDir, name, "project")
+	if (projectCommand) {
+		return projectCommand
+	}
+
+	// Check global directory if not found in project
+	const globalCommand = await tryLoadCommand(globalDir, name, "global")
+	return globalCommand
+}
+
+/**
+ * Try to load a specific command from a directory
+ */
+async function tryLoadCommand(
+	dirPath: string,
+	name: string,
+	source: "global" | "project",
+): Promise<Command | undefined> {
+	try {
+		const stats = await fs.stat(dirPath)
+		if (!stats.isDirectory()) {
+			return undefined
+		}
+
+		// Try to find the command file directly
+		const commandFileName = `${name}.md`
+		const filePath = path.join(dirPath, commandFileName)
+
+		try {
+			const content = await fs.readFile(filePath, "utf-8")
+			return {
+				name,
+				content: content.trim(),
+				source,
+				filePath,
+			}
+		} catch (error) {
+			// File doesn't exist or can't be read
+			return undefined
+		}
+	} catch (error) {
+		// Directory doesn't exist or can't be read
+		return undefined
+	}
 }
 
 /**
