@@ -80,7 +80,8 @@
 		},
 		"gemini": {
 			"generate_stream": "Kesalahan aliran konteks pembuatan Gemini: {{error}}",
-			"generate_complete_prompt": "Kesalahan penyelesaian Gemini: {{error}}"
+			"generate_complete_prompt": "Kesalahan penyelesaian Gemini: {{error}}",
+			"sources": "Sumber:"
 		}
 	},
 	"warnings": {

@@ -80,7 +80,8 @@
 		},
 		"gemini": {
 			"generate_stream": "जेमिनी जनरेट कॉन्टेक्स्ट स्ट्रीम त्रुटि: {{error}}",
-			"generate_complete_prompt": "जेमिनी समापन त्रुटि: {{error}}"
+			"generate_complete_prompt": "जेमिनी समापन त्रुटि: {{error}}",
+			"sources": "स्रोत:"
 		}
 	},
 	"warnings": {

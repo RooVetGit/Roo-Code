@@ -80,7 +80,8 @@
 		},
 		"gemini": {
 			"generate_stream": "Gemini oluşturma bağlam akışı hatası: {{error}}",
-			"generate_complete_prompt": "Gemini tamamlama hatası: {{error}}"
+			"generate_complete_prompt": "Gemini tamamlama hatası: {{error}}",
+			"sources": "Kaynaklar:"
 		}
 	},
 	"warnings": {

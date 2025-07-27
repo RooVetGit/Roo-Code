@@ -80,7 +80,8 @@
 		},
 		"gemini": {
 			"generate_stream": "Gemini 생성 컨텍스트 스트림 오류: {{error}}",
-			"generate_complete_prompt": "Gemini 완료 오류: {{error}}"
+			"generate_complete_prompt": "Gemini 완료 오류: {{error}}",
+			"sources": "출처:"
 		}
 	},
 	"warnings": {

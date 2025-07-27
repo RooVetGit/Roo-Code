@@ -80,7 +80,8 @@
 		},
 		"gemini": {
 			"generate_stream": "Lỗi luồng ngữ cảnh tạo Gemini: {{error}}",
-			"generate_complete_prompt": "Lỗi hoàn thành Gemini: {{error}}"
+			"generate_complete_prompt": "Lỗi hoàn thành Gemini: {{error}}",
+			"sources": "Nguồn:"
 		}
 	},
 	"warnings": {

@@ -80,7 +80,8 @@
 		},
 		"gemini": {
 			"generate_stream": "Ошибка потока контекста генерации Gemini: {{error}}",
-			"generate_complete_prompt": "Ошибка завершения Gemini: {{error}}"
+			"generate_complete_prompt": "Ошибка завершения Gemini: {{error}}",
+			"sources": "Источники:"
 		}
 	},
 	"warnings": {

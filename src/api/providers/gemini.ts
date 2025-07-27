@@ -134,7 +134,7 @@ export class GeminiHandler extends BaseProvider implements SingleCompletionHandl
 			if (pendingGroundingMetadata) {
 				const citations = this.extractCitationsOnly(pendingGroundingMetadata)
 				if (citations) {
-					yield { type: "text", text: `\n\nSources: ${citations}` }
+					yield { type: "text", text: `\n\n${t("common:errors.gemini.sources")} ${citations}` }
 				}
 			}
 
@@ -230,7 +230,7 @@ export class GeminiHandler extends BaseProvider implements SingleCompletionHandl
 			if (candidate?.groundingMetadata) {
 				const citations = this.extractCitationsOnly(candidate.groundingMetadata)
 				if (citations) {
-					text += `\n\nSources: ${citations}`
+					text += `\n\n${t("common:errors.gemini.sources")} ${citations}`
 				}
 			}
 

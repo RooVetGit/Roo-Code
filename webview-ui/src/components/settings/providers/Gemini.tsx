@@ -12,7 +12,6 @@ import { inputEventTransform } from "../transforms"
 type GeminiProps = {
 	apiConfiguration: ProviderSettings
 	setApiConfigurationField: (field: keyof ProviderSettings, value: ProviderSettings[keyof ProviderSettings]) => void
-	currentModelId?: string
 }
 
 export const Gemini = ({ apiConfiguration, setApiConfigurationField }: GeminiProps) => {

@@ -80,7 +80,8 @@
 		},
 		"gemini": {
 			"generate_stream": "Gemini 生成コンテキスト ストリーム エラー: {{error}}",
-			"generate_complete_prompt": "Gemini 完了エラー: {{error}}"
+			"generate_complete_prompt": "Gemini 完了エラー: {{error}}",
+			"sources": "ソース:"
 		}
 	},
 	"warnings": {

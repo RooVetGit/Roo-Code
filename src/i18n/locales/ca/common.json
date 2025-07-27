@@ -83,7 +83,8 @@
 		},
 		"gemini": {
 			"generate_stream": "Error del flux de context de generació de Gemini: {{error}}",
-			"generate_complete_prompt": "Error de finalització de Gemini: {{error}}"
+			"generate_complete_prompt": "Error de finalització de Gemini: {{error}}",
+			"sources": "Fonts:"
 		},
 		"mode_import_failed": "Ha fallat la importació del mode: {{error}}"
 	},

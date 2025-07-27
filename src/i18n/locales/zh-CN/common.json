@@ -85,7 +85,8 @@
 		},
 		"gemini": {
 			"generate_stream": "Gemini 生成上下文流错误：{{error}}",
-			"generate_complete_prompt": "Gemini 完成错误：{{error}}"
+			"generate_complete_prompt": "Gemini 完成错误：{{error}}",
+			"sources": "来源："
 		}
 	},
 	"warnings": {

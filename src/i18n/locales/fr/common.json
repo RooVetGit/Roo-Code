@@ -80,7 +80,8 @@
 		},
 		"gemini": {
 			"generate_stream": "Erreur du flux de contexte de génération Gemini : {{error}}",
-			"generate_complete_prompt": "Erreur d'achèvement de Gemini : {{error}}"
+			"generate_complete_prompt": "Erreur d'achèvement de Gemini : {{error}}",
+			"sources": "Sources :"
 		}
 	},
 	"warnings": {

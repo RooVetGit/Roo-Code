@@ -80,7 +80,8 @@
 		},
 		"gemini": {
 			"generate_stream": "Fout bij het genereren van contextstream door Gemini: {{error}}",
-			"generate_complete_prompt": "Fout bij het voltooien door Gemini: {{error}}"
+			"generate_complete_prompt": "Fout bij het voltooien door Gemini: {{error}}",
+			"sources": "Bronnen:"
 		}
 	},
 	"warnings": {
