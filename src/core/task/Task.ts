@@ -281,17 +281,20 @@ export class Task extends EventEmitter<ClineEvents> {
 
 		// If no historyItem, get the current mode from provider
 		if (!historyItem && provider.getState) {
-			provider
-				.getState()
-				.then((state) => {
-					if (state?.mode) {
-						this.taskMode = state.mode
-					}
-				})
-				.catch((error) => {
-					// If there's an error getting state, keep the default mode
-					console.error("Failed to get mode from provider state:", error)
-				})
+			const statePromise = provider.getState()
+			// Check if getState() returns a Promise
+			if (statePromise && typeof statePromise.then === "function") {
+				statePromise
+					.then((state) => {
+						if (state?.mode) {
+							this.taskMode = state.mode
+						}
+					})
+					.catch((error) => {
+						// If there's an error getting state, keep the default mode
+						console.error("Failed to get mode from provider state:", error)
+					})
+			}
 		}
 
 		// Only set up diff strategy if diff is enabled
