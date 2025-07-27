@@ -349,5 +349,9 @@
 	},
 	"command": {
 		"triggerDescription": "Activa la comanda {{name}}"
+	},
+	"queuedMessages": {
+		"title": "Missatges en cua:",
+		"removeMessage": "Eliminar missatge"
 	}
 }

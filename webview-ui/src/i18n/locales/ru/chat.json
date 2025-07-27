@@ -349,5 +349,9 @@
 	},
 	"command": {
 		"triggerDescription": "Запустить команду {{name}}"
+	},
+	"queuedMessages": {
+		"title": "Сообщения в очереди:",
+		"removeMessage": "Удалить сообщение"
 	}
 }

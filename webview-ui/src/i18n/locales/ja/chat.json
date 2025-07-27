@@ -349,5 +349,9 @@
 	},
 	"command": {
 		"triggerDescription": "{{name}}コマンドをトリガー"
+	},
+	"queuedMessages": {
+		"title": "キューメッセージ:",
+		"removeMessage": "メッセージを削除"
 	}
 }

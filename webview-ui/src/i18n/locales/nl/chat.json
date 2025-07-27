@@ -349,5 +349,9 @@
 	},
 	"command": {
 		"triggerDescription": "Activeer de {{name}} opdracht"
+	},
+	"queuedMessages": {
+		"title": "Berichten in wachtrij:",
+		"removeMessage": "Bericht verwijderen"
 	}
 }

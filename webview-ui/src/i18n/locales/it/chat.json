@@ -349,5 +349,9 @@
 	},
 	"command": {
 		"triggerDescription": "Attiva il comando {{name}}"
+	},
+	"queuedMessages": {
+		"title": "Messaggi in coda:",
+		"removeMessage": "Rimuovi messaggio"
 	}
 }

@@ -349,5 +349,9 @@
 	},
 	"command": {
 		"triggerDescription": "Uruchom polecenie {{name}}"
+	},
+	"queuedMessages": {
+		"title": "Wiadomości w kolejce:",
+		"removeMessage": "Usuń wiadomość"
 	}
 }

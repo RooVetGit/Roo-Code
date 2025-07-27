@@ -349,5 +349,9 @@
 	},
 	"editMessage": {
 		"placeholder": "Bearbeite deine Nachricht..."
+	},
+	"queuedMessages": {
+		"title": "Warteschlange Nachrichten:",
+		"removeMessage": "Nachricht entfernen"
 	}
 }

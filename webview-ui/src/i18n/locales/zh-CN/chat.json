@@ -349,5 +349,9 @@
 	},
 	"editMessage": {
 		"placeholder": "编辑消息..."
+	},
+	"queuedMessages": {
+		"title": "队列消息:",
+		"removeMessage": "删除消息"
 	}
 }

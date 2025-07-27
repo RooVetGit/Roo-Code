@@ -349,5 +349,9 @@
 	},
 	"command": {
 		"triggerDescription": "觸發 {{name}} 命令"
+	},
+	"queuedMessages": {
+		"title": "佇列訊息:",
+		"removeMessage": "移除訊息"
 	}
 }

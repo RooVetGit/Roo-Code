@@ -355,5 +355,9 @@
 	},
 	"command": {
 		"triggerDescription": "Jalankan perintah {{name}}"
+	},
+	"queuedMessages": {
+		"title": "Pesan Antrian:",
+		"removeMessage": "Hapus pesan"
 	}
 }

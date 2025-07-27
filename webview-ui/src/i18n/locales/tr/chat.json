@@ -349,5 +349,9 @@
 	},
 	"command": {
 		"triggerDescription": "{{name}} komutunu tetikle"
+	},
+	"queuedMessages": {
+		"title": "Sıradaki Mesajlar:",
+		"removeMessage": "Mesajı kaldır"
 	}
 }

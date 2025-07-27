@@ -349,5 +349,9 @@
 	},
 	"command": {
 		"triggerDescription": "Acionar o comando {{name}}"
+	},
+	"queuedMessages": {
+		"title": "Mensagens na fila:",
+		"removeMessage": "Remover mensagem"
 	}
 }

@@ -197,10 +197,8 @@ vi.mock("../ChatTextArea", () => {
 						ref={mockInputRef}
 						type="text"
 						onChange={(e) => {
-							// Only call onSend if not disabled
-							if (!props.sendingDisabled) {
-								props.onSend(e.target.value)
-							}
+							// With message queueing, onSend is always called (it handles queueing internally)
+							props.onSend(e.target.value)
 						}}
 						data-sending-disabled={props.sendingDisabled}
 					/>
