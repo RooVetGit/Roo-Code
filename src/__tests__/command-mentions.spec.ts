@@ -35,6 +35,7 @@ describe("Command Mentions", () => {
 			undefined, // fileContextTracker
 			undefined, // rooIgnoreController
 			true, // showRooIgnoredFiles
+			false, // enableSvnContext
 			true, // includeDiagnosticMessages
 			50, // maxDiagnosticMessages
 			undefined, // maxReadFileLine
