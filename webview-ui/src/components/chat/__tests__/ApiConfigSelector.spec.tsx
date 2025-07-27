@@ -75,8 +75,8 @@ describe("ApiConfigSelector", () => {
 		render(<ApiConfigSelector {...defaultProps} />)
 
 		const trigger = screen.getByTestId("dropdown-trigger")
-		// Check for the icon by looking for the SVG element
-		const icon = trigger.querySelector("svg")
+		// Check for the icon by looking for the codicon span element
+		const icon = trigger.querySelector(".codicon-chevron-up")
 		expect(icon).toBeInTheDocument()
 	})
 
@@ -263,7 +263,7 @@ describe("ApiConfigSelector", () => {
 		// Find the one that's in the dropdown content (not the trigger)
 		const configInDropdown = config1Elements.find((el) => el.closest('[data-testid="popover-content"]'))
 		const selectedConfigRow = configInDropdown?.closest("div")
-		const checkIcon = selectedConfigRow?.querySelector("svg")
+		const checkIcon = selectedConfigRow?.querySelector(".codicon-check")
 		expect(checkIcon).toBeInTheDocument()
 	})
 
