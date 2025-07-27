@@ -1,7 +1,6 @@
 import { createHash } from "crypto"
 import * as path from "path"
-import { Connection, Table, VectorQuery } from "@lancedb/lancedb"
-import { getWorkspacePath } from "../../../utils/path"
+import { Connection, Table } from "@lancedb/lancedb"
 import { IVectorStore } from "../interfaces/vector-store"
 import { Payload, VectorStoreSearchResult } from "../interfaces"
 import { DEFAULT_MAX_SEARCH_RESULTS, DEFAULT_SEARCH_MIN_SCORE } from "../constants"
@@ -15,6 +14,7 @@ const fs = require("fs")
 export class LocalVectorStore implements IVectorStore {
 	private readonly vectorSize: number
 	private readonly dbPath: string
+	private readonly workspacePath: string
 	private db: Connection | null = null
 	private table: Table | null = null
 	private readonly vectorTableName = "vector"
@@ -29,6 +29,7 @@ export class LocalVectorStore implements IVectorStore {
 		extensionContext: vscode.ExtensionContext,
 	) {
 		this.vectorSize = vectorSize
+		this.workspacePath = workspacePath
 		const basename = path.basename(workspacePath)
 		// Generate database directory name from workspace path
 		const hash = createHash("sha256").update(workspacePath).digest("hex")
@@ -325,7 +326,7 @@ export class LocalVectorStore implements IVectorStore {
 
 		try {
 			const table = await this.getTable()
-			const workspaceRoot = getWorkspacePath()
+			const workspaceRoot = this.workspacePath
 			const normalizedPaths = filePaths.map((fp) =>
 				path.normalize(path.resolve(workspaceRoot, fp)).substring(workspaceRoot.length + 1),
 			)
