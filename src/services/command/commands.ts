@@ -86,11 +86,13 @@ async function scanCommandDirectory(
 }
 
 /**
- * Extract command name from filename (strip all extensions)
+ * Extract command name from filename (strip .md extension only)
  */
 export function getCommandNameFromFile(filename: string): string {
-	const dotIndex = filename.indexOf(".")
-	return dotIndex === -1 ? filename : filename.substring(0, dotIndex)
+	if (filename.toLowerCase().endsWith(".md")) {
+		return filename.slice(0, -3)
+	}
+	return filename
 }
 
 /**

@@ -11,11 +11,13 @@ describe("Command Utilities", () => {
 	const testCwd = "/test/project"
 
 	describe("getCommandNameFromFile", () => {
-		it("should strip all extensions from filename", () => {
+		it("should strip .md extension only", () => {
 			expect(getCommandNameFromFile("my-command.md")).toBe("my-command")
-			expect(getCommandNameFromFile("test.txt")).toBe("test")
+			expect(getCommandNameFromFile("test.txt")).toBe("test.txt")
 			expect(getCommandNameFromFile("no-extension")).toBe("no-extension")
-			expect(getCommandNameFromFile("multiple.dots.file.md")).toBe("multiple")
+			expect(getCommandNameFromFile("multiple.dots.file.md")).toBe("multiple.dots.file")
+			expect(getCommandNameFromFile("api.config.md")).toBe("api.config")
+			expect(getCommandNameFromFile("deploy_prod.md")).toBe("deploy_prod")
 		})
 	})
 
@@ -64,14 +66,14 @@ describe("Command Utilities", () => {
 			expect(getCommandNameFromFile("command")).toBe("command")
 			expect(getCommandNameFromFile("my-command")).toBe("my-command")
 
-			// Files with multiple dots - only strip first extension
-			expect(getCommandNameFromFile("my.complex.command.md")).toBe("my")
-			expect(getCommandNameFromFile("v1.2.3.txt")).toBe("v1")
+			// Files with multiple dots - only strip .md extension
+			expect(getCommandNameFromFile("my.complex.command.md")).toBe("my.complex.command")
+			expect(getCommandNameFromFile("v1.2.3.txt")).toBe("v1.2.3.txt")
 
 			// Edge cases
-			expect(getCommandNameFromFile(".")).toBe("")
-			expect(getCommandNameFromFile("..")).toBe("")
-			expect(getCommandNameFromFile(".hidden.md")).toBe("")
+			expect(getCommandNameFromFile(".")).toBe(".")
+			expect(getCommandNameFromFile("..")).toBe("..")
+			expect(getCommandNameFromFile(".hidden.md")).toBe(".hidden")
 		})
 	})
 
