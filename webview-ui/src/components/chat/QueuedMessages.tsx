@@ -23,7 +23,7 @@ const QueuedMessages: React.FC<QueuedMessagesProps> = ({ queue, onRemove }) => {
 			<div className="flex flex-col gap-2">
 				{queue.map((message, index) => (
 					<div
-						key={index}
+						key={message.id}
 						className="bg-vscode-editor-background border rounded-xs p-1 overflow-hidden whitespace-pre-wrap">
 						<div className="flex justify-between">
 							<div className="flex-grow px-2 py-1 wrap-anywhere">

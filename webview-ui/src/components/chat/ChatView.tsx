@@ -550,49 +550,66 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 	 */
 	const handleSendMessage = useCallback(
 		(text: string, images: string[], fromQueue = false) => {
-			text = text.trim()
+			try {
+				text = text.trim()
 
-			if (text || images.length > 0) {
-				if (sendingDisabled && !fromQueue) {
-					setMessageQueue((prev) => [...prev, { id: Date.now().toString(), text, images }])
-					setInputValue("")
-					setSelectedImages([])
-					return
-				}
-				// Mark that user has responded - this prevents any pending auto-approvals
-				userRespondedRef.current = true
+				if (text || images.length > 0) {
+					if (sendingDisabled && !fromQueue) {
+						// Generate a more unique ID using timestamp + random component
+						const messageId = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+						setMessageQueue((prev) => [...prev, { id: messageId, text, images }])
+						setInputValue("")
+						setSelectedImages([])
+						return
+					}
+					// Mark that user has responded - this prevents any pending auto-approvals
+					userRespondedRef.current = true
 
-				if (messagesRef.current.length === 0) {
-					vscode.postMessage({ type: "newTask", text, images })
-				} else if (clineAskRef.current) {
-					if (clineAskRef.current === "followup") {
-						markFollowUpAsAnswered()
+					if (messagesRef.current.length === 0) {
+						vscode.postMessage({ type: "newTask", text, images })
+					} else if (clineAskRef.current) {
+						if (clineAskRef.current === "followup") {
+							markFollowUpAsAnswered()
+						}
+
+						// Use clineAskRef.current
+						switch (
+							clineAskRef.current // Use clineAskRef.current
+						) {
+							case "followup":
+							case "tool":
+							case "browser_action_launch":
+							case "command": // User can provide feedback to a tool or command use.
+							case "command_output": // User can send input to command stdin.
+							case "use_mcp_server":
+							case "completion_result": // If this happens then the user has feedback for the completion result.
+							case "resume_task":
+							case "resume_completed_task":
+							case "mistake_limit_reached":
+								vscode.postMessage({
+									type: "askResponse",
+									askResponse: "messageResponse",
+									text,
+									images,
+								})
+								break
+							// There is no other case that a textfield should be enabled.
+						}
+					} else {
+						// This is a new message in an ongoing task.
+						vscode.postMessage({ type: "askResponse", askResponse: "messageResponse", text, images })
 					}
 
-					// Use clineAskRef.current
-					switch (
-						clineAskRef.current // Use clineAskRef.current
-					) {
-						case "followup":
-						case "tool":
-						case "browser_action_launch":
-						case "command": // User can provide feedback to a tool or command use.
-						case "command_output": // User can send input to command stdin.
-						case "use_mcp_server":
-						case "completion_result": // If this happens then the user has feedback for the completion result.
-						case "resume_task":
-						case "resume_completed_task":
-						case "mistake_limit_reached":
-							vscode.postMessage({ type: "askResponse", askResponse: "messageResponse", text, images })
-							break
-						// There is no other case that a textfield should be enabled.
-					}
-				} else {
-					// This is a new message in an ongoing task.
-					vscode.postMessage({ type: "askResponse", askResponse: "messageResponse", text, images })
+					handleChatReset()
 				}
-
-				handleChatReset()
+			} catch (error) {
+				console.error("Error in handleSendMessage:", error)
+				// If this was a queued message, we should handle it differently
+				if (fromQueue) {
+					throw error // Re-throw to be caught by the queue processor
+				}
+				// For direct sends, we could show an error to the user
+				// but for now we'll just log it
 			}
 		},
 		[handleChatReset, markFollowUpAsAnswered, sendingDisabled], // messagesRef and clineAskRef are stable
@@ -601,13 +618,31 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 	useEffect(() => {
 		if (!sendingDisabled && messageQueue.length > 0 && !isProcessingQueueRef.current) {
 			isProcessingQueueRef.current = true
-			const nextMessage = messageQueue[0]
 
 			// Use setTimeout to ensure state updates are processed
 			setTimeout(() => {
-				handleSendMessage(nextMessage.text, nextMessage.images, true)
-				setMessageQueue((prev) => prev.slice(1))
-				isProcessingQueueRef.current = false
+				// Re-check the queue inside the timeout to avoid race conditions
+				setMessageQueue((prev) => {
+					if (prev.length > 0) {
+						const [nextMessage, ...remaining] = prev
+						// Process the message asynchronously to avoid blocking
+						Promise.resolve()
+							.then(() => {
+								handleSendMessage(nextMessage.text, nextMessage.images, true)
+							})
+							.catch((error) => {
+								console.error("Failed to send queued message:", error)
+								// Re-add the message to the queue on error
+								setMessageQueue((current) => [nextMessage, ...current])
+							})
+							.finally(() => {
+								isProcessingQueueRef.current = false
+							})
+						return remaining
+					}
+					isProcessingQueueRef.current = false
+					return prev
+				})
 			}, 0)
 		}
 	}, [sendingDisabled, messageQueue, handleSendMessage])
