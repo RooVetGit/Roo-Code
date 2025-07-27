@@ -280,7 +280,7 @@ export class Task extends EventEmitter<ClineEvents> {
 		}
 
 		// If no historyItem, get the current mode from provider
-		if (!historyItem) {
+		if (!historyItem && provider.getState) {
 			provider
 				.getState()
 				.then((state) => {
