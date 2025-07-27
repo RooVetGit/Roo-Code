@@ -26,6 +26,37 @@ vi.mock("fs/promises", async (importOriginal) => {
 	}
 })
 
+// Mock taskMetadata
+vi.mock("../../task-persistence", () => ({
+	readApiMessages: vi.fn().mockResolvedValue([]),
+	saveApiMessages: vi.fn().mockResolvedValue(undefined),
+	readTaskMessages: vi.fn().mockResolvedValue([]),
+	saveTaskMessages: vi.fn().mockResolvedValue(undefined),
+	taskMetadata: vi.fn().mockImplementation(async (options) => ({
+		historyItem: {
+			id: options.taskId,
+			ts: Date.now(),
+			task: "Test task",
+			tokensIn: 0,
+			tokensOut: 0,
+			cacheWrites: 0,
+			cacheReads: 0,
+			totalCost: 0,
+			size: 0,
+			workspace: options.workspace,
+			mode: options.mode,
+		},
+		tokenUsage: {
+			totalTokensIn: 0,
+			totalTokensOut: 0,
+			totalCacheWrites: 0,
+			totalCacheReads: 0,
+			totalCost: 0,
+			contextTokens: 0,
+		},
+	})),
+}))
+
 vi.mock("vscode", () => ({
 	workspace: {
 		workspaceFolders: [
@@ -177,7 +208,7 @@ describe("Task - Sticky Mode", () => {
 		mockExtensionContext = {
 			globalState: {
 				get: vi.fn().mockImplementation((key) => {
-					if (key === "mode") return "code"
+					if (key === "mode") return "architect"
 					return undefined
 				}),
 				update: vi.fn().mockImplementation(() => Promise.resolve()),
@@ -227,7 +258,7 @@ describe("Task - Sticky Mode", () => {
 		mockProvider.postStateToWebview = vi.fn().mockResolvedValue(undefined)
 		mockProvider.updateTaskHistory = vi.fn().mockResolvedValue([])
 		mockProvider.getState = vi.fn().mockResolvedValue({
-			mode: "code",
+			mode: "architect",
 		})
 
 		// Setup mock API configuration
@@ -239,7 +270,7 @@ describe("Task - Sticky Mode", () => {
 	})
 
 	describe("saveClineMessages", () => {
-		it("should include current mode in task metadata", async () => {
+		it("should include task's own mode in task metadata", async () => {
 			// Set provider mode
 			mockProvider.getState.mockResolvedValue({
 				mode: "architect",
@@ -252,25 +283,24 @@ describe("Task - Sticky Mode", () => {
 				startTask: false,
 			})
 
-			// Mock fs.writeFile to capture what's written
-			const fs = await import("fs/promises")
-			let capturedMetadata: any
-			vi.mocked(fs.writeFile).mockImplementation(async (path, data) => {
-				if (path.toString().includes("metadata.json")) {
-					capturedMetadata = JSON.parse(data.toString())
-				}
-			})
+			// Wait for async mode initialization
+			await new Promise((resolve) => setTimeout(resolve, 10))
+
+			// Import taskMetadata mock
+			const { taskMetadata } = await import("../../task-persistence")
 
 			// Save messages
-			await (task as any).saveClineMessages([], { customData: "test" })
+			await (task as any).saveClineMessages()
 
-			// Verify mode was included in metadata
-			expect(capturedMetadata).toBeDefined()
-			expect(capturedMetadata.mode).toBe("architect")
-			expect(capturedMetadata.customData).toBe("test")
+			// Verify taskMetadata was called with the task's mode
+			expect(taskMetadata).toHaveBeenCalledWith(
+				expect.objectContaining({
+					mode: "architect",
+				}),
+			)
 		})
 
-		it("should preserve mode across multiple saves", async () => {
+		it("should preserve task's initial mode across multiple saves", async () => {
 			// Start with code mode
 			mockProvider.getState.mockResolvedValue({
 				mode: "code",
@@ -283,24 +313,32 @@ describe("Task - Sticky Mode", () => {
 				startTask: false,
 			})
 
-			const fs = await import("fs/promises")
-			let capturedMetadata: any
-			vi.mocked(fs.writeFile).mockImplementation(async (path, data) => {
-				if (path.toString().includes("metadata.json")) {
-					capturedMetadata = JSON.parse(data.toString())
-				}
-			})
+			// Wait for async mode initialization
+			await new Promise((resolve) => setTimeout(resolve, 10))
+
+			const { taskMetadata } = await import("../../task-persistence")
+			vi.mocked(taskMetadata).mockClear()
 
 			// First save with code mode
-			await (task as any).saveClineMessages([])
-			expect(capturedMetadata.mode).toBe("code")
+			await (task as any).saveClineMessages()
+			expect(taskMetadata).toHaveBeenCalledWith(
+				expect.objectContaining({
+					mode: "code",
+				}),
+			)
 
-			// Change mode and save again
+			// Change provider mode to debug
 			mockProvider.getState.mockResolvedValue({
 				mode: "debug",
 			})
-			await (task as any).saveClineMessages([])
-			expect(capturedMetadata.mode).toBe("debug")
+
+			// Save again - should still use task's original mode
+			await (task as any).saveClineMessages()
+			expect(taskMetadata).toHaveBeenLastCalledWith(
+				expect.objectContaining({
+					mode: "code", // Should still be code, not debug
+				}),
+			)
 		})
 	})
 
@@ -316,26 +354,10 @@ describe("Task - Sticky Mode", () => {
 				cacheWrites: 0,
 				cacheReads: 0,
 				totalCost: 0.001,
+				size: 0,
+				workspace: "/test",
 				mode: "architect", // Saved mode
 			}
-
-			// Mock getTaskWithId to return history with mode
-			mockProvider.getTaskWithId = vi.fn().mockResolvedValue({
-				historyItem,
-				taskDirPath: "/test/path",
-				apiConversationHistoryFilePath: "/test/path/api_history.json",
-				uiMessagesFilePath: "/test/path/ui_messages.json",
-				apiConversationHistory: [],
-			})
-
-			// Mock fs.readFile to return metadata with mode
-			const fs = await import("fs/promises")
-			vi.mocked(fs.readFile).mockImplementation(async (path) => {
-				if (path.toString().includes("metadata.json")) {
-					return JSON.stringify({ mode: "architect" })
-				}
-				return "[]"
-			})
 
 			// Create task with history
 			const task = new Task({
@@ -344,9 +366,8 @@ describe("Task - Sticky Mode", () => {
 				historyItem,
 			})
 
-			// The task should have loaded the mode from history
-			// This would be used by the provider to restore the mode
-			expect(mockProvider.getTaskWithId).toHaveBeenCalledWith(historyItem.id)
+			// The task should have the mode from history
+			expect((task as any).taskMode).toBe("architect")
 		})
 	})
 
@@ -364,7 +385,15 @@ describe("Task - Sticky Mode", () => {
 				startTask: false,
 			})
 
-			// Create subtask - parent mode should be preserved
+			// Wait for async mode initialization
+			await new Promise((resolve) => setTimeout(resolve, 10))
+
+			// Change provider mode to code
+			mockProvider.getState.mockResolvedValue({
+				mode: "code",
+			})
+
+			// Create subtask - should get current provider mode
 			const childTask = new Task({
 				provider: mockProvider,
 				apiConfiguration: mockApiConfig,
@@ -374,40 +403,35 @@ describe("Task - Sticky Mode", () => {
 				startTask: false,
 			})
 
-			// Mock fs.writeFile to capture metadata
-			const fs = await import("fs/promises")
-			let parentMetadata: any
-			let childMetadata: any
-			vi.mocked(fs.writeFile).mockImplementation(async (path, data) => {
-				if (path.toString().includes("metadata.json")) {
-					const metadata = JSON.parse(data.toString())
-					if (path.toString().includes(parentTask.taskId)) {
-						parentMetadata = metadata
-					} else if (path.toString().includes(childTask.taskId)) {
-						childMetadata = metadata
-					}
-				}
-			})
+			// Wait for async mode initialization
+			await new Promise((resolve) => setTimeout(resolve, 10))
+
+			const { taskMetadata } = await import("../../task-persistence")
+			vi.mocked(taskMetadata).mockClear()
 
 			// Save parent task - should have architect mode
-			await (parentTask as any).saveClineMessages([])
-			expect(parentMetadata.mode).toBe("architect")
-
-			// Change provider mode to code
-			mockProvider.getState.mockResolvedValue({
-				mode: "code",
-			})
+			await (parentTask as any).saveClineMessages()
+			expect(taskMetadata).toHaveBeenCalledWith(
+				expect.objectContaining({
+					mode: "architect",
+				}),
+			)
 
 			// Save child task - should have code mode
-			await (childTask as any).saveClineMessages([])
-			expect(childMetadata.mode).toBe("code")
+			await (childTask as any).saveClineMessages()
+			expect(taskMetadata).toHaveBeenCalledWith(
+				expect.objectContaining({
+					mode: "code",
+				}),
+			)
 
 			// Parent task mode should remain architect when saved again
-			mockProvider.getState.mockResolvedValue({
-				mode: "architect",
-			})
-			await (parentTask as any).saveClineMessages([])
-			expect(parentMetadata.mode).toBe("architect")
+			await (parentTask as any).saveClineMessages()
+			expect(taskMetadata).toHaveBeenLastCalledWith(
+				expect.objectContaining({
+					mode: "architect",
+				}),
+			)
 		})
 	})
 
@@ -423,35 +447,66 @@ describe("Task - Sticky Mode", () => {
 				startTask: false,
 			})
 
-			const fs = await import("fs/promises")
-			let capturedMetadata: any
-			vi.mocked(fs.writeFile).mockImplementation(async (path, data) => {
-				if (path.toString().includes("metadata.json")) {
-					capturedMetadata = JSON.parse(data.toString())
-				}
-			})
+			// Wait for async mode initialization
+			await new Promise((resolve) => setTimeout(resolve, 10))
+
+			// Task should use defaultModeSlug when provider returns no mode
+			expect((task as any).taskMode).toBe("architect")
+
+			const { taskMetadata } = await import("../../task-persistence")
+			vi.mocked(taskMetadata).mockClear()
 
 			// Should not throw when saving without mode
-			await expect((task as any).saveClineMessages([])).resolves.not.toThrow()
+			await expect((task as any).saveClineMessages()).resolves.not.toThrow()
 
-			// Mode should be undefined in metadata
-			expect(capturedMetadata).toBeDefined()
-			expect(capturedMetadata.mode).toBeUndefined()
+			// Mode should be defaultModeSlug (architect) in metadata
+			expect(taskMetadata).toHaveBeenCalledWith(
+				expect.objectContaining({
+					mode: "architect", // defaultModeSlug
+				}),
+			)
 		})
 
 		it("should handle provider.getState errors", async () => {
 			// Provider throws error
-			mockProvider.getState.mockRejectedValue(new Error("Provider error"))
+			const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {})
+
+			// Create a new mock provider that will throw an error
+			const errorProvider = {
+				...mockProvider,
+				getState: vi.fn().mockRejectedValue(new Error("Provider error")),
+			}
 
 			const task = new Task({
-				provider: mockProvider,
+				provider: errorProvider as any,
 				apiConfiguration: mockApiConfig,
 				task: "test task",
 				startTask: false,
 			})
 
-			// Should not throw when provider fails
-			await expect((task as any).saveClineMessages([])).resolves.not.toThrow()
+			// Wait a bit for the promise rejection to settle
+			await new Promise((resolve) => setTimeout(resolve, 20))
+
+			// Task should still be created without throwing
+			expect(task).toBeDefined()
+			// Should fall back to defaultModeSlug
+			expect((task as any).taskMode).toBe("architect")
+
+			const { taskMetadata } = await import("../../task-persistence")
+			vi.mocked(taskMetadata).mockClear()
+
+			// Should not throw when saving
+			await expect((task as any).saveClineMessages()).resolves.not.toThrow()
+
+			// Verify it uses the default mode
+			expect(taskMetadata).toHaveBeenCalledWith(
+				expect.objectContaining({
+					mode: "architect", // defaultModeSlug
+				}),
+			)
+
+			// Restore console.error
+			consoleErrorSpy.mockRestore()
 		})
 	})
 })

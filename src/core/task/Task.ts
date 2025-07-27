@@ -137,6 +137,7 @@ export class Task extends EventEmitter<ClineEvents> {
 	readonly parentTask: Task | undefined = undefined
 	readonly taskNumber: number
 	readonly workspacePath: string
+	taskMode: string
 
 	providerRef: WeakRef<ClineProvider>
 	private readonly globalStoragePath: string
@@ -268,10 +269,29 @@ export class Task extends EventEmitter<ClineEvents> {
 		this.parentTask = parentTask
 		this.taskNumber = taskNumber
 
+		// Store the task's mode when it's created
+		// For history items, use the stored mode; for new tasks, we'll set it after getting state
+		this.taskMode = historyItem?.mode || defaultModeSlug
+
 		if (historyItem) {
 			TelemetryService.instance.captureTaskRestarted(this.taskId)
 		} else {
 			TelemetryService.instance.captureTaskCreated(this.taskId)
+		}
+
+		// If no historyItem, get the current mode from provider
+		if (!historyItem) {
+			provider
+				.getState()
+				.then((state) => {
+					if (state?.mode) {
+						this.taskMode = state.mode
+					}
+				})
+				.catch((error) => {
+					// If there's an error getting state, keep the default mode
+					console.error("Failed to get mode from provider state:", error)
+				})
 		}
 
 		// Only set up diff strategy if diff is enabled
@@ -405,17 +425,13 @@ export class Task extends EventEmitter<ClineEvents> {
 				globalStoragePath: this.globalStoragePath,
 			})
 
-			const provider = this.providerRef.deref()
-			const state = await provider?.getState()
-			const currentMode = state?.mode
-
 			const { historyItem, tokenUsage } = await taskMetadata({
 				messages: this.clineMessages,
 				taskId: this.taskId,
 				taskNumber: this.taskNumber,
 				globalStoragePath: this.globalStoragePath,
 				workspace: this.cwd,
-				mode: currentMode,
+				mode: this.taskMode, // Use the task's own mode, not the current provider mode
 			})
 
 			this.emit("taskTokenUsageUpdated", this.taskId, tokenUsage)
