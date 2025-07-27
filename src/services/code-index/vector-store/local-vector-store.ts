@@ -283,7 +283,8 @@ export class LocalVectorStore implements IVectorStore {
 			let filter = ""
 			if (directoryPrefix) {
 				// Use backticks for column name and escape single quotes in directoryPrefix
-				filter = `\`filePath\` LIKE '${directoryPrefix}%'`
+				const filterDirectoryPrefix = directoryPrefix.replace(/\\/g, "\\\\")
+				filter = `\`filePath\` LIKE '${filterDirectoryPrefix}%'`
 			}
 			// Perform vector search
 			let searchQuery = table.vectorSearch(queryVector)
