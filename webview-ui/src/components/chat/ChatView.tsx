@@ -1909,6 +1909,9 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 			<QueuedMessages
 				queue={messageQueue}
 				onRemove={(index) => setMessageQueue((prev) => prev.filter((_, i) => i !== index))}
+				onUpdate={(index, newText) => {
+					setMessageQueue((prev) => prev.map((msg, i) => (i === index ? { ...msg, text: newText } : msg)))
+				}}
 			/>
 			<ChatTextArea
 				ref={textAreaRef}
