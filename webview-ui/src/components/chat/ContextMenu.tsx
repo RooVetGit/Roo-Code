@@ -1,7 +1,9 @@
 import React, { useEffect, useMemo, useRef, useState } from "react"
 import { getIconForFilePath, getIconUrlByName, getIconForDirectoryPath } from "vscode-material-icons"
+import { useTranslation } from "react-i18next"
 
 import type { ModeConfig } from "@roo-code/types"
+import type { Command } from "@roo/ExtensionMessage"
 
 import {
 	ContextMenuOptionType,
@@ -24,6 +26,7 @@ interface ContextMenuProps {
 	loading?: boolean
 	dynamicSearchResults?: SearchResult[]
 	enableSvnContext?: boolean
+	commands?: Command[]
 }
 
 const ContextMenu: React.FC<ContextMenuProps> = ({
@@ -38,21 +41,25 @@ const ContextMenu: React.FC<ContextMenuProps> = ({
 	modes,
 	dynamicSearchResults = [],
 	enableSvnContext = false,
+	commands = [],
 }) => {
 	const [materialIconsBaseUri, setMaterialIconsBaseUri] = useState("")
 	const menuRef = useRef<HTMLDivElement>(null)
+	const { t } = useTranslation()
 
 	const filteredOptions = useMemo(() => {
 		return getContextMenuOptions(
 			searchQuery,
 			inputValue,
+			t,
 			selectedType,
 			queryItems,
 			dynamicSearchResults,
 			modes,
 			enableSvnContext,
+			commands,
 		)
-	}, [searchQuery, inputValue, selectedType, queryItems, dynamicSearchResults, modes, enableSvnContext])
+	}, [searchQuery, inputValue, t, selectedType, queryItems, dynamicSearchResults, modes, enableSvnContext, commands])
 
 	useEffect(() => {
 		if (menuRef.current) {
@@ -79,6 +86,25 @@ const ContextMenu: React.FC<ContextMenuProps> = ({
 	const renderOptionContent = (option: ContextMenuQueryItem) => {
 		switch (option.type) {
 			case ContextMenuOptionType.Mode:
+				return (
+					<div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+						<span style={{ lineHeight: "1.2" }}>{option.label}</span>
+						{option.description && (
+							<span
+								style={{
+									opacity: 0.5,
+									fontSize: "0.9em",
+									lineHeight: "1.2",
+									whiteSpace: "nowrap",
+									overflow: "hidden",
+									textOverflow: "ellipsis",
+								}}>
+								{option.description}
+							</span>
+						)}
+					</div>
+				)
+			case ContextMenuOptionType.Command:
 				return (
 					<div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
 						<span style={{ lineHeight: "1.2" }}>{option.label}</span>
@@ -212,6 +238,8 @@ const ContextMenu: React.FC<ContextMenuProps> = ({
 		switch (option.type) {
 			case ContextMenuOptionType.Mode:
 				return "symbol-misc"
+			case ContextMenuOptionType.Command:
+				return "play"
 			case ContextMenuOptionType.OpenedFile:
 				return "window"
 			case ContextMenuOptionType.File:

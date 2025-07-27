@@ -87,6 +87,7 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 			taskHistory,
 			clineMessages,
 			enableSvnContext,
+			commands,
 		} = useExtensionState()
 
 		// Find the ID and display text for the currently selected API configuration
@@ -297,6 +298,27 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 					return
 				}
 
+				if (type === ContextMenuOptionType.Command && value) {
+					// Handle command selection.
+					setSelectedMenuIndex(-1)
+					setInputValue("")
+					setShowContextMenu(false)
+
+					// Insert the command mention into the textarea
+					const commandMention = `/${value}`
+					setInputValue(commandMention + " ")
+					setCursorPosition(commandMention.length + 1)
+					setIntendedCursorPosition(commandMention.length + 1)
+
+					// Focus the textarea
+					setTimeout(() => {
+						if (textAreaRef.current) {
+							textAreaRef.current.focus()
+						}
+					}, 0)
+					return
+				}
+
 				if (
 					type === ContextMenuOptionType.File ||
 					type === ContextMenuOptionType.Folder ||
@@ -329,6 +351,8 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 						insertValue = value || ""
 					} else if (type === ContextMenuOptionType.Svn) {
 						insertValue = value || ""
+					} else if (type === ContextMenuOptionType.Command) {
+						insertValue = value ? `/${value}` : ""
 					}
 
 					const { newValue, mentionIndex } = insertMention(
@@ -371,11 +395,13 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 							const options = getContextMenuOptions(
 								searchQuery,
 								inputValue,
+								t,
 								selectedType,
 								queryItems,
 								fileSearchResults,
 								allModes,
 								enableSvnContext,
+								commands,
 							)
 							const optionsLength = options.length
 
@@ -409,11 +435,13 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 						const selectedOption = getContextMenuOptions(
 							searchQuery,
 							inputValue,
+							t,
 							selectedType,
 							queryItems,
 							fileSearchResults,
 							allModes,
 							enableSvnContext,
+							commands,
 						)[selectedMenuIndex]
 						if (
 							selectedOption &&
@@ -505,6 +533,8 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 				handleHistoryNavigation,
 				resetHistoryNavigation,
 				enableSvnContext,
+				commands,
+				t,
 			],
 		)
 
@@ -534,10 +564,12 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 
 				if (showMenu) {
 					if (newValue.startsWith("/")) {
-						// Handle slash command.
+						// Handle slash command - request fresh commands
 						const query = newValue
 						setSearchQuery(query)
 						setSelectedMenuIndex(0)
+						// Request commands fresh each time slash menu is shown
+						vscode.postMessage({ type: "requestCommands" })
 					} else {
 						// Existing @ mention handling.
 						const lastAtIndex = newValue.lastIndexOf("@", newCursorPosition - 1)
@@ -1276,6 +1308,7 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 									loading={searchLoading}
 									dynamicSearchResults={fileSearchResults}
 									enableSvnContext={enableSvnContext}
+									commands={commands}
 								/>
 							</div>
 						)}
