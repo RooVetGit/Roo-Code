@@ -1492,22 +1492,4 @@ describe("ChatView - Message Queueing Tests", () => {
 		const input = chatTextArea.querySelector("input")!
 		expect(input.getAttribute("data-sending-disabled")).toBe("false")
 	})
-
-	it("renders QueuedMessages component when messages are queued", async () => {
-		const { queryByTestId } = renderChatView()
-
-		// Mock the ChatView to have queued messages
-		// Since we can't easily test the actual queueing behavior with our mocks,
-		// we'll test that the QueuedMessages component renders correctly
-
-		// For a real test, we would need to:
-		// 1. Start with an active task (sending disabled)
-		// 2. Trigger handleSendMessage to queue a message
-		// 3. Verify QueuedMessages appears with the queued message
-		// 4. Complete the task (enable sending)
-		// 5. Verify the queued messages are sent
-
-		// This is a placeholder test that verifies the component structure
-		expect(queryByTestId("queued-messages")).not.toBeInTheDocument()
-	})
 })
