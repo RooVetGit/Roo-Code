@@ -8,12 +8,13 @@ import { useForm, FormProvider } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import fuzzysort from "fuzzysort"
 import { toast } from "sonner"
-import { X, Rocket, Check, ChevronsUpDown, SlidersHorizontal, Book, CircleCheck } from "lucide-react"
+import { X, Rocket, Check, ChevronsUpDown, SlidersHorizontal, Book, CircleCheck, Users } from "lucide-react"
 
 import { globalSettingsSchema, providerSettingsSchema, EVALS_SETTINGS, getModelId } from "@roo-code/types"
 
 import { createRun } from "@/actions/runs"
 import { getExercises } from "@/actions/exercises"
+import { getExerciseGroups } from "@/actions/exercise-groups"
 import {
 	createRunSchema,
 	type CreateRun,
@@ -70,6 +71,7 @@ export function NewRun() {
 
 	const models = useOpenRouterModels()
 	const exercises = useQuery({ queryKey: ["getExercises"], queryFn: () => getExercises() })
+	const exerciseGroups = useQuery({ queryKey: ["getExerciseGroups"], queryFn: () => getExerciseGroups() })
 
 	const form = useForm<CreateRun>({
 		resolver: zodResolver(createRunSchema),
@@ -176,6 +178,18 @@ export function NewRun() {
 			}
 		},
 		[clearErrors, setValue],
+	)
+
+	const onSelectExerciseGroup = useCallback(
+		(groupName: string) => {
+			const group = exerciseGroups.data?.find((g) => g.name === groupName)
+			if (group) {
+				setValue("suite", "partial")
+				setValue("exercises", group.exercises)
+				toast.success(`Selected "${groupName}" exercise group with ${group.exercises.length} exercises`)
+			}
+		},
+		[exerciseGroups.data, setValue],
 	)
 
 	return (
@@ -309,13 +323,37 @@ export function NewRun() {
 									</TabsList>
 								</Tabs>
 								{suite === "partial" && (
-									<MultiSelect
-										options={exercises.data?.map((path) => ({ value: path, label: path })) || []}
-										onValueChange={(value) => setValue("exercises", value)}
-										placeholder="Select"
-										variant="inverted"
-										maxCount={4}
-									/>
+									<>
+										{exerciseGroups.data && exerciseGroups.data.length > 0 && (
+											<div className="flex flex-wrap gap-2 mt-2 mb-2">
+												<div className="text-sm text-muted-foreground flex items-center gap-1">
+													<Users className="size-4" />
+													Predefined groups:
+												</div>
+												{exerciseGroups.data.map((group) => (
+													<Button
+														key={group.name}
+														type="button"
+														variant="outline"
+														size="sm"
+														onClick={() => onSelectExerciseGroup(group.name)}
+														className="text-xs">
+														{group.name} ({group.exercises.length})
+													</Button>
+												))}
+											</div>
+										)}
+										<MultiSelect
+											options={
+												exercises.data?.map((path) => ({ value: path, label: path })) || []
+											}
+											onValueChange={(value) => setValue("exercises", value)}
+											placeholder="Select"
+											variant="inverted"
+											maxCount={4}
+											defaultValue={form.watch("exercises") || []}
+										/>
+									</>
 								)}
 								<FormMessage />
 							</FormItem>
