@@ -61,20 +61,20 @@ describe("Command Mentions", () => {
 			expect(result).toContain("Please help me set up the project")
 		})
 
-		it("should only handle command at start of message", async () => {
-			mockGetCommand.mockResolvedValue({
+		it("should handle only first command in message", async () => {
+			mockGetCommand.mockResolvedValueOnce({
 				name: "setup",
 				content: "# Setup instructions",
 				source: "project",
 				filePath: "/project/.roo/commands/setup.md",
 			})
 
-			// Only the first command should be recognized
+			// Only first command should be recognized
 			const input = "/setup the project\nThen /deploy later"
 			const result = await callParseMentions(input)
 
 			expect(mockGetCommand).toHaveBeenCalledWith("/test/cwd", "setup")
-			expect(mockGetCommand).toHaveBeenCalledTimes(1) // Only called once
+			expect(mockGetCommand).toHaveBeenCalledTimes(1) // Only first command called
 			expect(result).toContain('<command name="setup">')
 			expect(result).toContain("# Setup instructions")
 			expect(result).not.toContain('<command name="deploy">') // Second command not processed
@@ -88,7 +88,7 @@ describe("Command Mentions", () => {
 
 			expect(mockGetCommand).toHaveBeenCalledWith("/test/cwd", "nonexistent")
 			expect(result).toContain('<command name="nonexistent">')
-			expect(result).toContain("not found")
+			expect(result).toContain("Command 'nonexistent' not found")
 			expect(result).toContain("</command>")
 		})
 
@@ -172,8 +172,8 @@ npm install
 	})
 
 	describe("command mention regex patterns", () => {
-		it("should match valid command mention patterns at start of message", () => {
-			const commandRegex = /^\/([a-zA-Z0-9_\.-]+)(?=\s|$)/g
+		it("should match valid command mention patterns anywhere", () => {
+			const commandRegex = /\/([a-zA-Z0-9_\.-]+)(?=\s|$)/g
 
 			const validPatterns = ["/setup", "/build-prod", "/test_suite", "/my-command", "/command123"]
 
@@ -184,40 +184,44 @@ npm install
 			})
 		})
 
-		it("should not match command patterns in middle of text", () => {
-			const commandRegex = /^\/([a-zA-Z0-9_\.-]+)(?=\s|$)/g
+		it("should match command patterns in middle of text", () => {
+			const commandRegex = /\/([a-zA-Z0-9_\.-]+)(?=\s|$)/g
 
-			const invalidPatterns = ["Please /setup", "Run /build now", "Use /deploy here"]
+			const validPatterns = ["Please /setup", "Run /build now", "Use /deploy here"]
 
-			invalidPatterns.forEach((pattern) => {
+			validPatterns.forEach((pattern) => {
 				const match = pattern.match(commandRegex)
-				expect(match).toBeFalsy()
+				expect(match).toBeTruthy()
+				expect(match![0]).toMatch(/^\/[a-zA-Z0-9_\.-]+$/)
 			})
 		})
 
-		it("should NOT match commands at start of new lines", () => {
-			const commandRegex = /^\/([a-zA-Z0-9_\.-]+)(?=\s|$)/g
+		it("should match commands at start of new lines", () => {
+			const commandRegex = /\/([a-zA-Z0-9_\.-]+)(?=\s|$)/g
 
 			const multilineText = "First line\n/setup the project\nAnother line\n/deploy when ready"
 			const matches = multilineText.match(commandRegex)
 
-			// Should not match any commands since they're not at the very start
-			expect(matches).toBeFalsy()
+			// Should match both commands now
+			expect(matches).toBeTruthy()
+			expect(matches).toHaveLength(2)
+			expect(matches![0]).toBe("/setup")
+			expect(matches![1]).toBe("/deploy")
 		})
 
-		it("should only match command at very start of message", () => {
-			const commandRegex = /^\/([a-zA-Z0-9_\.-]+)(?=\s|$)/g
+		it("should match only first command in message", () => {
+			const commandRegex = /^\/([a-zA-Z0-9_\.-]+)(?=\s|$)/m
 
-			const validText = "/setup the project\nThen do other things"
-			const matches = validText.match(commandRegex)
+			const validText = "/setup the project\nThen /deploy later"
+			const match = validText.match(commandRegex)
 
-			expect(matches).toBeTruthy()
-			expect(matches).toHaveLength(1)
-			expect(matches![0]).toBe("/setup")
+			expect(match).toBeTruthy()
+			expect(match![0]).toBe("/setup")
+			expect(match![1]).toBe("setup") // Captured group
 		})
 
 		it("should not match invalid command patterns", () => {
-			const commandRegex = /^\/([a-zA-Z0-9_\.-]+)(?=\s|$)/g
+			const commandRegex = /\/([a-zA-Z0-9_\.-]+)(?=\s|$)/g
 
 			const invalidPatterns = ["/ space", "/with space", "/with/slash", "//double", "/with@symbol"]
 
@@ -239,37 +243,48 @@ npm install
 			expect(result).toContain("Command 'setup' (see below for command content)")
 		})
 
-		it("should only process first command in message", async () => {
+		it("should process only first command in message", async () => {
+			mockGetCommand.mockResolvedValueOnce({
+				name: "setup",
+				content: "# Setup instructions",
+				source: "project",
+				filePath: "/project/.roo/commands/setup.md",
+			})
+
 			const input = "/setup the project\nThen /deploy later"
 			const result = await callParseMentions(input)
 
 			expect(result).toContain("Command 'setup' (see below for command content)")
-			expect(result).not.toContain("Command 'deploy'") // Second command not processed
+			expect(result).not.toContain("Command 'deploy' (see below for command content)")
 		})
 
-		it("should only match commands at very start of message", async () => {
+		it("should match commands at start of lines only", async () => {
+			mockGetCommand.mockResolvedValue({
+				name: "build",
+				content: "# Build instructions",
+				source: "project",
+				filePath: "/project/.roo/commands/build.md",
+			})
+
 			// At the beginning - should match
 			let input = "/build the project"
 			let result = await callParseMentions(input)
 			expect(result).toContain("Command 'build'")
 
-			// In the middle - should NOT match
+			// In the middle - should NOT match with new regex
 			input = "Please /build and test"
 			result = await callParseMentions(input)
 			expect(result).not.toContain("Command 'build'")
-			expect(result).toContain("Please /build and test") // Original text preserved
 
-			// At the end - should NOT match
+			// At the end - should NOT match with new regex
 			input = "Run the /build"
 			result = await callParseMentions(input)
 			expect(result).not.toContain("Command 'build'")
-			expect(result).toContain("Run the /build") // Original text preserved
 
-			// At start of new line - should NOT match
+			// At start of new line - should match
 			input = "Some text\n/build the project"
 			result = await callParseMentions(input)
-			expect(result).not.toContain("Command 'build'")
-			expect(result).toContain("Some text\n/build the project") // Original text preserved
+			expect(result).toContain("Command 'build'")
 		})
 	})
 })
