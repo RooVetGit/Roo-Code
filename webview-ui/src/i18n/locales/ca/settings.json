@@ -287,6 +287,7 @@
 		"litellmBaseUrl": "URL base de LiteLLM",
 		"awsCredentials": "Credencials d'AWS",
 		"awsProfile": "Perfil d'AWS",
+		"awsApiKey": "Clau d'API d'Amazon Bedrock",
 		"awsProfileName": "Nom del perfil d'AWS",
 		"awsAccessKey": "Clau d'accés d'AWS",
 		"awsSecretKey": "Clau secreta d'AWS",
@@ -754,5 +755,8 @@
 		"useCustomArn": "Utilitza ARN personalitzat..."
 	},
 	"includeMaxOutputTokens": "Incloure tokens màxims de sortida",
-	"includeMaxOutputTokensDescription": "Enviar el paràmetre de tokens màxims de sortida a les sol·licituds API. Alguns proveïdors poden no admetre això."
+	"includeMaxOutputTokensDescription": "Enviar el paràmetre de tokens màxims de sortida a les sol·licituds API. Alguns proveïdors poden no admetre això.",
+	"limitMaxTokensDescription": "Limitar el nombre màxim de tokens en la resposta",
+	"maxOutputTokensLabel": "Tokens màxims de sortida",
+	"maxTokensGenerateDescription": "Tokens màxims a generar en la resposta"
 }

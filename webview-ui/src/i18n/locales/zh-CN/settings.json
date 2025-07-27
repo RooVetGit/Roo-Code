@@ -287,6 +287,7 @@
 		"litellmBaseUrl": "LiteLLM 基础 URL",
 		"awsCredentials": "AWS 凭证",
 		"awsProfile": "AWS 配置文件",
+		"awsApiKey": "Amazon Bedrock API 密钥",
 		"awsProfileName": "AWS 配置文件名称",
 		"awsAccessKey": "AWS 访问密钥",
 		"awsSecretKey": "AWS 密钥",
@@ -755,5 +756,8 @@
 		"useCustomArn": "使用自定义 ARN..."
 	},
 	"includeMaxOutputTokens": "包含最大输出 Token 数",
-	"includeMaxOutputTokensDescription": "在 API 请求中发送最大输出 Token 参数。某些提供商可能不支持此功能。"
+	"includeMaxOutputTokensDescription": "在 API 请求中发送最大输出 Token 参数。某些提供商可能不支持此功能。",
+	"limitMaxTokensDescription": "限制响应中的最大 Token 数量",
+	"maxOutputTokensLabel": "最大输出 Token 数",
+	"maxTokensGenerateDescription": "响应中生成的最大 Token 数"
 }
