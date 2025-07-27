@@ -4,6 +4,7 @@ import { Anthropic } from "@anthropic-ai/sdk"
 
 import { type ModelInfo, geminiDefaultModelId } from "@roo-code/types"
 
+import { t } from "i18next"
 import { GeminiHandler } from "../gemini"
 
 const GEMINI_25_FLASH_PREVIEW_05_20_NAME = "gemini-2.5-flash-preview-05-20"
@@ -136,7 +137,7 @@ describe("GeminiHandler", () => {
 			;(handler["client"].models.generateContent as any).mockRejectedValue(mockError)
 
 			await expect(handler.completePrompt("Test prompt")).rejects.toThrow(
-				"Gemini completion error: Gemini API error",
+				t("common:errors.gemini.generate_complete_prompt", { error: "Gemini API error" }),
 			)
 		})
 
