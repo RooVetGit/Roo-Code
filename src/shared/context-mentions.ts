@@ -57,8 +57,8 @@ export const mentionRegex =
 	/(?<!\\)@((?:\/|\w+:\/\/)(?:[^\s\\]|\\ )+?|[a-f0-9]{7,40}\b|problems\b|git-changes\b|terminal\b)(?=[.,;:!?]?(?=[\s\r\n]|$))/
 export const mentionRegexGlobal = new RegExp(mentionRegex.source, "g")
 
-// Regex to match command mentions like /command-name at start of lines
-export const commandRegex = /^\/([a-zA-Z0-9_\.-]+)(?=\s|$)/m
+// Regex to match command mentions like /command-name anywhere in text
+export const commandRegexGlobal = /(?:^|\s)\/([a-zA-Z0-9_\.-]+)(?=\s|$)/g
 
 export interface MentionSuggestion {
 	type: "file" | "folder" | "git" | "problems"

@@ -4,7 +4,7 @@ import * as path from "path"
 import * as vscode from "vscode"
 import { isBinaryFile } from "isbinaryfile"
 
-import { mentionRegexGlobal, commandRegex, unescapeSpaces } from "../../shared/context-mentions"
+import { mentionRegexGlobal, commandRegexGlobal, unescapeSpaces } from "../../shared/context-mentions"
 
 import { getCommitInfo, getWorkingState } from "../../utils/git"
 import { getWorkspacePath } from "../../utils/path"
@@ -89,7 +89,7 @@ export async function parseMentions(
 	const commandMentions: Set<string> = new Set()
 
 	// First pass: extract command mentions (starting with /)
-	let parsedText = text.replace(commandRegex, (match, commandName) => {
+	let parsedText = text.replace(commandRegexGlobal, (match, commandName) => {
 		commandMentions.add(commandName)
 		return `Command '${commandName}' (see below for command content)`
 	})
