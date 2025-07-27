@@ -4,6 +4,7 @@
 vitest.mock("vscode", () => ({}))
 
 import { Anthropic } from "@anthropic-ai/sdk"
+import { type GenerateContentResponse } from "@google/genai"
 
 import { ApiStreamChunk } from "../../transform/stream"
 
@@ -22,6 +23,25 @@ describe("VertexHandler", () => {
 			apiModelId: "gemini-1.5-pro-001",
 			vertexProjectId: "test-project",
 			vertexRegion: "us-central1",
+		})
+
+		// Mock the GoogleGenAI constructor to capture arguments
+		vitest.mock("@google/genai", async (importOriginal) => {
+			const actual = await importOriginal<typeof import("@google/genai")>()
+			return {
+				...actual,
+				GoogleGenAI: vitest.fn((options) => {
+					// Call the original constructor to ensure proper object creation
+					const originalInstance = new actual.GoogleGenAI(options)
+					// Spy on the models property to allow mocking its methods
+					vitest.spyOn(originalInstance, "models", "get").mockReturnValue({
+						generateContentStream: vitest.fn(),
+						generateContent: vitest.fn(),
+						getGenerativeModel: vitest.fn(),
+					} as any)
+					return originalInstance
+				}),
+			}
 		})
 
 		// Replace the client with our mock
@@ -76,6 +96,39 @@ describe("VertexHandler", () => {
 			// Since we're directly mocking createMessage, we don't need to verify
 			// that generateContentStream was called
 		})
+
+		it("should use vertexBaseUrl in httpOptions for createMessage", async () => {
+			const testBaseUrl = "https://custom.vertex.ai"
+			const testHandler = new VertexHandler({
+				apiModelId: "gemini-1.5-pro-001",
+				vertexProjectId: "test-project",
+				vertexRegion: "us-central1",
+				vertexBaseUrl: testBaseUrl,
+			})
+
+			// Mock the actual generateContentStream to avoid network calls
+			const mockGenerateContentStream = vitest.fn(() =>
+				Promise.resolve(
+					(async function* (): AsyncGenerator<GenerateContentResponse> {
+						yield { text: "mock response" } as GenerateContentResponse
+					})(),
+				),
+			)
+			testHandler["client"].models.generateContentStream = mockGenerateContentStream
+
+			const stream = testHandler.createMessage(systemPrompt, mockMessages)
+			for await (const _chunk of stream) {
+				// consume the stream
+			}
+
+			expect(mockGenerateContentStream).toHaveBeenCalledWith(
+				expect.objectContaining({
+					config: expect.objectContaining({
+						httpOptions: { baseUrl: testBaseUrl },
+					}),
+				}),
+			)
+		})
 	})
 
 	describe("completePrompt", () => {
@@ -95,6 +148,29 @@ describe("VertexHandler", () => {
 					contents: [{ role: "user", parts: [{ text: "Test prompt" }] }],
 					config: expect.objectContaining({
 						temperature: 0,
+					}),
+				}),
+			)
+		})
+
+		it("should use vertexBaseUrl in httpOptions for completePrompt", async () => {
+			const testBaseUrl = "https://custom.vertex.ai"
+			const testHandler = new VertexHandler({
+				apiModelId: "gemini-1.5-pro-001",
+				vertexProjectId: "test-project",
+				vertexRegion: "us-central1",
+				vertexBaseUrl: testBaseUrl,
+			})
+
+			const mockGenerateContent = vitest.fn().mockResolvedValue({ text: "Test Gemini response" })
+			testHandler["client"].models.generateContent = mockGenerateContent
+
+			await testHandler.completePrompt("Test prompt")
+
+			expect(mockGenerateContent).toHaveBeenCalledWith(
+				expect.objectContaining({
+					config: expect.objectContaining({
+						httpOptions: { baseUrl: testBaseUrl },
 					}),
 				}),
 			)

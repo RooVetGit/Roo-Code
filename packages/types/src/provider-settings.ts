@@ -127,6 +127,7 @@ const vertexSchema = apiModelIdProviderModelSchema.extend({
 	vertexJsonCredentials: z.string().optional(),
 	vertexProjectId: z.string().optional(),
 	vertexRegion: z.string().optional(),
+	vertexBaseUrl: z.string().optional(),
 })
 
 const openAiSchema = baseProviderSettingsSchema.extend({
@@ -169,6 +170,7 @@ const lmStudioSchema = baseProviderSettingsSchema.extend({
 const geminiSchema = apiModelIdProviderModelSchema.extend({
 	geminiApiKey: z.string().optional(),
 	googleGeminiBaseUrl: z.string().optional(),
+	isVertex: z.boolean().optional(),
 })
 
 const geminiCliSchema = apiModelIdProviderModelSchema.extend({

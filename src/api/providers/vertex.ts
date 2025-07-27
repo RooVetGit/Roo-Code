@@ -9,7 +9,7 @@ import { SingleCompletionHandler } from "../index"
 
 export class VertexHandler extends GeminiHandler implements SingleCompletionHandler {
 	constructor(options: ApiHandlerOptions) {
-		super({ ...options, isVertex: true })
+		super({ ...options, isVertex: true, vertexBaseUrl: options.vertexBaseUrl })
 	}
 
 	override getModel() {
