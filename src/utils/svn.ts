@@ -46,67 +46,24 @@ function convertSvnOutput(output: Buffer | string): string {
 const execAsync = promisify(exec)
 const SVN_OUTPUT_LINE_LIMIT = 500
 
-// SVN Debug Logger
+// SVN Debug Logger - simplified to use console only
 export class SvnLogger {
-	private static outputChannel: vscode.OutputChannel | null = null
-
-	static getOutputChannel(): vscode.OutputChannel {
-		if (!this.outputChannel) {
-			this.outputChannel = vscode.window.createOutputChannel("Roo Code - SVN Debug")
-		}
-		return this.outputChannel
-	}
-
 	static debug(message: string, ...args: any[]) {
 		const timestamp = new Date().toISOString()
-		const logMessage = `[${timestamp}] [DEBUG] ${message}`
-
-		// Log to console
+		const logMessage = `[${timestamp}] [SVN DEBUG] ${message}`
 		console.log(logMessage, ...args)
-
-		// Log to VS Code output channel
-		const channel = this.getOutputChannel()
-		channel.appendLine(logMessage)
-		if (args.length > 0) {
-			channel.appendLine(`  Args: ${JSON.stringify(args, null, 2)}`)
-		}
 	}
 
 	static error(message: string, error?: any) {
 		const timestamp = new Date().toISOString()
-		const logMessage = `[${timestamp}] [ERROR] ${message}`
-
-		// Log to console
+		const logMessage = `[${timestamp}] [SVN ERROR] ${message}`
 		console.error(logMessage, error)
-
-		// Log to VS Code output channel
-		const channel = this.getOutputChannel()
-		channel.appendLine(logMessage)
-		if (error) {
-			channel.appendLine(`  Error: ${error.toString()}`)
-			if (error.stack) {
-				channel.appendLine(`  Stack: ${error.stack}`)
-			}
-		}
 	}
 
 	static info(message: string, ...args: any[]) {
 		const timestamp = new Date().toISOString()
-		const logMessage = `[${timestamp}] [INFO] ${message}`
-
-		// Log to console
+		const logMessage = `[${timestamp}] [SVN INFO] ${message}`
 		console.log(logMessage, ...args)
-
-		// Log to VS Code output channel
-		const channel = this.getOutputChannel()
-		channel.appendLine(logMessage)
-		if (args.length > 0) {
-			channel.appendLine(`  Data: ${JSON.stringify(args, null, 2)}`)
-		}
-	}
-
-	static showOutput() {
-		this.getOutputChannel().show()
 	}
 }
 
@@ -411,20 +368,10 @@ class SvnErrorHandler {
 		}
 
 		// Generic error with context
-		vscode.window
-			.showErrorMessage(
-				`SVN ${context} failed`,
-				{
-					modal: false,
-					detail: `Error: ${error.message}\n\nPlease check the SVN Debug output channel for more details.`,
-				},
-				"Show Output",
-			)
-			.then((action) => {
-				if (action === "Show Output") {
-					SvnLogger.showOutput()
-				}
-			})
+		vscode.window.showErrorMessage(`SVN ${context} failed`, {
+			modal: false,
+			detail: `Error: ${error.message}`,
+		})
 	}
 }
 

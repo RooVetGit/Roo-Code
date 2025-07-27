@@ -22,11 +22,7 @@ vi.mock("vscode", () => ({
 		],
 	},
 	window: {
-		createOutputChannel: vi.fn(() => ({
-			appendLine: vi.fn(),
-			show: vi.fn(),
-		})),
-		showErrorMessage: vi.fn(() => Promise.resolve("Show Output")),
+		showErrorMessage: vi.fn(() => Promise.resolve()),
 		showWarningMessage: vi.fn(() => Promise.resolve()),
 		showInformationMessage: vi.fn(() => Promise.resolve()),
 	},

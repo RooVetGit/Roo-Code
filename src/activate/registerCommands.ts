@@ -265,34 +265,19 @@ const getCommandsMap = ({ context, outputChannel, provider }: RegisterCommandOpt
 			})
 
 			// Show success message
-			const action = await vscode.window.showInformationMessage(
-				`SVN Debug Complete! Found ${commits.length} commits.\n\nRepository URL: ${repoInfo.repositoryUrl || "Unknown"}\nWorking Copy Root: ${repoInfo.workingCopyRoot || "Unknown"}\n\nCheck "Roo Code - SVN Debug" output channel for detailed information.`,
+			vscode.window.showInformationMessage(
+				`SVN Debug Complete! Found ${commits.length} commits.\n\nRepository URL: ${repoInfo.repositoryUrl || "Unknown"}\nWorking Copy Root: ${repoInfo.workingCopyRoot || "Unknown"}`,
 				{ modal: false },
-				"Show Output",
 			)
-
-			if (action === "Show Output") {
-				SvnLogger.showOutput()
-			}
 		} catch (error) {
 			// This should rarely happen now since individual functions handle their own errors
 			const svnError = error instanceof Error ? error : new Error(String(error))
 			SvnLogger.error("SVN debug failed", svnError)
 
-			vscode.window
-				.showErrorMessage(
-					"SVN debug operation failed",
-					{
-						modal: false,
-						detail: `Unexpected error: ${svnError.message}\n\nPlease check the SVN Debug output channel for more details.`,
-					},
-					"Show Output",
-				)
-				.then((action) => {
-					if (action === "Show Output") {
-						SvnLogger.showOutput()
-					}
-				})
+			vscode.window.showErrorMessage("SVN debug operation failed", {
+				modal: false,
+				detail: `Unexpected error: ${svnError.message}`,
+			})
 		}
 	},
 })
