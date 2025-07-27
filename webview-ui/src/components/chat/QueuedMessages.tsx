@@ -38,18 +38,27 @@ const QueuedMessages: React.FC<QueuedMessagesProps> = ({ queue, onRemove, onUpda
 	return (
 		<div className="px-[15px] py-[10px] pr-[6px]" data-testid="queued-messages">
 			<div className="text-vscode-descriptionForeground text-md mb-2">{t("queuedMessages.title")}</div>
-			<div className="flex flex-col gap-2">
+			<div className="flex flex-col gap-2 max-h-[300px] overflow-y-auto pr-2">
 				{queue.map((message, index) => {
 					const editState = getEditState(message.id, message.text)
 
 					return (
 						<div
 							key={message.id}
-							className="bg-vscode-editor-background border rounded-xs p-1 overflow-hidden whitespace-pre-wrap">
+							className="bg-vscode-editor-background border rounded-xs p-1 overflow-hidden whitespace-pre-wrap flex-shrink-0">
 							<div className="flex justify-between">
 								<div className="flex-grow px-2 py-1 wrap-anywhere">
 									{editState.isEditing ? (
 										<textarea
+											ref={(textarea) => {
+												if (textarea) {
+													// Set cursor at the end
+													textarea.setSelectionRange(
+														textarea.value.length,
+														textarea.value.length,
+													)
+												}
+											}}
 											value={editState.value}
 											onChange={(e) => setEditState(message.id, true, e.target.value)}
 											onBlur={() => handleSaveEdit(index, message.id, editState.value)}
