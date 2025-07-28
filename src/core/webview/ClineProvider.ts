@@ -578,9 +578,25 @@ export class ClineProvider
 	public async initClineWithHistoryItem(historyItem: HistoryItem & { rootTask?: Task; parentTask?: Task }) {
 		await this.removeClineFromStack()
 
-		// If the history item has a saved mode, restore it
+		// If the history item has a saved mode, restore it and its associated API configuration
 		if (historyItem.mode) {
 			await this.updateGlobalState("mode", historyItem.mode)
+
+			// Load the saved API config for the restored mode if it exists
+			const savedConfigId = await this.providerSettingsManager.getModeConfigId(historyItem.mode)
+			const listApiConfig = await this.providerSettingsManager.listConfig()
+
+			// Update listApiConfigMeta first to ensure UI has latest data
+			await this.updateGlobalState("listApiConfigMeta", listApiConfig)
+
+			// If this mode has a saved config, use it
+			if (savedConfigId) {
+				const profile = listApiConfig.find(({ id }) => id === savedConfigId)
+
+				if (profile?.name) {
+					await this.activateProviderProfile({ name: profile.name })
+				}
+			}
 		}
 
 		const {

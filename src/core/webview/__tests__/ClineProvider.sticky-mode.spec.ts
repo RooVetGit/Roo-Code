@@ -5,7 +5,7 @@ import { TelemetryService } from "@roo-code/telemetry"
 import { ClineProvider } from "../ClineProvider"
 import { ContextProxy } from "../../config/ContextProxy"
 import { Task } from "../../task/Task"
-import type { HistoryItem } from "@roo-code/types"
+import type { HistoryItem, ProviderName } from "@roo-code/types"
 
 // Mock setup
 vi.mock("vscode", () => ({
@@ -664,6 +664,52 @@ describe("ClineProvider - Sticky Mode", () => {
 
 			// Verify mode switch was not called with null
 			expect(handleModeSwitchSpy).not.toHaveBeenCalledWith(null)
+		})
+
+		it("should restore API configuration when restoring task from history with mode", async () => {
+			// Setup: Configure different API configs for different modes
+			const codeApiConfig = { apiProvider: "anthropic" as ProviderName, anthropicApiKey: "code-key" }
+			const architectApiConfig = { apiProvider: "openai" as ProviderName, openAiApiKey: "architect-key" }
+
+			// Save API configs
+			await provider.upsertProviderProfile("code-config", codeApiConfig)
+			await provider.upsertProviderProfile("architect-config", architectApiConfig)
+
+			// Get the config IDs
+			const codeConfigId = provider.getProviderProfileEntry("code-config")?.id
+			const architectConfigId = provider.getProviderProfileEntry("architect-config")?.id
+
+			// Associate configs with modes
+			await provider.providerSettingsManager.setModeConfig("code", codeConfigId!)
+			await provider.providerSettingsManager.setModeConfig("architect", architectConfigId!)
+
+			// Start in code mode with code config
+			await provider.handleModeSwitch("code")
+
+			// Create a history item with architect mode
+			const historyItem: HistoryItem = {
+				id: "test-task-id",
+				number: 1,
+				ts: Date.now(),
+				task: "Test task",
+				tokensIn: 100,
+				tokensOut: 200,
+				cacheWrites: 0,
+				cacheReads: 0,
+				totalCost: 0.001,
+				mode: "architect", // Task was created in architect mode
+			}
+
+			// Restore the task from history
+			await provider.initClineWithHistoryItem(historyItem)
+
+			// Verify that the mode was restored
+			const state = await provider.getState()
+			expect(state.mode).toBe("architect")
+
+			// Verify that the API configuration was also restored
+			expect(state.currentApiConfigName).toBe("architect-config")
+			expect(state.apiConfiguration.apiProvider).toBe("openai")
 		})
 	})
 })
