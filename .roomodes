@@ -283,7 +283,7 @@ customModes:
       - Following established patterns from existing modes
       - Maintaining consistency across all mode components
     whenToUse: Use this mode when you need to create a new custom mode or edit an existing one. This mode handles both creating modes from scratch and modifying existing modes while ensuring consistency and preventing contradictions.
-    description: Create and edit custom modes with validation.
+    description: Create and edit custom modes with validation
     groups:
       - read
       - - edit
