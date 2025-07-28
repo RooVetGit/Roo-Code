@@ -1991,6 +1991,7 @@ export const webviewMessageHandler = async (
 					...currentConfig,
 					codebaseIndexEnabled: settings.codebaseIndexEnabled,
 					codebaseIndexQdrantUrl: settings.codebaseIndexQdrantUrl,
+					codebaseIndexValkeyUrl: settings.codebaseIndexValkeyUrl,
 					codebaseIndexEmbedderProvider: settings.codebaseIndexEmbedderProvider,
 					codebaseIndexEmbedderBaseUrl: settings.codebaseIndexEmbedderBaseUrl,
 					codebaseIndexEmbedderModelId: settings.codebaseIndexEmbedderModelId,
@@ -1998,6 +1999,7 @@ export const webviewMessageHandler = async (
 					codebaseIndexOpenAiCompatibleBaseUrl: settings.codebaseIndexOpenAiCompatibleBaseUrl,
 					codebaseIndexSearchMaxResults: settings.codebaseIndexSearchMaxResults,
 					codebaseIndexSearchMinScore: settings.codebaseIndexSearchMinScore,
+					searchProvider: settings.searchProvider,
 				}
 
 				// Save global state first

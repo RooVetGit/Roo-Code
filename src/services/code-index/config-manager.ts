@@ -21,6 +21,8 @@ export class CodeIndexConfigManager {
 	private mistralOptions?: { apiKey: string }
 	private qdrantUrl?: string = "http://localhost:6333"
 	private qdrantApiKey?: string
+	private searchProvider?: string
+	private valkeyUrl?: string = "http://localhost:6379"
 	private searchMinScore?: number
 	private searchMaxResults?: number
 
@@ -45,6 +47,7 @@ export class CodeIndexConfigManager {
 		const codebaseIndexConfig = this.contextProxy?.getGlobalState("codebaseIndexConfig") ?? {
 			codebaseIndexEnabled: true,
 			codebaseIndexQdrantUrl: "http://localhost:6333",
+			codebaseIndexValkeyUrl: "http://localhost:6379",
 			codebaseIndexEmbedderProvider: "openai",
 			codebaseIndexEmbedderBaseUrl: "",
 			codebaseIndexEmbedderModelId: "",
@@ -55,11 +58,13 @@ export class CodeIndexConfigManager {
 		const {
 			codebaseIndexEnabled,
 			codebaseIndexQdrantUrl,
+			codebaseIndexValkeyUrl,
 			codebaseIndexEmbedderProvider,
 			codebaseIndexEmbedderBaseUrl,
 			codebaseIndexEmbedderModelId,
 			codebaseIndexSearchMinScore,
 			codebaseIndexSearchMaxResults,
+			searchProvider,
 		} = codebaseIndexConfig
 
 		const openAiKey = this.contextProxy?.getSecret("codeIndexOpenAiKey") ?? ""
@@ -74,8 +79,10 @@ export class CodeIndexConfigManager {
 		this.codebaseIndexEnabled = codebaseIndexEnabled ?? true
 		this.qdrantUrl = codebaseIndexQdrantUrl
 		this.qdrantApiKey = qdrantApiKey ?? ""
+		this.valkeyUrl = codebaseIndexValkeyUrl
 		this.searchMinScore = codebaseIndexSearchMinScore
 		this.searchMaxResults = codebaseIndexSearchMaxResults
+		this.searchProvider = searchProvider
 
 		// Validate and set model dimension
 		const rawDimension = codebaseIndexConfig.codebaseIndexEmbedderModelDimension
@@ -143,6 +150,8 @@ export class CodeIndexConfigManager {
 			mistralOptions?: { apiKey: string }
 			qdrantUrl?: string
 			qdrantApiKey?: string
+			valkeyUrl?: string
+			searchProvider?: string
 			searchMinScore?: number
 		}
 		requiresRestart: boolean
@@ -161,6 +170,8 @@ export class CodeIndexConfigManager {
 			geminiApiKey: this.geminiOptions?.apiKey ?? "",
 			mistralApiKey: this.mistralOptions?.apiKey ?? "",
 			qdrantUrl: this.qdrantUrl ?? "",
+			valkeyUrl: this.valkeyUrl ?? "",
+			searchProvider: this.searchProvider,
 			qdrantApiKey: this.qdrantApiKey ?? "",
 		}
 
@@ -186,6 +197,8 @@ export class CodeIndexConfigManager {
 				mistralOptions: this.mistralOptions,
 				qdrantUrl: this.qdrantUrl,
 				qdrantApiKey: this.qdrantApiKey,
+				valkeyUrl: this.valkeyUrl,
+				searchProvider: this.searchProvider,
 				searchMinScore: this.currentSearchMinScore,
 			},
 			requiresRestart,
@@ -377,6 +390,8 @@ export class CodeIndexConfigManager {
 			mistralOptions: this.mistralOptions,
 			qdrantUrl: this.qdrantUrl,
 			qdrantApiKey: this.qdrantApiKey,
+			searchProvider: this.searchProvider,
+			valkeyUrl: this.valkeyUrl,
 			searchMinScore: this.currentSearchMinScore,
 			searchMaxResults: this.currentSearchMaxResults,
 		}

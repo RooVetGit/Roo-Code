@@ -6,6 +6,7 @@ import { GeminiEmbedder } from "./embedders/gemini"
 import { MistralEmbedder } from "./embedders/mistral"
 import { EmbedderProvider, getDefaultModelId, getModelDimension } from "../../shared/embeddingModels"
 import { QdrantVectorStore } from "./vector-store/qdrant-client"
+import { ValkeySearchVectorStore } from "./vector-store/valkey-search-client"
 import { codeParser, DirectoryScanner, FileWatcher } from "./processors"
 import { ICodeParser, IEmbedder, IFileWatcher, IVectorStore } from "./interfaces"
 import { CodeIndexConfigManager } from "./config-manager"
@@ -132,12 +133,16 @@ export class CodeIndexServiceFactory {
 			}
 		}
 
-		if (!config.qdrantUrl) {
-			throw new Error(t("embeddings:serviceFactory.qdrantUrlMissing"))
+		const searchProvider = config.searchProvider
+
+		if (searchProvider === "qdrant" && config.qdrantUrl) {
+			return new QdrantVectorStore(this.workspacePath, config.qdrantUrl, vectorSize, config.qdrantApiKey)
+		} else if (searchProvider === "valkey" && config.valkeyUrl) {
+			return new ValkeySearchVectorStore(this.workspacePath, config.valkeyUrl, vectorSize)
 		}
 
 		// Assuming constructor is updated: new QdrantVectorStore(workspacePath, url, vectorSize, apiKey?)
-		return new QdrantVectorStore(this.workspacePath, config.qdrantUrl, vectorSize, config.qdrantApiKey)
+		throw new Error(t("embeddings:serviceFactory.vectorStoreUrlMissing"))
 	}
 
 	/**
