@@ -210,9 +210,9 @@ export const webviewMessageHandler = async (
 
 	switch (message.type) {
 		case "webviewDidLaunch":
-			// Load custom modes first
-			const customModes = await provider.customModesManager.getCustomModes()
-			await updateGlobalState("customModes", customModes)
+			// Load custom agents first
+			const customAgents = await provider.customModesManager.getCustomModes()
+			await updateGlobalState("customModes", customAgents)
 
 			provider.postStateToWebview()
 			provider.workspaceTracker?.initializeFilePaths() // Don't await.
@@ -772,10 +772,10 @@ export const webviewMessageHandler = async (
 			break
 		}
 		case "openCustomModesSettings": {
-			const customModesFilePath = await provider.customModesManager.getCustomModesFilePath()
+			const customAgentsFilePath = await provider.customModesManager.getCustomModesFilePath()
 
-			if (customModesFilePath) {
-				openFile(customModesFilePath)
+			if (customAgentsFilePath) {
+				openFile(customAgentsFilePath)
 			}
 
 			break
@@ -1623,32 +1623,32 @@ export const webviewMessageHandler = async (
 			break
 		case "updateCustomMode":
 			if (message.modeConfig) {
-				// Check if this is a new mode or an update to an existing mode
-				const existingModes = await provider.customModesManager.getCustomModes()
-				const isNewMode = !existingModes.some((mode) => mode.slug === message.modeConfig?.slug)
+				// Check if this is a new agent or an update to an existing agent
+				const existingAgents = await provider.customModesManager.getCustomModes()
+				const isNewAgent = !existingAgents.some((agent) => agent.slug === message.modeConfig?.slug)
 
 				await provider.customModesManager.updateCustomMode(message.modeConfig.slug, message.modeConfig)
-				// Update state after saving the mode
-				const customModes = await provider.customModesManager.getCustomModes()
-				await updateGlobalState("customModes", customModes)
+				// Update state after saving the agent
+				const customAgents = await provider.customModesManager.getCustomModes()
+				await updateGlobalState("customModes", customAgents)
 				await updateGlobalState("mode", message.modeConfig.slug)
 				await provider.postStateToWebview()
 
-				// Track telemetry for custom mode creation or update
+				// Track telemetry for custom agent creation or update
 				if (TelemetryService.hasInstance()) {
-					if (isNewMode) {
-						// This is a new custom mode
+					if (isNewAgent) {
+						// This is a new custom agent
 						TelemetryService.instance.captureCustomModeCreated(
 							message.modeConfig.slug,
 							message.modeConfig.name,
 						)
 					} else {
 						// Determine which setting was changed by comparing objects
-						const existingMode = existingModes.find((mode) => mode.slug === message.modeConfig?.slug)
-						const changedSettings = existingMode
+						const existingAgent = existingAgents.find((agent) => agent.slug === message.modeConfig?.slug)
+						const changedSettings = existingAgent
 							? Object.keys(message.modeConfig).filter(
 									(key) =>
-										JSON.stringify((existingMode as Record<string, unknown>)[key]) !==
+										JSON.stringify((existingAgent as Record<string, unknown>)[key]) !==
 										JSON.stringify((message.modeConfig as Record<string, unknown>)[key]),
 								)
 							: []
@@ -1662,16 +1662,16 @@ export const webviewMessageHandler = async (
 			break
 		case "deleteCustomMode":
 			if (message.slug) {
-				// Get the mode details to determine source and rules folder path
-				const customModes = await provider.customModesManager.getCustomModes()
-				const modeToDelete = customModes.find((mode) => mode.slug === message.slug)
+				// Get the agent details to determine source and rules folder path
+				const customAgents = await provider.customModesManager.getCustomModes()
+				const agentToDelete = customAgents.find((agent) => agent.slug === message.slug)
 
-				if (!modeToDelete) {
+				if (!agentToDelete) {
 					break
 				}
 
 				// Determine the scope based on source (project or global)
-				const scope = modeToDelete.source || "global"
+				const scope = agentToDelete.source || "global"
 
 				// Determine the rules folder path
 				let rulesFolderPath: string
@@ -1701,16 +1701,16 @@ export const webviewMessageHandler = async (
 					break
 				}
 
-				// Delete the mode
+				// Delete the agent
 				await provider.customModesManager.deleteCustomMode(message.slug)
 
 				// Delete the rules folder if it exists
 				if (rulesFolderExists) {
 					try {
 						await fs.rm(rulesFolderPath, { recursive: true, force: true })
-						provider.log(`Deleted rules folder for mode ${message.slug}: ${rulesFolderPath}`)
+						provider.log(`Deleted rules folder for agent ${message.slug}: ${rulesFolderPath}`)
 					} catch (error) {
-						provider.log(`Failed to delete rules folder for mode ${message.slug}: ${error}`)
+						provider.log(`Failed to delete rules folder for agent ${message.slug}: ${error}`)
 						// Notify the user about the failure
 						vscode.window.showErrorMessage(
 							t("common:errors.delete_rules_folder_failed", {
@@ -1718,11 +1718,11 @@ export const webviewMessageHandler = async (
 								error: error instanceof Error ? error.message : String(error),
 							}),
 						)
-						// Continue with mode deletion even if folder deletion fails
+						// Continue with agent deletion even if folder deletion fails
 					}
 				}
 
-				// Switch back to default mode after deletion
+				// Switch back to default agent after deletion
 				await updateGlobalState("mode", defaultModeSlug)
 				await provider.postStateToWebview()
 			}
@@ -1730,11 +1730,11 @@ export const webviewMessageHandler = async (
 		case "exportMode":
 			if (message.slug) {
 				try {
-					// Get custom mode prompts to check if built-in mode has been customized
-					const customModePrompts = getGlobalState("customModePrompts") || {}
-					const customPrompt = customModePrompts[message.slug]
+					// Get custom agent prompts to check if built-in agent has been customized
+					const customAgentPrompts = getGlobalState("customModePrompts") || {}
+					const customPrompt = customAgentPrompts[message.slug]
 
-					// Export the mode with any customizations merged directly
+					// Export the agent with any customizations merged directly
 					const result = await provider.customModesManager.exportModeWithRules(message.slug, customPrompt)
 
 					if (result.success && result.yaml) {
@@ -1764,7 +1764,7 @@ export const webviewMessageHandler = async (
 							filters: {
 								"YAML files": ["yaml", "yml"],
 							},
-							title: "Save mode export",
+							title: "Save agent export",
 						})
 
 						if (saveUri && result.yaml) {
@@ -1803,7 +1803,7 @@ export const webviewMessageHandler = async (
 					}
 				} catch (error) {
 					const errorMessage = error instanceof Error ? error.message : String(error)
-					provider.log(`Failed to export mode ${message.slug}: ${errorMessage}`)
+					provider.log(`Failed to export agent ${message.slug}: ${errorMessage}`)
 
 					// Send error message to webview
 					provider.postMessageToWebview({
@@ -1842,7 +1842,7 @@ export const webviewMessageHandler = async (
 					filters: {
 						"YAML files": ["yaml", "yml"],
 					},
-					title: "Select mode export file to import",
+					title: "Select agent export file to import",
 				})
 
 				if (fileUri && fileUri[0]) {
@@ -1852,7 +1852,7 @@ export const webviewMessageHandler = async (
 					// Read the file content
 					const yamlContent = await fs.readFile(fileUri[0].fsPath, "utf-8")
 
-					// Import the mode with the specified source level
+					// Import the agent with the specified source level
 					const result = await provider.customModesManager.importModeWithRules(
 						yamlContent,
 						message.source || "project", // Default to project if not specified
@@ -1860,8 +1860,8 @@ export const webviewMessageHandler = async (
 
 					if (result.success) {
 						// Update state after importing
-						const customModes = await provider.customModesManager.getCustomModes()
-						await updateGlobalState("customModes", customModes)
+						const customAgents = await provider.customModesManager.getCustomModes()
+						await updateGlobalState("customModes", customAgents)
 						await provider.postStateToWebview()
 
 						// Send success message to webview
@@ -1893,7 +1893,7 @@ export const webviewMessageHandler = async (
 				}
 			} catch (error) {
 				const errorMessage = error instanceof Error ? error.message : String(error)
-				provider.log(`Failed to import mode: ${errorMessage}`)
+				provider.log(`Failed to import agent: ${errorMessage}`)
 
 				// Send error message to webview
 				provider.postMessageToWebview({

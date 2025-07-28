@@ -16,7 +16,7 @@
 		"type": {
 			"label": "Filtrar por tipo:",
 			"all": "Todos os tipos",
-			"mode": "Modo",
+			"agent": "Modo",
 			"mcpServer": "Servidor MCP"
 		},
 		"sort": {
@@ -36,7 +36,7 @@
 		"none": "Nenhum"
 	},
 	"type-group": {
-		"modes": "Modos",
+		"agents": "Modos",
 		"mcps": "Servidores MCP"
 	},
 	"items": {
@@ -128,9 +128,9 @@
 		}
 	},
 	"removeConfirm": {
-		"mode": {
+		"agent": {
 			"title": "Remover Modo",
-			"message": "Tem certeza de que deseja remover o modo \"{{modeName}}\"?",
+			"message": "Tem certeza de que deseja remover o modo \"{{agentName}}\"?",
 			"rulesWarning": "Isso também removerá todos os arquivos de regras associados a este modo."
 		},
 		"mcp": {

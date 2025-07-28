@@ -216,14 +216,14 @@
 		"wantsToUseTool": "Roo muốn sử dụng một công cụ trên máy chủ MCP {{serverName}}:",
 		"wantsToAccessResource": "Roo muốn truy cập một tài nguyên trên máy chủ MCP {{serverName}}:"
 	},
-	"modes": {
-		"wantsToSwitch": "Roo muốn chuyển sang chế độ <code>{{mode}}</code>",
-		"wantsToSwitchWithReason": "Roo muốn chuyển sang chế độ <code>{{mode}}</code> vì: {{reason}}",
-		"didSwitch": "Roo đã chuyển sang chế độ <code>{{mode}}</code>",
-		"didSwitchWithReason": "Roo đã chuyển sang chế độ <code>{{mode}}</code> vì: {{reason}}"
+	"agents": {
+		"wantsToSwitch": "Roo muốn chuyển sang chế độ <code>{{agent}}</code>",
+		"wantsToSwitchWithReason": "Roo muốn chuyển sang chế độ <code>{{agent}}</code> vì: {{reason}}",
+		"didSwitch": "Roo đã chuyển sang chế độ <code>{{agent}}</code>",
+		"didSwitchWithReason": "Roo đã chuyển sang chế độ <code>{{agent}}</code> vì: {{reason}}"
 	},
 	"subtasks": {
-		"wantsToCreate": "Roo muốn tạo một nhiệm vụ phụ mới trong chế độ <code>{{mode}}</code>:",
+		"wantsToCreate": "Roo muốn tạo một nhiệm vụ phụ mới trong chế độ <code>{{agent}}</code>:",
 		"wantsToFinish": "Roo muốn hoàn thành nhiệm vụ phụ này",
 		"newTaskContent": "Hướng dẫn nhiệm vụ phụ",
 		"completionContent": "Nhiệm vụ phụ đã hoàn thành",

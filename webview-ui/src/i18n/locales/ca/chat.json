@@ -88,19 +88,19 @@
 			"description": "Divideix les tasques en parts més petites i manejables."
 		},
 		"stickyModels": {
-			"title": "Modes persistents",
-			"description": "Cada mode recorda el vostre darrer model utilitzat"
+			"title": "Agents persistents",
+			"description": "Cada agent recorda el vostre darrer model utilitzat"
 		},
 		"tools": {
 			"title": "Eines",
 			"description": "Permet que la IA resolgui problemes navegant per la web, executant ordres i molt més."
 		},
 		"customizableModes": {
-			"title": "Modes personalitzables",
+			"title": "Agents personalitzables",
 			"description": "Personalitats especialitzades amb comportaments propis i models assignats"
 		}
 	},
-	"selectMode": "Selecciona el mode d'interacció",
+	"selectMode": "Selecciona el agent d'interacció",
 	"selectApiConfig": "Seleccioneu la configuració de l'API",
 	"enhancePrompt": "Millora la sol·licitud amb context addicional",
 	"addImages": "Afegeix imatges al missatge",
@@ -108,24 +108,24 @@
 	"stopTts": "Atura la síntesi de veu",
 	"typeMessage": "Escriu un missatge...",
 	"typeTask": "Escriu la teva tasca aquí...",
-	"addContext": "@ per afegir context, / per canviar de mode",
+	"addContext": "@ per afegir context, / per canviar de agent",
 	"dragFiles": "manté premut shift per arrossegar fitxers",
 	"dragFilesImages": "manté premut shift per arrossegar fitxers/imatges",
 	"enhancePromptDescription": "El botó 'Millora la sol·licitud' ajuda a millorar la teva sol·licitud proporcionant context addicional, aclariments o reformulacions. Prova d'escriure una sol·licitud aquí i fes clic al botó de nou per veure com funciona.",
 	"modeSelector": {
-		"title": "Modes",
-		"marketplace": "Marketplace de Modes",
-		"settings": "Configuració de Modes",
+		"title": "Agents",
+		"marketplace": "Marketplace de Agents",
+		"settings": "Configuració de Agents",
 		"description": "Personalitats especialitzades que adapten el comportament de Roo.",
-		"searchPlaceholder": "Cerca modes...",
+		"searchPlaceholder": "Cerca agents...",
 		"noResults": "No s'han trobat resultats"
 	},
 	"errorReadingFile": "Error en llegir el fitxer:",
 	"noValidImages": "No s'ha processat cap imatge vàlida",
 	"separator": "Separador",
 	"edit": "Edita...",
-	"forNextMode": "per al següent mode",
-	"forPreviousMode": "per al mode anterior",
+	"forNextMode": "per al següent agent",
+	"forPreviousMode": "per al agent anterior",
 	"error": "Error",
 	"diffError": {
 		"title": "Edició fallida"
@@ -216,14 +216,14 @@
 		"wantsToUseTool": "Roo vol utilitzar una eina al servidor MCP {{serverName}}:",
 		"wantsToAccessResource": "Roo vol accedir a un recurs al servidor MCP {{serverName}}:"
 	},
-	"modes": {
-		"wantsToSwitch": "Roo vol canviar a mode <code>{{mode}}</code>",
-		"wantsToSwitchWithReason": "Roo vol canviar a mode <code>{{mode}}</code> perquè: {{reason}}",
-		"didSwitch": "Roo ha canviat a mode <code>{{mode}}</code>",
-		"didSwitchWithReason": "Roo ha canviat a mode <code>{{mode}}</code> perquè: {{reason}}"
+	"agents": {
+		"wantsToSwitch": "Roo vol canviar a agent <code>{{agent}}</code>",
+		"wantsToSwitchWithReason": "Roo vol canviar a agent <code>{{agent}}</code> perquè: {{reason}}",
+		"didSwitch": "Roo ha canviat a agent <code>{{agent}}</code>",
+		"didSwitchWithReason": "Roo ha canviat a agent <code>{{agent}}</code> perquè: {{reason}}"
 	},
 	"subtasks": {
-		"wantsToCreate": "Roo vol crear una nova subtasca en mode <code>{{mode}}</code>:",
+		"wantsToCreate": "Roo vol crear una nova subtasca en agent <code>{{agent}}</code>:",
 		"wantsToFinish": "Roo vol finalitzar aquesta subtasca",
 		"newTaskContent": "Instruccions de la subtasca",
 		"completionContent": "Subtasca completada",

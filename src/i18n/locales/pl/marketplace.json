@@ -1,11 +1,11 @@
 {
 	"type-group": {
-		"modes": "Tryby",
+		"agents": "Tryby",
 		"mcps": "Serwery MCP",
 		"match": "dopasowanie"
 	},
 	"item-card": {
-		"type-mode": "Tryb",
+		"type-agent": "Tryb",
 		"type-mcp": "Serwer MCP",
 		"type-other": "Inne",
 		"by-author": "przez {{author}}",
@@ -23,7 +23,7 @@
 		"type": {
 			"label": "Typ",
 			"all": "Wszystkie typy",
-			"mode": "Tryb",
+			"agent": "Tryb",
 			"mcpServer": "Serwer MCP"
 		},
 		"sort": {

@@ -1,7 +1,7 @@
 {
 	"title": "Modos",
 	"done": "Concluído",
-	"modes": {
+	"agents": {
 		"title": "Modos",
 		"createNewMode": "Criar novo modo",
 		"importMode": "Importar modo",
@@ -49,8 +49,8 @@
 	"customInstructions": {
 		"title": "Instruções personalizadas específicas do modo (opcional)",
 		"resetToDefault": "Restaurar para padrão",
-		"description": "Adicione diretrizes comportamentais específicas para o modo {{modeName}}.",
-		"loadFromFile": "Instruções personalizadas específicas para o modo {{mode}} também podem ser carregadas da pasta <span>.roo/rules-{{slug}}/</span> no seu espaço de trabalho (.roorules-{{slug}} e .clinerules-{{slug}} estão obsoletos e deixarão de funcionar em breve)."
+		"description": "Adicione diretrizes comportamentais específicas para o modo {{agentName}}.",
+		"loadFromFile": "Instruções personalizadas específicas para o modo {{agent}} também podem ser carregadas da pasta <span>.roo/rules-{{slug}}/</span> no seu espaço de trabalho (.roorules-{{slug}} e .clinerules-{{slug}} estão obsoletos e deixarão de funcionar em breve)."
 	},
 	"exportMode": {
 		"title": "Exportar modo",
@@ -82,7 +82,7 @@
 	"systemPrompt": {
 		"preview": "Visualizar prompt do sistema",
 		"copy": "Copiar prompt do sistema para a área de transferência",
-		"title": "Prompt do sistema (modo {{modeName}})"
+		"title": "Prompt do sistema (modo {{agentName}})"
 	},
 	"supportPrompts": {
 		"title": "Prompts de suporte",
@@ -200,7 +200,7 @@
 	"allFiles": "todos os arquivos",
 	"deleteMode": {
 		"title": "Excluir Modo",
-		"message": "Tem certeza de que deseja excluir o modo \"{{modeName}}\"?",
+		"message": "Tem certeza de que deseja excluir o modo \"{{agentName}}\"?",
 		"rulesFolder": "Este modo tem uma pasta de regras em {{folderPath}} que também será excluída.",
 		"descriptionNoRules": "Tem certeza de que deseja excluir este modo personalizado?",
 		"confirm": "Excluir",

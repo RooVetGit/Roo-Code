@@ -1,7 +1,7 @@
 {
 	"title": "模式",
 	"done": "完成",
-	"modes": {
+	"agents": {
 		"title": "模式配置",
 		"createNewMode": "新建模式",
 		"importMode": "导入模式",
@@ -49,7 +49,7 @@
 	"customInstructions": {
 		"title": "模式专属规则（可选）",
 		"resetToDefault": "重置为默认值",
-		"description": "{{modeName}}模式的专属规则",
+		"description": "{{agentName}}模式的专属规则",
 		"loadFromFile": "支持从<span>.roo/rules-{{slug}}/</span>目录读取配置（.roorules-{{slug}}和.clinerules-{{slug}}已弃用并将很快停止工作）。"
 	},
 	"exportMode": {
@@ -79,7 +79,7 @@
 	"systemPrompt": {
 		"preview": "预览系统提示词",
 		"copy": "复制系统提示词",
-		"title": "系统提示词（{{modeName}}模式）"
+		"title": "系统提示词（{{agentName}}模式）"
 	},
 	"supportPrompts": {
 		"title": "功能提示词",
@@ -200,7 +200,7 @@
 	},
 	"deleteMode": {
 		"title": "删除模式",
-		"message": "您确定要删除\"{{modeName}}\"模式吗？",
+		"message": "您确定要删除\"{{agentName}}\"模式吗？",
 		"rulesFolder": "此模式在 {{folderPath}} 有一个规则文件夹，该文件夹也将被删除。",
 		"descriptionNoRules": "您确定要删除此自定义模式吗？",
 		"confirm": "删除",

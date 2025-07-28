@@ -1,7 +1,7 @@
 {
 	"title": "모드",
 	"done": "완료",
-	"modes": {
+	"agents": {
 		"title": "모드",
 		"createNewMode": "새 모드 만들기",
 		"importMode": "모드 가져오기",
@@ -49,8 +49,8 @@
 	"customInstructions": {
 		"title": "모드별 사용자 지정 지침 (선택 사항)",
 		"resetToDefault": "기본값으로 재설정",
-		"description": "{{modeName}} 모드에 대한 특정 행동 지침을 추가하세요.",
-		"loadFromFile": "{{mode}} 모드에 대한 사용자 지정 지침은 작업 공간의 <span>.roo/rules-{{slug}}/</span> 폴더에서도 로드할 수 있습니다(.roorules-{{slug}}와 .clinerules-{{slug}}는 더 이상 사용되지 않으며 곧 작동을 중단합니다)."
+		"description": "{{agentName}} 모드에 대한 특정 행동 지침을 추가하세요.",
+		"loadFromFile": "{{agent}} 모드에 대한 사용자 지정 지침은 작업 공간의 <span>.roo/rules-{{slug}}/</span> 폴더에서도 로드할 수 있습니다(.roorules-{{slug}}와 .clinerules-{{slug}}는 더 이상 사용되지 않으며 곧 작동을 중단합니다)."
 	},
 	"exportMode": {
 		"title": "모드 내보내기",
@@ -82,7 +82,7 @@
 	"systemPrompt": {
 		"preview": "시스템 프롬프트 미리보기",
 		"copy": "시스템 프롬프트를 클립보드에 복사",
-		"title": "시스템 프롬프트 ({{modeName}} 모드)"
+		"title": "시스템 프롬프트 ({{agentName}} 모드)"
 	},
 	"supportPrompts": {
 		"title": "지원 프롬프트",
@@ -200,7 +200,7 @@
 	"allFiles": "모든 파일",
 	"deleteMode": {
 		"title": "모드 삭제",
-		"message": "\"{{modeName}}\" 모드를 삭제하시겠습니까?",
+		"message": "\"{{agentName}}\" 모드를 삭제하시겠습니까?",
 		"rulesFolder": "이 모드에는 {{folderPath}}에 규칙 폴더가 있으며 함께 삭제됩니다.",
 		"descriptionNoRules": "이 사용자 정의 모드를 삭제하시겠습니까?",
 		"confirm": "삭제",

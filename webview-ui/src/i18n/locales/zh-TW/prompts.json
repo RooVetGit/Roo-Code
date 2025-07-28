@@ -1,7 +1,7 @@
 {
 	"title": "模式",
 	"done": "完成",
-	"modes": {
+	"agents": {
 		"title": "模式",
 		"createNewMode": "建立新模式",
 		"importMode": "匯入模式",
@@ -49,8 +49,8 @@
 	"customInstructions": {
 		"title": "模式專屬自訂指令（選用）",
 		"resetToDefault": "重設為預設值",
-		"description": "為 {{modeName}} 模式新增專屬的行為指南。",
-		"loadFromFile": "{{mode}} 模式的自訂指令也可以從工作區的 <span>.roo/rules-{{slug}}/</span> 資料夾載入（.roorules-{{slug}} 和 .clinerules-{{slug}} 已棄用並將很快停止運作）。"
+		"description": "為 {{agentName}} 模式新增專屬的行為指南。",
+		"loadFromFile": "{{agent}} 模式的自訂指令也可以從工作區的 <span>.roo/rules-{{slug}}/</span> 資料夾載入（.roorules-{{slug}} 和 .clinerules-{{slug}} 已棄用並將很快停止運作）。"
 	},
 	"exportMode": {
 		"title": "匯出模式",
@@ -79,7 +79,7 @@
 	"systemPrompt": {
 		"preview": "預覽系統提示詞",
 		"copy": "複製系統提示詞到剪貼簿",
-		"title": "系統提示詞（{{modeName}} 模式）"
+		"title": "系統提示詞（{{agentName}} 模式）"
 	},
 	"supportPrompts": {
 		"title": "輔助提示詞",
@@ -200,7 +200,7 @@
 	},
 	"deleteMode": {
 		"title": "刪除模式",
-		"message": "您確定要刪除「{{modeName}}」模式嗎？",
+		"message": "您確定要刪除「{{agentName}}」模式嗎？",
 		"rulesFolder": "此模式在 {{folderPath}} 有一個規則資料夾，該資料夾也將被刪除。",
 		"descriptionNoRules": "您確定要刪除此自訂模式嗎？",
 		"confirm": "刪除",

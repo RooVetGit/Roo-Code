@@ -11,12 +11,12 @@
 		"search": {
 			"placeholder": "Cari item marketplace...",
 			"placeholderMcp": "Cari MCP...",
-			"placeholderMode": "Cari Mode..."
+			"placeholderMode": "Cari Agent..."
 		},
 		"type": {
 			"label": "Filter berdasarkan tipe:",
 			"all": "Semua tipe",
-			"mode": "Mode",
+			"agent": "Agent",
 			"mcpServer": "Server MCP"
 		},
 		"sort": {
@@ -36,7 +36,7 @@
 		"none": "Tidak Ada"
 	},
 	"type-group": {
-		"modes": "Mode",
+		"agents": "Agent",
 		"mcps": "Server MCP"
 	},
 	"items": {
@@ -77,7 +77,7 @@
 	},
 	"install": {
 		"title": "Instal {{name}}",
-		"titleMode": "Instal Mode {{name}}",
+		"titleMode": "Instal Agent {{name}}",
 		"titleMcp": "Instal MCP {{name}}",
 		"scope": "Cakupan Instalasi",
 		"project": "Proyek (workspace saat ini)",
@@ -91,10 +91,10 @@
 		"successDescription": "Instalasi berhasil diselesaikan",
 		"installed": "Berhasil diinstal!",
 		"whatNextMcp": "Anda sekarang dapat mengkonfigurasi dan menggunakan server MCP ini. Klik ikon MCP di sidebar untuk beralih tab.",
-		"whatNextMode": "Anda sekarang dapat menggunakan mode ini. Klik ikon Mode di sidebar untuk beralih tab.",
+		"whatNextMode": "Anda sekarang dapat menggunakan agent ini. Klik ikon Agent di sidebar untuk beralih tab.",
 		"done": "Selesai",
 		"goToMcp": "Ke Tab MCP",
-		"goToModes": "Ke Pengaturan Mode",
+		"goToModes": "Ke Pengaturan Agent",
 		"moreInfoMcp": "Lihat dokumentasi MCP {{name}}",
 		"validationRequired": "Silakan berikan nilai untuk {{paramName}}"
 	},
@@ -128,10 +128,10 @@
 		}
 	},
 	"removeConfirm": {
-		"mode": {
-			"title": "Hapus Mode",
-			"message": "Apakah Anda yakin ingin menghapus mode \"{{modeName}}\"?",
-			"rulesWarning": "Ini juga akan menghapus semua file aturan terkait untuk mode ini."
+		"agent": {
+			"title": "Hapus Agent",
+			"message": "Apakah Anda yakin ingin menghapus agent \"{{agentName}}\"?",
+			"rulesWarning": "Ini juga akan menghapus semua file aturan terkait untuk agent ini."
 		},
 		"mcp": {
 			"title": "Hapus Server MCP",

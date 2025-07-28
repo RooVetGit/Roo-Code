@@ -100,26 +100,26 @@
 		},
 		"stickyModels": {
 			"title": "Sticky Models",
-			"description": "Each mode remembers your last used model"
+			"description": "Each agent remembers your last used model"
 		},
 		"tools": {
 			"title": "Tools",
 			"description": "Allow the AI to solve problems by browsing the web, running commands, and more"
 		},
-		"customizableModes": {
-			"title": "Customizable Modes",
+		"customizableAgents": {
+			"title": "Customizable Agents",
 			"description": "Specialized personas with their own behaviors and assigned models"
 		}
 	},
-	"selectMode": "Select mode for interaction",
+	"selectAgent": "Select agent for interaction",
 	"selectApiConfig": "Select API configuration",
 	"enhancePrompt": "Enhance prompt with additional context",
-	"modeSelector": {
-		"title": "Modes",
-		"marketplace": "Mode Marketplace",
-		"settings": "Mode Settings",
+	"agentSelector": {
+		"title": "Agents",
+		"marketplace": "Agent Marketplace",
+		"settings": "Agent Settings",
 		"description": "Specialized personas that tailor Roo's behavior.",
-		"searchPlaceholder": "Search modes...",
+		"searchPlaceholder": "Search agents...",
 		"noResults": "No results found"
 	},
 	"enhancePromptDescription": "The 'Enhance Prompt' button helps improve your prompt by providing additional context, clarification, or rephrasing. Try typing a prompt in here and clicking the button again to see how it works.",
@@ -128,15 +128,15 @@
 	"stopTts": "Stop text-to-speech",
 	"typeMessage": "Type a message...",
 	"typeTask": "Type your task here...",
-	"addContext": "@ to add context, / to switch modes",
+	"addContext": "@ to add context, / to switch agents",
 	"dragFiles": "hold shift to drag in files",
 	"dragFilesImages": "hold shift to drag in files/images",
 	"errorReadingFile": "Error reading file:",
 	"noValidImages": "No valid images were processed",
 	"separator": "Separator",
 	"edit": "Edit...",
-	"forNextMode": "for next mode",
-	"forPreviousMode": "for previous mode",
+	"forNextAgent": "for next agent",
+	"forPreviousAgent": "for previous agent",
 	"apiRequest": {
 		"title": "API Request",
 		"failed": "API Request Failed",
@@ -235,14 +235,14 @@
 		"wantsToUseTool": "Roo wants to use a tool on the {{serverName}} MCP server:",
 		"wantsToAccessResource": "Roo wants to access a resource on the {{serverName}} MCP server:"
 	},
-	"modes": {
-		"wantsToSwitch": "Roo wants to switch to {{mode}} mode",
-		"wantsToSwitchWithReason": "Roo wants to switch to {{mode}} mode because: {{reason}}",
-		"didSwitch": "Roo switched to {{mode}} mode",
-		"didSwitchWithReason": "Roo switched to {{mode}} mode because: {{reason}}"
+	"agents": {
+		"wantsToSwitch": "Roo wants to switch to {{agent}} agent",
+		"wantsToSwitchWithReason": "Roo wants to switch to {{agent}} agent because: {{reason}}",
+		"didSwitch": "Roo switched to {{agent}} agent",
+		"didSwitchWithReason": "Roo switched to {{agent}} agent because: {{reason}}"
 	},
 	"subtasks": {
-		"wantsToCreate": "Roo wants to create a new subtask in {{mode}} mode:",
+		"wantsToCreate": "Roo wants to create a new subtask in {{agent}} agent:",
 		"wantsToFinish": "Roo wants to finish this subtask",
 		"newTaskContent": "Subtask Instructions",
 		"completionContent": "Subtask Completed",

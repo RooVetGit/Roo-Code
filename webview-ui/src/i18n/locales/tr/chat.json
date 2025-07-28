@@ -216,14 +216,14 @@
 		"wantsToUseTool": "Roo {{serverName}} MCP sunucusunda bir araç kullanmak istiyor:",
 		"wantsToAccessResource": "Roo {{serverName}} MCP sunucusundaki bir kaynağa erişmek istiyor:"
 	},
-	"modes": {
-		"wantsToSwitch": "Roo <code>{{mode}}</code> moduna geçmek istiyor",
-		"wantsToSwitchWithReason": "Roo <code>{{mode}}</code> moduna geçmek istiyor çünkü: {{reason}}",
-		"didSwitch": "Roo <code>{{mode}}</code> moduna geçti",
-		"didSwitchWithReason": "Roo <code>{{mode}}</code> moduna geçti çünkü: {{reason}}"
+	"agents": {
+		"wantsToSwitch": "Roo <code>{{agent}}</code> moduna geçmek istiyor",
+		"wantsToSwitchWithReason": "Roo <code>{{agent}}</code> moduna geçmek istiyor çünkü: {{reason}}",
+		"didSwitch": "Roo <code>{{agent}}</code> moduna geçti",
+		"didSwitchWithReason": "Roo <code>{{agent}}</code> moduna geçti çünkü: {{reason}}"
 	},
 	"subtasks": {
-		"wantsToCreate": "Roo <code>{{mode}}</code> modunda yeni bir alt görev oluşturmak istiyor:",
+		"wantsToCreate": "Roo <code>{{agent}}</code> modunda yeni bir alt görev oluşturmak istiyor:",
 		"wantsToFinish": "Roo bu alt görevi bitirmek istiyor",
 		"newTaskContent": "Alt Görev Talimatları",
 		"completionContent": "Alt Görev Tamamlandı",

@@ -102,7 +102,7 @@
 		"image_saved": "Resim {{path}} konumuna kaydedildi",
 		"organization_share_link_copied": "Kuruluş paylaşım bağlantısı panoya kopyalandı!",
 		"public_share_link_copied": "Herkese açık paylaşım bağlantısı panoya kopyalandı!",
-		"mode_exported": "'{{mode}}' modu başarıyla dışa aktarıldı",
+		"mode_exported": "'{{agent}}' modu başarıyla dışa aktarıldı",
 		"mode_imported": "Mod başarıyla içe aktarıldı"
 	},
 	"answers": {
@@ -161,7 +161,7 @@
 		}
 	},
 	"marketplace": {
-		"mode": {
+		"agent": {
 			"rulesCleanupFailed": "Mod başarıyla kaldırıldı, ancak {{rulesFolderPath}} konumundaki kurallar klasörü silinemedi. Manuel olarak silmeniz gerekebilir."
 		}
 	},

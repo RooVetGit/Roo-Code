@@ -16,7 +16,7 @@
 		"type": {
 			"label": "Filteren op type:",
 			"all": "Alle types",
-			"mode": "Modus",
+			"agent": "Modus",
 			"mcpServer": "MCP-server"
 		},
 		"sort": {
@@ -36,7 +36,7 @@
 		"none": "Geen"
 	},
 	"type-group": {
-		"modes": "Modi",
+		"agents": "Modi",
 		"mcps": "MCP-servers"
 	},
 	"items": {
@@ -128,9 +128,9 @@
 		}
 	},
 	"removeConfirm": {
-		"mode": {
+		"agent": {
 			"title": "Modus verwijderen",
-			"message": "Weet je zeker dat je de modus \"{{modeName}}\" wilt verwijderen?",
+			"message": "Weet je zeker dat je de modus \"{{agentName}}\" wilt verwijderen?",
 			"rulesWarning": "Dit verwijdert ook alle bijbehorende regelbestanden voor deze modus."
 		},
 		"mcp": {

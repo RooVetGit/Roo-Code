@@ -229,7 +229,9 @@ export class API extends EventEmitter<RooCodeEvents> implements RooCodeAPI {
 				}
 			})
 
-			cline.on("taskModeSwitched", (taskId, mode) => this.emit(RooCodeEventName.TaskModeSwitched, taskId, mode))
+			cline.on("taskAgentSwitched", (taskId, agent) =>
+				this.emit(RooCodeEventName.TaskAgentSwitched, taskId, agent),
+			)
 
 			cline.on("taskAskResponded", () => this.emit(RooCodeEventName.TaskAskResponded, cline.taskId))
 

@@ -12,7 +12,8 @@ export interface RooCodeAPIEvents {
 	message: [data: { taskId: string; action: "created" | "updated"; message: ClineMessage }]
 	taskCreated: [taskId: string]
 	taskStarted: [taskId: string]
-	taskModeSwitched: [taskId: string, mode: string]
+	taskAgentSwitched: [taskId: string, agent: string]
+	taskModeSwitched: [taskId: string, mode: string] // Backward compatibility alias
 	taskPaused: [taskId: string]
 	taskUnpaused: [taskId: string]
 	taskAskResponded: [taskId: string]

@@ -20,7 +20,7 @@ export enum RooCodeEventName {
 	Message = "message",
 	TaskCreated = "taskCreated",
 	TaskStarted = "taskStarted",
-	TaskModeSwitched = "taskModeSwitched",
+	TaskAgentSwitched = "taskAgentSwitched",
 	TaskPaused = "taskPaused",
 	TaskUnpaused = "taskUnpaused",
 	TaskAskResponded = "taskAskResponded",
@@ -33,6 +33,9 @@ export enum RooCodeEventName {
 	EvalFail = "evalFail",
 }
 
+// Backward compatibility alias
+export const TaskModeSwitched = RooCodeEventName.TaskAgentSwitched
+
 export const rooCodeEventsSchema = z.object({
 	[RooCodeEventName.Message]: z.tuple([
 		z.object({
@@ -43,7 +46,7 @@ export const rooCodeEventsSchema = z.object({
 	]),
 	[RooCodeEventName.TaskCreated]: z.tuple([z.string()]),
 	[RooCodeEventName.TaskStarted]: z.tuple([z.string()]),
-	[RooCodeEventName.TaskModeSwitched]: z.tuple([z.string(), z.string()]),
+	[RooCodeEventName.TaskAgentSwitched]: z.tuple([z.string(), z.string()]),
 	[RooCodeEventName.TaskPaused]: z.tuple([z.string()]),
 	[RooCodeEventName.TaskUnpaused]: z.tuple([z.string()]),
 	[RooCodeEventName.TaskAskResponded]: z.tuple([z.string()]),
@@ -121,8 +124,8 @@ export const taskEventSchema = z.discriminatedUnion("eventName", [
 		taskId: z.number().optional(),
 	}),
 	z.object({
-		eventName: z.literal(RooCodeEventName.TaskModeSwitched),
-		payload: rooCodeEventsSchema.shape[RooCodeEventName.TaskModeSwitched],
+		eventName: z.literal(RooCodeEventName.TaskAgentSwitched),
+		payload: rooCodeEventsSchema.shape[RooCodeEventName.TaskAgentSwitched],
 		taskId: z.number().optional(),
 	}),
 	z.object({

@@ -1,7 +1,7 @@
 {
 	"title": "Chế độ",
 	"done": "Hoàn thành",
-	"modes": {
+	"agents": {
 		"title": "Chế độ",
 		"createNewMode": "Tạo chế độ mới",
 		"importMode": "Nhập chế độ",
@@ -49,8 +49,8 @@
 	"customInstructions": {
 		"title": "Hướng dẫn tùy chỉnh dành riêng cho chế độ (tùy chọn)",
 		"resetToDefault": "Đặt lại về mặc định",
-		"description": "Thêm hướng dẫn hành vi dành riêng cho chế độ {{modeName}}.",
-		"loadFromFile": "Hướng dẫn tùy chỉnh dành riêng cho chế độ {{mode}} cũng có thể được tải từ thư mục <span>.roo/rules-{{slug}}/</span> trong không gian làm việc của bạn (.roorules-{{slug}} và .clinerules-{{slug}} đã lỗi thời và sẽ sớm ngừng hoạt động)."
+		"description": "Thêm hướng dẫn hành vi dành riêng cho chế độ {{agentName}}.",
+		"loadFromFile": "Hướng dẫn tùy chỉnh dành riêng cho chế độ {{agent}} cũng có thể được tải từ thư mục <span>.roo/rules-{{slug}}/</span> trong không gian làm việc của bạn (.roorules-{{slug}} và .clinerules-{{slug}} đã lỗi thời và sẽ sớm ngừng hoạt động)."
 	},
 	"exportMode": {
 		"title": "Xuất chế độ",
@@ -79,7 +79,7 @@
 	"systemPrompt": {
 		"preview": "Xem trước lời nhắc hệ thống",
 		"copy": "Sao chép lời nhắc hệ thống vào bộ nhớ tạm",
-		"title": "Lời nhắc hệ thống (chế độ {{modeName}})"
+		"title": "Lời nhắc hệ thống (chế độ {{agentName}})"
 	},
 	"supportPrompts": {
 		"title": "Lời nhắc hỗ trợ",
@@ -200,7 +200,7 @@
 	},
 	"deleteMode": {
 		"title": "Xóa chế độ",
-		"message": "Bạn có chắc chắn muốn xóa chế độ \"{{modeName}}\" không?",
+		"message": "Bạn có chắc chắn muốn xóa chế độ \"{{agentName}}\" không?",
 		"rulesFolder": "Chế độ này có một thư mục quy tắc tại {{folderPath}} cũng sẽ bị xóa.",
 		"descriptionNoRules": "Bạn có chắc chắn muốn xóa chế độ tùy chỉnh này không?",
 		"confirm": "Xóa",

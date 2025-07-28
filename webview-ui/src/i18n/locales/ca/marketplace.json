@@ -11,12 +11,12 @@
 		"search": {
 			"placeholder": "Cercar elements del marketplace...",
 			"placeholderMcp": "Cercar MCPs...",
-			"placeholderMode": "Cercar modes..."
+			"placeholderMode": "Cercar agents..."
 		},
 		"type": {
 			"label": "Filtrar per tipus:",
 			"all": "Tots els tipus",
-			"mode": "Mode",
+			"agent": "Agent",
 			"mcpServer": "Servidor MCP"
 		},
 		"sort": {
@@ -36,7 +36,7 @@
 		"none": "Cap"
 	},
 	"type-group": {
-		"modes": "Modes",
+		"agents": "Agents",
 		"mcps": "Servidors MCP"
 	},
 	"items": {
@@ -79,7 +79,7 @@
 	},
 	"install": {
 		"title": "Instal·lar {{name}}",
-		"titleMode": "Instal·lar mode {{name}}",
+		"titleMode": "Instal·lar agent {{name}}",
 		"titleMcp": "Instal·lar MCP {{name}}",
 		"scope": "Àmbit d'instal·lació",
 		"project": "Projecte (espai de treball actual)",
@@ -92,10 +92,10 @@
 		"successDescription": "Instal·lació completada amb èxit",
 		"installed": "Instal·lat amb èxit!",
 		"whatNextMcp": "Ara pots configurar i utilitzar aquest servidor MCP. Feu clic a la icona MCP de la barra lateral per canviar de pestanya.",
-		"whatNextMode": "Ara pots utilitzar aquest mode. Feu clic a la icona Modes de la barra lateral per canviar de pestanya.",
+		"whatNextMode": "Ara pots utilitzar aquest agent. Feu clic a la icona Agents de la barra lateral per canviar de pestanya.",
 		"done": "Fet",
 		"goToMcp": "Anar a la pestanya MCP",
-		"goToModes": "Anar a la configuració de Modes",
+		"goToModes": "Anar a la configuració de Agents",
 		"moreInfoMcp": "Veure documentació MCP de {{name}}",
 		"validationRequired": "Si us plau, proporciona un valor per a {{paramName}}",
 		"prerequisites": "Prerequisits"
@@ -130,10 +130,10 @@
 		}
 	},
 	"removeConfirm": {
-		"mode": {
-			"title": "Eliminar el mode",
-			"message": "Estàs segur que vols eliminar el mode \"{{modeName}}\"?",
-			"rulesWarning": "Això també eliminarà qualsevol fitxer de regles associat per a aquest mode."
+		"agent": {
+			"title": "Eliminar el agent",
+			"message": "Estàs segur que vols eliminar el agent \"{{agentName}}\"?",
+			"rulesWarning": "Això també eliminarà qualsevol fitxer de regles associat per a aquest agent."
 		},
 		"mcp": {
 			"title": "Eliminar el servidor MCP",

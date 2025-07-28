@@ -61,7 +61,7 @@ describe("ProviderSettingsManager", () => {
 							fuzzyMatchThreshold: 1.0,
 						},
 					},
-					modeApiConfigs: {},
+					agentApiConfigs: {},
 					migrations: {
 						rateLimitSecondsMigrated: true,
 						diffSettingsMigrated: true,

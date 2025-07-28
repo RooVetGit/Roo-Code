@@ -103,27 +103,27 @@
 		},
 		"stickyModels": {
 			"title": "Model Sticky",
-			"description": "Setiap mode mengingat model terakhir yang kamu gunakan"
+			"description": "Setiap agent mengingat model terakhir yang kamu gunakan"
 		},
 		"tools": {
 			"title": "Tools",
 			"description": "Izinkan AI menyelesaikan masalah dengan browsing web, menjalankan perintah, dan lainnya"
 		},
 		"customizableModes": {
-			"title": "Mode yang Dapat Disesuaikan",
+			"title": "Agent yang Dapat Disesuaikan",
 			"description": "Persona khusus dengan perilaku dan model yang ditugaskan sendiri"
 		}
 	},
-	"selectMode": "Pilih mode untuk interaksi",
+	"selectMode": "Pilih agent untuk interaksi",
 	"selectApiConfig": "Pilih konfigurasi API",
 	"enhancePrompt": "Tingkatkan prompt dengan konteks tambahan",
 	"enhancePromptDescription": "Tombol 'Tingkatkan Prompt' membantu memperbaiki prompt kamu dengan memberikan konteks tambahan, klarifikasi, atau penyusunan ulang. Coba ketik prompt di sini dan klik tombol lagi untuk melihat cara kerjanya.",
 	"modeSelector": {
-		"title": "Mode",
-		"marketplace": "Marketplace Mode",
-		"settings": "Pengaturan Mode",
+		"title": "Agent",
+		"marketplace": "Marketplace Agent",
+		"settings": "Pengaturan Agent",
 		"description": "Persona khusus yang menyesuaikan perilaku Roo.",
-		"searchPlaceholder": "Cari mode...",
+		"searchPlaceholder": "Cari agent...",
 		"noResults": "Tidak ada hasil yang ditemukan"
 	},
 	"addImages": "Tambahkan gambar ke pesan",
@@ -131,15 +131,15 @@
 	"stopTts": "Hentikan text-to-speech",
 	"typeMessage": "Ketik pesan...",
 	"typeTask": "Bangun, cari, tanya sesuatu",
-	"addContext": "@ untuk menambah konteks, / untuk ganti mode",
+	"addContext": "@ untuk menambah konteks, / untuk ganti agent",
 	"dragFiles": "tahan shift untuk drag file",
 	"dragFilesImages": "tahan shift untuk drag file/gambar",
 	"errorReadingFile": "Error membaca file:",
 	"noValidImages": "Tidak ada gambar valid yang diproses",
 	"separator": "Pemisah",
 	"edit": "Edit...",
-	"forNextMode": "untuk mode selanjutnya",
-	"forPreviousMode": "untuk mode sebelumnya",
+	"forNextMode": "untuk agent selanjutnya",
+	"forPreviousMode": "untuk agent sebelumnya",
 	"apiRequest": {
 		"title": "Permintaan API",
 		"failed": "Permintaan API Gagal",
@@ -238,14 +238,14 @@
 		"wantsToUseTool": "Roo ingin menggunakan tool di server MCP {{serverName}}:",
 		"wantsToAccessResource": "Roo ingin mengakses resource di server MCP {{serverName}}:"
 	},
-	"modes": {
-		"wantsToSwitch": "Roo ingin beralih ke mode {{mode}}",
-		"wantsToSwitchWithReason": "Roo ingin beralih ke mode {{mode}} karena: {{reason}}",
-		"didSwitch": "Roo beralih ke mode {{mode}}",
-		"didSwitchWithReason": "Roo beralih ke mode {{mode}} karena: {{reason}}"
+	"agents": {
+		"wantsToSwitch": "Roo ingin beralih ke agent {{agent}}",
+		"wantsToSwitchWithReason": "Roo ingin beralih ke agent {{agent}} karena: {{reason}}",
+		"didSwitch": "Roo beralih ke agent {{agent}}",
+		"didSwitchWithReason": "Roo beralih ke agent {{agent}} karena: {{reason}}"
 	},
 	"subtasks": {
-		"wantsToCreate": "Roo ingin membuat subtugas baru dalam mode {{mode}}:",
+		"wantsToCreate": "Roo ingin membuat subtugas baru dalam agent {{agent}}:",
 		"wantsToFinish": "Roo ingin menyelesaikan subtugas ini",
 		"newTaskContent": "Instruksi Subtugas",
 		"completionContent": "Subtugas Selesai",

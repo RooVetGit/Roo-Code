@@ -164,8 +164,8 @@
 			"description": "Habilitar l'aprovació automàtica d'eines MCP individuals a la vista de Servidors MCP (requereix tant aquesta configuració com la casella \"Permetre sempre\" de l'eina)"
 		},
 		"modeSwitch": {
-			"label": "Mode",
-			"description": "Canviar automàticament entre diferents modes sense requerir aprovació"
+			"label": "Agent",
+			"description": "Canviar automàticament entre diferents agents sense requerir aprovació"
 		},
 		"subtasks": {
 			"label": "Subtasques",
@@ -332,7 +332,7 @@
 			"draftModelId": "ID del model d'esborrany",
 			"draftModelDesc": "El model d'esborrany ha de ser de la mateixa família de models perquè la descodificació especulativa funcioni correctament.",
 			"selectDraftModel": "Seleccionar model d'esborrany",
-			"noModelsFound": "No s'han trobat models d'esborrany. Assegureu-vos que LM Studio s'està executant amb el mode servidor habilitat.",
+			"noModelsFound": "No s'han trobat models d'esborrany. Assegureu-vos que LM Studio s'està executant amb el agent servidor habilitat.",
 			"description": "LM Studio permet executar models localment al vostre ordinador. Per a instruccions sobre com començar, consulteu la seva <a>Guia d'inici ràpid</a>. També necessitareu iniciar la funció de <b>Servidor Local</b> de LM Studio per utilitzar-la amb aquesta extensió. <span>Nota:</span> Roo Code utilitza prompts complexos i funciona millor amb models Claude. Els models menys capaços poden no funcionar com s'espera."
 		},
 		"ollama": {
@@ -641,8 +641,8 @@
 			"description": "Activar l'eina d'inserció de contingut experimental, permetent a Roo inserir contingut a números de línia específics sense necessitat de crear un diff."
 		},
 		"POWER_STEERING": {
-			"name": "Utilitzar mode \"direcció assistida\" experimental",
-			"description": "Quan està activat, Roo recordarà al model els detalls de la seva definició de mode actual amb més freqüència. Això portarà a una adherència més forta a les definicions de rol i instruccions personalitzades, però utilitzarà més tokens per missatge."
+			"name": "Utilitzar agent \"direcció assistida\" experimental",
+			"description": "Quan està activat, Roo recordarà al model els detalls de la seva definició de agent actual amb més freqüència. Això portarà a una adherència més forta a les definicions de rol i instruccions personalitzades, però utilitzarà més tokens per missatge."
 		},
 		"MULTI_SEARCH_AND_REPLACE": {
 			"name": "Utilitzar eina diff de blocs múltiples experimental",
@@ -654,7 +654,7 @@
 		},
 		"MARKETPLACE": {
 			"name": "Habilitar Marketplace",
-			"description": "Quan està habilitat, pots instal·lar MCP i modes personalitzats del Marketplace."
+			"description": "Quan està habilitat, pots instal·lar MCP i agents personalitzats del Marketplace."
 		},
 		"MULTI_FILE_APPLY_DIFF": {
 			"name": "Habilita edicions de fitxers concurrents",

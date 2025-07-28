@@ -1,7 +1,7 @@
 {
 	"title": "Modi",
 	"done": "Fertig",
-	"modes": {
+	"agents": {
 		"title": "Modi",
 		"createNewMode": "Neuen Modus erstellen",
 		"importMode": "Modus importieren",
@@ -49,8 +49,8 @@
 	"customInstructions": {
 		"title": "Modusspezifische benutzerdefinierte Anweisungen (optional)",
 		"resetToDefault": "Auf Standardwerte zurücksetzen",
-		"description": "Fügen Sie verhaltensspezifische Richtlinien für den Modus {{modeName}} hinzu.",
-		"loadFromFile": "Benutzerdefinierte Anweisungen für den Modus {{mode}} können auch aus dem Ordner <span>.roo/rules-{{slug}}/</span> in deinem Arbeitsbereich geladen werden (.roorules-{{slug}} und .clinerules-{{slug}} sind veraltet und werden bald nicht mehr funktionieren)."
+		"description": "Fügen Sie verhaltensspezifische Richtlinien für den Modus {{agentName}} hinzu.",
+		"loadFromFile": "Benutzerdefinierte Anweisungen für den Modus {{agent}} können auch aus dem Ordner <span>.roo/rules-{{slug}}/</span> in deinem Arbeitsbereich geladen werden (.roorules-{{slug}} und .clinerules-{{slug}} sind veraltet und werden bald nicht mehr funktionieren)."
 	},
 	"exportMode": {
 		"title": "Modus exportieren",
@@ -82,7 +82,7 @@
 	"systemPrompt": {
 		"preview": "System-Prompt Vorschau",
 		"copy": "System-Prompt in Zwischenablage kopieren",
-		"title": "System-Prompt (Modus {{modeName}})"
+		"title": "System-Prompt (Modus {{agentName}})"
 	},
 	"supportPrompts": {
 		"title": "Support-Prompts",
@@ -200,7 +200,7 @@
 	"allFiles": "alle Dateien",
 	"deleteMode": {
 		"title": "Modus löschen",
-		"message": "Möchten Sie den Modus \"{{modeName}}\" wirklich löschen?",
+		"message": "Möchten Sie den Modus \"{{agentName}}\" wirklich löschen?",
 		"rulesFolder": "Dieser Modus hat einen Regelordner unter {{folderPath}}, der ebenfalls gelöscht wird.",
 		"descriptionNoRules": "Möchten Sie diesen benutzerdefinierten Modus wirklich löschen?",
 		"confirm": "Löschen",

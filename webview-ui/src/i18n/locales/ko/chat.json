@@ -216,14 +216,14 @@
 		"wantsToUseTool": "Roo가 {{serverName}} MCP 서버에서 도구를 사용하고 싶어합니다:",
 		"wantsToAccessResource": "Roo가 {{serverName}} MCP 서버에서 리소스에 접근하고 싶어합니다:"
 	},
-	"modes": {
-		"wantsToSwitch": "Roo가 <code>{{mode}}</code> 모드로 전환하고 싶어합니다",
-		"wantsToSwitchWithReason": "Roo가 다음 이유로 <code>{{mode}}</code> 모드로 전환하고 싶어합니다: {{reason}}",
-		"didSwitch": "Roo가 <code>{{mode}}</code> 모드로 전환했습니다",
-		"didSwitchWithReason": "Roo가 다음 이유로 <code>{{mode}}</code> 모드로 전환했습니다: {{reason}}"
+	"agents": {
+		"wantsToSwitch": "Roo가 <code>{{agent}}</code> 모드로 전환하고 싶어합니다",
+		"wantsToSwitchWithReason": "Roo가 다음 이유로 <code>{{agent}}</code> 모드로 전환하고 싶어합니다: {{reason}}",
+		"didSwitch": "Roo가 <code>{{agent}}</code> 모드로 전환했습니다",
+		"didSwitchWithReason": "Roo가 다음 이유로 <code>{{agent}}</code> 모드로 전환했습니다: {{reason}}"
 	},
 	"subtasks": {
-		"wantsToCreate": "Roo가 <code>{{mode}}</code> 모드에서 새 하위 작업을 만들고 싶어합니다:",
+		"wantsToCreate": "Roo가 <code>{{agent}}</code> 모드에서 새 하위 작업을 만들고 싶어합니다:",
 		"wantsToFinish": "Roo가 이 하위 작업을 완료하고 싶어합니다",
 		"newTaskContent": "하위 작업 지침",
 		"completionContent": "하위 작업 완료",

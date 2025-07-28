@@ -1,11 +1,11 @@
 {
 	"type-group": {
-		"modes": "Mode",
+		"agents": "Agent",
 		"mcps": "Server MCP",
 		"match": "cocok"
 	},
 	"item-card": {
-		"type-mode": "Mode",
+		"type-agent": "Agent",
 		"type-mcp": "Server MCP",
 		"type-other": "Lainnya",
 		"by-author": "oleh {{author}}",
@@ -23,7 +23,7 @@
 		"type": {
 			"label": "Tipe",
 			"all": "Semua Tipe",
-			"mode": "Mode",
+			"agent": "Agent",
 			"mcpServer": "Server MCP"
 		},
 		"sort": {

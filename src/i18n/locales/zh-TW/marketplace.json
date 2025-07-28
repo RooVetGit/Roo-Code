@@ -1,11 +1,11 @@
 {
 	"type-group": {
-		"modes": "模式",
+		"agents": "模式",
 		"mcps": "MCP 伺服器",
 		"match": "符合"
 	},
 	"item-card": {
-		"type-mode": "模式",
+		"type-agent": "模式",
 		"type-mcp": "MCP 伺服器",
 		"type-other": "其他",
 		"by-author": "作者：{{author}}",
@@ -23,7 +23,7 @@
 		"type": {
 			"label": "類型",
 			"all": "所有類型",
-			"mode": "模式",
+			"agent": "模式",
 			"mcpServer": "MCP 伺服器"
 		},
 		"sort": {

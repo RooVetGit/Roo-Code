@@ -102,7 +102,7 @@
 		"image_saved": "Immagine salvata in {{path}}",
 		"organization_share_link_copied": "Link di condivisione organizzazione copiato negli appunti!",
 		"public_share_link_copied": "Link di condivisione pubblica copiato negli appunti!",
-		"mode_exported": "Modalità '{{mode}}' esportata con successo",
+		"mode_exported": "Modalità '{{agent}}' esportata con successo",
 		"mode_imported": "Modalità importata con successo"
 	},
 	"answers": {
@@ -161,7 +161,7 @@
 		}
 	},
 	"marketplace": {
-		"mode": {
+		"agent": {
 			"rulesCleanupFailed": "La modalità è stata rimossa con successo, ma non è stato possibile eliminare la cartella delle regole in {{rulesFolderPath}}. Potrebbe essere necessario eliminarla manualmente."
 		}
 	},

@@ -806,7 +806,7 @@ export class ClineProvider
 
 		if (cline) {
 			TelemetryService.instance.captureModeSwitch(cline.taskId, newMode)
-			cline.emit("taskModeSwitched", cline.taskId, newMode)
+			cline.emit("taskAgentSwitched", cline.taskId, newMode)
 		}
 
 		await this.updateGlobalState("mode", newMode)

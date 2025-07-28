@@ -11,13 +11,13 @@ import { TelemetryService } from "@roo-code/telemetry"
 
 import { ProviderSettingsManager, providerProfilesSchema } from "./ProviderSettingsManager"
 import { ContextProxy } from "./ContextProxy"
-import { CustomModesManager } from "./CustomModesManager"
+import { CustomAgentsManager, CustomModesManager } from "./CustomModesManager"
 import { t } from "../../i18n"
 
 export type ImportOptions = {
 	providerSettingsManager: ProviderSettingsManager
 	contextProxy: ContextProxy
-	customModesManager: CustomModesManager
+	customModesManager: CustomAgentsManager | CustomModesManager
 }
 
 type ExportOptions = {

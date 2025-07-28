@@ -107,7 +107,7 @@
 		"image_saved": "图片已保存到 {{path}}",
 		"organization_share_link_copied": "组织分享链接已复制到剪贴板！",
 		"public_share_link_copied": "公开分享链接已复制到剪贴板！",
-		"mode_exported": "模式 '{{mode}}' 已成功导出",
+		"mode_exported": "模式 '{{agent}}' 已成功导出",
 		"mode_imported": "模式已成功导入"
 	},
 	"answers": {
@@ -166,7 +166,7 @@
 		}
 	},
 	"marketplace": {
-		"mode": {
+		"agent": {
 			"rulesCleanupFailed": "模式已成功移除，但无法删除位于 {{rulesFolderPath}} 的规则文件夹。您可能需要手动删除。"
 		}
 	},

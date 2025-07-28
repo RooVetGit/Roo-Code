@@ -211,14 +211,14 @@
 		"wantsToUseTool": "Roo wil een tool gebruiken op de {{serverName}} MCP-server:",
 		"wantsToAccessResource": "Roo wil een bron benaderen op de {{serverName}} MCP-server:"
 	},
-	"modes": {
-		"wantsToSwitch": "Roo wil overschakelen naar {{mode}} modus",
-		"wantsToSwitchWithReason": "Roo wil overschakelen naar {{mode}} modus omdat: {{reason}}",
-		"didSwitch": "Roo is overgeschakeld naar {{mode}} modus",
-		"didSwitchWithReason": "Roo is overgeschakeld naar {{mode}} modus omdat: {{reason}}"
+	"agents": {
+		"wantsToSwitch": "Roo wil overschakelen naar {{agent}} modus",
+		"wantsToSwitchWithReason": "Roo wil overschakelen naar {{agent}} modus omdat: {{reason}}",
+		"didSwitch": "Roo is overgeschakeld naar {{agent}} modus",
+		"didSwitchWithReason": "Roo is overgeschakeld naar {{agent}} modus omdat: {{reason}}"
 	},
 	"subtasks": {
-		"wantsToCreate": "Roo wil een nieuwe subtaak aanmaken in {{mode}} modus:",
+		"wantsToCreate": "Roo wil een nieuwe subtaak aanmaken in {{agent}} modus:",
 		"wantsToFinish": "Roo wil deze subtaak voltooien",
 		"newTaskContent": "Subtaak-instructies",
 		"completionContent": "Subtaak voltooid",

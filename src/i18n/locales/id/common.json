@@ -17,7 +17,7 @@
 	"confirmation": {
 		"reset_state": "Apakah kamu yakin ingin mereset semua state dan secret storage di ekstensi? Ini tidak dapat dibatalkan.",
 		"delete_config_profile": "Apakah kamu yakin ingin menghapus profil konfigurasi ini?",
-		"delete_custom_mode_with_rules": "Anda yakin ingin menghapus mode {scope} ini?\n\nIni juga akan menghapus folder aturan terkait di:\n{rulesFolderPath}"
+		"delete_custom_mode_with_rules": "Anda yakin ingin menghapus agent {scope} ini?\n\nIni juga akan menghapus folder aturan terkait di:\n{rulesFolderPath}"
 	},
 	"errors": {
 		"invalid_data_uri": "Format data URI tidak valid",
@@ -43,7 +43,7 @@
 		"list_api_config": "Gagal mendapatkan daftar konfigurasi api",
 		"update_server_timeout": "Gagal memperbarui timeout server",
 		"hmr_not_running": "Server pengembangan lokal tidak berjalan, HMR tidak akan bekerja. Silakan jalankan 'npm run dev' sebelum meluncurkan ekstensi untuk mengaktifkan HMR.",
-		"retrieve_current_mode": "Error: gagal mengambil mode saat ini dari state.",
+		"retrieve_current_mode": "Error: gagal mengambil agent saat ini dari state.",
 		"failed_delete_repo": "Gagal menghapus shadow repository atau branch yang terkait: {{error}}",
 		"failed_remove_directory": "Gagal menghapus direktori tugas: {{error}}",
 		"custom_storage_path_unusable": "Path penyimpanan kustom \"{{path}}\" tidak dapat digunakan, akan menggunakan path default",
@@ -69,7 +69,7 @@
 		"share_auth_required": "Autentikasi diperlukan. Silakan masuk untuk berbagi tugas.",
 		"share_not_enabled": "Berbagi tugas tidak diaktifkan untuk organisasi ini.",
 		"share_task_not_found": "Tugas tidak ditemukan atau akses ditolak.",
-		"mode_import_failed": "Gagal mengimpor mode: {{error}}",
+		"mode_import_failed": "Gagal mengimpor agent: {{error}}",
 		"delete_rules_folder_failed": "Gagal menghapus folder aturan: {{rulesFolderPath}}. Error: {{error}}",
 		"claudeCode": {
 			"processExited": "Proses Claude Code keluar dengan kode {{exitCode}}.",
@@ -102,8 +102,8 @@
 		"image_saved": "Gambar disimpan ke {{path}}",
 		"organization_share_link_copied": "Tautan berbagi organisasi disalin ke clipboard!",
 		"public_share_link_copied": "Tautan berbagi publik disalin ke clipboard!",
-		"mode_exported": "Mode '{{mode}}' berhasil diekspor",
-		"mode_imported": "Mode berhasil diimpor"
+		"mode_exported": "Agent '{{agent}}' berhasil diekspor",
+		"mode_imported": "Agent berhasil diimpor"
 	},
 	"answers": {
 		"yes": "Ya",
@@ -146,14 +146,14 @@
 	"customModes": {
 		"errors": {
 			"yamlParseError": "YAML tidak valid dalam file .roomodes pada baris {{line}}. Silakan periksa:\n• Indentasi yang benar (gunakan spasi, bukan tab)\n• Tanda kutip dan kurung yang cocok\n• Sintaks YAML yang valid",
-			"schemaValidationError": "Format mode kustom tidak valid dalam .roomodes:\n{{issues}}",
-			"invalidFormat": "Format mode kustom tidak valid. Pastikan pengaturan kamu mengikuti format YAML yang benar.",
-			"updateFailed": "Gagal memperbarui mode kustom: {{error}}",
-			"deleteFailed": "Gagal menghapus mode kustom: {{error}}",
-			"resetFailed": "Gagal mereset mode kustom: {{error}}",
-			"modeNotFound": "Kesalahan tulis: Mode tidak ditemukan",
-			"noWorkspaceForProject": "Tidak ditemukan folder workspace untuk mode khusus proyek",
-			"rulesCleanupFailed": "Mode berhasil dihapus, tetapi gagal menghapus folder aturan di {{rulesFolderPath}}. Kamu mungkin perlu menghapusnya secara manual."
+			"schemaValidationError": "Format agent kustom tidak valid dalam .roomodes:\n{{issues}}",
+			"invalidFormat": "Format agent kustom tidak valid. Pastikan pengaturan kamu mengikuti format YAML yang benar.",
+			"updateFailed": "Gagal memperbarui agent kustom: {{error}}",
+			"deleteFailed": "Gagal menghapus agent kustom: {{error}}",
+			"resetFailed": "Gagal mereset agent kustom: {{error}}",
+			"modeNotFound": "Kesalahan tulis: Agent tidak ditemukan",
+			"noWorkspaceForProject": "Tidak ditemukan folder workspace untuk agent khusus proyek",
+			"rulesCleanupFailed": "Agent berhasil dihapus, tetapi gagal menghapus folder aturan di {{rulesFolderPath}}. Kamu mungkin perlu menghapusnya secara manual."
 		},
 		"scope": {
 			"project": "proyek",
@@ -161,8 +161,8 @@
 		}
 	},
 	"marketplace": {
-		"mode": {
-			"rulesCleanupFailed": "Mode berhasil dihapus, tetapi gagal menghapus folder aturan di {{rulesFolderPath}}. Kamu mungkin perlu menghapusnya secara manual."
+		"agent": {
+			"rulesCleanupFailed": "Agent berhasil dihapus, tetapi gagal menghapus folder aturan di {{rulesFolderPath}}. Kamu mungkin perlu menghapusnya secara manual."
 		}
 	},
 	"mdm": {
@@ -174,9 +174,9 @@
 	},
 	"prompts": {
 		"deleteMode": {
-			"title": "Hapus Mode Kustom",
-			"description": "Anda yakin ingin menghapus mode {{scope}} ini? Ini juga akan menghapus folder aturan terkait di: {{rulesFolderPath}}",
-			"descriptionNoRules": "Anda yakin ingin menghapus mode kustom ini?",
+			"title": "Hapus Agent Kustom",
+			"description": "Anda yakin ingin menghapus agent {{scope}} ini? Ini juga akan menghapus folder aturan terkait di: {{rulesFolderPath}}",
+			"descriptionNoRules": "Anda yakin ingin menghapus agent kustom ini?",
 			"confirm": "Hapus"
 		}
 	},

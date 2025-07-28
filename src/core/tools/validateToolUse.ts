@@ -1,15 +1,15 @@
 import type { ToolName, ModeConfig } from "@roo-code/types"
 
-import { Mode, isToolAllowedForMode } from "../../shared/modes"
+import { Agent, isToolAllowedForAgent } from "../../shared/agents"
 
 export function validateToolUse(
 	toolName: ToolName,
-	mode: Mode,
-	customModes?: ModeConfig[],
+	agent: Agent,
+	customAgents?: ModeConfig[],
 	toolRequirements?: Record<string, boolean>,
 	toolParams?: Record<string, unknown>,
 ): void {
-	if (!isToolAllowedForMode(toolName, mode, customModes ?? [], toolRequirements, toolParams)) {
-		throw new Error(`Tool "${toolName}" is not allowed in ${mode} mode.`)
+	if (!isToolAllowedForAgent(toolName, agent, customAgents ?? [], toolRequirements, toolParams)) {
+		throw new Error(`Tool "${toolName}" is not allowed in ${agent} mode.`)
 	}
 }

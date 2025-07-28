@@ -216,14 +216,14 @@
 		"wantsToUseTool": "Roo想在{{serverName}} MCP上使用工具:",
 		"wantsToAccessResource": "Roo想访问{{serverName}} MCP服务上的资源:"
 	},
-	"modes": {
-		"wantsToSwitch": "即将切换至{{mode}}模式",
-		"wantsToSwitchWithReason": "即将切换至{{mode}}模式（原因：{{reason}}）",
-		"didSwitch": "已切换至{{mode}}模式",
-		"didSwitchWithReason": "已切换至{{mode}}模式（原因：{{reason}}）"
+	"agents": {
+		"wantsToSwitch": "即将切换至{{agent}}模式",
+		"wantsToSwitchWithReason": "即将切换至{{agent}}模式（原因：{{reason}}）",
+		"didSwitch": "已切换至{{agent}}模式",
+		"didSwitchWithReason": "已切换至{{agent}}模式（原因：{{reason}}）"
 	},
 	"subtasks": {
-		"wantsToCreate": "Roo想在<code>{{mode}}</code>模式下创建新子任务:",
+		"wantsToCreate": "Roo想在<code>{{agent}}</code>模式下创建新子任务:",
 		"wantsToFinish": "Roo想完成此子任务",
 		"newTaskContent": "子任务说明",
 		"completionContent": "子任务已完成",

@@ -16,7 +16,7 @@
 		"type": {
 			"label": "タイプでフィルター:",
 			"all": "すべてのタイプ",
-			"mode": "モード",
+			"agent": "モード",
 			"mcpServer": "MCPサーバー"
 		},
 		"sort": {
@@ -36,7 +36,7 @@
 		"none": "なし"
 	},
 	"type-group": {
-		"modes": "モード",
+		"agents": "モード",
 		"mcps": "MCPサーバー"
 	},
 	"items": {
@@ -128,9 +128,9 @@
 		}
 	},
 	"removeConfirm": {
-		"mode": {
+		"agent": {
 			"title": "モードを削除",
-			"message": "モード「{{modeName}}」を本当に削除しますか？",
+			"message": "モード「{{agentName}}」を本当に削除しますか？",
 			"rulesWarning": "これにより、このモードに関連するルールファイルも削除されます。"
 		},
 		"mcp": {

@@ -1,6 +1,6 @@
 {
 	"greeting": "Welcome to Roo Code!",
-	"introduction": "With a range of built-in and extensible Modes, Roo Code lets you plan, architect, code, debug and boost your productivity like never before.",
+	"introduction": "With a range of built-in and extensible Agents, Roo Code lets you plan, architect, code, debug and boost your productivity like never before.",
 	"notice": "To get started, this extension needs an API provider.",
 	"start": "Let's go!",
 	"routers": {

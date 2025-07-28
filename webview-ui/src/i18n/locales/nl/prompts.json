@@ -1,7 +1,7 @@
 {
 	"title": "Modi",
 	"done": "Gereed",
-	"modes": {
+	"agents": {
 		"title": "Modi",
 		"createNewMode": "Nieuwe modus aanmaken",
 		"importMode": "Modus importeren",
@@ -49,8 +49,8 @@
 	"customInstructions": {
 		"title": "Modusspecifieke instructies (optioneel)",
 		"resetToDefault": "Terugzetten naar standaard",
-		"description": "Voeg gedragsrichtlijnen toe die specifiek zijn voor de modus {{modeName}}.",
-		"loadFromFile": "Modusspecifieke instructies voor {{mode}} kunnen ook worden geladen uit de map <span>.roo/rules-{{slug}}/</span> in je werkruimte (.roorules-{{slug}} en .clinerules-{{slug}} zijn verouderd en werken binnenkort niet meer)."
+		"description": "Voeg gedragsrichtlijnen toe die specifiek zijn voor de modus {{agentName}}.",
+		"loadFromFile": "Modusspecifieke instructies voor {{agent}} kunnen ook worden geladen uit de map <span>.roo/rules-{{slug}}/</span> in je werkruimte (.roorules-{{slug}} en .clinerules-{{slug}} zijn verouderd en werken binnenkort niet meer)."
 	},
 	"exportMode": {
 		"title": "Modus exporteren",
@@ -82,7 +82,7 @@
 	"systemPrompt": {
 		"preview": "Systeemprompt bekijken",
 		"copy": "Systeemprompt kopiëren naar klembord",
-		"title": "Systeemprompt ({{modeName}} modus)"
+		"title": "Systeemprompt ({{agentName}} modus)"
 	},
 	"supportPrompts": {
 		"title": "Ondersteuningsprompts",
@@ -200,7 +200,7 @@
 	"allFiles": "alle bestanden",
 	"deleteMode": {
 		"title": "Modus verwijderen",
-		"message": "Weet je zeker dat je de modus \"{{modeName}}\" wilt verwijderen?",
+		"message": "Weet je zeker dat je de modus \"{{agentName}}\" wilt verwijderen?",
 		"rulesFolder": "Deze modus heeft een regelmap op {{folderPath}} die ook wordt verwijderd.",
 		"descriptionNoRules": "Weet je zeker dat je deze aangepaste modus wilt verwijderen?",
 		"confirm": "Verwijderen",

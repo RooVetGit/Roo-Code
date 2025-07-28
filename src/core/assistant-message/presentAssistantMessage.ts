@@ -4,7 +4,7 @@ import { serializeError } from "serialize-error"
 import type { ToolName, ClineAsk, ToolProgressStatus } from "@roo-code/types"
 import { TelemetryService } from "@roo-code/telemetry"
 
-import { defaultModeSlug, getModeBySlug } from "../../shared/modes"
+import { defaultAgentSlug, getAgentBySlug } from "../../shared/agents"
 import type { ToolParamName, ToolResponse } from "../../shared/tools"
 
 import { fetchInstructionsTool } from "../tools/fetchInstructionsTool"
@@ -209,10 +209,10 @@ export async function presentAssistantMessage(cline: Task) {
 					case "update_todo_list":
 						return `[${block.name}]`
 					case "new_task": {
-						const mode = block.params.mode ?? defaultModeSlug
+						const agent = block.params.mode ?? defaultAgentSlug
 						const message = block.params.message ?? "(no message)"
-						const modeName = getModeBySlug(mode, customModes)?.name ?? mode
-						return `[${block.name} in ${modeName} mode: '${message}']`
+						// We'll get the custom agents when we actually need them
+						return `[${block.name} in ${agent} agent: '${message}']`
 					}
 				}
 			}
@@ -352,13 +352,13 @@ export async function presentAssistantMessage(cline: Task) {
 			}
 
 			// Validate tool use before execution.
-			const { mode, customModes } = (await cline.providerRef.deref()?.getState()) ?? {}
+			const { mode: agent, customModes: customAgents } = (await cline.providerRef.deref()?.getState()) ?? {}
 
 			try {
 				validateToolUse(
 					block.name as ToolName,
-					mode ?? defaultModeSlug,
-					customModes ?? [],
+					agent ?? defaultAgentSlug,
+					customAgents ?? [],
 					{ apply_diff: cline.diffEnabled },
 					block.params,
 				)

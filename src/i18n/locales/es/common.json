@@ -102,7 +102,7 @@
 		"image_saved": "Imagen guardada en {{path}}",
 		"organization_share_link_copied": "¡Enlace de compartición de organización copiado al portapapeles!",
 		"public_share_link_copied": "¡Enlace de compartición pública copiado al portapapeles!",
-		"mode_exported": "Modo '{{mode}}' exportado correctamente",
+		"mode_exported": "Modo '{{agent}}' exportado correctamente",
 		"mode_imported": "Modo importado correctamente"
 	},
 	"answers": {
@@ -161,7 +161,7 @@
 		}
 	},
 	"marketplace": {
-		"mode": {
+		"agent": {
 			"rulesCleanupFailed": "El modo se eliminó correctamente, pero no se pudo eliminar la carpeta de reglas en {{rulesFolderPath}}. Es posible que debas eliminarla manually."
 		}
 	},

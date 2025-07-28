@@ -1,11 +1,11 @@
 {
 	"type-group": {
-		"modes": "Modi",
+		"agents": "Modi",
 		"mcps": "MCP-Server",
 		"match": "Übereinstimmung"
 	},
 	"item-card": {
-		"type-mode": "Modus",
+		"type-agent": "Modus",
 		"type-mcp": "MCP-Server",
 		"type-other": "Andere",
 		"by-author": "von {{author}}",
@@ -23,7 +23,7 @@
 		"type": {
 			"label": "Typ",
 			"all": "Alle Typen",
-			"mode": "Modus",
+			"agent": "Modus",
 			"mcpServer": "MCP-Server"
 		},
 		"sort": {

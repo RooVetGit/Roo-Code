@@ -16,7 +16,7 @@
 		"type": {
 			"label": "按类型筛选：",
 			"all": "所有类型",
-			"mode": "模式",
+			"agent": "模式",
 			"mcpServer": "MCP 服务"
 		},
 		"sort": {
@@ -36,7 +36,7 @@
 		"none": "无"
 	},
 	"type-group": {
-		"modes": "模式",
+		"agents": "模式",
 		"mcps": "MCP 服务"
 	},
 	"items": {
@@ -128,9 +128,9 @@
 		}
 	},
 	"removeConfirm": {
-		"mode": {
+		"agent": {
 			"title": "删除模式",
-			"message": "您确定要删除\"{{modeName}}\"模式吗？",
+			"message": "您确定要删除\"{{agentName}}\"模式吗？",
 			"rulesWarning": "这也将删除此模式的任何关联规则文件。"
 		},
 		"mcp": {

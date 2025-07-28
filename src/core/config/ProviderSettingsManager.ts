@@ -9,7 +9,7 @@ import {
 } from "@roo-code/types"
 import { TelemetryService } from "@roo-code/telemetry"
 
-import { Mode, modes } from "../../shared/modes"
+import { Agent, agents } from "../../shared/agents"
 
 const providerSettingsWithIdSchema = providerSettingsSchema.extend({ id: z.string().optional() })
 const discriminatedProviderSettingsWithIdSchema = providerSettingsSchemaDiscriminated.and(
@@ -21,7 +21,8 @@ type ProviderSettingsWithId = z.infer<typeof providerSettingsWithIdSchema>
 export const providerProfilesSchema = z.object({
 	currentApiConfigName: z.string(),
 	apiConfigs: z.record(z.string(), providerSettingsWithIdSchema),
-	modeApiConfigs: z.record(z.string(), z.string()).optional(),
+	agentApiConfigs: z.record(z.string(), z.string()).optional(),
+	modeApiConfigs: z.record(z.string(), z.string()).optional(), // Keep for backward compatibility during migration
 	migrations: z
 		.object({
 			rateLimitSecondsMigrated: z.boolean().optional(),
@@ -39,14 +40,14 @@ export class ProviderSettingsManager {
 	private static readonly SCOPE_PREFIX = "roo_cline_config_"
 	private readonly defaultConfigId = this.generateId()
 
-	private readonly defaultModeApiConfigs: Record<string, string> = Object.fromEntries(
-		modes.map((mode) => [mode.slug, this.defaultConfigId]),
+	private readonly defaultAgentApiConfigs: Record<string, string> = Object.fromEntries(
+		agents.map((agent) => [agent.slug, this.defaultConfigId]),
 	)
 
 	private readonly defaultProviderProfiles: ProviderProfiles = {
 		currentApiConfigName: "default",
 		apiConfigs: { default: { id: this.defaultConfigId } },
-		modeApiConfigs: this.defaultModeApiConfigs,
+		agentApiConfigs: this.defaultAgentApiConfigs,
 		migrations: {
 			rateLimitSecondsMigrated: true, // Mark as migrated on fresh installs
 			diffSettingsMigrated: true, // Mark as migrated on fresh installs
@@ -92,15 +93,20 @@ export class ProviderSettingsManager {
 
 				let isDirty = false
 
-				// Migrate existing installs to have per-mode API config map
-				if (!providerProfiles.modeApiConfigs) {
-					// Use the currently selected config for all modes initially
+				// Migrate existing installs to have per-agent API config map
+				if (!providerProfiles.agentApiConfigs && !providerProfiles.modeApiConfigs) {
+					// Use the currently selected config for all agents initially
 					const currentName = providerProfiles.currentApiConfigName
 					const seedId =
 						providerProfiles.apiConfigs[currentName]?.id ??
 						Object.values(providerProfiles.apiConfigs)[0]?.id ??
 						this.defaultConfigId
-					providerProfiles.modeApiConfigs = Object.fromEntries(modes.map((m) => [m.slug, seedId]))
+					providerProfiles.agentApiConfigs = Object.fromEntries(agents.map((a) => [a.slug, seedId]))
+					isDirty = true
+				} else if (providerProfiles.modeApiConfigs && !providerProfiles.agentApiConfigs) {
+					// Migrate from modeApiConfigs to agentApiConfigs
+					providerProfiles.agentApiConfigs = providerProfiles.modeApiConfigs
+					delete providerProfiles.modeApiConfigs
 					isDirty = true
 				}
 
@@ -412,37 +418,46 @@ export class ProviderSettingsManager {
 	}
 
 	/**
-	 * Set the API config for a specific mode.
+	 * Set the API config for a specific agent.
 	 */
-	public async setModeConfig(mode: Mode, configId: string) {
+	public async setAgentConfig(agent: Agent, configId: string) {
 		try {
 			return await this.lock(async () => {
 				const providerProfiles = await this.load()
-				// Ensure the per-mode config map exists
-				if (!providerProfiles.modeApiConfigs) {
-					providerProfiles.modeApiConfigs = {}
+				// Ensure the per-agent config map exists
+				if (!providerProfiles.agentApiConfigs) {
+					providerProfiles.agentApiConfigs = {}
 				}
-				// Assign the chosen config ID to this mode
-				providerProfiles.modeApiConfigs[mode] = configId
+				// Assign the chosen config ID to this agent
+				providerProfiles.agentApiConfigs[agent] = configId
 				await this.store(providerProfiles)
 			})
 		} catch (error) {
-			throw new Error(`Failed to set mode config: ${error}`)
+			throw new Error(`Failed to set agent config: ${error}`)
 		}
 	}
 
 	/**
-	 * Get the API config ID for a specific mode.
+	 * Get the API config ID for a specific agent.
 	 */
-	public async getModeConfigId(mode: Mode) {
+	public async getAgentConfigId(agent: Agent) {
 		try {
 			return await this.lock(async () => {
-				const { modeApiConfigs } = await this.load()
-				return modeApiConfigs?.[mode]
+				const { agentApiConfigs } = await this.load()
+				return agentApiConfigs?.[agent]
 			})
 		} catch (error) {
-			throw new Error(`Failed to get mode config: ${error}`)
+			throw new Error(`Failed to get agent config: ${error}`)
 		}
+	}
+
+	// Backward compatibility aliases
+	public async setModeConfig(mode: Agent, configId: string) {
+		return this.setAgentConfig(mode, configId)
+	}
+
+	public async getModeConfigId(mode: Agent) {
+		return this.getAgentConfigId(mode)
 	}
 
 	public async export() {

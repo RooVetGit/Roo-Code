@@ -216,14 +216,14 @@
 		"wantsToUseTool": "Roo quer usar uma ferramenta no servidor MCP {{serverName}}:",
 		"wantsToAccessResource": "Roo quer acessar um recurso no servidor MCP {{serverName}}:"
 	},
-	"modes": {
-		"wantsToSwitch": "Roo quer mudar para o modo <code>{{mode}}</code>",
-		"wantsToSwitchWithReason": "Roo quer mudar para o modo <code>{{mode}}</code> porque: {{reason}}",
-		"didSwitch": "Roo mudou para o modo <code>{{mode}}</code>",
-		"didSwitchWithReason": "Roo mudou para o modo <code>{{mode}}</code> porque: {{reason}}"
+	"agents": {
+		"wantsToSwitch": "Roo quer mudar para o modo <code>{{agent}}</code>",
+		"wantsToSwitchWithReason": "Roo quer mudar para o modo <code>{{agent}}</code> porque: {{reason}}",
+		"didSwitch": "Roo mudou para o modo <code>{{agent}}</code>",
+		"didSwitchWithReason": "Roo mudou para o modo <code>{{agent}}</code> porque: {{reason}}"
 	},
 	"subtasks": {
-		"wantsToCreate": "Roo quer criar uma nova subtarefa no modo <code>{{mode}}</code>:",
+		"wantsToCreate": "Roo quer criar uma nova subtarefa no modo <code>{{agent}}</code>:",
 		"wantsToFinish": "Roo quer finalizar esta subtarefa",
 		"newTaskContent": "Instruções da subtarefa",
 		"completionContent": "Subtarefa concluída",

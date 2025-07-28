@@ -216,14 +216,14 @@
 		"wantsToUseTool": "RooはMCPサーバー{{serverName}}でツールを使用したい:",
 		"wantsToAccessResource": "RooはMCPサーバー{{serverName}}のリソースにアクセスしたい:"
 	},
-	"modes": {
-		"wantsToSwitch": "Rooは<code>{{mode}}</code>モードに切り替えたい",
-		"wantsToSwitchWithReason": "Rooは次の理由で<code>{{mode}}</code>モードに切り替えたい: {{reason}}",
-		"didSwitch": "Rooは<code>{{mode}}</code>モードに切り替えました",
-		"didSwitchWithReason": "Rooは次の理由で<code>{{mode}}</code>モードに切り替えました: {{reason}}"
+	"agents": {
+		"wantsToSwitch": "Rooは<code>{{agent}}</code>モードに切り替えたい",
+		"wantsToSwitchWithReason": "Rooは次の理由で<code>{{agent}}</code>モードに切り替えたい: {{reason}}",
+		"didSwitch": "Rooは<code>{{agent}}</code>モードに切り替えました",
+		"didSwitchWithReason": "Rooは次の理由で<code>{{agent}}</code>モードに切り替えました: {{reason}}"
 	},
 	"subtasks": {
-		"wantsToCreate": "Rooは<code>{{mode}}</code>モードで新しいサブタスクを作成したい:",
+		"wantsToCreate": "Rooは<code>{{agent}}</code>モードで新しいサブタスクを作成したい:",
 		"wantsToFinish": "Rooはこのサブタスクを終了したい",
 		"newTaskContent": "サブタスク指示",
 		"completionContent": "サブタスク完了",

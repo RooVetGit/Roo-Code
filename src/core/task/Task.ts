@@ -41,7 +41,7 @@ import { t } from "../../i18n"
 import { ClineApiReqCancelReason, ClineApiReqInfo } from "../../shared/ExtensionMessage"
 import { getApiMetrics } from "../../shared/getApiMetrics"
 import { ClineAskResponse } from "../../shared/WebviewMessage"
-import { defaultModeSlug } from "../../shared/modes"
+import { defaultAgentSlug } from "../../shared/modes"
 import { DiffStrategy } from "../../shared/tools"
 import { EXPERIMENT_IDS, experiments } from "../../shared/experiments"
 import { getModelMaxOutputTokens } from "../../shared/api"
@@ -99,7 +99,7 @@ const MAX_EXPONENTIAL_BACKOFF_SECONDS = 600 // 10 minutes
 export type ClineEvents = {
 	message: [{ action: "created" | "updated"; message: ClineMessage }]
 	taskStarted: []
-	taskModeSwitched: [taskId: string, mode: string]
+	taskAgentSwitched: [taskId: string, agent: string]
 	taskPaused: []
 	taskUnpaused: []
 	taskAskResponded: []
@@ -145,7 +145,7 @@ export class Task extends EventEmitter<ClineEvents> {
 	abandoned = false
 	isInitialized = false
 	isPaused: boolean = false
-	pausedModeSlug: string = defaultModeSlug
+	pausedAgentSlug: string = defaultAgentSlug
 	private pauseInterval: NodeJS.Timeout | undefined
 
 	// API
@@ -1193,17 +1193,17 @@ export class Task extends EventEmitter<ClineEvents> {
 			provider.log(`[subtasks] paused ${this.taskId}.${this.instanceId}`)
 			await this.waitForResume()
 			provider.log(`[subtasks] resumed ${this.taskId}.${this.instanceId}`)
-			const currentMode = (await provider.getState())?.mode ?? defaultModeSlug
+			const currentAgent = (await provider.getState())?.mode ?? defaultAgentSlug
 
-			if (currentMode !== this.pausedModeSlug) {
-				// The mode has changed, we need to switch back to the paused mode.
-				await provider.handleModeSwitch(this.pausedModeSlug)
+			if (currentAgent !== this.pausedAgentSlug) {
+				// The agent has changed, we need to switch back to the paused agent.
+				await provider.handleModeSwitch(this.pausedAgentSlug)
 
-				// Delay to allow mode change to take effect before next tool is executed.
+				// Delay to allow agent change to take effect before next tool is executed.
 				await delay(500)
 
 				provider.log(
-					`[subtasks] task ${this.taskId}.${this.instanceId} has switched back to '${this.pausedModeSlug}' from '${currentMode}'`,
+					`[subtasks] task ${this.taskId}.${this.instanceId} has switched back to '${this.pausedAgentSlug}' from '${currentAgent}'`,
 				)
 			}
 		}
@@ -1626,8 +1626,8 @@ export class Task extends EventEmitter<ClineEvents> {
 		const {
 			browserViewportSize,
 			mode,
-			customModes,
-			customModePrompts,
+			customModes: customAgents,
+			customModePrompts: customAgentPrompts,
 			customInstructions,
 			experiments,
 			enableMcpServerCreation,
@@ -1653,8 +1653,8 @@ export class Task extends EventEmitter<ClineEvents> {
 				this.diffStrategy,
 				browserViewportSize,
 				mode,
-				customModePrompts,
-				customModes,
+				customAgentPrompts,
+				customAgents,
 				customInstructions,
 				this.diffEnabled,
 				experiments,

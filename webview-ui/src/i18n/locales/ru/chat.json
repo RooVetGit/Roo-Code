@@ -211,14 +211,14 @@
 		"wantsToUseTool": "Roo хочет использовать инструмент на сервере MCP {{serverName}}:",
 		"wantsToAccessResource": "Roo хочет получить доступ к ресурсу на сервере MCP {{serverName}}:"
 	},
-	"modes": {
-		"wantsToSwitch": "Roo хочет переключиться в режим {{mode}}",
-		"wantsToSwitchWithReason": "Roo хочет переключиться в режим {{mode}}, потому что: {{reason}}",
-		"didSwitch": "Roo переключился в режим {{mode}}",
-		"didSwitchWithReason": "Roo переключился в режим {{mode}}, потому что: {{reason}}"
+	"agents": {
+		"wantsToSwitch": "Roo хочет переключиться в режим {{agent}}",
+		"wantsToSwitchWithReason": "Roo хочет переключиться в режим {{agent}}, потому что: {{reason}}",
+		"didSwitch": "Roo переключился в режим {{agent}}",
+		"didSwitchWithReason": "Roo переключился в режим {{agent}}, потому что: {{reason}}"
 	},
 	"subtasks": {
-		"wantsToCreate": "Roo хочет создать новую подзадачу в режиме {{mode}}:",
+		"wantsToCreate": "Roo хочет создать новую подзадачу в режиме {{agent}}:",
 		"wantsToFinish": "Roo хочет завершить эту подзадачу",
 		"newTaskContent": "Инструкции по подзадаче",
 		"completionContent": "Подзадача завершена",

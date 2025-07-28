@@ -11,12 +11,12 @@
 		"search": {
 			"placeholder": "Search marketplace items...",
 			"placeholderMcp": "Search MCPs...",
-			"placeholderMode": "Search Modes..."
+			"placeholderAgent": "Search Agents..."
 		},
 		"type": {
 			"label": "Filter by type:",
 			"all": "All types",
-			"mode": "Mode",
+			"agent": "Agent",
 			"mcpServer": "MCP Server"
 		},
 		"sort": {
@@ -36,7 +36,7 @@
 		"none": "None"
 	},
 	"type-group": {
-		"modes": "Modes",
+		"agents": "Agents",
 		"mcps": "MCP Servers"
 	},
 	"items": {
@@ -77,7 +77,7 @@
 	},
 	"install": {
 		"title": "Install {{name}}",
-		"titleMode": "Install {{name}} Mode",
+		"titleAgent": "Install {{name}} Agent",
 		"titleMcp": "Install {{name}} MCP",
 		"scope": "Installation Scope",
 		"project": "Project (current workspace)",
@@ -91,10 +91,10 @@
 		"successDescription": "Installation completed successfully",
 		"installed": "Successfully installed!",
 		"whatNextMcp": "You can now configure and use this MCP server. Click the MCP icon in the sidebar to switch tabs.",
-		"whatNextMode": "You can now use this mode. Click the Modes icon in the sidebar to switch tabs.",
+		"whatNextAgent": "You can now use this agent. Click the Agents icon in the sidebar to switch tabs.",
 		"done": "Done",
 		"goToMcp": "Go to MCP Tab",
-		"goToModes": "Go to Modes Settings",
+		"goToAgents": "Go to Agents Settings",
 		"moreInfoMcp": "View {{name}} MCP documentation",
 		"validationRequired": "Please provide a value for {{paramName}}"
 	},
@@ -128,10 +128,10 @@
 		}
 	},
 	"removeConfirm": {
-		"mode": {
-			"title": "Remove Mode",
-			"message": "Are you sure you want to remove the mode \"{{modeName}}\"?",
-			"rulesWarning": "This will also remove any associated rules files for this mode."
+		"agent": {
+			"title": "Remove Agent",
+			"message": "Are you sure you want to remove the agent \"{{agentName}}\"?",
+			"rulesWarning": "This will also remove any associated rules files for this agent."
 		},
 		"mcp": {
 			"title": "Remove MCP Server",

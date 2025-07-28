@@ -16,7 +16,7 @@
 		"type": {
 			"label": "Filtruj według typu:",
 			"all": "Wszystkie typy",
-			"mode": "Tryb",
+			"agent": "Tryb",
 			"mcpServer": "Serwer MCP"
 		},
 		"sort": {
@@ -36,7 +36,7 @@
 		"none": "Brak"
 	},
 	"type-group": {
-		"modes": "Tryby",
+		"agents": "Tryby",
 		"mcps": "Serwery MCP"
 	},
 	"items": {
@@ -128,9 +128,9 @@
 		}
 	},
 	"removeConfirm": {
-		"mode": {
+		"agent": {
 			"title": "Usuń tryb",
-			"message": "Czy na pewno chcesz usunąć tryb „{{modeName}}”?",
+			"message": "Czy na pewno chcesz usunąć tryb „{{agentName}}”?",
 			"rulesWarning": "Spowoduje to również usunięcie wszelkich powiązanych plików reguł dla tego trybu."
 		},
 		"mcp": {

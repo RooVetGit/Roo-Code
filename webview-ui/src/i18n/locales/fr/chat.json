@@ -88,19 +88,19 @@
 			"description": "Divisez les tâches en parties plus petites et gérables."
 		},
 		"stickyModels": {
-			"title": "Modes persistants",
-			"description": "Chaque mode se souvient de votre dernier modèle utilisé"
+			"title": "Agents persistants",
+			"description": "Chaque agent se souvient de votre dernier modèle utilisé"
 		},
 		"tools": {
 			"title": "Outils",
 			"description": "Permettez à l'IA de résoudre des problèmes en naviguant sur le Web, en exécutant des commandes, et plus encore."
 		},
 		"customizableModes": {
-			"title": "Modes personnalisables",
+			"title": "Agents personnalisables",
 			"description": "Des personas spécialisés avec leurs propres comportements et modèles assignés"
 		}
 	},
-	"selectMode": "Sélectionner le mode d'interaction",
+	"selectMode": "Sélectionner le agent d'interaction",
 	"selectApiConfig": "Sélectionner la configuration de l'API",
 	"enhancePrompt": "Améliorer la requête avec un contexte supplémentaire",
 	"addImages": "Ajouter des images au message",
@@ -108,24 +108,24 @@
 	"stopTts": "Arrêter la synthèse vocale",
 	"typeMessage": "Écrivez un message...",
 	"typeTask": "Écrivez votre tâche ici...",
-	"addContext": "@ pour ajouter du contexte, / pour changer de mode",
+	"addContext": "@ pour ajouter du contexte, / pour changer de agent",
 	"dragFiles": "maintenir Maj pour glisser des fichiers",
 	"dragFilesImages": "maintenir Maj pour glisser des fichiers/images",
 	"enhancePromptDescription": "Le bouton 'Améliorer la requête' aide à améliorer votre demande en fournissant un contexte supplémentaire, des clarifications ou des reformulations. Essayez de taper une demande ici et cliquez à nouveau sur le bouton pour voir comment cela fonctionne.",
 	"modeSelector": {
-		"title": "Modes",
-		"marketplace": "Marketplace de Modes",
-		"settings": "Paramètres des Modes",
+		"title": "Agents",
+		"marketplace": "Marketplace de Agents",
+		"settings": "Paramètres des Agents",
 		"description": "Personas spécialisés qui adaptent le comportement de Roo.",
-		"searchPlaceholder": "Rechercher des modes...",
+		"searchPlaceholder": "Rechercher des agents...",
 		"noResults": "Aucun résultat trouvé"
 	},
 	"errorReadingFile": "Erreur lors de la lecture du fichier :",
 	"noValidImages": "Aucune image valide n'a été traitée",
 	"separator": "Séparateur",
 	"edit": "Éditer...",
-	"forNextMode": "pour le prochain mode",
-	"forPreviousMode": "pour le mode précédent",
+	"forNextMode": "pour le prochain agent",
+	"forPreviousMode": "pour le agent précédent",
 	"error": "Erreur",
 	"diffError": {
 		"title": "Modification échouée"
@@ -216,14 +216,14 @@
 		"wantsToUseTool": "Roo veut utiliser un outil sur le serveur MCP {{serverName}} :",
 		"wantsToAccessResource": "Roo veut accéder à une ressource sur le serveur MCP {{serverName}} :"
 	},
-	"modes": {
-		"wantsToSwitch": "Roo veut passer au mode <code>{{mode}}</code>",
-		"wantsToSwitchWithReason": "Roo veut passer au mode <code>{{mode}}</code> car : {{reason}}",
-		"didSwitch": "Roo est passé au mode <code>{{mode}}</code>",
-		"didSwitchWithReason": "Roo est passé au mode <code>{{mode}}</code> car : {{reason}}"
+	"agents": {
+		"wantsToSwitch": "Roo veut passer au agent <code>{{agent}}</code>",
+		"wantsToSwitchWithReason": "Roo veut passer au agent <code>{{agent}}</code> car : {{reason}}",
+		"didSwitch": "Roo est passé au agent <code>{{agent}}</code>",
+		"didSwitchWithReason": "Roo est passé au agent <code>{{agent}}</code> car : {{reason}}"
 	},
 	"subtasks": {
-		"wantsToCreate": "Roo veut créer une nouvelle sous-tâche en mode <code>{{mode}}</code> :",
+		"wantsToCreate": "Roo veut créer une nouvelle sous-tâche en agent <code>{{agent}}</code> :",
 		"wantsToFinish": "Roo veut terminer cette sous-tâche",
 		"newTaskContent": "Instructions de la sous-tâche",
 		"completionContent": "Sous-tâche terminée",

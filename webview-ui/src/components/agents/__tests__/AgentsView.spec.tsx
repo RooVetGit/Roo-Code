@@ -1,7 +1,7 @@
-// npx vitest src/components/modes/__tests__/ModesView.spec.tsx
+// npx vitest src/components/agents/__tests__/AgentsView.spec.tsx
 
 import { render, screen, fireEvent, waitFor } from "@/utils/test-utils"
-import ModesView from "../ModesView"
+import AgentsView from "../AgentsView"
 import { ExtensionStateContext } from "@src/context/ExtensionStateContext"
 import { vscode } from "@src/utils/vscode"
 
@@ -32,7 +32,7 @@ const renderPromptsView = (props = {}) => {
 	const mockOnDone = vitest.fn()
 	return render(
 		<ExtensionStateContext.Provider value={{ ...mockExtensionState, ...props } as any}>
-			<ModesView onDone={mockOnDone} />
+			<AgentsView onDone={mockOnDone} />
 		</ExtensionStateContext.Provider>,
 	)
 }
@@ -128,7 +128,7 @@ describe("PromptsView", () => {
 		const { unmount } = render(
 			<ExtensionStateContext.Provider
 				value={{ ...mockExtensionState, mode: "code", customModes: [customMode] } as any}>
-				<ModesView onDone={vitest.fn()} />
+				<AgentsView onDone={vitest.fn()} />
 			</ExtensionStateContext.Provider>,
 		)
 
@@ -154,7 +154,7 @@ describe("PromptsView", () => {
 		render(
 			<ExtensionStateContext.Provider
 				value={{ ...mockExtensionState, mode: "custom-mode", customModes: [customMode] } as any}>
-				<ModesView onDone={vitest.fn()} />
+				<AgentsView onDone={vitest.fn()} />
 			</ExtensionStateContext.Provider>,
 		)
 
@@ -175,7 +175,7 @@ describe("PromptsView", () => {
 		const { unmount } = render(
 			<ExtensionStateContext.Provider
 				value={{ ...mockExtensionState, mode: "code", customModes: [customMode] } as any}>
-				<ModesView onDone={vitest.fn()} />
+				<AgentsView onDone={vitest.fn()} />
 			</ExtensionStateContext.Provider>,
 		)
 
@@ -190,7 +190,7 @@ describe("PromptsView", () => {
 		render(
 			<ExtensionStateContext.Provider
 				value={{ ...mockExtensionState, mode: "custom-mode", customModes: [customMode] } as any}>
-				<ModesView onDone={vitest.fn()} />
+				<AgentsView onDone={vitest.fn()} />
 			</ExtensionStateContext.Provider>,
 		)
 

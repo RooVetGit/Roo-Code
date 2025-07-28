@@ -1,7 +1,7 @@
 {
 	"title": "Tryby",
 	"done": "Gotowe",
-	"modes": {
+	"agents": {
 		"title": "Tryby",
 		"createNewMode": "Utwórz nowy tryb",
 		"importMode": "Importuj tryb",
@@ -49,8 +49,8 @@
 	"customInstructions": {
 		"title": "Niestandardowe instrukcje dla trybu (opcjonalne)",
 		"resetToDefault": "Przywróć domyślne",
-		"description": "Dodaj wytyczne dotyczące zachowania specyficzne dla trybu {{modeName}}.",
-		"loadFromFile": "Niestandardowe instrukcje dla trybu {{mode}} mogą być również ładowane z folderu <span>.roo/rules-{{slug}}/</span> w Twoim obszarze roboczym (.roorules-{{slug}} i .clinerules-{{slug}} są przestarzałe i wkrótce przestaną działać)."
+		"description": "Dodaj wytyczne dotyczące zachowania specyficzne dla trybu {{agentName}}.",
+		"loadFromFile": "Niestandardowe instrukcje dla trybu {{agent}} mogą być również ładowane z folderu <span>.roo/rules-{{slug}}/</span> w Twoim obszarze roboczym (.roorules-{{slug}} i .clinerules-{{slug}} są przestarzałe i wkrótce przestaną działać)."
 	},
 	"exportMode": {
 		"title": "Eksportuj tryb",
@@ -82,7 +82,7 @@
 	"systemPrompt": {
 		"preview": "Podgląd podpowiedzi systemowej",
 		"copy": "Kopiuj podpowiedź systemową do schowka",
-		"title": "Podpowiedź systemowa (tryb {{modeName}})"
+		"title": "Podpowiedź systemowa (tryb {{agentName}})"
 	},
 	"supportPrompts": {
 		"title": "Podpowiedzi pomocnicze",
@@ -200,7 +200,7 @@
 	"allFiles": "wszystkie pliki",
 	"deleteMode": {
 		"title": "Usuń tryb",
-		"message": "Czy na pewno chcesz usunąć tryb \"{{modeName}}\"?",
+		"message": "Czy na pewno chcesz usunąć tryb \"{{agentName}}\"?",
 		"rulesFolder": "Ten tryb ma folder z regułami w {{folderPath}}, który również zostanie usunięty.",
 		"descriptionNoRules": "Czy na pewno chcesz usunąć ten niestandardowy tryb?",
 		"confirm": "Usuń",

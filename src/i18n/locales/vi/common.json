@@ -102,7 +102,7 @@
 		"image_saved": "Hình ảnh đã được lưu vào {{path}}",
 		"organization_share_link_copied": "Liên kết chia sẻ tổ chức đã được sao chép vào clipboard!",
 		"public_share_link_copied": "Liên kết chia sẻ công khai đã được sao chép vào clipboard!",
-		"mode_exported": "Chế độ '{{mode}}' đã được xuất thành công",
+		"mode_exported": "Chế độ '{{agent}}' đã được xuất thành công",
 		"mode_imported": "Chế độ đã được nhập thành công"
 	},
 	"answers": {
@@ -161,7 +161,7 @@
 		}
 	},
 	"marketplace": {
-		"mode": {
+		"agent": {
 			"rulesCleanupFailed": "Đã xóa chế độ thành công, nhưng không thể xóa thư mục quy tắc tại {{rulesFolderPath}}. Bạn có thể cần xóa thủ công."
 		}
 	},

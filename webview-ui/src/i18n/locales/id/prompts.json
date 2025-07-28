@@ -1,24 +1,24 @@
 {
-	"title": "Mode",
+	"title": "Agent",
 	"done": "Selesai",
-	"modes": {
-		"title": "Mode",
-		"createNewMode": "Buat mode baru",
-		"importMode": "Impor mode",
-		"noMatchFound": "Tidak ada mode yang ditemukan",
-		"editModesConfig": "Edit konfigurasi mode",
-		"editGlobalModes": "Edit Mode Global",
-		"editProjectModes": "Edit Mode Proyek (.roomodes)",
-		"createModeHelpText": "Mode adalah persona khusus yang menyesuaikan perilaku Roo Code. <0>Pelajari tentang Menggunakan Mode</0> atau <1>Menyesuaikan Mode.</1>",
-		"selectMode": "Cari mode"
+	"agents": {
+		"title": "Agent",
+		"createNewMode": "Buat agent baru",
+		"importMode": "Impor agent",
+		"noMatchFound": "Tidak ada agent yang ditemukan",
+		"editModesConfig": "Edit konfigurasi agent",
+		"editGlobalModes": "Edit Agent Global",
+		"editProjectModes": "Edit Agent Proyek (.roomodes)",
+		"createModeHelpText": "Agent adalah persona khusus yang menyesuaikan perilaku Roo Code. <0>Pelajari tentang Menggunakan Agent</0> atau <1>Menyesuaikan Agent.</1>",
+		"selectMode": "Cari agent"
 	},
 	"apiConfiguration": {
 		"title": "Konfigurasi API",
-		"select": "Pilih konfigurasi API mana yang akan digunakan untuk mode ini"
+		"select": "Pilih konfigurasi API mana yang akan digunakan untuk agent ini"
 	},
 	"tools": {
 		"title": "Tools yang Tersedia",
-		"builtInModesText": "Tools untuk mode bawaan tidak dapat dimodifikasi",
+		"builtInModesText": "Tools untuk agent bawaan tidak dapat dimodifikasi",
 		"editTools": "Edit tools",
 		"doneEditing": "Selesai mengedit",
 		"allowedFiles": "File yang diizinkan:",
@@ -34,32 +34,32 @@
 	"roleDefinition": {
 		"title": "Definisi Peran",
 		"resetToDefault": "Reset ke default",
-		"description": "Tentukan keahlian dan kepribadian Roo untuk mode ini. Deskripsi ini membentuk bagaimana Roo mempresentasikan dirinya dan mendekati tugas."
+		"description": "Tentukan keahlian dan kepribadian Roo untuk agent ini. Deskripsi ini membentuk bagaimana Roo mempresentasikan dirinya dan mendekati tugas."
 	},
 	"description": {
 		"title": "Deskripsi singkat (untuk manusia)",
 		"resetToDefault": "Setel ulang ke deskripsi default",
-		"description": "Deskripsi singkat yang ditampilkan di dropdown pemilih mode."
+		"description": "Deskripsi singkat yang ditampilkan di dropdown pemilih agent."
 	},
 	"whenToUse": {
 		"title": "Kapan Menggunakan (opsional)",
-		"description": "Jelaskan kapan mode ini harus digunakan. Ini membantu Orchestrator memilih mode yang tepat untuk suatu tugas.",
+		"description": "Jelaskan kapan agent ini harus digunakan. Ini membantu Orchestrator memilih agent yang tepat untuk suatu tugas.",
 		"resetToDefault": "Reset ke deskripsi default 'Kapan Menggunakan'"
 	},
 	"customInstructions": {
-		"title": "Instruksi Kustom Khusus Mode (opsional)",
+		"title": "Instruksi Kustom Khusus Agent (opsional)",
 		"resetToDefault": "Reset ke default",
-		"description": "Tambahkan panduan perilaku khusus untuk mode {{modeName}}.",
-		"loadFromFile": "Instruksi kustom khusus untuk mode {{mode}} juga dapat dimuat dari folder <span>.roo/rules-{{slug}}/</span> di workspace Anda (.roomodes-{{slug}} dan .clinerules-{{slug}} sudah deprecated dan akan segera berhenti bekerja)."
+		"description": "Tambahkan panduan perilaku khusus untuk agent {{agentName}}.",
+		"loadFromFile": "Instruksi kustom khusus untuk agent {{agent}} juga dapat dimuat dari folder <span>.roo/rules-{{slug}}/</span> di workspace Anda (.roomodes-{{slug}} dan .clinerules-{{slug}} sudah deprecated dan akan segera berhenti bekerja)."
 	},
 	"exportMode": {
-		"title": "Ekspor Mode",
-		"description": "Ekspor mode ini ke file YAML dengan semua aturan yang disertakan untuk berbagi dengan mudah dengan orang lain.",
-		"export": "Ekspor Mode",
+		"title": "Ekspor Agent",
+		"description": "Ekspor agent ini ke file YAML dengan semua aturan yang disertakan untuk berbagi dengan mudah dengan orang lain.",
+		"export": "Ekspor Agent",
 		"exporting": "Mengekspor..."
 	},
 	"importMode": {
-		"selectLevel": "Pilih di mana akan mengimpor mode ini:",
+		"selectLevel": "Pilih di mana akan mengimpor agent ini:",
 		"import": "Impor",
 		"importing": "Mengimpor...",
 		"global": {
@@ -68,21 +68,21 @@
 		},
 		"project": {
 			"label": "Tingkat Proyek",
-			"description": "Hanya tersedia di ruang kerja ini. Jika mode yang diekspor berisi file aturan, file tersebut akan dibuat ulang di folder .roo/rules-{slug}/."
+			"description": "Hanya tersedia di ruang kerja ini. Jika agent yang diekspor berisi file aturan, file tersebut akan dibuat ulang di folder .roo/rules-{slug}/."
 		}
 	},
 	"advanced": {
 		"title": "Lanjutan"
 	},
 	"globalCustomInstructions": {
-		"title": "Instruksi Kustom untuk Semua Mode",
-		"description": "Instruksi ini berlaku untuk semua mode. Mereka menyediakan set dasar perilaku yang dapat ditingkatkan oleh instruksi khusus mode di bawah. <0>Pelajari lebih lanjut</0>",
+		"title": "Instruksi Kustom untuk Semua Agent",
+		"description": "Instruksi ini berlaku untuk semua agent. Mereka menyediakan set dasar perilaku yang dapat ditingkatkan oleh instruksi khusus agent di bawah. <0>Pelajari lebih lanjut</0>",
 		"loadFromFile": "Instruksi juga dapat dimuat dari folder <span>.roo/rules/</span> di workspace Anda (.roorules dan .clinerules sudah deprecated dan akan segera berhenti bekerja)."
 	},
 	"systemPrompt": {
 		"preview": "Pratinjau System Prompt",
 		"copy": "Salin system prompt ke clipboard",
-		"title": "System Prompt (mode {{modeName}})"
+		"title": "System Prompt (agent {{agentName}})"
 	},
 	"supportPrompts": {
 		"title": "Support Prompts",
@@ -149,11 +149,11 @@
 		"description": "<2>⚠️ Peringatan:</2> Fitur lanjutan ini melewati pengamanan. <1>BACA INI SEBELUM MENGGUNAKAN!</1>Override system prompt default dengan membuat file di <span>.roo/system-prompt-{{slug}}</span>."
 	},
 	"createModeDialog": {
-		"title": "Buat Mode Baru",
+		"title": "Buat Agent Baru",
 		"close": "Tutup",
 		"name": {
 			"label": "Nama",
-			"placeholder": "Masukkan nama mode"
+			"placeholder": "Masukkan nama agent"
 		},
 		"slug": {
 			"label": "Slug",
@@ -161,7 +161,7 @@
 		},
 		"saveLocation": {
 			"label": "Lokasi Penyimpanan",
-			"description": "Pilih di mana menyimpan mode ini. Mode khusus proyek lebih diutamakan daripada mode global.",
+			"description": "Pilih di mana menyimpan agent ini. Agent khusus proyek lebih diutamakan daripada agent global.",
 			"global": {
 				"label": "Global",
 				"description": "Tersedia di semua workspace"
@@ -173,36 +173,36 @@
 		},
 		"roleDefinition": {
 			"label": "Definisi Peran",
-			"description": "Tentukan keahlian dan kepribadian Roo untuk mode ini."
+			"description": "Tentukan keahlian dan kepribadian Roo untuk agent ini."
 		},
 		"whenToUse": {
 			"label": "Kapan Menggunakan (opsional)",
-			"description": "Berikan deskripsi yang jelas tentang kapan mode ini paling efektif dan jenis tugas apa yang unggul."
+			"description": "Berikan deskripsi yang jelas tentang kapan agent ini paling efektif dan jenis tugas apa yang unggul."
 		},
 		"tools": {
 			"label": "Tools yang Tersedia",
-			"description": "Pilih tools mana yang dapat digunakan mode ini."
+			"description": "Pilih tools mana yang dapat digunakan agent ini."
 		},
 		"description": {
 			"label": "Deskripsi singkat (untuk manusia)",
-			"description": "Deskripsi singkat yang ditampilkan di dropdown pemilih mode."
+			"description": "Deskripsi singkat yang ditampilkan di dropdown pemilih agent."
 		},
 		"customInstructions": {
 			"label": "Instruksi Kustom (opsional)",
-			"description": "Tambahkan panduan perilaku khusus untuk mode ini."
+			"description": "Tambahkan panduan perilaku khusus untuk agent ini."
 		},
 		"buttons": {
 			"cancel": "Batal",
-			"create": "Buat Mode"
+			"create": "Buat Agent"
 		},
-		"deleteMode": "Hapus mode"
+		"deleteMode": "Hapus agent"
 	},
 	"allFiles": "semua file",
 	"deleteMode": {
-		"title": "Hapus Mode",
-		"message": "Anda yakin ingin menghapus mode \"{{modeName}}\"?",
-		"rulesFolder": "Mode ini memiliki folder aturan di {{folderPath}} yang juga akan dihapus.",
-		"descriptionNoRules": "Apakah Anda yakin ingin menghapus mode kustom ini?",
+		"title": "Hapus Agent",
+		"message": "Anda yakin ingin menghapus agent \"{{agentName}}\"?",
+		"rulesFolder": "Agent ini memiliki folder aturan di {{folderPath}} yang juga akan dihapus.",
+		"descriptionNoRules": "Apakah Anda yakin ingin menghapus agent kustom ini?",
 		"confirm": "Hapus",
 		"cancel": "Batal"
 	}

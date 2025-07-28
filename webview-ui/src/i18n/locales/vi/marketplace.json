@@ -16,7 +16,7 @@
 		"type": {
 			"label": "Lọc theo loại:",
 			"all": "Tất cả loại",
-			"mode": "Chế độ",
+			"agent": "Chế độ",
 			"mcpServer": "Máy chủ MCP"
 		},
 		"sort": {
@@ -36,7 +36,7 @@
 		"none": "Không có"
 	},
 	"type-group": {
-		"modes": "Chế độ",
+		"agents": "Chế độ",
 		"mcps": "Máy chủ MCP"
 	},
 	"items": {
@@ -128,9 +128,9 @@
 		}
 	},
 	"removeConfirm": {
-		"mode": {
+		"agent": {
 			"title": "Xóa chế độ",
-			"message": "Bạn có chắc chắn muốn xóa chế độ \"{{modeName}}\" không?",
+			"message": "Bạn có chắc chắn muốn xóa chế độ \"{{agentName}}\" không?",
 			"rulesWarning": "Thao tác này cũng sẽ xóa mọi tệp quy tắc được liên kết cho chế độ này."
 		},
 		"mcp": {

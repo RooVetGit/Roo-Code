@@ -3,7 +3,7 @@ import delay from "delay"
 import { Task } from "../task/Task"
 import { ToolUse, AskApproval, HandleError, PushToolResult, RemoveClosingTag } from "../../shared/tools"
 import { formatResponse } from "../prompts/responses"
-import { defaultModeSlug, getModeBySlug } from "../../shared/modes"
+import { defaultAgentSlug, getAgentBySlug } from "../../shared/agents"
 
 export async function switchModeTool(
 	cline: Task,
@@ -13,21 +13,21 @@ export async function switchModeTool(
 	pushToolResult: PushToolResult,
 	removeClosingTag: RemoveClosingTag,
 ) {
-	const mode_slug: string | undefined = block.params.mode_slug
+	const agent_slug: string | undefined = block.params.mode_slug
 	const reason: string | undefined = block.params.reason
 
 	try {
 		if (block.partial) {
 			const partialMessage = JSON.stringify({
 				tool: "switchMode",
-				mode: removeClosingTag("mode_slug", mode_slug),
+				mode: removeClosingTag("mode_slug", agent_slug),
 				reason: removeClosingTag("reason", reason),
 			})
 
 			await cline.ask("tool", partialMessage, block.partial).catch(() => {})
 			return
 		} else {
-			if (!mode_slug) {
+			if (!agent_slug) {
 				cline.consecutiveMistakeCount++
 				cline.recordToolError("switch_mode")
 				pushToolResult(await cline.sayAndCreateMissingParamError("switch_mode", "mode_slug"))
@@ -36,41 +36,41 @@ export async function switchModeTool(
 
 			cline.consecutiveMistakeCount = 0
 
-			// Verify the mode exists
-			const targetMode = getModeBySlug(mode_slug, (await cline.providerRef.deref()?.getState())?.customModes)
+			// Verify the agent exists
+			const targetAgent = getAgentBySlug(agent_slug, (await cline.providerRef.deref()?.getState())?.customModes)
 
-			if (!targetMode) {
+			if (!targetAgent) {
 				cline.recordToolError("switch_mode")
-				pushToolResult(formatResponse.toolError(`Invalid mode: ${mode_slug}`))
+				pushToolResult(formatResponse.toolError(`Invalid agent: ${agent_slug}`))
 				return
 			}
 
-			// Check if already in requested mode
-			const currentMode = (await cline.providerRef.deref()?.getState())?.mode ?? defaultModeSlug
+			// Check if already in requested agent
+			const currentAgent = (await cline.providerRef.deref()?.getState())?.mode ?? defaultAgentSlug
 
-			if (currentMode === mode_slug) {
+			if (currentAgent === agent_slug) {
 				cline.recordToolError("switch_mode")
-				pushToolResult(`Already in ${targetMode.name} mode.`)
+				pushToolResult(`Already in ${targetAgent.name} agent.`)
 				return
 			}
 
-			const completeMessage = JSON.stringify({ tool: "switchMode", mode: mode_slug, reason })
+			const completeMessage = JSON.stringify({ tool: "switchMode", mode: agent_slug, reason })
 			const didApprove = await askApproval("tool", completeMessage)
 
 			if (!didApprove) {
 				return
 			}
 
-			// Switch the mode using shared handler
-			await cline.providerRef.deref()?.handleModeSwitch(mode_slug)
+			// Switch the agent using shared handler
+			await cline.providerRef.deref()?.handleModeSwitch(agent_slug)
 
 			pushToolResult(
-				`Successfully switched from ${getModeBySlug(currentMode)?.name ?? currentMode} mode to ${
-					targetMode.name
-				} mode${reason ? ` because: ${reason}` : ""}.`,
+				`Successfully switched from ${getAgentBySlug(currentAgent)?.name ?? currentAgent} agent to ${
+					targetAgent.name
+				} agent${reason ? ` because: ${reason}` : ""}.`,
 			)
 
-			await delay(500) // Delay to allow mode change to take effect before next tool is executed
+			await delay(500) // Delay to allow agent change to take effect before next tool is executed
 
 			return
 		}

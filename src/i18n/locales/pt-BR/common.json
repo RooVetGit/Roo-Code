@@ -106,7 +106,7 @@
 		"image_saved": "Imagem salva em {{path}}",
 		"organization_share_link_copied": "Link de compartilhamento da organização copiado para a área de transferência!",
 		"public_share_link_copied": "Link de compartilhamento público copiado para a área de transferência!",
-		"mode_exported": "Modo '{{mode}}' exportado com sucesso",
+		"mode_exported": "Modo '{{agent}}' exportado com sucesso",
 		"mode_imported": "Modo importado com sucesso"
 	},
 	"answers": {
@@ -161,7 +161,7 @@
 		}
 	},
 	"marketplace": {
-		"mode": {
+		"agent": {
 			"rulesCleanupFailed": "O modo foi removido com sucesso, mas falhou ao excluir a pasta de regras em {{rulesFolderPath}}. Você pode precisar excluí-la manualmente."
 		}
 	},

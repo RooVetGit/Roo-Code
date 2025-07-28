@@ -102,7 +102,7 @@
 		"image_saved": "Obraz zapisany w {{path}}",
 		"organization_share_link_copied": "Link udostępniania organizacji skopiowany do schowka!",
 		"public_share_link_copied": "Publiczny link udostępniania skopiowany do schowka!",
-		"mode_exported": "Tryb '{{mode}}' pomyślnie wyeksportowany",
+		"mode_exported": "Tryb '{{agent}}' pomyślnie wyeksportowany",
 		"mode_imported": "Tryb pomyślnie zaimportowany"
 	},
 	"answers": {
@@ -161,7 +161,7 @@
 		}
 	},
 	"marketplace": {
-		"mode": {
+		"agent": {
 			"rulesCleanupFailed": "Tryb został pomyślnie usunięty, ale nie udało się usunąć folderu reguł w {{rulesFolderPath}}. Może być konieczne ręczne usunięcie."
 		}
 	},

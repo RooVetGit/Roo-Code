@@ -16,7 +16,7 @@
 		"type": {
 			"label": "依類型篩選：",
 			"all": "所有類型",
-			"mode": "模式",
+			"agent": "模式",
 			"mcpServer": "MCP 伺服器"
 		},
 		"sort": {
@@ -36,7 +36,7 @@
 		"none": "無"
 	},
 	"type-group": {
-		"modes": "模式",
+		"agents": "模式",
 		"mcps": "MCP 伺服器"
 	},
 	"items": {
@@ -128,9 +128,9 @@
 		}
 	},
 	"removeConfirm": {
-		"mode": {
+		"agent": {
 			"title": "移除模式",
-			"message": "您確定要移除「{{modeName}}」模式嗎？",
+			"message": "您確定要移除「{{agentName}}」模式嗎？",
 			"rulesWarning": "這也會移除此模式的任何相關規則檔案。"
 		},
 		"mcp": {

@@ -1,7 +1,7 @@
 {
 	"title": "Modlar",
 	"done": "Tamamlandı",
-	"modes": {
+	"agents": {
 		"title": "Modlar",
 		"createNewMode": "Yeni mod oluştur",
 		"importMode": "Modu içe aktar",
@@ -49,8 +49,8 @@
 	"customInstructions": {
 		"title": "Moda özgü özel talimatlar (isteğe bağlı)",
 		"resetToDefault": "Varsayılana sıfırla",
-		"description": "{{modeName}} modu için özel davranış yönergeleri ekleyin.",
-		"loadFromFile": "{{mode}} moduna özgü özel talimatlar ayrıca çalışma alanınızdaki <span>.roo/rules-{{slug}}/</span> klasöründen yüklenebilir (.roorules-{{slug}} ve .clinerules-{{slug}} kullanımdan kaldırılmıştır ve yakında çalışmayı durduracaklardır)."
+		"description": "{{agentName}} modu için özel davranış yönergeleri ekleyin.",
+		"loadFromFile": "{{agent}} moduna özgü özel talimatlar ayrıca çalışma alanınızdaki <span>.roo/rules-{{slug}}/</span> klasöründen yüklenebilir (.roorules-{{slug}} ve .clinerules-{{slug}} kullanımdan kaldırılmıştır ve yakında çalışmayı durduracaklardır)."
 	},
 	"exportMode": {
 		"title": "Modu Dışa Aktar",
@@ -79,7 +79,7 @@
 	"systemPrompt": {
 		"preview": "Sistem promptunu önizle",
 		"copy": "Sistem promptunu panoya kopyala",
-		"title": "Sistem promptu ({{modeName}} modu)"
+		"title": "Sistem promptu ({{agentName}} modu)"
 	},
 	"supportPrompts": {
 		"title": "Destek Promptları",
@@ -200,7 +200,7 @@
 	},
 	"deleteMode": {
 		"title": "Modu Sil",
-		"message": "\"{{modeName}}\" modunu silmek istediğinizden emin misiniz?",
+		"message": "\"{{agentName}}\" modunu silmek istediğinizden emin misiniz?",
 		"rulesFolder": "Bu modun {{folderPath}} konumunda bir kurallar klasörü var ve bu da silinecek.",
 		"descriptionNoRules": "Bu özel modu silmek istediğinizden emin misiniz?",
 		"confirm": "Sil",

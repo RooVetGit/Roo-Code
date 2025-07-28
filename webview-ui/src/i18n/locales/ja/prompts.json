@@ -1,7 +1,7 @@
 {
 	"title": "モード",
 	"done": "完了",
-	"modes": {
+	"agents": {
 		"title": "モード",
 		"createNewMode": "新しいモードを作成",
 		"importMode": "モードをインポート",
@@ -49,8 +49,8 @@
 	"customInstructions": {
 		"title": "モード固有のカスタム指示（オプション）",
 		"resetToDefault": "デフォルトにリセット",
-		"description": "{{modeName}}モードに特化した行動ガイドラインを追加します。",
-		"loadFromFile": "{{mode}}モード固有のカスタム指示は、ワークスペースの<span>.roo/rules-{{slug}}/</span>フォルダからも読み込めます（.roorules-{{slug}}と.clinerules-{{slug}}は非推奨であり、まもなく機能しなくなります）。"
+		"description": "{{agentName}}モードに特化した行動ガイドラインを追加します。",
+		"loadFromFile": "{{agent}}モード固有のカスタム指示は、ワークスペースの<span>.roo/rules-{{slug}}/</span>フォルダからも読み込めます（.roorules-{{slug}}と.clinerules-{{slug}}は非推奨であり、まもなく機能しなくなります）。"
 	},
 	"exportMode": {
 		"title": "モードをエクスポート",
@@ -82,7 +82,7 @@
 	"systemPrompt": {
 		"preview": "システムプロンプトのプレビュー",
 		"copy": "システムプロンプトをクリップボードにコピー",
-		"title": "システムプロンプト（{{modeName}}モード）"
+		"title": "システムプロンプト（{{agentName}}モード）"
 	},
 	"supportPrompts": {
 		"title": "サポートプロンプト",
@@ -200,7 +200,7 @@
 	"allFiles": "すべてのファイル",
 	"deleteMode": {
 		"title": "モードを削除",
-		"message": "モード「{{modeName}}」を削除してもよろしいですか？",
+		"message": "モード「{{agentName}}」を削除してもよろしいですか？",
 		"rulesFolder": "このモードには{{folderPath}}にルールフォルダがあり、それも削除されます。",
 		"descriptionNoRules": "このカスタムモードを削除してもよろしいですか？",
 		"confirm": "削除",

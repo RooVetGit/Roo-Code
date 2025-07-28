@@ -216,14 +216,14 @@
 		"wantsToUseTool": "Roo möchte ein Tool auf dem {{serverName}} MCP-Server verwenden:",
 		"wantsToAccessResource": "Roo möchte auf eine Ressource auf dem {{serverName}} MCP-Server zugreifen:"
 	},
-	"modes": {
-		"wantsToSwitch": "Roo möchte zum <code>{{mode}}</code>-Modus wechseln",
-		"wantsToSwitchWithReason": "Roo möchte zum <code>{{mode}}</code>-Modus wechseln, weil: {{reason}}",
-		"didSwitch": "Roo hat zum <code>{{mode}}</code>-Modus gewechselt",
-		"didSwitchWithReason": "Roo hat zum <code>{{mode}}</code>-Modus gewechselt, weil: {{reason}}"
+	"agents": {
+		"wantsToSwitch": "Roo möchte zum <code>{{agent}}</code>-Modus wechseln",
+		"wantsToSwitchWithReason": "Roo möchte zum <code>{{agent}}</code>-Modus wechseln, weil: {{reason}}",
+		"didSwitch": "Roo hat zum <code>{{agent}}</code>-Modus gewechselt",
+		"didSwitchWithReason": "Roo hat zum <code>{{agent}}</code>-Modus gewechselt, weil: {{reason}}"
 	},
 	"subtasks": {
-		"wantsToCreate": "Roo möchte eine neue Teilaufgabe im <code>{{mode}}</code>-Modus erstellen:",
+		"wantsToCreate": "Roo möchte eine neue Teilaufgabe im <code>{{agent}}</code>-Modus erstellen:",
 		"wantsToFinish": "Roo möchte diese Teilaufgabe abschließen",
 		"newTaskContent": "Teilaufgabenanweisungen",
 		"completionContent": "Teilaufgabe abgeschlossen",

@@ -216,14 +216,14 @@
 		"wantsToUseTool": "Roo 想要在 {{serverName}} MCP 伺服器上使用工具：",
 		"wantsToAccessResource": "Roo 想要存取 {{serverName}} MCP 伺服器上的資源："
 	},
-	"modes": {
-		"wantsToSwitch": "Roo 想要切換至 <code>{{mode}}</code> 模式",
-		"wantsToSwitchWithReason": "Roo 想要切換至 <code>{{mode}}</code> 模式，原因：{{reason}}",
-		"didSwitch": "Roo 已切換至 <code>{{mode}}</code> 模式",
-		"didSwitchWithReason": "Roo 已切換至 <code>{{mode}}</code> 模式，原因：{{reason}}"
+	"agents": {
+		"wantsToSwitch": "Roo 想要切換至 <code>{{agent}}</code> 模式",
+		"wantsToSwitchWithReason": "Roo 想要切換至 <code>{{agent}}</code> 模式，原因：{{reason}}",
+		"didSwitch": "Roo 已切換至 <code>{{agent}}</code> 模式",
+		"didSwitchWithReason": "Roo 已切換至 <code>{{agent}}</code> 模式，原因：{{reason}}"
 	},
 	"subtasks": {
-		"wantsToCreate": "Roo 想要在 <code>{{mode}}</code> 模式下建立新的子工作：",
+		"wantsToCreate": "Roo 想要在 <code>{{agent}}</code> 模式下建立新的子工作：",
 		"wantsToFinish": "Roo 想要完成此子工作",
 		"newTaskContent": "子工作指示",
 		"completionContent": "子工作已完成",

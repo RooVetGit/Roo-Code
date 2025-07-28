@@ -17,7 +17,7 @@
 	"confirmation": {
 		"reset_state": "Êtes-vous sûr de vouloir réinitialiser le global state et le stockage de secrets de l'extension ? Cette action est irréversible.",
 		"delete_config_profile": "Êtes-vous sûr de vouloir supprimer ce profil de configuration ?",
-		"delete_custom_mode_with_rules": "Êtes-vous sûr de vouloir supprimer ce mode {scope} ?\n\nCela supprimera également le dossier de règles associé à l'adresse :\n{rulesFolderPath}"
+		"delete_custom_mode_with_rules": "Êtes-vous sûr de vouloir supprimer ce agent {scope} ?\n\nCela supprimera également le dossier de règles associé à l'adresse :\n{rulesFolderPath}"
 	},
 	"errors": {
 		"invalid_data_uri": "Format d'URI de données invalide",
@@ -43,7 +43,7 @@
 		"list_api_config": "Erreur lors de l'obtention de la liste des configurations API",
 		"update_server_timeout": "Erreur lors de la mise à jour du délai d'attente du serveur",
 		"hmr_not_running": "Le serveur de développement local n'est pas en cours d'exécution, HMR ne fonctionnera pas. Veuillez exécuter 'npm run dev' avant de lancer l'extension pour activer l'HMR.",
-		"retrieve_current_mode": "Erreur lors de la récupération du mode actuel à partir du state.",
+		"retrieve_current_mode": "Erreur lors de la récupération du agent actuel à partir du state.",
 		"failed_delete_repo": "Échec de la suppression du repo fantôme ou de la branche associée : {{error}}",
 		"failed_remove_directory": "Échec de la suppression du répertoire de tâches : {{error}}",
 		"custom_storage_path_unusable": "Le chemin de stockage personnalisé \"{{path}}\" est inutilisable, le chemin par défaut sera utilisé",
@@ -69,7 +69,7 @@
 		"share_auth_required": "Authentification requise. Veuillez vous connecter pour partager des tâches.",
 		"share_not_enabled": "Le partage de tâches n'est pas activé pour cette organisation.",
 		"share_task_not_found": "Tâche non trouvée ou accès refusé.",
-		"mode_import_failed": "Échec de l'importation du mode : {{error}}",
+		"mode_import_failed": "Échec de l'importation du agent : {{error}}",
 		"delete_rules_folder_failed": "Échec de la suppression du dossier de règles : {{rulesFolderPath}}. Erreur : {{error}}",
 		"claudeCode": {
 			"processExited": "Le processus Claude Code s'est terminé avec le code {{exitCode}}.",
@@ -102,8 +102,8 @@
 		"image_saved": "Image enregistrée dans {{path}}",
 		"organization_share_link_copied": "Lien de partage d'organisation copié dans le presse-papiers !",
 		"public_share_link_copied": "Lien de partage public copié dans le presse-papiers !",
-		"mode_exported": "Mode '{{mode}}' exporté avec succès",
-		"mode_imported": "Mode importé avec succès"
+		"mode_exported": "Agent '{{agent}}' exporté avec succès",
+		"mode_imported": "Agent importé avec succès"
 	},
 	"answers": {
 		"yes": "Oui",
@@ -146,14 +146,14 @@
 	"customModes": {
 		"errors": {
 			"yamlParseError": "YAML invalide dans le fichier .roomodes à la ligne {{line}}. Vérifie :\n• L'indentation correcte (utilise des espaces, pas de tabulations)\n• Les guillemets et crochets correspondants\n• La syntaxe YAML valide",
-			"schemaValidationError": "Format invalide des modes personnalisés dans .roomodes :\n{{issues}}",
-			"invalidFormat": "Format invalide des modes personnalisés. Assure-toi que tes paramètres suivent le format YAML correct.",
-			"updateFailed": "Échec de la mise à jour du mode personnalisé : {{error}}",
-			"deleteFailed": "Échec de la suppression du mode personnalisé : {{error}}",
-			"resetFailed": "Échec de la réinitialisation des modes personnalisés : {{error}}",
-			"modeNotFound": "Erreur d'écriture : Mode non trouvé",
-			"noWorkspaceForProject": "Aucun dossier d'espace de travail trouvé pour le mode spécifique au projet",
-			"rulesCleanupFailed": "Le mode a été supprimé avec succès, mais la suppression du dossier de règles à l'adresse {{rulesFolderPath}} a échoué. Vous devrez peut-être le supprimer manuellement."
+			"schemaValidationError": "Format invalide des agents personnalisés dans .roomodes :\n{{issues}}",
+			"invalidFormat": "Format invalide des agents personnalisés. Assure-toi que tes paramètres suivent le format YAML correct.",
+			"updateFailed": "Échec de la mise à jour du agent personnalisé : {{error}}",
+			"deleteFailed": "Échec de la suppression du agent personnalisé : {{error}}",
+			"resetFailed": "Échec de la réinitialisation des agents personnalisés : {{error}}",
+			"modeNotFound": "Erreur d'écriture : Agent non trouvé",
+			"noWorkspaceForProject": "Aucun dossier d'espace de travail trouvé pour le agent spécifique au projet",
+			"rulesCleanupFailed": "Le agent a été supprimé avec succès, mais la suppression du dossier de règles à l'adresse {{rulesFolderPath}} a échoué. Vous devrez peut-être le supprimer manuellement."
 		},
 		"scope": {
 			"project": "projet",
@@ -161,8 +161,8 @@
 		}
 	},
 	"marketplace": {
-		"mode": {
-			"rulesCleanupFailed": "Le mode a été supprimé avec succès, mais la suppression du dossier de règles à l'adresse {{rulesFolderPath}} a échoué. Vous devrez peut-être le supprimer manuellement."
+		"agent": {
+			"rulesCleanupFailed": "Le agent a été supprimé avec succès, mais la suppression du dossier de règles à l'adresse {{rulesFolderPath}} a échoué. Vous devrez peut-être le supprimer manuellement."
 		}
 	},
 	"mdm": {
@@ -174,9 +174,9 @@
 	},
 	"prompts": {
 		"deleteMode": {
-			"title": "Supprimer le mode personnalisé",
-			"description": "Êtes-vous sûr de vouloir supprimer ce mode {{scope}} ? Cela supprimera également le dossier de règles associé à l'adresse : {{rulesFolderPath}}",
-			"descriptionNoRules": "Êtes-vous sûr de vouloir supprimer ce mode personnalisé ?",
+			"title": "Supprimer le agent personnalisé",
+			"description": "Êtes-vous sûr de vouloir supprimer ce agent {{scope}} ? Cela supprimera également le dossier de règles associé à l'adresse : {{rulesFolderPath}}",
+			"descriptionNoRules": "Êtes-vous sûr de vouloir supprimer ce agent personnalisé ?",
 			"confirm": "Supprimer"
 		}
 	},

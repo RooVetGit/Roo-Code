@@ -102,7 +102,7 @@
 		"image_saved": "Afbeelding opgeslagen naar {{path}}",
 		"organization_share_link_copied": "Organisatie deel-link gekopieerd naar klembord!",
 		"public_share_link_copied": "Openbare deel-link gekopieerd naar klembord!",
-		"mode_exported": "Modus '{{mode}}' succesvol geëxporteerd",
+		"mode_exported": "Modus '{{agent}}' succesvol geëxporteerd",
 		"mode_imported": "Modus succesvol geïmporteerd"
 	},
 	"answers": {
@@ -161,7 +161,7 @@
 		}
 	},
 	"marketplace": {
-		"mode": {
+		"agent": {
 			"rulesCleanupFailed": "Modus succesvol verwijderd, maar het verwijderen van de regelsmap op {{rulesFolderPath}} is mislukt. Je moet deze mogelijk handmatig verwijderen."
 		}
 	},

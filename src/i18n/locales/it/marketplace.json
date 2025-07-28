@@ -1,11 +1,11 @@
 {
 	"type-group": {
-		"modes": "Modalità",
+		"agents": "Modalità",
 		"mcps": "Server MCP",
 		"match": "corrispondenza"
 	},
 	"item-card": {
-		"type-mode": "Modalità",
+		"type-agent": "Modalità",
 		"type-mcp": "Server MCP",
 		"type-other": "Altro",
 		"by-author": "di {{author}}",
@@ -23,7 +23,7 @@
 		"type": {
 			"label": "Tipo",
 			"all": "Tutti i tipi",
-			"mode": "Modalità",
+			"agent": "Modalità",
 			"mcpServer": "Server MCP"
 		},
 		"sort": {

@@ -2,7 +2,7 @@ import delay from "delay"
 
 import { ToolUse, AskApproval, HandleError, PushToolResult, RemoveClosingTag } from "../../shared/tools"
 import { Task } from "../task/Task"
-import { defaultModeSlug, getModeBySlug } from "../../shared/modes"
+import { defaultAgentSlug, getAgentBySlug } from "../../shared/agents"
 import { formatResponse } from "../prompts/responses"
 import { t } from "../../i18n"
 
@@ -14,21 +14,21 @@ export async function newTaskTool(
 	pushToolResult: PushToolResult,
 	removeClosingTag: RemoveClosingTag,
 ) {
-	const mode: string | undefined = block.params.mode
+	const agent: string | undefined = block.params.mode
 	const message: string | undefined = block.params.message
 
 	try {
 		if (block.partial) {
 			const partialMessage = JSON.stringify({
 				tool: "newTask",
-				mode: removeClosingTag("mode", mode),
+				mode: removeClosingTag("mode", agent),
 				content: removeClosingTag("message", message),
 			})
 
 			await cline.ask("tool", partialMessage, block.partial).catch(() => {})
 			return
 		} else {
-			if (!mode) {
+			if (!agent) {
 				cline.consecutiveMistakeCount++
 				cline.recordToolError("new_task")
 				pushToolResult(await cline.sayAndCreateMissingParamError("new_task", "mode"))
@@ -47,17 +47,17 @@ export async function newTaskTool(
 			// Un-escape one level: \\@ -> \@ (removes one backslash for hierarchical subtasks)
 			const unescapedMessage = message.replace(/\\\\@/g, "\\@")
 
-			// Verify the mode exists
-			const targetMode = getModeBySlug(mode, (await cline.providerRef.deref()?.getState())?.customModes)
+			// Verify the agent exists
+			const targetAgent = getAgentBySlug(agent, (await cline.providerRef.deref()?.getState())?.customModes)
 
-			if (!targetMode) {
-				pushToolResult(formatResponse.toolError(`Invalid mode: ${mode}`))
+			if (!targetAgent) {
+				pushToolResult(formatResponse.toolError(`Invalid agent: ${agent}`))
 				return
 			}
 
 			const toolMessage = JSON.stringify({
 				tool: "newTask",
-				mode: targetMode.name,
+				mode: targetAgent.name,
 				content: message,
 			})
 
@@ -77,13 +77,13 @@ export async function newTaskTool(
 				cline.checkpointSave(true)
 			}
 
-			// Preserve the current mode so we can resume with it later.
-			cline.pausedModeSlug = (await provider.getState()).mode ?? defaultModeSlug
+			// Preserve the current agent so we can resume with it later.
+			cline.pausedAgentSlug = (await provider.getState()).mode ?? defaultAgentSlug
 
-			// Switch mode first, then create new task instance.
-			await provider.handleModeSwitch(mode)
+			// Switch agent first, then create new task instance.
+			await provider.handleModeSwitch(agent)
 
-			// Delay to allow mode change to take effect before next tool is executed.
+			// Delay to allow agent change to take effect before next tool is executed.
 			await delay(500)
 
 			const newCline = await provider.initClineWithTask(unescapedMessage, undefined, cline)
@@ -93,7 +93,9 @@ export async function newTaskTool(
 			}
 			cline.emit("taskSpawned", newCline.taskId)
 
-			pushToolResult(`Successfully created new task in ${targetMode.name} mode with message: ${unescapedMessage}`)
+			pushToolResult(
+				`Successfully created new task in ${targetAgent.name} agent with message: ${unescapedMessage}`,
+			)
 
 			// Set the isPaused flag to true so the parent
 			// task can wait for the sub-task to finish.

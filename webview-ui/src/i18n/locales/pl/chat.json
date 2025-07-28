@@ -216,14 +216,14 @@
 		"wantsToUseTool": "Roo chce użyć narzędzia na serwerze MCP {{serverName}}:",
 		"wantsToAccessResource": "Roo chce uzyskać dostęp do zasobu na serwerze MCP {{serverName}}:"
 	},
-	"modes": {
-		"wantsToSwitch": "Roo chce przełączyć się na tryb <code>{{mode}}</code>",
-		"wantsToSwitchWithReason": "Roo chce przełączyć się na tryb <code>{{mode}}</code> ponieważ: {{reason}}",
-		"didSwitch": "Roo przełączył się na tryb <code>{{mode}}</code>",
-		"didSwitchWithReason": "Roo przełączył się na tryb <code>{{mode}}</code> ponieważ: {{reason}}"
+	"agents": {
+		"wantsToSwitch": "Roo chce przełączyć się na tryb <code>{{agent}}</code>",
+		"wantsToSwitchWithReason": "Roo chce przełączyć się na tryb <code>{{agent}}</code> ponieważ: {{reason}}",
+		"didSwitch": "Roo przełączył się na tryb <code>{{agent}}</code>",
+		"didSwitchWithReason": "Roo przełączył się na tryb <code>{{agent}}</code> ponieważ: {{reason}}"
 	},
 	"subtasks": {
-		"wantsToCreate": "Roo chce utworzyć nowe podzadanie w trybie <code>{{mode}}</code>:",
+		"wantsToCreate": "Roo chce utworzyć nowe podzadanie w trybie <code>{{agent}}</code>:",
 		"wantsToFinish": "Roo chce zakończyć to podzadanie",
 		"newTaskContent": "Instrukcje podzadania",
 		"completionContent": "Podzadanie zakończone",

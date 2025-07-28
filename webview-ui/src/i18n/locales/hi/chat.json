@@ -216,14 +216,14 @@
 		"wantsToUseTool": "Roo {{serverName}} MCP सर्वर पर एक टूल का उपयोग करना चाहता है:",
 		"wantsToAccessResource": "Roo {{serverName}} MCP सर्वर पर एक संसाधन का उपयोग करना चाहता है:"
 	},
-	"modes": {
-		"wantsToSwitch": "Roo <code>{{mode}}</code> मोड में स्विच करना चाहता है",
-		"wantsToSwitchWithReason": "Roo <code>{{mode}}</code> मोड में स्विच करना चाहता है क्योंकि: {{reason}}",
-		"didSwitch": "Roo <code>{{mode}}</code> मोड में स्विच कर गया",
-		"didSwitchWithReason": "Roo <code>{{mode}}</code> मोड में स्विच कर गया क्योंकि: {{reason}}"
+	"agents": {
+		"wantsToSwitch": "Roo <code>{{agent}}</code> मोड में स्विच करना चाहता है",
+		"wantsToSwitchWithReason": "Roo <code>{{agent}}</code> मोड में स्विच करना चाहता है क्योंकि: {{reason}}",
+		"didSwitch": "Roo <code>{{agent}}</code> मोड में स्विच कर गया",
+		"didSwitchWithReason": "Roo <code>{{agent}}</code> मोड में स्विच कर गया क्योंकि: {{reason}}"
 	},
 	"subtasks": {
-		"wantsToCreate": "Roo <code>{{mode}}</code> मोड में एक नया उपकार्य बनाना चाहता है:",
+		"wantsToCreate": "Roo <code>{{agent}}</code> मोड में एक नया उपकार्य बनाना चाहता है:",
 		"wantsToFinish": "Roo इस उपकार्य को समाप्त करना चाहता है",
 		"newTaskContent": "उपकार्य निर्देश",
 		"completionContent": "उपकार्य पूर्ण",

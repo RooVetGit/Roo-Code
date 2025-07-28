@@ -16,7 +16,7 @@
 		"type": {
 			"label": "Filtra per tipo:",
 			"all": "Tutti i tipi",
-			"mode": "Modalità",
+			"agent": "Modalità",
 			"mcpServer": "Server MCP"
 		},
 		"sort": {
@@ -36,7 +36,7 @@
 		"none": "Nessuno"
 	},
 	"type-group": {
-		"modes": "Modalità",
+		"agents": "Modalità",
 		"mcps": "Server MCP"
 	},
 	"items": {
@@ -128,9 +128,9 @@
 		}
 	},
 	"removeConfirm": {
-		"mode": {
+		"agent": {
 			"title": "Rimuovi modalità",
-			"message": "Sei sicuro di voler rimuovere la modalità \"{{modeName}}\"?",
+			"message": "Sei sicuro di voler rimuovere la modalità \"{{agentName}}\"?",
 			"rulesWarning": "Questo rimuoverà anche eventuali file di regole associati per questa modalità."
 		},
 		"mcp": {

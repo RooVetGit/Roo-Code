@@ -1,6 +1,6 @@
 import * as vscode from "vscode"
 import { WebviewMessage } from "../../shared/WebviewMessage"
-import { defaultModeSlug, getModeBySlug, getGroupName } from "../../shared/modes"
+import { defaultAgentSlug, getAgentBySlug, getGroupName } from "../../shared/agents"
 import { buildApiHandler } from "../../api"
 import { experiments as experimentsModule, EXPERIMENT_IDS } from "../../shared/experiments"
 
@@ -39,7 +39,7 @@ export const generateSystemPrompt = async (provider: ClineProvider, message: Web
 
 	const cwd = provider.cwd
 
-	const mode = message.mode ?? defaultModeSlug
+	const agent = message.mode ?? defaultAgentSlug
 	const customModes = await provider.customModesManager.getCustomModes()
 
 	const rooIgnoreInstructions = provider.getCurrentCline()?.rooIgnoreController?.getInstructions()
@@ -57,12 +57,12 @@ export const generateSystemPrompt = async (provider: ClineProvider, message: Web
 	}
 
 	// Check if the current mode includes the browser tool group
-	const modeConfig = getModeBySlug(mode, customModes)
-	const modeSupportsBrowser = modeConfig?.groups.some((group) => getGroupName(group) === "browser") ?? false
+	const agentConfig = getAgentBySlug(agent, customModes)
+	const agentSupportsBrowser = agentConfig?.groups.some((group) => getGroupName(group) === "browser") ?? false
 
 	// Only enable browser tools if the model supports it, the mode includes browser tools,
 	// and browser tools are enabled in settings
-	const canUseBrowserTool = modelSupportsComputerUse && modeSupportsBrowser && (browserToolEnabled ?? true)
+	const canUseBrowserTool = modelSupportsComputerUse && agentSupportsBrowser && (browserToolEnabled ?? true)
 
 	const systemPrompt = await SYSTEM_PROMPT(
 		provider.context,
@@ -71,7 +71,7 @@ export const generateSystemPrompt = async (provider: ClineProvider, message: Web
 		mcpEnabled ? provider.getMcpHub() : undefined,
 		diffStrategy,
 		browserViewportSize ?? "900x600",
-		mode,
+		agent,
 		customModePrompts,
 		customModes,
 		customInstructions,
