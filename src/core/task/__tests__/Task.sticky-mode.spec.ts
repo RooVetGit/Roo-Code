@@ -283,8 +283,8 @@ describe("Task - Sticky Mode", () => {
 				startTask: false,
 			})
 
-			// Wait for async mode initialization
-			await new Promise((resolve) => setTimeout(resolve, 10))
+			// Wait for async mode initialization using the new method
+			await task.waitForModeInitialization()
 
 			// Import taskMetadata mock
 			const { taskMetadata } = await import("../../task-persistence")
@@ -313,8 +313,8 @@ describe("Task - Sticky Mode", () => {
 				startTask: false,
 			})
 
-			// Wait for async mode initialization
-			await new Promise((resolve) => setTimeout(resolve, 10))
+			// Wait for async mode initialization using the new method
+			await task.waitForModeInitialization()
 
 			const { taskMetadata } = await import("../../task-persistence")
 			vi.mocked(taskMetadata).mockClear()
@@ -385,8 +385,8 @@ describe("Task - Sticky Mode", () => {
 				startTask: false,
 			})
 
-			// Wait for async mode initialization
-			await new Promise((resolve) => setTimeout(resolve, 10))
+			// Wait for async mode initialization using the new method
+			await parentTask.waitForModeInitialization()
 
 			// Change provider mode to code
 			mockProvider.getState.mockResolvedValue({
@@ -403,8 +403,8 @@ describe("Task - Sticky Mode", () => {
 				startTask: false,
 			})
 
-			// Wait for async mode initialization
-			await new Promise((resolve) => setTimeout(resolve, 10))
+			// Wait for async mode initialization using the new method
+			await childTask.waitForModeInitialization()
 
 			const { taskMetadata } = await import("../../task-persistence")
 			vi.mocked(taskMetadata).mockClear()
@@ -447,8 +447,8 @@ describe("Task - Sticky Mode", () => {
 				startTask: false,
 			})
 
-			// Wait for async mode initialization
-			await new Promise((resolve) => setTimeout(resolve, 10))
+			// Wait for async mode initialization using the new method
+			await task.waitForModeInitialization()
 
 			// Task should use defaultModeSlug when provider returns no mode
 			expect((task as any).taskMode).toBe("architect")
@@ -475,6 +475,7 @@ describe("Task - Sticky Mode", () => {
 			const errorProvider = {
 				...mockProvider,
 				getState: vi.fn().mockRejectedValue(new Error("Provider error")),
+				log: vi.fn(), // Add the log method to the mock
 			}
 
 			const task = new Task({
@@ -484,8 +485,8 @@ describe("Task - Sticky Mode", () => {
 				startTask: false,
 			})
 
-			// Wait a bit for the promise rejection to settle
-			await new Promise((resolve) => setTimeout(resolve, 20))
+			// Wait for the promise rejection to settle using the new method
+			await task.waitForModeInitialization()
 
 			// Task should still be created without throwing
 			expect(task).toBeDefined()

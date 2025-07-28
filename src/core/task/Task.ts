@@ -137,7 +137,16 @@ export class Task extends EventEmitter<ClineEvents> {
 	readonly parentTask: Task | undefined = undefined
 	readonly taskNumber: number
 	readonly workspacePath: string
+	/**
+	 * The mode associated with this task. Persisted across sessions
+	 * to maintain user context when reopening tasks from history.
+	 */
 	taskMode: string
+	/**
+	 * Promise that resolves when the task mode has been initialized.
+	 * This ensures async mode initialization completes before the task is used.
+	 */
+	private taskModeReady: Promise<void>
 
 	providerRef: WeakRef<ClineProvider>
 	private readonly globalStoragePath: string
@@ -279,22 +288,13 @@ export class Task extends EventEmitter<ClineEvents> {
 			TelemetryService.instance.captureTaskCreated(this.taskId)
 		}
 
-		// If no historyItem, get the current mode from provider
-		if (!historyItem && provider.getState) {
-			const statePromise = provider.getState()
-			// Check if getState() returns a Promise
-			if (statePromise && typeof statePromise.then === "function") {
-				statePromise
-					.then((state) => {
-						if (state?.mode) {
-							this.taskMode = state.mode
-						}
-					})
-					.catch((error) => {
-						// If there's an error getting state, keep the default mode
-						console.error("Failed to get mode from provider state:", error)
-					})
-			}
+		// Initialize the task mode ready promise
+		if (!historyItem) {
+			// For new tasks, initialize mode asynchronously
+			this.taskModeReady = this.initializeTaskMode(provider)
+		} else {
+			// For history items, mode is already set
+			this.taskModeReady = Promise.resolve()
 		}
 
 		// Only set up diff strategy if diff is enabled
@@ -328,6 +328,32 @@ export class Task extends EventEmitter<ClineEvents> {
 				throw new Error("Either historyItem or task/images must be provided")
 			}
 		}
+	}
+
+	/**
+	 * Initialize the task mode from the provider state.
+	 * This method handles async initialization with proper error handling.
+	 */
+	private async initializeTaskMode(provider: ClineProvider): Promise<void> {
+		try {
+			const state = await provider.getState()
+			if (state?.mode) {
+				this.taskMode = state.mode
+			}
+		} catch (error) {
+			// If there's an error getting state, keep the default mode
+			// Use the provider's log method for better error visibility
+			const errorMessage = `Failed to initialize task mode: ${error instanceof Error ? error.message : String(error)}`
+			provider.log(errorMessage)
+		}
+	}
+
+	/**
+	 * Wait for the task mode to be initialized.
+	 * This should be called before any operations that depend on the correct mode being set.
+	 */
+	public async waitForModeInitialization(): Promise<void> {
+		return this.taskModeReady
 	}
 
 	static create(options: TaskOptions): [Task, Promise<void>] {
