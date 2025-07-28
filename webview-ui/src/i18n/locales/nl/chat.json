@@ -117,7 +117,7 @@
 	"stopTts": "Stop tekst-naar-spraak",
 	"typeMessage": "Typ een bericht...",
 	"typeTask": "Typ hier je taak...",
-	"addContext": "@ om context toe te voegen, / om van modus te wisselen",
+	"addContext": "@ om context toe te voegen, / voor commando's",
 	"dragFiles": "houd shift ingedrukt om bestanden te slepen",
 	"dragFilesImages": "houd shift ingedrukt om bestanden/afbeeldingen te slepen",
 	"errorReadingFile": "Fout bij het lezen van bestand:",

@@ -396,7 +396,6 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 							const options = getContextMenuOptions(
 								searchQuery,
 								inputValue,
-								t,
 								selectedType,
 								queryItems,
 								fileSearchResults,
@@ -435,7 +434,6 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 						const selectedOption = getContextMenuOptions(
 							searchQuery,
 							inputValue,
-							t,
 							selectedType,
 							queryItems,
 							fileSearchResults,
@@ -529,7 +527,6 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 				handleHistoryNavigation,
 				resetHistoryNavigation,
 				commands,
-				t,
 			],
 		)
 

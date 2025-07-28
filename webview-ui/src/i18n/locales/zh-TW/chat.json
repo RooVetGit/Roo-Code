@@ -108,7 +108,7 @@
 	"stopTts": "停止文字轉語音",
 	"typeMessage": "輸入訊息...",
 	"typeTask": "在此處輸入您的工作...",
-	"addContext": "輸入 @ 新增內容，輸入 / 切換模式",
+	"addContext": "輸入 @ 新增內容，輸入 / 執行指令",
 	"dragFiles": "按住 Shift 鍵拖曳檔案",
 	"dragFilesImages": "按住 Shift 鍵拖曳檔案/圖片",
 	"enhancePromptDescription": "「增強提示」按鈕透過提供額外內容、說明或重新表述來幫助改進您的請求。嘗試在此處輸入請求，然後再次點選按鈕以了解其運作方式。",
