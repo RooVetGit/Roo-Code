@@ -1,4 +1,4 @@
-import { HTMLAttributes, useState } from "react"
+import { HTMLAttributes } from "react"
 import { useAppTranslation } from "@/i18n/TranslationContext"
 import { Trans } from "react-i18next"
 import { Info, Download, Upload, TriangleAlert } from "lucide-react"
@@ -22,33 +22,9 @@ type AboutProps = HTMLAttributes<HTMLDivElement> & {
 
 export const About = ({ telemetrySetting, setTelemetrySetting, className, ...props }: AboutProps) => {
 	const { t } = useAppTranslation()
-	const [shouldThrowError, setShouldThrowError] = useState(false)
-
-	// Function to trigger error for testing ErrorBoundary
-	const triggerTestError = () => {
-		setShouldThrowError(true)
-	}
-
-	// Named function to make it easier to identify in stack traces
-	function throwTestError() {
-		// Intentionally cause a type error by accessing a property on undefined
-		const obj: any = undefined
-		obj.nonExistentMethod()
-	}
-
-	// Test component that throws an error when shouldThrow is true
-	const ErrorThrower = ({ shouldThrow = false }) => {
-		if (shouldThrow) {
-			// Use a named function to make it easier to identify in stack traces
-			throwTestError()
-		}
-		return null
-	}
 
 	return (
 		<div className={cn("flex flex-col gap-2", className)} {...props}>
-			{/* Test component that throws an error when shouldThrow is true */}
-			<ErrorThrower shouldThrow={shouldThrowError} />
 			<SectionHeader
 				description={
 					Package.sha
@@ -108,14 +84,6 @@ export const About = ({ telemetrySetting, setTelemetrySetting, className, ...pro
 						<TriangleAlert className="p-0.5" />
 						{t("settings:footer.settings.reset")}
 					</Button>
-
-					{/* Test button for ErrorBoundary - only visible in development */}
-					{process.env.NODE_ENV === "development" && (
-						<Button variant="destructive" onClick={triggerTestError} className="w-auto">
-							<TriangleAlert className="p-0.5" />
-							Test ErrorBoundary
-						</Button>
-					)}
 				</div>
 			</Section>
 		</div>
