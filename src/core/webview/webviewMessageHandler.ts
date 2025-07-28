@@ -2441,7 +2441,7 @@ export const webviewMessageHandler = async (
 					// Project commands
 					const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath
 					if (!workspaceRoot) {
-						vscode.window.showErrorMessage("No workspace folder found for project command")
+						vscode.window.showErrorMessage(t("common:errors.no_workspace_for_project_command"))
 						break
 					}
 					commandsDir = path.join(workspaceRoot, ".roo", "commands")
@@ -2504,12 +2504,12 @@ export const webviewMessageHandler = async (
 						.then(() => true)
 						.catch(() => false)
 				) {
-					vscode.window.showErrorMessage(`Command "${commandName}" already exists`)
+					vscode.window.showErrorMessage(t("common:errors.command_already_exists", { commandName }))
 					break
 				}
 
 				// Create the command file with template content
-				const templateContent = "This is a new slash command. Edit this file to customize the command behavior."
+				const templateContent = t("common:errors.command_template_content")
 
 				await fs.writeFile(filePath, templateContent, "utf8")
 				provider.log(`Created new command file: ${filePath}`)
@@ -2531,7 +2531,7 @@ export const webviewMessageHandler = async (
 				})
 			} catch (error) {
 				provider.log(`Error creating command: ${JSON.stringify(error, Object.getOwnPropertyNames(error), 2)}`)
-				vscode.window.showErrorMessage("Failed to create command")
+				vscode.window.showErrorMessage(t("common:errors.create_command_failed"))
 			}
 			break
 		}
