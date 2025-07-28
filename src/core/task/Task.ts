@@ -1228,6 +1228,7 @@ export class Task extends EventEmitter<ClineEvents> {
 
 		const {
 			showRooIgnoredFiles = true,
+			enableSvnContext = false,
 			includeDiagnosticMessages = true,
 			maxDiagnosticMessages = 50,
 			maxReadFileLine = -1,
@@ -1240,6 +1241,7 @@ export class Task extends EventEmitter<ClineEvents> {
 			fileContextTracker: this.fileContextTracker,
 			rooIgnoreController: this.rooIgnoreController,
 			showRooIgnoredFiles,
+			enableSvnContext,
 			includeDiagnosticMessages,
 			maxDiagnosticMessages,
 			maxReadFileLine,

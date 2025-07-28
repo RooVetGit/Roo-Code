@@ -9,7 +9,7 @@ Mention regex:
   - `/@`: 
 	- **@**: The mention must start with the '@' symbol.
   
-  - `((?:\/|\w+:\/\/)[^\s]+?|problems\b|git-changes\b)`:
+  - `((?:\/|\w+:\/\/)[^\s]+?|problems\b|git-changes\b|svn-changes\b)`:
 	- **Capturing Group (`(...)`)**: Captures the part of the string that matches one of the specified patterns.
 	- `(?:\/|\w+:\/\/)`: 
 	  - **Non-Capturing Group (`(?:...)`)**: Groups the alternatives without capturing them for back-referencing.
@@ -46,6 +46,7 @@ Mention regex:
 	- URLs that start with a protocol (like 'http://') followed by any non-whitespace characters (including query parameters).
 	- The exact word 'problems'.
 	- The exact word 'git-changes'.
+	- The exact word 'svn-changes'.
     - The exact word 'terminal'.
   - It ensures that any trailing punctuation marks (such as ',', '.', '!', etc.) are not included in the matched mention, allowing the punctuation to follow the mention naturally in the text.
 
@@ -54,14 +55,14 @@ Mention regex:
 
 */
 export const mentionRegex =
-	/(?<!\\)@((?:\/|\w+:\/\/)(?:[^\s\\]|\\ )+?|[a-f0-9]{7,40}\b|problems\b|git-changes\b|terminal\b)(?=[.,;:!?]?(?=[\s\r\n]|$))/
+	/(?<!\\)@((?:\/|\w+:\/\/)(?:[^\s\\]|\\ )+?|[a-f0-9]{7,40}\b|r?\d+\b|problems\b|git-changes\b|svn-changes\b|terminal\b)(?=[.,;:!?]?(?=[\s\r\n]|$))/
 export const mentionRegexGlobal = new RegExp(mentionRegex.source, "g")
 
 // Regex to match command mentions like /command-name anywhere in text
 export const commandRegexGlobal = /(?:^|\s)\/([a-zA-Z0-9_\.-]+)(?=\s|$)/g
 
 export interface MentionSuggestion {
-	type: "file" | "folder" | "git" | "problems"
+	type: "file" | "folder" | "git" | "svn" | "problems"
 	label: string
 	description?: string
 	value: string
@@ -73,6 +74,15 @@ export interface GitMentionSuggestion extends MentionSuggestion {
 	hash: string
 	shortHash: string
 	subject: string
+	author: string
+	date: string
+}
+
+export interface SvnMentionSuggestion extends MentionSuggestion {
+	type: "svn"
+	revision: string
+	shortRevision: string
+	message: string
 	author: string
 	date: string
 }
@@ -93,6 +103,27 @@ export function formatGitSuggestion(commit: {
 		hash: commit.hash,
 		shortHash: commit.shortHash,
 		subject: commit.subject,
+		author: commit.author,
+		date: commit.date,
+	}
+}
+
+export function formatSvnSuggestion(commit: {
+	revision: string
+	shortRevision: string
+	message: string
+	author: string
+	date: string
+}): SvnMentionSuggestion {
+	return {
+		type: "svn",
+		label: commit.message,
+		description: `${commit.shortRevision} by ${commit.author} on ${commit.date}`,
+		value: commit.revision,
+		icon: "$(git-commit)", // Using git commit icon for consistency
+		revision: commit.revision,
+		shortRevision: commit.shortRevision,
+		message: commit.message,
 		author: commit.author,
 		date: commit.date,
 	}

@@ -87,6 +87,7 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 			togglePinnedApiConfig,
 			taskHistory,
 			clineMessages,
+			enableSvnContext,
 			commands,
 		} = useExtensionState()
 
@@ -100,6 +101,7 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 		}, [listApiConfigMeta, currentApiConfigName])
 
 		const [gitCommits, setGitCommits] = useState<any[]>([])
+		const [svnCommits, setSvnCommits] = useState<any[]>([])
 		const [showDropdown, setShowDropdown] = useState(false)
 		const [fileSearchResults, setFileSearchResults] = useState<SearchResult[]>([])
 		const [searchLoading, setSearchLoading] = useState(false)
@@ -155,6 +157,16 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 					}))
 
 					setGitCommits(commits)
+				} else if (message.type === "svnCommitSearchResults") {
+					const commits = message.svnCommits.map((commit: any) => ({
+						type: ContextMenuOptionType.Svn,
+						value: `r${commit.revision}`,
+						label: commit.message,
+						description: `r${commit.revision} by ${commit.author} on ${commit.date}`,
+						icon: "$(git-commit)",
+					}))
+
+					setSvnCommits(commits)
 				} else if (message.type === "fileSearchResults") {
 					setSearchLoading(false)
 					if (message.requestId === searchRequestId) {
@@ -203,6 +215,17 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 			}
 		}, [selectedType, searchQuery])
 
+		// Fetch SVN commits when SVN is selected or when typing a revision number with 'r' prefix.
+		useEffect(() => {
+			if (selectedType === ContextMenuOptionType.Svn || /^r\d+$/i.test(searchQuery)) {
+				const message: WebviewMessage = {
+					type: "searchSvnCommits",
+					query: searchQuery || "",
+				} as const
+				vscode.postMessage(message)
+			}
+		}, [selectedType, searchQuery])
+
 		const handleEnhancePrompt = useCallback(() => {
 			const trimmedInput = inputValue.trim()
 
@@ -221,6 +244,7 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 				{ type: ContextMenuOptionType.Problems, value: "problems" },
 				{ type: ContextMenuOptionType.Terminal, value: "terminal" },
 				...gitCommits,
+				...svnCommits,
 				...openedTabs
 					.filter((tab) => tab.path)
 					.map((tab) => ({
@@ -235,7 +259,7 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 						value: path,
 					})),
 			]
-		}, [filePaths, gitCommits, openedTabs])
+		}, [filePaths, gitCommits, svnCommits, openedTabs])
 
 		useEffect(() => {
 			const handleClickOutside = (event: MouseEvent) => {
@@ -295,7 +319,8 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 				if (
 					type === ContextMenuOptionType.File ||
 					type === ContextMenuOptionType.Folder ||
-					type === ContextMenuOptionType.Git
+					type === ContextMenuOptionType.Git ||
+					type === ContextMenuOptionType.Svn
 				) {
 					if (!value) {
 						setSelectedType(type)
@@ -320,6 +345,8 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 					} else if (type === ContextMenuOptionType.Terminal) {
 						insertValue = "terminal"
 					} else if (type === ContextMenuOptionType.Git) {
+						insertValue = value || ""
+					} else if (type === ContextMenuOptionType.Svn) {
 						insertValue = value || ""
 					} else if (type === ContextMenuOptionType.Command) {
 						insertValue = value ? `/${value}` : ""
@@ -370,6 +397,7 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 								queryItems,
 								fileSearchResults,
 								allModes,
+								enableSvnContext,
 								commands,
 							)
 							const optionsLength = options.length
@@ -409,6 +437,7 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 							queryItems,
 							fileSearchResults,
 							allModes,
+							enableSvnContext,
 							commands,
 						)[selectedMenuIndex]
 						if (
@@ -497,6 +526,7 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 				fileSearchResults,
 				handleHistoryNavigation,
 				resetHistoryNavigation,
+				enableSvnContext,
 				commands,
 				t,
 			],
@@ -1155,6 +1185,7 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 									modes={allModes}
 									loading={searchLoading}
 									dynamicSearchResults={fileSearchResults}
+									enableSvnContext={enableSvnContext}
 									commands={commands}
 								/>
 							</div>

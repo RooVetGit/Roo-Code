@@ -13,6 +13,7 @@ import type {
 } from "@roo-code/types"
 
 import { GitCommit } from "../utils/git"
+import { SvnCommit } from "../utils/svn"
 
 import { McpServer } from "./mcp"
 import { Mode } from "./modes"
@@ -67,6 +68,7 @@ export interface ExtensionMessage {
 		| "mcpServers"
 		| "enhancedPrompt"
 		| "commitSearchResults"
+		| "svnCommitSearchResults"
 		| "listApiConfig"
 		| "routerModels"
 		| "openAiModels"
@@ -163,6 +165,7 @@ export interface ExtensionMessage {
 	}>
 	mcpServers?: McpServer[]
 	commits?: GitCommit[]
+	svnCommits?: SvnCommit[]
 	listApiConfig?: ProviderSettingsEntry[]
 	mode?: Mode
 	customMode?: ModeConfig
@@ -280,6 +283,7 @@ export type ExtensionState = Pick<
 	maxOpenTabsContext: number // Maximum number of VSCode open tabs to include in context (0-500)
 	maxWorkspaceFiles: number // Maximum number of files to include in current working directory details (0-500)
 	showRooIgnoredFiles: boolean // Whether to show .rooignore'd files in listings
+	enableSvnContext: boolean // Whether to enable SVN context features (commits and changes)
 	maxReadFileLine: number // Maximum number of lines to read from a file before truncating
 
 	experiments: Experiments // Map of experiment IDs to their enabled state

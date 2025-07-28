@@ -503,6 +503,10 @@
 			"label": "Mostrar arquivos .rooignore em listas e pesquisas",
 			"description": "Quando ativado, os arquivos que correspondem aos padrões em .rooignore serão mostrados em listas com um símbolo de cadeado. Quando desativado, esses arquivos serão completamente ocultos das listas de arquivos e pesquisas."
 		},
+		"svnContext": {
+			"label": "Ativar funcionalidade de contexto SVN",
+			"description": "Quando ativado, você pode usar @svn, @svn-changes e @r123 no chat para referenciar commits SVN e mudanças no diretório de trabalho. Quando desativado, essas funcionalidades de menção de contexto relacionadas ao SVN não estarão disponíveis."
+		},
 		"maxReadFile": {
 			"label": "Limite de auto-truncamento de leitura de arquivo",
 			"description": "O Roo lê este número de linhas quando o modelo omite valores de início/fim. Se este número for menor que o total do arquivo, o Roo gera um índice de números de linha das definições de código. Casos especiais: -1 instrui o Roo a ler o arquivo inteiro (sem indexação), e 0 instrui a não ler linhas e fornecer apenas índices de linha para contexto mínimo. Valores mais baixos minimizam o uso inicial de contexto, permitindo leituras posteriores precisas de intervalos de linhas. Requisições com início/fim explícitos não são limitadas por esta configuração.",

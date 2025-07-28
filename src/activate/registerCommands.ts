@@ -16,6 +16,7 @@ import { CodeIndexManager } from "../services/code-index/manager"
 import { importSettingsWithFeedback } from "../core/config/importExport"
 import { MdmService } from "../services/mdm/MdmService"
 import { t } from "../i18n"
+import { checkSvnInstalled, checkSvnRepo, getSvnRepositoryInfo, searchSvnCommits, SvnLogger } from "../utils/svn"
 
 /**
  * Helper to get the visible ClineProvider instance or log if not found.
@@ -217,6 +218,67 @@ const getCommandsMap = ({ context, outputChannel, provider }: RegisterCommandOpt
 		}
 
 		visibleProvider.postMessageToWebview({ type: "acceptInput" })
+	},
+	debugSvn: async () => {
+		const workspaceFolders = vscode.workspace.workspaceFolders
+		if (!workspaceFolders || workspaceFolders.length === 0) {
+			vscode.window.showErrorMessage("No workspace folder is open")
+			return
+		}
+
+		const workspaceRoot = workspaceFolders[0].uri.fsPath
+		SvnLogger.info(`Starting SVN debug for workspace: ${workspaceRoot}`)
+
+		try {
+			// Check SVN installation and repository status
+			// Note: These functions now handle their own user-friendly error messages
+			SvnLogger.info("Checking if SVN is installed...")
+			const svnInstalled = await checkSvnInstalled()
+			SvnLogger.info(`SVN installed: ${svnInstalled}`)
+
+			if (!svnInstalled) {
+				// Error message already shown by checkSvnInstalled
+				return
+			}
+
+			SvnLogger.info("Checking if current directory is an SVN repository...")
+			const isSvnRepo = await checkSvnRepo(workspaceRoot)
+			SvnLogger.info(`Is SVN repository: ${isSvnRepo}`)
+
+			if (!isSvnRepo) {
+				// Error message already shown by checkSvnRepo
+				return
+			}
+
+			// Get SVN repository information
+			SvnLogger.info("Getting SVN repository information...")
+			const repoInfo = await getSvnRepositoryInfo(workspaceRoot)
+			SvnLogger.info(`Repository info: ${JSON.stringify(repoInfo, null, 2)}`)
+
+			// Search for recent commits
+			SvnLogger.info("Searching for recent commits...")
+			const commits = await searchSvnCommits("", workspaceRoot)
+			SvnLogger.info(`Found ${commits.length} commits`)
+
+			commits.forEach((commit, index) => {
+				SvnLogger.info(`Commit ${index + 1}: r${commit.revision} - ${commit.message}`)
+			})
+
+			// Show success message
+			vscode.window.showInformationMessage(
+				`SVN Debug Complete! Found ${commits.length} commits.\n\nRepository URL: ${repoInfo.repositoryUrl || "Unknown"}\nWorking Copy Root: ${repoInfo.workingCopyRoot || "Unknown"}`,
+				{ modal: false },
+			)
+		} catch (error) {
+			// This should rarely happen now since individual functions handle their own errors
+			const svnError = error instanceof Error ? error : new Error(String(error))
+			SvnLogger.error("SVN debug failed", svnError)
+
+			vscode.window.showErrorMessage("SVN debug operation failed", {
+				modal: false,
+				detail: `Unexpected error: ${svnError.message}`,
+			})
+		}
 	},
 })
 

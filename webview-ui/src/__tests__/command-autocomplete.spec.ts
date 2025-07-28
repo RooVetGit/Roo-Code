@@ -26,7 +26,7 @@ describe("Command Autocomplete", () => {
 
 	describe("slash command command suggestions", () => {
 		it('should return all commands when query is just "/"', () => {
-			const options = getContextMenuOptions("/", "/", mockT, null, mockQueryItems, [], [], mockCommands)
+			const options = getContextMenuOptions("/", "/", mockT, null, mockQueryItems, [], [], false, mockCommands)
 
 			expect(options).toHaveLength(5)
 			expect(options.every((option) => option.type === ContextMenuOptionType.Command)).toBe(true)
@@ -40,7 +40,17 @@ describe("Command Autocomplete", () => {
 		})
 
 		it("should filter commands based on fuzzy search", () => {
-			const options = getContextMenuOptions("/set", "/set", mockT, null, mockQueryItems, [], [], mockCommands)
+			const options = getContextMenuOptions(
+				"/set",
+				"/set",
+				mockT,
+				null,
+				mockQueryItems,
+				[],
+				[],
+				false,
+				mockCommands,
+			)
 
 			// Should match 'setup' (fuzzy search behavior may vary)
 			expect(options.length).toBeGreaterThan(0)
@@ -50,7 +60,17 @@ describe("Command Autocomplete", () => {
 		})
 
 		it("should return commands with correct format", () => {
-			const options = getContextMenuOptions("/setup", "/setup", mockT, null, mockQueryItems, [], [], mockCommands)
+			const options = getContextMenuOptions(
+				"/setup",
+				"/setup",
+				mockT,
+				null,
+				mockQueryItems,
+				[],
+				[],
+				false,
+				mockCommands,
+			)
 
 			const setupOption = options.find((option) => option.value === "setup")
 			expect(setupOption).toBeDefined()
@@ -61,7 +81,7 @@ describe("Command Autocomplete", () => {
 		})
 
 		it("should handle empty command list", () => {
-			const options = getContextMenuOptions("/setup", "/setup", mockT, null, mockQueryItems, [], [], [])
+			const options = getContextMenuOptions("/setup", "/setup", mockT, null, mockQueryItems, [], [], false, [])
 
 			// Should return NoResults when no commands match
 			expect(options).toHaveLength(1)
@@ -77,6 +97,7 @@ describe("Command Autocomplete", () => {
 				mockQueryItems,
 				[],
 				[],
+				false,
 				mockCommands,
 			)
 
@@ -86,7 +107,17 @@ describe("Command Autocomplete", () => {
 		})
 
 		it("should not return command suggestions for non-slash queries", () => {
-			const options = getContextMenuOptions("setup", "setup", mockT, null, mockQueryItems, [], [], mockCommands)
+			const options = getContextMenuOptions(
+				"setup",
+				"setup",
+				mockT,
+				null,
+				mockQueryItems,
+				[],
+				[],
+				false,
+				mockCommands,
+			)
 
 			// Should not contain command options for non-slash queries
 			const commandOptions = options.filter((option) => option.type === ContextMenuOptionType.Command)
@@ -108,6 +139,7 @@ describe("Command Autocomplete", () => {
 				mockQueryItems,
 				[],
 				[],
+				false,
 				specialCommands,
 			)
 
@@ -117,7 +149,17 @@ describe("Command Autocomplete", () => {
 		})
 
 		it("should handle case-insensitive fuzzy matching", () => {
-			const options = getContextMenuOptions("/setup", "/setup", mockT, null, mockQueryItems, [], [], mockCommands)
+			const options = getContextMenuOptions(
+				"/setup",
+				"/setup",
+				mockT,
+				null,
+				mockQueryItems,
+				[],
+				[],
+				false,
+				mockCommands,
+			)
 
 			const commandNames = options.map((option) => option.value)
 			expect(commandNames).toContain("setup")
@@ -138,6 +180,7 @@ describe("Command Autocomplete", () => {
 				mockQueryItems,
 				[],
 				[],
+				false,
 				commandsWithSimilarNames,
 			)
 
@@ -146,7 +189,17 @@ describe("Command Autocomplete", () => {
 		})
 
 		it("should handle partial matches correctly", () => {
-			const options = getContextMenuOptions("/te", "/te", mockT, null, mockQueryItems, [], [], mockCommands)
+			const options = getContextMenuOptions(
+				"/te",
+				"/te",
+				mockT,
+				null,
+				mockQueryItems,
+				[],
+				[],
+				false,
+				mockCommands,
+			)
 
 			// Should match 'test-suite'
 			const commandNames = options.map((option) => option.value)
@@ -173,7 +226,17 @@ describe("Command Autocomplete", () => {
 		] as any[]
 
 		it("should return both modes and commands for slash commands", () => {
-			const options = getContextMenuOptions("/", "/", mockT, null, mockQueryItems, [], mockModes, mockCommands)
+			const options = getContextMenuOptions(
+				"/",
+				"/",
+				mockT,
+				null,
+				mockQueryItems,
+				[],
+				mockModes,
+				false,
+				mockCommands,
+			)
 
 			const modeOptions = options.filter((option) => option.type === ContextMenuOptionType.Mode)
 			const commandOptions = options.filter((option) => option.type === ContextMenuOptionType.Command)
@@ -191,6 +254,7 @@ describe("Command Autocomplete", () => {
 				mockQueryItems,
 				[],
 				mockModes,
+				false,
 				mockCommands,
 			)
 
@@ -207,7 +271,17 @@ describe("Command Autocomplete", () => {
 
 	describe("command source indication", () => {
 		it("should not expose source information in autocomplete", () => {
-			const options = getContextMenuOptions("/setup", "/setup", mockT, null, mockQueryItems, [], [], mockCommands)
+			const options = getContextMenuOptions(
+				"/setup",
+				"/setup",
+				mockT,
+				null,
+				mockQueryItems,
+				[],
+				[],
+				false,
+				mockCommands,
+			)
 
 			const setupOption = options.find((option) => option.value === "setup")
 			expect(setupOption).toBeDefined()
@@ -221,14 +295,24 @@ describe("Command Autocomplete", () => {
 
 	describe("edge cases", () => {
 		it("should handle undefined commands gracefully", () => {
-			const options = getContextMenuOptions("/setup", "/setup", mockT, null, mockQueryItems, [], [], undefined)
+			const options = getContextMenuOptions(
+				"/setup",
+				"/setup",
+				mockT,
+				null,
+				mockQueryItems,
+				[],
+				[],
+				false,
+				undefined,
+			)
 
 			expect(options).toHaveLength(1)
 			expect(options[0].type).toBe(ContextMenuOptionType.NoResults)
 		})
 
 		it("should handle empty query with commands", () => {
-			const options = getContextMenuOptions("", "", mockT, null, mockQueryItems, [], [], mockCommands)
+			const options = getContextMenuOptions("", "", mockT, null, mockQueryItems, [], [], false, mockCommands)
 
 			// Should not return command options for empty query
 			const commandOptions = options.filter((option) => option.type === ContextMenuOptionType.Command)
@@ -248,6 +332,7 @@ describe("Command Autocomplete", () => {
 				mockQueryItems,
 				[],
 				[],
+				false,
 				longNameCommands,
 			)
 
@@ -262,7 +347,17 @@ describe("Command Autocomplete", () => {
 				{ name: "123test", source: "project" },
 			]
 
-			const options = getContextMenuOptions("/v", "/v", mockT, null, mockQueryItems, [], [], numericCommands)
+			const options = getContextMenuOptions(
+				"/v",
+				"/v",
+				mockT,
+				null,
+				mockQueryItems,
+				[],
+				[],
+				false,
+				numericCommands,
+			)
 
 			const commandNames = options.map((option) => option.value)
 			expect(commandNames).toContain("v2-setup")

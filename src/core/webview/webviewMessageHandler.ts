@@ -37,6 +37,7 @@ import { fileExistsAtPath } from "../../utils/fs"
 import { playTts, setTtsEnabled, setTtsSpeed, stopTts } from "../../utils/tts"
 import { singleCompletionHandler } from "../../utils/single-completion-handler"
 import { searchCommits } from "../../utils/git"
+import { searchSvnCommits } from "../../utils/svn"
 import { exportSettings, importSettingsWithFeedback } from "../config/importExport"
 import { getOpenAiModels } from "../../api/providers/openai"
 import { getVsCodeLmModels } from "../../api/providers/vscode-lm"
@@ -1257,6 +1258,10 @@ export const webviewMessageHandler = async (
 			await updateGlobalState("showRooIgnoredFiles", message.bool ?? true)
 			await provider.postStateToWebview()
 			break
+		case "enableSvnContext":
+			await updateGlobalState("enableSvnContext", message.bool ?? true)
+			await provider.postStateToWebview()
+			break
 		case "hasOpenedModeSelector":
 			await updateGlobalState("hasOpenedModeSelector", message.bool ?? true)
 			await provider.postStateToWebview()
@@ -1406,6 +1411,24 @@ export const webviewMessageHandler = async (
 						`Error searching commits: ${JSON.stringify(error, Object.getOwnPropertyNames(error), 2)}`,
 					)
 					vscode.window.showErrorMessage(t("common:errors.search_commits"))
+				}
+			}
+			break
+		}
+		case "searchSvnCommits": {
+			const cwd = provider.cwd
+			if (cwd) {
+				try {
+					const svnCommits = await searchSvnCommits(message.query || "", cwd)
+					await provider.postMessageToWebview({
+						type: "svnCommitSearchResults",
+						svnCommits,
+					})
+				} catch (error) {
+					provider.log(
+						`Error searching SVN commits: ${JSON.stringify(error, Object.getOwnPropertyNames(error), 2)}`,
+					)
+					vscode.window.showErrorMessage("Error searching SVN commits")
 				}
 			}
 			break

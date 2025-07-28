@@ -7,6 +7,7 @@ import { isBinaryFile } from "isbinaryfile"
 import { mentionRegexGlobal, commandRegexGlobal, unescapeSpaces } from "../../shared/context-mentions"
 
 import { getCommitInfo, getWorkingState } from "../../utils/git"
+import { getSvnWorkingState, getSvnCommitInfoForMentions } from "../../utils/svn"
 import { getWorkspacePath } from "../../utils/path"
 
 import { openFile } from "../../integrations/misc/open-file"
@@ -81,6 +82,7 @@ export async function parseMentions(
 	fileContextTracker?: FileContextTracker,
 	rooIgnoreController?: RooIgnoreController,
 	showRooIgnoredFiles: boolean = true,
+	enableSvnContext: boolean = false,
 	includeDiagnosticMessages: boolean = true,
 	maxDiagnosticMessages: number = 50,
 	maxReadFileLine?: number,
@@ -108,8 +110,12 @@ export async function parseMentions(
 			return `Workspace Problems (see below for diagnostics)`
 		} else if (mention === "git-changes") {
 			return `Working directory changes (see below for details)`
+		} else if (enableSvnContext && mention === "svn-changes") {
+			return `Working directory changes (see below for details)`
 		} else if (/^[a-f0-9]{7,40}$/.test(mention)) {
 			return `Git commit '${mention}' (see below for commit info)`
+		} else if (enableSvnContext && /^r\d+$/.test(mention)) {
+			return `SVN revision '${mention}' (see below for commit info)`
 		} else if (mention === "terminal") {
 			return `Terminal Output (see below for output)`
 		}
@@ -196,12 +202,42 @@ export async function parseMentions(
 			} catch (error) {
 				parsedText += `\n\n<git_working_state>\nError fetching working state: ${error.message}\n</git_working_state>`
 			}
+		} else if (enableSvnContext && mention === "svn-changes") {
+			try {
+				const svnWorkingState = await getSvnWorkingState(cwd)
+				console.log("[DEBUG] SVN working state object:", JSON.stringify(svnWorkingState, null, 2))
+
+				// Format the SVN working state properly
+				let formattedState = ""
+				if (svnWorkingState.status) {
+					formattedState += `Status:\n${svnWorkingState.status}\n\n`
+				}
+				if (svnWorkingState.diff) {
+					formattedState += `Diff:\n${svnWorkingState.diff}`
+				}
+				if (!formattedState.trim()) {
+					formattedState = "No changes detected in working directory."
+				}
+
+				console.log("[DEBUG] Formatted SVN state for AI:", formattedState)
+				parsedText += `\n\n<svn_working_state>\n${formattedState}\n</svn_working_state>`
+			} catch (error) {
+				console.error("[DEBUG] Error fetching SVN working state:", error)
+				parsedText += `\n\n<svn_working_state>\nError fetching SVN working state: ${error.message}\n</svn_working_state>`
+			}
 		} else if (/^[a-f0-9]{7,40}$/.test(mention)) {
 			try {
 				const commitInfo = await getCommitInfo(mention, cwd)
 				parsedText += `\n\n<git_commit hash="${mention}">\n${commitInfo}\n</git_commit>`
 			} catch (error) {
 				parsedText += `\n\n<git_commit hash="${mention}">\nError fetching commit info: ${error.message}\n</git_commit>`
+			}
+		} else if (enableSvnContext && /^r\d+$/.test(mention)) {
+			try {
+				const commitInfo = await getSvnCommitInfoForMentions(mention, cwd)
+				parsedText += `\n\n<svn_commit revision="${mention}">\n${commitInfo}\n</svn_commit>`
+			} catch (error) {
+				parsedText += `\n\n<svn_commit revision="${mention}">\nError fetching commit info: ${error.message}\n</svn_commit>`
 			}
 		} else if (mention === "terminal") {
 			try {
