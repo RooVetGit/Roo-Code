@@ -71,6 +71,9 @@
 		"share_task_not_found": "Taak niet gevonden of toegang geweigerd.",
 		"mode_import_failed": "Importeren van modus mislukt: {{error}}",
 		"delete_rules_folder_failed": "Kan regelmap niet verwijderen: {{rulesFolderPath}}. Fout: {{error}}",
+		"command_not_found": "Opdracht '{{name}}' niet gevonden",
+		"open_command_file": "Kan opdrachtbestand niet openen",
+		"delete_command": "Kan opdracht niet verwijderen",
 		"claudeCode": {
 			"processExited": "Claude Code proces beëindigd met code {{exitCode}}.",
 			"errorOutput": "Foutuitvoer: {{output}}",

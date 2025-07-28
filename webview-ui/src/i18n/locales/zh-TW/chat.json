@@ -352,6 +352,24 @@
 	"command": {
 		"triggerDescription": "觸發 {{name}} 命令"
 	},
+	"slashCommands": {
+		"tooltip": "管理斜線指令",
+		"title": "斜線指令",
+		"description": "建立自訂斜線指令，快速存取常用提示詞和工作流程。",
+		"globalCommands": "全域指令",
+		"workspaceCommands": "工作區指令",
+		"globalCommand": "全域指令",
+		"editCommand": "編輯指令",
+		"deleteCommand": "刪除指令",
+		"newGlobalCommandPlaceholder": "新增全域指令...",
+		"newWorkspaceCommandPlaceholder": "新增工作區指令...",
+		"deleteDialog": {
+			"title": "刪除指令",
+			"description": "確定要刪除指令 \"{{name}}\" 嗎？此動作無法復原。",
+			"cancel": "取消",
+			"confirm": "刪除"
+		}
+	},
 	"queuedMessages": {
 		"title": "佇列訊息:",
 		"clickToEdit": "點擊編輯訊息"

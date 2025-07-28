@@ -352,6 +352,24 @@
 	"editMessage": {
 		"placeholder": "Bearbeite deine Nachricht..."
 	},
+	"slashCommands": {
+		"tooltip": "Slash-Befehle verwalten",
+		"title": "Slash-Befehle",
+		"description": "Erstelle benutzerdefinierte Slash-Befehle für schnellen Zugriff auf häufig verwendete Prompts und Workflows.",
+		"globalCommands": "Globale Befehle",
+		"workspaceCommands": "Arbeitsbereich-Befehle",
+		"globalCommand": "Globaler Befehl",
+		"editCommand": "Befehl bearbeiten",
+		"deleteCommand": "Befehl löschen",
+		"newGlobalCommandPlaceholder": "Neuer globaler Befehl...",
+		"newWorkspaceCommandPlaceholder": "Neuer Arbeitsbereich-Befehl...",
+		"deleteDialog": {
+			"title": "Befehl löschen",
+			"description": "Bist du sicher, dass du den Befehl \"{{name}}\" löschen möchtest? Diese Aktion kann nicht rückgängig gemacht werden.",
+			"cancel": "Abbrechen",
+			"confirm": "Löschen"
+		}
+	},
 	"queuedMessages": {
 		"title": "Warteschlange Nachrichten:",
 		"clickToEdit": "Klicken zum Bearbeiten der Nachricht"

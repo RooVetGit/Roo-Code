@@ -352,6 +352,24 @@
 	"command": {
 		"triggerDescription": "{{name}}コマンドをトリガー"
 	},
+	"slashCommands": {
+		"tooltip": "スラッシュコマンドを管理",
+		"title": "スラッシュコマンド",
+		"description": "よく使用するプロンプトやワークフローに素早くアクセスするためのカスタムスラッシュコマンドを作成します。",
+		"globalCommands": "グローバルコマンド",
+		"workspaceCommands": "ワークスペースコマンド",
+		"globalCommand": "グローバルコマンド",
+		"editCommand": "コマンドを編集",
+		"deleteCommand": "コマンドを削除",
+		"newGlobalCommandPlaceholder": "新しいグローバルコマンド...",
+		"newWorkspaceCommandPlaceholder": "新しいワークスペースコマンド...",
+		"deleteDialog": {
+			"title": "コマンドを削除",
+			"description": "\"{{name}}\" コマンドを削除してもよろしいですか？この操作は元に戻せません。",
+			"cancel": "キャンセル",
+			"confirm": "削除"
+		}
+	},
 	"queuedMessages": {
 		"title": "キューメッセージ:",
 		"clickToEdit": "クリックしてメッセージを編集"

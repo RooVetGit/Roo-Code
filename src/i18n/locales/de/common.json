@@ -71,6 +71,9 @@
 		"share_task_not_found": "Aufgabe nicht gefunden oder Zugriff verweigert.",
 		"mode_import_failed": "Fehler beim Importieren des Modus: {{error}}",
 		"delete_rules_folder_failed": "Fehler beim Löschen des Regelordners: {{rulesFolderPath}}. Fehler: {{error}}",
+		"command_not_found": "Befehl '{{name}}' nicht gefunden",
+		"open_command_file": "Fehler beim Öffnen der Befehlsdatei",
+		"delete_command": "Fehler beim Löschen des Befehls",
 		"claudeCode": {
 			"processExited": "Claude Code Prozess wurde mit Code {{exitCode}} beendet.",
 			"errorOutput": "Fehlerausgabe: {{output}}",

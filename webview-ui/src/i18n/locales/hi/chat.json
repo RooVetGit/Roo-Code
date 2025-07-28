@@ -352,6 +352,24 @@
 	"command": {
 		"triggerDescription": "{{name}} कमांड को ट्रिगर करें"
 	},
+	"slashCommands": {
+		"tooltip": "स्लैश कमांड प्रबंधित करें",
+		"title": "स्लैश कमांड",
+		"description": "बार-बार उपयोग किए जाने वाले प्रॉम्प्ट और वर्कफ़्लो तक त्वरित पहुंच के लिए कस्टम स्लैश कमांड बनाएं।",
+		"globalCommands": "वैश्विक कमांड",
+		"workspaceCommands": "कार्यक्षेत्र कमांड",
+		"globalCommand": "वैश्विक कमांड",
+		"editCommand": "कमांड संपादित करें",
+		"deleteCommand": "कमांड हटाएं",
+		"newGlobalCommandPlaceholder": "नया वैश्विक कमांड...",
+		"newWorkspaceCommandPlaceholder": "नया कार्यक्षेत्र कमांड...",
+		"deleteDialog": {
+			"title": "कमांड हटाएं",
+			"description": "क्या आप वाकई \"{{name}}\" कमांड को हटाना चाहते हैं? यह क्रिया पूर्ववत नहीं की जा सकती।",
+			"cancel": "रद्द करें",
+			"confirm": "हटाएं"
+		}
+	},
 	"queuedMessages": {
 		"title": "कतार में संदेश:",
 		"clickToEdit": "संदेश संपादित करने के लिए क्लिक करें"

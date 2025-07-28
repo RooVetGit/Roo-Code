@@ -352,6 +352,24 @@
 	"command": {
 		"triggerDescription": "Запустить команду {{name}}"
 	},
+	"slashCommands": {
+		"tooltip": "Управление слэш-командами",
+		"title": "Слэш-команды",
+		"description": "Создавайте пользовательские слэш-команды для быстрого доступа к часто используемым промптам и рабочим процессам.",
+		"globalCommands": "Глобальные команды",
+		"workspaceCommands": "Команды рабочего пространства",
+		"globalCommand": "Глобальная команда",
+		"editCommand": "Редактировать команду",
+		"deleteCommand": "Удалить команду",
+		"newGlobalCommandPlaceholder": "Новая глобальная команда...",
+		"newWorkspaceCommandPlaceholder": "Новая команда рабочего пространства...",
+		"deleteDialog": {
+			"title": "Удалить команду",
+			"description": "Вы уверены, что хотите удалить команду \"{{name}}\"? Это действие нельзя отменить.",
+			"cancel": "Отмена",
+			"confirm": "Удалить"
+		}
+	},
 	"queuedMessages": {
 		"title": "Сообщения в очереди:",
 		"clickToEdit": "Нажмите, чтобы редактировать сообщение"

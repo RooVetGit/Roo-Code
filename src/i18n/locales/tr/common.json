@@ -71,6 +71,9 @@
 		"share_task_not_found": "Görev bulunamadı veya erişim reddedildi.",
 		"mode_import_failed": "Mod içe aktarılamadı: {{error}}",
 		"delete_rules_folder_failed": "Kurallar klasörü silinemedi: {{rulesFolderPath}}. Hata: {{error}}",
+		"command_not_found": "'{{name}}' komutu bulunamadı",
+		"open_command_file": "Komut dosyası açılamadı",
+		"delete_command": "Komut silinemedi",
 		"claudeCode": {
 			"processExited": "Claude Code işlemi {{exitCode}} koduyla çıktı.",
 			"errorOutput": "Hata çıktısı: {{output}}",

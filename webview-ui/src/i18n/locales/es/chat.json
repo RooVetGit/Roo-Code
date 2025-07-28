@@ -352,6 +352,24 @@
 	"command": {
 		"triggerDescription": "Activar el comando {{name}}"
 	},
+	"slashCommands": {
+		"tooltip": "Gestionar comandos de barra",
+		"title": "Comandos de Barra",
+		"description": "Crea comandos de barra personalizados para acceder rápidamente a prompts y flujos de trabajo utilizados con frecuencia.",
+		"globalCommands": "Comandos Globales",
+		"workspaceCommands": "Comandos del Espacio de Trabajo",
+		"globalCommand": "Comando global",
+		"editCommand": "Editar comando",
+		"deleteCommand": "Eliminar comando",
+		"newGlobalCommandPlaceholder": "Nuevo comando global...",
+		"newWorkspaceCommandPlaceholder": "Nuevo comando del espacio de trabajo...",
+		"deleteDialog": {
+			"title": "Eliminar Comando",
+			"description": "¿Estás seguro de que quieres eliminar el comando \"{{name}}\"? Esta acción no se puede deshacer.",
+			"cancel": "Cancelar",
+			"confirm": "Eliminar"
+		}
+	},
 	"queuedMessages": {
 		"title": "Mensajes en cola:",
 		"clickToEdit": "Haz clic para editar el mensaje"

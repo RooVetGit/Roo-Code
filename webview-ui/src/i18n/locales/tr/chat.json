@@ -352,6 +352,24 @@
 	"command": {
 		"triggerDescription": "{{name}} komutunu tetikle"
 	},
+	"slashCommands": {
+		"tooltip": "Eğik çizgi komutlarını yönet",
+		"title": "Eğik Çizgi Komutları",
+		"description": "Sık kullanılan komut istemleri ve iş akışlarına hızlı erişim için özel eğik çizgi komutları oluşturun.",
+		"globalCommands": "Genel Komutlar",
+		"workspaceCommands": "Çalışma Alanı Komutları",
+		"globalCommand": "Genel komut",
+		"editCommand": "Komutu düzenle",
+		"deleteCommand": "Komutu sil",
+		"newGlobalCommandPlaceholder": "Yeni genel komut...",
+		"newWorkspaceCommandPlaceholder": "Yeni çalışma alanı komutu...",
+		"deleteDialog": {
+			"title": "Komutu Sil",
+			"description": "\"{{name}}\" komutunu silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.",
+			"cancel": "İptal",
+			"confirm": "Sil"
+		}
+	},
 	"queuedMessages": {
 		"title": "Sıradaki Mesajlar:",
 		"clickToEdit": "Mesajı düzenlemek için tıkla"

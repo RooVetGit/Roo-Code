@@ -352,6 +352,24 @@
 	"command": {
 		"triggerDescription": "{{name}} 명령 트리거"
 	},
+	"slashCommands": {
+		"tooltip": "슬래시 명령 관리",
+		"title": "슬래시 명령",
+		"description": "자주 사용하는 프롬프트와 워크플로우에 빠르게 액세스할 수 있는 사용자 정의 슬래시 명령을 만듭니다.",
+		"globalCommands": "전역 명령",
+		"workspaceCommands": "작업 공간 명령",
+		"globalCommand": "전역 명령",
+		"editCommand": "명령 편집",
+		"deleteCommand": "명령 삭제",
+		"newGlobalCommandPlaceholder": "새 전역 명령...",
+		"newWorkspaceCommandPlaceholder": "새 작업 공간 명령...",
+		"deleteDialog": {
+			"title": "명령 삭제",
+			"description": "\"{{name}}\" 명령을 삭제하시겠습니까? 이 작업은 취소할 수 없습니다.",
+			"cancel": "취소",
+			"confirm": "삭제"
+		}
+	},
 	"queuedMessages": {
 		"title": "대기열 메시지:",
 		"clickToEdit": "클릭하여 메시지 편집"

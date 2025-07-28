@@ -74,6 +74,9 @@
 		"share_not_enabled": "La compartició de tasques no està habilitada per a aquesta organització.",
 		"share_task_not_found": "Tasca no trobada o accés denegat.",
 		"delete_rules_folder_failed": "Error en eliminar la carpeta de regles: {{rulesFolderPath}}. Error: {{error}}",
+		"command_not_found": "Ordre '{{name}}' no trobada",
+		"open_command_file": "Error en obrir el fitxer d'ordres",
+		"delete_command": "Error en eliminar l'ordre",
 		"claudeCode": {
 			"processExited": "El procés Claude Code ha sortit amb codi {{exitCode}}.",
 			"errorOutput": "Sortida d'error: {{output}}",

@@ -71,6 +71,9 @@
 		"share_task_not_found": "Attività non trovata o accesso negato.",
 		"mode_import_failed": "Importazione della modalità non riuscita: {{error}}",
 		"delete_rules_folder_failed": "Impossibile eliminare la cartella delle regole: {{rulesFolderPath}}. Errore: {{error}}",
+		"command_not_found": "Comando '{{name}}' non trovato",
+		"open_command_file": "Impossibile aprire il file di comando",
+		"delete_command": "Impossibile eliminare il comando",
 		"claudeCode": {
 			"processExited": "Il processo Claude Code è terminato con codice {{exitCode}}.",
 			"errorOutput": "Output di errore: {{output}}",

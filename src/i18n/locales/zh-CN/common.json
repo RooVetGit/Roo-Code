@@ -76,6 +76,9 @@
 		"share_task_not_found": "未找到任务或访问被拒绝。",
 		"mode_import_failed": "导入模式失败：{{error}}",
 		"delete_rules_folder_failed": "删除规则文件夹失败：{{rulesFolderPath}}。错误：{{error}}",
+		"command_not_found": "未找到命令 '{{name}}'",
+		"open_command_file": "打开命令文件失败",
+		"delete_command": "删除命令失败",
 		"claudeCode": {
 			"processExited": "Claude Code 进程退出，退出码：{{exitCode}}。",
 			"errorOutput": "错误输出：{{output}}",

@@ -358,6 +358,24 @@
 	"command": {
 		"triggerDescription": "Jalankan perintah {{name}}"
 	},
+	"slashCommands": {
+		"tooltip": "Kelola perintah slash",
+		"title": "Perintah Slash",
+		"description": "Buat perintah slash kustom untuk akses cepat ke prompt dan alur kerja yang sering digunakan.",
+		"globalCommands": "Perintah Global",
+		"workspaceCommands": "Perintah Workspace",
+		"globalCommand": "Perintah global",
+		"editCommand": "Edit perintah",
+		"deleteCommand": "Hapus perintah",
+		"newGlobalCommandPlaceholder": "Perintah global baru...",
+		"newWorkspaceCommandPlaceholder": "Perintah workspace baru...",
+		"deleteDialog": {
+			"title": "Hapus Perintah",
+			"description": "Apakah Anda yakin ingin menghapus perintah \"{{name}}\"? Tindakan ini tidak dapat dibatalkan.",
+			"cancel": "Batal",
+			"confirm": "Hapus"
+		}
+	},
 	"queuedMessages": {
 		"title": "Pesan Antrian:",
 		"clickToEdit": "Klik untuk mengedit pesan"
