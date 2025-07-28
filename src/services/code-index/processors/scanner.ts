@@ -281,17 +281,31 @@ export class DirectoryScanner implements IDirectoryScanner {
 					try {
 						await this.qdrantClient.deletePointsByFilePath(cachedFilePath)
 						await this.cacheManager.deleteHash(cachedFilePath)
-					} catch (error) {
+					} catch (error: any) {
+						const errorStatus = error?.status || error?.response?.status || error?.statusCode
+						const errorMessage = error instanceof Error ? error.message : String(error)
+
 						console.error(
 							`[DirectoryScanner] Failed to delete points for ${cachedFilePath} in workspace ${scanWorkspace}:`,
 							error,
 						)
+
 						TelemetryService.instance.captureEvent(TelemetryEventName.CODE_INDEX_ERROR, {
-							error: sanitizeErrorMessage(error instanceof Error ? error.message : String(error)),
+							error: sanitizeErrorMessage(errorMessage),
 							stack: error instanceof Error ? sanitizeErrorMessage(error.stack || "") : undefined,
 							location: "scanDirectory:deleteRemovedFiles",
+							errorStatus: errorStatus,
 						})
-						if (onError) {
+
+						// Check if this is a bad request error that we should handle gracefully
+						if (errorStatus === 400 || errorMessage.toLowerCase().includes("bad request")) {
+							console.warn(
+								`[DirectoryScanner] Received bad request error when deleting ${cachedFilePath}. File may not exist in vector store. Removing from cache anyway...`,
+							)
+							// Still remove from cache even if vector store deletion failed
+							await this.cacheManager.deleteHash(cachedFilePath)
+						} else if (onError) {
+							// For other errors, report to error handler but don't throw
 							onError(
 								error instanceof Error
 									? new Error(
@@ -304,7 +318,7 @@ export class DirectoryScanner implements IDirectoryScanner {
 										),
 							)
 						}
-						// Decide if we should re-throw or just log
+						// Don't re-throw - allow scanning to continue
 					}
 				}
 			}
@@ -347,27 +361,40 @@ export class DirectoryScanner implements IDirectoryScanner {
 				if (uniqueFilePaths.length > 0) {
 					try {
 						await this.qdrantClient.deletePointsByMultipleFilePaths(uniqueFilePaths)
-					} catch (deleteError) {
+					} catch (deleteError: any) {
+						const errorStatus =
+							deleteError?.status || deleteError?.response?.status || deleteError?.statusCode
+						const errorMessage = deleteError instanceof Error ? deleteError.message : String(deleteError)
+
 						console.error(
 							`[DirectoryScanner] Failed to delete points for ${uniqueFilePaths.length} files before upsert in workspace ${scanWorkspace}:`,
 							deleteError,
 						)
+
 						TelemetryService.instance.captureEvent(TelemetryEventName.CODE_INDEX_ERROR, {
-							error: sanitizeErrorMessage(
-								deleteError instanceof Error ? deleteError.message : String(deleteError),
-							),
+							error: sanitizeErrorMessage(errorMessage),
 							stack:
 								deleteError instanceof Error
 									? sanitizeErrorMessage(deleteError.stack || "")
 									: undefined,
 							location: "processBatch:deletePointsByMultipleFilePaths",
 							fileCount: uniqueFilePaths.length,
+							errorStatus: errorStatus,
 						})
-						// Re-throw the error with workspace context
-						throw new Error(
-							`Failed to delete points for ${uniqueFilePaths.length} files. Workspace: ${scanWorkspace}. ${deleteError instanceof Error ? deleteError.message : String(deleteError)}`,
-							{ cause: deleteError },
-						)
+
+						// Check if this is a bad request error that we should handle gracefully
+						if (errorStatus === 400 || errorMessage.toLowerCase().includes("bad request")) {
+							console.warn(
+								`[DirectoryScanner] Received bad request error during deletion. Continuing with upsert operation...`,
+							)
+							// Don't throw - continue with the upsert operation
+						} else {
+							// For other errors, re-throw with workspace context
+							throw new Error(
+								`Failed to delete points for ${uniqueFilePaths.length} files. Workspace: ${scanWorkspace}. ${errorMessage}`,
+								{ cause: deleteError },
+							)
+						}
 					}
 				}
 				// --- End Deletion Step ---
