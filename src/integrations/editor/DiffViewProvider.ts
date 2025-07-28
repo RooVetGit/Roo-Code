@@ -56,10 +56,6 @@ export class DiffViewProvider {
 			}
 		}
 
-		// Get diagnostics before editing the file, we'll compare to diagnostics
-		// after editing to see if cline needs to fix anything.
-		this.preDiagnostics = vscode.languages.getDiagnostics()
-
 		if (fileExists) {
 			this.originalContent = await fs.readFile(absolutePath, "utf-8")
 		} else {
@@ -95,6 +91,11 @@ export class DiffViewProvider {
 		}
 
 		this.activeDiffEditor = await this.openDiffEditor()
+		// Get diagnostics before editing the file, we'll compare to diagnostics
+		// after editing to see if cline needs to fix anything.
+		// Open the document to ensure diagnostics are up-to-date.
+		// This must happen AFTER opening the diff editor, since the diff editor triggers diagnostics of vscode.
+		this.preDiagnostics = vscode.languages.getDiagnostics()
 		this.fadedOverlayController = new DecorationController("fadedOverlay", this.activeDiffEditor)
 		this.activeLineController = new DecorationController("activeLine", this.activeDiffEditor)
 		// Apply faded overlay to all lines initially.
@@ -191,8 +192,6 @@ export class DiffViewProvider {
 			await updatedDocument.save()
 		}
 
-		await this.closeAllDiffViews()
-
 		// Getting diagnostics before and after the file edit is a better approach than
 		// automatically tracking problems in real-time. This method ensures we only
 		// report new problems that are a direct result of this specific edit.
@@ -209,6 +208,9 @@ export class DiffViewProvider {
 		// applying a fix, won't be notified, which is generally fine since the
 		// initial fix is usually correct and it may just take time for linters to catch up.
 		const postDiagnostics = vscode.languages.getDiagnostics()
+
+		// Close diff views AFTER getting diagnostics, so we can get the diagnostics for the edited file.
+		await this.closeAllDiffViews()
 
 		const newProblems = await diagnosticsToProblemsString(
 			getNewDiagnostics(this.preDiagnostics, postDiagnostics),
