@@ -18,6 +18,7 @@ export function useEscapeKey(
 
 	const handleKeyDown = useCallback(
 		(event: KeyboardEvent) => {
+			// Check isOpen inside the handler to ensure proper cleanup
 			if (event.key === "Escape" && isOpen) {
 				if (preventDefault) {
 					event.preventDefault()
@@ -32,12 +33,12 @@ export function useEscapeKey(
 	)
 
 	useEffect(() => {
-		if (isOpen) {
-			// Use window instead of document for consistency with existing patterns
-			window.addEventListener("keydown", handleKeyDown)
-			return () => {
-				window.removeEventListener("keydown", handleKeyDown)
-			}
+		// Always add the event listener to ensure proper cleanup on unmount
+		// The isOpen check is now inside the handler
+		window.addEventListener("keydown", handleKeyDown)
+
+		return () => {
+			window.removeEventListener("keydown", handleKeyDown)
 		}
-	}, [isOpen, handleKeyDown])
+	}, [handleKeyDown])
 }
