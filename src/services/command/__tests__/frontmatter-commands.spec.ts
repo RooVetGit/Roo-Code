@@ -166,7 +166,7 @@ Global setup instructions.`
 				name: "setup",
 				content: "# Global Setup\n\nGlobal setup instructions.",
 				source: "global",
-				filePath: expect.stringContaining("/.roo/commands/setup.md"),
+				filePath: expect.stringContaining(path.join(".roo", "commands", "setup.md")),
 				description: "Global setup command",
 			})
 		})
