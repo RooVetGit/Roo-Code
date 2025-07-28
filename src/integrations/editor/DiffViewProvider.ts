@@ -641,7 +641,7 @@ export class DiffViewProvider {
 	async saveDirectly(
 		relPath: string,
 		content: string,
-		openWithoutFocus: boolean = true,
+		openFile: boolean = true,
 		diagnosticsEnabled: boolean = true,
 		writeDelayMs: number = DEFAULT_WRITE_DELAY_MS,
 	): Promise<{
@@ -658,8 +658,9 @@ export class DiffViewProvider {
 		await createDirectoriesForFile(absolutePath)
 		await fs.writeFile(absolutePath, content, "utf-8")
 
-		// Open the file without focus if requested (to capture diagnostics)
-		if (openWithoutFocus) {
+		// Only open the file if explicitly requested
+		// This prevents focus stealing when the experiment is enabled
+		if (openFile) {
 			await vscode.window.showTextDocument(vscode.Uri.file(absolutePath), {
 				preview: false,
 				preserveFocus: true,

@@ -173,13 +173,13 @@ export async function applyDiffToolLegacy(
 					return
 				}
 
-				// Save directly without showing diff view
+				// Save directly without showing diff view or opening the file
 				cline.diffViewProvider.editType = "modify"
 				cline.diffViewProvider.originalContent = originalContent
 				await cline.diffViewProvider.saveDirectly(
 					relPath,
 					diffResult.content,
-					true,
+					false,
 					diagnosticsEnabled,
 					writeDelayMs,
 				)

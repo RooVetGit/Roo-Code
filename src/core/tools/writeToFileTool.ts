@@ -222,8 +222,8 @@ export async function writeToFileTool(
 					return
 				}
 
-				// Save directly without showing diff view
-				await cline.diffViewProvider.saveDirectly(relPath, newContent, true, diagnosticsEnabled, writeDelayMs)
+				// Save directly without showing diff view or opening the file
+				await cline.diffViewProvider.saveDirectly(relPath, newContent, false, diagnosticsEnabled, writeDelayMs)
 			} else {
 				// Original behavior with diff view
 				const completeMessage = JSON.stringify({

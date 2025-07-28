@@ -560,13 +560,13 @@ ${errorDetails ? `\nTechnical details:\n${errorDetails}\n` : ""}
 				}
 
 				if (isPreventFocusDisruptionEnabled) {
-					// Direct file write without diff view
+					// Direct file write without diff view or opening the file
 					cline.diffViewProvider.editType = "modify"
 					cline.diffViewProvider.originalContent = await fs.readFile(absolutePath, "utf-8")
 					await cline.diffViewProvider.saveDirectly(
 						relPath,
 						originalContent!,
-						true,
+						false,
 						diagnosticsEnabled,
 						writeDelayMs,
 					)

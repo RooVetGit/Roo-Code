@@ -157,8 +157,8 @@ export async function insertContentTool(
 		}
 
 		if (isPreventFocusDisruptionEnabled) {
-			// Direct file write without diff view
-			await cline.diffViewProvider.saveDirectly(relPath, updatedContent, true, diagnosticsEnabled, writeDelayMs)
+			// Direct file write without diff view or opening the file
+			await cline.diffViewProvider.saveDirectly(relPath, updatedContent, false, diagnosticsEnabled, writeDelayMs)
 		} else {
 			// Original behavior with diff view
 			// Show changes in diff view

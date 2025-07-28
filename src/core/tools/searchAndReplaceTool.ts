@@ -230,8 +230,8 @@ export async function searchAndReplaceTool(
 		}
 
 		if (isPreventFocusDisruptionEnabled) {
-			// Direct file write without diff view
-			await cline.diffViewProvider.saveDirectly(validRelPath, newContent, true, diagnosticsEnabled, writeDelayMs)
+			// Direct file write without diff view or opening the file
+			await cline.diffViewProvider.saveDirectly(validRelPath, newContent, false, diagnosticsEnabled, writeDelayMs)
 		} else {
 			// Original behavior with diff view
 			// Show changes in diff view
