@@ -2,6 +2,7 @@ import path from "path"
 import fs from "fs/promises"
 
 import { TelemetryService } from "@roo-code/telemetry"
+import { DEFAULT_WRITE_DELAY_MS } from "@roo-code/types"
 
 import { ClineSayTool } from "../../shared/ExtensionMessage"
 import { getReadablePath } from "../../utils/path"
@@ -170,7 +171,11 @@ export async function applyDiffToolLegacy(
 			}
 
 			// Call saveChanges to update the DiffViewProvider properties
-			await cline.diffViewProvider.saveChanges()
+			const provider = cline.providerRef.deref()
+			const state = await provider?.getState()
+			const diagnosticsEnabled = state?.diagnosticsEnabled ?? true
+			const writeDelayMs = state?.writeDelayMs ?? DEFAULT_WRITE_DELAY_MS
+			await cline.diffViewProvider.saveChanges(diagnosticsEnabled, writeDelayMs)
 
 			// Track file edit operation
 			if (relPath) {
@@ -188,10 +193,17 @@ export async function applyDiffToolLegacy(
 			// Get the formatted response message
 			const message = await cline.diffViewProvider.pushToolWriteResult(cline, cline.cwd, !fileExists)
 
+			// Check for single SEARCH/REPLACE block warning
+			const searchBlocks = (diffContent.match(/<<<<<<< SEARCH/g) || []).length
+			const singleBlockNotice =
+				searchBlocks === 1
+					? "\n<notice>Making multiple related changes in a single apply_diff is more efficient. If other changes are needed in this file, please include them as additional SEARCH/REPLACE blocks.</notice>"
+					: ""
+
 			if (partFailHint) {
-				pushToolResult(partFailHint + message)
+				pushToolResult(partFailHint + message + singleBlockNotice)
 			} else {
-				pushToolResult(message)
+				pushToolResult(message + singleBlockNotice)
 			}
 
 			await cline.diffViewProvider.reset()

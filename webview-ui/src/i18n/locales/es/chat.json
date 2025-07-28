@@ -39,7 +39,7 @@
 	},
 	"save": {
 		"title": "Guardar",
-		"tooltip": "Guardar los cambios del archivo"
+		"tooltip": "Guardar los cambios del mensaje"
 	},
 	"tokenProgress": {
 		"availableSpace": "Espacio disponible: {{amount}} tokens",
@@ -116,13 +116,16 @@
 		"title": "Modos",
 		"marketplace": "Marketplace de Modos",
 		"settings": "Configuración de Modos",
-		"description": "Personalidades especializadas que adaptan el comportamiento de Roo."
+		"description": "Personalidades especializadas que adaptan el comportamiento de Roo.",
+		"searchPlaceholder": "Buscar modos...",
+		"noResults": "No se encontraron resultados"
 	},
 	"errorReadingFile": "Error al leer el archivo:",
 	"noValidImages": "No se procesaron imágenes válidas",
 	"separator": "Separador",
 	"edit": "Editar...",
 	"forNextMode": "para el siguiente modo",
+	"forPreviousMode": "para el modo anterior",
 	"error": "Error",
 	"diffError": {
 		"title": "Edición fallida"
@@ -191,6 +194,22 @@
 		"didViewDefinitionsOutsideWorkspace": "Roo vio nombres de definiciones de código fuente utilizados en este directorio (fuera del espacio de trabajo):"
 	},
 	"commandOutput": "Salida del comando",
+	"commandExecution": {
+		"running": "Ejecutando",
+		"pid": "PID: {{pid}}",
+		"exited": "Finalizado ({{exitCode}})",
+		"manageCommands": "Gestionar permisos de comandos",
+		"commandManagementDescription": "Gestionar permisos de comandos: Haz clic en ✓ para permitir la ejecución automática, ✗ para denegar la ejecución. Los patrones se pueden activar/desactivar o eliminar de las listas. <settingsLink>Ver todos los ajustes</settingsLink>",
+		"addToAllowed": "Añadir a la lista de permitidos",
+		"removeFromAllowed": "Eliminar de la lista de permitidos",
+		"addToDenied": "Añadir a la lista de denegados",
+		"removeFromDenied": "Eliminar de la lista de denegados",
+		"abortCommand": "Abortar ejecución del comando",
+		"expandOutput": "Expandir salida",
+		"collapseOutput": "Contraer salida",
+		"expandManagement": "Expandir sección de gestión de comandos",
+		"collapseManagement": "Contraer sección de gestión de comandos"
+	},
 	"response": "Respuesta",
 	"arguments": "Argumentos",
 	"mcp": {
@@ -222,7 +241,10 @@
 	"autoApprove": {
 		"title": "Auto-aprobar:",
 		"none": "Ninguno",
-		"description": "Auto-aprobar permite a Roo Code realizar acciones sin pedir permiso. Habilita solo para acciones en las que confíes plenamente. Configuración más detallada disponible en <settingsLink>Configuración</settingsLink>."
+		"description": "Auto-aprobar permite a Roo Code realizar acciones sin pedir permiso. Habilita solo para acciones en las que confíes plenamente. Configuración más detallada disponible en <settingsLink>Configuración</settingsLink>.",
+		"selectOptionsFirst": "Selecciona al menos una opción a continuación para habilitar la aprobación automática",
+		"toggleAriaLabel": "Alternar aprobación automática",
+		"disabledAriaLabel": "Aprobación automática desactivada: seleccione primero las opciones"
 	},
 	"reasoning": {
 		"thinking": "Pensando",
@@ -243,9 +265,9 @@
 		"title": "🎉 Roo Code {{version}} publicado",
 		"description": "Roo Code {{version}} trae poderosas nuevas funcionalidades y mejoras significativas para mejorar tu flujo de trabajo de desarrollo.",
 		"whatsNew": "Novedades",
-		"feature1": "<bold>Indexación de código base graduada de experimental</bold>: La indexación completa del código base ahora es estable y está lista para uso en producción con búsqueda mejorada y comprensión de contexto.",
-		"feature2": "<bold>Nueva función de lista de tareas</bold>: Mantén tus tareas en el buen camino con gestión integrada de tareas que te ayuda a mantenerte organizado y enfocado en tus objetivos de desarrollo.",
-		"feature3": "<bold>Transiciones mejoradas de Arquitecto a Código</bold>: Transferencias fluidas desde la planificación en modo Arquitecto hasta la implementación en modo Código.",
+		"feature1": "<bold>Proveedor de Hugging Face</bold>: Accede a toneladas de excelentes modelos de código abierto directamente a través del nuevo proveedor de Hugging Face con integración perfecta y selección de modelos.",
+		"feature2": "<bold>Controles de Comando en Línea</bold>: Nuevos controles de auto-aprobación y denegación para la ejecución de comandos te dan control preciso sobre las operaciones de terminal con permisos personalizables.",
+		"feature3": "<bold>Soporte para Reglas AGENTS.md</bold>: Añade soporte para un archivo AGENTS.md estándar de la comunidad en la raíz del proyecto.",
 		"hideButton": "Ocultar anuncio",
 		"detailsDiscussLinks": "Obtén más detalles y participa en <discordLink>Discord</discordLink> y <redditLink>Reddit</redditLink> 🚀"
 	},
@@ -318,5 +340,20 @@
 	},
 	"versionIndicator": {
 		"ariaLabel": "Versión {{version}} - Haz clic para ver las notas de la versión"
+	},
+	"rooCloudCTA": {
+		"title": "¡Roo Code Cloud llegará pronto!",
+		"description": "Ejecuta agentes remotos en la nube, accede a tus tareas desde cualquier lugar, colabora con otros y mucho más.",
+		"joinWaitlist": "Únete a la lista de espera para obtener acceso anticipado."
+	},
+	"editMessage": {
+		"placeholder": "Edita tu mensaje..."
+	},
+	"command": {
+		"triggerDescription": "Activar el comando {{name}}"
+	},
+	"queuedMessages": {
+		"title": "Mensajes en cola:",
+		"clickToEdit": "Haz clic para editar el mensaje"
 	}
 }

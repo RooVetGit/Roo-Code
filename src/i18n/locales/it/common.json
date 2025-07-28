@@ -17,12 +17,7 @@
 	"confirmation": {
 		"reset_state": "Sei sicuro di voler reimpostare tutti gli stati e l'archiviazione segreta nell'estensione? Questa azione non può essere annullata.",
 		"delete_config_profile": "Sei sicuro di voler eliminare questo profilo di configurazione?",
-		"delete_custom_mode_with_rules": "Sei sicuro di voler eliminare questa modalità {scope}?\n\nQuesto eliminerà anche la cartella delle regole associata in:\n{rulesFolderPath}",
-		"delete_message": "Cosa desideri eliminare?",
-		"edit_warning": "Modificare questo messaggio eliminerà tutti i messaggi successivi nella conversazione. Vuoi continuare?",
-		"delete_just_this_message": "Solo questo messaggio",
-		"delete_this_and_subsequent": "Questo e tutti i messaggi successivi",
-		"proceed": "Continua"
+		"delete_custom_mode_with_rules": "Sei sicuro di voler eliminare questa modalità {scope}?\n\nQuesto eliminerà anche la cartella delle regole associata in:\n{rulesFolderPath}"
 	},
 	"errors": {
 		"invalid_data_uri": "Formato URI dati non valido",
@@ -33,6 +28,7 @@
 		"could_not_open_file_generic": "Impossibile aprire il file!",
 		"checkpoint_timeout": "Timeout durante il tentativo di ripristinare il checkpoint.",
 		"checkpoint_failed": "Impossibile ripristinare il checkpoint.",
+		"git_not_installed": "Git è richiesto per la funzione di checkpoint. Per favore, installa Git per abilitare i checkpoint.",
 		"no_workspace": "Per favore, apri prima una cartella di progetto",
 		"update_support_prompt": "Errore durante l'aggiornamento del messaggio di supporto",
 		"reset_support_prompt": "Errore durante il ripristino del messaggio di supporto",
@@ -67,6 +63,7 @@
 		"url_page_not_found": "La pagina non è stata trovata. Verifica se l'URL è corretto.",
 		"url_fetch_failed": "Errore nel recupero del contenuto URL: {{error}}",
 		"url_fetch_error_with_url": "Errore nel recupero del contenuto per {{url}}: {{error}}",
+		"command_timeout": "Esecuzione del comando scaduta dopo {{seconds}} secondi",
 		"share_task_failed": "Condivisione dell'attività fallita. Riprova.",
 		"share_no_active_task": "Nessuna attività attiva da condividere",
 		"share_auth_required": "Autenticazione richiesta. Accedi per condividere le attività.",
@@ -80,6 +77,11 @@
 			"processExitedWithError": "Il processo Claude Code è terminato con codice {{exitCode}}. Output di errore: {{output}}",
 			"stoppedWithReason": "Claude Code si è fermato per il motivo: {{reason}}",
 			"apiKeyModelPlanMismatch": "Le chiavi API e i piani di abbonamento consentono modelli diversi. Assicurati che il modello selezionato sia incluso nel tuo piano."
+		},
+		"gemini": {
+			"generate_stream": "Errore del flusso di contesto di generazione Gemini: {{error}}",
+			"generate_complete_prompt": "Errore di completamento Gemini: {{error}}",
+			"sources": "Fonti:"
 		}
 	},
 	"warnings": {
@@ -111,7 +113,8 @@
 	},
 	"buttons": {
 		"save": "Salva",
-		"edit": "Modifica"
+		"edit": "Modifica",
+		"learn_more": "Scopri di più"
 	},
 	"tasks": {
 		"canceled": "Errore attività: È stata interrotta e annullata dall'utente.",
@@ -149,11 +152,17 @@
 			"deleteFailed": "Eliminazione modalità personalizzata fallita: {{error}}",
 			"resetFailed": "Reset modalità personalizzate fallito: {{error}}",
 			"modeNotFound": "Errore di scrittura: Modalità non trovata",
-			"noWorkspaceForProject": "Nessuna cartella workspace trovata per la modalità specifica del progetto"
+			"noWorkspaceForProject": "Nessuna cartella workspace trovata per la modalità specifica del progetto",
+			"rulesCleanupFailed": "La modalità è stata eliminata con successo, ma non è stato possibile eliminare la cartella delle regole in {{rulesFolderPath}}. Potrebbe essere necessario eliminarla manualmente."
 		},
 		"scope": {
 			"project": "progetto",
 			"global": "globale"
+		}
+	},
+	"marketplace": {
+		"mode": {
+			"rulesCleanupFailed": "La modalità è stata rimossa con successo, ma non è stato possibile eliminare la cartella delle regole in {{rulesFolderPath}}. Potrebbe essere necessario eliminarla manualmente."
 		}
 	},
 	"mdm": {
@@ -169,6 +178,11 @@
 			"description": "Sei sicuro di voler eliminare questa modalità {{scope}}? Questo eliminerà anche la cartella delle regole associata a: {{rulesFolderPath}}",
 			"descriptionNoRules": "Sei sicuro di voler eliminare questa modalità personalizzata?",
 			"confirm": "Elimina"
+		}
+	},
+	"commands": {
+		"preventCompletionWithOpenTodos": {
+			"description": "Impedire il completamento delle attività quando ci sono todo incompleti nella lista dei todo"
 		}
 	}
 }

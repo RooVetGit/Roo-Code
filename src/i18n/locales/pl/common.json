@@ -17,12 +17,7 @@
 	"confirmation": {
 		"reset_state": "Czy na pewno chcesz zresetować wszystkie stany i tajne magazyny w rozszerzeniu? Tej operacji nie można cofnąć.",
 		"delete_config_profile": "Czy na pewno chcesz usunąć ten profil konfiguracyjny?",
-		"delete_custom_mode_with_rules": "Czy na pewno chcesz usunąć ten tryb {scope}?\n\nSpowoduje to również usunięcie powiązanego folderu reguł pod adresem:\n{rulesFolderPath}",
-		"delete_message": "Co chcesz usunąć?",
-		"delete_just_this_message": "Tylko tę wiadomość",
-		"delete_this_and_subsequent": "Tę i wszystkie kolejne wiadomości",
-		"edit_warning": "Edytowanie tej wiadomości usunie wszystkie kolejne wiadomości w rozmowie. Czy chcesz kontynuować?",
-		"proceed": "Kontynuuj"
+		"delete_custom_mode_with_rules": "Czy na pewno chcesz usunąć ten tryb {scope}?\n\nSpowoduje to również usunięcie powiązanego folderu reguł pod adresem:\n{rulesFolderPath}"
 	},
 	"errors": {
 		"invalid_data_uri": "Nieprawidłowy format URI danych",
@@ -33,6 +28,7 @@
 		"could_not_open_file_generic": "Nie można otworzyć pliku!",
 		"checkpoint_timeout": "Upłynął limit czasu podczas próby przywrócenia punktu kontrolnego.",
 		"checkpoint_failed": "Nie udało się przywrócić punktu kontrolnego.",
+		"git_not_installed": "Funkcja punktów kontrolnych wymaga oprogramowania Git. Zainstaluj Git, aby włączyć punkty kontrolne.",
 		"no_workspace": "Najpierw otwórz folder projektu",
 		"update_support_prompt": "Nie udało się zaktualizować komunikatu wsparcia",
 		"reset_support_prompt": "Nie udało się zresetować komunikatu wsparcia",
@@ -67,6 +63,7 @@
 		"url_page_not_found": "Strona nie została znaleziona. Sprawdź, czy URL jest poprawny.",
 		"url_fetch_failed": "Błąd pobierania zawartości URL: {{error}}",
 		"url_fetch_error_with_url": "Błąd pobierania zawartości dla {{url}}: {{error}}",
+		"command_timeout": "Przekroczono limit czasu wykonania polecenia po {{seconds}} sekundach",
 		"share_task_failed": "Nie udało się udostępnić zadania",
 		"share_no_active_task": "Brak aktywnego zadania do udostępnienia",
 		"share_auth_required": "Wymagana autoryzacja. Zaloguj się, aby udostępniać zadania.",
@@ -80,6 +77,11 @@
 			"processExitedWithError": "Proces Claude Code zakończył się kodem {{exitCode}}. Wyjście błędu: {{output}}",
 			"stoppedWithReason": "Claude Code zatrzymał się z powodu: {{reason}}",
 			"apiKeyModelPlanMismatch": "Klucze API i plany subskrypcji pozwalają na różne modele. Upewnij się, że wybrany model jest zawarty w twoim planie."
+		},
+		"gemini": {
+			"generate_stream": "Błąd strumienia kontekstu generowania Gemini: {{error}}",
+			"generate_complete_prompt": "Błąd uzupełniania Gemini: {{error}}",
+			"sources": "Źródła:"
 		}
 	},
 	"warnings": {
@@ -111,7 +113,8 @@
 	},
 	"buttons": {
 		"save": "Zapisz",
-		"edit": "Edytuj"
+		"edit": "Edytuj",
+		"learn_more": "Dowiedz się więcej"
 	},
 	"tasks": {
 		"canceled": "Błąd zadania: Zostało zatrzymane i anulowane przez użytkownika.",
@@ -149,11 +152,17 @@
 			"deleteFailed": "Usunięcie trybu niestandardowego nie powiodło się: {{error}}",
 			"resetFailed": "Resetowanie trybów niestandardowych nie powiodło się: {{error}}",
 			"modeNotFound": "Błąd zapisu: Tryb nie został znaleziony",
-			"noWorkspaceForProject": "Nie znaleziono folderu obszaru roboczego dla trybu specyficznego dla projektu"
+			"noWorkspaceForProject": "Nie znaleziono folderu obszaru roboczego dla trybu specyficznego dla projektu",
+			"rulesCleanupFailed": "Tryb został pomyślnie usunięty, ale nie udało się usunąć folderu reguł w {{rulesFolderPath}}. Może być konieczne ręczne usunięcie."
 		},
 		"scope": {
 			"project": "projekt",
 			"global": "globalny"
+		}
+	},
+	"marketplace": {
+		"mode": {
+			"rulesCleanupFailed": "Tryb został pomyślnie usunięty, ale nie udało się usunąć folderu reguł w {{rulesFolderPath}}. Może być konieczne ręczne usunięcie."
 		}
 	},
 	"mdm": {
@@ -169,6 +178,11 @@
 			"description": "Czy na pewno chcesz usunąć ten tryb {{scope}}? Spowoduje to również usunięcie powiązanego folderu z regułami w {{rulesFolderPath}}",
 			"descriptionNoRules": "Czy na pewno chcesz usunąć ten tryb niestandardowy?",
 			"confirm": "Usuń"
+		}
+	},
+	"commands": {
+		"preventCompletionWithOpenTodos": {
+			"description": "Zapobiegaj ukończeniu zadania gdy na liście zadań są nieukończone zadania"
 		}
 	}
 }

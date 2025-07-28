@@ -6,6 +6,7 @@ import pWaitFor from "p-wait-for"
 import delay from "delay"
 
 import type { ExperimentId } from "@roo-code/types"
+import { DEFAULT_TERMINAL_OUTPUT_CHARACTER_LIMIT } from "@roo-code/types"
 
 import { EXPERIMENT_IDS, experiments as Experiments } from "../../shared/experiments"
 import { formatLanguage } from "../../shared/language"
@@ -25,7 +26,11 @@ export async function getEnvironmentDetails(cline: Task, includeFileDetails: boo
 
 	const clineProvider = cline.providerRef.deref()
 	const state = await clineProvider?.getState()
-	const { terminalOutputLineLimit = 500, maxWorkspaceFiles = 200 } = state ?? {}
+	const {
+		terminalOutputLineLimit = 500,
+		terminalOutputCharacterLimit = DEFAULT_TERMINAL_OUTPUT_CHARACTER_LIMIT,
+		maxWorkspaceFiles = 200,
+	} = state ?? {}
 
 	// It could be useful for cline to know if the user went from one or no
 	// file to another between messages, so we always include this context.
@@ -111,7 +116,11 @@ export async function getEnvironmentDetails(cline: Task, includeFileDetails: boo
 			let newOutput = TerminalRegistry.getUnretrievedOutput(busyTerminal.id)
 
 			if (newOutput) {
-				newOutput = Terminal.compressTerminalOutput(newOutput, terminalOutputLineLimit)
+				newOutput = Terminal.compressTerminalOutput(
+					newOutput,
+					terminalOutputLineLimit,
+					terminalOutputCharacterLimit,
+				)
 				terminalDetails += `\n### New Output\n${newOutput}`
 			}
 		}
@@ -139,7 +148,11 @@ export async function getEnvironmentDetails(cline: Task, includeFileDetails: boo
 				let output = process.getUnretrievedOutput()
 
 				if (output) {
-					output = Terminal.compressTerminalOutput(output, terminalOutputLineLimit)
+					output = Terminal.compressTerminalOutput(
+						output,
+						terminalOutputLineLimit,
+						terminalOutputCharacterLimit,
+					)
 					terminalOutputs.push(`Command: \`${process.command}\`\n${output}`)
 				}
 			}
@@ -179,22 +192,12 @@ export async function getEnvironmentDetails(cline: Task, includeFileDetails: boo
 	// Add current time information with timezone.
 	const now = new Date()
 
-	const formatter = new Intl.DateTimeFormat(undefined, {
-		year: "numeric",
-		month: "numeric",
-		day: "numeric",
-		hour: "numeric",
-		minute: "numeric",
-		second: "numeric",
-		hour12: true,
-	})
-
-	const timeZone = formatter.resolvedOptions().timeZone
+	const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone
 	const timeZoneOffset = -now.getTimezoneOffset() / 60 // Convert to hours and invert sign to match conventional notation
 	const timeZoneOffsetHours = Math.floor(Math.abs(timeZoneOffset))
 	const timeZoneOffsetMinutes = Math.abs(Math.round((Math.abs(timeZoneOffset) - timeZoneOffsetHours) * 60))
 	const timeZoneOffsetStr = `${timeZoneOffset >= 0 ? "+" : "-"}${timeZoneOffsetHours}:${timeZoneOffsetMinutes.toString().padStart(2, "0")}`
-	details += `\n\n# Current Time\n${formatter.format(now)} (${timeZone}, UTC${timeZoneOffsetStr})`
+	details += `\n\n# Current Time\nCurrent time in ISO 8601 UTC format: ${now.toISOString()}\nUser time zone: ${timeZone}, UTC${timeZoneOffsetStr}`
 
 	// Add context tokens information.
 	const { contextTokens, totalCost } = getApiMetrics(cline.clineMessages)

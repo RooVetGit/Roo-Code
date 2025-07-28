@@ -17,12 +17,7 @@
 	"confirmation": {
 		"reset_state": "확장 프로그램의 모든 상태와 보안 저장소를 재설정하시겠습니까? 이 작업은 취소할 수 없습니다.",
 		"delete_config_profile": "이 구성 프로필을 삭제하시겠습니까?",
-		"delete_custom_mode_with_rules": "이 {scope} 모드를 삭제하시겠습니까?\n\n이렇게 하면 연결된 규칙 폴더도 다음 위치에서 삭제됩니다:\n{rulesFolderPath}",
-		"delete_message": "무엇을 삭제하시겠습니까?",
-		"edit_warning": "이 메시지를 편집하면 대화의 모든 후속 메시지가 삭제됩니다. 계속하시겠습니까?",
-		"delete_just_this_message": "이 메시지만",
-		"delete_this_and_subsequent": "이 메시지와 모든 후속 메시지",
-		"proceed": "계속"
+		"delete_custom_mode_with_rules": "이 {scope} 모드를 삭제하시겠습니까?\n\n이렇게 하면 연결된 규칙 폴더도 다음 위치에서 삭제됩니다:\n{rulesFolderPath}"
 	},
 	"errors": {
 		"invalid_data_uri": "잘못된 데이터 URI 형식",
@@ -33,6 +28,7 @@
 		"could_not_open_file_generic": "파일을 열 수 없습니다!",
 		"checkpoint_timeout": "체크포인트 복원을 시도하는 중 시간 초과되었습니다.",
 		"checkpoint_failed": "체크포인트 복원에 실패했습니다.",
+		"git_not_installed": "체크포인트 기능을 사용하려면 Git이 필요합니다. 체크포인트를 활성화하려면 Git을 설치하세요.",
 		"no_workspace": "먼저 프로젝트 폴더를 열어주세요",
 		"update_support_prompt": "지원 프롬프트 업데이트에 실패했습니다",
 		"reset_support_prompt": "지원 프롬프트 재설정에 실패했습니다",
@@ -67,6 +63,7 @@
 		"url_page_not_found": "페이지를 찾을 수 없습니다. URL이 올바른지 확인해 주세요.",
 		"url_fetch_failed": "URL 콘텐츠 가져오기 실패: {{error}}",
 		"url_fetch_error_with_url": "{{url}} 콘텐츠 가져오기 오류: {{error}}",
+		"command_timeout": "명령 실행 시간이 {{seconds}}초 후 초과되었습니다",
 		"share_task_failed": "작업 공유에 실패했습니다",
 		"share_no_active_task": "공유할 활성 작업이 없습니다",
 		"share_auth_required": "인증이 필요합니다. 작업을 공유하려면 로그인하세요.",
@@ -80,6 +77,11 @@
 			"processExitedWithError": "Claude Code 프로세스가 코드 {{exitCode}}로 종료되었습니다. 오류 출력: {{output}}",
 			"stoppedWithReason": "Claude Code가 다음 이유로 중지되었습니다: {{reason}}",
 			"apiKeyModelPlanMismatch": "API 키와 구독 플랜에서 다른 모델을 허용합니다. 선택한 모델이 플랜에 포함되어 있는지 확인하세요."
+		},
+		"gemini": {
+			"generate_stream": "Gemini 생성 컨텍스트 스트림 오류: {{error}}",
+			"generate_complete_prompt": "Gemini 완료 오류: {{error}}",
+			"sources": "출처:"
 		}
 	},
 	"warnings": {
@@ -111,7 +113,8 @@
 	},
 	"buttons": {
 		"save": "저장",
-		"edit": "편집"
+		"edit": "편집",
+		"learn_more": "더 알아보기"
 	},
 	"tasks": {
 		"canceled": "작업 오류: 사용자에 의해 중지 및 취소되었습니다.",
@@ -149,11 +152,17 @@
 			"deleteFailed": "사용자 정의 모드 삭제 실패: {{error}}",
 			"resetFailed": "사용자 정의 모드 재설정 실패: {{error}}",
 			"modeNotFound": "쓰기 오류: 모드를 찾을 수 없습니다",
-			"noWorkspaceForProject": "프로젝트별 모드용 작업 공간 폴더를 찾을 수 없습니다"
+			"noWorkspaceForProject": "프로젝트별 모드용 작업 공간 폴더를 찾을 수 없습니다",
+			"rulesCleanupFailed": "모드가 성공적으로 삭제되었지만 {{rulesFolderPath}}의 규칙 폴더를 삭제하지 못했습니다. 수동으로 삭제해야 할 수도 있습니다."
 		},
 		"scope": {
 			"project": "프로젝트",
 			"global": "글로벌"
+		}
+	},
+	"marketplace": {
+		"mode": {
+			"rulesCleanupFailed": "모드가 성공적으로 제거되었지만 {{rulesFolderPath}}의 규칙 폴더를 삭제하지 못했습니다. 수동으로 삭제해야 할 수도 있습니다."
 		}
 	},
 	"mdm": {
@@ -169,6 +178,11 @@
 			"description": "이 {{scope}} 모드를 삭제하시겠습니까? 이렇게 하면 {{rulesFolderPath}}의 관련 규칙 폴더도 삭제됩니다.",
 			"descriptionNoRules": "이 사용자 정의 모드를 삭제하시겠습니까?",
 			"confirm": "삭제"
+		}
+	},
+	"commands": {
+		"preventCompletionWithOpenTodos": {
+			"description": "할 일 목록에 미완료된 할 일이 있을 때 작업 완료를 방지"
 		}
 	}
 }

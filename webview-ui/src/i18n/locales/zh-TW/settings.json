@@ -47,6 +47,9 @@
 		"geminiProvider": "Gemini",
 		"geminiApiKeyLabel": "API 金鑰：",
 		"geminiApiKeyPlaceholder": "輸入您的Gemini API金鑰",
+		"mistralProvider": "Mistral",
+		"mistralApiKeyLabel": "API 金鑰：",
+		"mistralApiKeyPlaceholder": "輸入您的 Mistral API 金鑰",
 		"openaiCompatibleProvider": "OpenAI 相容",
 		"openAiKeyLabel": "OpenAI API 金鑰",
 		"openAiKeyPlaceholder": "輸入您的 OpenAI API 金鑰",
@@ -109,6 +112,7 @@
 			"modelIdRequired": "需要模型 ID",
 			"modelDimensionRequired": "需要模型維度",
 			"geminiApiKeyRequired": "需要 Gemini API 金鑰",
+			"mistralApiKeyRequired": "需要 Mistral API 金鑰",
 			"ollamaBaseUrlRequired": "需要 Ollama 基礎 URL",
 			"baseUrlRequired": "需要基礎 URL",
 			"modelDimensionMinValue": "模型維度必須大於 0"
@@ -123,6 +127,8 @@
 	},
 	"autoApprove": {
 		"description": "允許 Roo 無需核准即執行操作。僅在您完全信任 AI 並了解相關安全風險時啟用這些設定。",
+		"toggleAriaLabel": "切換自動核准",
+		"disabledAriaLabel": "自動核准已停用 - 請先選取選項",
 		"readOnly": {
 			"label": "讀取",
 			"description": "啟用後，Roo 將自動檢視目錄內容並讀取檔案，無需點選核准按鈕。",
@@ -190,7 +196,8 @@
 			"title": "最大請求數",
 			"description": "在請求批准以繼續執行工作之前，自動發出此數量的 API 請求。",
 			"unlimited": "無限制"
-		}
+		},
+		"selectOptionsFirst": "請至少選擇以下一個選項以啟用自動核准"
 	},
 	"providers": {
 		"providerDocumentation": "{{provider}} 文件",
@@ -246,9 +253,25 @@
 		"getChutesApiKey": "取得 Chutes API 金鑰",
 		"deepSeekApiKey": "DeepSeek API 金鑰",
 		"getDeepSeekApiKey": "取得 DeepSeek API 金鑰",
+		"moonshotApiKey": "Moonshot API 金鑰",
+		"getMoonshotApiKey": "取得 Moonshot API 金鑰",
+		"moonshotBaseUrl": "Moonshot 服務站點",
 		"geminiApiKey": "Gemini API 金鑰",
 		"getGroqApiKey": "取得 Groq API 金鑰",
 		"groqApiKey": "Groq API 金鑰",
+		"getHuggingFaceApiKey": "取得 Hugging Face API 金鑰",
+		"huggingFaceApiKey": "Hugging Face API 金鑰",
+		"huggingFaceModelId": "模型 ID",
+		"huggingFaceLoading": "載入中...",
+		"huggingFaceModelsCount": "({{count}} 個模型)",
+		"huggingFaceSelectModel": "選擇模型...",
+		"huggingFaceSearchModels": "搜尋模型...",
+		"huggingFaceNoModelsFound": "找不到模型",
+		"huggingFaceProvider": "提供者",
+		"huggingFaceProviderAuto": "自動",
+		"huggingFaceSelectProvider": "選擇提供者...",
+		"huggingFaceSearchProviders": "搜尋提供者...",
+		"huggingFaceNoProvidersFound": "找不到提供者",
 		"getGeminiApiKey": "取得 Gemini API 金鑰",
 		"openAiApiKey": "OpenAI API 金鑰",
 		"apiKey": "API 金鑰",
@@ -264,6 +287,7 @@
 		"litellmBaseUrl": "LiteLLM 基礎 URL",
 		"awsCredentials": "AWS 認證",
 		"awsProfile": "AWS Profile",
+		"awsApiKey": "Amazon Bedrock API 金鑰",
 		"awsProfileName": "AWS Profile 名稱",
 		"awsAccessKey": "AWS Access Key",
 		"awsSecretKey": "AWS Secret Key",
@@ -280,6 +304,17 @@
 		"cacheUsageNote": "注意：如果您沒有看到快取使用情況，請嘗試選擇其他模型，然後重新選擇您想要的模型。",
 		"vscodeLmModel": "語言模型",
 		"vscodeLmWarning": "注意：此整合功能仍處於實驗階段，各供應商的支援程度可能不同。如果出現模型不支援的錯誤，通常是供應商方面的問題。",
+
+		"geminiParameters": {
+			"urlContext": {
+				"title": "啟用 URL 上下文",
+				"description": "讓 Gemini 讀取連結的頁面以提取、比較和綜合其內容，從而提供明智的答覆。"
+			},
+			"groundingSearch": {
+				"title": "啟用 Google 搜尋基礎",
+				"description": "將 Gemini 連接到即時網路數據，以獲得包含可驗證引用的準確、最新的答案。"
+			}
+		},
 		"googleCloudSetup": {
 			"title": "要使用 Google Cloud Vertex AI，您需要：",
 			"step1": "1. 建立 Google Cloud 帳戶，啟用 Vertex AI API 並啟用所需的 Claude 模型。",
@@ -366,6 +401,12 @@
 		"rateLimitSeconds": {
 			"label": "速率限制",
 			"description": "API 請求間的最短時間"
+		},
+		"consecutiveMistakeLimit": {
+			"label": "錯誤和重複限制",
+			"description": "在顯示「Roo 遇到問題」對話方塊前允許的連續錯誤或重複操作次數",
+			"unlimitedDescription": "已啟用無限重試（自動繼續）。對話方塊將永遠不會出現。",
+			"warning": "⚠️ 設定為 0 允許無限重試，這可能會消耗大量 API 使用量"
 		},
 		"reasoningEffort": {
 			"label": "模型推理強度",
@@ -472,6 +513,23 @@
 			"label": "並行檔案讀取限制",
 			"description": "read_file 工具可以同時處理的最大檔案數。較高的值可能會加快讀取多個小檔案的速度，但會增加記憶體使用量。"
 		},
+		"diagnostics": {
+			"includeMessages": {
+				"label": "自動在上下文中包含診斷",
+				"description": "啟用後，來自已編輯檔案的診斷訊息（錯誤）將自動包含在上下文中。您隨時可以使用 @problems 手動包含所有工作區診斷。"
+			},
+			"maxMessages": {
+				"label": "最大診斷訊息數",
+				"description": "每個檔案包含的最大診斷訊息數。此限制適用於自動包含（當核取方塊啟用時）和手動 @problems 提及。較高的值提供更多上下文，但會增加權杖使用量。",
+				"resetTooltip": "重設為預設值 (50)",
+				"unlimited": "無限制診斷訊息",
+				"unlimitedLabel": "無限制"
+			},
+			"delayAfterWrite": {
+				"label": "寫入後延遲以允許診斷程式偵測潛在問題",
+				"description": "在繼續之前寫入檔案後等待的時間，允許診斷工具處理變更並偵測問題。"
+			}
+		},
 		"condensingThreshold": {
 			"label": "壓縮觸發閾值",
 			"selectProfile": "設定檔案閾值",
@@ -494,6 +552,10 @@
 		"outputLineLimit": {
 			"label": "終端機輸出行數限制",
 			"description": "執行命令時終端機輸出的最大行數。超過此限制時，會從中間移除多餘的行數，以節省 token 用量。 <0>瞭解更多</0>"
+		},
+		"outputCharacterLimit": {
+			"label": "終端機字元限制",
+			"description": "執行指令時在終端輸出中包含的最大字元數。此限制優先於行數限制，以防止因行過長而導致的記憶體問題。超過後，輸出將被截斷。 <0>了解更多</0>"
 		},
 		"shellIntegrationTimeout": {
 			"label": "終端機 Shell 整合逾時",
@@ -536,6 +598,9 @@
 			"description": "啟用後，終端機將從 VSCode 父程序繼承環境變數，如使用者設定檔中定義的 shell 整合設定。這直接切換 VSCode 全域設定 `terminal.integrated.inheritEnv`。 <0>瞭解更多</0>"
 		}
 	},
+	"advancedSettings": {
+		"title": "進階設定"
+	},
 	"advanced": {
 		"diff": {
 			"label": "透過差異比對編輯",
@@ -557,6 +622,10 @@
 				"label": "比對精確度",
 				"description": "此滑桿控制套用差異時程式碼區段的比對精確度。較低的數值允許更彈性的比對，但也會增加錯誤取代的風險。使用低於 100% 的數值時請特別謹慎。"
 			}
+		},
+		"todoList": {
+			"label": "啟用待辦事項清單工具",
+			"description": "啟用後，Roo 可以建立和管理待辦事項清單來追蹤任務進度。這有助於將複雜任務組織成可管理的步驟。"
 		}
 	},
 	"experimental": {
@@ -698,5 +767,8 @@
 		"useCustomArn": "使用自訂 ARN..."
 	},
 	"includeMaxOutputTokens": "包含最大輸出 Token 數",
-	"includeMaxOutputTokensDescription": "在 API 請求中傳送最大輸出 Token 參數。某些提供商可能不支援此功能。"
+	"includeMaxOutputTokensDescription": "在 API 請求中傳送最大輸出 Token 參數。某些提供商可能不支援此功能。",
+	"limitMaxTokensDescription": "限制回應中的最大 Token 數量",
+	"maxOutputTokensLabel": "最大輸出 Token 數",
+	"maxTokensGenerateDescription": "回應中產生的最大 Token 數"
 }
