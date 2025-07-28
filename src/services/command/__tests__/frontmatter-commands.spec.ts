@@ -41,7 +41,7 @@ npm run build
 				name: "setup",
 				content: "# Setup Command\n\nRun the following commands:\n```bash\nnpm install\nnpm run build\n```",
 				source: "project",
-				filePath: "/test/cwd/.roo/commands/setup.md",
+				filePath: path.join("/test/cwd", ".roo", "commands", "setup.md"),
 				description: "Sets up the development environment",
 			})
 		})
@@ -64,7 +64,7 @@ npm run build
 				name: "setup",
 				content: "# Setup Command\n\nRun the following commands:\n```bash\nnpm install\nnpm run build\n```",
 				source: "project",
-				filePath: "/test/cwd/.roo/commands/setup.md",
+				filePath: path.join("/test/cwd", ".roo", "commands", "setup.md"),
 				description: undefined,
 			})
 		})
@@ -106,7 +106,7 @@ Command content here.`
 				name: "setup",
 				content: commandContent.trim(),
 				source: "project",
-				filePath: "/test/cwd/.roo/commands/setup.md",
+				filePath: path.join("/test/cwd", ".roo", "commands", "setup.md"),
 				description: undefined,
 			})
 		})
@@ -140,7 +140,7 @@ Global setup instructions.`
 				name: "setup",
 				content: "# Project Setup\n\nProject-specific setup instructions.",
 				source: "project",
-				filePath: "/test/cwd/.roo/commands/setup.md",
+				filePath: path.join("/test/cwd", ".roo", "commands", "setup.md"),
 				description: "Project-specific setup",
 			})
 		})
