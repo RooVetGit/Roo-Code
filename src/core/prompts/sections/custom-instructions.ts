@@ -27,6 +27,34 @@ async function safeReadFile(filePath: string): Promise<string> {
 }
 
 /**
+ * Safely read a file and follow symlinks if necessary
+ */
+async function safeReadFileFollowingSymlinks(filePath: string): Promise<string> {
+	try {
+		// Check if the path is a symlink
+		const stats = await fs.lstat(filePath)
+		if (stats.isSymbolicLink()) {
+			// Resolve the symlink to get the actual file path
+			const linkTarget = await fs.readlink(filePath)
+			const resolvedPath = path.resolve(path.dirname(filePath), linkTarget)
+			// Read from the resolved path
+			const content = await fs.readFile(resolvedPath, "utf-8")
+			return content.trim()
+		} else {
+			// Not a symlink, read normally
+			const content = await fs.readFile(filePath, "utf-8")
+			return content.trim()
+		}
+	} catch (err) {
+		const errorCode = (err as NodeJS.ErrnoException).code
+		if (!errorCode || !["ENOENT", "EISDIR"].includes(errorCode)) {
+			throw err
+		}
+		return ""
+	}
+}
+
+/**
  * Check if a directory exists
  */
 async function directoryExists(dirPath: string): Promise<boolean> {
@@ -222,7 +250,7 @@ export async function loadRuleFiles(cwd: string): Promise<string> {
 async function loadAgentRulesFile(cwd: string): Promise<string> {
 	try {
 		const agentsPath = path.join(cwd, "AGENTS.md")
-		const content = await safeReadFile(agentsPath)
+		const content = await safeReadFileFollowingSymlinks(agentsPath)
 		if (content) {
 			return `# Agent Rules Standard (AGENTS.md):\n${content}`
 		}
