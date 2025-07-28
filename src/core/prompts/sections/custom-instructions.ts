@@ -27,30 +27,38 @@ async function safeReadFile(filePath: string): Promise<string> {
 }
 
 /**
- * Safely read a file and follow symlinks if necessary
+ * Resolve a symlink to its target path
  */
-async function safeReadFileFollowingSymlinks(filePath: string): Promise<string> {
+async function resolveSymlinkPath(symlinkPath: string, depth: number = 0): Promise<string> {
+	// Avoid cyclic symlinks
+	if (depth > MAX_DEPTH) {
+		throw new Error(`Maximum symlink depth exceeded for ${symlinkPath}`)
+	}
+
 	try {
 		// Check if the path is a symlink
-		const stats = await fs.lstat(filePath)
-		if (stats.isSymbolicLink()) {
-			// Resolve the symlink to get the actual file path
-			const linkTarget = await fs.readlink(filePath)
-			const resolvedPath = path.resolve(path.dirname(filePath), linkTarget)
-			// Read from the resolved path
-			const content = await fs.readFile(resolvedPath, "utf-8")
-			return content.trim()
-		} else {
-			// Not a symlink, read normally
-			const content = await fs.readFile(filePath, "utf-8")
-			return content.trim()
+		const stats = await fs.lstat(symlinkPath)
+		if (!stats.isSymbolicLink()) {
+			// Not a symlink, return the original path
+			return symlinkPath
 		}
+
+		// Get the symlink target
+		const linkTarget = await fs.readlink(symlinkPath)
+		// Resolve the target path (relative to the symlink location)
+		const resolvedTarget = path.resolve(path.dirname(symlinkPath), linkTarget)
+
+		// Check if the resolved target is also a symlink (handle nested symlinks)
+		const targetStats = await fs.lstat(resolvedTarget)
+		if (targetStats.isSymbolicLink()) {
+			// Recursively resolve nested symlinks
+			return resolveSymlinkPath(resolvedTarget, depth + 1)
+		}
+
+		return resolvedTarget
 	} catch (err) {
-		const errorCode = (err as NodeJS.ErrnoException).code
-		if (!errorCode || !["ENOENT", "EISDIR"].includes(errorCode)) {
-			throw err
-		}
-		return ""
+		// If we can't resolve the symlink, return the original path
+		return symlinkPath
 	}
 }
 
@@ -250,7 +258,10 @@ export async function loadRuleFiles(cwd: string): Promise<string> {
 async function loadAgentRulesFile(cwd: string): Promise<string> {
 	try {
 		const agentsPath = path.join(cwd, "AGENTS.md")
-		const content = await safeReadFileFollowingSymlinks(agentsPath)
+		// Resolve symlinks if necessary
+		const resolvedPath = await resolveSymlinkPath(agentsPath)
+		// Read the file content
+		const content = await safeReadFile(resolvedPath)
 		if (content) {
 			return `# Agent Rules Standard (AGENTS.md):\n${content}`
 		}
