@@ -352,6 +352,24 @@
 	"command": {
 		"triggerDescription": "Trigger the {{name}} command"
 	},
+	"slashCommands": {
+		"tooltip": "Manage slash commands",
+		"title": "Slash Commands",
+		"description": "Create custom slash commands for quick access to frequently used prompts and workflows.",
+		"globalCommands": "Global Commands",
+		"workspaceCommands": "Workspace Commands",
+		"globalCommand": "Global command",
+		"editCommand": "Edit command",
+		"deleteCommand": "Delete command",
+		"newGlobalCommandPlaceholder": "New global command...",
+		"newWorkspaceCommandPlaceholder": "New workspace command...",
+		"deleteDialog": {
+			"title": "Delete Command",
+			"description": "Are you sure you want to delete the command \"{{name}}\"? This action cannot be undone.",
+			"cancel": "Cancel",
+			"confirm": "Delete"
+		}
+	},
 	"queuedMessages": {
 		"title": "Queued Messages:",
 		"clickToEdit": "Click to edit message"
