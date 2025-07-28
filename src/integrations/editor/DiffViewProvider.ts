@@ -635,7 +635,7 @@ export class DiffViewProvider {
 	 *
 	 * @param relPath - Relative path to the file
 	 * @param content - Content to write to the file
-	 * @param openWithoutFocus - Whether to open the file without stealing focus (for diagnostics)
+	 * @param openFile - Whether to open the file (deprecated - file is always opened with preserveFocus)
 	 * @returns Result of the save operation including any new problems detected
 	 */
 	async saveDirectly(
@@ -658,14 +658,12 @@ export class DiffViewProvider {
 		await createDirectoriesForFile(absolutePath)
 		await fs.writeFile(absolutePath, content, "utf-8")
 
-		// Only open the file if explicitly requested
-		// This prevents focus stealing when the experiment is enabled
-		if (openFile) {
-			await vscode.window.showTextDocument(vscode.Uri.file(absolutePath), {
-				preview: false,
-				preserveFocus: true,
-			})
-		}
+		// Always open the file to ensure diagnostics are loaded
+		// When openFile is false (PREVENT_FOCUS_DISRUPTION enabled), we still open but preserve focus
+		await vscode.window.showTextDocument(vscode.Uri.file(absolutePath), {
+			preview: false,
+			preserveFocus: true,
+		})
 
 		let newProblemsMessage = ""
 
