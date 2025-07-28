@@ -813,6 +813,9 @@ export class ClineProvider
 			TelemetryService.instance.captureModeSwitch(cline.taskId, newMode)
 			cline.emit("taskModeSwitched", cline.taskId, newMode)
 
+			// Update the task's own mode property
+			cline.taskMode = newMode
+
 			// Update the task history with the new mode
 			const history = this.getGlobalState("taskHistory") ?? []
 			const taskHistoryItem = history.find((item) => item.id === cline.taskId)

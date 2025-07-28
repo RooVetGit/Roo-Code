@@ -309,6 +309,48 @@ describe("ClineProvider - Sticky Mode", () => {
 			)
 		})
 
+		it("should update task's taskMode property when switching modes", async () => {
+			// Create a mock task with initial mode
+			const mockTask = {
+				taskId: "test-task-id",
+				taskMode: "code", // Initial mode
+				emit: vi.fn(),
+				saveClineMessages: vi.fn(),
+				clineMessages: [],
+				apiConversationHistory: [],
+			}
+
+			// Add task to provider stack
+			await provider.addClineToStack(mockTask as any)
+
+			// Mock getGlobalState to return task history
+			vi.spyOn(provider as any, "getGlobalState").mockReturnValue([
+				{
+					id: mockTask.taskId,
+					ts: Date.now(),
+					task: "Test task",
+					number: 1,
+					tokensIn: 0,
+					tokensOut: 0,
+					cacheWrites: 0,
+					cacheReads: 0,
+					totalCost: 0,
+				},
+			])
+
+			// Mock updateTaskHistory
+			vi.spyOn(provider, "updateTaskHistory").mockImplementation(() => Promise.resolve([]))
+
+			// Switch mode
+			await provider.handleModeSwitch("architect")
+
+			// Verify task's taskMode property was updated
+			expect(mockTask.taskMode).toBe("architect")
+
+			// Verify emit was called with taskModeSwitched event
+			expect(mockTask.emit).toHaveBeenCalledWith("taskModeSwitched", mockTask.taskId, "architect")
+		})
+
 		it("should update task history with new mode when active task exists", async () => {
 			// Create a mock task with history
 			const mockTask = new Task({
