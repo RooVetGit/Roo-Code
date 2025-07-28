@@ -341,6 +341,61 @@ export const webviewMessageHandler = async (
 			await provider.postStateToWebview()
 			break
 		case "askResponse":
+			// Handle temperature error retry with temperature reduction
+			if (message.askResponse === "yesButtonClicked") {
+				const currentCline = provider.getCurrentCline()
+				if (currentCline) {
+					const lastMessage = currentCline.clineMessages.at(-1)
+					if (lastMessage?.ask === "temperature_tool_error") {
+						// User clicked "Reduce Temperature to 0.2 & Retry"
+						// 1. Update temperature to 0.2 for current API profile
+						const { apiConfiguration, currentApiConfigName } = await provider.getState()
+						if (apiConfiguration) {
+							const updatedConfig = {
+								...apiConfiguration,
+								modelTemperature: 0.2,
+							}
+
+							// Update the current configuration using the provider's method
+							await provider.upsertProviderProfile(currentApiConfigName, updatedConfig)
+						}
+
+						// 2. Remove the temperature error message and the failed tool message before it
+						const messageIndex = currentCline.clineMessages.length - 1
+						const apiConversationHistoryIndex = currentCline.apiConversationHistory.length - 1
+
+						// Remove the temperature_tool_error ask message
+						await currentCline.overwriteClineMessages(currentCline.clineMessages.slice(0, messageIndex))
+
+						// Remove the last assistant message from API history (the one with the failed tool)
+						if (apiConversationHistoryIndex >= 0) {
+							await currentCline.overwriteApiConversationHistory(
+								currentCline.apiConversationHistory.slice(0, apiConversationHistoryIndex),
+							)
+						}
+
+						// 3. Re-send the last user message to retry with lower temperature
+						const lastUserMessage = currentCline.apiConversationHistory
+							.slice()
+							.reverse()
+							.find((msg) => msg.role === "user")
+
+						if (lastUserMessage && lastUserMessage.content) {
+							// Convert content to ContentBlockParam[] format
+							const contentBlocks =
+								typeof lastUserMessage.content === "string"
+									? [{ type: "text" as const, text: lastUserMessage.content }]
+									: lastUserMessage.content
+
+							// Re-initiate the task loop with the last user content
+							await currentCline.recursivelyMakeClineRequests(contentBlocks)
+						}
+
+						break
+					}
+				}
+			}
+
 			provider.getCurrentCline()?.handleWebviewAskResponse(message.askResponse!, message.text, message.images)
 			break
 		case "autoCondenseContext":

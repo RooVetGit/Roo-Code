@@ -12,6 +12,7 @@ import { formatResponse } from "../prompts/responses"
 import { fileExistsAtPath } from "../../utils/fs"
 import { RecordSource } from "../context-tracking/FileContextTrackerTypes"
 import { unescapeHtmlEntities } from "../../utils/text-normalization"
+import { isTemperatureRelatedError, getTemperatureErrorMessage } from "./utils/temperatureErrorDetection"
 
 export async function applyDiffToolLegacy(
 	cline: Task,
@@ -131,6 +132,25 @@ export async function applyDiffToolLegacy(
 
 				if (currentCount >= 2) {
 					await cline.say("diff_error", formattedError)
+				}
+
+				// Check if this is a temperature-related error
+				if (isTemperatureRelatedError("apply_diff", formattedError, cline)) {
+					const currentTemperature = cline.apiConfiguration?.modelTemperature ?? 0.0
+					const temperatureMessage = getTemperatureErrorMessage(currentTemperature)
+
+					// Ask user if they want to reduce temperature and retry
+					const askMessage = JSON.stringify({
+						tool: "apply_diff",
+						path: getReadablePath(cline.cwd, relPath),
+						error: formattedError,
+						temperatureMessage,
+						currentTemperature,
+					})
+
+					await cline.ask("temperature_tool_error", askMessage)
+					cline.recordToolError("apply_diff", formattedError)
+					return
 				}
 
 				cline.recordToolError("apply_diff", formattedError)

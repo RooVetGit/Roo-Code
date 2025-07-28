@@ -14,6 +14,7 @@ import { isPathOutsideWorkspace } from "../../utils/pathUtils"
 import { detectCodeOmission } from "../../integrations/editor/detect-omission"
 import { unescapeHtmlEntities } from "../../utils/text-normalization"
 import { DEFAULT_WRITE_DELAY_MS } from "@roo-code/types"
+import { isTemperatureRelatedError, getTemperatureErrorMessage } from "./utils/temperatureErrorDetection"
 
 export async function writeToFileTool(
 	cline: Task,
@@ -172,13 +173,30 @@ export async function writeToFileTool(
 				if (cline.diffStrategy) {
 					await cline.diffViewProvider.revertChanges()
 
-					pushToolResult(
-						formatResponse.toolError(
-							`Content appears to be truncated (file has ${
-								newContent.split("\n").length
-							} lines but was predicted to have ${predictedLineCount} lines), and found comments indicating omitted code (e.g., '// rest of code unchanged', '/* previous code */'). Please provide the complete file content without any omissions if possible, or otherwise use the 'apply_diff' tool to apply the diff to the original file.`,
-						),
-					)
+					const errorMessage = `Content appears to be truncated (file has ${
+						newContent.split("\n").length
+					} lines but was predicted to have ${predictedLineCount} lines), and found comments indicating omitted code (e.g., '// rest of code unchanged', '/* previous code */'). Please provide the complete file content without any omissions if possible, or otherwise use the 'apply_diff' tool to apply the diff to the original file.`
+
+					// Check if this is a temperature-related error
+					if (isTemperatureRelatedError("write_to_file", errorMessage, cline)) {
+						const currentTemperature = cline.apiConfiguration?.modelTemperature ?? 0.0
+						const temperatureMessage = getTemperatureErrorMessage(currentTemperature)
+
+						// Ask user if they want to reduce temperature and retry
+						const askMessage = JSON.stringify({
+							tool: "write_to_file",
+							path: getReadablePath(cline.cwd, relPath),
+							error: errorMessage,
+							temperatureMessage,
+							currentTemperature,
+						})
+
+						await cline.ask("temperature_tool_error", askMessage)
+						cline.recordToolError("write_to_file", errorMessage)
+						return
+					}
+
+					pushToolResult(formatResponse.toolError(errorMessage))
 					return
 				} else {
 					vscode.window
