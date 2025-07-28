@@ -201,7 +201,7 @@ export class CloudService {
 		this.telemetryClient!.setConnectionStatusCallback(callback)
 	}
 
-	public setTelemetryQueueSizeCallback(callback: (size: number, isAboveThreshold: boolean) => void): void {
+	public setTelemetryQueueSizeCallback(callback: (size: number, isAboveWarningThreshold: boolean) => void): void {
 		this.ensureInitialized()
 		this.telemetryClient!.setQueueSizeCallback(callback)
 	}

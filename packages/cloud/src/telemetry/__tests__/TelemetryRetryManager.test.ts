@@ -59,44 +59,56 @@ describe("TelemetryRetryManager", () => {
 		it("should start retry timer", async () => {
 			retryManager.start()
 
-			// Should not process immediately
-			expect(mockQueue.getEventsForRetry).toHaveBeenCalledTimes(0)
+			// Should process immediately on start
+			await vi.waitFor(() => {
+				expect(mockQueue.getEventsForRetry).toHaveBeenCalledTimes(1)
+			})
 
 			// Advance timer and run pending timers
 			await vi.advanceTimersByTimeAsync(30000)
-			expect(mockQueue.getEventsForRetry).toHaveBeenCalledTimes(1)
+			expect(mockQueue.getEventsForRetry).toHaveBeenCalledTimes(2)
 
 			// Advance timer again
 			await vi.advanceTimersByTimeAsync(30000)
-			expect(mockQueue.getEventsForRetry).toHaveBeenCalledTimes(2)
+			expect(mockQueue.getEventsForRetry).toHaveBeenCalledTimes(3)
 		})
 
 		it("should not start multiple timers", async () => {
 			retryManager.start()
 			retryManager.start()
 
+			// Should only process once on start
+			await vi.waitFor(() => {
+				expect(mockQueue.getEventsForRetry).toHaveBeenCalledTimes(1)
+			})
+
 			// Advance timer
 			await vi.advanceTimersByTimeAsync(30000)
-			expect(mockQueue.getEventsForRetry).toHaveBeenCalledTimes(1)
+			expect(mockQueue.getEventsForRetry).toHaveBeenCalledTimes(2)
 
 			// Advance timer again
 			await vi.advanceTimersByTimeAsync(30000)
-			expect(mockQueue.getEventsForRetry).toHaveBeenCalledTimes(2)
+			expect(mockQueue.getEventsForRetry).toHaveBeenCalledTimes(3)
 		})
 
 		it("should stop retry timer", async () => {
 			retryManager.start()
 
+			// Should process immediately on start
+			await vi.waitFor(() => {
+				expect(mockQueue.getEventsForRetry).toHaveBeenCalledTimes(1)
+			})
+
 			// Advance timer once
 			await vi.advanceTimersByTimeAsync(30000)
-			expect(mockQueue.getEventsForRetry).toHaveBeenCalledTimes(1)
+			expect(mockQueue.getEventsForRetry).toHaveBeenCalledTimes(2)
 
 			retryManager.stop()
 
 			// Advance timer again
 			await vi.advanceTimersByTimeAsync(30000)
-			// Should still only be called once
-			expect(mockQueue.getEventsForRetry).toHaveBeenCalledTimes(1)
+			// Should still only be called twice
+			expect(mockQueue.getEventsForRetry).toHaveBeenCalledTimes(2)
 		})
 	})
 
@@ -156,13 +168,15 @@ describe("TelemetryRetryManager", () => {
 
 			retryManager.start()
 
-			// Advance timer to trigger processing
-			await vi.advanceTimersByTimeAsync(30000)
+			// Wait for immediate processing to complete
+			await vi.waitFor(() => {
+				expect(mockQueue.getEventsForRetry).toHaveBeenCalled()
+			})
 
 			// Should process in batches of 10
 			// Filter out connection check events
 			const actualEventCalls = sendEventMock.mock.calls.filter(
-				(call) => (call[0].event as string) !== "telemetry_connection_check",
+				(call) => call[0].event !== TelemetryEventName.TELEMETRY_CONNECTION_CHECK,
 			)
 			expect(actualEventCalls).toHaveLength(25)
 			expect(mockQueue.updateEventAfterRetry).toHaveBeenCalledTimes(25)
@@ -184,8 +198,10 @@ describe("TelemetryRetryManager", () => {
 
 			retryManager.start()
 
-			// Advance timer to trigger processing
-			await vi.advanceTimersByTimeAsync(30000)
+			// Wait for immediate processing to complete
+			await vi.waitFor(() => {
+				expect(mockQueue.updateEventAfterRetry).toHaveBeenCalled()
+			})
 
 			expect(mockQueue.updateEventAfterRetry).toHaveBeenCalledWith("event-1", true, undefined)
 		})
@@ -206,8 +222,10 @@ describe("TelemetryRetryManager", () => {
 
 			retryManager.start()
 
-			// Advance timer to trigger processing
-			await vi.advanceTimersByTimeAsync(30000)
+			// Wait for immediate processing to complete
+			await vi.waitFor(() => {
+				expect(mockQueue.updateEventAfterRetry).toHaveBeenCalled()
+			})
 
 			expect(mockQueue.updateEventAfterRetry).toHaveBeenCalledWith("event-1", false, "Network error")
 		})
@@ -232,15 +250,33 @@ describe("TelemetryRetryManager", () => {
 
 			retryManager.start()
 
-			// Advance timer to trigger processing
-			await vi.advanceTimersByTimeAsync(30000)
+			// Wait for immediate processing to complete
+			await vi.waitFor(() => {
+				expect(connectionStatusCallback).toHaveBeenCalled()
+			})
 
 			expect(connectionStatusCallback).toHaveBeenCalledWith(false)
 
-			// Now succeed
-			sendEventMock.mockResolvedValueOnce(undefined)
+			// Reset mocks for next iteration
+			connectionStatusCallback.mockClear()
+			mockQueue.getEventsForRetry.mockClear()
+			mockQueue.updateEventAfterRetry.mockClear()
+			sendEventMock.mockClear()
+
+			// Now succeed - mock the send to succeed this time
+			sendEventMock.mockResolvedValue(undefined)
+
+			// Set up the queue to return the same event again
+			mockQueue.getEventsForRetry.mockResolvedValue(events)
+
 			await vi.advanceTimersByTimeAsync(30000)
 
+			// Wait for the processing to complete
+			await vi.waitFor(() => {
+				expect(mockQueue.updateEventAfterRetry).toHaveBeenCalled()
+			})
+
+			// Now check that connection status was updated
 			expect(connectionStatusCallback).toHaveBeenCalledWith(true)
 		})
 
@@ -249,8 +285,10 @@ describe("TelemetryRetryManager", () => {
 
 			retryManager.start()
 
-			// Advance timer to trigger processing
-			await vi.advanceTimersByTimeAsync(30000)
+			// Wait for immediate processing to complete
+			await vi.waitFor(() => {
+				expect(mockQueue.pruneFailedEvents).toHaveBeenCalled()
+			})
 
 			expect(mockQueue.pruneFailedEvents).toHaveBeenCalled()
 		})
@@ -275,7 +313,7 @@ describe("TelemetryRetryManager", () => {
 		it("should periodically check connection status", async () => {
 			// Mock successful connection check
 			sendEventMock.mockImplementation((event: TelemetryEvent) => {
-				if ((event.event as string) === "telemetry_connection_check") {
+				if (event.event === TelemetryEventName.TELEMETRY_CONNECTION_CHECK) {
 					return Promise.resolve()
 				}
 				return Promise.reject(new Error("Other error"))
@@ -296,16 +334,22 @@ describe("TelemetryRetryManager", () => {
 
 			retryManager.start()
 
-			// First advance to trigger initial processing (30s)
-			await vi.advanceTimersByTimeAsync(30000)
+			// Wait for immediate processing to complete
+			await vi.waitFor(() => {
+				expect(mockQueue.getEventsForRetry).toHaveBeenCalled()
+			})
 
-			// Then advance past connection check interval (1 minute more)
-			await vi.advanceTimersByTimeAsync(35000)
+			// Clear previous calls from immediate processing
+			sendEventMock.mockClear()
+			mockQueue.getEventsForRetry.mockClear()
+
+			// Advance past connection check interval (1 minute + 30s)
+			await vi.advanceTimersByTimeAsync(90000)
 
 			// Should have sent a connection check event
 			expect(sendEventMock).toHaveBeenCalledWith(
 				expect.objectContaining({
-					event: "telemetry_connection_check",
+					event: TelemetryEventName.TELEMETRY_CONNECTION_CHECK,
 				}),
 			)
 		})
@@ -329,12 +373,12 @@ describe("TelemetryRetryManager", () => {
 
 			retryManager.start()
 
-			// First advance to trigger initial processing (30s)
-			await vi.advanceTimersByTimeAsync(30000)
+			// Wait for immediate processing to complete
+			await vi.waitFor(() => {
+				expect(connectionStatusCallback).toHaveBeenCalled()
+			})
 
-			// Then advance past connection check interval (1 minute more)
-			await vi.advanceTimersByTimeAsync(35000)
-
+			// Connection should already be marked as disconnected from immediate processing
 			expect(connectionStatusCallback).toHaveBeenCalledWith(false)
 		})
 	})

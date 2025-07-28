@@ -66,6 +66,7 @@ export enum TelemetryEventName {
 	SHELL_INTEGRATION_ERROR = "Shell Integration Error",
 	CONSECUTIVE_MISTAKE_ERROR = "Consecutive Mistake Error",
 	CODE_INDEX_ERROR = "Code Index Error",
+	TELEMETRY_CONNECTION_CHECK = "Telemetry Connection Check",
 }
 
 /**
@@ -167,6 +168,7 @@ export const rooCodeTelemetryEventSchema = z.discriminatedUnion("type", [
 			TelemetryEventName.TAB_SHOWN,
 			TelemetryEventName.MODE_SETTINGS_CHANGED,
 			TelemetryEventName.CUSTOM_MODE_CREATED,
+			TelemetryEventName.TELEMETRY_CONNECTION_CHECK,
 		]),
 		properties: telemetryPropertiesSchema,
 	}),

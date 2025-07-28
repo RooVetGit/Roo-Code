@@ -1,0 +1,9 @@
+{
+	"connectionLost": "Telemetry connection lost. Events will be queued and retried automatically.",
+	"connectionRestored": "Telemetry connection restored. Queued events are being sent.",
+	"queueBuildingUp": "Telemetry queue is building up ({{count}} events). Check your connection to Roo Code Cloud.",
+	"queueCleared": "Telemetry queue cleared. All events have been sent.",
+	"statusMonitor": {
+		"failedToInitialize": "[TelemetryStatusMonitor] Failed to initialize: {{error}}"
+	}
+}

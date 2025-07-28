@@ -1,5 +1,6 @@
 import * as vscode from "vscode"
 import { CloudService } from "@roo-code/cloud"
+import { t } from "../../i18n"
 
 /**
  * TelemetryStatusMonitor provides visual feedback about telemetry connection status
@@ -43,8 +44,8 @@ export class TelemetryStatusMonitor {
 			this.onConnectionStatusChange(isConnected)
 		})
 
-		CloudService.instance.setTelemetryQueueSizeCallback((size, isAboveThreshold) => {
-			this.onQueueSizeChange(size, isAboveThreshold)
+		CloudService.instance.setTelemetryQueueSizeCallback((size, isAboveWarningThreshold) => {
+			this.onQueueSizeChange(size, isAboveWarningThreshold)
 		})
 
 		// Get initial status
@@ -64,34 +65,28 @@ export class TelemetryStatusMonitor {
 
 		// Show notification on status change
 		if (wasConnected && !isConnected) {
-			this.showNotification(
-				"Telemetry connection lost. Events will be queued and retried automatically.",
-				"warning",
-			)
+			this.showNotification(t("telemetry:connectionLost"), "warning")
 		} else if (!wasConnected && isConnected) {
-			this.showNotification("Telemetry connection restored. Queued events are being sent.", "info")
+			this.showNotification(t("telemetry:connectionRestored"), "info")
 		}
 	}
 
 	/**
 	 * Handles queue size changes
 	 */
-	private onQueueSizeChange(size: number, isAboveThreshold: boolean): void {
+	private onQueueSizeChange(size: number, isAboveWarningThreshold: boolean): void {
 		this.queueSize = size
 		const wasAboveThreshold = this.isAboveThreshold
-		this.isAboveThreshold = isAboveThreshold
+		this.isAboveThreshold = isAboveWarningThreshold
 
 		// Update status bar
 		this.updateStatusBar()
 
 		// Show notification when crossing threshold
-		if (!wasAboveThreshold && isAboveThreshold) {
-			this.showNotification(
-				`Telemetry queue is building up (${size} events). Check your connection to Roo Code Cloud.`,
-				"warning",
-			)
-		} else if (wasAboveThreshold && !isAboveThreshold && size === 0) {
-			this.showNotification("Telemetry queue cleared. All events have been sent.", "info")
+		if (!wasAboveThreshold && isAboveWarningThreshold) {
+			this.showNotification(t("telemetry:queueBuildingUp", { count: size }), "warning")
+		} else if (wasAboveThreshold && !isAboveWarningThreshold && size === 0) {
+			this.showNotification(t("telemetry:queueCleared"), "info")
 		}
 	}
 

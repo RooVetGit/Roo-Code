@@ -16,7 +16,7 @@ export class TelemetryClient extends BaseTelemetryClient {
 	private queue?: TelemetryQueue
 	private retryManager?: TelemetryRetryManager
 	private connectionStatusCallback?: (isConnected: boolean) => void
-	private queueSizeCallback?: (size: number, isAboveThreshold: boolean) => void
+	private queueSizeCallback?: (size: number, isAboveWarningThreshold: boolean) => void
 
 	constructor(
 		private authService: AuthService,
@@ -56,9 +56,9 @@ export class TelemetryClient extends BaseTelemetryClient {
 							this.connectionStatusCallback(isConnected)
 						}
 					},
-					onQueueSizeChange: (size, isAboveThreshold) => {
+					onQueueSizeChange: (size, isAboveWarningThreshold) => {
 						if (this.queueSizeCallback) {
-							this.queueSizeCallback(size, isAboveThreshold)
+							this.queueSizeCallback(size, isAboveWarningThreshold)
 						}
 					},
 				},
@@ -79,7 +79,7 @@ export class TelemetryClient extends BaseTelemetryClient {
 	/**
 	 * Sets a callback for queue size changes
 	 */
-	public setQueueSizeCallback(callback: (size: number, isAboveThreshold: boolean) => void): void {
+	public setQueueSizeCallback(callback: (size: number, isAboveWarningThreshold: boolean) => void): void {
 		this.queueSizeCallback = callback
 	}
 

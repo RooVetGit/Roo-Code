@@ -1,11 +1,11 @@
-import { TelemetryEvent } from "@roo-code/types"
+import { TelemetryEvent, TelemetryEventName } from "@roo-code/types"
 import { TelemetryQueue, QueuedTelemetryEvent } from "./TelemetryQueue"
 
 export interface RetryManagerConfig {
 	retryIntervalMs: number
 	batchSize: number
 	onConnectionStatusChange?: (isConnected: boolean) => void
-	onQueueSizeChange?: (size: number, isAboveThreshold: boolean) => void
+	onQueueSizeChange?: (size: number, isAboveWarningThreshold: boolean) => void
 }
 
 const DEFAULT_CONFIG: RetryManagerConfig = {
@@ -42,6 +42,9 @@ export class TelemetryRetryManager {
 		this.retryTimer = setInterval(() => {
 			this.processQueue()
 		}, this.config.retryIntervalMs)
+
+		// Process immediately on start
+		this.processQueue()
 	}
 
 	/**
@@ -190,7 +193,7 @@ export class TelemetryRetryManager {
 		try {
 			// Try to send a minimal test event
 			await this.sendEvent({
-				event: "telemetry_connection_check" as TelemetryEvent["event"],
+				event: TelemetryEventName.TELEMETRY_CONNECTION_CHECK,
 				properties: { timestamp: now },
 			})
 

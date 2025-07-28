@@ -39,7 +39,7 @@ import {
 	registerTerminalActions,
 	CodeActionProvider,
 } from "./activate"
-import { initializeI18n } from "./i18n"
+import { initializeI18n, t } from "./i18n"
 
 /**
  * Built using https://github.com/microsoft/vscode-webview-ui-toolkit
@@ -87,7 +87,11 @@ export async function activate(context: vscode.ExtensionContext) {
 		telemetryStatusMonitor.initialize()
 		context.subscriptions.push(telemetryStatusMonitor)
 	} catch (error) {
-		outputChannel.appendLine(`[TelemetryStatusMonitor] Failed to initialize: ${error}`)
+		outputChannel.appendLine(
+			t("telemetry:statusMonitor.failedToInitialize", {
+				error: `${error}${error instanceof Error && error.stack ? "\n" + error.stack : ""}`,
+			}),
+		)
 	}
 
 	// Initialize MDM service
