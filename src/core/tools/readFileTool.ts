@@ -1,6 +1,5 @@
 import path from "path"
 import { isBinaryFile } from "isbinaryfile"
-import prettyBytes from "pretty-bytes"
 
 import { Task } from "../task/Task"
 import { ClineSayTool } from "../../shared/ExtensionMessage"
@@ -15,12 +14,13 @@ import { readLines } from "../../integrations/misc/read-lines"
 import { extractTextFromFile, addLineNumbers, getSupportedBinaryFormats } from "../../integrations/misc/extract-text"
 import { parseSourceCodeDefinitionsForFile } from "../../services/tree-sitter"
 import { parseXml } from "../../utils/xml"
-import * as fs from "fs/promises"
 import {
 	DEFAULT_MAX_IMAGE_FILE_SIZE_MB,
 	DEFAULT_MAX_TOTAL_IMAGE_SIZE_MB,
-	readImageAsDataUrlWithBuffer,
 	isSupportedImageFormat,
+	validateImageForProcessing,
+	processImageFile,
+	ImageMemoryTracker,
 } from "./helpers/imageHelpers"
 
 export function getReadFileToolDescription(blockName: string, blockParams: any): string {
@@ -434,7 +434,7 @@ export async function readFileTool(
 		}
 
 		// Track total image memory usage across all files
-		let totalImageMemoryUsed = 0
+		const imageMemoryTracker = new ImageMemoryTracker()
 		const state = await cline.providerRef.deref()?.getState()
 		const {
 			maxReadFileLine = -1,
@@ -463,71 +463,39 @@ export async function readFileTool(
 
 					// Check if it's a supported image format
 					if (isSupportedImageFormat(fileExtension)) {
-						// Skip image processing if model doesn't support images
-						if (!supportsImages) {
-							const notice =
-								"Image file detected but current model does not support images. Skipping image processing."
-
-							// Track file read
-							await cline.fileContextTracker.trackFileContext(relPath, "read_tool" as RecordSource)
-
-							updateFileResult(relPath, {
-								xmlContent: `<file><path>${relPath}</path>\n<notice>${notice}</notice>\n</file>`,
-							})
-							continue
-						}
-
 						try {
-							const imageStats = await fs.stat(fullPath)
+							// Validate image for processing
+							const validationResult = await validateImageForProcessing(
+								fullPath,
+								supportsImages,
+								maxImageFileSize,
+								maxTotalImageSize,
+								imageMemoryTracker.getTotalMemoryUsed(),
+							)
 
-							// Check if image file exceeds individual size limit
-							if (imageStats.size > maxImageFileSize * 1024 * 1024) {
-								const imageSizeFormatted = prettyBytes(imageStats.size)
-								const notice = t("tools:readFile.imageTooLarge", {
-									size: imageSizeFormatted,
-									max: maxImageFileSize,
-								})
-
+							if (!validationResult.isValid) {
 								// Track file read
 								await cline.fileContextTracker.trackFileContext(relPath, "read_tool" as RecordSource)
 
 								updateFileResult(relPath, {
-									xmlContent: `<file><path>${relPath}</path>\n<notice>${notice}</notice>\n</file>`,
+									xmlContent: `<file><path>${relPath}</path>\n<notice>${validationResult.notice}</notice>\n</file>`,
 								})
 								continue
 							}
 
-							// Check if adding this image would exceed total memory limit
-							const imageSizeInMB = imageStats.size / (1024 * 1024)
-							if (totalImageMemoryUsed + imageSizeInMB > maxTotalImageSize) {
-								const currentMemoryFormatted = prettyBytes(totalImageMemoryUsed * 1024 * 1024)
-								const fileMemoryFormatted = prettyBytes(imageStats.size)
-								const notice = `Image skipped to avoid size limit (${maxTotalImageSize}MB). Current: ${currentMemoryFormatted} + this file: ${fileMemoryFormatted}. Try fewer or smaller images.`
-
-								// Track file read
-								await cline.fileContextTracker.trackFileContext(relPath, "read_tool" as RecordSource)
-
-								updateFileResult(relPath, {
-									xmlContent: `<file><path>${relPath}</path>\n<notice>${notice}</notice>\n</file>`,
-								})
-								continue
-							}
+							// Process the image
+							const imageResult = await processImageFile(fullPath)
 
 							// Track memory usage for this image
-							totalImageMemoryUsed += imageSizeInMB
-
-							const { dataUrl: imageDataUrl, buffer } = await readImageAsDataUrlWithBuffer(fullPath)
-							const imageSizeInKB = Math.round(imageStats.size / 1024)
+							imageMemoryTracker.addMemoryUsage(imageResult.sizeInMB)
 
 							// Track file read
 							await cline.fileContextTracker.trackFileContext(relPath, "read_tool" as RecordSource)
 
 							// Store image data URL separately - NOT in XML
-							const noticeText = t("tools:readFile.imageWithSize", { size: imageSizeInKB })
-
 							updateFileResult(relPath, {
-								xmlContent: `<file><path>${relPath}</path>\n<notice>${noticeText}</notice>\n</file>`,
-								imageDataUrl: imageDataUrl,
+								xmlContent: `<file><path>${relPath}</path>\n<notice>${imageResult.notice}</notice>\n</file>`,
+								imageDataUrl: imageResult.dataUrl,
 							})
 							continue
 						} catch (error) {

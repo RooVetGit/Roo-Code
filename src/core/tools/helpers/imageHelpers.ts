@@ -1,5 +1,7 @@
 import path from "path"
 import * as fs from "fs/promises"
+import { t } from "../../../i18n"
+import prettyBytes from "pretty-bytes"
 
 /**
  * Default maximum allowed image file size in bytes (5MB)
@@ -47,6 +49,27 @@ export const IMAGE_MIME_TYPES: Record<string, string> = {
 }
 
 /**
+ * Result of image validation
+ */
+export interface ImageValidationResult {
+	isValid: boolean
+	reason?: "size_limit" | "memory_limit" | "unsupported_model"
+	notice?: string
+	sizeInMB?: number
+}
+
+/**
+ * Result of image processing
+ */
+export interface ImageProcessingResult {
+	dataUrl: string
+	buffer: Buffer
+	sizeInKB: number
+	sizeInMB: number
+	notice: string
+}
+
+/**
  * Reads an image file and returns both the data URL and buffer
  */
 export async function readImageAsDataUrlWithBuffer(filePath: string): Promise<{ dataUrl: string; buffer: Buffer }> {
@@ -65,4 +88,105 @@ export async function readImageAsDataUrlWithBuffer(filePath: string): Promise<{ 
  */
 export function isSupportedImageFormat(extension: string): boolean {
 	return SUPPORTED_IMAGE_FORMATS.includes(extension.toLowerCase() as (typeof SUPPORTED_IMAGE_FORMATS)[number])
+}
+
+/**
+ * Validates if an image can be processed based on size limits and model support
+ */
+export async function validateImageForProcessing(
+	fullPath: string,
+	supportsImages: boolean,
+	maxImageFileSize: number,
+	maxTotalImageSize: number,
+	currentTotalMemoryUsed: number,
+): Promise<ImageValidationResult> {
+	// Check if model supports images
+	if (!supportsImages) {
+		return {
+			isValid: false,
+			reason: "unsupported_model",
+			notice: "Image file detected but current model does not support images. Skipping image processing.",
+		}
+	}
+
+	const imageStats = await fs.stat(fullPath)
+	const imageSizeInMB = imageStats.size / (1024 * 1024)
+
+	// Check individual file size limit
+	if (imageStats.size > maxImageFileSize * 1024 * 1024) {
+		const imageSizeFormatted = prettyBytes(imageStats.size)
+		return {
+			isValid: false,
+			reason: "size_limit",
+			notice: t("tools:readFile.imageTooLarge", {
+				size: imageSizeFormatted,
+				max: maxImageFileSize,
+			}),
+			sizeInMB: imageSizeInMB,
+		}
+	}
+
+	// Check total memory limit
+	if (currentTotalMemoryUsed + imageSizeInMB > maxTotalImageSize) {
+		const currentMemoryFormatted = prettyBytes(currentTotalMemoryUsed * 1024 * 1024)
+		const fileMemoryFormatted = prettyBytes(imageStats.size)
+		return {
+			isValid: false,
+			reason: "memory_limit",
+			notice: `Image skipped to avoid size limit (${maxTotalImageSize}MB). Current: ${currentMemoryFormatted} + this file: ${fileMemoryFormatted}. Try fewer or smaller images.`,
+			sizeInMB: imageSizeInMB,
+		}
+	}
+
+	return {
+		isValid: true,
+		sizeInMB: imageSizeInMB,
+	}
+}
+
+/**
+ * Processes an image file and returns the result
+ */
+export async function processImageFile(fullPath: string): Promise<ImageProcessingResult> {
+	const imageStats = await fs.stat(fullPath)
+	const { dataUrl, buffer } = await readImageAsDataUrlWithBuffer(fullPath)
+	const imageSizeInKB = Math.round(imageStats.size / 1024)
+	const imageSizeInMB = imageStats.size / (1024 * 1024)
+	const noticeText = t("tools:readFile.imageWithSize", { size: imageSizeInKB })
+
+	return {
+		dataUrl,
+		buffer,
+		sizeInKB: imageSizeInKB,
+		sizeInMB: imageSizeInMB,
+		notice: noticeText,
+	}
+}
+
+/**
+ * Memory tracker for image processing
+ */
+export class ImageMemoryTracker {
+	private totalMemoryUsed: number = 0
+
+	/**
+	 * Gets the current total memory used in MB
+	 */
+	getTotalMemoryUsed(): number {
+		return this.totalMemoryUsed
+	}
+
+	/**
+	 * Adds to the total memory used
+	 */
+	addMemoryUsage(sizeInMB: number): void {
+		this.totalMemoryUsed += sizeInMB
+	}
+
+	/**
+	 * Resets the memory tracker
+	 */
+	reset(): void {
+		this.totalMemoryUsed = 0
+	}
 }
