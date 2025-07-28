@@ -533,10 +533,10 @@
 			"mb": "MB",
 			"description": "Maksymalny rozmiar (w MB) plików obrazów, które mogą być przetwarzane przez narzędzie do czytania plików."
 		},
-		"maxTotalImageMemory": {
-			"label": "Maksymalna całkowita pamięć dla obrazów",
+		"maxTotalImageSize": {
+			"label": "Maksymalny całkowity rozmiar obrazów",
 			"mb": "MB",
-			"description": "Maksymalna całkowita pamięć (w MB) dla wszystkich obrazów w jednej operacji odczytu. Zapobiega problemom z pamięcią podczas jednoczesnego odczytu wielu dużych obrazów."
+			"description": "Maksymalny skumulowany limit rozmiaru (w MB) dla wszystkich obrazów przetwarzanych w jednej operacji read_file. Podczas odczytu wielu obrazów rozmiar każdego obrazu jest dodawany do sumy. Jeśli dołączenie kolejnego obrazu przekroczyłoby ten limit, zostanie on pominięty."
 		}
 	},
 	"terminal": {

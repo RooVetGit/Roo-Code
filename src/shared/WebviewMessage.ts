@@ -163,7 +163,7 @@ export interface WebviewMessage {
 		| "language"
 		| "maxReadFileLine"
 		| "maxImageFileSize"
-		| "maxTotalImageMemory"
+		| "maxTotalImageSize"
 		| "maxConcurrentFileReads"
 		| "includeDiagnosticMessages"
 		| "maxDiagnosticMessages"

@@ -533,10 +533,10 @@
 			"mb": "MB",
 			"description": "read file工具可以处理的图像文件的最大大小（以MB为单位）。"
 		},
-		"maxTotalImageMemory": {
-			"label": "图像最大总内存",
+		"maxTotalImageSize": {
+			"label": "图片总大小上限",
 			"mb": "MB",
-			"description": "单次读取操作中所有图像的最大总内存（以MB为单位）。防止同时读取多个大图像时出现内存问题。"
+			"description": "单次 read_file 操作中处理的所有图片的最大累计大小限制（MB）。读取多张图片时，每张图片的大小会累加到总大小中。如果包含另一张图片会超过此限制，则会跳过该图片。"
 		}
 	},
 	"terminal": {

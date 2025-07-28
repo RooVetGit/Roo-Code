@@ -532,10 +532,10 @@
 			"mb": "MB",
 			"description": "Maximale Größe (in MB) für Bilddateien, die vom read file Tool verarbeitet werden können."
 		},
-		"maxTotalImageMemory": {
-			"label": "Maximaler Gesamtspeicher für Bilder",
+		"maxTotalImageSize": {
+			"label": "Maximale Gesamtbildgröße",
 			"mb": "MB",
-			"description": "Maximaler Gesamtspeicher (in MB) für alle Bilder in einem einzelnen Lesevorgang. Verhindert Speicherprobleme beim gleichzeitigen Lesen mehrerer großer Bilder."
+			"description": "Maximales kumulatives Größenlimit (in MB) für alle Bilder, die in einer einzelnen read_file-Operation verarbeitet werden. Beim Lesen mehrerer Bilder wird die Größe jedes Bildes zur Gesamtsumme addiert. Wenn das Einbeziehen eines weiteren Bildes dieses Limit überschreiten würde, wird es übersprungen."
 		}
 	},
 	"terminal": {

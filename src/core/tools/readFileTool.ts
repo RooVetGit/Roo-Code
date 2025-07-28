@@ -1,5 +1,6 @@
 import path from "path"
 import { isBinaryFile } from "isbinaryfile"
+import prettyBytes from "pretty-bytes"
 
 import { Task } from "../task/Task"
 import { ClineSayTool } from "../../shared/ExtensionMessage"
@@ -17,8 +18,7 @@ import { parseXml } from "../../utils/xml"
 import * as fs from "fs/promises"
 import {
 	DEFAULT_MAX_IMAGE_FILE_SIZE_MB,
-	DEFAULT_MAX_TOTAL_IMAGE_MEMORY_MB,
-	SUPPORTED_IMAGE_FORMATS,
+	DEFAULT_MAX_TOTAL_IMAGE_SIZE_MB,
 	readImageAsDataUrlWithBuffer,
 	isSupportedImageFormat,
 } from "./helpers/imageHelpers"
@@ -439,7 +439,7 @@ export async function readFileTool(
 		const {
 			maxReadFileLine = -1,
 			maxImageFileSize = DEFAULT_MAX_IMAGE_FILE_SIZE_MB,
-			maxTotalImageMemory = DEFAULT_MAX_TOTAL_IMAGE_MEMORY_MB,
+			maxTotalImageSize = DEFAULT_MAX_TOTAL_IMAGE_SIZE_MB,
 		} = state ?? {}
 
 		// Then process only approved files
@@ -482,9 +482,9 @@ export async function readFileTool(
 
 							// Check if image file exceeds individual size limit
 							if (imageStats.size > maxImageFileSize * 1024 * 1024) {
-								const imageSizeInMB = (imageStats.size / (1024 * 1024)).toFixed(1)
+								const imageSizeFormatted = prettyBytes(imageStats.size)
 								const notice = t("tools:readFile.imageTooLarge", {
-									size: imageSizeInMB,
+									size: imageSizeFormatted,
 									max: maxImageFileSize,
 								})
 
@@ -499,8 +499,10 @@ export async function readFileTool(
 
 							// Check if adding this image would exceed total memory limit
 							const imageSizeInMB = imageStats.size / (1024 * 1024)
-							if (totalImageMemoryUsed + imageSizeInMB > maxTotalImageMemory) {
-								const notice = `Image skipped to avoid memory limit (${maxTotalImageMemory}MB). Current: ${totalImageMemoryUsed.toFixed(1)}MB + this file: ${imageSizeInMB.toFixed(1)}MB. Try fewer or smaller images.`;
+							if (totalImageMemoryUsed + imageSizeInMB > maxTotalImageSize) {
+								const currentMemoryFormatted = prettyBytes(totalImageMemoryUsed * 1024 * 1024)
+								const fileMemoryFormatted = prettyBytes(imageStats.size)
+								const notice = `Image skipped to avoid size limit (${maxTotalImageSize}MB). Current: ${currentMemoryFormatted} + this file: ${fileMemoryFormatted}. Try fewer or smaller images.`
 
 								// Track file read
 								await cline.fileContextTracker.trackFileContext(relPath, "read_tool" as RecordSource)

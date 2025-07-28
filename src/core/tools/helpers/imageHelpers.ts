@@ -8,9 +8,12 @@ export const DEFAULT_MAX_IMAGE_FILE_SIZE_MB = 5
 
 /**
  * Default maximum total memory usage for all images in a single read operation (20MB)
- * This prevents memory issues when reading multiple large images simultaneously
+ * This is a cumulative limit - as each image is processed, its size is added to the total.
+ * If including another image would exceed this limit, it will be skipped with a notice.
+ * Example: With a 20MB limit, reading 3 images of 8MB, 7MB, and 10MB would process
+ * the first two (15MB total) but skip the third to stay under the limit.
  */
-export const DEFAULT_MAX_TOTAL_IMAGE_MEMORY_MB = 20
+export const DEFAULT_MAX_TOTAL_IMAGE_SIZE_MB = 20
 
 /**
  * Supported image formats that can be displayed

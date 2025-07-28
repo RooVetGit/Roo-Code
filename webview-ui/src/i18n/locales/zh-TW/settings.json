@@ -533,10 +533,10 @@
 			"mb": "MB",
 			"description": "read file工具可以處理的圖像檔案的最大大小（以MB為單位）。"
 		},
-		"maxTotalImageMemory": {
-			"label": "圖像最大總記憶體",
+		"maxTotalImageSize": {
+			"label": "圖片總大小上限",
 			"mb": "MB",
-			"description": "單次讀取操作中所有圖像的最大總記憶體（以MB為單位）。防止同時讀取多個大圖像時出現記憶體問題。"
+			"description": "單次 read_file 操作中處理的所有圖片的最大累計大小限制（MB）。讀取多張圖片時，每張圖片的大小會累加到總大小中。如果包含另一張圖片會超過此限制，則會跳過該圖片。"
 		}
 	},
 	"terminal": {

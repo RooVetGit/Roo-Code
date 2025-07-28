@@ -507,10 +507,10 @@
 			"mb": "MB",
 			"description": "Taille maximale (en MB) pour les fichiers d'image qui peuvent être traités par l'outil de lecture de fichier."
 		},
-		"maxTotalImageMemory": {
-			"label": "Mémoire totale maximale pour les images",
+		"maxTotalImageSize": {
+			"label": "Taille totale maximale des images",
 			"mb": "MB",
-			"description": "Mémoire totale maximale (en MB) pour toutes les images dans une seule opération de lecture. Empêche les problèmes de mémoire lors de la lecture simultanée de plusieurs grandes images."
+			"description": "Limite de taille cumulée maximale (en MB) pour toutes les images traitées dans une seule opération read_file. Lors de la lecture de plusieurs images, la taille de chaque image est ajoutée au total. Si l'inclusion d'une autre image dépasserait cette limite, elle sera ignorée."
 		},
 		"diagnostics": {
 			"includeMessages": {

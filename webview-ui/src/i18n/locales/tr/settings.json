@@ -533,10 +533,10 @@
 			"mb": "MB",
 			"description": "Dosya okuma aracı tarafından işlenebilecek görüntü dosyaları için maksimum boyut (MB cinsinden)."
 		},
-		"maxTotalImageMemory": {
-			"label": "Görüntüler için maksimum toplam bellek",
+		"maxTotalImageSize": {
+			"label": "Maksimum toplam görüntü boyutu",
 			"mb": "MB",
-			"description": "Tek bir okuma işlemindeki tüm görüntüler için maksimum toplam bellek (MB cinsinden). Birden çok büyük görüntüyü eş zamanlı okurken bellek sorunlarını önler."
+			"description": "Tek bir read_file işleminde işlenen tüm görüntüler için maksimum kümülatif boyut sınırı (MB cinsinden). Birden çok görüntü okurken, her görüntünün boyutu toplama eklenir. Başka bir görüntü eklemek bu sınırı aşacaksa, atlanacaktır."
 		}
 	},
 	"terminal": {

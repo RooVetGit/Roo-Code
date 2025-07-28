@@ -532,10 +532,10 @@
 			"mb": "MB",
 			"description": "Mida màxima (en MB) per a arxius d'imatge que poden ser processats per l'eina de lectura d'arxius."
 		},
-		"maxTotalImageMemory": {
-			"label": "Memòria total màxima per a imatges",
+		"maxTotalImageSize": {
+			"label": "Mida total màxima d'imatges",
 			"mb": "MB",
-			"description": "Memòria total màxima (en MB) per a totes les imatges en una sola operació de lectura. Prevé problemes de memòria en llegir múltiples imatges grans simultàniament."
+			"description": "Límit de mida acumulativa màxima (en MB) per a totes les imatges processades en una sola operació read_file. Quan es llegeixen múltiples imatges, la mida de cada imatge s'afegeix al total. Si incloure una altra imatge excediria aquest límit, serà omesa."
 		}
 	},
 	"terminal": {

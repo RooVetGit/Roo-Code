@@ -1269,8 +1269,8 @@ export const webviewMessageHandler = async (
 			await updateGlobalState("maxImageFileSize", message.value)
 			await provider.postStateToWebview()
 			break
-		case "maxTotalImageMemory":
-			await updateGlobalState("maxTotalImageMemory", message.value)
+		case "maxTotalImageSize":
+			await updateGlobalState("maxTotalImageSize", message.value)
 			await provider.postStateToWebview()
 			break
 		case "maxConcurrentFileReads":

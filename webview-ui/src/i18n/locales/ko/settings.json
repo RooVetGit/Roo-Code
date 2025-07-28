@@ -533,10 +533,10 @@
 			"mb": "MB",
 			"description": "read file 도구로 처리할 수 있는 이미지 파일의 최대 크기(MB 단위)입니다."
 		},
-		"maxTotalImageMemory": {
-			"label": "이미지 최대 총 메모리",
+		"maxTotalImageSize": {
+			"label": "최대 총 이미지 크기",
 			"mb": "MB",
-			"description": "단일 읽기 작업에서 모든 이미지에 대한 최대 총 메모리(MB 단위). 여러 대용량 이미지를 동시에 읽을 때 메모리 문제를 방지합니다."
+			"description": "단일 read_file 작업에서 처리되는 모든 이미지의 최대 누적 크기 제한(MB 단위)입니다. 여러 이미지를 읽을 때 각 이미지의 크기가 총계에 추가됩니다. 다른 이미지를 포함하면 이 제한을 초과하는 경우 해당 이미지는 건너뜁니다."
 		}
 	},
 	"terminal": {

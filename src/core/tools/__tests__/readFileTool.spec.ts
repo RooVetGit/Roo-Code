@@ -10,7 +10,7 @@ import { isBinaryFile } from "isbinaryfile"
 import { ReadFileToolUse, ToolParamName, ToolResponse } from "../../../shared/tools"
 import { readFileTool } from "../readFileTool"
 import { formatResponse } from "../../prompts/responses"
-import { DEFAULT_MAX_IMAGE_FILE_SIZE_MB, DEFAULT_MAX_TOTAL_IMAGE_MEMORY_MB } from "../helpers/imageHelpers"
+import { DEFAULT_MAX_IMAGE_FILE_SIZE_MB, DEFAULT_MAX_TOTAL_IMAGE_SIZE_MB } from "../helpers/imageHelpers"
 
 vi.mock("path", async () => {
 	const originalPath = await vi.importActual("path")
@@ -156,7 +156,7 @@ vi.mock("../../../i18n", () => ({
 		const translations: Record<string, string> = {
 			"tools:readFile.imageWithSize": "Image file ({{size}} KB)",
 			"tools:readFile.imageTooLarge":
-				"Image file is too large ({{size}} MB). The maximum allowed size is {{max}} MB.",
+				"Image file is too large ({{size}}). The maximum allowed size is {{max}} MB.",
 			"tools:readFile.linesRange": " (lines {{start}}-{{end}})",
 			"tools:readFile.definitionsOnly": " (definitions only)",
 			"tools:readFile.maxLines": " (max {{max}} lines)",
@@ -296,7 +296,7 @@ describe("read_file tool with maxReadFileLine setting", () => {
 		const maxReadFileLine = options.maxReadFileLine ?? 500
 		const totalLines = options.totalLines ?? 5
 
-		mockProvider.getState.mockResolvedValue({ maxReadFileLine, maxImageFileSize: 20, maxTotalImageMemory: 20 })
+		mockProvider.getState.mockResolvedValue({ maxReadFileLine, maxImageFileSize: 20, maxTotalImageSize: 20 })
 		mockedCountFileLines.mockResolvedValue(totalLines)
 
 		// Reset the spy before each test
@@ -532,7 +532,7 @@ describe("read_file tool XML output structure", () => {
 		mockInputContent = fileContent
 
 		// Setup mock provider with default maxReadFileLine
-		mockProvider.getState.mockResolvedValue({ maxReadFileLine: -1, maxImageFileSize: 20, maxTotalImageMemory: 20 }) // Default to full file read
+		mockProvider.getState.mockResolvedValue({ maxReadFileLine: -1, maxImageFileSize: 20, maxTotalImageSize: 20 }) // Default to full file read
 
 		// Add additional properties needed for XML tests
 		mockCline.sayAndCreateMissingParamError = vi.fn().mockResolvedValue("Missing required parameter")
@@ -557,7 +557,7 @@ describe("read_file tool XML output structure", () => {
 		const isBinary = options.isBinary ?? false
 		const validateAccess = options.validateAccess ?? true
 
-		mockProvider.getState.mockResolvedValue({ maxReadFileLine, maxImageFileSize: 20, maxTotalImageMemory: 20 })
+		mockProvider.getState.mockResolvedValue({ maxReadFileLine, maxImageFileSize: 20, maxTotalImageSize: 20 })
 		mockedCountFileLines.mockResolvedValue(totalLines)
 		mockedIsBinaryFile.mockResolvedValue(isBinary)
 		mockCline.rooIgnoreController.validateAccess = vi.fn().mockReturnValue(validateAccess)
@@ -599,8 +599,8 @@ describe("read_file tool XML output structure", () => {
 			mockProvider.getState.mockResolvedValue({
 				maxReadFileLine: -1,
 				maxImageFileSize: 20,
-				maxTotalImageMemory: 20,
-			}) // Allow up to 20MB per image and total memory
+				maxTotalImageSize: 20,
+			}) // Allow up to 20MB per image and total size
 
 			// Execute
 			const result = await executeReadFileTool()
@@ -632,8 +632,8 @@ describe("read_file tool XML output structure", () => {
 			mockProvider.getState.mockResolvedValue({
 				maxReadFileLine: -1,
 				maxImageFileSize: 20,
-				maxTotalImageMemory: 20,
-			}) // Allow up to 20MB per image and total memory
+				maxTotalImageSize: 20,
+			}) // Allow up to 20MB per image and total size
 
 			// Execute
 			const result = await executeReadFileTool({}, { totalLines: 0 })
@@ -650,6 +650,12 @@ describe("read_file tool XML output structure", () => {
 				{ path: "test/image2.jpg", sizeKB: 10240 }, // 10MB
 				{ path: "test/image3.gif", sizeKB: 8192 }, // 8MB
 			]
+
+			// Define imageBuffer for this test suite
+			const imageBuffer = Buffer.from(
+				"iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==",
+				"base64",
+			)
 
 			beforeEach(() => {
 				// CRITICAL: Reset fsPromises mocks to prevent cross-test contamination within this suite
@@ -707,8 +713,8 @@ describe("read_file tool XML output structure", () => {
 				mockProvider.getState.mockResolvedValue({
 					maxReadFileLine: -1,
 					maxImageFileSize: 20,
-					maxTotalImageMemory: 20,
-				}) // Allow up to 20MB per image and total memory
+					maxTotalImageSize: 20,
+				}) // Allow up to 20MB per image and total size
 
 				// Setup mockCline properties (preserve existing API)
 				mockCline.cwd = "/"
@@ -780,8 +786,8 @@ describe("read_file tool XML output structure", () => {
 				mockProvider.getState.mockResolvedValue({
 					maxReadFileLine: -1,
 					maxImageFileSize: 15,
-					maxTotalImageMemory: 20,
-				}) // Allow up to 15MB per image and 20MB total memory
+					maxTotalImageSize: 20,
+				}) // Allow up to 15MB per image and 20MB total size
 
 				// Setup mockCline properties
 				mockCline.cwd = "/"
@@ -844,9 +850,9 @@ describe("read_file tool XML output structure", () => {
 				expect(imageParts).toHaveLength(4) // First 4 images should be included (~19.6MB total)
 
 				// Verify memory limit notice for the fifth image
-				expect(textPart).toContain(
-					"Image skipped to avoid memory limit (20MB). Current: 19.6MB + this file: 4.9MB. Try fewer or smaller images.",
-				)
+				expect(textPart).toContain("Image skipped to avoid size limit (20MB)")
+				expect(textPart).toMatch(/Current: \d+(\.\d+)? MB/)
+				expect(textPart).toMatch(/this file: \d+(\.\d+)? MB/)
 			})
 
 			it("should track memory usage correctly across multiple images", async () => {
@@ -866,8 +872,8 @@ describe("read_file tool XML output structure", () => {
 				mockProvider.getState.mockResolvedValue({
 					maxReadFileLine: -1,
 					maxImageFileSize: 15,
-					maxTotalImageMemory: 20,
-				}) // Allow up to 15MB per image and 20MB total memory
+					maxTotalImageSize: 20,
+				}) // Allow up to 15MB per image and 20MB total size
 
 				// Setup mockCline properties
 				mockCline.cwd = "/"
@@ -917,9 +923,9 @@ describe("read_file tool XML output structure", () => {
 				const imageParts = Array.isArray(result) ? result.filter((p) => p.type === "image") : []
 
 				expect(imageParts).toHaveLength(2) // First 2 images should fit
-				expect(textPart).toContain(
-					"Image skipped to avoid memory limit (20MB). Current: 20.0MB + this file: 1.0MB. Try fewer or smaller images.",
-				)
+				expect(textPart).toContain("Image skipped to avoid size limit (20MB)")
+				expect(textPart).toMatch(/Current: \d+(\.\d+)? MB/)
+				expect(textPart).toMatch(/this file: \d+(\.\d+)? MB/)
 			})
 
 			it("should handle individual image size limit and total memory limit together", async () => {
@@ -939,8 +945,8 @@ describe("read_file tool XML output structure", () => {
 				mockProvider.getState.mockResolvedValue({
 					maxReadFileLine: -1,
 					maxImageFileSize: 20,
-					maxTotalImageMemory: 20,
-				}) // Allow up to 20MB per image and total memory
+					maxTotalImageSize: 20,
+				}) // Allow up to 20MB per image and total size
 
 				// Setup mockCline properties (complete setup)
 				mockCline.cwd = "/"
@@ -981,7 +987,7 @@ describe("read_file tool XML output structure", () => {
 				mockProvider.getState.mockResolvedValue({
 					maxReadFileLine: -1,
 					maxImageFileSize: 5,
-					maxTotalImageMemory: 20,
+					maxTotalImageSize: 20,
 				})
 
 				// Mock path.resolve
@@ -1001,7 +1007,9 @@ describe("read_file tool XML output structure", () => {
 				expect(imageParts).toHaveLength(2)
 
 				// Should show individual size limit violation
-				expect(textPart).toContain("Image file is too large (6.0 MB). The maximum allowed size is 5 MB.")
+				expect(textPart).toMatch(
+					/Image file is too large \(\d+(\.\d+)? MB\)\. The maximum allowed size is 5 MB\./,
+				)
 			})
 
 			it("should correctly calculate total memory and skip the last image", async () => {
@@ -1015,7 +1023,7 @@ describe("read_file tool XML output structure", () => {
 				mockProvider.getState.mockResolvedValue({
 					maxReadFileLine: -1,
 					maxImageFileSize: 10, // 10MB per image
-					maxTotalImageMemory: 20, // 20MB total
+					maxTotalImageSize: 20, // 20MB total
 				})
 
 				mockedIsBinaryFile.mockResolvedValue(true)
@@ -1040,9 +1048,9 @@ describe("read_file tool XML output structure", () => {
 				const imageParts = parts.filter((p) => p.type === "image")
 
 				expect(imageParts).toHaveLength(2) // First two images should be processed
-				expect(textPart).toContain("Image skipped to avoid memory limit (20MB)")
-				expect(textPart).toContain("Current: 16.0MB")
-				expect(textPart).toContain("this file: 8.0MB")
+				expect(textPart).toContain("Image skipped to avoid size limit (20MB)")
+				expect(textPart).toMatch(/Current: \d+(\.\d+)? MB/)
+				expect(textPart).toMatch(/this file: \d+(\.\d+)? MB/)
 			})
 
 			it("should reset total memory tracking for each tool invocation", async () => {
@@ -1062,7 +1070,7 @@ describe("read_file tool XML output structure", () => {
 				mockProvider.getState.mockResolvedValue({
 					maxReadFileLine: -1,
 					maxImageFileSize: 20,
-					maxTotalImageMemory: 20,
+					maxTotalImageSize: 20,
 				})
 
 				// Setup mockCline properties (complete setup)
@@ -1106,7 +1114,7 @@ describe("read_file tool XML output structure", () => {
 				mockProvider.getState.mockResolvedValue({
 					maxReadFileLine: -1,
 					maxImageFileSize: 20,
-					maxTotalImageMemory: 20,
+					maxTotalImageSize: 20,
 				})
 
 				// Reset path resolving for second batch
@@ -1161,6 +1169,123 @@ describe("read_file tool XML output structure", () => {
 				const imageParts = parts.filter((p) => p.type === "image")
 
 				expect(imageParts).toHaveLength(1) // Second image should be processed
+			})
+
+			it("should handle a folder with many images just under the individual size limit", async () => {
+				// Setup - Create many images that are each just under the 5MB individual limit
+				// but together approach the 20MB total limit
+				const manyImages = [
+					{ path: "test/img1.png", sizeKB: 4900 }, // 4.78MB
+					{ path: "test/img2.png", sizeKB: 4900 }, // 4.78MB
+					{ path: "test/img3.png", sizeKB: 4900 }, // 4.78MB
+					{ path: "test/img4.png", sizeKB: 4900 }, // 4.78MB
+					{ path: "test/img5.png", sizeKB: 4900 }, // 4.78MB - This should be skipped (total would be ~23.9MB)
+				]
+
+				// Setup mocks
+				mockedIsBinaryFile.mockResolvedValue(true)
+				mockedCountFileLines.mockResolvedValue(0)
+				fsPromises.readFile.mockResolvedValue(imageBuffer)
+
+				// Setup provider with 5MB individual limit and 20MB total limit
+				mockProvider.getState.mockResolvedValue({
+					maxReadFileLine: -1,
+					maxImageFileSize: 5,
+					maxTotalImageSize: 20,
+				})
+
+				// Mock file stats for each image
+				fsPromises.stat = vi.fn().mockImplementation((filePath) => {
+					const normalizedFilePath = path.normalize(filePath.toString())
+					const image = manyImages.find((img) => normalizedFilePath.includes(path.normalize(img.path)))
+					return Promise.resolve({ size: (image?.sizeKB || 1024) * 1024 })
+				})
+
+				// Mock path.resolve
+				mockedPathResolve.mockImplementation((cwd, relPath) => `/${relPath}`)
+
+				// Execute
+				const result = await executeReadMultipleImagesTool(manyImages.map((img) => img.path))
+
+				// Verify
+				expect(Array.isArray(result)).toBe(true)
+				const parts = result as any[]
+				const textPart = parts.find((p) => p.type === "text")?.text
+				const imageParts = parts.filter((p) => p.type === "image")
+
+				// Should process first 4 images (total ~19.12MB, under 20MB limit)
+				expect(imageParts).toHaveLength(4)
+
+				// Should show memory limit notice for the 5th image
+				expect(textPart).toContain("Image skipped to avoid size limit (20MB)")
+				expect(textPart).toContain("test/img5.png")
+
+				// Verify memory tracking worked correctly
+				// The notice should show current memory usage around 20MB (4 * 4900KB ≈ 19.14MB, displayed as 20.1MB)
+				expect(textPart).toMatch(/Current: \d+(\.\d+)? MB/)
+			})
+
+			it("should reset memory tracking between separate tool invocations more explicitly", async () => {
+				// This test verifies that totalImageMemoryUsed is reset between calls
+				// by making two separate tool invocations and ensuring the second one
+				// starts with fresh memory tracking
+
+				// Setup mocks
+				mockedIsBinaryFile.mockResolvedValue(true)
+				mockedCountFileLines.mockResolvedValue(0)
+				fsPromises.readFile.mockResolvedValue(imageBuffer)
+
+				// Setup provider
+				mockProvider.getState.mockResolvedValue({
+					maxReadFileLine: -1,
+					maxImageFileSize: 20,
+					maxTotalImageSize: 20,
+				})
+
+				// First invocation - use 15MB of memory
+				const firstBatch = [{ path: "test/large1.png", sizeKB: 15360 }] // 15MB
+
+				fsPromises.stat = vi.fn().mockResolvedValue({ size: 15360 * 1024 })
+				mockedPathResolve.mockImplementation((cwd, relPath) => `/${relPath}`)
+
+				// Execute first batch
+				const result1 = await executeReadMultipleImagesTool(firstBatch.map((img) => img.path))
+
+				// Verify first batch processed successfully
+				expect(Array.isArray(result1)).toBe(true)
+				const parts1 = result1 as any[]
+				const imageParts1 = parts1.filter((p) => p.type === "image")
+				expect(imageParts1).toHaveLength(1)
+
+				// Second invocation - should start with 0 memory used, not 15MB
+				// If memory tracking wasn't reset, this 18MB image would be rejected
+				const secondBatch = [{ path: "test/large2.png", sizeKB: 18432 }] // 18MB
+
+				// Reset mocks for second invocation
+				fsPromises.stat.mockClear()
+				fsPromises.readFile.mockClear()
+				mockedPathResolve.mockClear()
+
+				fsPromises.stat = vi.fn().mockResolvedValue({ size: 18432 * 1024 })
+				fsPromises.readFile.mockResolvedValue(imageBuffer)
+				mockedPathResolve.mockImplementation((cwd, relPath) => `/${relPath}`)
+
+				// Execute second batch
+				const result2 = await executeReadMultipleImagesTool(secondBatch.map((img) => img.path))
+
+				// Verify second batch processed successfully
+				expect(Array.isArray(result2)).toBe(true)
+				const parts2 = result2 as any[]
+				const imageParts2 = parts2.filter((p) => p.type === "image")
+				const textPart2 = parts2.find((p) => p.type === "text")?.text
+
+				// The 18MB image should be processed successfully because memory was reset
+				expect(imageParts2).toHaveLength(1)
+
+				// Should NOT contain any memory limit notices
+				expect(textPart2).not.toContain("Image skipped to avoid memory limit")
+
+				// This proves memory tracking was reset between invocations
 			})
 		})
 	})
