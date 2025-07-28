@@ -364,7 +364,7 @@
 		"newGlobalCommandPlaceholder": "Nouvelle commande globale...",
 		"newWorkspaceCommandPlaceholder": "Nouvelle commande de l'espace de travail...",
 		"deleteDialog": {
-			"title": "Supprimer la Commande",
+			"title": "Supprimer la commande",
 			"description": "Êtes-vous sûr de vouloir supprimer la commande \"{{name}}\" ? Cette action ne peut pas être annulée.",
 			"cancel": "Annuler",
 			"confirm": "Supprimer"
