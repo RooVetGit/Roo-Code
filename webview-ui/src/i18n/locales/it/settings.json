@@ -289,6 +289,7 @@
 		"litellmBaseUrl": "URL base LiteLLM",
 		"awsCredentials": "Credenziali AWS",
 		"awsProfile": "Profilo AWS",
+		"awsApiKey": "Chiave API Amazon Bedrock",
 		"awsProfileName": "Nome profilo AWS",
 		"awsAccessKey": "Chiave di accesso AWS",
 		"awsSecretKey": "Chiave segreta AWS",
@@ -305,6 +306,17 @@
 		"cacheUsageNote": "Nota: Se non vedi l'utilizzo della cache, prova a selezionare un modello diverso e poi seleziona nuovamente il modello desiderato.",
 		"vscodeLmModel": "Modello linguistico",
 		"vscodeLmWarning": "Nota: Questa è un'integrazione molto sperimentale e il supporto del fornitore varierà. Se ricevi un errore relativo a un modello non supportato, si tratta di un problema del fornitore.",
+		"geminiParameters": {
+			"urlContext": {
+				"title": "Abilita contesto URL",
+				"description": "Consente a Gemini di accedere e processare URL per contesto aggiuntivo durante la generazione delle risposte. Utile per attività che richiedono analisi di contenuti web."
+			},
+			"groundingSearch": {
+				"title": "Abilita grounding con ricerca Google",
+				"description": "Consente a Gemini di cercare informazioni aggiornate su Google e basare le risposte su dati in tempo reale. Utile per query che richiedono informazioni aggiornate."
+			}
+		},
+
 		"googleCloudSetup": {
 			"title": "Per utilizzare Google Cloud Vertex AI, è necessario:",
 			"step1": "1. Creare un account Google Cloud, abilitare l'API Vertex AI e abilitare i modelli Claude desiderati.",
@@ -757,5 +769,8 @@
 		"useCustomArn": "Usa ARN personalizzato..."
 	},
 	"includeMaxOutputTokens": "Includi token di output massimi",
-	"includeMaxOutputTokensDescription": "Invia il parametro dei token di output massimi nelle richieste API. Alcuni provider potrebbero non supportarlo."
+	"includeMaxOutputTokensDescription": "Invia il parametro dei token di output massimi nelle richieste API. Alcuni provider potrebbero non supportarlo.",
+	"limitMaxTokensDescription": "Limita il numero massimo di token nella risposta",
+	"maxOutputTokensLabel": "Token di output massimi",
+	"maxTokensGenerateDescription": "Token massimi da generare nella risposta"
 }

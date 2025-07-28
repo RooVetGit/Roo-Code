@@ -221,7 +221,7 @@
 		"noProviderMatchFound": "कोई प्रदाता नहीं मिला",
 		"noMatchFound": "कोई मिलान प्रोफ़ाइल नहीं मिला",
 		"vscodeLmDescription": "VS कोड भाषा मॉडल API आपको अन्य VS कोड एक्सटेंशन (जैसे GitHub Copilot) द्वारा प्रदान किए गए मॉडल चलाने की अनुमति देता है। शुरू करने का सबसे आसान तरीका VS कोड मार्केटप्लेस से Copilot और Copilot चैट एक्सटेंशन इंस्टॉल करना है।",
-		"awsCustomArnUse": "आप जिस मॉडल का उपयोग करना चाहते हैं, उसके लिए एक वैध AWS बेडरॉक ARN दर्ज करें। प्रारूप उदाहरण:",
+		"awsCustomArnUse": "आप जिस मॉडल का उपयोग करना चाहते हैं, उसके लिए एक वैध Amazon बेडरॉक ARN दर्ज करें। प्रारूप उदाहरण:",
 		"awsCustomArnDesc": "सुनिश्चित करें कि ARN में क्षेत्र ऊपर चयनित AWS क्षेत्र से मेल खाता है।",
 		"openRouterApiKey": "OpenRouter API कुंजी",
 		"getOpenRouterApiKey": "OpenRouter API कुंजी प्राप्त करें",
@@ -289,6 +289,7 @@
 		"litellmBaseUrl": "LiteLLM आधार URL",
 		"awsCredentials": "AWS क्रेडेंशियल्स",
 		"awsProfile": "AWS प्रोफाइल",
+		"awsApiKey": "Amazon बेडरॉक API कुंजी",
 		"awsProfileName": "AWS प्रोफाइल नाम",
 		"awsAccessKey": "AWS एक्सेस कुंजी",
 		"awsSecretKey": "AWS सीक्रेट कुंजी",
@@ -305,6 +306,17 @@
 		"cacheUsageNote": "नोट: यदि आप कैश उपयोग नहीं देखते हैं, तो एक अलग मॉडल चुनने का प्रयास करें और फिर अपने वांछित मॉडल को पुनः चुनें।",
 		"vscodeLmModel": "भाषा मॉडल",
 		"vscodeLmWarning": "नोट: यह एक बहुत ही प्रायोगिक एकीकरण है और प्रदाता समर्थन भिन्न होगा। यदि आपको किसी मॉडल के समर्थित न होने की त्रुटि मिलती है, तो यह प्रदाता की ओर से एक समस्या है।",
+		"geminiParameters": {
+			"urlContext": {
+				"title": "URL संदर्भ सक्षम करें",
+				"description": "जब प्रतिक्रिया उत्पन्न होती है, अतिरिक्त संदर्भ के लिए Gemini को URL तक पहुंचने और संसाधित करने की अनुमति देता है। वेब सामग्री विश्लेषण वाली कार्यों के लिए उपयोगी।"
+			},
+			"groundingSearch": {
+				"title": "Google खोज के साथ ग्राउंडिंग सक्षम करें",
+				"description": "Gemini को वास्तविक समय के डेटा पर आधारित उत्तर प्रदान करने के लिए Google पर जानकारी खोजने और उत्तरों को ग्राउंड करने की अनुमति देता है। अद्यतित जानकारी की आवश्यकता वाली क्वेरीज़ के लिए उपयोगी।"
+			}
+		},
+
 		"googleCloudSetup": {
 			"title": "Google Cloud Vertex AI का उपयोग करने के लिए, आपको आवश्यकता है:",
 			"step1": "1. Google Cloud खाता बनाएं, Vertex AI API सक्षम करें और वांछित Claude मॉडल सक्षम करें।",
@@ -757,5 +769,8 @@
 		"useCustomArn": "कस्टम ARN का उपयोग करें..."
 	},
 	"includeMaxOutputTokens": "अधिकतम आउटपुट टोकन शामिल करें",
-	"includeMaxOutputTokensDescription": "API अनुरोधों में अधिकतम आउटपुट टोकन पैरामीटर भेजें। कुछ प्रदाता इसका समर्थन नहीं कर सकते हैं।"
+	"includeMaxOutputTokensDescription": "API अनुरोधों में अधिकतम आउटपुट टोकन पैरामीटर भेजें। कुछ प्रदाता इसका समर्थन नहीं कर सकते हैं।",
+	"limitMaxTokensDescription": "प्रतिक्रिया में टोकन की अधिकतम संख्या सीमित करें",
+	"maxOutputTokensLabel": "अधिकतम आउटपुट टोकन",
+	"maxTokensGenerateDescription": "प्रतिक्रिया में उत्पन्न करने के लिए अधिकतम टोकन"
 }

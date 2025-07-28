@@ -289,6 +289,7 @@
 		"litellmBaseUrl": "Базовый URL LiteLLM",
 		"awsCredentials": "AWS-учётные данные",
 		"awsProfile": "Профиль AWS",
+		"awsApiKey": "Ключ API Amazon Bedrock",
 		"awsProfileName": "Имя профиля AWS",
 		"awsAccessKey": "AWS Access Key",
 		"awsSecretKey": "AWS Secret Key",
@@ -305,6 +306,17 @@
 		"cacheUsageNote": "Примечание: если вы не видите использование кэша, попробуйте выбрать другую модель, а затем вернуться к нужной.",
 		"vscodeLmModel": "Языковая модель",
 		"vscodeLmWarning": "Внимание: это очень экспериментальная интеграция, поддержка провайдера может отличаться. Если возникает ошибка о неподдерживаемой модели — проблема на стороне провайдера.",
+		"geminiParameters": {
+			"urlContext": {
+				"title": "Включить контекст URL",
+				"description": "Позволяет Gemini получать доступ к URL-адресам и обрабатывать их для дополнительного контекста при генерации ответов. Полезно для задач, требующих анализа веб-контента."
+			},
+			"groundingSearch": {
+				"title": "Включить grounding через поиск Google",
+				"description": "Позволяет Gemini искать актуальную информацию в Google и основывать ответы на данных в реальном времени. Полезно для запросов, требующих актуальной информации."
+			}
+		},
+
 		"googleCloudSetup": {
 			"title": "Для использования Google Cloud Vertex AI необходимо:",
 			"step1": "1. Создайте аккаунт Google Cloud, включите Vertex AI API и нужные модели Claude.",
@@ -757,5 +769,8 @@
 		"useCustomArn": "Использовать пользовательский ARN..."
 	},
 	"includeMaxOutputTokens": "Включить максимальные выходные токены",
-	"includeMaxOutputTokensDescription": "Отправлять параметр максимальных выходных токенов в API-запросах. Некоторые провайдеры могут не поддерживать это."
+	"includeMaxOutputTokensDescription": "Отправлять параметр максимальных выходных токенов в API-запросах. Некоторые провайдеры могут не поддерживать это.",
+	"limitMaxTokensDescription": "Ограничить максимальное количество токенов в ответе",
+	"maxOutputTokensLabel": "Максимальные выходные токены",
+	"maxTokensGenerateDescription": "Максимальные токены для генерации в ответе"
 }

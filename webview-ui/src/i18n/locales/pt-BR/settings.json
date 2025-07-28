@@ -289,6 +289,7 @@
 		"litellmBaseUrl": "URL base LiteLLM",
 		"awsCredentials": "Credenciais AWS",
 		"awsProfile": "Perfil AWS",
+		"awsApiKey": "Chave de API Amazon Bedrock",
 		"awsProfileName": "Nome do Perfil AWS",
 		"awsAccessKey": "Chave de Acesso AWS",
 		"awsSecretKey": "Chave Secreta AWS",
@@ -305,6 +306,17 @@
 		"cacheUsageNote": "Nota: Se você não vir o uso do cache, tente selecionar um modelo diferente e depois selecionar novamente o modelo desejado.",
 		"vscodeLmModel": "Modelo de Linguagem",
 		"vscodeLmWarning": "Nota: Esta é uma integração muito experimental e o suporte do provedor pode variar. Se você receber um erro sobre um modelo não ser suportado, isso é um problema do lado do provedor.",
+		"geminiParameters": {
+			"urlContext": {
+				"title": "Ativar contexto de URL",
+				"description": "Permite que o Gemini acesse e processe URLs para contexto adicional ao gerar respostas. Útil para tarefas que exijam análise de conteúdo da web."
+			},
+			"groundingSearch": {
+				"title": "Ativar grounding com pesquisa no Google",
+				"description": "Permite que o Gemini pesquise informações atuais no Google e fundamente as respostas em dados em tempo real. Útil para consultas que requerem informações atualizadas."
+			}
+		},
+
 		"googleCloudSetup": {
 			"title": "Para usar o Google Cloud Vertex AI, você precisa:",
 			"step1": "1. Criar uma conta Google Cloud, ativar a API Vertex AI e ativar os modelos Claude desejados.",
@@ -757,5 +769,8 @@
 		"useCustomArn": "Usar ARN personalizado..."
 	},
 	"includeMaxOutputTokens": "Incluir tokens máximos de saída",
-	"includeMaxOutputTokensDescription": "Enviar parâmetro de tokens máximos de saída nas solicitações de API. Alguns provedores podem não suportar isso."
+	"includeMaxOutputTokensDescription": "Enviar parâmetro de tokens máximos de saída nas solicitações de API. Alguns provedores podem não suportar isso.",
+	"limitMaxTokensDescription": "Limitar o número máximo de tokens na resposta",
+	"maxOutputTokensLabel": "Tokens máximos de saída",
+	"maxTokensGenerateDescription": "Tokens máximos para gerar na resposta"
 }
