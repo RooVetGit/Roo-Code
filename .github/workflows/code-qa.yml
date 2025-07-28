@@ -30,7 +30,7 @@ jobs:
               run: pnpm knip
 
     compile:
-        runs-on: self-hosted
+        runs-on: ubuntu-latest
         steps:
             - name: Checkout code
               uses: actions/checkout@v4
@@ -43,7 +43,14 @@ jobs:
 
     unit-test:
         name: platform-unit-test (${{ matrix.name }})
-        runs-on: self-hosted
+        runs-on: ${{ matrix.os }}
+        strategy:
+            matrix:
+                include:
+                    - os: ubuntu-latest
+                      name: ubuntu-latest
+                    - os: windows-latest
+                      name: windows-latest
         steps:
             - name: Checkout code
               uses: actions/checkout@v4
