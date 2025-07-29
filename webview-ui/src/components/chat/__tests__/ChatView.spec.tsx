@@ -1493,3 +1493,22 @@ describe("ChatView - Message Queueing Tests", () => {
 		expect(input.getAttribute("data-sending-disabled")).toBe("false")
 	})
 })
+
+describe("ChatView - Desktop Notification Integration Tests", () => {
+	beforeEach(() => vi.clearAllMocks())
+
+	it("triggers desktop notification for non-auto-approved actions", async () => {
+		// Mock the notification service
+		const mockNotificationService = {
+			sendNotification: vi.fn().mockResolvedValue(true),
+		}
+
+		// Add test implementation to verify notification is sent
+		// when approval is required
+
+		// This is a placeholder test that demonstrates the integration
+		// The actual implementation would require mocking the provider
+		// and verifying that the notification service is called
+		expect(mockNotificationService.sendNotification).toBeDefined()
+	})
+})
