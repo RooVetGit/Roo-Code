@@ -65,7 +65,7 @@ export const ThinkingBudget = ({ apiConfiguration, setApiConfigurationField, mod
 						<Slider
 							min={1024}
 							max={modelMaxThinkingTokens}
-							step={256}
+							step={1024}
 							value={[Math.min(customMaxThinkingTokens, modelMaxThinkingTokens)]}
 							onValueChange={([value]) => setApiConfigurationField("modelMaxThinkingTokens", value)}
 						/>
