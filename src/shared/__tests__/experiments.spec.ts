@@ -23,11 +23,21 @@ describe("experiments", () => {
 		})
 	})
 
+	describe("FILE_BASED_EDITING", () => {
+		it("is configured correctly", () => {
+			expect(EXPERIMENT_IDS.FILE_BASED_EDITING).toBe("fileBasedEditing")
+			expect(experimentConfigsMap.FILE_BASED_EDITING).toMatchObject({
+				enabled: false,
+			})
+		})
+	})
+
 	describe("isEnabled", () => {
 		it("returns false when POWER_STEERING experiment is not enabled", () => {
 			const experiments: Record<ExperimentId, boolean> = {
 				powerSteering: false,
 				multiFileApplyDiff: false,
+				fileBasedEditing: false,
 			}
 			expect(Experiments.isEnabled(experiments, EXPERIMENT_IDS.POWER_STEERING)).toBe(false)
 		})
@@ -36,14 +46,25 @@ describe("experiments", () => {
 			const experiments: Record<ExperimentId, boolean> = {
 				powerSteering: true,
 				multiFileApplyDiff: false,
+				fileBasedEditing: false,
 			}
 			expect(Experiments.isEnabled(experiments, EXPERIMENT_IDS.POWER_STEERING)).toBe(true)
+		})
+
+		it("returns true when experiment FILE_BASED_EDITING is enabled", () => {
+			const experiments: Record<ExperimentId, boolean> = {
+				powerSteering: false,
+				multiFileApplyDiff: false,
+				fileBasedEditing: true,
+			}
+			expect(Experiments.isEnabled(experiments, EXPERIMENT_IDS.FILE_BASED_EDITING)).toBe(true)
 		})
 
 		it("returns false when experiment is not present", () => {
 			const experiments: Record<ExperimentId, boolean> = {
 				powerSteering: false,
 				multiFileApplyDiff: false,
+				fileBasedEditing: false,
 			}
 			expect(Experiments.isEnabled(experiments, EXPERIMENT_IDS.POWER_STEERING)).toBe(false)
 		})

@@ -96,8 +96,8 @@ export async function insertContentTool(
 
 		cline.consecutiveMistakeCount = 0
 
-		cline.diffViewProvider.editType = fileExists ? "modify" : "create"
-		cline.diffViewProvider.originalContent = fileContent
+		cline.editingProvider.editType = fileExists ? "modify" : "create"
+		cline.editingProvider.originalContent = fileContent
 		const lines = fileExists ? fileContent.split("\n") : []
 
 		const updatedContent = insertGroups(lines, [
@@ -108,12 +108,12 @@ export async function insertContentTool(
 		]).join("\n")
 
 		// Show changes in diff view
-		if (!cline.diffViewProvider.isEditing) {
+		if (!cline.editingProvider.isEditing) {
 			await cline.ask("tool", JSON.stringify(sharedMessageProps), true).catch(() => {})
 			// First open with original content
-			await cline.diffViewProvider.open(relPath)
-			await cline.diffViewProvider.update(fileContent, false)
-			cline.diffViewProvider.scrollToFirstDiff()
+			await cline.editingProvider.open(relPath)
+			await cline.editingProvider.update(fileContent, false)
+			cline.editingProvider.scrollToFirstDiff()
 			await delay(200)
 		}
 
@@ -135,7 +135,7 @@ export async function insertContentTool(
 			approvalContent = updatedContent
 		}
 
-		await cline.diffViewProvider.update(updatedContent, true)
+		await cline.editingProvider.update(updatedContent, true)
 
 		const completeMessage = JSON.stringify({
 			...sharedMessageProps,
@@ -150,7 +150,7 @@ export async function insertContentTool(
 			.then((response) => response.response === "yesButtonClicked")
 
 		if (!didApprove) {
-			await cline.diffViewProvider.revertChanges()
+			await cline.editingProvider.revertChanges()
 			pushToolResult("Changes were rejected by the user.")
 			return
 		}
@@ -160,7 +160,7 @@ export async function insertContentTool(
 		const state = await provider?.getState()
 		const diagnosticsEnabled = state?.diagnosticsEnabled ?? true
 		const writeDelayMs = state?.writeDelayMs ?? DEFAULT_WRITE_DELAY_MS
-		await cline.diffViewProvider.saveChanges(diagnosticsEnabled, writeDelayMs)
+		await cline.editingProvider.saveChanges(diagnosticsEnabled, writeDelayMs)
 
 		// Track file edit operation
 		if (relPath) {
@@ -170,13 +170,13 @@ export async function insertContentTool(
 		cline.didEditFile = true
 
 		// Get the formatted response message
-		const message = await cline.diffViewProvider.pushToolWriteResult(cline, cline.cwd, !fileExists)
+		const message = await cline.editingProvider.pushToolWriteResult(cline, cline.cwd, !fileExists)
 
 		pushToolResult(message)
 
-		await cline.diffViewProvider.reset()
+		await cline.editingProvider.reset()
 	} catch (error) {
 		handleError("insert content", error)
-		await cline.diffViewProvider.reset()
+		await cline.editingProvider.reset()
 	}
 }
