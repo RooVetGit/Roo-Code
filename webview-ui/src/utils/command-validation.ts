@@ -44,7 +44,7 @@ type ShellToken = string | { op: string } | { command: string }
  *
  * ## Security Considerations:
  *
- * - **Subshell Protection**: Prevents command injection via $(command) or `command`
+ * - **Subshell Protection**: Prevents command injection via $(command), `command`, or process substitution
  * - **Chain Analysis**: Each command in a chain (cmd1 && cmd2) is validated separately
  * - **Case Insensitive**: All matching is case-insensitive for consistency
  * - **Whitespace Handling**: Commands are trimmed and normalized before matching
@@ -59,12 +59,25 @@ type ShellToken = string | { op: string } | { command: string }
  */
 
 /**
+ * Detect subshell usage and command substitution patterns:
+ * - $() - command substitution
+ * - `` - backticks (legacy command substitution)
+ * - <() - process substitution (input)
+ * - >() - process substitution (output)
+ * - $(()) - arithmetic expansion
+ * - $[] - arithmetic expansion (alternative syntax)
+ */
+export function containsSubshell(source: string): boolean {
+	return /(\$\()|`|<\(|>\(|\$\[/.test(source)
+}
+
+/**
  * Split a command string into individual sub-commands by
  * chaining operators (&&, ||, ;, or |) and newlines.
  *
  * Uses shell-quote to properly handle:
  * - Quoted strings (preserves quotes)
- * - Subshell commands ($(cmd) or `cmd`)
+ * - Subshell commands ($(cmd), `cmd`, <(cmd), >(cmd))
  * - PowerShell redirections (2>&1)
  * - Chain operators (&&, ||, ;, |)
  * - Newlines as command separators
@@ -103,7 +116,6 @@ function parseCommandLine(command: string): string[] {
 	const arithmeticExpressions: string[] = []
 	const variables: string[] = []
 	const parameterExpansions: string[] = []
-	const processSubstitutions: string[] = []
 
 	// First handle PowerShell redirections by temporarily replacing them
 	let processedCommand = command.replace(/\d*>&\d*/g, (match) => {
@@ -118,6 +130,12 @@ function parseCommandLine(command: string): string[] {
 		return `__ARITH_${arithmeticExpressions.length - 1}__`
 	})
 
+	// Handle $[...] arithmetic expressions (alternative syntax)
+	processedCommand = processedCommand.replace(/\$\[[^\]]*\]/g, (match) => {
+		arithmeticExpressions.push(match)
+		return `__ARITH_${arithmeticExpressions.length - 1}__`
+	})
+
 	// Handle parameter expansions: ${...} patterns (including array indexing)
 	// This covers ${var}, ${var:-default}, ${var:+alt}, ${#var}, ${var%pattern}, etc.
 	processedCommand = processedCommand.replace(/\$\{[^}]+\}/g, (match) => {
@@ -126,9 +144,9 @@ function parseCommandLine(command: string): string[] {
 	})
 
 	// Handle process substitutions: <(...) and >(...)
-	processedCommand = processedCommand.replace(/[<>]\([^)]+\)/g, (match) => {
-		processSubstitutions.push(match)
-		return `__PROCSUB_${processSubstitutions.length - 1}__`
+	processedCommand = processedCommand.replace(/[<>]\(([^)]+)\)/g, (_, inner) => {
+		subshells.push(inner.trim())
+		return `__SUBSH_${subshells.length - 1}__`
 	})
 
 	// Handle simple variable references: $varname pattern
@@ -144,7 +162,7 @@ function parseCommandLine(command: string): string[] {
 		return `__VAR_${variables.length - 1}__`
 	})
 
-	// Then handle subshell commands
+	// Then handle subshell commands $() and back-ticks
 	processedCommand = processedCommand
 		.replace(/\$\((.*?)\)/g, (_, inner) => {
 			subshells.push(inner.trim())
@@ -187,10 +205,9 @@ function parseCommandLine(command: string): string[] {
 			result = result.replace(/__ARITH_(\d+)__/g, (_, i) => arithmeticExpressions[parseInt(i)])
 			// Restore parameter expansions
 			result = result.replace(/__PARAM_(\d+)__/g, (_, i) => parameterExpansions[parseInt(i)])
-			// Restore process substitutions
-			result = result.replace(/__PROCSUB_(\d+)__/g, (_, i) => processSubstitutions[parseInt(i)])
 			// Restore variable references
 			result = result.replace(/__VAR_(\d+)__/g, (_, i) => variables[parseInt(i)])
+			result = result.replace(/__SUBSH_(\d+)__/g, (_, i) => subshells[parseInt(i)])
 			return result
 		})
 	}
@@ -243,10 +260,9 @@ function parseCommandLine(command: string): string[] {
 		result = result.replace(/__ARITH_(\d+)__/g, (_, i) => arithmeticExpressions[parseInt(i)])
 		// Restore parameter expansions
 		result = result.replace(/__PARAM_(\d+)__/g, (_, i) => parameterExpansions[parseInt(i)])
-		// Restore process substitutions
-		result = result.replace(/__PROCSUB_(\d+)__/g, (_, i) => processSubstitutions[parseInt(i)])
 		// Restore variable references
 		result = result.replace(/__VAR_(\d+)__/g, (_, i) => variables[parseInt(i)])
+		result = result.replace(/__SUBSH_(\d+)__/g, (_, i) => subshells[parseInt(i)])
 		return result
 	})
 }
@@ -430,14 +446,6 @@ export function getCommandDecision(
 ): CommandDecision {
 	if (!command?.trim()) return "auto_approve"
 
-	// Check if subshells contain denied prefixes
-	if ((command.includes("$(") || command.includes("`")) && deniedCommands?.length) {
-		const mainCommandLower = command.toLowerCase()
-		if (deniedCommands.some((denied) => mainCommandLower.includes(denied.toLowerCase()))) {
-			return "auto_deny"
-		}
-	}
-
 	// Parse into sub-commands (split by &&, ||, ;, |)
 	const subCommands = parseCommand(command)
 
@@ -610,7 +618,7 @@ export class CommandValidator {
 		hasSubshells: boolean
 	} {
 		const subCommands = parseCommand(command)
-		const hasSubshells = command.includes("$(") || command.includes("`")
+		const hasSubshells = containsSubshell(command)
 
 		const allowedMatches = subCommands.map((cmd) => ({
 			command: cmd,
