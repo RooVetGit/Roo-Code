@@ -184,5 +184,35 @@
 		"preventCompletionWithOpenTodos": {
 			"description": "Impedire il completamento delle attività quando ci sono todo incompleti nella lista dei todo"
 		}
+	},
+	"notification": {
+		"approvalRequired": {
+			"title": "Roo Code: Approvazione richiesta"
+		},
+		"browserLaunch": {
+			"message": "L'agente richiede il permesso di aprire il browser e navigare a: {{url}}"
+		},
+		"commandExecution": {
+			"message": "L'agente richiede il permesso di eseguire il comando: {{command}}"
+		},
+		"toolUse": {
+			"message": "L'agente richiede il permesso di usare lo strumento: {{tool}}"
+		},
+		"error": {
+			"title": "Roo Code: Errore",
+			"message": "Errore {{action}}: {{error}}"
+		},
+		"taskComplete": {
+			"title": "Roo Code: Attività completata",
+			"message": "La tua attività è stata completata con successo"
+		},
+		"inputRequired": {
+			"title": "Roo Code: Input richiesto",
+			"message": "L'agente ha bisogno del tuo input per continuare"
+		},
+		"sessionTimeout": {
+			"title": "Roo Code: Avviso timeout sessione",
+			"message": "La tua sessione scadrà presto per inattività"
+		}
 	}
 }

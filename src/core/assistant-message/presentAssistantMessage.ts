@@ -27,6 +27,7 @@ import { newTaskTool } from "../tools/newTaskTool"
 
 import { checkpointSave } from "../checkpoints"
 import { updateTodoListTool } from "../tools/updateTodoListTool"
+import { t } from "../../i18n"
 
 import { formatResponse } from "../prompts/responses"
 import { validateToolUse } from "../tools/validateToolUse"
@@ -266,6 +267,32 @@ export async function presentAssistantMessage(cline: Task) {
 				progressStatus?: ToolProgressStatus,
 				isProtected?: boolean,
 			) => {
+				// Send desktop notification for approval request
+				if (type === "tool" || type === "command" || type === "browser_action_launch") {
+					const notificationService = cline.providerRef.deref()?.notificationService
+					if (notificationService) {
+						const toolInfo = type === "tool" && partialMessage ? JSON.parse(partialMessage) : {}
+						await notificationService.sendNotification({
+							type: "approval_request",
+							priority: "high",
+							title: t("common:notification.approvalRequired.title"),
+							message:
+								type === "browser_action_launch"
+									? t("common:notification.browserLaunch.message", { url: partialMessage })
+									: type === "command"
+										? t("common:notification.commandExecution.message", { command: partialMessage })
+										: t("common:notification.toolUse.message", {
+												tool: toolInfo.tool || "unknown",
+											}),
+							context: {
+								toolName: type === "tool" ? toolInfo.tool : type,
+								action: type,
+								sessionId: cline.taskId,
+							},
+						})
+					}
+				}
+
 				const { response, text, images } = await cline.ask(
 					type,
 					partialMessage,
@@ -306,6 +333,22 @@ export async function presentAssistantMessage(cline: Task) {
 
 			const handleError = async (action: string, error: Error) => {
 				const errorString = `Error ${action}: ${JSON.stringify(serializeError(error))}`
+
+				// Send desktop notification for errors
+				const notificationService = cline.providerRef.deref()?.notificationService
+				if (notificationService) {
+					await notificationService.sendNotification({
+						type: "error",
+						priority: "critical",
+						title: t("common:notification.error.title"),
+						message: t("common:notification.error.message", { action, error: error.message }),
+						context: {
+							errorType: error.name,
+							action,
+							sessionId: cline.taskId,
+						},
+					})
+				}
 
 				await cline.say(
 					"error",

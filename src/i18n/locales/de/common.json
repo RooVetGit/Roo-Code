@@ -184,5 +184,35 @@
 		"preventCompletionWithOpenTodos": {
 			"description": "Aufgabenabschluss verhindern, wenn unvollständige Todos in der Todo-Liste vorhanden sind"
 		}
+	},
+	"notification": {
+		"approvalRequired": {
+			"title": "Roo Code: Genehmigung erforderlich"
+		},
+		"browserLaunch": {
+			"message": "Agent fordert Erlaubnis an, Browser zu starten und zu navigieren zu: {{url}}"
+		},
+		"commandExecution": {
+			"message": "Agent fordert Erlaubnis an, Befehl auszuführen: {{command}}"
+		},
+		"toolUse": {
+			"message": "Agent fordert Erlaubnis an, Tool zu verwenden: {{tool}}"
+		},
+		"error": {
+			"title": "Roo Code: Fehler",
+			"message": "Fehler {{action}}: {{error}}"
+		},
+		"taskComplete": {
+			"title": "Roo Code: Aufgabe abgeschlossen",
+			"message": "Ihre Aufgabe wurde erfolgreich abgeschlossen"
+		},
+		"inputRequired": {
+			"title": "Roo Code: Eingabe erforderlich",
+			"message": "Agent benötigt Ihre Eingabe zum Fortfahren"
+		},
+		"sessionTimeout": {
+			"title": "Roo Code: Sitzungszeitüberschreitung",
+			"message": "Ihre Sitzung läuft bald wegen Inaktivität ab"
+		}
 	}
 }

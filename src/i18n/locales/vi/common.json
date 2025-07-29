@@ -191,5 +191,35 @@
 		"preventCompletionWithOpenTodos": {
 			"description": "Ngăn chặn hoàn thành nhiệm vụ khi có các todo chưa hoàn thành trong danh sách todo"
 		}
+	},
+	"notification": {
+		"approvalRequired": {
+			"title": "Roo Code: Cần phê duyệt"
+		},
+		"browserLaunch": {
+			"message": "Tác nhân yêu cầu quyền mở trình duyệt và điều hướng đến: {{url}}"
+		},
+		"commandExecution": {
+			"message": "Tác nhân yêu cầu quyền thực thi lệnh: {{command}}"
+		},
+		"toolUse": {
+			"message": "Tác nhân yêu cầu quyền sử dụng công cụ: {{tool}}"
+		},
+		"error": {
+			"title": "Roo Code: Lỗi",
+			"message": "Lỗi {{action}}: {{error}}"
+		},
+		"taskComplete": {
+			"title": "Roo Code: Hoàn thành tác vụ",
+			"message": "Tác vụ của bạn đã được hoàn thành thành công"
+		},
+		"inputRequired": {
+			"title": "Roo Code: Cần nhập liệu",
+			"message": "Tác nhân cần bạn nhập liệu để tiếp tục"
+		},
+		"sessionTimeout": {
+			"title": "Roo Code: Cảnh báo hết thời gian phiên",
+			"message": "Phiên của bạn sẽ hết hạn sớm do không hoạt động"
+		}
 	}
 }

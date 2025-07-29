@@ -189,5 +189,35 @@
 		"preventCompletionWithOpenTodos": {
 			"description": "当待办事项列表中有未完成的待办事项时阻止任务完成"
 		}
+	},
+	"notification": {
+		"approvalRequired": {
+			"title": "Roo Code: 需要批准"
+		},
+		"browserLaunch": {
+			"message": "代理请求打开浏览器并导航到: {{url}}"
+		},
+		"commandExecution": {
+			"message": "代理请求执行命令: {{command}}"
+		},
+		"toolUse": {
+			"message": "代理请求使用工具: {{tool}}"
+		},
+		"error": {
+			"title": "Roo Code: 错误",
+			"message": "错误 {{action}}: {{error}}"
+		},
+		"taskComplete": {
+			"title": "Roo Code: 任务完成",
+			"message": "您的任务已成功完成"
+		},
+		"inputRequired": {
+			"title": "Roo Code: 需要输入",
+			"message": "代理需要您的输入才能继续"
+		},
+		"sessionTimeout": {
+			"title": "Roo Code: 会话超时警告",
+			"message": "由于不活动，您的会话即将过期"
+		}
 	}
 }

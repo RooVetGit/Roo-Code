@@ -184,5 +184,35 @@
 		"preventCompletionWithOpenTodos": {
 			"description": "Todo listesinde tamamlanmamış todolar olduğunda görev tamamlanmasını engelle"
 		}
+	},
+	"notification": {
+		"approvalRequired": {
+			"title": "Roo Code: Onay Gerekli"
+		},
+		"browserLaunch": {
+			"message": "Ajan tarayıcıyı açmak ve şuraya gitmek için izin istiyor: {{url}}"
+		},
+		"commandExecution": {
+			"message": "Ajan komutu çalıştırmak için izin istiyor: {{command}}"
+		},
+		"toolUse": {
+			"message": "Ajan aracı kullanmak için izin istiyor: {{tool}}"
+		},
+		"error": {
+			"title": "Roo Code: Hata",
+			"message": "Hata {{action}}: {{error}}"
+		},
+		"taskComplete": {
+			"title": "Roo Code: Görev Tamamlandı",
+			"message": "Göreviniz başarıyla tamamlandı"
+		},
+		"inputRequired": {
+			"title": "Roo Code: Giriş Gerekli",
+			"message": "Ajan devam etmek için girişinize ihtiyaç duyuyor"
+		},
+		"sessionTimeout": {
+			"title": "Roo Code: Oturum Zaman Aşımı Uyarısı",
+			"message": "Hareketsizlik nedeniyle oturumunuz yakında sona erecek"
+		}
 	}
 }

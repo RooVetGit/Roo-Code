@@ -153,6 +153,14 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 		ttsEnabled,
 		ttsSpeed,
 		soundVolume,
+		desktopNotificationsEnabled,
+		showApprovalRequests,
+		showErrors,
+		showTaskCompletion,
+		showUserInputRequired,
+		showSessionTimeouts,
+		notificationTimeout,
+		desktopNotificationSound,
 		telemetrySetting,
 		terminalOutputLineLimit,
 		terminalOutputCharacterLimit,
@@ -295,6 +303,14 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 			vscode.postMessage({ type: "ttsEnabled", bool: ttsEnabled })
 			vscode.postMessage({ type: "ttsSpeed", value: ttsSpeed })
 			vscode.postMessage({ type: "soundVolume", value: soundVolume })
+			vscode.postMessage({ type: "desktopNotificationsEnabled", bool: desktopNotificationsEnabled })
+			vscode.postMessage({ type: "showApprovalRequests", bool: showApprovalRequests })
+			vscode.postMessage({ type: "showErrors", bool: showErrors })
+			vscode.postMessage({ type: "showTaskCompletion", bool: showTaskCompletion })
+			vscode.postMessage({ type: "showUserInputRequired", bool: showUserInputRequired })
+			vscode.postMessage({ type: "showSessionTimeouts", bool: showSessionTimeouts })
+			vscode.postMessage({ type: "notificationTimeout", value: notificationTimeout })
+			vscode.postMessage({ type: "desktopNotificationSound", bool: desktopNotificationSound })
 			vscode.postMessage({ type: "diffEnabled", bool: diffEnabled })
 			vscode.postMessage({ type: "enableCheckpoints", bool: enableCheckpoints })
 			vscode.postMessage({ type: "browserViewportSize", text: browserViewportSize })
@@ -653,6 +669,14 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 							ttsSpeed={ttsSpeed}
 							soundEnabled={soundEnabled}
 							soundVolume={soundVolume}
+							desktopNotificationsEnabled={desktopNotificationsEnabled}
+							showApprovalRequests={showApprovalRequests}
+							showErrors={showErrors}
+							showTaskCompletion={showTaskCompletion}
+							showUserInputRequired={showUserInputRequired}
+							showSessionTimeouts={showSessionTimeouts}
+							notificationTimeout={notificationTimeout}
+							desktopNotificationSound={desktopNotificationSound}
 							setCachedStateField={setCachedStateField}
 						/>
 					)}

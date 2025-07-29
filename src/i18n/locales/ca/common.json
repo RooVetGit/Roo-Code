@@ -184,5 +184,35 @@
 		"preventCompletionWithOpenTodos": {
 			"description": "Evitar la finalització de tasques quan hi ha todos incomplets a la llista de todos"
 		}
+	},
+	"notification": {
+		"approvalRequired": {
+			"title": "Roo Code: Cal aprovació"
+		},
+		"browserLaunch": {
+			"message": "L'agent sol·licita permís per obrir el navegador i navegar a: {{url}}"
+		},
+		"commandExecution": {
+			"message": "L'agent sol·licita permís per executar l'ordre: {{command}}"
+		},
+		"toolUse": {
+			"message": "L'agent sol·licita permís per utilitzar l'eina: {{tool}}"
+		},
+		"error": {
+			"title": "Roo Code: Error",
+			"message": "Error {{action}}: {{error}}"
+		},
+		"taskComplete": {
+			"title": "Roo Code: Tasca completada",
+			"message": "La teva tasca s'ha completat correctament"
+		},
+		"inputRequired": {
+			"title": "Roo Code: Cal entrada",
+			"message": "L'agent necessita la teva entrada per continuar"
+		},
+		"sessionTimeout": {
+			"title": "Roo Code: Avís de temps d'espera",
+			"message": "La teva sessió caducarà aviat per inactivitat"
+		}
 	}
 }

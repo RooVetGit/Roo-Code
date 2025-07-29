@@ -184,5 +184,35 @@
 		"preventCompletionWithOpenTodos": {
 			"description": "जब टूडू सूची में अधूरे टूडू हों तो कार्य पूर्ण होने से रोकें"
 		}
+	},
+	"notification": {
+		"approvalRequired": {
+			"title": "Roo Code: अनुमोदन आवश्यक"
+		},
+		"browserLaunch": {
+			"message": "एजेंट ब्राउज़र खोलने और नेविगेट करने की अनुमति मांग रहा है: {{url}}"
+		},
+		"commandExecution": {
+			"message": "एजेंट कमांड निष्पादित करने की अनुमति मांग रहा है: {{command}}"
+		},
+		"toolUse": {
+			"message": "एजेंट टूल उपयोग करने की अनुमति मांग रहा है: {{tool}}"
+		},
+		"error": {
+			"title": "Roo Code: त्रुटि",
+			"message": "त्रुटि {{action}}: {{error}}"
+		},
+		"taskComplete": {
+			"title": "Roo Code: कार्य पूर्ण",
+			"message": "आपका कार्य सफलतापूर्वक पूरा हो गया है"
+		},
+		"inputRequired": {
+			"title": "Roo Code: इनपुट आवश्यक",
+			"message": "एजेंट को जारी रखने के लिए आपके इनपुट की आवश्यकता है"
+		},
+		"sessionTimeout": {
+			"title": "Roo Code: सत्र समय समाप्ति चेतावनी",
+			"message": "निष्क्रियता के कारण आपका सत्र जल्द ही समाप्त हो जाएगा"
+		}
 	}
 }

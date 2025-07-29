@@ -48,6 +48,7 @@ import { Terminal } from "../../integrations/terminal/Terminal"
 import { downloadTask } from "../../integrations/misc/export-markdown"
 import { getTheme } from "../../integrations/theme/getTheme"
 import WorkspaceTracker from "../../integrations/workspace/WorkspaceTracker"
+import { DesktopNotificationService } from "../../services/notification"
 import { McpHub } from "../../services/mcp/McpHub"
 import { McpServerManager } from "../../services/mcp/McpServerManager"
 import { MarketplaceManager } from "../../services/marketplace"
@@ -109,6 +110,7 @@ export class ClineProvider
 	protected mcpHub?: McpHub // Change from private to protected
 	private marketplaceManager: MarketplaceManager
 	private mdmService?: MdmService
+	public notificationService: DesktopNotificationService
 
 	public isViewLaunched = false
 	public settingsImportedAt?: number
@@ -159,6 +161,24 @@ export class ClineProvider
 			})
 
 		this.marketplaceManager = new MarketplaceManager(this.context, this.customModesManager)
+
+		// Initialize notification service with preferences from global state
+		const notificationPreferences = {
+			enabled: this.contextProxy.getValue("desktopNotificationsEnabled") ?? true,
+			showApprovalRequests: this.contextProxy.getValue("showApprovalRequests") ?? true,
+			showErrors: this.contextProxy.getValue("showErrors") ?? true,
+			showTaskCompletion: this.contextProxy.getValue("showTaskCompletion") ?? true,
+			showUserInputRequired: this.contextProxy.getValue("showUserInputRequired") ?? true,
+			showSessionTimeouts: this.contextProxy.getValue("showSessionTimeouts") ?? true,
+			timeout: this.contextProxy.getValue("notificationTimeout") ?? 10,
+			sound: this.contextProxy.getValue("desktopNotificationSound") ?? true,
+		}
+		this.notificationService = new DesktopNotificationService(
+			context,
+			notificationPreferences,
+			(...args: unknown[]) => this.log(args.join(" ")),
+		)
+		this.notificationService.initialize()
 	}
 
 	// Adds a new Cline instance to clineStack, marking the start of a new task.
@@ -1253,6 +1273,23 @@ export class ClineProvider
 		if (!this.checkMdmCompliance()) {
 			await this.postMessageToWebview({ type: "action", action: "accountButtonClicked" })
 		}
+
+		// Update notification service preferences when state changes
+		await this.updateNotificationPreferences()
+	}
+
+	async updateNotificationPreferences() {
+		const notificationPreferences = {
+			enabled: this.contextProxy.getValue("desktopNotificationsEnabled") ?? true,
+			showApprovalRequests: this.contextProxy.getValue("showApprovalRequests") ?? true,
+			showErrors: this.contextProxy.getValue("showErrors") ?? true,
+			showTaskCompletion: this.contextProxy.getValue("showTaskCompletion") ?? true,
+			showUserInputRequired: this.contextProxy.getValue("showUserInputRequired") ?? true,
+			showSessionTimeouts: this.contextProxy.getValue("showSessionTimeouts") ?? true,
+			timeout: this.contextProxy.getValue("notificationTimeout") ?? 10,
+			sound: this.contextProxy.getValue("desktopNotificationSound") ?? true,
+		}
+		await this.notificationService.setUserPreferences(notificationPreferences)
 	}
 
 	/**

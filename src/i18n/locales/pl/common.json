@@ -184,5 +184,35 @@
 		"preventCompletionWithOpenTodos": {
 			"description": "Zapobiegaj ukończeniu zadania gdy na liście zadań są nieukończone zadania"
 		}
+	},
+	"notification": {
+		"approvalRequired": {
+			"title": "Roo Code: Wymagane zatwierdzenie"
+		},
+		"browserLaunch": {
+			"message": "Agent prosi o pozwolenie na uruchomienie przeglądarki i nawigację do: {{url}}"
+		},
+		"commandExecution": {
+			"message": "Agent prosi o pozwolenie na wykonanie polecenia: {{command}}"
+		},
+		"toolUse": {
+			"message": "Agent prosi o pozwolenie na użycie narzędzia: {{tool}}"
+		},
+		"error": {
+			"title": "Roo Code: Błąd",
+			"message": "Błąd {{action}}: {{error}}"
+		},
+		"taskComplete": {
+			"title": "Roo Code: Zadanie ukończone",
+			"message": "Twoje zadanie zostało pomyślnie ukończone"
+		},
+		"inputRequired": {
+			"title": "Roo Code: Wymagane dane wejściowe",
+			"message": "Agent potrzebuje twoich danych, aby kontynuować"
+		},
+		"sessionTimeout": {
+			"title": "Roo Code: Ostrzeżenie o przekroczeniu czasu sesji",
+			"message": "Twoja sesja wkrótce wygaśnie z powodu braku aktywności"
+		}
 	}
 }

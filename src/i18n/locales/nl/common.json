@@ -184,5 +184,35 @@
 		"preventCompletionWithOpenTodos": {
 			"description": "Voorkom taakafronding wanneer er onvolledige todos in de todolijst staan"
 		}
+	},
+	"notification": {
+		"approvalRequired": {
+			"title": "Roo Code: Goedkeuring vereist"
+		},
+		"browserLaunch": {
+			"message": "Agent vraagt toestemming om browser te openen en te navigeren naar: {{url}}"
+		},
+		"commandExecution": {
+			"message": "Agent vraagt toestemming om opdracht uit te voeren: {{command}}"
+		},
+		"toolUse": {
+			"message": "Agent vraagt toestemming om tool te gebruiken: {{tool}}"
+		},
+		"error": {
+			"title": "Roo Code: Fout",
+			"message": "Fout {{action}}: {{error}}"
+		},
+		"taskComplete": {
+			"title": "Roo Code: Taak voltooid",
+			"message": "Je taak is succesvol voltooid"
+		},
+		"inputRequired": {
+			"title": "Roo Code: Invoer vereist",
+			"message": "Agent heeft je invoer nodig om door te gaan"
+		},
+		"sessionTimeout": {
+			"title": "Roo Code: Sessie time-out waarschuwing",
+			"message": "Je sessie verloopt binnenkort wegens inactiviteit"
+		}
 	}
 }

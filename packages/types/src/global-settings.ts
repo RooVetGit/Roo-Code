@@ -97,6 +97,15 @@ export const globalSettingsSchema = z.object({
 	soundEnabled: z.boolean().optional(),
 	soundVolume: z.number().optional(),
 
+	desktopNotificationsEnabled: z.boolean().optional(),
+	showApprovalRequests: z.boolean().optional(),
+	showErrors: z.boolean().optional(),
+	showTaskCompletion: z.boolean().optional(),
+	showUserInputRequired: z.boolean().optional(),
+	showSessionTimeouts: z.boolean().optional(),
+	notificationTimeout: z.number().optional(),
+	desktopNotificationSound: z.boolean().optional(),
+
 	maxOpenTabsContext: z.number().optional(),
 	maxWorkspaceFiles: z.number().optional(),
 	showRooIgnoredFiles: z.boolean().optional(),

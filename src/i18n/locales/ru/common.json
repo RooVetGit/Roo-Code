@@ -184,5 +184,35 @@
 		"preventCompletionWithOpenTodos": {
 			"description": "Предотвратить завершение задач при наличии незавершенных дел в списке дел"
 		}
+	},
+	"notification": {
+		"approvalRequired": {
+			"title": "Roo Code: Требуется одобрение"
+		},
+		"browserLaunch": {
+			"message": "Агент запрашивает разрешение открыть браузер и перейти по адресу: {{url}}"
+		},
+		"commandExecution": {
+			"message": "Агент запрашивает разрешение выполнить команду: {{command}}"
+		},
+		"toolUse": {
+			"message": "Агент запрашивает разрешение использовать инструмент: {{tool}}"
+		},
+		"error": {
+			"title": "Roo Code: Ошибка",
+			"message": "Ошибка {{action}}: {{error}}"
+		},
+		"taskComplete": {
+			"title": "Roo Code: Задача выполнена",
+			"message": "Ваша задача успешно выполнена"
+		},
+		"inputRequired": {
+			"title": "Roo Code: Требуется ввод",
+			"message": "Агенту нужен ваш ввод для продолжения"
+		},
+		"sessionTimeout": {
+			"title": "Roo Code: Предупреждение о тайм-ауте сеанса",
+			"message": "Ваш сеанс скоро истечет из-за неактивности"
+		}
 	}
 }

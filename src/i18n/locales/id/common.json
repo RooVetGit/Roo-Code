@@ -184,5 +184,35 @@
 		"preventCompletionWithOpenTodos": {
 			"description": "Mencegah penyelesaian tugas ketika ada todo yang belum selesai dalam daftar todo"
 		}
+	},
+	"notification": {
+		"approvalRequired": {
+			"title": "Roo Code: Persetujuan Diperlukan"
+		},
+		"browserLaunch": {
+			"message": "Agen meminta izin untuk membuka browser dan navigasi ke: {{url}}"
+		},
+		"commandExecution": {
+			"message": "Agen meminta izin untuk menjalankan perintah: {{command}}"
+		},
+		"toolUse": {
+			"message": "Agen meminta izin untuk menggunakan alat: {{tool}}"
+		},
+		"error": {
+			"title": "Roo Code: Kesalahan",
+			"message": "Kesalahan {{action}}: {{error}}"
+		},
+		"taskComplete": {
+			"title": "Roo Code: Tugas Selesai",
+			"message": "Tugas Anda telah berhasil diselesaikan"
+		},
+		"inputRequired": {
+			"title": "Roo Code: Input Diperlukan",
+			"message": "Agen memerlukan input Anda untuk melanjutkan"
+		},
+		"sessionTimeout": {
+			"title": "Roo Code: Peringatan Batas Waktu Sesi",
+			"message": "Sesi Anda akan segera berakhir karena tidak aktif"
+		}
 	}
 }

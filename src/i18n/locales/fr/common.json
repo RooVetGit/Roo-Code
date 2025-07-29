@@ -184,5 +184,35 @@
 		"preventCompletionWithOpenTodos": {
 			"description": "Empêcher la finalisation des tâches lorsqu'il y a des todos incomplets dans la liste de todos"
 		}
+	},
+	"notification": {
+		"approvalRequired": {
+			"title": "Roo Code: Approbation requise"
+		},
+		"browserLaunch": {
+			"message": "L'agent demande l'autorisation de lancer le navigateur et de naviguer vers : {{url}}"
+		},
+		"commandExecution": {
+			"message": "L'agent demande l'autorisation d'exécuter la commande : {{command}}"
+		},
+		"toolUse": {
+			"message": "L'agent demande l'autorisation d'utiliser l'outil : {{tool}}"
+		},
+		"error": {
+			"title": "Roo Code: Erreur",
+			"message": "Erreur {{action}}: {{error}}"
+		},
+		"taskComplete": {
+			"title": "Roo Code: Tâche terminée",
+			"message": "Votre tâche a été complétée avec succès"
+		},
+		"inputRequired": {
+			"title": "Roo Code: Saisie requise",
+			"message": "L'agent a besoin de votre saisie pour continuer"
+		},
+		"sessionTimeout": {
+			"title": "Roo Code: Avertissement de délai d'expiration",
+			"message": "Votre session expirera bientôt en raison d'inactivité"
+		}
 	}
 }

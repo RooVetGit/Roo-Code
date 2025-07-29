@@ -184,5 +184,35 @@
 		"preventCompletionWithOpenTodos": {
 			"description": "할 일 목록에 미완료된 할 일이 있을 때 작업 완료를 방지"
 		}
+	},
+	"notification": {
+		"approvalRequired": {
+			"title": "Roo Code: 승인 필요"
+		},
+		"browserLaunch": {
+			"message": "에이전트가 브라우저를 실행하고 다음으로 이동할 권한을 요청합니다: {{url}}"
+		},
+		"commandExecution": {
+			"message": "에이전트가 명령을 실행할 권한을 요청합니다: {{command}}"
+		},
+		"toolUse": {
+			"message": "에이전트가 도구를 사용할 권한을 요청합니다: {{tool}}"
+		},
+		"error": {
+			"title": "Roo Code: 오류",
+			"message": "오류 {{action}}: {{error}}"
+		},
+		"taskComplete": {
+			"title": "Roo Code: 작업 완료",
+			"message": "작업이 성공적으로 완료되었습니다"
+		},
+		"inputRequired": {
+			"title": "Roo Code: 입력 필요",
+			"message": "에이전트가 계속하려면 입력이 필요합니다"
+		},
+		"sessionTimeout": {
+			"title": "Roo Code: 세션 시간 초과 경고",
+			"message": "비활성으로 인해 세션이 곧 만료됩니다"
+		}
 	}
 }

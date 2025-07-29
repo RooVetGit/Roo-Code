@@ -184,5 +184,35 @@
 		"preventCompletionWithOpenTodos": {
 			"description": "Impedir a conclusão de tarefas quando há todos incompletos na lista de todos"
 		}
+	},
+	"notification": {
+		"approvalRequired": {
+			"title": "Roo Code: Aprovação necessária"
+		},
+		"browserLaunch": {
+			"message": "O agente solicita permissão para abrir o navegador e navegar para: {{url}}"
+		},
+		"commandExecution": {
+			"message": "O agente solicita permissão para executar o comando: {{command}}"
+		},
+		"toolUse": {
+			"message": "O agente solicita permissão para usar a ferramenta: {{tool}}"
+		},
+		"error": {
+			"title": "Roo Code: Erro",
+			"message": "Erro {{action}}: {{error}}"
+		},
+		"taskComplete": {
+			"title": "Roo Code: Tarefa concluída",
+			"message": "Sua tarefa foi concluída com sucesso"
+		},
+		"inputRequired": {
+			"title": "Roo Code: Entrada necessária",
+			"message": "O agente precisa da sua entrada para continuar"
+		},
+		"sessionTimeout": {
+			"title": "Roo Code: Aviso de tempo limite da sessão",
+			"message": "Sua sessão expirará em breve devido à inatividade"
+		}
 	}
 }

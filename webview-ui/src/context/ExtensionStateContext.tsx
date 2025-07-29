@@ -98,6 +98,14 @@ export interface ExtensionStateContextType extends ExtensionState {
 	alwaysApproveResubmit?: boolean
 	setAlwaysApproveResubmit: (value: boolean) => void
 	requestDelaySeconds: number
+	setDesktopNotificationsEnabled: (value: boolean) => void
+	setShowApprovalRequests: (value: boolean) => void
+	setShowErrors: (value: boolean) => void
+	setShowTaskCompletion: (value: boolean) => void
+	setShowUserInputRequired: (value: boolean) => void
+	setShowSessionTimeouts: (value: boolean) => void
+	setNotificationTimeout: (value: number) => void
+	setDesktopNotificationSound: (value: boolean) => void
 	setRequestDelaySeconds: (value: number) => void
 	setCurrentApiConfigName: (value: string) => void
 	setListApiConfigMeta: (value: ProviderSettingsEntry[]) => void
@@ -175,6 +183,14 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 		soundVolume: 0.5,
 		ttsEnabled: false,
 		ttsSpeed: 1.0,
+		desktopNotificationsEnabled: true,
+		showApprovalRequests: true,
+		showErrors: true,
+		showTaskCompletion: true,
+		showUserInputRequired: true,
+		showSessionTimeouts: true,
+		notificationTimeout: 10,
+		desktopNotificationSound: true,
 		diffEnabled: false,
 		enableCheckpoints: true,
 		fuzzyMatchThreshold: 1.0,
@@ -494,6 +510,30 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 		maxDiagnosticMessages: state.maxDiagnosticMessages,
 		setMaxDiagnosticMessages: (value) => {
 			setState((prevState) => ({ ...prevState, maxDiagnosticMessages: value }))
+		},
+		setDesktopNotificationsEnabled: (value) => {
+			setState((prevState) => ({ ...prevState, desktopNotificationsEnabled: value }))
+		},
+		setShowApprovalRequests: (value) => {
+			setState((prevState) => ({ ...prevState, showApprovalRequests: value }))
+		},
+		setShowErrors: (value) => {
+			setState((prevState) => ({ ...prevState, showErrors: value }))
+		},
+		setShowTaskCompletion: (value) => {
+			setState((prevState) => ({ ...prevState, showTaskCompletion: value }))
+		},
+		setShowUserInputRequired: (value) => {
+			setState((prevState) => ({ ...prevState, showUserInputRequired: value }))
+		},
+		setShowSessionTimeouts: (value) => {
+			setState((prevState) => ({ ...prevState, showSessionTimeouts: value }))
+		},
+		setNotificationTimeout: (value) => {
+			setState((prevState) => ({ ...prevState, notificationTimeout: value }))
+		},
+		setDesktopNotificationSound: (value) => {
+			setState((prevState) => ({ ...prevState, desktopNotificationSound: value }))
 		},
 	}
 

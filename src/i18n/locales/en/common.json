@@ -173,5 +173,35 @@
 		"preventCompletionWithOpenTodos": {
 			"description": "Prevent task completion when there are incomplete todos in the todo list"
 		}
+	},
+	"notification": {
+		"approvalRequired": {
+			"title": "Roo Code: Approval Required"
+		},
+		"browserLaunch": {
+			"message": "Agent requests permission to launch browser and navigate to: {{url}}"
+		},
+		"commandExecution": {
+			"message": "Agent requests permission to execute command: {{command}}"
+		},
+		"toolUse": {
+			"message": "Agent requests permission to use tool: {{tool}}"
+		},
+		"error": {
+			"title": "Roo Code: Error",
+			"message": "Error {{action}}: {{error}}"
+		},
+		"taskComplete": {
+			"title": "Roo Code: Task Complete",
+			"message": "Your task has been completed successfully"
+		},
+		"inputRequired": {
+			"title": "Roo Code: Input Required",
+			"message": "Agent needs your input to continue"
+		},
+		"sessionTimeout": {
+			"title": "Roo Code: Session Timeout Warning",
+			"message": "Your session will expire soon due to inactivity"
+		}
 	}
 }
