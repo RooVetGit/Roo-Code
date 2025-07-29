@@ -4,7 +4,7 @@ import * as path from "path"
 import * as yaml from "yaml"
 import { RemoteConfigLoader } from "./RemoteConfigLoader"
 import { SimpleInstaller } from "./SimpleInstaller"
-import type { MarketplaceItem, MarketplaceItemType, McpMarketplaceItem } from "@roo-code/types"
+import type { MarketplaceItem, MarketplaceItemType, McpMarketplaceItem, OrganizationSettings } from "@roo-code/types"
 import { GlobalFileNames } from "../../shared/globalFileNames"
 import { ensureSettingsDirectoryExists } from "../../utils/globalContext"
 import { t } from "../../i18n"
@@ -32,48 +32,39 @@ export class MarketplaceManager {
 
 	async getMarketplaceItems(): Promise<MarketplaceItemsResponse> {
 		try {
-			let shouldHideMarketplaceMcps = false
-			let orgSettings: ReturnType<typeof CloudService.instance.getOrganizationSettings> | null = null
+			const errors: string[] = []
 
-			// Check organization settings first to determine if we should load MCPs
+			let orgSettings: OrganizationSettings | undefined
 			try {
 				if (CloudService.hasInstance() && CloudService.instance.isAuthenticated()) {
 					orgSettings = CloudService.instance.getOrganizationSettings()
-					if (orgSettings?.hideMarketplaceMcps) {
-						shouldHideMarketplaceMcps = true
-					}
-				}
-			} catch (orgError) {
-				console.warn("Failed to load organization settings:", orgError)
-			}
-
-			const allMarketplaceItems = await this.configLoader.loadAllItems(shouldHideMarketplaceMcps)
-			let organizationMcps: MarketplaceItem[] = []
-			let marketplaceItems = allMarketplaceItems
-			const errors: string[] = []
-
-			try {
-				if (orgSettings) {
-					if (orgSettings.mcps && orgSettings.mcps.length > 0) {
-						organizationMcps = orgSettings.mcps.map(
-							(mcp: McpMarketplaceItem): MarketplaceItem => ({
-								...mcp,
-								type: "mcp" as const,
-							}),
-						)
-					}
-
-					if (orgSettings.hiddenMcps && orgSettings.hiddenMcps.length > 0) {
-						const hiddenMcpIds = new Set(orgSettings.hiddenMcps)
-						marketplaceItems = allMarketplaceItems.filter(
-							(item) => item.type !== "mcp" || !hiddenMcpIds.has(item.id),
-						)
-					}
 				}
 			} catch (orgError) {
 				console.warn("Failed to load organization settings:", orgError)
 				const orgErrorMessage = orgError instanceof Error ? orgError.message : String(orgError)
 				errors.push(`Organization settings: ${orgErrorMessage}`)
+			}
+
+			const allMarketplaceItems = await this.configLoader.loadAllItems(orgSettings?.hideMarketplaceMcps)
+			let organizationMcps: MarketplaceItem[] = []
+			let marketplaceItems = allMarketplaceItems
+
+			if (orgSettings) {
+				if (orgSettings.mcps && orgSettings.mcps.length > 0) {
+					organizationMcps = orgSettings.mcps.map(
+						(mcp: McpMarketplaceItem): MarketplaceItem => ({
+							...mcp,
+							type: "mcp" as const,
+						}),
+					)
+				}
+
+				if (orgSettings.hiddenMcps && orgSettings.hiddenMcps.length > 0) {
+					const hiddenMcpIds = new Set(orgSettings.hiddenMcps)
+					marketplaceItems = allMarketplaceItems.filter(
+						(item) => item.type !== "mcp" || !hiddenMcpIds.has(item.id),
+					)
+				}
 			}
 
 			return {
