@@ -30,6 +30,10 @@ vi.mock("vscode", () => ({
 	workspace: {
 		applyEdit: vi.fn(),
 		onDidOpenTextDocument: vi.fn(() => ({ dispose: vi.fn() })),
+		openTextDocument: vi.fn().mockResolvedValue({
+			isDirty: false,
+			save: vi.fn().mockResolvedValue(undefined),
+		}),
 		textDocuments: [],
 		fs: {
 			stat: vi.fn(),
