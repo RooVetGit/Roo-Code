@@ -1,0 +1,9 @@
+{
+	"connectionLost": "Telemetri bağlantısı kayboldu. Olaylar kuyruğa alınacak ve otomatik olarak yeniden denenecek.",
+	"connectionRestored": "Telemetri bağlantısı geri yüklendi. Kuyruktaki olaylar gönderiliyor.",
+	"queueBuildingUp": "Telemetri kuyruğu birikiyor ({{count}} olay). Roo Code Cloud bağlantınızı kontrol edin.",
+	"queueCleared": "Telemetri kuyruğu temizlendi. Tüm olaylar gönderildi.",
+	"statusMonitor": {
+		"failedToInitialize": "[TelemetryStatusMonitor] Başlatma başarısız: {{error}}"
+	}
+}

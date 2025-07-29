@@ -1,0 +1,9 @@
+{
+	"connectionLost": "Conexão de telemetria perdida. Os eventos serão enfileirados e tentados novamente automaticamente.",
+	"connectionRestored": "Conexão de telemetria restaurada. Os eventos enfileirados estão sendo enviados.",
+	"queueBuildingUp": "A fila de telemetria está se acumulando ({{count}} eventos). Verifique sua conexão com o Roo Code Cloud.",
+	"queueCleared": "Fila de telemetria limpa. Todos os eventos foram enviados.",
+	"statusMonitor": {
+		"failedToInitialize": "[TelemetryStatusMonitor] Falha ao inicializar: {{error}}"
+	}
+}

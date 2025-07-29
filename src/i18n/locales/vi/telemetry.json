@@ -1,0 +1,9 @@
+{
+	"connectionLost": "Kết nối telemetry bị mất. Các sự kiện sẽ được xếp hàng và tự động thử lại.",
+	"connectionRestored": "Kết nối telemetry đã được khôi phục. Các sự kiện trong hàng đợi đang được gửi.",
+	"queueBuildingUp": "Hàng đợi telemetry đang tích tụ ({{count}} sự kiện). Kiểm tra kết nối của bạn tới Roo Code Cloud.",
+	"queueCleared": "Hàng đợi telemetry đã được xóa. Tất cả sự kiện đã được gửi.",
+	"statusMonitor": {
+		"failedToInitialize": "[TelemetryStatusMonitor] Khởi tạo thất bại: {{error}}"
+	}
+}

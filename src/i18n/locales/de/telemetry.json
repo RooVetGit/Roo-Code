@@ -1,0 +1,9 @@
+{
+	"connectionLost": "Telemetrie-Verbindung verloren. Ereignisse werden in die Warteschlange eingereiht und automatisch wiederholt.",
+	"connectionRestored": "Telemetrie-Verbindung wiederhergestellt. Warteschlangen-Ereignisse werden gesendet.",
+	"queueBuildingUp": "Telemetrie-Warteschlange baut sich auf ({{count}} Ereignisse). Überprüfen Sie Ihre Verbindung zu Roo Code Cloud.",
+	"queueCleared": "Telemetrie-Warteschlange geleert. Alle Ereignisse wurden gesendet.",
+	"statusMonitor": {
+		"failedToInitialize": "[TelemetryStatusMonitor] Initialisierung fehlgeschlagen: {{error}}"
+	}
+}

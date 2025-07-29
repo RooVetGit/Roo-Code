@@ -1,0 +1,9 @@
+{
+	"connectionLost": "Połączenie telemetrii utracone. Zdarzenia zostaną umieszczone w kolejce i automatycznie ponowione.",
+	"connectionRestored": "Połączenie telemetrii przywrócone. Zdarzenia z kolejki są wysyłane.",
+	"queueBuildingUp": "Kolejka telemetrii się zapełnia ({{count}} zdarzeń). Sprawdź połączenie z Roo Code Cloud.",
+	"queueCleared": "Kolejka telemetrii wyczyszczona. Wszystkie zdarzenia zostały wysłane.",
+	"statusMonitor": {
+		"failedToInitialize": "[TelemetryStatusMonitor] Inicjalizacja nie powiodła się: {{error}}"
+	}
+}

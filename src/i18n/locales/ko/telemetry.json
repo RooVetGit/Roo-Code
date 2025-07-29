@@ -1,0 +1,9 @@
+{
+	"connectionLost": "텔레메트리 연결이 끊어졌습니다. 이벤트가 대기열에 추가되고 자동으로 재시도됩니다.",
+	"connectionRestored": "텔레메트리 연결이 복원되었습니다. 대기열에 있는 이벤트가 전송되고 있습니다.",
+	"queueBuildingUp": "텔레메트리 대기열이 쌓이고 있습니다 ({{count}}개 이벤트). Roo Code Cloud 연결을 확인하세요.",
+	"queueCleared": "텔레메트리 대기열이 지워졌습니다. 모든 이벤트가 전송되었습니다.",
+	"statusMonitor": {
+		"failedToInitialize": "[TelemetryStatusMonitor] 초기화 실패: {{error}}"
+	}
+}

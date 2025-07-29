@@ -1,0 +1,9 @@
+{
+	"connectionLost": "テレメトリ接続が失われました。イベントはキューに入れられ、自動的に再試行されます。",
+	"connectionRestored": "テレメトリ接続が復元されました。キューに入れられたイベントが送信されています。",
+	"queueBuildingUp": "テレメトリキューが蓄積されています（{{count}}イベント）。Roo Code Cloudへの接続を確認してください。",
+	"queueCleared": "テレメトリキューがクリアされました。すべてのイベントが送信されました。",
+	"statusMonitor": {
+		"failedToInitialize": "[TelemetryStatusMonitor] 初期化に失敗しました: {{error}}"
+	}
+}

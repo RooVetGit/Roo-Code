@@ -1,0 +1,9 @@
+{
+	"connectionLost": "Connexió de telemetria perduda. Els esdeveniments es posaran en cua i es reintentaran automàticament.",
+	"connectionRestored": "Connexió de telemetria restaurada. S'estan enviant els esdeveniments en cua.",
+	"queueBuildingUp": "La cua de telemetria s'està acumulant ({{count}} esdeveniments). Comproveu la vostra connexió a Roo Code Cloud.",
+	"queueCleared": "Cua de telemetria esborrada. Tots els esdeveniments s'han enviat.",
+	"statusMonitor": {
+		"failedToInitialize": "[TelemetryStatusMonitor] Error en inicialitzar: {{error}}"
+	}
+}

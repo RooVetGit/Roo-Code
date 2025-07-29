@@ -1,0 +1,9 @@
+{
+	"connectionLost": "Telemetrie verbinding verloren. Gebeurtenissen worden in de wachtrij geplaatst en automatisch opnieuw geprobeerd.",
+	"connectionRestored": "Telemetrie verbinding hersteld. Gebeurtenissen in de wachtrij worden verzonden.",
+	"queueBuildingUp": "Telemetrie wachtrij loopt op ({{count}} gebeurtenissen). Controleer uw verbinding met Roo Code Cloud.",
+	"queueCleared": "Telemetrie wachtrij geleegd. Alle gebeurtenissen zijn verzonden.",
+	"statusMonitor": {
+		"failedToInitialize": "[TelemetryStatusMonitor] Initialisatie mislukt: {{error}}"
+	}
+}

@@ -1,0 +1,9 @@
+{
+	"connectionLost": "Connexion de télémétrie perdue. Les événements seront mis en file d'attente et retentés automatiquement.",
+	"connectionRestored": "Connexion de télémétrie restaurée. Les événements en file d'attente sont en cours d'envoi.",
+	"queueBuildingUp": "La file d'attente de télémétrie s'accumule ({{count}} événements). Vérifiez votre connexion à Roo Code Cloud.",
+	"queueCleared": "File d'attente de télémétrie vidée. Tous les événements ont été envoyés.",
+	"statusMonitor": {
+		"failedToInitialize": "[TelemetryStatusMonitor] Échec de l'initialisation : {{error}}"
+	}
+}

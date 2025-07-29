@@ -1,0 +1,9 @@
+{
+	"connectionLost": "Connessione telemetria persa. Gli eventi verranno messi in coda e ritentati automaticamente.",
+	"connectionRestored": "Connessione telemetria ripristinata. Gli eventi in coda vengono inviati.",
+	"queueBuildingUp": "La coda telemetria si sta accumulando ({{count}} eventi). Controlla la tua connessione a Roo Code Cloud.",
+	"queueCleared": "Coda telemetria svuotata. Tutti gli eventi sono stati inviati.",
+	"statusMonitor": {
+		"failedToInitialize": "[TelemetryStatusMonitor] Inizializzazione fallita: {{error}}"
+	}
+}

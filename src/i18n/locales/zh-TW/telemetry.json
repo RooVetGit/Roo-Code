@@ -1,0 +1,9 @@
+{
+	"connectionLost": "遙測連接丟失。事件將被排隊並自動重試。",
+	"connectionRestored": "遙測連接已恢復。正在發送排隊的事件。",
+	"queueBuildingUp": "遙測隊列正在積累（{{count}} 個事件）。請檢查您與 Roo Code Cloud 的連接。",
+	"queueCleared": "遙測隊列已清空。所有事件已發送。",
+	"statusMonitor": {
+		"failedToInitialize": "[TelemetryStatusMonitor] 初始化失敗：{{error}}"
+	}
+}

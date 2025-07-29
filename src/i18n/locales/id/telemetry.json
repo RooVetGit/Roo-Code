@@ -1,0 +1,9 @@
+{
+	"connectionLost": "Koneksi telemetri terputus. Event akan diantrekan dan dicoba ulang secara otomatis.",
+	"connectionRestored": "Koneksi telemetri dipulihkan. Event yang diantrekan sedang dikirim.",
+	"queueBuildingUp": "Antrian telemetri sedang menumpuk ({{count}} event). Periksa koneksi Anda ke Roo Code Cloud.",
+	"queueCleared": "Antrian telemetri dibersihkan. Semua event telah dikirim.",
+	"statusMonitor": {
+		"failedToInitialize": "[TelemetryStatusMonitor] Gagal menginisialisasi: {{error}}"
+	}
+}
