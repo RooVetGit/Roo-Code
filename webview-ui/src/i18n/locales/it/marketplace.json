@@ -35,6 +35,10 @@
 		},
 		"none": "Nessuno"
 	},
+	"sections": {
+		"organizationMcps": "MCP dell'organizzazione",
+		"marketplace": "Mercato"
+	},
 	"type-group": {
 		"modes": "Modalità",
 		"mcps": "Server MCP"

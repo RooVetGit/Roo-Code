@@ -35,6 +35,10 @@
 		},
 		"none": "None"
 	},
+	"sections": {
+		"organizationMcps": "Organization MCPs",
+		"marketplace": "Marketplace"
+	},
 	"type-group": {
 		"modes": "Modes",
 		"mcps": "MCP Servers"

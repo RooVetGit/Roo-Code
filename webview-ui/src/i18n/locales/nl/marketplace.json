@@ -35,6 +35,10 @@
 		},
 		"none": "Geen"
 	},
+	"sections": {
+		"organizationMcps": "Organisatie MCP's",
+		"marketplace": "Marktplaats"
+	},
 	"type-group": {
 		"modes": "Modi",
 		"mcps": "MCP-servers"

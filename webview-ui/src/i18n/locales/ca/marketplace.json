@@ -35,6 +35,10 @@
 		},
 		"none": "Cap"
 	},
+	"sections": {
+		"organizationMcps": "MCPs de l'organització",
+		"marketplace": "Mercat"
+	},
 	"type-group": {
 		"modes": "Modes",
 		"mcps": "Servidors MCP"

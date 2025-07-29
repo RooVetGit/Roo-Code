@@ -35,6 +35,10 @@
 		},
 		"none": "Không có"
 	},
+	"sections": {
+		"organizationMcps": "MCP của Tổ chức",
+		"marketplace": "Marketplace"
+	},
 	"type-group": {
 		"modes": "Chế độ",
 		"mcps": "Máy chủ MCP"
