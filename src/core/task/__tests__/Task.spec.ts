@@ -1618,11 +1618,65 @@ describe("Cline", () => {
 			// Start the task
 			await (task as any).startTask("Compare @/src/index.ts with @/src/utils.ts")
 
-			// Verify synthetic assistant message has multiple read_file calls
+			// Verify synthetic assistant message has a single read_file call with multiple files
 			expect(apiMessages[1].role).toBe("assistant")
 			expect(apiMessages[1].content[0].text).toContain("<path>/src/index.ts</path>")
 			expect(apiMessages[1].content[0].text).toContain("<path>/src/utils.ts</path>")
-			expect(apiMessages[1].content[0].text).toMatch(/read_file.*read_file/s) // Multiple read_file blocks
+			// Should have exactly one read_file block containing both files
+			const readFileMatches = apiMessages[1].content[0].text.match(/<read_file>/g)
+			expect(readFileMatches).toHaveLength(1)
+		})
+
+		it("should batch files when more than 5 files are mentioned", async () => {
+			const task = new Task({
+				provider: mockProvider,
+				apiConfiguration: mockApiConfig,
+				task: "Analyze multiple files",
+				startTask: false,
+			})
+
+			// Mock the API conversation history to track messages
+			const apiMessages: any[] = []
+			vi.spyOn(task as any, "addToApiConversationHistory").mockImplementation(async (message) => {
+				apiMessages.push(message)
+			})
+
+			// Mock extractFileMentions to return 7 file mentions (more than 5)
+			const fileMentions = Array.from({ length: 7 }, (_, i) => ({
+				mention: `@file${i + 1}.ts`,
+				path: `file${i + 1}.ts`,
+			}))
+			vi.mocked(extractFileMentions).mockReturnValue(fileMentions)
+			vi.mocked(hasFileMentions).mockReturnValue(true)
+
+			// Mock processUserContentMentions
+			vi.mocked(processUserContentMentions).mockResolvedValue([
+				{
+					type: "text",
+					text: "Analyze multiple files with content",
+				},
+			])
+
+			// Start the task
+			await (task as any).startTask("Analyze multiple files")
+
+			// Verify synthetic assistant message has two read_file calls (5 files + 2 files)
+			expect(apiMessages[1].role).toBe("assistant")
+			const assistantText = apiMessages[1].content[0].text
+
+			// Should have exactly two read_file blocks
+			const readFileMatches = assistantText.match(/<read_file>/g)
+			expect(readFileMatches).toHaveLength(2)
+
+			// First batch should have 5 files
+			const firstBatch = assistantText.match(/<read_file>[\s\S]*?<\/read_file>/)[0]
+			const firstBatchFiles = firstBatch.match(/<path>file\d+\.ts<\/path>/g)
+			expect(firstBatchFiles).toHaveLength(5)
+
+			// Second batch should have 2 files
+			const secondBatch = assistantText.match(/<read_file>[\s\S]*?<\/read_file>/g)[1]
+			const secondBatchFiles = secondBatch.match(/<path>file\d+\.ts<\/path>/g)
+			expect(secondBatchFiles).toHaveLength(2)
 		})
 
 		it("should preserve task history without embedded file content", async () => {

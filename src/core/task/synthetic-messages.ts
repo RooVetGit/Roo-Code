@@ -86,14 +86,28 @@ export function createSyntheticReadFileMessage(filePaths: string[]): string {
 		return ""
 	}
 
-	// Create read_file tool calls for each file
-	const toolCalls = filePaths
-		.map((path) => {
+	// Group files into batches of 5 (the maximum allowed by read_file tool)
+	const MAX_FILES_PER_CALL = 5
+	const fileBatches: string[][] = []
+
+	for (let i = 0; i < filePaths.length; i += MAX_FILES_PER_CALL) {
+		fileBatches.push(filePaths.slice(i, i + MAX_FILES_PER_CALL))
+	}
+
+	// Create read_file tool calls - one per batch
+	const toolCalls = fileBatches
+		.map((batch) => {
+			const fileElements = batch
+				.map(
+					(path) => `  <file>
+    <path>${path}</path>
+  </file>`,
+				)
+				.join("\n")
+
 			return `<read_file>
 <args>
-  <file>
-    <path>${path}</path>
-  </file>
+${fileElements}
 </args>
 </read_file>`
 		})
