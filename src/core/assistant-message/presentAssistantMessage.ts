@@ -580,10 +580,20 @@ export async function presentAssistantMessage(cline: Task) {
 		presentAssistantMessage(cline)
 	}
 }
-async function checkpointSaveAndMark(cline: Task) {
-	if (cline.currentStreamingDidCheckpoint) {
+
+/**
+ * save checkpoint and mark done in the current streaming task.
+ * @param task The Task instance to checkpoint save and mark.
+ * @returns
+ */
+async function checkpointSaveAndMark(task: Task) {
+	if (task.currentStreamingDidCheckpoint) {
 		return
 	}
-	await cline.checkpointSave(true)
-	cline.currentStreamingDidCheckpoint = true
+	try {
+		await task.checkpointSave(true)
+		task.currentStreamingDidCheckpoint = true
+	} catch (error) {
+		console.error(`[Task#presentAssistantMessage] Error saving checkpoint: ${error.message}`, error)
+	}
 }

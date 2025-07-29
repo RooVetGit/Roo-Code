@@ -140,6 +140,7 @@ async function checkGitInstallation(
 			} catch (err) {
 				log("[Task#getCheckpointService] caught error in on('initialize'), disabling checkpoints")
 				cline.enableCheckpoints = false
+				cline.checkpointService = undefined
 			}
 		})
 
@@ -283,19 +284,19 @@ export async function checkpointDiff(cline: Task, { ts, previousCommitHash, comm
 
 	TelemetryService.instance.captureCheckpointDiffed(cline.taskId)
 
-	let from = commitHash
-	let to: string | undefined
+	let prevHash = commitHash
+	let nextHash: string | undefined
 
 	const checkpoints = typeof service.getCheckpoints === "function" ? service.getCheckpoints() : []
 	const idx = checkpoints.indexOf(commitHash)
 	if (idx !== -1 && idx < checkpoints.length - 1) {
-		to = checkpoints[idx + 1]
+		nextHash = checkpoints[idx + 1]
 	} else {
-		to = undefined
+		nextHash = undefined
 	}
 
 	try {
-		const changes = await service.getDiff({ from, to })
+		const changes = await service.getDiff({ from: prevHash, to: nextHash })
 
 		if (!changes?.length) {
 			vscode.window.showInformationMessage("No changes found.")
