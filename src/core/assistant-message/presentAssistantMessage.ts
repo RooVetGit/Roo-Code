@@ -411,9 +411,11 @@ export async function presentAssistantMessage(cline: Task) {
 
 			switch (block.name) {
 				case "write_to_file":
+					await checkpointSaveAndMark(cline)
 					await writeToFileTool(cline, block, askApproval, handleError, pushToolResult, removeClosingTag)
 					break
 				case "update_todo_list":
+					await checkpointSaveAndMark(cline)
 					await updateTodoListTool(cline, block, askApproval, handleError, pushToolResult, removeClosingTag)
 					break
 				case "apply_diff": {
@@ -429,6 +431,7 @@ export async function presentAssistantMessage(cline: Task) {
 						)
 					}
 
+					await checkpointSaveAndMark(cline)
 					if (isMultiFileApplyDiffEnabled) {
 						await applyDiffTool(cline, block, askApproval, handleError, pushToolResult, removeClosingTag)
 					} else {
@@ -444,9 +447,11 @@ export async function presentAssistantMessage(cline: Task) {
 					break
 				}
 				case "insert_content":
+					await checkpointSaveAndMark(cline)
 					await insertContentTool(cline, block, askApproval, handleError, pushToolResult, removeClosingTag)
 					break
 				case "search_and_replace":
+					await checkpointSaveAndMark(cline)
 					await searchAndReplaceTool(cline, block, askApproval, handleError, pushToolResult, removeClosingTag)
 					break
 				case "read_file":
@@ -582,4 +587,11 @@ export async function presentAssistantMessage(cline: Task) {
 	if (cline.presentAssistantMessageHasPendingUpdates) {
 		presentAssistantMessage(cline)
 	}
+}
+async function checkpointSaveAndMark(cline: Task) {
+	if (cline.currentStreamingDidCheckpoint) {
+		return
+	}
+	await cline.checkpointSave(true)
+	cline.currentStreamingDidCheckpoint = true
 }

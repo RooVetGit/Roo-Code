@@ -247,6 +247,7 @@ export class Task extends EventEmitter<ClineEvents> {
 	isWaitingForFirstChunk = false
 	isStreaming = false
 	currentStreamingContentIndex = 0
+	currentStreamingDidCheckpoint = false
 	assistantMessageContent: AssistantMessageContent[] = []
 	presentAssistantMessageLocked = false
 	presentAssistantMessageHasPendingUpdates = false
@@ -1523,6 +1524,7 @@ export class Task extends EventEmitter<ClineEvents> {
 
 			// Reset streaming state.
 			this.currentStreamingContentIndex = 0
+			this.currentStreamingDidCheckpoint = false
 			this.assistantMessageContent = []
 			this.didCompleteReadingStream = false
 			this.userMessageContent = []
