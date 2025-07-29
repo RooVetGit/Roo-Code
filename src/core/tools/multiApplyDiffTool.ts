@@ -528,38 +528,53 @@ ${errorDetails ? `\nTechnical details:\n${errorDetails}\n` : ""}
 				// If single file, handle based on PREVENT_FOCUS_DISRUPTION setting
 				let didApprove = true
 				if (operationsToApprove.length === 1) {
-					if (isPreventFocusDisruptionEnabled) {
-						// Direct approval without showing diff view
-						const diffContents = diffItems.map((item) => item.content).join("\n\n")
-						const operationMessage = JSON.stringify({
-							...sharedMessageProps,
-							diff: diffContents,
-						} satisfies ClineSayTool)
+					// Prepare common data for single file operation
+					const diffContents = diffItems.map((item) => item.content).join("\n\n")
+					const operationMessage = JSON.stringify({
+						...sharedMessageProps,
+						diff: diffContents,
+					} satisfies ClineSayTool)
 
-						let toolProgressStatus
+					let toolProgressStatus
+					if (cline.diffStrategy && cline.diffStrategy.getProgressStatus) {
+						toolProgressStatus = cline.diffStrategy.getProgressStatus(
+							{
+								...block,
+								params: { ...block.params, diff: diffContents },
+							},
+							{ success: true },
+						)
+					}
 
-						if (cline.diffStrategy && cline.diffStrategy.getProgressStatus) {
-							toolProgressStatus = cline.diffStrategy.getProgressStatus(
-								{
-									...block,
-									params: { ...block.params, diff: diffContents },
-								},
-								{ success: true },
-							)
-						}
+					// Set up diff view
+					cline.diffViewProvider.editType = "modify"
 
-						// Check if file is write-protected
-						const isWriteProtected = cline.rooProtectedController?.isWriteProtected(relPath) || false
-						didApprove = await askApproval("tool", operationMessage, toolProgressStatus, isWriteProtected)
-
-						if (!didApprove) {
-							results.push(`Changes to ${relPath} were not approved by user`)
-							continue
-						}
-
-						// Direct file write without diff view or opening the file
-						cline.diffViewProvider.editType = "modify"
+					// Show diff view if focus disruption prevention is disabled
+					if (!isPreventFocusDisruptionEnabled) {
+						await cline.diffViewProvider.open(relPath)
+						await cline.diffViewProvider.update(originalContent!, true)
+						cline.diffViewProvider.scrollToFirstDiff()
+					} else {
+						// For direct save, we still need to set originalContent
 						cline.diffViewProvider.originalContent = await fs.readFile(absolutePath, "utf-8")
+					}
+
+					// Ask for approval (same for both flows)
+					const isWriteProtected = cline.rooProtectedController?.isWriteProtected(relPath) || false
+					didApprove = await askApproval("tool", operationMessage, toolProgressStatus, isWriteProtected)
+
+					if (!didApprove) {
+						// Revert changes if diff view was shown
+						if (!isPreventFocusDisruptionEnabled) {
+							await cline.diffViewProvider.revertChanges()
+						}
+						results.push(`Changes to ${relPath} were not approved by user`)
+						continue
+					}
+
+					// Save the changes
+					if (isPreventFocusDisruptionEnabled) {
+						// Direct file write without diff view or opening the file
 						await cline.diffViewProvider.saveDirectly(
 							relPath,
 							originalContent!,
@@ -568,40 +583,6 @@ ${errorDetails ? `\nTechnical details:\n${errorDetails}\n` : ""}
 							writeDelayMs,
 						)
 					} else {
-						// Show diff view BEFORE asking for approval
-						cline.diffViewProvider.editType = "modify"
-						await cline.diffViewProvider.open(relPath)
-						await cline.diffViewProvider.update(originalContent!, true)
-						cline.diffViewProvider.scrollToFirstDiff()
-
-						const diffContents = diffItems.map((item) => item.content).join("\n\n")
-						const operationMessage = JSON.stringify({
-							...sharedMessageProps,
-							diff: diffContents,
-						} satisfies ClineSayTool)
-
-						let toolProgressStatus
-
-						if (cline.diffStrategy && cline.diffStrategy.getProgressStatus) {
-							toolProgressStatus = cline.diffStrategy.getProgressStatus(
-								{
-									...block,
-									params: { ...block.params, diff: diffContents },
-								},
-								{ success: true },
-							)
-						}
-
-						// Check if file is write-protected
-						const isWriteProtected = cline.rooProtectedController?.isWriteProtected(relPath) || false
-						didApprove = await askApproval("tool", operationMessage, toolProgressStatus, isWriteProtected)
-
-						if (!didApprove) {
-							await cline.diffViewProvider.revertChanges()
-							results.push(`Changes to ${relPath} were not approved by user`)
-							continue
-						}
-
 						// Call saveChanges to update the DiffViewProvider properties
 						await cline.diffViewProvider.saveChanges(diagnosticsEnabled, writeDelayMs)
 					}
