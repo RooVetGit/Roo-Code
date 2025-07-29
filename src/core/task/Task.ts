@@ -1845,6 +1845,62 @@ export class Task extends EventEmitter<ClineEvents> {
 		})()
 	}
 
+	/**
+	 * Checks if an error is a "prompt is too long" error from Anthropic
+	 */
+	private isPromptTooLongError(error: any): boolean {
+		if (!error) return false
+		
+		// Check for the specific error message pattern
+		const errorMessage = error.message || error.error?.message || ""
+		return (
+			errorMessage.includes("prompt is too long") ||
+			errorMessage.includes("tokens > ") ||
+			(error.error?.type === "invalid_request_error" && errorMessage.includes("maximum")) ||
+			error.name === "PromptTooLongError"
+		)
+	}
+
+	/**
+	 * Validates that the conversation doesn't exceed the model's context window
+	 * Returns true if validation passes, false if context needs reduction
+	 */
+	private async validateContextSize(systemPrompt: string, messages: ApiMessage[]): Promise<boolean> {
+		try {
+			const modelInfo = this.api.getModel().info
+			const contextWindow = modelInfo.contextWindow
+			
+			// Estimate total tokens including system prompt
+			let totalTokens = 0
+			
+			// Count system prompt tokens
+			const systemPromptTokens = await this.api.countTokens([{ type: "text", text: systemPrompt }])
+			totalTokens += systemPromptTokens
+			
+			// Count message tokens
+			for (const message of messages) {
+				if (Array.isArray(message.content)) {
+					const messageTokens = await this.api.countTokens(message.content)
+					totalTokens += messageTokens
+				} else if (typeof message.content === "string") {
+					const messageTokens = await this.api.countTokens([{ type: "text", text: message.content }])
+					totalTokens += messageTokens
+				}
+			}
+			
+			// Use the same buffer logic as sliding window
+			const bufferPercentage = contextWindow <= 250_000 ? 0.15 : 0.1
+			const maxAllowedTokens = contextWindow * (1 - bufferPercentage)
+			
+			console.log(`Token validation: ${totalTokens}/${maxAllowedTokens} (${Math.round(totalTokens/contextWindow*100)}% of context window)`)
+			
+			return totalTokens <= maxAllowedTokens
+		} catch (error) {
+			console.warn("Token validation failed, proceeding with request:", error)
+			return true // If validation fails, proceed anyway
+		}
+	}
+
 	public async *attemptApiRequest(retryAttempt: number = 0): ApiStream {
 		const state = await this.providerRef.deref()?.getState()
 		const {
@@ -1963,6 +2019,62 @@ export class Task extends EventEmitter<ClineEvents> {
 			({ role, content }) => ({ role, content }),
 		)
 
+		// Pre-validate context size to catch potential overages before API call
+		const isContextValid = await this.validateContextSize(systemPrompt, cleanConversationHistory)
+		if (!isContextValid) {
+			console.log("Pre-request validation failed: context too large, forcing reduction...")
+			
+			// Force more aggressive context reduction
+			const modelInfo = this.api.getModel().info
+			const maxTokens = getModelMaxOutputTokens({
+				modelId: this.api.getModel().id,
+				model: modelInfo,
+				settings: this.apiConfiguration,
+			})
+			const contextWindow = modelInfo.contextWindow
+			
+			const truncateResult = await truncateConversationIfNeeded({
+				messages: this.apiConversationHistory,
+				totalTokens: contextWindow * 0.8, // Force truncation
+				maxTokens,
+				contextWindow,
+				apiHandler: this.api,
+				autoCondenseContext: true,
+				autoCondenseContextPercent: 40, // More aggressive threshold
+				systemPrompt,
+				taskId: this.taskId,
+				customCondensingPrompt,
+				condensingApiHandler,
+				profileThresholds,
+				currentProfileId: "default",
+			})
+			
+			if (truncateResult.messages !== this.apiConversationHistory) {
+				await this.overwriteApiConversationHistory(truncateResult.messages)
+				
+				// Update the conversation history for this request
+				const updatedMessagesSinceLastSummary = getMessagesSinceLastSummary(this.apiConversationHistory)
+				const updatedCleanConversationHistory = maybeRemoveImageBlocks(updatedMessagesSinceLastSummary, this.api).map(
+					({ role, content }) => ({ role, content }),
+				)
+				
+				// Show user what happened
+				await this.say(
+					"error",
+					"The conversation context was approaching the model's limit. I've automatically reduced the context to prevent errors.",
+					undefined,
+					false,
+					undefined,
+					undefined,
+					{ isNonInteractive: true }
+				)
+				
+				// Use the updated conversation history
+				cleanConversationHistory.length = 0
+				cleanConversationHistory.push(...updatedCleanConversationHistory)
+			}
+		}
+
 		// Check if we've reached the maximum number of auto-approved requests
 		const maxRequests = state?.allowedMaxRequests || Infinity
 
@@ -1993,6 +2105,60 @@ export class Task extends EventEmitter<ClineEvents> {
 			this.isWaitingForFirstChunk = false
 		} catch (error) {
 			this.isWaitingForFirstChunk = false
+			
+			// Check if this is a "prompt is too long" error that needs context reduction
+			if (this.isPromptTooLongError(error)) {
+				console.log("Detected 'prompt is too long' error, attempting context reduction...")
+				
+				// Force context reduction by truncating more aggressively
+				const modelInfo = this.api.getModel().info
+				const maxTokens = getModelMaxOutputTokens({
+					modelId: this.api.getModel().id,
+					model: modelInfo,
+					settings: this.apiConfiguration,
+				})
+				const contextWindow = modelInfo.contextWindow
+				
+				// Use a more aggressive truncation (remove 50% of messages)
+				const truncateResult = await truncateConversationIfNeeded({
+					messages: this.apiConversationHistory,
+					totalTokens: contextWindow * 0.9, // Force truncation by setting high token count
+					maxTokens,
+					contextWindow,
+					apiHandler: this.api,
+					autoCondenseContext: true,
+					autoCondenseContextPercent: 50, // More aggressive threshold
+					systemPrompt: await this.getSystemPrompt(),
+					taskId: this.taskId,
+					customCondensingPrompt: state?.customCondensingPrompt,
+					condensingApiHandler,
+					profileThresholds: {},
+					currentProfileId: "default",
+				})
+				
+				if (truncateResult.messages !== this.apiConversationHistory) {
+					await this.overwriteApiConversationHistory(truncateResult.messages)
+					
+					// Show user what happened
+					await this.say(
+						"error",
+						"The conversation context was too long for the model. I've automatically reduced the context and will retry the request.",
+						undefined,
+						false,
+						undefined,
+						undefined,
+						{ isNonInteractive: true }
+					)
+					
+					// Retry the request with reduced context
+					yield* this.attemptApiRequest(retryAttempt)
+					return
+				} else {
+					// If truncation didn't help, fall through to normal error handling
+					console.warn("Context reduction did not help with prompt too long error")
+				}
+			}
+			
 			// note that this api_req_failed ask is unique in that we only present this option if the api hasn't streamed any content yet (ie it fails on the first chunk due), as it would allow them to hit a retry button. However if the api failed mid-stream, it could be in any arbitrary state where some tools may have executed, so that error is handled differently and requires cancelling the task entirely.
 			if (autoApprovalEnabled && alwaysApproveResubmit) {
 				let errorMsg
