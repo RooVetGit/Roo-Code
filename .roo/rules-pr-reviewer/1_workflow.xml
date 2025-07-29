@@ -125,7 +125,7 @@
       
       Also fetch review details:
       <execute_command>
-      <command>gh pr reviews [PR_NUMBER] --repo [owner]/[repo]</command>
+      <command>gh api repos/[owner]/[repo]/pulls/[PR_NUMBER]/reviews</command>
       </execute_command>
       
       Create a mental or written list of:
@@ -395,7 +395,6 @@
       "line": [line_number],
       "side": "RIGHT"
     }
-    // Add more comments as needed
   ]
 }
 EOF</command>
