@@ -238,7 +238,7 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 			codebaseIndexSearchMaxResults: undefined,
 			codebaseIndexSearchMinScore: undefined,
 		},
-		codebaseIndexModels: { ollama: {}, openai: {} },
+		codebaseIndexModels: { ollama: {}, openai: {}, doubao: {} },
 		alwaysAllowUpdateTodoList: true,
 		includeDiagnosticMessages: true,
 		maxDiagnosticMessages: 50,
@@ -515,5 +515,5 @@ export const useExtensionState = () => {
 		throw new Error("useExtensionState must be used within an ExtensionStateContextProvider")
 	}
 
-	return context
+	return context as ExtensionStateContextType
 }
