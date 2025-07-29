@@ -414,15 +414,7 @@ export class QdrantVectorStore implements IVectorStore {
 	 * @param filePath Path of the file to delete points for
 	 */
 	async deletePointsByFilePath(filePath: string): Promise<void> {
-		try {
-			return await this.deletePointsByMultipleFilePaths([filePath])
-		} catch (error) {
-			// Error is already handled in deletePointsByMultipleFilePaths
-			// This is just for consistency in case the method is called directly
-			console.error(`[QdrantVectorStore] Error in deletePointsByFilePath for ${filePath}:`, error)
-			// Re-throw to maintain the interface contract
-			throw error
-		}
+		return this.deletePointsByMultipleFilePaths([filePath])
 	}
 
 	async deletePointsByMultipleFilePaths(filePaths: string[]): Promise<void> {
@@ -464,11 +456,6 @@ export class QdrantVectorStore implements IVectorStore {
 				return { must: mustConditions }
 			})
 
-			// Log the paths being deleted for debugging
-			console.log(
-				`[QdrantVectorStore] Attempting to delete points for ${filePaths.length} file(s) from collection "${this.collectionName}"`,
-			)
-
 			// Use 'should' to match any of the file paths (OR condition)
 			const filter = filters.length === 1 ? filters[0] : { should: filters }
 
@@ -476,8 +463,6 @@ export class QdrantVectorStore implements IVectorStore {
 				filter,
 				wait: true,
 			})
-
-			console.log(`[QdrantVectorStore] Successfully deleted points for ${filePaths.length} file(s)`)
 		} catch (error: any) {
 			// Extract more detailed error information
 			const errorMessage = error?.message || String(error)
