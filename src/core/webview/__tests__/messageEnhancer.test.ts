@@ -259,23 +259,46 @@ describe("MessageEnhancer", () => {
 	describe("captureTelemetry", () => {
 		it("should capture telemetry when TelemetryService is available", () => {
 			const mockTaskId = "task-123"
-			MessageEnhancer.captureTelemetry(mockTaskId)
+			const mockCaptureEvent = vi.fn()
+			vi.mocked(TelemetryService.instance).captureEvent = mockCaptureEvent
+
+			MessageEnhancer.captureTelemetry(mockTaskId, true)
 
 			expect(TelemetryService.hasInstance).toHaveBeenCalled()
-			expect(TelemetryService.instance.capturePromptEnhanced).toHaveBeenCalledWith(mockTaskId)
+			expect(mockCaptureEvent).toHaveBeenCalledWith(expect.any(String), {
+				taskId: mockTaskId,
+				includeTaskHistory: true,
+			})
 		})
 
 		it("should handle missing TelemetryService gracefully", () => {
 			vi.mocked(TelemetryService).hasInstance = vi.fn().mockReturnValue(false)
 
 			// Should not throw
-			expect(() => MessageEnhancer.captureTelemetry("task-123")).not.toThrow()
+			expect(() => MessageEnhancer.captureTelemetry("task-123", true)).not.toThrow()
 		})
 
 		it("should work without task ID", () => {
-			MessageEnhancer.captureTelemetry()
+			const mockCaptureEvent = vi.fn()
+			vi.mocked(TelemetryService.instance).captureEvent = mockCaptureEvent
 
-			expect(TelemetryService.instance.capturePromptEnhanced).toHaveBeenCalledWith(undefined)
+			MessageEnhancer.captureTelemetry(undefined, false)
+
+			expect(mockCaptureEvent).toHaveBeenCalledWith(expect.any(String), {
+				includeTaskHistory: false,
+			})
+		})
+
+		it("should default includeTaskHistory to false when not provided", () => {
+			const mockCaptureEvent = vi.fn()
+			vi.mocked(TelemetryService.instance).captureEvent = mockCaptureEvent
+
+			MessageEnhancer.captureTelemetry("task-123")
+
+			expect(mockCaptureEvent).toHaveBeenCalledWith(expect.any(String), {
+				taskId: "task-123",
+				includeTaskHistory: false,
+			})
 		})
 	})
 
@@ -298,6 +321,45 @@ describe("MessageEnhancer", () => {
 			expect(history).toContain("User: User message 2")
 			expect(history).not.toContain("Tool use")
 			expect(history.split("\n").length).toBe(3) // Only 3 valid messages
+		})
+
+		it("should handle malformed messages gracefully", () => {
+			const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {})
+
+			// Create messages that will cause errors when accessed
+			const malformedMessages = [
+				null,
+				undefined,
+				{ type: "ask" }, // Missing required properties
+				"not an object",
+			] as any
+
+			// Access private method through any type assertion for testing
+			const history = (MessageEnhancer as any).extractTaskHistory(malformedMessages)
+
+			// Should return empty string and log error
+			expect(history).toBe("")
+			expect(consoleSpy).toHaveBeenCalledWith("Failed to extract task history:", expect.any(Error))
+
+			consoleSpy.mockRestore()
+		})
+
+		it("should handle messages with circular references", () => {
+			const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {})
+
+			// Create a message with circular reference
+			const circularMessage: any = { type: "ask", text: "Test" }
+			circularMessage.self = circularMessage
+
+			const messages = [circularMessage] as ClineMessage[]
+
+			// Access private method through any type assertion for testing
+			const history = (MessageEnhancer as any).extractTaskHistory(messages)
+
+			// Should handle gracefully
+			expect(history).toBe("User: Test")
+
+			consoleSpy.mockRestore()
 		})
 	})
 })

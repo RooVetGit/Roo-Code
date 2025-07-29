@@ -1,4 +1,4 @@
-import { ProviderSettings, ClineMessage, GlobalState } from "@roo-code/types"
+import { ProviderSettings, ClineMessage, GlobalState, TelemetryEventName } from "@roo-code/types"
 import { TelemetryService } from "@roo-code/telemetry"
 import { supportPrompt } from "../../shared/support-prompt"
 import { singleCompletionHandler } from "../../utils/single-completion-handler"
@@ -97,36 +97,47 @@ export class MessageEnhancer {
 	 * @returns Formatted task history string
 	 */
 	private static extractTaskHistory(messages: ClineMessage[]): string {
-		const relevantMessages = messages
-			.filter((msg) => {
-				// Include user messages (type: "ask" with text) and assistant messages (type: "say" with say: "text")
-				if (msg.type === "ask" && msg.text) {
-					return true
-				}
-				if (msg.type === "say" && msg.say === "text" && msg.text) {
-					return true
-				}
-				return false
-			})
-			.slice(-10) // Limit to last 10 messages to avoid context explosion
+		try {
+			const relevantMessages = messages
+				.filter((msg) => {
+					// Include user messages (type: "ask" with text) and assistant messages (type: "say" with say: "text")
+					if (msg.type === "ask" && msg.text) {
+						return true
+					}
+					if (msg.type === "say" && msg.say === "text" && msg.text) {
+						return true
+					}
+					return false
+				})
+				.slice(-10) // Limit to last 10 messages to avoid context explosion
 
-		return relevantMessages
-			.map((msg) => {
-				const role = msg.type === "ask" ? "User" : "Assistant"
-				const content = msg.text || ""
-				// Truncate long messages
-				return `${role}: ${content.slice(0, 500)}${content.length > 500 ? "..." : ""}`
-			})
-			.join("\n")
+			return relevantMessages
+				.map((msg) => {
+					const role = msg.type === "ask" ? "User" : "Assistant"
+					const content = msg.text || ""
+					// Truncate long messages
+					return `${role}: ${content.slice(0, 500)}${content.length > 500 ? "..." : ""}`
+				})
+				.join("\n")
+		} catch (error) {
+			// Log error but don't fail the enhancement
+			console.error("Failed to extract task history:", error)
+			return ""
+		}
 	}
 
 	/**
 	 * Captures telemetry for prompt enhancement
 	 * @param taskId Optional task ID for telemetry tracking
+	 * @param includeTaskHistory Whether task history was included in the enhancement
 	 */
-	static captureTelemetry(taskId?: string): void {
+	static captureTelemetry(taskId?: string, includeTaskHistory?: boolean): void {
 		if (TelemetryService.hasInstance()) {
-			TelemetryService.instance.capturePromptEnhanced(taskId)
+			// Use captureEvent directly to include the includeTaskHistory property
+			TelemetryService.instance.captureEvent(TelemetryEventName.PROMPT_ENHANCED, {
+				...(taskId && { taskId }),
+				includeTaskHistory: includeTaskHistory ?? false,
+			})
 		}
 	}
 }

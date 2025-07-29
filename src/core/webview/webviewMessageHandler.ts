@@ -1340,8 +1340,13 @@ export const webviewMessageHandler = async (
 			if (message.text) {
 				try {
 					const state = await provider.getState()
-					const { apiConfiguration, customSupportPrompts, listApiConfigMeta, enhancementApiConfigId } = state
-					const includeTaskHistoryInEnhance = (state as any).includeTaskHistoryInEnhance
+					const {
+						apiConfiguration,
+						customSupportPrompts,
+						listApiConfigMeta,
+						enhancementApiConfigId,
+						includeTaskHistoryInEnhance,
+					} = state
 
 					const currentCline = provider.getCurrentCline()
 					const result = await MessageEnhancer.enhanceMessage({
@@ -1357,7 +1362,7 @@ export const webviewMessageHandler = async (
 
 					if (result.success && result.enhancedText) {
 						// Capture telemetry for prompt enhancement
-						MessageEnhancer.captureTelemetry(currentCline?.taskId)
+						MessageEnhancer.captureTelemetry(currentCline?.taskId, includeTaskHistoryInEnhance)
 						await provider.postMessageToWebview({ type: "enhancedPrompt", text: result.enhancedText })
 					} else {
 						throw new Error(result.error || "Unknown error")
