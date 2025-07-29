@@ -1311,6 +1311,10 @@ export const webviewMessageHandler = async (
 			await updateGlobalState("enhancementApiConfigId", message.text)
 			await provider.postStateToWebview()
 			break
+		case "includeTaskHistoryInEnhance":
+			await updateGlobalState("includeTaskHistoryInEnhance", message.bool ?? false)
+			await provider.postStateToWebview()
+			break
 		case "condensingApiConfigId":
 			await updateGlobalState("condensingApiConfigId", message.text)
 			await provider.postStateToWebview()
@@ -1335,8 +1339,9 @@ export const webviewMessageHandler = async (
 		case "enhancePrompt":
 			if (message.text) {
 				try {
-					const { apiConfiguration, customSupportPrompts, listApiConfigMeta, enhancementApiConfigId } =
-						await provider.getState()
+					const state = await provider.getState()
+					const { apiConfiguration, customSupportPrompts, listApiConfigMeta, enhancementApiConfigId } = state
+					const includeTaskHistoryInEnhance = (state as any).includeTaskHistoryInEnhance
 
 					// Try to get enhancement config first, fall back to current config.
 					let configToUse: ProviderSettings = apiConfiguration
@@ -1351,9 +1356,38 @@ export const webviewMessageHandler = async (
 						}
 					}
 
+					let promptToEnhance = message.text
+
+					// Include task history if enabled
+					if (includeTaskHistoryInEnhance && provider.getCurrentCline()) {
+						const currentCline = provider.getCurrentCline()!
+						const taskHistory = currentCline.clineMessages
+							.filter((msg) => {
+								// Include user messages (type: "ask" with text) and assistant messages (type: "say" with say: "text")
+								if (msg.type === "ask" && msg.text) {
+									return true
+								}
+								if (msg.type === "say" && msg.say === "text" && msg.text) {
+									return true
+								}
+								return false
+							})
+							.slice(-10) // Limit to last 10 messages to avoid context explosion
+							.map((msg) => {
+								const role = msg.type === "ask" ? "User" : "Assistant"
+								const content = msg.text || ""
+								return `${role}: ${content.slice(0, 500)}${content.length > 500 ? "..." : ""}` // Truncate long messages
+							})
+							.join("\n")
+
+						if (taskHistory) {
+							promptToEnhance = `${message.text}\n\nUse the following previous conversation context as needed:\n${taskHistory}`
+						}
+					}
+
 					const enhancedPrompt = await singleCompletionHandler(
 						configToUse,
-						supportPrompt.create("ENHANCE", { userInput: message.text }, customSupportPrompts),
+						supportPrompt.create("ENHANCE", { userInput: promptToEnhance }, customSupportPrompts),
 					)
 
 					// Capture telemetry for prompt enhancement.
