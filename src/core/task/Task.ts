@@ -1,5 +1,6 @@
 import * as path from "path"
 import * as vscode from "vscode"
+import * as fs from "fs/promises"
 import os from "os"
 import crypto from "crypto"
 import EventEmitter from "events"
@@ -88,7 +89,7 @@ import {
 	checkpointDiff,
 } from "../checkpoints"
 import { processUserContentMentions } from "../mentions/processUserContentMentions"
-import { ApiMessage } from "../task-persistence/apiMessages"
+import { ApiMessage, FileMetadata, ToolMetadata } from "../task-persistence/apiMessages"
 import { getMessagesSinceLastSummary, summarizeConversation } from "../condense"
 import { maybeRemoveImageBlocks } from "../../api/transform/image-cleaning"
 import { restoreTodoListForTask } from "../tools/updateTodoListTool"
@@ -199,6 +200,13 @@ export class Task extends EventEmitter<ClineEvents> {
 	enableCheckpoints: boolean
 	checkpointService?: RepoPerTaskCheckpointService
 	checkpointServiceInitializing = false
+
+	// File modification time tracking
+	mtimeInitialMap: Map<string, number> = new Map()
+
+	// Pending file metadata to be attached to next API message
+	pendingFileMetadata?: FileMetadata[]
+	pendingToolMetadata?: ToolMetadata
 
 	// Streaming
 	isWaitingForFirstChunk = false
@@ -330,7 +338,24 @@ export class Task extends EventEmitter<ClineEvents> {
 	}
 
 	private async addToApiConversationHistory(message: Anthropic.MessageParam) {
-		const messageWithTs = { ...message, ts: Date.now() }
+		const messageWithTs: ApiMessage = {
+			...message,
+			ts: Date.now(),
+		}
+
+		// Attach pending file metadata and tool metadata if they exist
+		if (this.pendingFileMetadata && this.pendingFileMetadata.length > 0) {
+			messageWithTs.files = this.pendingFileMetadata
+			// Clear pending metadata after attaching it
+			this.pendingFileMetadata = undefined
+		}
+
+		if (this.pendingToolMetadata) {
+			messageWithTs.tool = this.pendingToolMetadata
+			// Clear pending tool metadata after attaching it
+			this.pendingToolMetadata = undefined
+		}
+
 		this.apiConversationHistory.push(messageWithTs)
 		await this.saveApiConversationHistory()
 	}
@@ -1949,6 +1974,45 @@ export class Task extends EventEmitter<ClineEvents> {
 		if (error) {
 			this.emit("taskToolFailed", this.taskId, toolName, error)
 		}
+	}
+
+	// File modification time tracking methods
+
+	/**
+	 * Ensures initial mtime is captured for a file before tool execution.
+	 * Only captures once per tool execution cycle.
+	 */
+	public async ensureInitialMtime(filePath: string): Promise<void> {
+		if (this.mtimeInitialMap.has(filePath)) {
+			console.log(`[DEBUG] ${filePath}: mtime already captured=${this.mtimeInitialMap.get(filePath)}`)
+			return // Already captured for this tool execution
+		}
+
+		try {
+			const stats = await fs.stat(path.resolve(this.cwd, filePath))
+			const capturedMtime = Math.floor(stats.mtimeMs)
+			this.mtimeInitialMap.set(filePath, capturedMtime)
+			console.log(`[DEBUG] ${filePath}: captured initial mtime=${capturedMtime}`)
+		} catch (error) {
+			// File doesn't exist, set to 0 to indicate non-existence
+			this.mtimeInitialMap.set(filePath, 0)
+			console.log(`[DEBUG] ${filePath}: file doesn't exist, set mtime=0`)
+		}
+	}
+
+	/**
+	 * Clears the mtime map after tool completion.
+	 * Should be called after every tool execution.
+	 */
+	public clearMtimeMap(): void {
+		this.mtimeInitialMap.clear()
+	}
+
+	/**
+	 * Gets the initial mtime for a file that was captured at tool start.
+	 */
+	public getInitialMtime(filePath: string): number | undefined {
+		return this.mtimeInitialMap.get(filePath)
 	}
 
 	// Getters

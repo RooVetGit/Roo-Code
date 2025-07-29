@@ -11,6 +11,8 @@ import { RecordSource } from "../context-tracking/FileContextTrackerTypes"
 import { fileExistsAtPath } from "../../utils/fs"
 import { insertGroups } from "../diff/insert-groups"
 import { DEFAULT_WRITE_DELAY_MS } from "@roo-code/types"
+import { calculateFileMetadata } from "../file-history/fileHistoryUtils"
+import { FileMetadata } from "../task-persistence/apiMessages"
 
 export async function insertContentTool(
 	cline: Task,
@@ -173,6 +175,20 @@ export async function insertContentTool(
 		const message = await cline.diffViewProvider.pushToolWriteResult(cline, cline.cwd, !fileExists)
 
 		pushToolResult(message)
+
+		// Calculate and set pending file metadata for the insert operation
+		try {
+			const fileMetadata = await calculateFileMetadata(cline, relPath, "write")
+
+			// Set pending metadata to be attached to next API message
+			cline.pendingFileMetadata = [fileMetadata]
+			cline.pendingToolMetadata = {
+				name: "insert_content",
+				operation: "write",
+			}
+		} catch (error) {
+			console.warn(`[insertContentTool] Failed to calculate file metadata for ${relPath}:`, error)
+		}
 
 		await cline.diffViewProvider.reset()
 	} catch (error) {

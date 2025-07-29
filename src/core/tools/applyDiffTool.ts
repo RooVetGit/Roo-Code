@@ -12,6 +12,8 @@ import { formatResponse } from "../prompts/responses"
 import { fileExistsAtPath } from "../../utils/fs"
 import { RecordSource } from "../context-tracking/FileContextTrackerTypes"
 import { unescapeHtmlEntities } from "../../utils/text-normalization"
+import { calculateFileMetadata } from "../file-history/fileHistoryUtils"
+import { FileMetadata } from "../task-persistence/apiMessages"
 
 export async function applyDiffToolLegacy(
 	cline: Task,
@@ -204,6 +206,20 @@ export async function applyDiffToolLegacy(
 				pushToolResult(partFailHint + message + singleBlockNotice)
 			} else {
 				pushToolResult(message + singleBlockNotice)
+			}
+
+			// Calculate and set pending file metadata for the diff operation
+			try {
+				const fileMetadata = await calculateFileMetadata(cline, relPath, "write")
+
+				// Set pending metadata to be attached to next API message
+				cline.pendingFileMetadata = [fileMetadata]
+				cline.pendingToolMetadata = {
+					name: "apply_diff",
+					operation: "write",
+				}
+			} catch (error) {
+				console.warn(`[applyDiffTool] Failed to calculate file metadata for ${relPath}:`, error)
 			}
 
 			await cline.diffViewProvider.reset()

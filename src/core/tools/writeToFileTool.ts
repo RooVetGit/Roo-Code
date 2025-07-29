@@ -14,6 +14,8 @@ import { isPathOutsideWorkspace } from "../../utils/pathUtils"
 import { detectCodeOmission } from "../../integrations/editor/detect-omission"
 import { unescapeHtmlEntities } from "../../utils/text-normalization"
 import { DEFAULT_WRITE_DELAY_MS } from "@roo-code/types"
+import { calculateFileMetadata } from "../file-history/fileHistoryUtils"
+import { FileMetadata } from "../task-persistence/apiMessages"
 
 export async function writeToFileTool(
 	cline: Task,
@@ -231,6 +233,20 @@ export async function writeToFileTool(
 			const message = await cline.diffViewProvider.pushToolWriteResult(cline, cline.cwd, !fileExists)
 
 			pushToolResult(message)
+
+			// Calculate and set pending file metadata for the write operation
+			try {
+				const fileMetadata = await calculateFileMetadata(cline, relPath, "write")
+
+				// Set pending metadata to be attached to next API message
+				cline.pendingFileMetadata = [fileMetadata]
+				cline.pendingToolMetadata = {
+					name: "write_to_file",
+					operation: "write",
+				}
+			} catch (error) {
+				console.warn(`[writeToFileTool] Failed to calculate file metadata for ${relPath}:`, error)
+			}
 
 			await cline.diffViewProvider.reset()
 
