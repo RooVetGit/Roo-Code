@@ -444,11 +444,15 @@ export class QdrantVectorStore implements IVectorStore {
 
 			// Build filters using pathSegments to match the indexed fields
 			const filters = filePaths.map((filePath) => {
-				const absolutePath = path.resolve(workspaceRoot, filePath)
-				const normalizedPath = path.normalize(absolutePath)
+				// IMPORTANT: Use the relative path to match what's stored in upsertPoints
+				// upsertPoints stores the relative filePath, not the absolute path
+				const relativePath = path.isAbsolute(filePath) ? path.relative(workspaceRoot, filePath) : filePath
+
+				// Normalize the relative path
+				const normalizedRelativePath = path.normalize(relativePath)
 
 				// Split the path into segments like we do in upsertPoints
-				const segments = normalizedPath.split(path.sep).filter(Boolean)
+				const segments = normalizedRelativePath.split(path.sep).filter(Boolean)
 
 				// Create a filter that matches all segments of the path
 				// This ensures we only delete points that match the exact file path
@@ -490,16 +494,6 @@ export class QdrantVectorStore implements IVectorStore {
 				samplePaths: filePaths.slice(0, 3),
 			})
 
-			// Check if this is a "bad request" error that we can handle gracefully
-			if (errorStatus === 400 || errorMessage.toLowerCase().includes("bad request")) {
-				console.warn(
-					`[QdrantVectorStore] Received bad request error during deletion. This might indicate the points don't exist or the filter is invalid. Continuing without throwing...`,
-				)
-				// Don't throw the error - allow the indexing process to continue
-				return
-			}
-
-			// For other errors, still throw them
 			throw error
 		}
 	}

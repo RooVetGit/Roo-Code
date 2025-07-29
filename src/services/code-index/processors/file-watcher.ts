@@ -216,35 +216,16 @@ export class FileWatcher implements IFileWatcher {
 					errorStatus: errorStatus,
 				})
 
-				// Check if this is a bad request error that we should handle gracefully
-				if (errorStatus === 400 || errorMessage.toLowerCase().includes("bad request")) {
-					console.warn(
-						`[FileWatcher] Received bad request error during deletion for ${allPathsToClearFromDB.size} files. Treating as successful deletion...`,
-					)
-					// Treat as successful deletion - remove from cache and mark as success
-					for (const path of pathsToExplicitlyDelete) {
-						this.cacheManager.deleteHash(path)
-						batchResults.push({ path, status: "success" })
-						processedCountInBatch++
-						this._onBatchProgressUpdate.fire({
-							processedInBatch: processedCountInBatch,
-							totalInBatch: totalFilesInBatch,
-							currentFile: path,
-						})
-					}
-				} else {
-					// For other errors, mark as error but don't set overallBatchError
-					// This allows the rest of the batch to continue processing
-					overallBatchError = error as Error
-					for (const path of pathsToExplicitlyDelete) {
-						batchResults.push({ path, status: "error", error: error as Error })
-						processedCountInBatch++
-						this._onBatchProgressUpdate.fire({
-							processedInBatch: processedCountInBatch,
-							totalInBatch: totalFilesInBatch,
-							currentFile: path,
-						})
-					}
+				// Mark all paths as error
+				overallBatchError = error as Error
+				for (const path of pathsToExplicitlyDelete) {
+					batchResults.push({ path, status: "error", error: error as Error })
+					processedCountInBatch++
+					this._onBatchProgressUpdate.fire({
+						processedInBatch: processedCountInBatch,
+						totalInBatch: totalFilesInBatch,
+						currentFile: path,
+					})
 				}
 			}
 		}

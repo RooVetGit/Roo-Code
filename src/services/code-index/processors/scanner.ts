@@ -297,15 +297,8 @@ export class DirectoryScanner implements IDirectoryScanner {
 							errorStatus: errorStatus,
 						})
 
-						// Check if this is a bad request error that we should handle gracefully
-						if (errorStatus === 400 || errorMessage.toLowerCase().includes("bad request")) {
-							console.warn(
-								`[DirectoryScanner] Received bad request error when deleting ${cachedFilePath}. File may not exist in vector store. Removing from cache anyway...`,
-							)
-							// Still remove from cache even if vector store deletion failed
-							await this.cacheManager.deleteHash(cachedFilePath)
-						} else if (onError) {
-							// For other errors, report to error handler but don't throw
+						if (onError) {
+							// Report error to error handler
 							onError(
 								error instanceof Error
 									? new Error(
@@ -318,7 +311,8 @@ export class DirectoryScanner implements IDirectoryScanner {
 										),
 							)
 						}
-						// Don't re-throw - allow scanning to continue
+						// Re-throw to maintain consistent error handling
+						throw error
 					}
 				}
 			}
@@ -382,19 +376,11 @@ export class DirectoryScanner implements IDirectoryScanner {
 							errorStatus: errorStatus,
 						})
 
-						// Check if this is a bad request error that we should handle gracefully
-						if (errorStatus === 400 || errorMessage.toLowerCase().includes("bad request")) {
-							console.warn(
-								`[DirectoryScanner] Received bad request error during deletion. Continuing with upsert operation...`,
-							)
-							// Don't throw - continue with the upsert operation
-						} else {
-							// For other errors, re-throw with workspace context
-							throw new Error(
-								`Failed to delete points for ${uniqueFilePaths.length} files. Workspace: ${scanWorkspace}. ${errorMessage}`,
-								{ cause: deleteError },
-							)
-						}
+						// Re-throw with workspace context
+						throw new Error(
+							`Failed to delete points for ${uniqueFilePaths.length} files. Workspace: ${scanWorkspace}. ${errorMessage}`,
+							{ cause: deleteError },
+						)
 					}
 				}
 				// --- End Deletion Step ---
