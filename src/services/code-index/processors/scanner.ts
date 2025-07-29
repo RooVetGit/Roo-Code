@@ -311,8 +311,8 @@ export class DirectoryScanner implements IDirectoryScanner {
 										),
 							)
 						}
-						// Re-throw to maintain consistent error handling
-						throw error
+						// Log error and continue processing instead of re-throwing
+						console.error(`Failed to delete points for removed file: ${cachedFilePath}`, error)
 					}
 				}
 			}
