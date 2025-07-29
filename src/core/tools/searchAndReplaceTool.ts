@@ -210,40 +210,46 @@ export async function searchAndReplaceTool(
 			EXPERIMENT_IDS.PREVENT_FOCUS_DISRUPTION,
 		)
 
-		// Request user approval for changes
-		const completeMessage = JSON.stringify({
-			...sharedMessageProps,
-			diff,
-			isProtected: isWriteProtected,
-		} satisfies ClineSayTool)
-		const didApprove = await cline
-			.ask("tool", completeMessage, isWriteProtected)
-			.then((response) => response.response === "yesButtonClicked")
-
-		if (!didApprove) {
-			if (!isPreventFocusDisruptionEnabled) {
-				await cline.diffViewProvider.revertChanges()
-			}
-			pushToolResult("Changes were rejected by the user.")
-			await cline.diffViewProvider.reset()
-			return
-		}
-
 		if (isPreventFocusDisruptionEnabled) {
+			// Direct approval without showing diff view
+			const completeMessage = JSON.stringify({
+				...sharedMessageProps,
+				diff,
+				isProtected: isWriteProtected,
+			} satisfies ClineSayTool)
+			const didApprove = await cline
+				.ask("tool", completeMessage, isWriteProtected)
+				.then((response) => response.response === "yesButtonClicked")
+
+			if (!didApprove) {
+				pushToolResult("Changes were rejected by the user.")
+				await cline.diffViewProvider.reset()
+				return
+			}
+
 			// Direct file write without diff view or opening the file
 			await cline.diffViewProvider.saveDirectly(validRelPath, newContent, false, diagnosticsEnabled, writeDelayMs)
 		} else {
-			// Original behavior with diff view
-			// Show changes in diff view
-			if (!cline.diffViewProvider.isEditing) {
-				await cline.ask("tool", JSON.stringify(sharedMessageProps), true).catch(() => {})
-				await cline.diffViewProvider.open(validRelPath)
-				await cline.diffViewProvider.update(fileContent, false)
-				cline.diffViewProvider.scrollToFirstDiff()
-				await delay(200)
-			}
-
+			// Show diff view BEFORE asking for approval
+			await cline.diffViewProvider.open(validRelPath)
 			await cline.diffViewProvider.update(newContent, true)
+			cline.diffViewProvider.scrollToFirstDiff()
+
+			const completeMessage = JSON.stringify({
+				...sharedMessageProps,
+				diff,
+				isProtected: isWriteProtected,
+			} satisfies ClineSayTool)
+			const didApprove = await cline
+				.ask("tool", completeMessage, isWriteProtected)
+				.then((response) => response.response === "yesButtonClicked")
+
+			if (!didApprove) {
+				await cline.diffViewProvider.revertChanges()
+				pushToolResult("Changes were rejected by the user.")
+				await cline.diffViewProvider.reset()
+				return
+			}
 
 			// Call saveChanges to update the DiffViewProvider properties
 			await cline.diffViewProvider.saveChanges(diagnosticsEnabled, writeDelayMs)
