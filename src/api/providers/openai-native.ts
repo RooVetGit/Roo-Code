@@ -125,55 +125,6 @@ export class OpenAiNativeHandler extends BaseProvider implements SingleCompletio
 		yield* this.handleStreamResponse(stream, model)
 	}
 
-	/**
-	 * Makes a request to the OpenAI Responses API endpoint
-	 * Used by codex-mini-latest model which requires the v1/responses endpoint
-	 */
-	private async makeResponsesApiRequest(
-		modelId: string,
-		instructions: string,
-		input: string,
-		stream: boolean = true,
-	): Promise<Response> {
-		// Note: Using fetch() instead of OpenAI client because the OpenAI SDK v5.0.0
-		// does not support the v1/responses endpoint used by codex-mini-latest model.
-		// This is a special endpoint that requires a different request/response format.
-		const apiKey = this.options.openAiNativeApiKey ?? "not-provided"
-		const baseURL = this.options.openAiNativeBaseUrl ?? "https://api.openai.com/v1"
-
-		try {
-			const response = await fetch(`${baseURL}/responses`, {
-				method: "POST",
-				headers: {
-					"Content-Type": "application/json",
-					Authorization: `Bearer ${apiKey}`,
-				},
-				body: JSON.stringify({
-					model: modelId,
-					instructions: instructions,
-					input: input,
-					stream: stream,
-				}),
-			})
-
-			if (!response.ok) {
-				const errorText = await response.text()
-				throw new Error(`OpenAI Responses API error: ${response.status} ${response.statusText} - ${errorText}`)
-			}
-
-			return response
-		} catch (error) {
-			// Handle network failures and other errors
-			if (error instanceof TypeError && error.message.includes("fetch")) {
-				throw new Error(`Network error while calling OpenAI Responses API: ${error.message}`)
-			}
-			if (error instanceof Error) {
-				throw new Error(`OpenAI Responses API error: ${error.message}`)
-			}
-			throw new Error("Unknown error occurred while calling OpenAI Responses API")
-		}
-	}
-
 	private async *handleCodexMiniMessage(
 		model: OpenAiNativeModel,
 		systemPrompt: string,
@@ -182,9 +133,22 @@ export class OpenAiNativeHandler extends BaseProvider implements SingleCompletio
 		// Convert messages to a single input string
 		const input = this.convertMessagesToInput(messages)
 
-		// Make API call using shared helper
-		const response = await this.makeResponsesApiRequest(model.id, systemPrompt, input, true)
-		yield* this.handleResponsesStreamResponse(response.body, model, systemPrompt, input)
+		try {
+			// Use the OpenAI SDK's responses endpoint
+			const stream = await this.client.responses.create({
+				model: model.id,
+				instructions: systemPrompt,
+				input: input,
+				stream: true,
+			})
+
+			yield* this.handleResponsesStreamResponse(stream, model, systemPrompt, input)
+		} catch (error) {
+			if (error instanceof Error) {
+				throw new Error(`OpenAI Responses API error: ${error.message}`)
+			}
+			throw error
+		}
 	}
 
 	private convertMessagesToInput(messages: Anthropic.Messages.MessageParam[]): string {
@@ -207,80 +171,45 @@ export class OpenAiNativeHandler extends BaseProvider implements SingleCompletio
 	}
 
 	private async *handleResponsesStreamResponse(
-		stream: ReadableStream<Uint8Array> | null,
+		stream: AsyncIterable<any>,
 		model: OpenAiNativeModel,
 		systemPrompt: string,
 		userInput: string,
 	): ApiStream {
-		if (!stream) {
-			throw new Error("No response stream available")
-		}
-
 		let totalText = ""
-		const reader = stream.getReader()
-		const decoder = new TextDecoder()
-		let buffer = ""
 
 		try {
-			while (true) {
-				const { done, value } = await reader.read()
-				if (done) break
-
-				buffer += decoder.decode(value, { stream: true })
-				const lines = buffer.split("\n")
-				buffer = lines.pop() || ""
-
-				for (const line of lines) {
-					if (line.trim() === "") continue
-					if (line.startsWith("data: ")) {
-						const data = line.slice(6)
-						if (data === "[DONE]") continue
-
-						try {
-							const event = JSON.parse(data)
-							// Handle different event types from responses API
-							if (event.type === "response.output_text.delta") {
-								yield {
-									type: "text",
-									text: event.delta,
-								}
-								totalText += event.delta
-							} else if (event.type === "response.completed") {
-								// Calculate usage based on text length (approximate)
-								// Estimate tokens: ~1 token per 4 characters
-								const promptTokens = Math.ceil((systemPrompt.length + userInput.length) / 4)
-								const completionTokens = Math.ceil(totalText.length / 4)
-								yield* this.yieldUsage(model.info, {
-									prompt_tokens: promptTokens,
-									completion_tokens: completionTokens,
-									total_tokens: promptTokens + completionTokens,
-								})
-							} else if (event.type === "response.error") {
-								// Handle error events from the API
-								throw new Error(
-									`OpenAI Responses API stream error: ${event.error?.message || "Unknown error"}`,
-								)
-							} else {
-								// Log unknown event types for debugging and future compatibility
-								console.debug(
-									`OpenAI Responses API: Unknown event type '${event.type}' received`,
-									event,
-								)
-							}
-						} catch (e) {
-							// Only skip if it's a JSON parsing error
-							if (e instanceof SyntaxError) {
-								console.debug("OpenAI Responses API: Failed to parse SSE data", data)
-							} else {
-								// Re-throw other errors (like API errors)
-								throw e
-							}
-						}
+			for await (const event of stream) {
+				// Handle different event types from responses API
+				if (event.type === "response.output_text.delta") {
+					yield {
+						type: "text",
+						text: event.delta,
 					}
+					totalText += event.delta
+				} else if (event.type === "response.completed") {
+					// Calculate usage based on text length (approximate)
+					// Estimate tokens: ~1 token per 4 characters
+					const promptTokens = Math.ceil((systemPrompt.length + userInput.length) / 4)
+					const completionTokens = Math.ceil(totalText.length / 4)
+					yield* this.yieldUsage(model.info, {
+						prompt_tokens: promptTokens,
+						completion_tokens: completionTokens,
+						total_tokens: promptTokens + completionTokens,
+					})
+				} else if (event.type === "response.error") {
+					// Handle error events from the API
+					throw new Error(`OpenAI Responses API stream error: ${event.error?.message || "Unknown error"}`)
+				} else {
+					// Log unknown event types for debugging and future compatibility
+					console.debug(`OpenAI Responses API: Unknown event type '${event.type}' received`, event)
 				}
 			}
-		} finally {
-			reader.releaseLock()
+		} catch (error) {
+			if (error instanceof Error) {
+				throw new Error(`OpenAI Responses API error: ${error.message}`)
+			}
+			throw error
 		}
 	}
 
@@ -348,10 +277,14 @@ export class OpenAiNativeHandler extends BaseProvider implements SingleCompletio
 			const { id, temperature, reasoning } = this.getModel()
 
 			if (id === "codex-mini-latest") {
-				// Make API call using shared helper
-				const response = await this.makeResponsesApiRequest(id, "Complete the following prompt:", prompt, false)
-				const data = await response.json()
-				return data.output_text || ""
+				// Use the OpenAI SDK's responses endpoint
+				const response = await this.client.responses.create({
+					model: id,
+					instructions: "Complete the following prompt:",
+					input: prompt,
+					stream: false,
+				})
+				return response.output_text || ""
 			}
 
 			const params: OpenAI.Chat.Completions.ChatCompletionCreateParamsNonStreaming = {
