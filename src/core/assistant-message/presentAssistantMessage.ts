@@ -532,14 +532,6 @@ export async function presentAssistantMessage(cline: Task) {
 			break
 	}
 
-	const recentlyModifiedFiles = cline.fileContextTracker.getAndClearCheckpointPossibleFile()
-
-	if (recentlyModifiedFiles.length > 0) {
-		// TODO: We can track what file changes were made and only
-		// checkpoint those files, this will be save storage.
-		await checkpointSave(cline)
-	}
-
 	// Seeing out of bounds is fine, it means that the next too call is being
 	// built up and ready to add to assistantMessageContent to present.
 	// When you see the UI inactive during this, it means that a tool is

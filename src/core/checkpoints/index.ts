@@ -298,17 +298,19 @@ export async function checkpointDiff(cline: Task, { ts, previousCommitHash, comm
 
 	TelemetryService.instance.captureCheckpointDiffed(cline.taskId)
 
-	if (!previousCommitHash && mode === "checkpoint") {
-		const previousCheckpoint = cline.clineMessages
-			.filter(({ say }) => say === "checkpoint_saved")
-			.sort((a, b) => b.ts - a.ts)
-			.find((message) => message.ts < ts)
+	let from = commitHash
+	let to: string | undefined
 
-		previousCommitHash = previousCheckpoint?.text
+	const checkpoints = typeof service.getCheckpoints === "function" ? service.getCheckpoints() : []
+	const idx = checkpoints.indexOf(commitHash)
+	if (idx !== -1 && idx < checkpoints.length - 1) {
+		to = checkpoints[idx + 1]
+	} else {
+		to = undefined
 	}
 
 	try {
-		const changes = await service.getDiff({ from: previousCommitHash, to: commitHash })
+		const changes = await service.getDiff({ from, to })
 
 		if (!changes?.length) {
 			vscode.window.showInformationMessage("No changes found.")
