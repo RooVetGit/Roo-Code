@@ -39,12 +39,13 @@ describe("Command Validation", () => {
 			// Test $[] arithmetic expansion detection
 			expect(parseCommand("echo $[1 + 2]")).toEqual(["echo $[1 + 2]"])
 
-			// Verify containsSubshell detects $[] pattern
-			expect(containsSubshell("echo $[1 + 2]")).toBe(true)
-			expect(containsSubshell("echo $(date)")).toBe(true)
-			expect(containsSubshell("echo `date`")).toBe(true)
-			expect(containsSubshell("diff <(sort f1) <(sort f2)")).toBe(true)
-			expect(containsSubshell("echo hello")).toBe(false)
+			// Verify containsSubshell detects all subshell patterns
+			expect(containsSubshell("echo $[1 + 2]")).toBe(true) // $[] arithmetic expansion
+			expect(containsSubshell("echo $((1 + 2))")).toBe(true) // $(()) arithmetic expansion
+			expect(containsSubshell("echo $(date)")).toBe(true) // $() command substitution
+			expect(containsSubshell("echo `date`")).toBe(true) // backtick substitution
+			expect(containsSubshell("diff <(sort f1) <(sort f2)")).toBe(true) // process substitution
+			expect(containsSubshell("echo hello")).toBe(false) // no subshells
 		})
 
 		it("handles empty and whitespace input", () => {
@@ -968,9 +969,9 @@ describe("Unified Command Decision Functions", () => {
 				// Multiple subshells, one with denied prefix
 				expect(validator.validateCommand("echo $(date) $(rm file)")).toBe("auto_deny")
 
-				// Nested subshells - inner commands are extracted and not in allowlist
+				// Nested subshells - validates individual parsed commands
 				expect(validator.validateCommand("echo $(echo $(date))")).toBe("ask_user")
-				expect(validator.validateCommand("echo $(echo $(rm file))")).toBe("ask_user") // complex nested parsing results in mixed decisions
+				expect(validator.validateCommand("echo $(echo $(rm file))")).toBe("ask_user") // complex nested parsing with mixed validation results
 			})
 
 			it("handles complex commands with subshells", () => {

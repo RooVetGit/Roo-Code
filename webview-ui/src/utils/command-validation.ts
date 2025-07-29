@@ -66,9 +66,19 @@ type ShellToken = string | { op: string } | { command: string }
  * - >() - process substitution (output)
  * - $(()) - arithmetic expansion
  * - $[] - arithmetic expansion (alternative syntax)
+ *
+ * @example
+ * ```typescript
+ * containsSubshell("echo $(date)")     // true - command substitution
+ * containsSubshell("echo `date`")      // true - backtick substitution
+ * containsSubshell("diff <(sort f1)")  // true - process substitution
+ * containsSubshell("echo $((1+2))")    // true - arithmetic expansion
+ * containsSubshell("echo $[1+2]")      // true - arithmetic expansion (alt)
+ * containsSubshell("echo hello")       // false - no subshells
+ * ```
  */
 export function containsSubshell(source: string): boolean {
-	return /(\$\()|`|<\(|>\(|\$\[/.test(source)
+	return /(\$\()|`|(<\(|>\()|(\$\(\()|(\$\[)/.test(source)
 }
 
 /**
@@ -100,6 +110,36 @@ export function parseCommand(command: string): string[] {
 	}
 
 	return allCommands
+}
+
+/**
+ * Helper function to restore placeholders in a command string
+ */
+function restorePlaceholders(
+	command: string,
+	quotes: string[],
+	redirections: string[],
+	arrayIndexing: string[],
+	arithmeticExpressions: string[],
+	parameterExpansions: string[],
+	variables: string[],
+	subshells: string[],
+): string {
+	let result = command
+	// Restore quotes
+	result = result.replace(/__QUOTE_(\d+)__/g, (_, i) => quotes[parseInt(i)])
+	// Restore redirections
+	result = result.replace(/__REDIR_(\d+)__/g, (_, i) => redirections[parseInt(i)])
+	// Restore array indexing expressions
+	result = result.replace(/__ARRAY_(\d+)__/g, (_, i) => arrayIndexing[parseInt(i)])
+	// Restore arithmetic expressions
+	result = result.replace(/__ARITH_(\d+)__/g, (_, i) => arithmeticExpressions[parseInt(i)])
+	// Restore parameter expansions
+	result = result.replace(/__PARAM_(\d+)__/g, (_, i) => parameterExpansions[parseInt(i)])
+	// Restore variable references
+	result = result.replace(/__VAR_(\d+)__/g, (_, i) => variables[parseInt(i)])
+	result = result.replace(/__SUBSH_(\d+)__/g, (_, i) => subshells[parseInt(i)])
+	return result
 }
 
 /**
@@ -193,23 +233,18 @@ function parseCommandLine(command: string): string[] {
 			.filter((cmd) => cmd.length > 0)
 
 		// Restore all placeholders for each command
-		return fallbackCommands.map((cmd) => {
-			let result = cmd
-			// Restore quotes
-			result = result.replace(/__QUOTE_(\d+)__/g, (_, i) => quotes[parseInt(i)])
-			// Restore redirections
-			result = result.replace(/__REDIR_(\d+)__/g, (_, i) => redirections[parseInt(i)])
-			// Restore array indexing expressions
-			result = result.replace(/__ARRAY_(\d+)__/g, (_, i) => arrayIndexing[parseInt(i)])
-			// Restore arithmetic expressions
-			result = result.replace(/__ARITH_(\d+)__/g, (_, i) => arithmeticExpressions[parseInt(i)])
-			// Restore parameter expansions
-			result = result.replace(/__PARAM_(\d+)__/g, (_, i) => parameterExpansions[parseInt(i)])
-			// Restore variable references
-			result = result.replace(/__VAR_(\d+)__/g, (_, i) => variables[parseInt(i)])
-			result = result.replace(/__SUBSH_(\d+)__/g, (_, i) => subshells[parseInt(i)])
-			return result
-		})
+		return fallbackCommands.map((cmd) =>
+			restorePlaceholders(
+				cmd,
+				quotes,
+				redirections,
+				arrayIndexing,
+				arithmeticExpressions,
+				parameterExpansions,
+				variables,
+				subshells,
+			),
+		)
 	}
 
 	const commands: string[] = []
@@ -248,23 +283,18 @@ function parseCommandLine(command: string): string[] {
 	}
 
 	// Restore quotes and redirections
-	return commands.map((cmd) => {
-		let result = cmd
-		// Restore quotes
-		result = result.replace(/__QUOTE_(\d+)__/g, (_, i) => quotes[parseInt(i)])
-		// Restore redirections
-		result = result.replace(/__REDIR_(\d+)__/g, (_, i) => redirections[parseInt(i)])
-		// Restore array indexing expressions
-		result = result.replace(/__ARRAY_(\d+)__/g, (_, i) => arrayIndexing[parseInt(i)])
-		// Restore arithmetic expressions
-		result = result.replace(/__ARITH_(\d+)__/g, (_, i) => arithmeticExpressions[parseInt(i)])
-		// Restore parameter expansions
-		result = result.replace(/__PARAM_(\d+)__/g, (_, i) => parameterExpansions[parseInt(i)])
-		// Restore variable references
-		result = result.replace(/__VAR_(\d+)__/g, (_, i) => variables[parseInt(i)])
-		result = result.replace(/__SUBSH_(\d+)__/g, (_, i) => subshells[parseInt(i)])
-		return result
-	})
+	return commands.map((cmd) =>
+		restorePlaceholders(
+			cmd,
+			quotes,
+			redirections,
+			arrayIndexing,
+			arithmeticExpressions,
+			parameterExpansions,
+			variables,
+			subshells,
+		),
+	)
 }
 
 /**
