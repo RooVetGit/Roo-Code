@@ -36,7 +36,7 @@
 		"none": "Không có"
 	},
 	"sections": {
-		"organizationMcps": "MCP của Tổ chức",
+		"organizationMcps": "MCP của {{organization}}",
 		"marketplace": "Marketplace"
 	},
 	"type-group": {

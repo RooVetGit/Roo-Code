@@ -36,7 +36,7 @@
 		"none": "Hiçbiri"
 	},
 	"sections": {
-		"organizationMcps": "Kuruluş MCP'leri",
+		"organizationMcps": "{{organization}} MCP'leri",
 		"marketplace": "Marketplace"
 	},
 	"type-group": {

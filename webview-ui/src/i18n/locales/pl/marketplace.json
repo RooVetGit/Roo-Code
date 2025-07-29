@@ -36,7 +36,7 @@
 		"none": "Brak"
 	},
 	"sections": {
-		"organizationMcps": "MCPs organizacji",
+		"organizationMcps": "MCPs {{organization}}",
 		"marketplace": "Rynek"
 	},
 	"type-group": {

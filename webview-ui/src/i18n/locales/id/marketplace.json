@@ -36,7 +36,7 @@
 		"none": "Tidak Ada"
 	},
 	"sections": {
-		"organizationMcps": "MCP Organisasi",
+		"organizationMcps": "MCP {{organization}}",
 		"marketplace": "Marketplace"
 	},
 	"type-group": {

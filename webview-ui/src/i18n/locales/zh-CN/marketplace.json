@@ -36,7 +36,7 @@
 		"none": "无"
 	},
 	"sections": {
-		"organizationMcps": "组织 MCP",
+		"organizationMcps": "{{organization}} MCPs",
 		"marketplace": "Marketplace"
 	},
 	"type-group": {

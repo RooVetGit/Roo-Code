@@ -36,7 +36,7 @@
 		"none": "Nenhum"
 	},
 	"sections": {
-		"organizationMcps": "MCPs da Organização",
+		"organizationMcps": "MCPs da {{organization}}",
 		"marketplace": "Marketplace"
 	},
 	"type-group": {

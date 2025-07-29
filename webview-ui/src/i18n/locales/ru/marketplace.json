@@ -36,7 +36,7 @@
 		"none": "Нет"
 	},
 	"sections": {
-		"organizationMcps": "MCP организации",
+		"organizationMcps": "MCPs {{organization}}",
 		"marketplace": "Маркетплейс"
 	},
 	"type-group": {

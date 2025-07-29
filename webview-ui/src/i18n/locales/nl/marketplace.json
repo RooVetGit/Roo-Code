@@ -36,7 +36,7 @@
 		"none": "Geen"
 	},
 	"sections": {
-		"organizationMcps": "Organisatie MCP's",
+		"organizationMcps": "MCP's van {{organization}}",
 		"marketplace": "Marktplaats"
 	},
 	"type-group": {

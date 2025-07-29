@@ -36,7 +36,7 @@
 		"none": "कोई नहीं"
 	},
 	"sections": {
-		"organizationMcps": "संगठन MCPs",
+		"organizationMcps": "{{organization}} MCPs",
 		"marketplace": "मार्केटप्लेस"
 	},
 	"type-group": {
