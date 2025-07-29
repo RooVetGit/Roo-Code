@@ -538,6 +538,16 @@
 			"profileDescription": "仅此配置文件的自定义阈值（覆盖全局默认）",
 			"inheritDescription": "此配置文件继承全局默认阈值（{{threshold}}%）",
 			"usesGlobal": "（使用全局 {{threshold}}%）"
+		},
+		"maxImageFileSize": {
+			"label": "最大图像文件大小",
+			"mb": "MB",
+			"description": "read file工具可以处理的图像文件的最大大小（以MB为单位）。"
+		},
+		"maxTotalImageSize": {
+			"label": "图片总大小上限",
+			"mb": "MB",
+			"description": "单次 read_file 操作中处理的所有图片的最大累计大小限制（MB）。读取多张图片时，每张图片的大小会累加到总大小中。如果包含另一张图片会超过此限制，则会跳过该图片。"
 		}
 	},
 	"terminal": {
@@ -660,6 +670,10 @@
 		"MULTI_FILE_APPLY_DIFF": {
 			"name": "启用并发文件编辑",
 			"description": "启用后 Roo 可在单个请求中编辑多个文件。禁用后 Roo 必须逐个编辑文件。禁用此功能有助于使用能力较弱的模型或需要更精确控制文件修改时。"
+		},
+		"PREVENT_FOCUS_DISRUPTION": {
+			"name": "后台编辑",
+			"description": "启用后防止编辑器焦点干扰。文件编辑在后台进行，不会打开差异视图或抢夺焦点。你可以在 Roo 进行更改时继续不受干扰地工作。文件可以在不获取焦点的情况下打开以捕获诊断信息，或保持完全关闭状态。"
 		}
 	},
 	"promptCaching": {

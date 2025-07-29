@@ -538,6 +538,16 @@
 			"profileDescription": "Sadece bu profil için özel eşik (küresel varsayılanı geçersiz kılar)",
 			"inheritDescription": "Bu profil küresel varsayılan eşiği miras alır ({{threshold}}%)",
 			"usesGlobal": "(küresel {{threshold}}% kullanır)"
+		},
+		"maxImageFileSize": {
+			"label": "Maksimum görüntü dosyası boyutu",
+			"mb": "MB",
+			"description": "Dosya okuma aracı tarafından işlenebilecek görüntü dosyaları için maksimum boyut (MB cinsinden)."
+		},
+		"maxTotalImageSize": {
+			"label": "Maksimum toplam görüntü boyutu",
+			"mb": "MB",
+			"description": "Tek bir read_file işleminde işlenen tüm görüntüler için maksimum kümülatif boyut sınırı (MB cinsinden). Birden çok görüntü okurken, her görüntünün boyutu toplama eklenir. Başka bir görüntü eklemek bu sınırı aşacaksa, atlanacaktır."
 		}
 	},
 	"terminal": {
@@ -660,6 +670,10 @@
 		"MULTI_FILE_APPLY_DIFF": {
 			"name": "Eşzamanlı dosya düzenlemelerini etkinleştir",
 			"description": "Etkinleştirildiğinde, Roo tek bir istekte birden fazla dosyayı düzenleyebilir. Devre dışı bırakıldığında, Roo dosyaları tek tek düzenlemek zorundadır. Bunu devre dışı bırakmak, daha az yetenekli modellerle çalışırken veya dosya değişiklikleri üzerinde daha fazla kontrol istediğinde yardımcı olabilir."
+		},
+		"PREVENT_FOCUS_DISRUPTION": {
+			"name": "Arka plan düzenleme",
+			"description": "Etkinleştirildiğinde editör odak kesintisini önler. Dosya düzenlemeleri diff görünümlerini açmadan veya odağı çalmadan arka planda gerçekleşir. Roo değişiklikler yaparken kesintisiz çalışmaya devam edebilirsiniz. Dosyalar tanılamayı yakalamak için odaksız açılabilir veya tamamen kapalı kalabilir."
 		}
 	},
 	"promptCaching": {
