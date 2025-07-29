@@ -1295,7 +1295,7 @@ export class Task extends EventEmitter<ClineEvents> {
 
 	private async initiateTaskLoop(userContent: Anthropic.Messages.ContentBlockParam[]): Promise<void> {
 		// Kicks off the checkpoints initialization process in the background.
-		getCheckpointService(this)
+		await getCheckpointService(this)
 
 		let nextUserContent = userContent
 		let includeFileDetails = true

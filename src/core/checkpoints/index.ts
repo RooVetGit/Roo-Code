@@ -16,7 +16,7 @@ import { DIFF_VIEW_URI_SCHEME } from "../../integrations/editor/DiffViewProvider
 
 import { CheckpointServiceOptions, RepoPerTaskCheckpointService } from "../../services/checkpoints"
 
-export function getCheckpointService(cline: Task) {
+export async function getCheckpointService(cline: Task) {
 	if (!cline.enableCheckpoints) {
 		return undefined
 	}
@@ -75,7 +75,7 @@ export function getCheckpointService(cline: Task) {
 		// Check if Git is installed before initializing the service
 		// Note: This is intentionally fire-and-forget to match the original IIFE pattern
 		// The service is returned immediately while Git check happens asynchronously
-		checkGitInstallation(cline, service, log, provider)
+		await checkGitInstallation(cline, service, log, provider)
 
 		return service
 	} catch (err) {
@@ -153,11 +153,12 @@ async function checkGitInstallation(
 		})
 
 		log("[Task#getCheckpointService] initializing shadow git")
-
-		service.initShadowGit().catch((err) => {
+		try {
+			await service.initShadowGit()
+		} catch (err) {
 			log(`[Task#getCheckpointService] initShadowGit -> ${err.message}`)
 			cline.enableCheckpoints = false
-		})
+		}
 	} catch (err) {
 		log(`[Task#getCheckpointService] Unexpected error during Git check: ${err.message}`)
 		console.error("Git check error:", err)
@@ -170,7 +171,7 @@ async function getInitializedCheckpointService(
 	cline: Task,
 	{ interval = 250, timeout = 15_000 }: { interval?: number; timeout?: number } = {},
 ) {
-	const service = getCheckpointService(cline)
+	const service = await getCheckpointService(cline)
 
 	if (!service || service.isInitialized) {
 		return service
@@ -192,7 +193,7 @@ async function getInitializedCheckpointService(
 }
 
 export async function checkpointSave(cline: Task, force = false) {
-	const service = getCheckpointService(cline)
+	const service = await getCheckpointService(cline)
 
 	if (!service) {
 		return
