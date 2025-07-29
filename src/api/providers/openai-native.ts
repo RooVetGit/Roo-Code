@@ -22,6 +22,9 @@ import type { SingleCompletionHandler, ApiHandlerCreateMessageMetadata } from ".
 
 export type OpenAiNativeModel = ReturnType<OpenAiNativeHandler["getModel"]>
 
+// Token estimation constants
+const CHARS_PER_TOKEN = 4 // Approximate ratio used across the codebase
+
 export class OpenAiNativeHandler extends BaseProvider implements SingleCompletionHandler {
 	protected options: ApiHandlerOptions
 	private client: OpenAI
@@ -39,18 +42,20 @@ export class OpenAiNativeHandler extends BaseProvider implements SingleCompletio
 		metadata?: ApiHandlerCreateMessageMetadata,
 	): ApiStream {
 		const model = this.getModel()
-		let id: "o3-mini" | "o3" | "o4-mini" | undefined
 
-		if (model.id.startsWith("o3-mini")) {
-			id = "o3-mini"
-		} else if (model.id.startsWith("o3")) {
-			id = "o3"
-		} else if (model.id.startsWith("o4-mini")) {
-			id = "o4-mini"
-		}
-
-		if (id) {
-			yield* this.handleReasonerMessage(model, id, systemPrompt, messages)
+		// Handle O3 and O4-mini models which support reasoning_effort parameter
+		// These models use the "developer" role and require model ID normalization
+		if (model.id.startsWith("o3-mini") || model.id.startsWith("o3") || model.id.startsWith("o4-mini")) {
+			// Normalize model ID for API calls (e.g., "o3-mini-high" -> "o3-mini")
+			let normalizedId: "o3-mini" | "o3" | "o4-mini"
+			if (model.id.startsWith("o3-mini")) {
+				normalizedId = "o3-mini"
+			} else if (model.id.startsWith("o3")) {
+				normalizedId = "o3"
+			} else {
+				normalizedId = "o4-mini"
+			}
+			yield* this.handleO3O4MiniMessage(model, normalizedId, systemPrompt, messages)
 		} else if (model.id.startsWith("o1")) {
 			yield* this.handleO1FamilyMessage(model, systemPrompt, messages)
 		} else if (model.id === "codex-mini-latest") {
@@ -84,7 +89,7 @@ export class OpenAiNativeHandler extends BaseProvider implements SingleCompletio
 		yield* this.handleStreamResponse(response, model)
 	}
 
-	private async *handleReasonerMessage(
+	private async *handleO3O4MiniMessage(
 		model: OpenAiNativeModel,
 		family: "o3-mini" | "o3" | "o4-mini",
 		systemPrompt: string,
@@ -131,6 +136,8 @@ export class OpenAiNativeHandler extends BaseProvider implements SingleCompletio
 		messages: Anthropic.Messages.MessageParam[],
 	): ApiStream {
 		// Convert messages to a single input string
+		// The codex-mini-latest model uses the v1/responses endpoint which expects
+		// a single input string rather than a messages array
 		const input = this.convertMessagesToInput(messages)
 
 		try {
@@ -152,6 +159,8 @@ export class OpenAiNativeHandler extends BaseProvider implements SingleCompletio
 	}
 
 	private convertMessagesToInput(messages: Anthropic.Messages.MessageParam[]): string {
+		// Extract only user messages and convert to plain text
+		// This is specific to the codex-mini-latest model's requirements
 		return messages
 			.map((msg) => {
 				if (msg.role === "user") {
@@ -189,9 +198,9 @@ export class OpenAiNativeHandler extends BaseProvider implements SingleCompletio
 					totalText += event.delta
 				} else if (event.type === "response.completed") {
 					// Calculate usage based on text length (approximate)
-					// Estimate tokens: ~1 token per 4 characters
-					const promptTokens = Math.ceil((systemPrompt.length + userInput.length) / 4)
-					const completionTokens = Math.ceil(totalText.length / 4)
+					// The v1/responses API doesn't provide token usage, so we estimate
+					const promptTokens = Math.ceil((systemPrompt.length + userInput.length) / CHARS_PER_TOKEN)
+					const completionTokens = Math.ceil(totalText.length / CHARS_PER_TOKEN)
 					yield* this.yieldUsage(model.info, {
 						prompt_tokens: promptTokens,
 						completion_tokens: completionTokens,
@@ -267,9 +276,7 @@ export class OpenAiNativeHandler extends BaseProvider implements SingleCompletio
 			defaultTemperature: OPENAI_NATIVE_DEFAULT_TEMPERATURE,
 		})
 
-		// The o3 models are named like "o3-mini-[reasoning-effort]", which are
-		// not valid model ids, so we need to strip the suffix.
-		return { id: id.startsWith("o3-mini") ? "o3-mini" : id, info, ...params }
+		return { id, info, ...params }
 	}
 
 	async completePrompt(prompt: string): Promise<string> {
