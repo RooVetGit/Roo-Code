@@ -26,6 +26,7 @@ export class CloudService {
 	private callbacks: CloudServiceCallbacks
 	private authListener: () => void
 	private authService: AuthService | null = null
+	private settingsListener: () => void
 	private settingsService: SettingsService | null = null
 	private telemetryClient: TelemetryClient | null = null
 	private shareService: ShareService | null = null
@@ -37,6 +38,9 @@ export class CloudService {
 		this.callbacks = callbacks
 		this.log = callbacks.log || console.log
 		this.authListener = () => {
+			this.callbacks.stateChanged?.()
+		}
+		this.settingsListener = () => {
 			this.callbacks.stateChanged?.()
 		}
 	}
@@ -69,14 +73,11 @@ export class CloudService {
 			if (staticOrgSettings && staticOrgSettings.length > 0) {
 				this.settingsService = new StaticSettingsService(staticOrgSettings, this.log)
 			} else {
-				const cloudSettingsService = new CloudSettingsService(
-					this.context,
-					this.authService,
-					() => this.callbacks.stateChanged?.(),
-					this.log,
-				)
-
+				const cloudSettingsService = new CloudSettingsService(this.context, this.authService, this.log)
 				cloudSettingsService.initialize()
+
+				cloudSettingsService.on("settings-updated", this.settingsListener)
+
 				this.settingsService = cloudSettingsService
 			}
 
@@ -226,6 +227,9 @@ export class CloudService {
 			this.authService.off("user-info", this.authListener)
 		}
 		if (this.settingsService) {
+			if (this.settingsService instanceof CloudSettingsService) {
+				this.settingsService.off("settings-updated", this.settingsListener)
+			}
 			this.settingsService.dispose()
 		}
 
