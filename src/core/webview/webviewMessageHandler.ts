@@ -22,6 +22,7 @@ import { changeLanguage, t } from "../../i18n"
 import { Package } from "../../shared/package"
 import { RouterName, toRouterName, ModelRecord } from "../../shared/api"
 import { supportPrompt } from "../../shared/support-prompt"
+import { MessageEnhancer } from "./messageEnhancer"
 
 import { checkoutDiffPayloadSchema, checkoutRestorePayloadSchema, WebviewMessage } from "../../shared/WebviewMessage"
 import { checkExistKey } from "../../shared/checkExistApiConfig"
@@ -35,7 +36,6 @@ import { discoverChromeHostUrl, tryChromeHostUrl } from "../../services/browser/
 import { searchWorkspaceFiles } from "../../services/search/file-search"
 import { fileExistsAtPath } from "../../utils/fs"
 import { playTts, setTtsEnabled, setTtsSpeed, stopTts } from "../../utils/tts"
-import { singleCompletionHandler } from "../../utils/single-completion-handler"
 import { searchCommits } from "../../utils/git"
 import { exportSettings, importSettingsWithFeedback } from "../config/importExport"
 import { getOpenAiModels } from "../../api/providers/openai"
@@ -1343,58 +1343,25 @@ export const webviewMessageHandler = async (
 					const { apiConfiguration, customSupportPrompts, listApiConfigMeta, enhancementApiConfigId } = state
 					const includeTaskHistoryInEnhance = (state as any).includeTaskHistoryInEnhance
 
-					// Try to get enhancement config first, fall back to current config.
-					let configToUse: ProviderSettings = apiConfiguration
-
-					if (enhancementApiConfigId && !!listApiConfigMeta.find(({ id }) => id === enhancementApiConfigId)) {
-						const { name: _, ...providerSettings } = await provider.providerSettingsManager.getProfile({
-							id: enhancementApiConfigId,
-						})
-
-						if (providerSettings.apiProvider) {
-							configToUse = providerSettings
-						}
-					}
-
-					let promptToEnhance = message.text
-
-					// Include task history if enabled
-					if (includeTaskHistoryInEnhance && provider.getCurrentCline()) {
-						const currentCline = provider.getCurrentCline()!
-						const taskHistory = currentCline.clineMessages
-							.filter((msg) => {
-								// Include user messages (type: "ask" with text) and assistant messages (type: "say" with say: "text")
-								if (msg.type === "ask" && msg.text) {
-									return true
-								}
-								if (msg.type === "say" && msg.say === "text" && msg.text) {
-									return true
-								}
-								return false
-							})
-							.slice(-10) // Limit to last 10 messages to avoid context explosion
-							.map((msg) => {
-								const role = msg.type === "ask" ? "User" : "Assistant"
-								const content = msg.text || ""
-								return `${role}: ${content.slice(0, 500)}${content.length > 500 ? "..." : ""}` // Truncate long messages
-							})
-							.join("\n")
-
-						if (taskHistory) {
-							promptToEnhance = `${message.text}\n\nUse the following previous conversation context as needed:\n${taskHistory}`
-						}
-					}
-
-					const enhancedPrompt = await singleCompletionHandler(
-						configToUse,
-						supportPrompt.create("ENHANCE", { userInput: promptToEnhance }, customSupportPrompts),
-					)
-
-					// Capture telemetry for prompt enhancement.
 					const currentCline = provider.getCurrentCline()
-					TelemetryService.instance.capturePromptEnhanced(currentCline?.taskId)
+					const result = await MessageEnhancer.enhanceMessage({
+						text: message.text,
+						apiConfiguration,
+						customSupportPrompts,
+						listApiConfigMeta,
+						enhancementApiConfigId,
+						includeTaskHistoryInEnhance,
+						currentClineMessages: currentCline?.clineMessages,
+						providerSettingsManager: provider.providerSettingsManager,
+					})
 
-					await provider.postMessageToWebview({ type: "enhancedPrompt", text: enhancedPrompt })
+					if (result.success && result.enhancedText) {
+						// Capture telemetry for prompt enhancement
+						MessageEnhancer.captureTelemetry(currentCline?.taskId)
+						await provider.postMessageToWebview({ type: "enhancedPrompt", text: result.enhancedText })
+					} else {
+						throw new Error(result.error || "Unknown error")
+					}
 				} catch (error) {
 					provider.log(
 						`Error enhancing prompt: ${JSON.stringify(error, Object.getOwnPropertyNames(error), 2)}`,
