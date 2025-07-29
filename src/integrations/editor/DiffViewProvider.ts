@@ -635,7 +635,7 @@ export class DiffViewProvider {
 	 *
 	 * @param relPath - Relative path to the file
 	 * @param content - Content to write to the file
-	 * @param openFile - Whether to open the file (deprecated - file is always opened with preserveFocus)
+	 * @param openFile - Whether to show the file in editor (false = open in memory only for diagnostics)
 	 * @returns Result of the save operation including any new problems detected
 	 */
 	async saveDirectly(
@@ -658,12 +658,26 @@ export class DiffViewProvider {
 		await createDirectoriesForFile(absolutePath)
 		await fs.writeFile(absolutePath, content, "utf-8")
 
-		// Always open the file to ensure diagnostics are loaded
-		// When openFile is false (PREVENT_FOCUS_DISRUPTION enabled), we still open but preserve focus
-		await vscode.window.showTextDocument(vscode.Uri.file(absolutePath), {
-			preview: false,
-			preserveFocus: true,
-		})
+		// Open the document to ensure diagnostics are loaded
+		// When openFile is false (PREVENT_FOCUS_DISRUPTION enabled), we only open in memory
+		if (openFile) {
+			// Show the document in the editor
+			await vscode.window.showTextDocument(vscode.Uri.file(absolutePath), {
+				preview: false,
+				preserveFocus: true,
+			})
+		} else {
+			// Just open the document in memory to trigger diagnostics without showing it
+			const doc = await vscode.workspace.openTextDocument(vscode.Uri.file(absolutePath))
+
+			// Save the document to ensure VSCode recognizes it as saved and triggers diagnostics
+			if (doc.isDirty) {
+				await doc.save()
+			}
+
+			// Force a small delay to ensure diagnostics are triggered
+			await new Promise((resolve) => setTimeout(resolve, 100))
+		}
 
 		let newProblemsMessage = ""
 
