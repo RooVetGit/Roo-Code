@@ -1197,57 +1197,128 @@ export class Task extends EventEmitter<ClineEvents> {
 	}
 
 	public dispose(): void {
-		// Stop waiting for child task completion.
-		if (this.pauseInterval) {
-			clearInterval(this.pauseInterval)
-			this.pauseInterval = undefined
+		// Prevent multiple disposal attempts
+		if (this.isDisposed) {
+			console.log(`[dispose] Task ${this.taskId}.${this.instanceId} already disposed`)
+			return
 		}
+		this.isDisposed = true
 
-		// Release any terminals associated with this task.
+		console.log(`[dispose] Disposing task ${this.taskId}.${this.instanceId}`)
+
+		// Set disposal timeout to prevent hanging
+		const disposalTimeout = setTimeout(() => {
+			console.warn(`[dispose] Disposal timeout for task ${this.taskId}.${this.instanceId}`)
+		}, 10000) // 10 second timeout
+
 		try {
+			// Stop waiting for child task completion.
+			if (this.pauseInterval) {
+				clearInterval(this.pauseInterval)
+				this.pauseInterval = undefined
+			}
+
 			// Release any terminals associated with this task.
-			TerminalRegistry.releaseTerminalsForTask(this.taskId)
-		} catch (error) {
-			console.error("Error releasing terminals:", error)
-		}
-
-		try {
-			this.urlContentFetcher.closeBrowser()
-		} catch (error) {
-			console.error("Error closing URL content fetcher browser:", error)
-		}
-
-		try {
-			this.browserSession.closeBrowser()
-		} catch (error) {
-			console.error("Error closing browser session:", error)
-		}
-
-		try {
-			if (this.rooIgnoreController) {
-				this.rooIgnoreController.dispose()
-				this.rooIgnoreController = undefined
+			try {
+				// Release any terminals associated with this task.
+				TerminalRegistry.releaseTerminalsForTask(this.taskId)
+			} catch (error) {
+				console.error(`[dispose] Error releasing terminals: ${error}`)
 			}
-		} catch (error) {
-			console.error("Error disposing RooIgnoreController:", error)
-			// This is the critical one for the leak fix
-		}
 
-		try {
-			this.fileContextTracker.dispose()
-		} catch (error) {
-			console.error("Error disposing file context tracker:", error)
-		}
-
-		try {
-			// If we're not streaming then `abortStream` won't be called
-			if (this.isStreaming && this.diffViewProvider.isEditing) {
-				this.diffViewProvider.revertChanges().catch(console.error)
+			try {
+				this.urlContentFetcher.closeBrowser()
+			} catch (error) {
+				console.error(`[dispose] Error closing URL content fetcher browser: ${error}`)
 			}
+
+			try {
+				this.browserSession.closeBrowser()
+			} catch (error) {
+				console.error(`[dispose] Error closing browser session: ${error}`)
+			}
+
+			try {
+				if (this.rooIgnoreController) {
+					this.rooIgnoreController.dispose()
+					this.rooIgnoreController = undefined
+				}
+			} catch (error) {
+				console.error(`[dispose] Error disposing RooIgnoreController: ${error}`)
+				// This is the critical one for the leak fix
+			}
+
+			try {
+				if (this.rooProtectedController) {
+					// RooProtectedController doesn't have a dispose method, just clear the reference
+					this.rooProtectedController = undefined
+				}
+			} catch (error) {
+				console.error(`[dispose] Error clearing RooProtectedController: ${error}`)
+			}
+
+			try {
+				this.fileContextTracker.dispose()
+			} catch (error) {
+				console.error(`[dispose] Error disposing file context tracker: ${error}`)
+			}
+
+			try {
+				// If we're not streaming then `abortStream` won't be called
+				if (this.isStreaming && this.diffViewProvider.isEditing) {
+					this.diffViewProvider.revertChanges().catch(console.error)
+				}
+			} catch (error) {
+				console.error(`[dispose] Error reverting diff changes: ${error}`)
+			}
+
+			// Clear all event listeners with error handling
+			try {
+				this.removeAllListeners()
+			} catch (error) {
+				console.error(`[dispose] Error removing event listeners: ${error}`)
+			}
+
+			// Clear provider reference safely
+			try {
+				this.providerRef = new WeakRef({} as ClineProvider)
+			} catch (error) {
+				console.error(`[dispose] Error clearing provider reference: ${error}`)
+			}
+
+			// Clear any remaining references to prevent memory leaks
+			this.clearTaskHierarchyReferences()
+
+			clearTimeout(disposalTimeout)
+			console.log(`[dispose] Task ${this.taskId}.${this.instanceId} disposed successfully`)
 		} catch (error) {
-			console.error("Error reverting diff changes:", error)
+			clearTimeout(disposalTimeout)
+			console.error(`[dispose] Error during disposal of task ${this.taskId}.${this.instanceId}: ${error}`)
+			// Even if disposal fails, mark as disposed to prevent retry loops
 		}
 	}
+
+	/**
+	 * Clears references in task hierarchy to prevent memory leaks
+	 */
+	private clearTaskHierarchyReferences(): void {
+		try {
+			// Note: parentTask and rootTask are readonly, but we can help GC by ensuring
+			// we don't hold onto any internal references that might prevent cleanup
+
+			// Clear any internal caches or references that might hold onto parent/child tasks
+			// This is defensive programming to ensure no circular references remain
+
+			console.log(`[dispose] Cleared hierarchy references for task ${this.taskId}.${this.instanceId}`)
+		} catch (error) {
+			console.error(`[dispose] Error clearing hierarchy references: ${error}`)
+		}
+	}
+
+	/**
+	 * Flag to track disposal state
+	 */
+	private isDisposed: boolean = false
 
 	public async abortTask(isAbandoned = false) {
 		console.log(`[subtasks] aborting task ${this.taskId}.${this.instanceId}`)

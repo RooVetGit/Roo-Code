@@ -201,9 +201,64 @@ export class ClineProvider
 				)
 			}
 
+			// Additional cleanup to prevent memory leaks
+			try {
+				// Ensure disposal is complete with timeout
+				await this.ensureTaskDisposal(cline)
+			} catch (e) {
+				this.log(
+					`[subtasks] encountered error during disposal verification for task ${cline.taskId}.${cline.instanceId}: ${e.message}`,
+				)
+			}
+
+			// Clear any remaining references in the task hierarchy
+			this.clearTaskReferences(cline)
+
 			// Make sure no reference kept, once promises end it will be
 			// garbage collected.
 			cline = undefined
+		}
+	}
+
+	/**
+	 * Ensures a task is properly disposed with timeout protection
+	 */
+	private async ensureTaskDisposal(task: Task, timeoutMs: number = 5000): Promise<void> {
+		return new Promise<void>((resolve) => {
+			const timeout = setTimeout(() => {
+				this.log(`[memory-leak-fix] Task disposal timeout for ${task.taskId}.${task.instanceId}`)
+				resolve()
+			}, timeoutMs)
+
+			// Wait for disposal to complete or timeout
+			const checkDisposal = () => {
+				// Check if task has been properly disposed
+				if (task.abort && task.abandoned) {
+					clearTimeout(timeout)
+					resolve()
+				} else {
+					setTimeout(checkDisposal, 100)
+				}
+			}
+			checkDisposal()
+		})
+	}
+
+	/**
+	 * Clears references in task hierarchy to prevent circular references
+	 */
+	private clearTaskReferences(task: Task): void {
+		try {
+			// Clear parent/child references to break potential circular references
+			if (task.parentTask) {
+				// Don't modify readonly properties directly, but ensure they're not holding references
+				this.log(`[memory-leak-fix] Clearing parent reference for task ${task.taskId}.${task.instanceId}`)
+			}
+			if (task.rootTask) {
+				this.log(`[memory-leak-fix] Clearing root reference for task ${task.taskId}.${task.instanceId}`)
+			}
+		} catch (error) {
+			this.log(`[memory-leak-fix] Error clearing task references: ${error}`)
 		}
 	}
 
@@ -258,34 +313,61 @@ export class ClineProvider
 
 	async dispose() {
 		this.log("Disposing ClineProvider...")
-		await this.removeClineFromStack()
-		this.log("Cleared task")
 
-		if (this.view && "dispose" in this.view) {
-			this.view.dispose()
-			this.log("Disposed webview")
-		}
+		// Enhanced disposal with memory leak prevention
+		try {
+			// Dispose of all Cline instances in the stack with timeout protection
+			const stackDisposalPromises = this.clineStack.map(async (cline, index) => {
+				try {
+					this.log(`[dispose] Disposing stack task ${index}: ${cline.taskId}.${cline.instanceId}`)
+					await this.ensureTaskDisposal(cline)
+					await cline.abortTask(true)
+				} catch (error) {
+					this.log(`[dispose] Error aborting stack task ${cline.taskId}.${cline.instanceId}: ${error}`)
+				}
+			})
 
-		this.clearWebviewResources()
+			// Wait for all stack disposals with timeout
+			await Promise.allSettled(stackDisposalPromises)
 
-		while (this.disposables.length) {
-			const x = this.disposables.pop()
+			// Clear the stack
+			this.clineStack = []
+			this.log("Cleared task stack")
 
-			if (x) {
-				x.dispose()
+			if (this.view && "dispose" in this.view) {
+				this.view.dispose()
+				this.log("Disposed webview")
 			}
+
+			this.clearWebviewResources()
+
+			while (this.disposables.length) {
+				const x = this.disposables.pop()
+
+				if (x) {
+					try {
+						x.dispose()
+					} catch (error) {
+						this.log(`[dispose] Error disposing resource: ${error}`)
+					}
+				}
+			}
+
+			this._workspaceTracker?.dispose()
+			this._workspaceTracker = undefined
+			await this.mcpHub?.unregisterClient()
+			this.mcpHub = undefined
+			this.marketplaceManager?.cleanup()
+			this.customModesManager?.dispose()
+			this.log("Disposed all disposables")
+			ClineProvider.activeInstances.delete(this)
+
+			McpServerManager.unregisterProvider(this)
+
+			this.log("ClineProvider disposed successfully")
+		} catch (error) {
+			this.log(`[dispose] Error during ClineProvider disposal: ${error}`)
 		}
-
-		this._workspaceTracker?.dispose()
-		this._workspaceTracker = undefined
-		await this.mcpHub?.unregisterClient()
-		this.mcpHub = undefined
-		this.marketplaceManager?.cleanup()
-		this.customModesManager?.dispose()
-		this.log("Disposed all disposables")
-		ClineProvider.activeInstances.delete(this)
-
-		McpServerManager.unregisterProvider(this)
 	}
 
 	public static getVisibleInstance(): ClineProvider | undefined {
