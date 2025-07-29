@@ -366,7 +366,7 @@ describe("CustomModesManager - Export/Import with Slug Changes", () => {
 			// All files should be in rules-mixed-mode folder
 			const oldFormatPath = Object.keys(writtenFiles).find((p) => p.includes("old-format.md"))
 			const newFormatPath = Object.keys(writtenFiles).find((p) => p.includes("new-format.md"))
-			const nestedPath = Object.keys(writtenFiles).find((p) => p.includes("nested/file.md"))
+			const nestedPath = Object.keys(writtenFiles).find((p) => p.includes(path.join("nested", "file.md")))
 
 			expect(oldFormatPath).toContain(path.join(".roo", "rules-mixed-mode", "old-format.md"))
 			expect(newFormatPath).toContain(path.join(".roo", "rules-mixed-mode", "new-format.md"))
