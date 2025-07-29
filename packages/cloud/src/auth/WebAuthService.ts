@@ -242,6 +242,24 @@ export class WebAuthService extends EventEmitter<AuthServiceEvents> implements A
 	 * This method initiates the authentication flow by generating a state parameter
 	 * and opening the browser to the authorization URL.
 	 */
+	/**
+	 * Detects if running in Firebase Studio IDE (formerly IDX Google) environment
+	 */
+	private isFirebaseStudioIDE(): boolean {
+		const appName = vscode.env.appName?.toLowerCase() || ""
+		const remoteName = vscode.env.remoteName?.toLowerCase() || ""
+
+		return (
+			appName.includes("idx") ||
+			appName.includes("firebase") ||
+			appName.includes("studio") ||
+			remoteName.includes("idx") ||
+			remoteName.includes("firebase") ||
+			process.env.IDX_WORKSPACE_ID !== undefined ||
+			process.env.FIREBASE_PROJECT_ID !== undefined
+		)
+	}
+
 	public async login(): Promise<void> {
 		try {
 			// Generate a cryptographically random state parameter.
@@ -250,11 +268,34 @@ export class WebAuthService extends EventEmitter<AuthServiceEvents> implements A
 			const packageJSON = this.context.extension?.packageJSON
 			const publisher = packageJSON?.publisher ?? "RooVeterinaryInc"
 			const name = packageJSON?.name ?? "roo-cline"
+
+			const isCloudIDE = this.isFirebaseStudioIDE()
+			this.log(`[auth] Initiating login - Firebase Studio IDE detected: ${isCloudIDE}`)
+			this.log(`[auth] App name: ${vscode.env.appName}`)
+			this.log(`[auth] Remote name: ${vscode.env.remoteName}`)
+			this.log(`[auth] URI scheme: ${vscode.env.uriScheme}`)
+
 			const params = new URLSearchParams({
 				state,
 				auth_redirect: `${vscode.env.uriScheme}://${publisher}.${name}`,
 			})
+
+			// Add cloud IDE indicator for server-side handling
+			if (isCloudIDE) {
+				params.append("cloud_ide", "firebase_studio")
+			}
+
 			const url = `${getRooCodeApiUrl()}/extension/sign-in?${params.toString()}`
+			this.log(`[auth] Opening authentication URL: ${url}`)
+
+			if (isCloudIDE) {
+				// Show additional guidance for Firebase Studio IDE users
+				vscode.window.showInformationMessage(
+					"Opening authentication in Firebase Studio IDE. After signing in, the callback should be automatically handled.",
+					{ modal: false },
+				)
+			}
+
 			await vscode.env.openExternal(vscode.Uri.parse(url))
 		} catch (error) {
 			this.log(`[auth] Error initiating Roo Code Cloud auth: ${error}`)
@@ -277,8 +318,24 @@ export class WebAuthService extends EventEmitter<AuthServiceEvents> implements A
 		state: string | null,
 		organizationId?: string | null,
 	): Promise<void> {
+		const isCloudIDE = this.isFirebaseStudioIDE()
+
+		this.log(`[auth] Handling callback - Firebase Studio IDE: ${isCloudIDE}`)
+		this.log(`[auth] Code present: ${!!code}, State present: ${!!state}`)
+
 		if (!code || !state) {
-			vscode.window.showInformationMessage("Invalid Roo Code Cloud sign in url")
+			const message = "Invalid Roo Code Cloud sign in url"
+			this.log(`[auth] ${message}`)
+
+			if (isCloudIDE) {
+				// Provide more specific guidance for Firebase Studio IDE
+				vscode.window.showErrorMessage(
+					"Authentication callback failed in Firebase Studio IDE. Please try signing in again. " +
+						"If the issue persists, check that popup blockers are disabled and the extension has proper permissions.",
+				)
+			} else {
+				vscode.window.showInformationMessage(message)
+			}
 			return
 		}
 
@@ -288,9 +345,11 @@ export class WebAuthService extends EventEmitter<AuthServiceEvents> implements A
 
 			if (state !== storedState) {
 				this.log("[auth] State mismatch in callback")
+				this.log(`[auth] Expected state: ${storedState}, Received state: ${state}`)
 				throw new Error("Invalid state parameter. Authentication request may have been tampered with.")
 			}
 
+			this.log("[auth] State validation successful, proceeding with sign-in")
 			const credentials = await this.clerkSignIn(code)
 
 			// Set organizationId (null for personal accounts)
@@ -298,10 +357,28 @@ export class WebAuthService extends EventEmitter<AuthServiceEvents> implements A
 
 			await this.storeCredentials(credentials)
 
-			vscode.window.showInformationMessage("Successfully authenticated with Roo Code Cloud")
+			const successMessage = "Successfully authenticated with Roo Code Cloud"
+			if (isCloudIDE) {
+				vscode.window.showInformationMessage(
+					`${successMessage} in Firebase Studio IDE. You can now use Roo Code Cloud features.`,
+				)
+			} else {
+				vscode.window.showInformationMessage(successMessage)
+			}
+
 			this.log("[auth] Successfully authenticated with Roo Code Cloud")
 		} catch (error) {
 			this.log(`[auth] Error handling Roo Code Cloud callback: ${error}`)
+
+			if (isCloudIDE) {
+				// Provide more detailed error information for Firebase Studio IDE
+				const errorMessage = error instanceof Error ? error.message : String(error)
+				vscode.window.showErrorMessage(
+					`Authentication failed in Firebase Studio IDE: ${errorMessage}. ` +
+						"Please try again or contact support if the issue persists.",
+				)
+			}
+
 			const previousState = this.state
 			this.state = "logged-out"
 			this.emit("logged-out", { previousState })

@@ -51,13 +51,51 @@ import { initializeI18n } from "./i18n"
 let outputChannel: vscode.OutputChannel
 let extensionContext: vscode.ExtensionContext
 
+/**
+ * Detects if running in Firebase Studio IDE (formerly IDX Google) environment
+ */
+function isFirebaseStudioIDE(): boolean {
+	const appName = vscode.env.appName?.toLowerCase() || ""
+	const remoteName = vscode.env.remoteName?.toLowerCase() || ""
+
+	return (
+		appName.includes("idx") ||
+		appName.includes("firebase") ||
+		appName.includes("studio") ||
+		remoteName.includes("idx") ||
+		remoteName.includes("firebase") ||
+		process.env.IDX_WORKSPACE_ID !== undefined ||
+		process.env.FIREBASE_PROJECT_ID !== undefined
+	)
+}
+
 // This method is called when your extension is activated.
 // Your extension is activated the very first time the command is executed.
 export async function activate(context: vscode.ExtensionContext) {
 	extensionContext = context
 	outputChannel = vscode.window.createOutputChannel(Package.outputChannel)
 	context.subscriptions.push(outputChannel)
+
+	// Enhanced logging for Firebase Studio IDE environments
+	const isCloudIDE = isFirebaseStudioIDE()
 	outputChannel.appendLine(`${Package.name} extension activated - ${JSON.stringify(Package)}`)
+	outputChannel.appendLine(`Environment detection:`)
+	outputChannel.appendLine(`  - Firebase Studio IDE: ${isCloudIDE}`)
+	outputChannel.appendLine(`  - App name: ${vscode.env.appName}`)
+	outputChannel.appendLine(`  - Remote name: ${vscode.env.remoteName}`)
+	outputChannel.appendLine(`  - URI scheme: ${vscode.env.uriScheme}`)
+	outputChannel.appendLine(`  - Machine ID: ${vscode.env.machineId}`)
+	outputChannel.appendLine(`  - Session ID: ${vscode.env.sessionId}`)
+
+	if (isCloudIDE) {
+		outputChannel.appendLine(`Firebase Studio IDE environment detected - enabling enhanced authentication handling`)
+
+		// Show user notification about Firebase Studio IDE support
+		vscode.window.showInformationMessage(
+			"Roo Code detected Firebase Studio IDE environment. Enhanced authentication support is enabled.",
+			{ modal: false },
+		)
+	}
 
 	// Migrate old settings to new
 	await migrateSettings(context, outputChannel)
