@@ -93,7 +93,6 @@ import { getMessagesSinceLastSummary, summarizeConversation } from "../condense"
 import { maybeRemoveImageBlocks } from "../../api/transform/image-cleaning"
 import { restoreTodoListForTask } from "../tools/updateTodoListTool"
 
-// Constants
 const MAX_EXPONENTIAL_BACKOFF_SECONDS = 600 // 10 minutes
 
 export type TaskEvents = {
@@ -108,6 +107,10 @@ export type TaskEvents = {
 	taskCompleted: [taskId: string, tokenUsage: TokenUsage, toolUsage: ToolUsage]
 	taskTokenUsageUpdated: [taskId: string, tokenUsage: TokenUsage]
 	taskToolFailed: [taskId: string, tool: ToolName, error: string]
+}
+
+export type TaskEventHandlers = {
+	[K in keyof TaskEvents]: (...args: TaskEvents[K]) => void | Promise<void>
 }
 
 export type TaskOptions = {
@@ -280,10 +283,12 @@ export class Task extends EventEmitter<TaskEvents> {
 		}
 
 		this.taskId = historyItem ? historyItem.id : crypto.randomUUID()
-		// normal use-case is usually retry similar history task with new workspace
+
+		// Normal use-case is usually retry similar history task with new workspace.
 		this.workspacePath = parentTask
 			? parentTask.workspacePath
 			: getWorkspacePath(path.join(os.homedir(), "Desktop"))
+
 		this.instanceId = crypto.randomUUID().slice(0, 8)
 		this.taskNumber = -1
 
@@ -312,25 +317,26 @@ export class Task extends EventEmitter<TaskEvents> {
 		this.parentTask = parentTask
 		this.taskNumber = taskNumber
 
-		// Store the task's mode when it's created
-		// For history items, use the stored mode; for new tasks, we'll set it after getting state
+		// Store the task's mode when it's created.
+		// For history items, use the stored mode; for new tasks, we'll set it
+		// after getting state.
 		if (historyItem) {
 			this._taskMode = historyItem.mode || defaultModeSlug
 			this.taskModeReady = Promise.resolve()
 			TelemetryService.instance.captureTaskRestarted(this.taskId)
 		} else {
-			// For new tasks, don't set the mode yet - wait for async initialization
+			// For new tasks, don't set the mode yet - wait for async initialization.
 			this._taskMode = undefined
 			this.taskModeReady = this.initializeTaskMode(provider)
 			TelemetryService.instance.captureTaskCreated(this.taskId)
 		}
 
-		// Only set up diff strategy if diff is enabled
+		// Only set up diff strategy if diff is enabled.
 		if (this.diffEnabled) {
-			// Default to old strategy, will be updated if experiment is enabled
+			// Default to old strategy, will be updated if experiment is enabled.
 			this.diffStrategy = new MultiSearchReplaceDiffStrategy(this.fuzzyMatchThreshold)
 
-			// Check experiment asynchronously and update strategy if needed
+			// Check experiment asynchronously and update strategy if needed.
 			provider.getState().then((state) => {
 				const isMultiFileApplyDiffEnabled = experiments.isEnabled(
 					state.experiments ?? {},
@@ -1231,7 +1237,7 @@ export class Task extends EventEmitter<TaskEvents> {
 			}
 		} catch (error) {
 			console.error("Error disposing RooIgnoreController:", error)
-			// This is the critical one for the leak fix
+			// This is the critical one for the leak fix.
 		}
 
 		try {
@@ -1241,7 +1247,7 @@ export class Task extends EventEmitter<TaskEvents> {
 		}
 
 		try {
-			// If we're not streaming then `abortStream` won't be called
+			// If we're not streaming then `abortStream` won't be called.
 			if (this.isStreaming && this.diffViewProvider.isEditing) {
 				this.diffViewProvider.revertChanges().catch(console.error)
 			}
@@ -1848,6 +1854,7 @@ export class Task extends EventEmitter<TaskEvents> {
 
 	public async *attemptApiRequest(retryAttempt: number = 0): ApiStream {
 		const state = await this.providerRef.deref()?.getState()
+
 		const {
 			apiConfiguration,
 			autoApprovalEnabled,
@@ -1859,21 +1866,24 @@ export class Task extends EventEmitter<TaskEvents> {
 			profileThresholds = {},
 		} = state ?? {}
 
-		// Get condensing configuration for automatic triggers
+		// Get condensing configuration for automatic triggers.
 		const customCondensingPrompt = state?.customCondensingPrompt
 		const condensingApiConfigId = state?.condensingApiConfigId
 		const listApiConfigMeta = state?.listApiConfigMeta
 
-		// Determine API handler to use for condensing
+		// Determine API handler to use for condensing.
 		let condensingApiHandler: ApiHandler | undefined
+
 		if (condensingApiConfigId && listApiConfigMeta && Array.isArray(listApiConfigMeta)) {
-			// Using type assertion for the id property to avoid implicit any
+			// Using type assertion for the id property to avoid implicit any.
 			const matchingConfig = listApiConfigMeta.find((config: any) => config.id === condensingApiConfigId)
+
 			if (matchingConfig) {
 				const profile = await this.providerRef.deref()?.providerSettingsManager.getProfile({
 					id: condensingApiConfigId,
 				})
-				// Ensure profile and apiProvider exist before trying to build handler
+
+				// Ensure profile and apiProvider exist before trying to build handler.
 				if (profile && profile.apiProvider) {
 					condensingApiHandler = buildApiHandler(profile)
 				}
