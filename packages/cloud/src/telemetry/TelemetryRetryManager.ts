@@ -43,8 +43,8 @@ export class TelemetryRetryManager {
 			this.processQueue()
 		}, this.config.retryIntervalMs)
 
-		// Process immediately on start
-		this.processQueue()
+		// Process immediately on start (async to avoid blocking)
+		setTimeout(() => this.processQueue(), 0)
 	}
 
 	/**

@@ -59,10 +59,9 @@ describe("TelemetryRetryManager", () => {
 		it("should start retry timer", async () => {
 			retryManager.start()
 
-			// Should process immediately on start
-			await vi.waitFor(() => {
-				expect(mockQueue.getEventsForRetry).toHaveBeenCalledTimes(1)
-			})
+			// Should process immediately on start (after setTimeout)
+			await vi.advanceTimersByTimeAsync(0)
+			expect(mockQueue.getEventsForRetry).toHaveBeenCalledTimes(1)
 
 			// Advance timer and run pending timers
 			await vi.advanceTimersByTimeAsync(30000)
@@ -77,10 +76,9 @@ describe("TelemetryRetryManager", () => {
 			retryManager.start()
 			retryManager.start()
 
-			// Should only process once on start
-			await vi.waitFor(() => {
-				expect(mockQueue.getEventsForRetry).toHaveBeenCalledTimes(1)
-			})
+			// Should only process once on start (after setTimeout)
+			await vi.advanceTimersByTimeAsync(0)
+			expect(mockQueue.getEventsForRetry).toHaveBeenCalledTimes(1)
 
 			// Advance timer
 			await vi.advanceTimersByTimeAsync(30000)
@@ -94,10 +92,9 @@ describe("TelemetryRetryManager", () => {
 		it("should stop retry timer", async () => {
 			retryManager.start()
 
-			// Should process immediately on start
-			await vi.waitFor(() => {
-				expect(mockQueue.getEventsForRetry).toHaveBeenCalledTimes(1)
-			})
+			// Should process immediately on start (after setTimeout)
+			await vi.advanceTimersByTimeAsync(0)
+			expect(mockQueue.getEventsForRetry).toHaveBeenCalledTimes(1)
 
 			// Advance timer once
 			await vi.advanceTimersByTimeAsync(30000)
@@ -168,7 +165,8 @@ describe("TelemetryRetryManager", () => {
 
 			retryManager.start()
 
-			// Wait for immediate processing to complete
+			// Wait for immediate processing to complete (after setTimeout)
+			await vi.advanceTimersByTimeAsync(0)
 			await vi.waitFor(() => {
 				expect(mockQueue.getEventsForRetry).toHaveBeenCalled()
 			})
@@ -198,7 +196,8 @@ describe("TelemetryRetryManager", () => {
 
 			retryManager.start()
 
-			// Wait for immediate processing to complete
+			// Wait for immediate processing to complete (after setTimeout)
+			await vi.advanceTimersByTimeAsync(0)
 			await vi.waitFor(() => {
 				expect(mockQueue.updateEventAfterRetry).toHaveBeenCalled()
 			})
@@ -222,7 +221,8 @@ describe("TelemetryRetryManager", () => {
 
 			retryManager.start()
 
-			// Wait for immediate processing to complete
+			// Wait for immediate processing to complete (after setTimeout)
+			await vi.advanceTimersByTimeAsync(0)
 			await vi.waitFor(() => {
 				expect(mockQueue.updateEventAfterRetry).toHaveBeenCalled()
 			})
@@ -250,7 +250,8 @@ describe("TelemetryRetryManager", () => {
 
 			retryManager.start()
 
-			// Wait for immediate processing to complete
+			// Wait for immediate processing to complete (after setTimeout)
+			await vi.advanceTimersByTimeAsync(0)
 			await vi.waitFor(() => {
 				expect(connectionStatusCallback).toHaveBeenCalled()
 			})
@@ -285,7 +286,8 @@ describe("TelemetryRetryManager", () => {
 
 			retryManager.start()
 
-			// Wait for immediate processing to complete
+			// Wait for immediate processing to complete (after setTimeout)
+			await vi.advanceTimersByTimeAsync(0)
 			await vi.waitFor(() => {
 				expect(mockQueue.pruneFailedEvents).toHaveBeenCalled()
 			})
@@ -334,7 +336,8 @@ describe("TelemetryRetryManager", () => {
 
 			retryManager.start()
 
-			// Wait for immediate processing to complete
+			// Wait for immediate processing to complete (after setTimeout)
+			await vi.advanceTimersByTimeAsync(0)
 			await vi.waitFor(() => {
 				expect(mockQueue.getEventsForRetry).toHaveBeenCalled()
 			})
@@ -373,7 +376,8 @@ describe("TelemetryRetryManager", () => {
 
 			retryManager.start()
 
-			// Wait for immediate processing to complete
+			// Wait for immediate processing to complete (after setTimeout)
+			await vi.advanceTimersByTimeAsync(0)
 			await vi.waitFor(() => {
 				expect(connectionStatusCallback).toHaveBeenCalled()
 			})
