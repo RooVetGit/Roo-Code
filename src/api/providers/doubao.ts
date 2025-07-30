@@ -4,7 +4,6 @@ import { DOUBAO_API_BASE_URL, doubaoDefaultModelId, doubaoModels } from "@roo-co
 import { getModelParams } from "../transform/model-params"
 import { ApiStreamUsageChunk } from "../transform/stream"
 
-// by a fan of Doubao, his name on Github is AntiMoron.
 // Core types for Doubao API
 interface ChatCompletionMessageParam {
 	role: "system" | "user" | "assistant" | "developer"
@@ -49,17 +48,6 @@ interface ChatCompletionChunk {
 		completion_tokens: number
 	}
 }
-
-// interface ApiHandlerOptions {
-// 	doubaoBaseUrl?: string
-// 	doubaoApiKey?: string
-// 	doubaoHeaders?: Record<string, string>
-// 	doubaoModelId?: string
-// 	doubaoStreamingEnabled?: boolean
-// 	modelTemperature?: number
-// 	includeMaxTokens?: boolean
-// 	modelMaxTokens?: number
-// }
 
 export class DoubaoHandler extends OpenAiHandler {
 	constructor(options: ApiHandlerOptions) {
