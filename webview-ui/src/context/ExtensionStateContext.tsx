@@ -515,5 +515,5 @@ export const useExtensionState = () => {
 		throw new Error("useExtensionState must be used within an ExtensionStateContextProvider")
 	}
 
-	return context as ExtensionStateContextType
+	return context
 }
