@@ -687,6 +687,18 @@ describe("addCustomInstructions", () => {
 			return Promise.reject({ code: "ENOENT" })
 		})
 
+		// Mock stat to indicate the resolved target is a file
+		statMock.mockImplementation((filePath: PathLike) => {
+			const pathStr = filePath.toString()
+			const normalizedPath = pathStr.replace(/\\/g, "/")
+			if (normalizedPath.endsWith("actual-agents-file.md")) {
+				return Promise.resolve({
+					isFile: vi.fn().mockReturnValue(true),
+				})
+			}
+			return Promise.reject({ code: "ENOENT" })
+		})
+
 		// Mock readFile to return content from the resolved path
 		readFileMock.mockImplementation((filePath: PathLike) => {
 			const pathStr = filePath.toString()

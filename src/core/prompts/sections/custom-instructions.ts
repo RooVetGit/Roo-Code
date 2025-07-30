@@ -224,19 +224,27 @@ async function loadAgentRulesFile(cwd: string): Promise<string> {
 		const agentsPath = path.join(cwd, "AGENTS.md")
 		let resolvedPath = agentsPath
 
-		// Check if the file is a symlink and resolve it if necessary
+		// Check if AGENTS.md exists and handle symlinks
 		try {
 			const stats = await fs.lstat(agentsPath)
 			if (stats.isSymbolicLink()) {
-				const linkTarget = await fs.readlink(agentsPath)
-				resolvedPath = path.resolve(path.dirname(agentsPath), linkTarget)
+				// Create a temporary fileInfo array to use with resolveSymLink
+				const fileInfo: Array<{ originalPath: string; resolvedPath: string }> = []
+
+				// Use the existing resolveSymLink function to handle symlink resolution
+				await resolveSymLink(agentsPath, fileInfo, 0)
+
+				// Extract the resolved path from fileInfo
+				if (fileInfo.length > 0) {
+					resolvedPath = fileInfo[0].resolvedPath
+				}
 			}
 		} catch (err) {
-			// If we can't check symlink status, just use the original path
-			resolvedPath = agentsPath
+			// If lstat fails (file doesn't exist), return empty
+			return ""
 		}
 
-		// Read the file content
+		// Read the content from the resolved path
 		const content = await safeReadFile(resolvedPath)
 		if (content) {
 			return `# Agent Rules Standard (AGENTS.md):\n${content}`
