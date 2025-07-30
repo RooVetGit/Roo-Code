@@ -227,7 +227,8 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 
 				// Don't treat initial sync from undefined to a defined value as a user change
 				// This prevents the dirty state when the component initializes and auto-syncs the model ID
-				const isInitialSync = previousValue === undefined && value !== undefined
+				// Exception: Always trigger change detection for boolean fields (checkboxes)
+				const isInitialSync = previousValue === undefined && value !== undefined && typeof value !== "boolean"
 
 				if (!isInitialSync) {
 					setChangeDetected(true)
