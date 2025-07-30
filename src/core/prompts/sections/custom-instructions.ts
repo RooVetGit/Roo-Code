@@ -27,42 +27,6 @@ async function safeReadFile(filePath: string): Promise<string> {
 }
 
 /**
- * Resolve a symlink to its target path
- */
-async function resolveSymlinkPath(symlinkPath: string, depth: number = 0): Promise<string> {
-	// Avoid cyclic symlinks
-	if (depth > MAX_DEPTH) {
-		throw new Error(`Maximum symlink depth exceeded for ${symlinkPath}`)
-	}
-
-	try {
-		// Check if the path is a symlink
-		const stats = await fs.lstat(symlinkPath)
-		if (!stats.isSymbolicLink()) {
-			// Not a symlink, return the original path
-			return symlinkPath
-		}
-
-		// Get the symlink target
-		const linkTarget = await fs.readlink(symlinkPath)
-		// Resolve the target path (relative to the symlink location)
-		const resolvedTarget = path.resolve(path.dirname(symlinkPath), linkTarget)
-
-		// Check if the resolved target is also a symlink (handle nested symlinks)
-		const targetStats = await fs.lstat(resolvedTarget)
-		if (targetStats.isSymbolicLink()) {
-			// Recursively resolve nested symlinks
-			return resolveSymlinkPath(resolvedTarget, depth + 1)
-		}
-
-		return resolvedTarget
-	} catch (err) {
-		// If we can't resolve the symlink, return the original path
-		return symlinkPath
-	}
-}
-
-/**
  * Check if a directory exists
  */
 async function directoryExists(dirPath: string): Promise<boolean> {
@@ -258,8 +222,20 @@ export async function loadRuleFiles(cwd: string): Promise<string> {
 async function loadAgentRulesFile(cwd: string): Promise<string> {
 	try {
 		const agentsPath = path.join(cwd, "AGENTS.md")
-		// Resolve symlinks if necessary
-		const resolvedPath = await resolveSymlinkPath(agentsPath)
+		let resolvedPath = agentsPath
+
+		// Check if the file is a symlink and resolve it if necessary
+		try {
+			const stats = await fs.lstat(agentsPath)
+			if (stats.isSymbolicLink()) {
+				const linkTarget = await fs.readlink(agentsPath)
+				resolvedPath = path.resolve(path.dirname(agentsPath), linkTarget)
+			}
+		} catch (err) {
+			// If we can't check symlink status, just use the original path
+			resolvedPath = agentsPath
+		}
+
 		// Read the file content
 		const content = await safeReadFile(resolvedPath)
 		if (content) {

@@ -674,11 +674,6 @@ describe("addCustomInstructions", () => {
 				return Promise.resolve({
 					isSymbolicLink: vi.fn().mockReturnValue(true),
 				})
-			} else if (pathStr.endsWith("actual-agents-file.md")) {
-				// The resolved target is not a symlink
-				return Promise.resolve({
-					isSymbolicLink: vi.fn().mockReturnValue(false),
-				})
 			}
 			return Promise.reject({ code: "ENOENT" })
 		})
