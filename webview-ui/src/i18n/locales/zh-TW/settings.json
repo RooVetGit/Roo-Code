@@ -113,6 +113,7 @@
 			"modelDimensionRequired": "需要模型維度",
 			"geminiApiKeyRequired": "需要 Gemini API 金鑰",
 			"mistralApiKeyRequired": "需要 Mistral API 金鑰",
+			"jinaApiKeyRequired": "需要 Jina API 金鑰",
 			"ollamaBaseUrlRequired": "需要 Ollama 基礎 URL",
 			"baseUrlRequired": "需要基礎 URL",
 			"modelDimensionMinValue": "模型維度必須大於 0"
