@@ -36,6 +36,8 @@ import {
 	litellmDefaultModelId,
 	claudeCodeDefaultModelId,
 	claudeCodeModels,
+	sambaNovaModels,
+	sambaNovaDefaultModelId,
 } from "@roo-code/types"
 
 import type { RouterModels } from "@roo/api"
@@ -229,6 +231,11 @@ function getSelectedModel({
 		case "cerebras": {
 			const id = apiConfiguration.apiModelId ?? cerebrasDefaultModelId
 			const info = cerebrasModels[id as keyof typeof cerebrasModels]
+      return { id, info }
+		}
+		case "sambanova": {
+			const id = apiConfiguration.apiModelId ?? sambaNovaDefaultModelId
+			const info = sambaNovaModels[id as keyof typeof sambaNovaModels]
 			return { id, info }
 		}
 		// case "anthropic":
