@@ -78,13 +78,7 @@ import { getWorkspaceGitInfo } from "../../utils/git"
  */
 
 export type ClineProviderEvents = {
-	clineCreated: [cline: Task]
-}
-
-class OrganizationAllowListViolationError extends Error {
-	constructor(message: string) {
-		super(message)
-	}
+	taskCreated: [task: Task]
 }
 
 export class ClineProvider
@@ -380,6 +374,7 @@ export class ClineProvider
 				// Errors from terminal commands seem to get swallowed / ignored.
 				vscode.window.showErrorMessage(error.message)
 			}
+
 			throw error
 		}
 	}
@@ -526,7 +521,7 @@ export class ClineProvider
 	// of tasks, each one being a sub task of the previous one until the main
 	// task is finished.
 	public async initClineWithTask(
-		task?: string,
+		text?: string,
 		images?: string[],
 		parentTask?: Task,
 		options: Partial<
@@ -549,30 +544,30 @@ export class ClineProvider
 			throw new OrganizationAllowListViolationError(t("common:errors.violated_organization_allowlist"))
 		}
 
-		const cline = new Task({
+		const task = new Task({
 			provider: this,
 			apiConfiguration,
 			enableDiff,
 			enableCheckpoints,
 			fuzzyMatchThreshold,
 			consecutiveMistakeLimit: apiConfiguration.consecutiveMistakeLimit,
-			task,
+			task: text,
 			images,
 			experiments,
 			rootTask: this.clineStack.length > 0 ? this.clineStack[0] : undefined,
 			parentTask,
 			taskNumber: this.clineStack.length + 1,
-			onCreated: (cline) => this.emit("clineCreated", cline),
+			onCreated: (instance) => this.emit("taskCreated", instance),
 			...options,
 		})
 
-		await this.addClineToStack(cline)
+		await this.addClineToStack(task)
 
 		this.log(
-			`[subtasks] ${cline.parentTask ? "child" : "parent"} task ${cline.taskId}.${cline.instanceId} instantiated`,
+			`[subtasks] ${task.parentTask ? "child" : "parent"} task ${task.taskId}.${task.instanceId} instantiated`,
 		)
 
-		return cline
+		return task
 	}
 
 	public async initClineWithHistoryItem(historyItem: HistoryItem & { rootTask?: Task; parentTask?: Task }) {
@@ -629,7 +624,7 @@ export class ClineProvider
 			experiments,
 		} = await this.getState()
 
-		const cline = new Task({
+		const task = new Task({
 			provider: this,
 			apiConfiguration,
 			enableDiff,
@@ -641,14 +636,16 @@ export class ClineProvider
 			rootTask: historyItem.rootTask,
 			parentTask: historyItem.parentTask,
 			taskNumber: historyItem.number,
-			onCreated: (cline) => this.emit("clineCreated", cline),
+			onCreated: (instance) => this.emit("taskCreated", instance),
 		})
 
-		await this.addClineToStack(cline)
+		await this.addClineToStack(task)
+
 		this.log(
-			`[subtasks] ${cline.parentTask ? "child" : "parent"} task ${cline.taskId}.${cline.instanceId} instantiated`,
+			`[subtasks] ${task.parentTask ? "child" : "parent"} task ${task.taskId}.${task.instanceId} instantiated`,
 		)
-		return cline
+
+		return task
 	}
 
 	public async postMessageToWebview(message: ExtensionMessage) {
@@ -1979,3 +1976,5 @@ export class ClineProvider
 		}
 	}
 }
+
+class OrganizationAllowListViolationError extends Error {}

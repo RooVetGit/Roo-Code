@@ -96,7 +96,7 @@ import { restoreTodoListForTask } from "../tools/updateTodoListTool"
 // Constants
 const MAX_EXPONENTIAL_BACKOFF_SECONDS = 600 // 10 minutes
 
-export type ClineEvents = {
+export type TaskEvents = {
 	message: [{ action: "created" | "updated"; message: ClineMessage }]
 	taskStarted: []
 	taskModeSwitched: [taskId: string, mode: string]
@@ -125,10 +125,10 @@ export type TaskOptions = {
 	rootTask?: Task
 	parentTask?: Task
 	taskNumber?: number
-	onCreated?: (cline: Task) => void
+	onCreated?: (task: Task) => void
 }
 
-export class Task extends EventEmitter<ClineEvents> {
+export class Task extends EventEmitter<TaskEvents> {
 	todoList?: TodoItem[]
 	readonly taskId: string
 	readonly instanceId: string
@@ -137,6 +137,7 @@ export class Task extends EventEmitter<ClineEvents> {
 	readonly parentTask: Task | undefined = undefined
 	readonly taskNumber: number
 	readonly workspacePath: string
+
 	/**
 	 * The mode associated with this task. Persisted across sessions
 	 * to maintain user context when reopening tasks from history.
