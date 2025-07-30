@@ -24,11 +24,9 @@ export function MarketplaceView({ stateManager, onDone, targetTab }: Marketplace
 		extensionState?.organizationSettingsVersion ?? -1,
 	)
 
-	// Track when organization settings version changes and trigger refresh
 	useEffect(() => {
 		const currentVersion = extensionState?.organizationSettingsVersion ?? -1
 		if (currentVersion !== lastOrganizationSettingsVersion) {
-			// Organization settings version changed, refresh marketplace data
 			vscode.postMessage({
 				type: "fetchMarketplaceData",
 			})

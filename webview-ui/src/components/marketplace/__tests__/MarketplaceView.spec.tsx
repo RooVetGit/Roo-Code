@@ -5,14 +5,12 @@ import { MarketplaceViewStateManager } from "../MarketplaceViewStateManager"
 import { ExtensionStateContext } from "@/context/ExtensionStateContext"
 import { vscode } from "@/utils/vscode"
 
-// Mock vscode API
 vi.mock("@/utils/vscode", () => ({
 	vscode: {
 		postMessage: vi.fn(),
 	},
 }))
 
-// Mock the translation hook
 vi.mock("@/i18n/TranslationContext", () => ({
 	useAppTranslation: () => ({
 		t: (key: string) => key,
