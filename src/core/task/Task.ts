@@ -112,7 +112,6 @@ export type ClineEvents = {
 
 export type TaskOptions = {
 	provider: ClineProvider
-	apiConfiguration: ProviderSettings
 	enableDiff?: boolean
 	enableCheckpoints?: boolean
 	fuzzyMatchThreshold?: number
@@ -192,7 +191,7 @@ export class Task extends EventEmitter<ClineEvents> {
 	private pauseInterval: NodeJS.Timeout | undefined
 
 	// API
-	readonly apiConfiguration: ProviderSettings
+	private _apiConfiguration?: ProviderSettings
 	api: ApiHandler
 	private static lastGlobalApiRequestTime?: number
 	private consecutiveAutoApprovedRequestsCount: number = 0
@@ -234,7 +233,7 @@ export class Task extends EventEmitter<ClineEvents> {
 
 	// Tool Use
 	consecutiveMistakeCount: number = 0
-	consecutiveMistakeLimit: number
+	consecutiveMistakeLimit: number = DEFAULT_CONSECUTIVE_MISTAKE_LIMIT
 	consecutiveMistakeCountForApplyDiff: Map<string, number> = new Map()
 	toolUsage: ToolUsage = {}
 
@@ -258,11 +257,10 @@ export class Task extends EventEmitter<ClineEvents> {
 
 	constructor({
 		provider,
-		apiConfiguration,
 		enableDiff = false,
 		enableCheckpoints = true,
 		fuzzyMatchThreshold = 1.0,
-		consecutiveMistakeLimit = DEFAULT_CONSECUTIVE_MISTAKE_LIMIT,
+		consecutiveMistakeLimit,
 		task,
 		images,
 		historyItem,
@@ -294,18 +292,28 @@ export class Task extends EventEmitter<ClineEvents> {
 			console.error("Failed to initialize RooIgnoreController:", error)
 		})
 
-		this.apiConfiguration = apiConfiguration
-		this.api = buildApiHandler(apiConfiguration)
+		// API configuration will be loaded asynchronously
+		this.api = buildApiHandler({} as ProviderSettings) // Temporary, will be updated in initializeApiConfiguration
 
 		this.urlContentFetcher = new UrlContentFetcher(provider.context)
 		this.browserSession = new BrowserSession(provider.context)
 		this.diffEnabled = enableDiff
 		this.fuzzyMatchThreshold = fuzzyMatchThreshold
-		this.consecutiveMistakeLimit = consecutiveMistakeLimit ?? DEFAULT_CONSECUTIVE_MISTAKE_LIMIT
 		this.providerRef = new WeakRef(provider)
 		this.globalStoragePath = provider.context.globalStorageUri.fsPath
 		this.diffViewProvider = new DiffViewProvider(this.cwd, this)
 		this.enableCheckpoints = enableCheckpoints
+
+		// Set initial consecutiveMistakeLimit, will be updated when API config is loaded
+		this.consecutiveMistakeLimit = consecutiveMistakeLimit ?? DEFAULT_CONSECUTIVE_MISTAKE_LIMIT
+
+		// Initialize API configuration
+		this.initializeApiConfiguration().then((apiConfig) => {
+			// Update consecutiveMistakeLimit with API config value if not explicitly provided
+			if (consecutiveMistakeLimit === undefined && apiConfig.consecutiveMistakeLimit !== undefined) {
+				this.consecutiveMistakeLimit = apiConfig.consecutiveMistakeLimit
+			}
+		})
 
 		this.rootTask = rootTask
 		this.parentTask = parentTask
@@ -355,6 +363,33 @@ export class Task extends EventEmitter<ClineEvents> {
 				throw new Error("Either historyItem or task/images must be provided")
 			}
 		}
+	}
+
+	/**
+	 * Initialize API configuration from ProviderSettingsManager.
+	 * This ensures the Task always uses the current API configuration.
+	 */
+	private async initializeApiConfiguration(): Promise<ProviderSettings> {
+		const provider = this.providerRef.deref()
+		if (!provider) {
+			throw new Error("Provider reference lost during API configuration initialization")
+		}
+
+		const apiConfiguration = await provider.providerSettingsManager.getCurrentProviderSettings()
+		this._apiConfiguration = apiConfiguration
+		this.api = buildApiHandler(apiConfiguration)
+		return apiConfiguration
+	}
+
+	/**
+	 * Get the current API configuration, loading it if necessary.
+	 * This ensures we always have the latest configuration from ProviderSettingsManager.
+	 */
+	public async getApiConfiguration(): Promise<ProviderSettings> {
+		if (!this._apiConfiguration) {
+			return await this.initializeApiConfiguration()
+		}
+		return this._apiConfiguration
 	}
 
 	/**
@@ -1387,16 +1422,12 @@ export class Task extends EventEmitter<ClineEvents> {
 		// take a few seconds. For the best UX we show a placeholder api_req_started
 		// message with a loading spinner as this happens.
 
-		// Determine API protocol based on provider and model
-		const modelId = getModelId(this.apiConfiguration)
-		const apiProtocol = getApiProtocol(this.apiConfiguration.apiProvider, modelId)
-
 		await this.say(
 			"api_req_started",
 			JSON.stringify({
 				request:
 					userContent.map((block) => formatContentBlockToMarkdown(block)).join("\n\n") + "\n\nLoading...",
-				apiProtocol,
+				apiProtocol: "anthropic", // Temporary, will be updated after loading environment details
 			}),
 		)
 
@@ -1418,6 +1449,11 @@ export class Task extends EventEmitter<ClineEvents> {
 			maxDiagnosticMessages,
 			maxReadFileLine,
 		})
+
+		// Get API configuration for model info
+		const apiConfig = await this.getApiConfiguration()
+		const modelId = getModelId(apiConfig)
+		const apiProtocol = getApiProtocol(apiConfig.apiProvider, modelId)
 
 		const environmentDetails = await getEnvironmentDetails(this, includeFileDetails)
 
@@ -1848,7 +1884,6 @@ export class Task extends EventEmitter<ClineEvents> {
 	public async *attemptApiRequest(retryAttempt: number = 0): ApiStream {
 		const state = await this.providerRef.deref()?.getState()
 		const {
-			apiConfiguration,
 			autoApprovalEnabled,
 			alwaysApproveResubmit,
 			requestDelaySeconds,
@@ -1857,6 +1892,9 @@ export class Task extends EventEmitter<ClineEvents> {
 			autoCondenseContextPercent = 100,
 			profileThresholds = {},
 		} = state ?? {}
+
+		// Get API configuration from ProviderSettingsManager
+		const apiConfiguration = await this.getApiConfiguration()
 
 		// Get condensing configuration for automatic triggers
 		const customCondensingPrompt = state?.customCondensingPrompt
@@ -1913,7 +1951,7 @@ export class Task extends EventEmitter<ClineEvents> {
 			const maxTokens = getModelMaxOutputTokens({
 				modelId: this.api.getModel().id,
 				model: modelInfo,
-				settings: this.apiConfiguration,
+				settings: apiConfiguration,
 			})
 
 			const contextWindow = modelInfo.contextWindow

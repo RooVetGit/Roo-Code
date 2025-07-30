@@ -30,6 +30,10 @@ const mockClineProvider = {
 		setValue: vi.fn(),
 		getValue: vi.fn(),
 	},
+	providerSettingsManager: {
+		getCurrentProviderSettings: vi.fn(),
+		updateCurrentProviderSettings: vi.fn(),
+	},
 	log: vi.fn(),
 	postStateToWebview: vi.fn(),
 	getCurrentCline: vi.fn(),
@@ -107,6 +111,15 @@ describe("webviewMessageHandler - requestRouterModels", () => {
 				litellmBaseUrl: "http://localhost:4000",
 			},
 		})
+		// Mock providerSettingsManager to return the same API configuration
+		vi.mocked(mockClineProvider.providerSettingsManager.getCurrentProviderSettings).mockResolvedValue({
+			openRouterApiKey: "openrouter-key",
+			requestyApiKey: "requesty-key",
+			glamaApiKey: "glama-key",
+			unboundApiKey: "unbound-key",
+			litellmApiKey: "litellm-key",
+			litellmBaseUrl: "http://localhost:4000",
+		} as any)
 	})
 
 	it("successfully fetches models from all providers", async () => {
@@ -167,6 +180,14 @@ describe("webviewMessageHandler - requestRouterModels", () => {
 				// Missing litellm config
 			},
 		})
+		// Mock providerSettingsManager to return the same configuration without litellm
+		vi.mocked(mockClineProvider.providerSettingsManager.getCurrentProviderSettings).mockResolvedValue({
+			openRouterApiKey: "openrouter-key",
+			requestyApiKey: "requesty-key",
+			glamaApiKey: "glama-key",
+			unboundApiKey: "unbound-key",
+			// Missing litellm config
+		} as any)
 
 		const mockModels: ModelRecord = {
 			"model-1": {
@@ -205,6 +226,14 @@ describe("webviewMessageHandler - requestRouterModels", () => {
 				// Missing litellm config
 			},
 		})
+		// Mock providerSettingsManager to return the same configuration without litellm
+		vi.mocked(mockClineProvider.providerSettingsManager.getCurrentProviderSettings).mockResolvedValue({
+			openRouterApiKey: "openrouter-key",
+			requestyApiKey: "requesty-key",
+			glamaApiKey: "glama-key",
+			unboundApiKey: "unbound-key",
+			// Missing litellm config
+		} as any)
 
 		const mockModels: ModelRecord = {
 			"model-1": {

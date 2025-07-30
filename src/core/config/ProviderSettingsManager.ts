@@ -3,6 +3,7 @@ import { z, ZodError } from "zod"
 
 import {
 	type ProviderSettingsEntry,
+	type ProviderSettings,
 	providerSettingsSchema,
 	providerSettingsSchemaDiscriminated,
 	DEFAULT_CONSECUTIVE_MISTAKE_LIMIT,
@@ -370,6 +371,82 @@ export class ProviderSettingsManager {
 			})
 		} catch (error) {
 			throw new Error(`Failed to activate profile: ${error instanceof Error ? error.message : error}`)
+		}
+	}
+
+	/**
+	 * Get the current active provider settings.
+	 * This combines the profile data with the actual provider settings.
+	 */
+	public async getCurrentProviderSettings(): Promise<ProviderSettings> {
+		try {
+			return await this.lock(async () => {
+				const providerProfiles = await this.load()
+				const currentName = providerProfiles.currentApiConfigName
+
+				if (!currentName || !providerProfiles.apiConfigs[currentName]) {
+					// Return default empty settings if no current config
+					return {} as ProviderSettings
+				}
+
+				const { id, ...settings } = providerProfiles.apiConfigs[currentName]
+				return settings as ProviderSettings
+			})
+		} catch (error) {
+			throw new Error(`Failed to get current provider settings: ${error}`)
+		}
+	}
+
+	/**
+	 * Get provider settings for a specific mode.
+	 * Returns the settings for the API config assigned to that mode.
+	 */
+	public async getModeProviderSettings(mode: Mode): Promise<ProviderSettings | undefined> {
+		try {
+			return await this.lock(async () => {
+				const providerProfiles = await this.load()
+				const configId = providerProfiles.modeApiConfigs?.[mode]
+
+				if (!configId) {
+					return undefined
+				}
+
+				// Find the config with this ID
+				const config = Object.values(providerProfiles.apiConfigs).find((c) => c.id === configId)
+				if (!config) {
+					return undefined
+				}
+
+				const { id, ...settings } = config
+				return settings as ProviderSettings
+			})
+		} catch (error) {
+			throw new Error(`Failed to get mode provider settings: ${error}`)
+		}
+	}
+
+	/**
+	 * Update the current active provider settings.
+	 * This updates the settings for the currently active profile.
+	 */
+	public async updateCurrentProviderSettings(settings: ProviderSettings): Promise<void> {
+		try {
+			return await this.lock(async () => {
+				const providerProfiles = await this.load()
+				const currentName = providerProfiles.currentApiConfigName
+
+				if (!currentName || !providerProfiles.apiConfigs[currentName]) {
+					throw new Error("No active configuration to update")
+				}
+
+				// Preserve the ID when updating
+				const existingId = providerProfiles.apiConfigs[currentName].id
+				providerProfiles.apiConfigs[currentName] = { ...settings, id: existingId }
+
+				await this.store(providerProfiles)
+			})
+		} catch (error) {
+			throw new Error(`Failed to update current provider settings: ${error}`)
 		}
 	}
 

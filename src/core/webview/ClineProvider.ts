@@ -537,7 +537,6 @@ export class ClineProvider
 		> = {},
 	) {
 		const {
-			apiConfiguration,
 			organizationAllowList,
 			diffEnabled: enableDiff,
 			enableCheckpoints,
@@ -545,13 +544,15 @@ export class ClineProvider
 			experiments,
 		} = await this.getState()
 
+		// Get API configuration from ProviderSettingsManager to check organization allowlist
+		const apiConfiguration = await this.providerSettingsManager.getCurrentProviderSettings()
+
 		if (!ProfileValidator.isProfileAllowed(apiConfiguration, organizationAllowList)) {
 			throw new OrganizationAllowListViolationError(t("common:errors.violated_organization_allowlist"))
 		}
 
 		const cline = new Task({
 			provider: this,
-			apiConfiguration,
 			enableDiff,
 			enableCheckpoints,
 			fuzzyMatchThreshold,
@@ -621,17 +622,13 @@ export class ClineProvider
 			}
 		}
 
-		const {
-			apiConfiguration,
-			diffEnabled: enableDiff,
-			enableCheckpoints,
-			fuzzyMatchThreshold,
-			experiments,
-		} = await this.getState()
+		const { diffEnabled: enableDiff, enableCheckpoints, fuzzyMatchThreshold, experiments } = await this.getState()
+
+		// Get API configuration from ProviderSettingsManager for consecutiveMistakeLimit
+		const apiConfiguration = await this.providerSettingsManager.getCurrentProviderSettings()
 
 		const cline = new Task({
 			provider: this,
-			apiConfiguration,
 			enableDiff,
 			enableCheckpoints,
 			fuzzyMatchThreshold,
@@ -953,7 +950,7 @@ export class ClineProvider
 					this.updateGlobalState("listApiConfigMeta", await this.providerSettingsManager.listConfig()),
 					this.updateGlobalState("currentApiConfigName", name),
 					this.providerSettingsManager.setModeConfig(mode, id),
-					this.contextProxy.setProviderSettings(providerSettings),
+					this.providerSettingsManager.updateCurrentProviderSettings(providerSettings),
 				])
 
 				// Change the provider for the current task.
@@ -1009,7 +1006,7 @@ export class ClineProvider
 		await Promise.all([
 			this.contextProxy.setValue("listApiConfigMeta", await this.providerSettingsManager.listConfig()),
 			this.contextProxy.setValue("currentApiConfigName", name),
-			this.contextProxy.setProviderSettings(providerSettings),
+			this.providerSettingsManager.updateCurrentProviderSettings(providerSettings),
 		])
 
 		const { mode } = await this.getState()
@@ -1113,7 +1110,8 @@ export class ClineProvider
 	// OpenRouter
 
 	async handleOpenRouterCallback(code: string) {
-		let { apiConfiguration, currentApiConfigName } = await this.getState()
+		const { currentApiConfigName } = await this.getState()
+		const apiConfiguration = await this.providerSettingsManager.getCurrentProviderSettings()
 
 		let apiKey: string
 		try {
@@ -1161,7 +1159,8 @@ export class ClineProvider
 			throw error
 		}
 
-		const { apiConfiguration, currentApiConfigName } = await this.getState()
+		const { currentApiConfigName } = await this.getState()
+		const apiConfiguration = await this.providerSettingsManager.getCurrentProviderSettings()
 
 		const newConfiguration: ProviderSettings = {
 			...apiConfiguration,
@@ -1176,7 +1175,8 @@ export class ClineProvider
 	// Requesty
 
 	async handleRequestyCallback(code: string) {
-		let { apiConfiguration, currentApiConfigName } = await this.getState()
+		const { currentApiConfigName } = await this.getState()
+		const apiConfiguration = await this.providerSettingsManager.getCurrentProviderSettings()
 
 		const newConfiguration: ProviderSettings = {
 			...apiConfiguration,
@@ -1433,7 +1433,6 @@ export class ClineProvider
 
 	async getStateToPostToWebview() {
 		const {
-			apiConfiguration,
 			lastShownAnnouncementId,
 			customInstructions,
 			alwaysAllowReadOnly,
@@ -1527,9 +1526,12 @@ export class ClineProvider
 		const currentMode = mode ?? defaultModeSlug
 		const hasSystemPromptOverride = await this.hasFileBasedSystemPromptOverride(currentMode)
 
+		// Get current provider settings from ProviderSettingsManager
+		const currentProviderSettings = await this.providerSettingsManager.getCurrentProviderSettings()
+
 		return {
 			version: this.context.extension?.packageJSON?.version ?? "",
-			apiConfiguration,
+			apiConfiguration: currentProviderSettings,
 			customInstructions,
 			alwaysAllowReadOnly: alwaysAllowReadOnly ?? false,
 			alwaysAllowReadOnlyOutsideWorkspace: alwaysAllowReadOnlyOutsideWorkspace ?? false,
@@ -1652,15 +1654,12 @@ export class ClineProvider
 		const stateValues = this.contextProxy.getValues()
 		const customModes = await this.customModesManager.getCustomModes()
 
-		// Determine apiProvider with the same logic as before.
-		const apiProvider: ProviderName = stateValues.apiProvider ? stateValues.apiProvider : "anthropic"
+		// Get provider settings from ProviderSettingsManager
+		const providerSettings = await this.providerSettingsManager.getCurrentProviderSettings()
 
-		// Build the apiConfiguration object combining state values and secrets.
-		const providerSettings = this.contextProxy.getProviderSettings()
-
-		// Ensure apiProvider is set properly if not already in state
+		// Ensure apiProvider is set properly if not already in settings
 		if (!providerSettings.apiProvider) {
-			providerSettings.apiProvider = apiProvider
+			providerSettings.apiProvider = stateValues.apiProvider || "anthropic"
 		}
 
 		let organizationAllowList = ORGANIZATION_ALLOW_ALL
@@ -1927,7 +1926,8 @@ export class ClineProvider
 	 * like the current mode, API provider, git repository information, etc.
 	 */
 	public async getTelemetryProperties(): Promise<TelemetryProperties> {
-		const { mode, apiConfiguration, language } = await this.getState()
+		const { mode, language } = await this.getState()
+		const apiConfiguration = await this.providerSettingsManager.getCurrentProviderSettings()
 		const task = this.getCurrentCline()
 
 		const packageJSON = this.context.extension?.packageJSON

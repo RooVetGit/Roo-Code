@@ -91,7 +91,6 @@ describe("autoImportSettings", () => {
 		mockContextProxy = {
 			setValues: vi.fn().mockResolvedValue(undefined),
 			setValue: vi.fn().mockResolvedValue(undefined),
-			setProviderSettings: vi.fn().mockResolvedValue(undefined),
 		}
 
 		// Mock custom modes manager

@@ -237,7 +237,7 @@ export const webviewMessageHandler = async (
 					if (listApiConfig.length === 1) {
 						// Check if first time init then sync with exist config.
 						if (!checkExistKey(listApiConfig[0])) {
-							const { apiConfiguration } = await provider.getState()
+							const apiConfiguration = await provider.providerSettingsManager.getCurrentProviderSettings()
 
 							await provider.providerSettingsManager.saveConfig(
 								listApiConfig[0].name ?? "default",
@@ -512,7 +512,7 @@ export const webviewMessageHandler = async (
 			await flushModels(routerNameFlush)
 			break
 		case "requestRouterModels":
-			const { apiConfiguration } = await provider.getState()
+			const apiConfiguration = await provider.providerSettingsManager.getCurrentProviderSettings()
 
 			const routerModels: Partial<Record<RouterName, ModelRecord>> = {
 				openrouter: {},
@@ -611,7 +611,7 @@ export const webviewMessageHandler = async (
 			break
 		case "requestOllamaModels": {
 			// Specific handler for Ollama models only
-			const { apiConfiguration: ollamaApiConfig } = await provider.getState()
+			const ollamaApiConfig = await provider.providerSettingsManager.getCurrentProviderSettings()
 			try {
 				// Flush cache first to ensure fresh models
 				await flushModels("ollama")
@@ -635,7 +635,7 @@ export const webviewMessageHandler = async (
 		}
 		case "requestLmStudioModels": {
 			// Specific handler for LM Studio models only
-			const { apiConfiguration: lmStudioApiConfig } = await provider.getState()
+			const lmStudioApiConfig = await provider.providerSettingsManager.getCurrentProviderSettings()
 			try {
 				// Flush cache first to ensure fresh models
 				await flushModels("lmstudio")
@@ -1335,11 +1335,11 @@ export const webviewMessageHandler = async (
 		case "enhancePrompt":
 			if (message.text) {
 				try {
-					const { apiConfiguration, customSupportPrompts, listApiConfigMeta, enhancementApiConfigId } =
+					const { customSupportPrompts, listApiConfigMeta, enhancementApiConfigId } =
 						await provider.getState()
 
 					// Try to get enhancement config first, fall back to current config.
-					let configToUse: ProviderSettings = apiConfiguration
+					let configToUse: ProviderSettings
 
 					if (enhancementApiConfigId && !!listApiConfigMeta.find(({ id }) => id === enhancementApiConfigId)) {
 						const { name: _, ...providerSettings } = await provider.providerSettingsManager.getProfile({
@@ -1348,7 +1348,11 @@ export const webviewMessageHandler = async (
 
 						if (providerSettings.apiProvider) {
 							configToUse = providerSettings
+						} else {
+							configToUse = await provider.providerSettingsManager.getCurrentProviderSettings()
 						}
+					} else {
+						configToUse = await provider.providerSettingsManager.getCurrentProviderSettings()
 					}
 
 					const enhancedPrompt = await singleCompletionHandler(

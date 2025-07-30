@@ -2,16 +2,13 @@ import * as vscode from "vscode"
 import { ZodError } from "zod"
 
 import {
-	PROVIDER_SETTINGS_KEYS,
 	GLOBAL_SETTINGS_KEYS,
 	SECRET_STATE_KEYS,
 	GLOBAL_STATE_KEYS,
-	type ProviderSettings,
 	type GlobalSettings,
 	type SecretState,
 	type GlobalState,
 	type RooCodeSettings,
-	providerSettingsSchema,
 	globalSettingsSchema,
 	isSecretStateKey,
 } from "@roo-code/types"
@@ -184,48 +181,6 @@ export class ContextProxy {
 
 			return GLOBAL_SETTINGS_KEYS.reduce((acc, key) => ({ ...acc, [key]: values[key] }), {} as GlobalSettings)
 		}
-	}
-
-	/**
-	 * ProviderSettings
-	 */
-
-	public getProviderSettings(): ProviderSettings {
-		const values = this.getValues()
-
-		try {
-			return providerSettingsSchema.parse(values)
-		} catch (error) {
-			if (error instanceof ZodError) {
-				TelemetryService.instance.captureSchemaValidationError({ schemaName: "ProviderSettings", error })
-			}
-
-			return PROVIDER_SETTINGS_KEYS.reduce((acc, key) => ({ ...acc, [key]: values[key] }), {} as ProviderSettings)
-		}
-	}
-
-	public async setProviderSettings(values: ProviderSettings) {
-		// Explicitly clear out any old API configuration values before that
-		// might not be present in the new configuration.
-		// If a value is not present in the new configuration, then it is assumed
-		// that the setting's value should be `undefined` and therefore we
-		// need to remove it from the state cache if it exists.
-
-		// Ensure openAiHeaders is always an object even when empty
-		// This is critical for proper serialization/deserialization through IPC
-		if (values.openAiHeaders !== undefined) {
-			// Check if it's empty or null
-			if (!values.openAiHeaders || Object.keys(values.openAiHeaders).length === 0) {
-				values.openAiHeaders = {}
-			}
-		}
-
-		await this.setValues({
-			...PROVIDER_SETTINGS_KEYS.filter((key) => !isSecretStateKey(key))
-				.filter((key) => !!this.stateCache[key])
-				.reduce((acc, key) => ({ ...acc, [key]: undefined }), {} as ProviderSettings),
-			...values,
-		})
 	}
 
 	/**

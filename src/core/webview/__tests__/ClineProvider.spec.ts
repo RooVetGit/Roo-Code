@@ -46,6 +46,32 @@ vi.mock("axios", () => ({
 
 vi.mock("../../../utils/safeWriteJson")
 
+vi.mock("../../config/ProviderSettingsManager", () => ({
+	ProviderSettingsManager: vi.fn().mockImplementation(() => ({
+		getCurrentProviderSettings: vi.fn().mockResolvedValue({
+			apiProvider: "openrouter",
+			openRouterApiKey: "test-key",
+			openRouterModelId: "test-model",
+		}),
+		getModeProviderSettings: vi.fn().mockResolvedValue({
+			apiProvider: "openrouter",
+			openRouterApiKey: "test-key",
+			openRouterModelId: "test-model",
+		}),
+		updateCurrentProviderSettings: vi.fn().mockResolvedValue(undefined),
+		getModeConfigId: vi.fn().mockResolvedValue(undefined),
+		listConfig: vi.fn().mockResolvedValue([]),
+		activateProfile: vi.fn().mockResolvedValue({
+			name: "test-config",
+			id: "test-id",
+			apiProvider: "anthropic",
+		}),
+		setModeConfig: vi.fn().mockResolvedValue(undefined),
+		saveConfig: vi.fn().mockResolvedValue("test-id"),
+		resetAllConfigs: vi.fn().mockResolvedValue(undefined),
+	})),
+}))
+
 vi.mock("@modelcontextprotocol/sdk/types.js", () => ({
 	CallToolResultSchema: {},
 	ListResourcesResultSchema: {},
@@ -198,24 +224,22 @@ vi.mock("../../../integrations/workspace/WorkspaceTracker", () => {
 })
 
 vi.mock("../../task/Task", () => ({
-	Task: vi
-		.fn()
-		.mockImplementation(
-			(_provider, _apiConfiguration, _customInstructions, _diffEnabled, _fuzzyMatchThreshold, _task, taskId) => ({
-				api: undefined,
-				abortTask: vi.fn(),
-				handleWebviewAskResponse: vi.fn(),
-				clineMessages: [],
-				apiConversationHistory: [],
-				overwriteClineMessages: vi.fn(),
-				overwriteApiConversationHistory: vi.fn(),
-				getTaskNumber: vi.fn().mockReturnValue(0),
-				setTaskNumber: vi.fn(),
-				setParentTask: vi.fn(),
-				setRootTask: vi.fn(),
-				taskId: taskId || "test-task-id",
-			}),
-		),
+	Task: vi.fn().mockImplementation((options) => ({
+		api: undefined,
+		abortTask: vi.fn(),
+		handleWebviewAskResponse: vi.fn(),
+		clineMessages: [],
+		apiConversationHistory: [],
+		overwriteClineMessages: vi.fn(),
+		overwriteApiConversationHistory: vi.fn(),
+		getTaskNumber: vi.fn().mockReturnValue(0),
+		setTaskNumber: vi.fn(),
+		setParentTask: vi.fn(),
+		setRootTask: vi.fn(),
+		taskId: options?.taskId || "test-task-id",
+		initializeApiConfiguration: vi.fn().mockResolvedValue(undefined),
+		getApiConfiguration: vi.fn().mockReturnValue({ apiProvider: "openrouter" }),
+	})),
 }))
 
 vi.mock("../../../integrations/misc/extract-text", () => ({
@@ -414,9 +438,6 @@ describe("ClineProvider", () => {
 
 		defaultTaskOptions = {
 			provider,
-			apiConfiguration: {
-				apiProvider: "openrouter",
-			},
 		}
 
 		// @ts-ignore - Access private property for testing
@@ -876,6 +897,11 @@ describe("ClineProvider", () => {
 			listConfig: vi.fn().mockResolvedValue([profile]),
 			activateProfile: vi.fn().mockResolvedValue(profile),
 			setModeConfig: vi.fn(),
+			getCurrentProviderSettings: vi.fn().mockResolvedValue({
+				apiProvider: "anthropic",
+				anthropicApiKey: "test-key",
+			}),
+			updateCurrentProviderSettings: vi.fn().mockResolvedValue(undefined),
 		} as any
 
 		// Switch to architect mode
@@ -897,6 +923,11 @@ describe("ClineProvider", () => {
 				.fn()
 				.mockResolvedValue([{ name: "current-config", id: "current-id", apiProvider: "anthropic" }]),
 			setModeConfig: vi.fn(),
+			getCurrentProviderSettings: vi.fn().mockResolvedValue({
+				apiProvider: "anthropic",
+				anthropicApiKey: "test-key",
+			}),
+			updateCurrentProviderSettings: vi.fn().mockResolvedValue(undefined),
 		} as any
 
 		provider.setValue("currentApiConfigName", "current-config")
@@ -919,6 +950,11 @@ describe("ClineProvider", () => {
 			listConfig: vi.fn().mockResolvedValue([profile]),
 			setModeConfig: vi.fn(),
 			getModeConfigId: vi.fn().mockResolvedValue(undefined),
+			getCurrentProviderSettings: vi.fn().mockResolvedValue({
+				apiProvider: "anthropic",
+				anthropicApiKey: "test-key",
+			}),
+			updateCurrentProviderSettings: vi.fn().mockResolvedValue(undefined),
 		} as any
 
 		// First set the mode
@@ -946,6 +982,11 @@ describe("ClineProvider", () => {
 			listConfig: vi.fn().mockResolvedValue([profile]),
 			setModeConfig: vi.fn(),
 			getModeConfigId: vi.fn().mockResolvedValue(undefined),
+			getCurrentProviderSettings: vi.fn().mockResolvedValue({
+				apiProvider: "anthropic",
+				anthropicApiKey: "test-key",
+			}),
+			updateCurrentProviderSettings: vi.fn().mockResolvedValue(undefined),
 		} as any
 
 		// First set the mode
@@ -1146,6 +1187,11 @@ describe("ClineProvider", () => {
 			listConfig: vi.fn().mockResolvedValue([{ name: "test-config", id: "test-id", apiProvider: "anthropic" }]),
 			saveConfig: vi.fn().mockResolvedValue("test-id"),
 			setModeConfig: vi.fn(),
+			getCurrentProviderSettings: vi.fn().mockResolvedValue({
+				apiProvider: "anthropic",
+				anthropicApiKey: "test-key",
+			}),
+			updateCurrentProviderSettings: vi.fn().mockResolvedValue(undefined),
 		} as any
 
 		// Update API configuration
@@ -1608,6 +1654,11 @@ describe("ClineProvider", () => {
 				listConfig: vi.fn().mockResolvedValue([profile]),
 				activateProfile: vi.fn().mockResolvedValue(profile),
 				setModeConfig: vi.fn(),
+				getCurrentProviderSettings: vi.fn().mockResolvedValue({
+					apiProvider: "anthropic",
+					anthropicApiKey: "test-key",
+				}),
+				updateCurrentProviderSettings: vi.fn().mockResolvedValue(undefined),
 			} as any
 
 			// Switch to architect mode
@@ -1632,6 +1683,11 @@ describe("ClineProvider", () => {
 					.fn()
 					.mockResolvedValue([{ name: "current-config", id: "current-id", apiProvider: "anthropic" }]),
 				setModeConfig: vi.fn(),
+				getCurrentProviderSettings: vi.fn().mockResolvedValue({
+					apiProvider: "anthropic",
+					anthropicApiKey: "test-key",
+				}),
+				updateCurrentProviderSettings: vi.fn().mockResolvedValue(undefined),
 			} as any
 
 			// Mock the ContextProxy's getValue method to return the current config name
@@ -1689,6 +1745,11 @@ describe("ClineProvider", () => {
 			;(provider as any).providerSettingsManager = {
 				getModeConfigId: vi.fn().mockResolvedValue(undefined),
 				listConfig: vi.fn().mockResolvedValue([]),
+				getCurrentProviderSettings: vi.fn().mockResolvedValue({
+					apiProvider: "anthropic",
+					anthropicApiKey: "test-key",
+				}),
+				updateCurrentProviderSettings: vi.fn().mockResolvedValue(undefined),
 			}
 
 			// Spy on log method to verify warning was logged
@@ -1758,6 +1819,11 @@ describe("ClineProvider", () => {
 				activateProfile: vi
 					.fn()
 					.mockResolvedValue({ name: "test-config", id: "config-id", apiProvider: "anthropic" }),
+				getCurrentProviderSettings: vi.fn().mockResolvedValue({
+					apiProvider: "anthropic",
+					anthropicApiKey: "test-key",
+				}),
+				updateCurrentProviderSettings: vi.fn().mockResolvedValue(undefined),
 			}
 
 			// Spy on log method to verify no warning was logged
@@ -1813,6 +1879,11 @@ describe("ClineProvider", () => {
 			;(provider as any).providerSettingsManager = {
 				getModeConfigId: vi.fn().mockResolvedValue(undefined),
 				listConfig: vi.fn().mockResolvedValue([]),
+				getCurrentProviderSettings: vi.fn().mockResolvedValue({
+					apiProvider: "anthropic",
+					anthropicApiKey: "test-key",
+				}),
+				updateCurrentProviderSettings: vi.fn().mockResolvedValue(undefined),
 			}
 
 			// Create history item with built-in mode
@@ -1844,6 +1915,11 @@ describe("ClineProvider", () => {
 			;(provider as any).providerSettingsManager = {
 				getModeConfigId: vi.fn().mockResolvedValue(undefined),
 				listConfig: vi.fn().mockResolvedValue([]),
+				getCurrentProviderSettings: vi.fn().mockResolvedValue({
+					apiProvider: "anthropic",
+					anthropicApiKey: "test-key",
+				}),
+				updateCurrentProviderSettings: vi.fn().mockResolvedValue(undefined),
 			}
 
 			// Create history item without mode
@@ -1891,6 +1967,11 @@ describe("ClineProvider", () => {
 					.fn()
 					.mockResolvedValue([{ name: "test-config", id: "config-id", apiProvider: "anthropic" }]),
 				activateProfile: vi.fn().mockRejectedValue(new Error("Failed to load config")),
+				getCurrentProviderSettings: vi.fn().mockResolvedValue({
+					apiProvider: "anthropic",
+					anthropicApiKey: "test-key",
+				}),
+				updateCurrentProviderSettings: vi.fn().mockResolvedValue(undefined),
 			}
 
 			// Spy on log method
@@ -1990,6 +2071,11 @@ describe("ClineProvider", () => {
 				listConfig: vi
 					.fn()
 					.mockResolvedValue([{ name: "test-config", id: "test-id", apiProvider: "anthropic" }]),
+				getCurrentProviderSettings: vi.fn().mockResolvedValue({
+					apiProvider: "anthropic",
+					anthropicApiKey: "test-key",
+				}),
+				updateCurrentProviderSettings: vi.fn().mockResolvedValue(undefined),
 			} as any
 
 			// Mock getState to provide necessary data
@@ -2022,6 +2108,11 @@ describe("ClineProvider", () => {
 				listConfig: vi
 					.fn()
 					.mockResolvedValue([{ name: "test-config", id: "test-id", apiProvider: "anthropic" }]),
+				getCurrentProviderSettings: vi.fn().mockResolvedValue({
+					apiProvider: "anthropic",
+					anthropicApiKey: "test-key",
+				}),
+				updateCurrentProviderSettings: vi.fn().mockResolvedValue(undefined),
 			} as any
 
 			const testApiConfig = {
@@ -2065,6 +2156,11 @@ describe("ClineProvider", () => {
 				listConfig: vi
 					.fn()
 					.mockResolvedValue([{ name: "test-config", id: "test-id", apiProvider: "anthropic" }]),
+				getCurrentProviderSettings: vi.fn().mockResolvedValue({
+					apiProvider: "anthropic",
+					anthropicApiKey: "test-key",
+				}),
+				updateCurrentProviderSettings: vi.fn().mockResolvedValue(undefined),
 			} as any
 
 			// Setup Task instance with auto-mock from the top of the file
@@ -2106,6 +2202,11 @@ describe("ClineProvider", () => {
 				listConfig: vi
 					.fn()
 					.mockResolvedValue([{ name: "test-config", id: "test-id", apiProvider: "anthropic" }]),
+				getCurrentProviderSettings: vi.fn().mockResolvedValue({
+					apiProvider: "anthropic",
+					anthropicApiKey: "test-key",
+				}),
+				updateCurrentProviderSettings: vi.fn().mockResolvedValue(undefined),
 			} as any
 
 			const testApiConfig = {
@@ -2434,9 +2535,6 @@ describe("getTelemetryProperties", () => {
 
 		defaultTaskOptions = {
 			provider,
-			apiConfiguration: {
-				apiProvider: "openrouter",
-			},
 		}
 
 		// Setup Task instance with mocked getModel method
@@ -2628,17 +2726,29 @@ describe("ClineProvider - Router Models", () => {
 		await provider.resolveWebviewView(mockWebviewView)
 		const messageHandler = (mockWebviewView.webview.onDidReceiveMessage as any).mock.calls[0][0]
 
-		// Mock getState to return API configuration
-		vi.spyOn(provider, "getState").mockResolvedValue({
-			apiConfiguration: {
+		// Mock providerSettingsManager to return API configuration
+		;(provider as any).providerSettingsManager = {
+			getCurrentProviderSettings: vi.fn().mockResolvedValue({
+				apiProvider: "openrouter",
 				openRouterApiKey: "openrouter-key",
 				requestyApiKey: "requesty-key",
 				glamaApiKey: "glama-key",
 				unboundApiKey: "unbound-key",
 				litellmApiKey: "litellm-key",
 				litellmBaseUrl: "http://localhost:4000",
-			},
-		} as any)
+			}),
+			updateCurrentProviderSettings: vi.fn().mockResolvedValue(undefined),
+			getModeConfigId: vi.fn().mockResolvedValue(undefined),
+			listConfig: vi.fn().mockResolvedValue([]),
+			activateProfile: vi.fn().mockResolvedValue({
+				name: "test-config",
+				id: "test-id",
+				apiProvider: "anthropic",
+			}),
+			setModeConfig: vi.fn().mockResolvedValue(undefined),
+			saveConfig: vi.fn().mockResolvedValue("test-id"),
+			resetAllConfigs: vi.fn().mockResolvedValue(undefined),
+		}
 
 		const mockModels = {
 			"model-1": {
@@ -2690,16 +2800,29 @@ describe("ClineProvider - Router Models", () => {
 		await provider.resolveWebviewView(mockWebviewView)
 		const messageHandler = (mockWebviewView.webview.onDidReceiveMessage as any).mock.calls[0][0]
 
-		vi.spyOn(provider, "getState").mockResolvedValue({
-			apiConfiguration: {
+		// Mock providerSettingsManager to return API configuration
+		;(provider as any).providerSettingsManager = {
+			getCurrentProviderSettings: vi.fn().mockResolvedValue({
+				apiProvider: "openrouter",
 				openRouterApiKey: "openrouter-key",
 				requestyApiKey: "requesty-key",
 				glamaApiKey: "glama-key",
 				unboundApiKey: "unbound-key",
 				litellmApiKey: "litellm-key",
 				litellmBaseUrl: "http://localhost:4000",
-			},
-		} as any)
+			}),
+			updateCurrentProviderSettings: vi.fn().mockResolvedValue(undefined),
+			getModeConfigId: vi.fn().mockResolvedValue(undefined),
+			listConfig: vi.fn().mockResolvedValue([]),
+			activateProfile: vi.fn().mockResolvedValue({
+				name: "test-config",
+				id: "test-id",
+				apiProvider: "anthropic",
+			}),
+			setModeConfig: vi.fn().mockResolvedValue(undefined),
+			saveConfig: vi.fn().mockResolvedValue("test-id"),
+			resetAllConfigs: vi.fn().mockResolvedValue(undefined),
+		}
 
 		const mockModels = {
 			"model-1": { maxTokens: 4096, contextWindow: 8192, description: "Test model", supportsPromptCache: false },
@@ -2764,16 +2887,28 @@ describe("ClineProvider - Router Models", () => {
 		await provider.resolveWebviewView(mockWebviewView)
 		const messageHandler = (mockWebviewView.webview.onDidReceiveMessage as any).mock.calls[0][0]
 
-		// Mock state without LiteLLM config
-		vi.spyOn(provider, "getState").mockResolvedValue({
-			apiConfiguration: {
+		// Mock providerSettingsManager without LiteLLM config
+		;(provider as any).providerSettingsManager = {
+			getCurrentProviderSettings: vi.fn().mockResolvedValue({
+				apiProvider: "openrouter",
 				openRouterApiKey: "openrouter-key",
 				requestyApiKey: "requesty-key",
 				glamaApiKey: "glama-key",
 				unboundApiKey: "unbound-key",
 				// No litellm config
-			},
-		} as any)
+			}),
+			updateCurrentProviderSettings: vi.fn().mockResolvedValue(undefined),
+			getModeConfigId: vi.fn().mockResolvedValue(undefined),
+			listConfig: vi.fn().mockResolvedValue([]),
+			activateProfile: vi.fn().mockResolvedValue({
+				name: "test-config",
+				id: "test-id",
+				apiProvider: "anthropic",
+			}),
+			setModeConfig: vi.fn().mockResolvedValue(undefined),
+			saveConfig: vi.fn().mockResolvedValue("test-id"),
+			resetAllConfigs: vi.fn().mockResolvedValue(undefined),
+		}
 
 		const mockModels = {
 			"model-1": { maxTokens: 4096, contextWindow: 8192, description: "Test model", supportsPromptCache: false },
@@ -2801,15 +2936,28 @@ describe("ClineProvider - Router Models", () => {
 		await provider.resolveWebviewView(mockWebviewView)
 		const messageHandler = (mockWebviewView.webview.onDidReceiveMessage as any).mock.calls[0][0]
 
-		vi.spyOn(provider, "getState").mockResolvedValue({
-			apiConfiguration: {
+		// Mock providerSettingsManager without LiteLLM config
+		;(provider as any).providerSettingsManager = {
+			getCurrentProviderSettings: vi.fn().mockResolvedValue({
+				apiProvider: "openrouter",
 				openRouterApiKey: "openrouter-key",
 				requestyApiKey: "requesty-key",
 				glamaApiKey: "glama-key",
 				unboundApiKey: "unbound-key",
 				// No litellm config
-			},
-		} as any)
+			}),
+			updateCurrentProviderSettings: vi.fn().mockResolvedValue(undefined),
+			getModeConfigId: vi.fn().mockResolvedValue(undefined),
+			listConfig: vi.fn().mockResolvedValue([]),
+			activateProfile: vi.fn().mockResolvedValue({
+				name: "test-config",
+				id: "test-id",
+				apiProvider: "anthropic",
+			}),
+			setModeConfig: vi.fn().mockResolvedValue(undefined),
+			saveConfig: vi.fn().mockResolvedValue("test-id"),
+			resetAllConfigs: vi.fn().mockResolvedValue(undefined),
+		}
 
 		const mockModels = {
 			"model-1": { maxTokens: 4096, contextWindow: 8192, description: "Test model", supportsPromptCache: false },
@@ -2916,9 +3064,6 @@ describe("ClineProvider - Comprehensive Edit/Delete Edge Cases", () => {
 
 		defaultTaskOptions = {
 			provider,
-			apiConfiguration: {
-				apiProvider: "openrouter",
-			},
 		}
 
 		// Mock getMcpHub method

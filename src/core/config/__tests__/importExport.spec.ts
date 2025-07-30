@@ -81,7 +81,6 @@ describe("importExport", () => {
 			setValues: vi.fn(),
 			setValue: vi.fn(),
 			export: vi.fn().mockImplementation(() => Promise.resolve({})),
-			setProviderSettings: vi.fn(),
 		} as unknown as ReturnType<typeof vi.mocked<ContextProxy>>
 
 		mockCustomModesManager = { updateCustomMode: vi.fn() } as unknown as ReturnType<

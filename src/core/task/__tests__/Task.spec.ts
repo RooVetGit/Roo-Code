@@ -262,6 +262,9 @@ describe("Cline", () => {
 		// Mock provider methods
 		mockProvider.postMessageToWebview = vi.fn().mockResolvedValue(undefined)
 		mockProvider.postStateToWebview = vi.fn().mockResolvedValue(undefined)
+		mockProvider.providerSettingsManager = {
+			getCurrentProviderSettings: vi.fn().mockResolvedValue(mockApiConfig),
+		}
 		mockProvider.getTaskWithId = vi.fn().mockImplementation(async (id) => ({
 			historyItem: {
 				id,
@@ -295,7 +298,6 @@ describe("Cline", () => {
 		it("should respect provided settings", async () => {
 			const cline = new Task({
 				provider: mockProvider,
-				apiConfiguration: mockApiConfig,
 				fuzzyMatchThreshold: 0.95,
 				task: "test task",
 				startTask: false,
@@ -307,7 +309,6 @@ describe("Cline", () => {
 		it("should use default fuzzy match threshold when not provided", async () => {
 			const cline = new Task({
 				provider: mockProvider,
-				apiConfiguration: mockApiConfig,
 				enableDiff: true,
 				fuzzyMatchThreshold: 0.95,
 				task: "test task",
@@ -323,7 +324,6 @@ describe("Cline", () => {
 		it("should use default consecutiveMistakeLimit when not provided", () => {
 			const cline = new Task({
 				provider: mockProvider,
-				apiConfiguration: mockApiConfig,
 				task: "test task",
 				startTask: false,
 			})
@@ -334,7 +334,6 @@ describe("Cline", () => {
 		it("should respect provided consecutiveMistakeLimit", () => {
 			const cline = new Task({
 				provider: mockProvider,
-				apiConfiguration: mockApiConfig,
 				consecutiveMistakeLimit: 5,
 				task: "test task",
 				startTask: false,
@@ -346,7 +345,6 @@ describe("Cline", () => {
 		it("should keep consecutiveMistakeLimit of 0 as 0 for unlimited", () => {
 			const cline = new Task({
 				provider: mockProvider,
-				apiConfiguration: mockApiConfig,
 				consecutiveMistakeLimit: 0,
 				task: "test task",
 				startTask: false,
@@ -358,7 +356,6 @@ describe("Cline", () => {
 		it("should pass 0 to ToolRepetitionDetector for unlimited mode", () => {
 			const cline = new Task({
 				provider: mockProvider,
-				apiConfiguration: mockApiConfig,
 				consecutiveMistakeLimit: 0,
 				task: "test task",
 				startTask: false,
@@ -373,7 +370,6 @@ describe("Cline", () => {
 		it("should pass consecutiveMistakeLimit to ToolRepetitionDetector", () => {
 			const cline = new Task({
 				provider: mockProvider,
-				apiConfiguration: mockApiConfig,
 				consecutiveMistakeLimit: 5,
 				task: "test task",
 				startTask: false,
@@ -386,7 +382,7 @@ describe("Cline", () => {
 
 		it("should require either task or historyItem", () => {
 			expect(() => {
-				new Task({ provider: mockProvider, apiConfiguration: mockApiConfig })
+				new Task({ provider: mockProvider })
 			}).toThrow("Either historyItem or task/images must be provided")
 		})
 	})
@@ -397,7 +393,6 @@ describe("Cline", () => {
 				// Cline.create will now use our mocked getEnvironmentDetails
 				const [cline, task] = Task.create({
 					provider: mockProvider,
-					apiConfiguration: mockApiConfig,
 					task: "test task",
 				})
 
@@ -504,9 +499,9 @@ describe("Cline", () => {
 				]
 
 				// Test with model that supports images
+				mockProvider.providerSettingsManager.getCurrentProviderSettings.mockResolvedValue(configWithImages)
 				const [clineWithImages, taskWithImages] = Task.create({
 					provider: mockProvider,
-					apiConfiguration: configWithImages,
 					task: "test task",
 				})
 
@@ -527,9 +522,9 @@ describe("Cline", () => {
 				clineWithImages.apiConversationHistory = conversationHistory
 
 				// Test with model that doesn't support images
+				mockProvider.providerSettingsManager.getCurrentProviderSettings.mockResolvedValue(configWithoutImages)
 				const [clineWithoutImages, taskWithoutImages] = Task.create({
 					provider: mockProvider,
-					apiConfiguration: configWithoutImages,
 					task: "test task",
 				})
 
@@ -626,7 +621,6 @@ describe("Cline", () => {
 			it.skip("should handle API retry with countdown", async () => {
 				const [cline, task] = Task.create({
 					provider: mockProvider,
-					apiConfiguration: mockApiConfig,
 					task: "test task",
 				})
 
@@ -751,7 +745,6 @@ describe("Cline", () => {
 			it.skip("should not apply retry delay twice", async () => {
 				const [cline, task] = Task.create({
 					provider: mockProvider,
-					apiConfiguration: mockApiConfig,
 					task: "test task",
 				})
 
@@ -876,7 +869,6 @@ describe("Cline", () => {
 				it("should process mentions in task and feedback tags", async () => {
 					const [cline, task] = Task.create({
 						provider: mockProvider,
-						apiConfiguration: mockApiConfig,
 						task: "test task",
 					})
 
@@ -970,13 +962,14 @@ describe("Cline", () => {
 					context: {
 						globalStorageUri: { fsPath: "/test/storage" },
 					},
-					getState: vi.fn().mockResolvedValue({
-						apiConfiguration: mockApiConfig,
-					}),
+					getState: vi.fn().mockResolvedValue({}),
 					say: vi.fn(),
 					postStateToWebview: vi.fn().mockResolvedValue(undefined),
 					postMessageToWebview: vi.fn().mockResolvedValue(undefined),
 					updateTaskHistory: vi.fn().mockResolvedValue(undefined),
+					providerSettingsManager: {
+						getCurrentProviderSettings: vi.fn().mockResolvedValue(mockApiConfig),
+					},
 				}
 
 				// Get the mocked delay function
@@ -996,10 +989,12 @@ describe("Cline", () => {
 				// Create parent task
 				const parent = new Task({
 					provider: mockProvider,
-					apiConfiguration: mockApiConfig,
 					task: "parent task",
 					startTask: false,
 				})
+
+				// Wait for API configuration to be initialized
+				await parent.getApiConfiguration()
 
 				// Mock the API stream response
 				const mockStream = {
@@ -1030,12 +1025,14 @@ describe("Cline", () => {
 				// Create a subtask immediately after
 				const child = new Task({
 					provider: mockProvider,
-					apiConfiguration: mockApiConfig,
 					task: "child task",
 					parentTask: parent,
 					rootTask: parent,
 					startTask: false,
 				})
+
+				// Wait for API configuration to be initialized
+				await child.getApiConfiguration()
 
 				// Mock the child's API stream
 				const childMockStream = {
@@ -1069,10 +1066,12 @@ describe("Cline", () => {
 				// Create parent task
 				const parent = new Task({
 					provider: mockProvider,
-					apiConfiguration: mockApiConfig,
 					task: "parent task",
 					startTask: false,
 				})
+
+				// Wait for API configuration to be initialized
+				await parent.getApiConfiguration()
 
 				// Mock the API stream response
 				const mockStream = {
@@ -1105,12 +1104,14 @@ describe("Cline", () => {
 				// Create a subtask after time has passed
 				const child = new Task({
 					provider: mockProvider,
-					apiConfiguration: mockApiConfig,
 					task: "child task",
 					parentTask: parent,
 					rootTask: parent,
 					startTask: false,
 				})
+
+				// Wait for API configuration to be initialized
+				await child.getApiConfiguration()
 
 				vi.spyOn(child.api, "createMessage").mockReturnValue(mockStream)
 
@@ -1129,10 +1130,12 @@ describe("Cline", () => {
 				// Create parent task
 				const parent = new Task({
 					provider: mockProvider,
-					apiConfiguration: mockApiConfig,
 					task: "parent task",
 					startTask: false,
 				})
+
+				// Wait for API configuration to be initialized
+				await parent.getApiConfiguration()
 
 				// Mock the API stream response
 				const mockStream = {
@@ -1160,12 +1163,14 @@ describe("Cline", () => {
 				// Create first subtask
 				const child1 = new Task({
 					provider: mockProvider,
-					apiConfiguration: mockApiConfig,
 					task: "child task 1",
 					parentTask: parent,
 					rootTask: parent,
 					startTask: false,
 				})
+
+				// Wait for API configuration to be initialized
+				await child1.getApiConfiguration()
 
 				vi.spyOn(child1.api, "createMessage").mockReturnValue(mockStream)
 
@@ -1183,12 +1188,14 @@ describe("Cline", () => {
 				// Create second subtask immediately after
 				const child2 = new Task({
 					provider: mockProvider,
-					apiConfiguration: mockApiConfig,
 					task: "child task 2",
 					parentTask: parent,
 					rootTask: parent,
 					startTask: false,
 				})
+
+				// Wait for API configuration to be initialized
+				await child2.getApiConfiguration()
 
 				vi.spyOn(child2.api, "createMessage").mockReturnValue(mockStream)
 
@@ -1203,17 +1210,17 @@ describe("Cline", () => {
 			it("should handle rate limiting with zero rate limit", async () => {
 				// Update config to have zero rate limit
 				mockApiConfig.rateLimitSeconds = 0
-				mockProvider.getState.mockResolvedValue({
-					apiConfiguration: mockApiConfig,
-				})
+				mockProvider.providerSettingsManager.getCurrentProviderSettings.mockResolvedValue(mockApiConfig)
 
 				// Create parent task
 				const parent = new Task({
 					provider: mockProvider,
-					apiConfiguration: mockApiConfig,
 					task: "parent task",
 					startTask: false,
 				})
+
+				// Wait for API configuration to be initialized
+				await parent.getApiConfiguration()
 
 				// Mock the API stream response
 				const mockStream = {
@@ -1241,12 +1248,14 @@ describe("Cline", () => {
 				// Create a subtask
 				const child = new Task({
 					provider: mockProvider,
-					apiConfiguration: mockApiConfig,
 					task: "child task",
 					parentTask: parent,
 					rootTask: parent,
 					startTask: false,
 				})
+
+				// Wait for API configuration to be initialized
+				await child.getApiConfiguration()
 
 				vi.spyOn(child.api, "createMessage").mockReturnValue(mockStream)
 
@@ -1262,10 +1271,12 @@ describe("Cline", () => {
 				// Create task
 				const task = new Task({
 					provider: mockProvider,
-					apiConfiguration: mockApiConfig,
 					task: "test task",
 					startTask: false,
 				})
+
+				// Wait for API configuration to be initialized
+				await task.getApiConfiguration()
 
 				// Mock the API stream response
 				const mockStream = {
@@ -1314,6 +1325,9 @@ describe("Cline", () => {
 						globalStorageUri: { fsPath: "/test/storage" },
 					},
 					getState: vi.fn(),
+					providerSettingsManager: {
+						getCurrentProviderSettings: vi.fn().mockResolvedValue(mockApiConfig),
+					},
 				}
 			})
 
@@ -1326,7 +1340,6 @@ describe("Cline", () => {
 
 				const task = new Task({
 					provider: mockProvider,
-					apiConfiguration: mockApiConfig,
 					enableDiff: true,
 					task: "test task",
 					startTask: false,
@@ -1346,7 +1359,6 @@ describe("Cline", () => {
 
 				const task = new Task({
 					provider: mockProvider,
-					apiConfiguration: mockApiConfig,
 					enableDiff: true,
 					task: "test task",
 					startTask: false,
@@ -1368,7 +1380,6 @@ describe("Cline", () => {
 
 				const task = new Task({
 					provider: mockProvider,
-					apiConfiguration: mockApiConfig,
 					enableDiff: true,
 					task: "test task",
 					startTask: false,
@@ -1388,7 +1399,6 @@ describe("Cline", () => {
 			it("should not create diff strategy when enableDiff is false", async () => {
 				const task = new Task({
 					provider: mockProvider,
-					apiConfiguration: mockApiConfig,
 					enableDiff: false,
 					task: "test task",
 					startTask: false,
@@ -1407,40 +1417,45 @@ describe("Cline", () => {
 					apiProvider: "anthropic" as const,
 					apiModelId: "gpt-4",
 				}
+				mockProvider.providerSettingsManager.getCurrentProviderSettings.mockResolvedValue(anthropicConfig)
 				const anthropicTask = new Task({
 					provider: mockProvider,
-					apiConfiguration: anthropicConfig,
 					task: "test task",
 					startTask: false,
 				})
 				// Should use anthropic protocol even with non-claude model
-				expect(anthropicTask.apiConfiguration.apiProvider).toBe("anthropic")
+				const apiConfig = await anthropicTask.getApiConfiguration()
+				expect(apiConfig.apiProvider).toBe("anthropic")
 
 				// Test with OpenRouter provider and Claude model
 				const openrouterClaudeConfig = {
 					apiProvider: "openrouter" as const,
 					openRouterModelId: "anthropic/claude-3-opus",
 				}
+				mockProvider.providerSettingsManager.getCurrentProviderSettings.mockResolvedValue(
+					openrouterClaudeConfig,
+				)
 				const openrouterClaudeTask = new Task({
 					provider: mockProvider,
-					apiConfiguration: openrouterClaudeConfig,
 					task: "test task",
 					startTask: false,
 				})
-				expect(openrouterClaudeTask.apiConfiguration.apiProvider).toBe("openrouter")
+				const openrouterApiConfig = await openrouterClaudeTask.getApiConfiguration()
+				expect(openrouterApiConfig.apiProvider).toBe("openrouter")
 
 				// Test with OpenRouter provider and non-Claude model
 				const openrouterGptConfig = {
 					apiProvider: "openrouter" as const,
 					openRouterModelId: "openai/gpt-4",
 				}
+				mockProvider.providerSettingsManager.getCurrentProviderSettings.mockResolvedValue(openrouterGptConfig)
 				const openrouterGptTask = new Task({
 					provider: mockProvider,
-					apiConfiguration: openrouterGptConfig,
 					task: "test task",
 					startTask: false,
 				})
-				expect(openrouterGptTask.apiConfiguration.apiProvider).toBe("openrouter")
+				const gptApiConfig = await openrouterGptTask.getApiConfiguration()
+				expect(gptApiConfig.apiProvider).toBe("openrouter")
 
 				// Test with various Claude model formats
 				const claudeModelFormats = [
@@ -1456,9 +1471,9 @@ describe("Cline", () => {
 						apiProvider: "openai" as const,
 						openAiModelId: modelId,
 					}
+					mockProvider.providerSettingsManager.getCurrentProviderSettings.mockResolvedValue(config)
 					const task = new Task({
 						provider: mockProvider,
-						apiConfiguration: config,
 						task: "test task",
 						startTask: false,
 					})
@@ -1472,25 +1487,29 @@ describe("Cline", () => {
 				const undefinedProviderConfig = {
 					apiModelId: "claude-3-opus",
 				}
+				mockProvider.providerSettingsManager.getCurrentProviderSettings.mockResolvedValue(
+					undefinedProviderConfig,
+				)
 				const undefinedProviderTask = new Task({
 					provider: mockProvider,
-					apiConfiguration: undefinedProviderConfig,
 					task: "test task",
 					startTask: false,
 				})
-				expect(undefinedProviderTask.apiConfiguration.apiProvider).toBeUndefined()
+				const undefinedApiConfig = await undefinedProviderTask.getApiConfiguration()
+				expect(undefinedApiConfig.apiProvider).toBeUndefined()
 
 				// Test with no model ID
 				const noModelConfig = {
 					apiProvider: "openai" as const,
 				}
+				mockProvider.providerSettingsManager.getCurrentProviderSettings.mockResolvedValue(noModelConfig)
 				const noModelTask = new Task({
 					provider: mockProvider,
-					apiConfiguration: noModelConfig,
 					task: "test task",
 					startTask: false,
 				})
-				expect(noModelTask.apiConfiguration.apiProvider).toBe("openai")
+				const noModelApiConfig = await noModelTask.getApiConfiguration()
+				expect(noModelApiConfig.apiProvider).toBe("openai")
 			})
 		})
 	})

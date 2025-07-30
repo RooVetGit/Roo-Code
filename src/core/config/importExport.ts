@@ -74,17 +74,9 @@ export async function importSettingsFromPath(
 		await providerSettingsManager.import(providerProfiles)
 		await contextProxy.setValues(globalSettings)
 
-		// Set the current provider.
+		// Set the current provider name in context
 		const currentProviderName = providerProfiles.currentApiConfigName
-		const currentProvider = providerProfiles.apiConfigs[currentProviderName]
 		contextProxy.setValue("currentApiConfigName", currentProviderName)
-
-		// TODO: It seems like we don't need to have the provider settings in
-		// the proxy; we can just use providerSettingsManager as the source of
-		// truth.
-		if (currentProvider) {
-			contextProxy.setProviderSettings(currentProvider)
-		}
 
 		contextProxy.setValue("listApiConfigMeta", await providerSettingsManager.listConfig())
 
