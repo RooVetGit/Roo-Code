@@ -47,6 +47,7 @@
 		"openAiCompatibleConfigMissing": "Configuração compatível com OpenAI ausente para criação do embedder",
 		"geminiConfigMissing": "Configuração do Gemini ausente para criação do embedder",
 		"mistralConfigMissing": "Configuração do Mistral ausente para a criação do embedder",
+		"jinaConfigMissing": "Configuração do Jina ausente para a criação do embedder",
 		"unsupportedEmbeddingFormat": "Embeddings Base64/binários não são suportados",
 		"invalidEmbedderType": "Tipo de embedder configurado inválido: {{embedderProvider}}",
 		"vectorDimensionNotDeterminedOpenAiCompatible": "Não foi possível determinar a dimensão do vetor para o modelo '{{modelId}}' com o provedor '{{provider}}'. Certifique-se de que a 'Dimensão de Embedding' esteja configurada corretamente nas configurações do provedor compatível com OpenAI.",

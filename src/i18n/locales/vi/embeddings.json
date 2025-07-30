@@ -47,6 +47,7 @@
 		"openAiCompatibleConfigMissing": "Thiếu cấu hình tương thích OpenAI để tạo embedder",
 		"geminiConfigMissing": "Thiếu cấu hình Gemini để tạo embedder",
 		"mistralConfigMissing": "Thiếu cấu hình Mistral để tạo trình nhúng",
+		"jinaConfigMissing": "Thiếu cấu hình Jina để tạo trình nhúng",
 		"unsupportedEmbeddingFormat": "Embeddings Base64/nhị phân không được hỗ trợ",
 		"invalidEmbedderType": "Loại embedder được cấu hình không hợp lệ: {{embedderProvider}}",
 		"vectorDimensionNotDeterminedOpenAiCompatible": "Không thể xác định kích thước vector cho mô hình '{{modelId}}' với nhà cung cấp '{{provider}}'. Hãy đảm bảo 'Kích thước Embedding' được cài đặt đúng trong cài đặt nhà cung cấp tương thích OpenAI.",
