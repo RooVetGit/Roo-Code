@@ -269,6 +269,8 @@ export class CodeIndexConfigManager {
 		const prevGeminiApiKey = prev?.geminiApiKey ?? ""
 		const prevMistralApiKey = prev?.mistralApiKey ?? ""
 		const prevQdrantUrl = prev?.qdrantUrl ?? ""
+		const prevValkeyUrl = prev?.valkeyUrl ?? ""
+		const prevSearchProvider = prev?.searchProvider ?? ""
 		const prevQdrantApiKey = prev?.qdrantApiKey ?? ""
 
 		// 1. Transition from disabled/unconfigured to enabled/configured
@@ -306,6 +308,8 @@ export class CodeIndexConfigManager {
 		const currentGeminiApiKey = this.geminiOptions?.apiKey ?? ""
 		const currentMistralApiKey = this.mistralOptions?.apiKey ?? ""
 		const currentQdrantUrl = this.qdrantUrl ?? ""
+		const currentValkeyUrl = this.valkeyUrl ?? ""
+		const currentSearchProvider = this.searchProvider ?? ""
 		const currentQdrantApiKey = this.qdrantApiKey ?? ""
 
 		if (prevOpenAiKey !== currentOpenAiKey) {
@@ -337,6 +341,14 @@ export class CodeIndexConfigManager {
 		}
 
 		if (prevQdrantUrl !== currentQdrantUrl || prevQdrantApiKey !== currentQdrantApiKey) {
+			return true
+		}
+
+		if (prevValkeyUrl !== currentValkeyUrl) {
+			return true
+		}
+
+		if (currentSearchProvider != this.searchProvider) {
 			return true
 		}
 

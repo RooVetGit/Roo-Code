@@ -35,39 +35,38 @@ export class ValkeySearchVectorStore implements IVectorStore {
 
 		this.isInitializing = true
 
-		try {
-			if (this.client && this.client.disconnect) {
-				this.client.disconnect()
+		return new Promise<void>((resolve, reject) => {
+			try {
+				const { hostname, port, password, username } = this.parseConnectionOptions()
+				this.client = new Valkey({
+					host: hostname,
+					port,
+					password,
+					username,
+				})
+
+				this.client.on("error", (err: Error) => {
+					this.destroy()
+					this.isInitializing = false
+					reject(new Error("Valkey connection error", err))
+				})
+
+				this.client.on("ready", () => {
+					this.isInitializing = false
+					resolve()
+				})
+
+				this.client.on("end", () => {
+					this.destroy()
+					reject(new Error("Valkey connection closed"))
+				})
+
+				this.client.connect().catch(reject)
+			} catch (error) {
+				this.isInitializing = false
+				reject(new Error("Valkey initialization failed", error))
 			}
-
-			const { hostname, port, password } = this.parseConnectionOptions()
-			this.client = new Valkey({
-				host: hostname,
-				port,
-				password,
-				retryStrategy: (times) => Math.min(times * 100, 5000),
-			})
-
-			this.client.on("error", (err: Error) => {
-				console.error("[ValkeySearch] Connection error:", err)
-			})
-
-			this.client.on("ready", () => {
-				console.log("[ValkeySearch] Connection established")
-				this.isInitializing = false
-			})
-
-			this.client.on("end", () => {
-				console.log("[ValkeySearch] Connection closed")
-				this.isInitializing = false
-			})
-
-			await this.client.connect()
-		} catch (error) {
-			console.error("[ValkeySearch] Failed to initialize client:", error)
-			this.isInitializing = false
-			setTimeout(async () => await this.initializeClient(), 5000)
-		}
+		})
 	}
 
 	private parseConnectionOptions() {
@@ -76,6 +75,7 @@ export class ValkeySearchVectorStore implements IVectorStore {
 			hostname: url.hostname,
 			port: Number(url.port) || 6379,
 			password: url.password || undefined,
+			username: url.username || undefined,
 		}
 	}
 

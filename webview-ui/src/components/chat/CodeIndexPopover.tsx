@@ -193,9 +193,6 @@ export const CodeIndexPopover: React.FC<CodeIndexPopoverProps> = ({
 	// Current settings state - tracks user changes
 	const [currentSettings, setCurrentSettings] = useState<LocalCodeIndexSettings>(getDefaultSettings())
 
-	// Search provider selection
-	const [searchProvider, setSearchProvider] = useState<SearchProvider>((currentSettings.searchProvider = ""))
-
 	// Update indexing status from parent
 	useEffect(() => {
 		setIndexingStatus(externalIndexingStatus)
@@ -345,6 +342,10 @@ export const CodeIndexPopover: React.FC<CodeIndexPopoverProps> = ({
 		// Use a Set to ensure unique keys
 		const uniqueKeys = Array.from(new Set(allKeys))
 
+		if (currentSettings.searchProvider !== initialSettings.searchProvider) {
+			return true
+		}
+
 		for (const key of uniqueKeys) {
 			const currentValue = currentSettings[key]
 			const initialValue = initialSettings[key]
@@ -461,7 +462,6 @@ export const CodeIndexPopover: React.FC<CodeIndexPopoverProps> = ({
 		setSaveError(null)
 
 		// Prepare settings to save
-		currentSettings.searchProvider = searchProvider
 		const settingsToSave: any = {
 			codebaseIndexEnabled: currentSettings.codebaseIndexEnabled,
 		}
@@ -542,7 +542,9 @@ export const CodeIndexPopover: React.FC<CodeIndexPopoverProps> = ({
 							<div className="flex items-center gap-2">
 								<VSCodeCheckbox
 									checked={currentSettings.codebaseIndexEnabled}
-									onChange={(e: any) => updateSetting("codebaseIndexEnabled", e.target.checked)}>
+									onChange={(e: any) => {
+										updateSetting("codebaseIndexEnabled", e.target.checked)
+									}}>
 									<span className="font-medium">{t("settings:codeIndex.enableLabel")}</span>
 								</VSCodeCheckbox>
 								<StandardTooltip content={t("settings:codeIndex.enableDescription")}>
@@ -1027,8 +1029,10 @@ export const CodeIndexPopover: React.FC<CodeIndexPopoverProps> = ({
 											{t("settings:codeIndex.searchProviderLabel")}
 										</label>
 										<Select
-											value={searchProvider}
-											onValueChange={(value: SearchProvider) => setSearchProvider(value)}>
+											value={currentSettings.searchProvider}
+											onValueChange={(value: SearchProvider) => {
+												updateSetting("searchProvider", value)
+											}}>
 											<SelectTrigger className="w-full">
 												<SelectValue />
 											</SelectTrigger>
@@ -1043,7 +1047,7 @@ export const CodeIndexPopover: React.FC<CodeIndexPopoverProps> = ({
 										</Select>
 									</div>
 
-									{searchProvider === "qdrant" && (
+									{currentSettings.searchProvider === "qdrant" && (
 										<>
 											<div className="space-y-2">
 												<label className="text-sm font-medium">
@@ -1096,7 +1100,7 @@ export const CodeIndexPopover: React.FC<CodeIndexPopoverProps> = ({
 										</>
 									)}
 
-									{searchProvider === "valkey" && (
+									{currentSettings.searchProvider === "valkey" && (
 										<>
 											<div className="space-y-2">
 												<label className="text-sm font-medium">
