@@ -80,8 +80,6 @@ export async function activate(context: vscode.ExtensionContext) {
 			const provider = ClineProvider.getVisibleInstance()
 			if (provider) {
 				provider.postStateToWebview()
-				// Also refresh marketplace data when organization settings change
-				provider.fetchMarketplaceData()
 			}
 		},
 		log: cloudLogger,

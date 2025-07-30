@@ -20,23 +20,24 @@ export function MarketplaceView({ stateManager, onDone, targetTab }: Marketplace
 	const [state, manager] = useStateManager(stateManager)
 	const [hasReceivedInitialState, setHasReceivedInitialState] = useState(false)
 	const extensionState = useContext(ExtensionStateContext)
-	const [lastOrganizationSettingsVersion, setLastOrganizationSettingsVersion] = useState<number | undefined>(
-		extensionState?.organizationSettingsVersion,
+	const [lastOrganizationSettingsVersion, setLastOrganizationSettingsVersion] = useState<number>(
+		extensionState?.organizationSettingsVersion ?? -1,
 	)
 
 	// Track when organization settings version changes and trigger refresh
 	useEffect(() => {
+		const currentVersion = extensionState?.organizationSettingsVersion ?? -1
 		if (
-			extensionState?.organizationSettingsVersion !== undefined &&
-			lastOrganizationSettingsVersion !== undefined &&
-			extensionState.organizationSettingsVersion !== lastOrganizationSettingsVersion
+			currentVersion !== -1 &&
+			lastOrganizationSettingsVersion !== -1 &&
+			currentVersion !== lastOrganizationSettingsVersion
 		) {
 			// Organization settings version changed, refresh marketplace data
 			vscode.postMessage({
 				type: "fetchMarketplaceData",
 			})
 		}
-		setLastOrganizationSettingsVersion(extensionState?.organizationSettingsVersion)
+		setLastOrganizationSettingsVersion(currentVersion)
 	}, [extensionState?.organizationSettingsVersion, lastOrganizationSettingsVersion])
 
 	// Track when we receive the initial state
