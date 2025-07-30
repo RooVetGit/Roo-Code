@@ -104,11 +104,11 @@ describe("MarketplaceView", () => {
 		})
 	})
 
-	it("should not trigger fetchMarketplaceData when organization settings version is undefined", async () => {
-		// Start with undefined version
+	it("should trigger fetchMarketplaceData when organization settings version changes from -1", async () => {
+		// Start with -1 version (default)
 		mockExtensionState = {
 			...mockExtensionState,
-			organizationSettingsVersion: undefined,
+			organizationSettingsVersion: -1,
 		}
 
 		const { rerender } = render(
@@ -116,6 +116,9 @@ describe("MarketplaceView", () => {
 				<MarketplaceView stateManager={stateManager} />
 			</ExtensionStateContext.Provider>,
 		)
+
+		// Clear any initial calls
+		vi.clearAllMocks()
 
 		// Update to a defined version
 		mockExtensionState = {
@@ -129,9 +132,9 @@ describe("MarketplaceView", () => {
 			</ExtensionStateContext.Provider>,
 		)
 
-		// Should not trigger fetch when transitioning from undefined
+		// Should trigger fetch when transitioning from -1 to 1
 		await waitFor(() => {
-			expect(vscode.postMessage).not.toHaveBeenCalledWith({
+			expect(vscode.postMessage).toHaveBeenCalledWith({
 				type: "fetchMarketplaceData",
 			})
 		})
