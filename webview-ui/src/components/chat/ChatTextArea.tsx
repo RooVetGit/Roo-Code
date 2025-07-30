@@ -22,7 +22,7 @@ import { convertToMentionPath } from "@/utils/path-mentions"
 import { StandardTooltip } from "@/components/ui"
 
 import Thumbnails from "../common/Thumbnails"
-import ModeSelector from "./ModeSelector"
+import AgentSelector from "./AgentSelector"
 import { ApiConfigSelector } from "./ApiConfigSelector"
 import { MAX_IMAGES_PER_MESSAGE } from "./ChatView"
 import ContextMenu from "./ContextMenu"
@@ -31,7 +31,7 @@ import { IndexingStatusBadge } from "./IndexingStatusBadge"
 import { SlashCommandsPopover } from "./SlashCommandsPopover"
 import { cn } from "@/lib/utils"
 import { usePromptHistory } from "./hooks/usePromptHistory"
-import { EditModeControls } from "./EditModeControls"
+import { EditAgentControls } from "./EditAgentControls"
 
 interface ChatTextAreaProps {
 	inputValue: string
@@ -897,9 +897,9 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 			[setMode],
 		)
 
-		// Helper function to render mode selector
-		const renderModeSelector = () => (
-			<ModeSelector
+		// Helper function to render agent selector
+		const renderAgentSelector = () => (
+			<AgentSelector
 				value={mode}
 				title={t("chat:selectMode")}
 				onChange={handleModeChange}
@@ -915,11 +915,11 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 			vscode.postMessage({ type: "loadApiConfigurationById", text: value })
 		}, [])
 
-		// Helper function to render non-edit mode controls
-		const renderNonEditModeControls = () => (
+		// Helper function to render non-edit agent controls
+		const renderNonEditAgentControls = () => (
 			<div className={cn("flex", "justify-between", "items-center", "mt-auto")}>
 				<div className={cn("flex", "items-center", "gap-1", "min-w-0")}>
-					<div className="shrink-0">{renderModeSelector()}</div>
+					<div className="shrink-0">{renderAgentSelector()}</div>
 
 					<div className={cn("flex-1", "min-w-0", "overflow-hidden")}>
 						<ApiConfigSelector
@@ -1226,7 +1226,7 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 					</div>
 
 					{isEditMode && (
-						<EditModeControls
+						<EditAgentControls
 							mode={mode}
 							onModeChange={handleModeChange}
 							modeShortcutText={modeShortcutText}
@@ -1253,7 +1253,7 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 					/>
 				)}
 
-				{!isEditMode && renderNonEditModeControls()}
+				{!isEditMode && renderNonEditAgentControls()}
 			</div>
 		)
 	},

@@ -9,6 +9,7 @@ import { GlobalFileNames } from "../../shared/globalFileNames"
 import { ensureSettingsDirectoryExists } from "../../utils/globalContext"
 import { t } from "../../i18n"
 import { TelemetryService } from "@roo-code/telemetry"
+import type { CustomAgentsManager } from "../../core/config/CustomAgentsManager"
 import type { CustomModesManager } from "../../core/config/CustomModesManager"
 import { CloudService } from "@roo-code/cloud"
 
@@ -24,10 +25,10 @@ export class MarketplaceManager {
 
 	constructor(
 		private readonly context: vscode.ExtensionContext,
-		private readonly customModesManager?: CustomModesManager,
+		private readonly customAgentsManager?: CustomAgentsManager | CustomModesManager,
 	) {
 		this.configLoader = new RemoteConfigLoader()
-		this.installer = new SimpleInstaller(context, customModesManager)
+		this.installer = new SimpleInstaller(context, customAgentsManager)
 	}
 
 	async getMarketplaceItems(): Promise<MarketplaceItemsResponse> {
@@ -246,22 +247,40 @@ export class MarketplaceManager {
 				return // No workspace, no project installations
 			}
 
-			// Check modes in .roomodes
+			// Check agents/modes in .rooagents (preferred) or .roomodes (backward compatibility)
+			const projectAgentsPath = path.join(workspaceFolder.uri.fsPath, ".rooagents")
 			const projectModesPath = path.join(workspaceFolder.uri.fsPath, ".roomodes")
+
+			// Try .rooagents first
 			try {
-				const content = await fs.readFile(projectModesPath, "utf-8")
+				const content = await fs.readFile(projectAgentsPath, "utf-8")
 				const data = yaml.parse(content)
-				if (data?.customModes && Array.isArray(data.customModes)) {
-					for (const mode of data.customModes) {
-						if (mode.slug) {
-							metadata[mode.slug] = {
-								type: "mode",
+				if (data?.customAgents && Array.isArray(data.customAgents)) {
+					for (const agent of data.customAgents) {
+						if (agent.slug) {
+							metadata[agent.slug] = {
+								type: "mode", // Keep as "mode" for marketplace compatibility
 							}
 						}
 					}
 				}
 			} catch (error) {
-				// File doesn't exist or can't be read, skip
+				// .rooagents doesn't exist, try .roomodes for backward compatibility
+				try {
+					const content = await fs.readFile(projectModesPath, "utf-8")
+					const data = yaml.parse(content)
+					if (data?.customModes && Array.isArray(data.customModes)) {
+						for (const mode of data.customModes) {
+							if (mode.slug) {
+								metadata[mode.slug] = {
+									type: "mode",
+								}
+							}
+						}
+					}
+				} catch (error) {
+					// Neither file exists or can't be read, skip
+				}
 			}
 
 			// Check MCPs in .roo/mcp.json

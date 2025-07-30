@@ -21,7 +21,7 @@
 	"confirmation": {
 		"reset_state": "Tem certeza de que deseja redefinir todo o estado e armazenamento secreto na extensão? Isso não pode ser desfeito.",
 		"delete_config_profile": "Tem certeza de que deseja excluir este perfil de configuração?",
-		"delete_custom_mode_with_rules": "Tem certeza de que deseja excluir este modo {scope}?\n\nIsso também excluirá a pasta de regras associada em:\n{rulesFolderPath}"
+		"delete_custom_agent_with_rules": "Tem certeza de que deseja excluir este modo {scope}?\n\nIsso também excluirá a pasta de regras associada em:\n{rulesFolderPath}"
 	},
 	"errors": {
 		"invalid_data_uri": "Formato de URI de dados inválido",
@@ -73,7 +73,7 @@
 		"share_auth_required": "Autenticação necessária. Faça login para compartilhar tarefas.",
 		"share_not_enabled": "O compartilhamento de tarefas não está habilitado para esta organização.",
 		"share_task_not_found": "Tarefa não encontrada ou acesso negado.",
-		"mode_import_failed": "Falha ao importar o modo: {{error}}",
+		"agent_import_failed": "Falha ao importar o modo: {{error}}",
 		"delete_rules_folder_failed": "Falha ao excluir pasta de regras: {{rulesFolderPath}}. Erro: {{error}}",
 		"command_not_found": "Comando '{{name}}' não encontrado",
 		"open_command_file": "Falha ao abrir arquivo de comando",
@@ -113,8 +113,8 @@
 		"image_saved": "Imagem salva em {{path}}",
 		"organization_share_link_copied": "Link de compartilhamento da organização copiado para a área de transferência!",
 		"public_share_link_copied": "Link de compartilhamento público copiado para a área de transferência!",
-		"mode_exported": "Modo '{{mode}}' exportado com sucesso",
-		"mode_imported": "Modo importado com sucesso"
+		"agent_exported": "Modo '{{Agente}}' exportado com sucesso",
+		"agent_imported": "Modo importado com sucesso"
 	},
 	"answers": {
 		"yes": "Sim",
@@ -150,10 +150,10 @@
 			}
 		}
 	},
-	"customModes": {
+	"customAgents": {
 		"errors": {
-			"yamlParseError": "YAML inválido no arquivo .roomodes na linha {{line}}. Verifique:\n• Indentação correta (use espaços, não tabs)\n• Aspas e colchetes correspondentes\n• Sintaxe YAML válida",
-			"schemaValidationError": "Formato de modos personalizados inválido em .roomodes:\n{{issues}}",
+			"yamlParseError": "YAML inválido no arquivo .rooagents na linha {{line}}. Verifique:\n• Indentação correta (use espaços, não tabs)\n• Aspas e colchetes correspondentes\n• Sintaxe YAML válida",
+			"schemaValidationError": "Formato de modos personalizados inválido em .rooagents:\n{{issues}}",
 			"invalidFormat": "Formato de modos personalizados inválido. Certifique-se de que suas configurações seguem o formato YAML correto.",
 			"updateFailed": "Falha ao atualizar modo personalizado: {{error}}",
 			"deleteFailed": "Falha ao excluir modo personalizado: {{error}}",
@@ -168,7 +168,7 @@
 		}
 	},
 	"marketplace": {
-		"mode": {
+		"Agente": {
 			"rulesCleanupFailed": "O modo foi removido com sucesso, mas falhou ao excluir a pasta de regras em {{rulesFolderPath}}. Você pode precisar excluí-la manualmente."
 		}
 	},
@@ -180,7 +180,7 @@
 		}
 	},
 	"prompts": {
-		"deleteMode": {
+		"deleteAgent": {
 			"title": "Excluir Modo Personalizado",
 			"description": "Tem certeza de que deseja excluir este modo {{scope}}? Isso também excluirá a pasta de regras associada em: {{rulesFolderPath}}",
 			"descriptionNoRules": "Tem certeza de que deseja excluir este modo personalizado?",

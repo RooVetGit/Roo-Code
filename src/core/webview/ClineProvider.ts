@@ -59,7 +59,7 @@ import { fileExistsAtPath } from "../../utils/fs"
 import { setTtsEnabled, setTtsSpeed } from "../../utils/tts"
 import { ContextProxy } from "../config/ContextProxy"
 import { ProviderSettingsManager } from "../config/ProviderSettingsManager"
-import { CustomModesManager } from "../config/CustomModesManager"
+import { CustomAgentsManager } from "../config/CustomAgentsManager"
 import { buildApiHandler } from "../../api"
 import { Task, TaskOptions } from "../task/Task"
 import { getNonce } from "./getNonce"
@@ -114,7 +114,9 @@ export class ClineProvider
 	public settingsImportedAt?: number
 	public readonly latestAnnouncementId = "jul-29-2025-3-25-0" // Update for v3.25.0 announcement
 	public readonly providerSettingsManager: ProviderSettingsManager
-	public readonly customModesManager: CustomModesManager
+	public readonly customAgentsManager: CustomAgentsManager
+	// Backward compatibility alias
+	public readonly customModesManager: CustomAgentsManager
 
 	constructor(
 		readonly context: vscode.ExtensionContext,
@@ -144,9 +146,11 @@ export class ClineProvider
 
 		this.providerSettingsManager = new ProviderSettingsManager(this.context)
 
-		this.customModesManager = new CustomModesManager(this.context, async () => {
+		this.customAgentsManager = new CustomAgentsManager(this.context, async () => {
 			await this.postStateToWebview()
 		})
+		// Backward compatibility alias
+		this.customModesManager = this.customAgentsManager
 
 		// Initialize MCP Hub through the singleton manager
 		McpServerManager.getInstance(this.context, this)
@@ -158,7 +162,7 @@ export class ClineProvider
 				this.log(`Failed to initialize MCP Hub: ${error}`)
 			})
 
-		this.marketplaceManager = new MarketplaceManager(this.context, this.customModesManager)
+		this.marketplaceManager = new MarketplaceManager(this.context, this.customAgentsManager)
 	}
 
 	// Adds a new Cline instance to clineStack, marking the start of a new task.
@@ -174,7 +178,7 @@ export class ClineProvider
 		const state = await this.getState()
 
 		if (!state || typeof state.mode !== "string") {
-			throw new Error(t("common:errors.retrieve_current_mode"))
+			throw new Error(t("common:errors.retrieve_current_agent"))
 		}
 	}
 
@@ -281,7 +285,7 @@ export class ClineProvider
 		await this.mcpHub?.unregisterClient()
 		this.mcpHub = undefined
 		this.marketplaceManager?.cleanup()
-		this.customModesManager?.dispose()
+		this.customAgentsManager?.dispose()
 		this.log("Disposed all disposables")
 		ClineProvider.activeInstances.delete(this)
 
@@ -581,7 +585,7 @@ export class ClineProvider
 		// If the history item has a saved mode, restore it and its associated API configuration
 		if (historyItem.mode) {
 			// Validate that the mode still exists
-			const customModes = await this.customModesManager.getCustomModes()
+			const customModes = await this.customAgentsManager.getCustomModes()
 			const modeExists = getModeBySlug(historyItem.mode, customModes) !== undefined
 
 			if (!modeExists) {
@@ -1654,7 +1658,7 @@ export class ClineProvider
 
 	async getState() {
 		const stateValues = this.contextProxy.getValues()
-		const customModes = await this.customModesManager.getCustomModes()
+		const customModes = await this.customAgentsManager.getCustomModes()
 
 		// Determine apiProvider with the same logic as before.
 		const apiProvider: ProviderName = stateValues.apiProvider ? stateValues.apiProvider : "anthropic"
@@ -1895,7 +1899,7 @@ export class ClineProvider
 
 		await this.contextProxy.resetAllState()
 		await this.providerSettingsManager.resetAllConfigs()
-		await this.customModesManager.resetCustomModes()
+		await this.customAgentsManager.resetCustomModes()
 		await this.removeClineFromStack()
 		await this.postStateToWebview()
 		await this.postMessageToWebview({ type: "action", action: "chatButtonClicked" })

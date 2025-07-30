@@ -1,11 +1,11 @@
 {
 	"type-group": {
-		"modes": "モード",
+		"agents": "エージェント",
 		"mcps": "MCPサーバー",
 		"match": "マッチ"
 	},
 	"item-card": {
-		"type-mode": "モード",
+		"type-agent": "エージェント",
 		"type-mcp": "MCPサーバー",
 		"type-other": "その他",
 		"by-author": "{{author}}による",

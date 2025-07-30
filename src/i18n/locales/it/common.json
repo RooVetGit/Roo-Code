@@ -17,7 +17,7 @@
 	"confirmation": {
 		"reset_state": "Sei sicuro di voler reimpostare tutti gli stati e l'archiviazione segreta nell'estensione? Questa azione non può essere annullata.",
 		"delete_config_profile": "Sei sicuro di voler eliminare questo profilo di configurazione?",
-		"delete_custom_mode_with_rules": "Sei sicuro di voler eliminare questa modalità {scope}?\n\nQuesto eliminerà anche la cartella delle regole associata in:\n{rulesFolderPath}"
+		"delete_custom_agent_with_rules": "Sei sicuro di voler eliminare questa modalità {scope}?\n\nQuesto eliminerà anche la cartella delle regole associata in:\n{rulesFolderPath}"
 	},
 	"errors": {
 		"invalid_data_uri": "Formato URI dati non valido",
@@ -69,7 +69,7 @@
 		"share_auth_required": "Autenticazione richiesta. Accedi per condividere le attività.",
 		"share_not_enabled": "La condivisione delle attività non è abilitata per questa organizzazione.",
 		"share_task_not_found": "Attività non trovata o accesso negato.",
-		"mode_import_failed": "Importazione della modalità non riuscita: {{error}}",
+		"agent_import_failed": "Importazione della modalità non riuscita: {{error}}",
 		"delete_rules_folder_failed": "Impossibile eliminare la cartella delle regole: {{rulesFolderPath}}. Errore: {{error}}",
 		"command_not_found": "Comando '{{name}}' non trovato",
 		"open_command_file": "Impossibile aprire il file di comando",
@@ -109,8 +109,8 @@
 		"image_saved": "Immagine salvata in {{path}}",
 		"organization_share_link_copied": "Link di condivisione organizzazione copiato negli appunti!",
 		"public_share_link_copied": "Link di condivisione pubblica copiato negli appunti!",
-		"mode_exported": "Modalità '{{mode}}' esportata con successo",
-		"mode_imported": "Modalità importata con successo"
+		"agent_exported": "Modalità '{{Agente}}' esportata con successo",
+		"agent_imported": "Modalità importata con successo"
 	},
 	"answers": {
 		"yes": "Sì",
@@ -150,10 +150,10 @@
 			}
 		}
 	},
-	"customModes": {
+	"customAgents": {
 		"errors": {
-			"yamlParseError": "YAML non valido nel file .roomodes alla riga {{line}}. Controlla:\n• Indentazione corretta (usa spazi, non tab)\n• Virgolette e parentesi corrispondenti\n• Sintassi YAML valida",
-			"schemaValidationError": "Formato modalità personalizzate non valido in .roomodes:\n{{issues}}",
+			"yamlParseError": "YAML non valido nel file .rooagents alla riga {{line}}. Controlla:\n• Indentazione corretta (usa spazi, non tab)\n• Virgolette e parentesi corrispondenti\n• Sintassi YAML valida",
+			"schemaValidationError": "Formato modalità personalizzate non valido in .rooagents:\n{{issues}}",
 			"invalidFormat": "Formato modalità personalizzate non valido. Assicurati che le tue impostazioni seguano il formato YAML corretto.",
 			"updateFailed": "Aggiornamento modalità personalizzata fallito: {{error}}",
 			"deleteFailed": "Eliminazione modalità personalizzata fallita: {{error}}",
@@ -168,7 +168,7 @@
 		}
 	},
 	"marketplace": {
-		"mode": {
+		"Agente": {
 			"rulesCleanupFailed": "La modalità è stata rimossa con successo, ma non è stato possibile eliminare la cartella delle regole in {{rulesFolderPath}}. Potrebbe essere necessario eliminarla manualmente."
 		}
 	},
@@ -180,7 +180,7 @@
 		}
 	},
 	"prompts": {
-		"deleteMode": {
+		"deleteAgent": {
 			"title": "Elimina Modalità Personalizzata",
 			"description": "Sei sicuro di voler eliminare questa modalità {{scope}}? Questo eliminerà anche la cartella delle regole associata a: {{rulesFolderPath}}",
 			"descriptionNoRules": "Sei sicuro di voler eliminare questa modalità personalizzata?",

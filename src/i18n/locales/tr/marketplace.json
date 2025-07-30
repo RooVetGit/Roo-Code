@@ -1,11 +1,11 @@
 {
 	"type-group": {
-		"modes": "Modlar",
+		"Ajanlar": "Modlar",
 		"mcps": "MCP Sunucuları",
 		"match": "eşleşme"
 	},
 	"item-card": {
-		"type-mode": "Mod",
+		"type-Ajan": "Mod",
 		"type-mcp": "MCP Sunucusu",
 		"type-other": "Diğer",
 		"by-author": "{{author}} tarafından",
@@ -23,7 +23,7 @@
 		"type": {
 			"label": "Tür",
 			"all": "Tüm Türler",
-			"mode": "Mod",
+			"Ajan": "Mod",
 			"mcpServer": "MCP Sunucusu"
 		},
 		"sort": {

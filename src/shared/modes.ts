@@ -3,11 +3,14 @@ import * as vscode from "vscode"
 import {
 	type GroupOptions,
 	type GroupEntry,
+	type AgentConfig,
 	type ModeConfig,
+	type CustomAgentPrompts,
 	type CustomModePrompts,
 	type ExperimentId,
 	type ToolGroup,
 	type PromptComponent,
+	DEFAULT_AGENTS,
 	DEFAULT_MODES,
 } from "@roo-code/types"
 
@@ -16,7 +19,8 @@ import { addCustomInstructions } from "../core/prompts/sections/custom-instructi
 import { EXPERIMENT_IDS } from "./experiments"
 import { TOOL_GROUPS, ALWAYS_AVAILABLE_TOOLS } from "./tools"
 
-export type Mode = string
+export type Agent = string
+export type Mode = Agent // Backward compatibility alias
 
 // Helper to extract group name regardless of format
 export function getGroupName(group: GroupEntry): ToolGroup {
@@ -60,94 +64,136 @@ export function getToolsForMode(groups: readonly GroupEntry[]): string[] {
 	return Array.from(tools)
 }
 
-// Main modes configuration as an ordered array
+// Main agents configuration as an ordered array
+export const agents = DEFAULT_AGENTS
+
+// Main modes configuration as an ordered array (backward compatibility)
 export const modes = DEFAULT_MODES
 
-// Export the default mode slug
-export const defaultModeSlug = modes[0].slug
+// Export the default agent slug
+export const defaultAgentSlug = agents[0].slug
 
-// Helper functions
-export function getModeBySlug(slug: string, customModes?: ModeConfig[]): ModeConfig | undefined {
-	// Check custom modes first
-	const customMode = customModes?.find((mode) => mode.slug === slug)
-	if (customMode) {
-		return customMode
+// Export the default mode slug (backward compatibility)
+export const defaultModeSlug = defaultAgentSlug
+
+// Helper functions for agents
+export function getAgentBySlug(slug: string, customAgents?: AgentConfig[]): AgentConfig | undefined {
+	// Check custom agents first
+	const customAgent = customAgents?.find((agent) => agent.slug === slug)
+	if (customAgent) {
+		return customAgent
 	}
-	// Then check built-in modes
-	return modes.find((mode) => mode.slug === slug)
+	// Then check built-in agents
+	return agents.find((agent) => agent.slug === slug)
 }
 
-export function getModeConfig(slug: string, customModes?: ModeConfig[]): ModeConfig {
-	const mode = getModeBySlug(slug, customModes)
-	if (!mode) {
-		throw new Error(`No mode found for slug: ${slug}`)
+export function getAgentConfig(slug: string, customAgents?: AgentConfig[]): AgentConfig {
+	const agent = getAgentBySlug(slug, customAgents)
+	if (!agent) {
+		throw new Error(`No agent found for slug: ${slug}`)
 	}
-	return mode
+	return agent
 }
 
-// Get all available modes, with custom modes overriding built-in modes
-export function getAllModes(customModes?: ModeConfig[]): ModeConfig[] {
-	if (!customModes?.length) {
-		return [...modes]
+// Get all available agents, with custom agents overriding built-in agents
+export function getAllAgents(customAgents?: AgentConfig[]): AgentConfig[] {
+	if (!customAgents?.length) {
+		return [...agents]
 	}
 
-	// Start with built-in modes
-	const allModes = [...modes]
+	// Start with built-in agents
+	const allAgents = [...agents]
 
-	// Process custom modes
-	customModes.forEach((customMode) => {
-		const index = allModes.findIndex((mode) => mode.slug === customMode.slug)
+	// Process custom agents
+	customAgents.forEach((customAgent) => {
+		const index = allAgents.findIndex((agent) => agent.slug === customAgent.slug)
 		if (index !== -1) {
-			// Override existing mode
-			allModes[index] = customMode
+			// Override existing agent
+			allAgents[index] = customAgent
 		} else {
-			// Add new mode
-			allModes.push(customMode)
+			// Add new agent
+			allAgents.push(customAgent)
 		}
 	})
 
-	return allModes
+	return allAgents
 }
 
-// Check if a mode is custom or an override
+// Check if an agent is custom or an override
+export function isCustomAgent(slug: string, customAgents?: AgentConfig[]): boolean {
+	return !!customAgents?.some((agent) => agent.slug === slug)
+}
+
+// Helper functions for modes (backward compatibility)
+export function getModeBySlug(slug: string, customModes?: ModeConfig[]): ModeConfig | undefined {
+	return getAgentBySlug(slug, customModes)
+}
+
+export function getModeConfig(slug: string, customModes?: ModeConfig[]): ModeConfig {
+	return getAgentConfig(slug, customModes)
+}
+
+// Get all available modes, with custom modes overriding built-in modes (backward compatibility)
+export function getAllModes(customModes?: ModeConfig[]): ModeConfig[] {
+	return getAllAgents(customModes)
+}
+
+// Check if a mode is custom or an override (backward compatibility)
 export function isCustomMode(slug: string, customModes?: ModeConfig[]): boolean {
-	return !!customModes?.some((mode) => mode.slug === slug)
+	return isCustomAgent(slug, customModes)
 }
 
 /**
- * Find a mode by its slug, don't fall back to built-in modes
+ * Find an agent by its slug, don't fall back to built-in agents
+ */
+export function findAgentBySlug(slug: string, agents: readonly AgentConfig[] | undefined): AgentConfig | undefined {
+	return agents?.find((agent) => agent.slug === slug)
+}
+
+/**
+ * Get the agent selection based on the provided agent slug, prompt component, and custom agents.
+ * If a custom agent is found, it takes precedence over the built-in agents.
+ * If no custom agent is found, the built-in agent is used with partial merging from promptComponent.
+ * If neither is found, the default agent is used.
+ */
+export function getAgentSelection(agent: string, promptComponent?: PromptComponent, customAgents?: AgentConfig[]) {
+	const customAgent = findAgentBySlug(agent, customAgents)
+	const builtInAgent = findAgentBySlug(agent, agents)
+
+	// If we have a custom agent, use it entirely
+	if (customAgent) {
+		return {
+			roleDefinition: customAgent.roleDefinition || "",
+			baseInstructions: customAgent.customInstructions || "",
+			description: customAgent.description || "",
+		}
+	}
+
+	// Otherwise, use built-in agent as base and merge with promptComponent
+	const baseAgent = builtInAgent || agents[0] // fallback to default agent
+
+	return {
+		roleDefinition: promptComponent?.roleDefinition || baseAgent.roleDefinition || "",
+		baseInstructions: promptComponent?.customInstructions || baseAgent.customInstructions || "",
+		description: baseAgent.description || "",
+	}
+}
+
+/**
+ * Find a mode by its slug, don't fall back to built-in modes (backward compatibility)
  */
 export function findModeBySlug(slug: string, modes: readonly ModeConfig[] | undefined): ModeConfig | undefined {
-	return modes?.find((mode) => mode.slug === slug)
+	return findAgentBySlug(slug, modes)
 }
 
 /**
- * Get the mode selection based on the provided mode slug, prompt component, and custom modes.
+ * Get the mode selection based on the provided mode slug, prompt component, and custom modes (backward compatibility).
  * If a custom mode is found, it takes precedence over the built-in modes.
  * If no custom mode is found, the built-in mode is used with partial merging from promptComponent.
  * If neither is found, the default mode is used.
  */
 export function getModeSelection(mode: string, promptComponent?: PromptComponent, customModes?: ModeConfig[]) {
-	const customMode = findModeBySlug(mode, customModes)
-	const builtInMode = findModeBySlug(mode, modes)
-
-	// If we have a custom mode, use it entirely
-	if (customMode) {
-		return {
-			roleDefinition: customMode.roleDefinition || "",
-			baseInstructions: customMode.customInstructions || "",
-			description: customMode.description || "",
-		}
-	}
-
-	// Otherwise, use built-in mode as base and merge with promptComponent
-	const baseMode = builtInMode || modes[0] // fallback to default mode
-
-	return {
-		roleDefinition: promptComponent?.roleDefinition || baseMode.roleDefinition || "",
-		baseInstructions: promptComponent?.customInstructions || baseMode.customInstructions || "",
-		description: baseMode.description || "",
-	}
+	return getAgentSelection(mode, promptComponent, customModes)
 }
 
 // Edit operation parameters that indicate an actual edit operation
@@ -164,10 +210,10 @@ export class FileRestrictionError extends Error {
 	}
 }
 
-export function isToolAllowedForMode(
+export function isToolAllowedForAgent(
 	tool: string,
-	modeSlug: string,
-	customModes: ModeConfig[],
+	agentSlug: string,
+	customAgents: AgentConfig[],
 	toolRequirements?: Record<string, boolean>,
 	toolParams?: Record<string, any>, // All tool parameters
 	experiments?: Record<string, boolean>,
@@ -192,13 +238,13 @@ export function isToolAllowedForMode(
 		return false
 	}
 
-	const mode = getModeBySlug(modeSlug, customModes)
-	if (!mode) {
+	const agent = getAgentBySlug(agentSlug, customAgents)
+	if (!agent) {
 		return false
 	}
 
-	// Check if tool is in any of the mode's groups and respects any group options
-	for (const group of mode.groups) {
+	// Check if tool is in any of the agent's groups and respects any group options
+	for (const group of agent.groups) {
 		const groupName = getGroupName(group)
 		const options = getGroupOptions(group)
 
@@ -222,7 +268,7 @@ export function isToolAllowedForMode(
 
 			// Handle single file path validation
 			if (filePath && isEditOperation && !doesFileMatchRegex(filePath, options.fileRegex)) {
-				throw new FileRestrictionError(mode.name, options.fileRegex, options.description, filePath, tool)
+				throw new FileRestrictionError(agent.name, options.fileRegex, options.description, filePath, tool)
 			}
 
 			// Handle XML args parameter (used by MULTI_FILE_APPLY_DIFF experiment)
@@ -240,7 +286,7 @@ export function isToolAllowedForMode(
 								if (extractedPath && !extractedPath.includes("<") && !extractedPath.includes(">")) {
 									if (!doesFileMatchRegex(extractedPath, options.fileRegex)) {
 										throw new FileRestrictionError(
-											mode.name,
+											agent.name,
 											options.fileRegex,
 											options.description,
 											extractedPath,
@@ -268,37 +314,147 @@ export function isToolAllowedForMode(
 	return false
 }
 
-// Create the mode-specific default prompts
-export const defaultPrompts: Readonly<CustomModePrompts> = Object.freeze(
+// Backward compatibility function for modes
+export function isToolAllowedForMode(
+	tool: string,
+	modeSlug: string,
+	customModes: ModeConfig[],
+	toolRequirements?: Record<string, boolean>,
+	toolParams?: Record<string, any>, // All tool parameters
+	experiments?: Record<string, boolean>,
+): boolean {
+	return isToolAllowedForAgent(tool, modeSlug, customModes, toolRequirements, toolParams, experiments)
+}
+
+// Create the agent-specific default prompts
+export const defaultAgentPrompts: Readonly<CustomAgentPrompts> = Object.freeze(
 	Object.fromEntries(
-		modes.map((mode) => [
-			mode.slug,
+		agents.map((agent) => [
+			agent.slug,
 			{
-				roleDefinition: mode.roleDefinition,
-				whenToUse: mode.whenToUse,
-				customInstructions: mode.customInstructions,
-				description: mode.description,
+				roleDefinition: agent.roleDefinition,
+				whenToUse: agent.whenToUse,
+				customInstructions: agent.customInstructions,
+				description: agent.description,
 			},
 		]),
 	),
 )
 
-// Helper function to get all modes with their prompt overrides from extension state
-export async function getAllModesWithPrompts(context: vscode.ExtensionContext): Promise<ModeConfig[]> {
-	const customModes = (await context.globalState.get<ModeConfig[]>("customModes")) || []
-	const customModePrompts = (await context.globalState.get<CustomModePrompts>("customModePrompts")) || {}
+// Create the mode-specific default prompts (backward compatibility)
+export const defaultPrompts: Readonly<CustomModePrompts> = defaultAgentPrompts
 
-	const allModes = getAllModes(customModes)
-	return allModes.map((mode) => ({
-		...mode,
-		roleDefinition: customModePrompts[mode.slug]?.roleDefinition ?? mode.roleDefinition,
-		whenToUse: customModePrompts[mode.slug]?.whenToUse ?? mode.whenToUse,
-		customInstructions: customModePrompts[mode.slug]?.customInstructions ?? mode.customInstructions,
-		// description is not overridable via customModePrompts, so we keep the original
+// Helper function to get all agents with their prompt overrides from extension state
+export async function getAllAgentsWithPrompts(context: vscode.ExtensionContext): Promise<AgentConfig[]> {
+	const customAgents =
+		(await context.globalState.get<AgentConfig[]>("customAgents")) ||
+		(await context.globalState.get<ModeConfig[]>("customModes")) ||
+		[] // Fallback for backward compatibility
+	const customAgentPrompts =
+		(await context.globalState.get<CustomAgentPrompts>("customAgentPrompts")) ||
+		(await context.globalState.get<CustomModePrompts>("customModePrompts")) ||
+		{} // Fallback for backward compatibility
+
+	const allAgents = getAllAgents(customAgents)
+	return allAgents.map((agent) => ({
+		...agent,
+		roleDefinition: customAgentPrompts[agent.slug]?.roleDefinition ?? agent.roleDefinition,
+		whenToUse: customAgentPrompts[agent.slug]?.whenToUse ?? agent.whenToUse,
+		customInstructions: customAgentPrompts[agent.slug]?.customInstructions ?? agent.customInstructions,
+		// description is not overridable via customAgentPrompts, so we keep the original
 	}))
 }
 
-// Helper function to get complete mode details with all overrides
+// Helper function to get complete agent details with all overrides
+export async function getFullAgentDetails(
+	agentSlug: string,
+	customAgents?: AgentConfig[],
+	customAgentPrompts?: CustomAgentPrompts,
+	options?: {
+		cwd?: string
+		globalCustomInstructions?: string
+		language?: string
+	},
+): Promise<AgentConfig> {
+	// First get the base agent config from custom agents or built-in agents
+	const baseAgent = getAgentBySlug(agentSlug, customAgents) || agents.find((a) => a.slug === agentSlug) || agents[0]
+
+	// Check for any prompt component overrides
+	const promptComponent = customAgentPrompts?.[agentSlug]
+
+	// Get the base custom instructions
+	const baseCustomInstructions = promptComponent?.customInstructions || baseAgent.customInstructions || ""
+	const baseWhenToUse = promptComponent?.whenToUse || baseAgent.whenToUse || ""
+	const baseDescription = promptComponent?.description || baseAgent.description || ""
+
+	// If we have cwd, load and combine all custom instructions
+	let fullCustomInstructions = baseCustomInstructions
+	if (options?.cwd) {
+		fullCustomInstructions = await addCustomInstructions(
+			baseCustomInstructions,
+			options.globalCustomInstructions || "",
+			options.cwd,
+			agentSlug,
+			{ language: options.language },
+		)
+	}
+
+	// Return agent with any overrides applied
+	return {
+		...baseAgent,
+		roleDefinition: promptComponent?.roleDefinition || baseAgent.roleDefinition,
+		whenToUse: baseWhenToUse,
+		description: baseDescription,
+		customInstructions: fullCustomInstructions,
+	}
+}
+
+// Helper function to safely get agent role definition
+export function getAgentRoleDefinition(agentSlug: string, customAgents?: AgentConfig[]): string {
+	const agent = getAgentBySlug(agentSlug, customAgents)
+	if (!agent) {
+		console.warn(`No agent found for slug: ${agentSlug}`)
+		return ""
+	}
+	return agent.roleDefinition
+}
+
+// Helper function to safely get agent description
+export function getAgentDescription(agentSlug: string, customAgents?: AgentConfig[]): string {
+	const agent = getAgentBySlug(agentSlug, customAgents)
+	if (!agent) {
+		console.warn(`No agent found for slug: ${agentSlug}`)
+		return ""
+	}
+	return agent.description ?? ""
+}
+
+// Helper function to safely get agent whenToUse
+export function getAgentWhenToUse(agentSlug: string, customAgents?: AgentConfig[]): string {
+	const agent = getAgentBySlug(agentSlug, customAgents)
+	if (!agent) {
+		console.warn(`No agent found for slug: ${agentSlug}`)
+		return ""
+	}
+	return agent.whenToUse ?? ""
+}
+
+// Helper function to safely get agent custom instructions
+export function getAgentCustomInstructions(agentSlug: string, customAgents?: AgentConfig[]): string {
+	const agent = getAgentBySlug(agentSlug, customAgents)
+	if (!agent) {
+		console.warn(`No agent found for slug: ${agentSlug}`)
+		return ""
+	}
+	return agent.customInstructions ?? ""
+}
+
+// Helper function to get all modes with their prompt overrides from extension state (backward compatibility)
+export async function getAllModesWithPrompts(context: vscode.ExtensionContext): Promise<ModeConfig[]> {
+	return getAllAgentsWithPrompts(context)
+}
+
+// Helper function to get complete mode details with all overrides (backward compatibility)
 export async function getFullModeDetails(
 	modeSlug: string,
 	customModes?: ModeConfig[],
@@ -309,75 +465,25 @@ export async function getFullModeDetails(
 		language?: string
 	},
 ): Promise<ModeConfig> {
-	// First get the base mode config from custom modes or built-in modes
-	const baseMode = getModeBySlug(modeSlug, customModes) || modes.find((m) => m.slug === modeSlug) || modes[0]
-
-	// Check for any prompt component overrides
-	const promptComponent = customModePrompts?.[modeSlug]
-
-	// Get the base custom instructions
-	const baseCustomInstructions = promptComponent?.customInstructions || baseMode.customInstructions || ""
-	const baseWhenToUse = promptComponent?.whenToUse || baseMode.whenToUse || ""
-	const baseDescription = promptComponent?.description || baseMode.description || ""
-
-	// If we have cwd, load and combine all custom instructions
-	let fullCustomInstructions = baseCustomInstructions
-	if (options?.cwd) {
-		fullCustomInstructions = await addCustomInstructions(
-			baseCustomInstructions,
-			options.globalCustomInstructions || "",
-			options.cwd,
-			modeSlug,
-			{ language: options.language },
-		)
-	}
-
-	// Return mode with any overrides applied
-	return {
-		...baseMode,
-		roleDefinition: promptComponent?.roleDefinition || baseMode.roleDefinition,
-		whenToUse: baseWhenToUse,
-		description: baseDescription,
-		customInstructions: fullCustomInstructions,
-	}
+	return getFullAgentDetails(modeSlug, customModes, customModePrompts, options)
 }
 
-// Helper function to safely get role definition
+// Helper function to safely get role definition (backward compatibility)
 export function getRoleDefinition(modeSlug: string, customModes?: ModeConfig[]): string {
-	const mode = getModeBySlug(modeSlug, customModes)
-	if (!mode) {
-		console.warn(`No mode found for slug: ${modeSlug}`)
-		return ""
-	}
-	return mode.roleDefinition
+	return getAgentRoleDefinition(modeSlug, customModes)
 }
 
-// Helper function to safely get description
+// Helper function to safely get description (backward compatibility)
 export function getDescription(modeSlug: string, customModes?: ModeConfig[]): string {
-	const mode = getModeBySlug(modeSlug, customModes)
-	if (!mode) {
-		console.warn(`No mode found for slug: ${modeSlug}`)
-		return ""
-	}
-	return mode.description ?? ""
+	return getAgentDescription(modeSlug, customModes)
 }
 
-// Helper function to safely get whenToUse
+// Helper function to safely get whenToUse (backward compatibility)
 export function getWhenToUse(modeSlug: string, customModes?: ModeConfig[]): string {
-	const mode = getModeBySlug(modeSlug, customModes)
-	if (!mode) {
-		console.warn(`No mode found for slug: ${modeSlug}`)
-		return ""
-	}
-	return mode.whenToUse ?? ""
+	return getAgentWhenToUse(modeSlug, customModes)
 }
 
-// Helper function to safely get custom instructions
+// Helper function to safely get custom instructions (backward compatibility)
 export function getCustomInstructions(modeSlug: string, customModes?: ModeConfig[]): string {
-	const mode = getModeBySlug(modeSlug, customModes)
-	if (!mode) {
-		console.warn(`No mode found for slug: ${modeSlug}`)
-		return ""
-	}
-	return mode.customInstructions ?? ""
+	return getAgentCustomInstructions(modeSlug, customModes)
 }

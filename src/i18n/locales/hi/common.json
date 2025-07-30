@@ -17,7 +17,7 @@
 	"confirmation": {
 		"reset_state": "क्या आप वाकई एक्सटेंशन में सभी स्टेट और गुप्त स्टोरेज रीसेट करना चाहते हैं? इसे पूर्ववत नहीं किया जा सकता है।",
 		"delete_config_profile": "क्या आप वाकई इस कॉन्फ़िगरेशन प्रोफ़ाइल को हटाना चाहते हैं?",
-		"delete_custom_mode_with_rules": "क्या आप वाकई इस {scope} मोड को हटाना चाहते हैं?\n\nयह संबंधित नियम फ़ोल्डर को भी यहाँ हटा देगा:\n{rulesFolderPath}"
+		"delete_custom_agent_with_rules": "क्या आप वाकई इस {scope} मोड को हटाना चाहते हैं?\n\nयह संबंधित नियम फ़ोल्डर को भी यहाँ हटा देगा:\n{rulesFolderPath}"
 	},
 	"errors": {
 		"invalid_data_uri": "अमान्य डेटा URI फॉर्मेट",
@@ -69,7 +69,7 @@
 		"share_auth_required": "प्रमाणीकरण आवश्यक है। कार्य साझा करने के लिए कृपया साइन इन करें।",
 		"share_not_enabled": "इस संगठन के लिए कार्य साझाकरण सक्षम नहीं है।",
 		"share_task_not_found": "कार्य नहीं मिला या पहुंच अस्वीकृत।",
-		"mode_import_failed": "मोड आयात करने में विफल: {{error}}",
+		"agent_import_failed": "मोड आयात करने में विफल: {{error}}",
 		"delete_rules_folder_failed": "नियम फ़ोल्डर हटाने में विफल: {{rulesFolderPath}}। त्रुटि: {{error}}",
 		"command_not_found": "कमांड '{{name}}' नहीं मिला",
 		"open_command_file": "कमांड फ़ाइल खोलने में विफल",
@@ -109,8 +109,8 @@
 		"image_saved": "छवि {{path}} में सहेजी गई",
 		"organization_share_link_copied": "संगठन साझाकरण लिंक क्लिपबोर्ड में कॉपी किया गया!",
 		"public_share_link_copied": "सार्वजनिक साझाकरण लिंक क्लिपबोर्ड में कॉपी किया गया!",
-		"mode_exported": "मोड '{{mode}}' सफलतापूर्वक निर्यात किया गया",
-		"mode_imported": "मोड सफलतापूर्वक आयात किया गया"
+		"agent_exported": "मोड '{{एजेंट}}' सफलतापूर्वक निर्यात किया गया",
+		"agent_imported": "मोड सफलतापूर्वक आयात किया गया"
 	},
 	"answers": {
 		"yes": "हां",
@@ -150,10 +150,10 @@
 			}
 		}
 	},
-	"customModes": {
+	"customAgents": {
 		"errors": {
-			"yamlParseError": ".roomodes फ़ाइल में लाइन {{line}} पर अमान्य YAML। कृपया जांचें:\n• सही इंडेंटेशन (टैब नहीं, स्पेस का उपयोग करें)\n• मैचिंग कोट्स और ब्रैकेट्स\n• वैध YAML सिंटैक्स",
-			"schemaValidationError": ".roomodes में अमान्य कस्टम मोड फॉर्मेट:\n{{issues}}",
+			"yamlParseError": ".rooagents फ़ाइल में लाइन {{line}} पर अमान्य YAML। कृपया जांचें:\n• सही इंडेंटेशन (टैब नहीं, स्पेस का उपयोग करें)\n• मैचिंग कोट्स और ब्रैकेट्स\n• वैध YAML सिंटैक्स",
+			"schemaValidationError": ".rooagents में अमान्य कस्टम मोड फॉर्मेट:\n{{issues}}",
 			"invalidFormat": "अमान्य कस्टम मोड फॉर्मेट। कृपया सुनिश्चित करें कि आपकी सेटिंग्स सही YAML फॉर्मेट का पालन करती हैं।",
 			"updateFailed": "कस्टम मोड अपडेट विफल: {{error}}",
 			"deleteFailed": "कस्टम मोड डिलीट विफल: {{error}}",
@@ -168,7 +168,7 @@
 		}
 	},
 	"marketplace": {
-		"mode": {
+		"एजेंट": {
 			"rulesCleanupFailed": "मोड सफलतापूर्वक हटा दिया गया, लेकिन {{rulesFolderPath}} पर नियम फ़ोल्डर को हटाने में विफल रहा। आपको इसे मैन्युअल रूप से हटाना पड़ सकता है।"
 		}
 	},
@@ -180,7 +180,7 @@
 		}
 	},
 	"prompts": {
-		"deleteMode": {
+		"deleteAgent": {
 			"title": "कस्टम मोड हटाएं",
 			"description": "क्या आप वाकई इस {{scope}} मोड को हटाना चाहते हैं? यह संबंधित नियम फ़ोल्डर को भी {{rulesFolderPath}} पर हटा देगा",
 			"descriptionNoRules": "क्या आप वाकई इस कस्टम मोड को हटाना चाहते हैं?",

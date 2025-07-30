@@ -17,7 +17,7 @@
 	"confirmation": {
 		"reset_state": "Uzantıdaki tüm durumları ve gizli depolamayı sıfırlamak istediğinizden emin misiniz? Bu işlem geri alınamaz.",
 		"delete_config_profile": "Bu yapılandırma profilini silmek istediğinizden emin misiniz?",
-		"delete_custom_mode_with_rules": "Bu {scope} modunu silmek istediğinizden emin misiniz?\n\nBu işlem, ilişkili kurallar klasörünü de şu konumdan silecektir:\n{rulesFolderPath}"
+		"delete_custom_agent_with_rules": "Bu {scope} modunu silmek istediğinizden emin misiniz?\n\nBu işlem, ilişkili kurallar klasörünü de şu konumdan silecektir:\n{rulesFolderPath}"
 	},
 	"errors": {
 		"invalid_data_uri": "Geçersiz veri URI formatı",
@@ -69,7 +69,7 @@
 		"share_auth_required": "Kimlik doğrulama gerekli. Görevleri paylaşmak için lütfen giriş yapın.",
 		"share_not_enabled": "Bu kuruluş için görev paylaşımı etkinleştirilmemiş.",
 		"share_task_not_found": "Görev bulunamadı veya erişim reddedildi.",
-		"mode_import_failed": "Mod içe aktarılamadı: {{error}}",
+		"agent_import_failed": "Mod içe aktarılamadı: {{error}}",
 		"delete_rules_folder_failed": "Kurallar klasörü silinemedi: {{rulesFolderPath}}. Hata: {{error}}",
 		"command_not_found": "'{{name}}' komutu bulunamadı",
 		"open_command_file": "Komut dosyası açılamadı",
@@ -109,8 +109,8 @@
 		"image_saved": "Resim {{path}} konumuna kaydedildi",
 		"organization_share_link_copied": "Kuruluş paylaşım bağlantısı panoya kopyalandı!",
 		"public_share_link_copied": "Herkese açık paylaşım bağlantısı panoya kopyalandı!",
-		"mode_exported": "'{{mode}}' modu başarıyla dışa aktarıldı",
-		"mode_imported": "Mod başarıyla içe aktarıldı"
+		"agent_exported": "'{{Ajan}}' modu başarıyla dışa aktarıldı",
+		"agent_imported": "Mod başarıyla içe aktarıldı"
 	},
 	"answers": {
 		"yes": "Evet",
@@ -150,10 +150,10 @@
 			}
 		}
 	},
-	"customModes": {
+	"customAgents": {
 		"errors": {
-			"yamlParseError": ".roomodes dosyasının {{line}}. satırında geçersiz YAML. Kontrol et:\n• Doğru girinti (tab değil boşluk kullan)\n• Eşleşen tırnak işaretleri ve parantezler\n• Geçerli YAML sözdizimi",
-			"schemaValidationError": ".roomodes'ta geçersiz özel mod formatı:\n{{issues}}",
+			"yamlParseError": ".rooagents dosyasının {{line}}. satırında geçersiz YAML. Kontrol et:\n• Doğru girinti (tab değil boşluk kullan)\n• Eşleşen tırnak işaretleri ve parantezler\n• Geçerli YAML sözdizimi",
+			"schemaValidationError": ".rooagents'ta geçersiz özel mod formatı:\n{{issues}}",
 			"invalidFormat": "Geçersiz özel mod formatı. Ayarlarının doğru YAML formatını takip ettiğinden emin ol.",
 			"updateFailed": "Özel mod güncellemesi başarısız: {{error}}",
 			"deleteFailed": "Özel mod silme başarısız: {{error}}",
@@ -168,7 +168,7 @@
 		}
 	},
 	"marketplace": {
-		"mode": {
+		"Ajan": {
 			"rulesCleanupFailed": "Mod başarıyla kaldırıldı, ancak {{rulesFolderPath}} konumundaki kurallar klasörü silinemedi. Manuel olarak silmeniz gerekebilir."
 		}
 	},
@@ -180,7 +180,7 @@
 		}
 	},
 	"prompts": {
-		"deleteMode": {
+		"deleteAgent": {
 			"title": "Özel Modu Sil",
 			"description": "Bu {{scope}} modunu silmek istediğinizden emin misiniz? Bu, {{rulesFolderPath}} adresindeki ilişkili kurallar klasörünü de silecektir",
 			"descriptionNoRules": "Bu özel modu silmek istediğinizden emin misiniz?",

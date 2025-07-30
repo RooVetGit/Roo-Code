@@ -1,11 +1,11 @@
 {
 	"type-group": {
-		"modes": "Chế độ",
+		"Đại lý": "Chế độ",
 		"mcps": "Máy chủ MCP",
 		"match": "khớp"
 	},
 	"item-card": {
-		"type-mode": "Chế độ",
+		"type-Đại lý": "Chế độ",
 		"type-mcp": "Máy chủ MCP",
 		"type-other": "Khác",
 		"by-author": "bởi {{author}}",
@@ -23,7 +23,7 @@
 		"type": {
 			"label": "Loại",
 			"all": "Tất cả loại",
-			"mode": "Chế độ",
+			"Đại lý": "Chế độ",
 			"mcpServer": "Máy chủ MCP"
 		},
 		"sort": {

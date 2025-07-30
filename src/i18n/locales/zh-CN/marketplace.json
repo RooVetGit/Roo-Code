@@ -1,11 +1,11 @@
 {
 	"type-group": {
-		"modes": "模式",
+		"agents": "代理",
 		"mcps": "MCP 服务",
 		"match": "匹配"
 	},
 	"item-card": {
-		"type-mode": "模式",
+		"type-agent": "代理",
 		"type-mcp": "MCP 服务",
 		"type-other": "其他",
 		"by-author": "作者：{{author}}",

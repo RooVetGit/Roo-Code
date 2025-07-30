@@ -17,7 +17,7 @@
 	"confirmation": {
 		"reset_state": "Weet je zeker dat je alle status en geheime opslag in de extensie wilt resetten? Dit kan niet ongedaan worden gemaakt.",
 		"delete_config_profile": "Weet je zeker dat je dit configuratieprofiel wilt verwijderen?",
-		"delete_custom_mode_with_rules": "Weet je zeker dat je deze {scope}-modus wilt verwijderen?\n\nDit verwijdert ook de bijbehorende regelsmap op:\n{rulesFolderPath}"
+		"delete_custom_agent_with_rules": "Weet je zeker dat je deze {scope}-modus wilt verwijderen?\n\nDit verwijdert ook de bijbehorende regelsmap op:\n{rulesFolderPath}"
 	},
 	"errors": {
 		"invalid_data_uri": "Ongeldig data-URI-formaat",
@@ -69,7 +69,7 @@
 		"share_auth_required": "Authenticatie vereist. Log in om taken te delen.",
 		"share_not_enabled": "Taken delen is niet ingeschakeld voor deze organisatie.",
 		"share_task_not_found": "Taak niet gevonden of toegang geweigerd.",
-		"mode_import_failed": "Importeren van modus mislukt: {{error}}",
+		"agent_import_failed": "Importeren van modus mislukt: {{error}}",
 		"delete_rules_folder_failed": "Kan regelmap niet verwijderen: {{rulesFolderPath}}. Fout: {{error}}",
 		"command_not_found": "Opdracht '{{name}}' niet gevonden",
 		"open_command_file": "Kan opdrachtbestand niet openen",
@@ -109,8 +109,8 @@
 		"image_saved": "Afbeelding opgeslagen naar {{path}}",
 		"organization_share_link_copied": "Organisatie deel-link gekopieerd naar klembord!",
 		"public_share_link_copied": "Openbare deel-link gekopieerd naar klembord!",
-		"mode_exported": "Modus '{{mode}}' succesvol geëxporteerd",
-		"mode_imported": "Modus succesvol geïmporteerd"
+		"agent_exported": "Modus '{{Agent}}' succesvol geëxporteerd",
+		"agent_imported": "Modus succesvol geïmporteerd"
 	},
 	"answers": {
 		"yes": "Ja",
@@ -150,10 +150,10 @@
 			}
 		}
 	},
-	"customModes": {
+	"customAgents": {
 		"errors": {
-			"yamlParseError": "Ongeldige YAML in .roomodes bestand op regel {{line}}. Controleer:\n• Juiste inspringing (gebruik spaties, geen tabs)\n• Overeenkomende aanhalingstekens en haakjes\n• Geldige YAML syntaxis",
-			"schemaValidationError": "Ongeldig aangepaste modi formaat in .roomodes:\n{{issues}}",
+			"yamlParseError": "Ongeldige YAML in .rooagents bestand op regel {{line}}. Controleer:\n• Juiste inspringing (gebruik spaties, geen tabs)\n• Overeenkomende aanhalingstekens en haakjes\n• Geldige YAML syntaxis",
+			"schemaValidationError": "Ongeldig aangepaste modi formaat in .rooagents:\n{{issues}}",
 			"invalidFormat": "Ongeldig aangepaste modi formaat. Zorg ervoor dat je instellingen het juiste YAML formaat volgen.",
 			"updateFailed": "Aangepaste modus bijwerken mislukt: {{error}}",
 			"deleteFailed": "Aangepaste modus verwijderen mislukt: {{error}}",
@@ -168,7 +168,7 @@
 		}
 	},
 	"marketplace": {
-		"mode": {
+		"Agent": {
 			"rulesCleanupFailed": "Modus succesvol verwijderd, maar het verwijderen van de regelsmap op {{rulesFolderPath}} is mislukt. Je moet deze mogelijk handmatig verwijderen."
 		}
 	},
@@ -180,7 +180,7 @@
 		}
 	},
 	"prompts": {
-		"deleteMode": {
+		"deleteAgent": {
 			"title": "Aangepaste modus verwijderen",
 			"description": "Weet je zeker dat je deze {{scope}}-modus wilt verwijderen? Dit zal ook de bijbehorende regelsmap op {{rulesFolderPath}} verwijderen",
 			"descriptionNoRules": "Weet je zeker dat je deze aangepaste modus wilt verwijderen?",

@@ -194,7 +194,7 @@ export const MarketplaceInstallModal: React.FC<MarketplaceInstallModalProps> = (
 		setValidationError(null)
 	}
 
-	const handlePostInstallAction = (tab: "mcp" | "modes") => {
+	const handlePostInstallAction = (tab: "mcp" | "agents") => {
 		if (tab === "mcp") {
 			// Navigate to MCP tab
 			window.postMessage(
@@ -376,7 +376,7 @@ export const MarketplaceInstallModal: React.FC<MarketplaceInstallModalProps> = (
 							<Button variant="outline" onClick={onClose}>
 								{t("marketplace:install.done")}
 							</Button>
-							<Button onClick={() => handlePostInstallAction(item.type === "mcp" ? "mcp" : "modes")}>
+							<Button onClick={() => handlePostInstallAction(item.type === "mcp" ? "mcp" : "agents")}>
 								{item.type === "mcp"
 									? t("marketplace:install.goToMcp")
 									: t("marketplace:install.goToModes")}

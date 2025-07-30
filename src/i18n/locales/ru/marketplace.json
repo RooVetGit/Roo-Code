@@ -1,11 +1,11 @@
 {
 	"type-group": {
-		"modes": "Режимы",
+		"Агенты": "Режимы",
 		"mcps": "MCP серверы",
 		"match": "совпадение"
 	},
 	"item-card": {
-		"type-mode": "Режим",
+		"type-Агент": "Режим",
 		"type-mcp": "MCP сервер",
 		"type-other": "Другое",
 		"by-author": "от {{author}}",
@@ -23,7 +23,7 @@
 		"type": {
 			"label": "Тип",
 			"all": "Все типы",
-			"mode": "Режим",
+			"Агент": "Режим",
 			"mcpServer": "MCP сервер"
 		},
 		"sort": {

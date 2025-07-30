@@ -1,7 +1,7 @@
 import React from "react"
 import { render, screen, fireEvent } from "@/utils/test-utils"
 import { describe, test, expect, vi } from "vitest"
-import ModeSelector from "../ModeSelector"
+import AgentSelector from "../AgentSelector"
 import { Mode } from "@roo/modes"
 import { ModeConfig } from "@roo-code/types"
 
@@ -46,16 +46,16 @@ vi.mock("@roo/modes", async () => {
 	}
 })
 
-describe("ModeSelector", () => {
+describe("AgentSelector", () => {
 	test("shows custom description from customModePrompts", () => {
 		const customModePrompts = {
 			code: {
-				description: "Custom code mode description",
+				description: "Custom code agent description",
 			},
 		}
 
 		render(
-			<ModeSelector
+			<AgentSelector
 				value={"code" as Mode}
 				onChange={vi.fn()}
 				modeShortcutText="Ctrl+M"
@@ -64,14 +64,14 @@ describe("ModeSelector", () => {
 		)
 
 		// The component should be rendered
-		expect(screen.getByTestId("mode-selector-trigger")).toBeInTheDocument()
+		expect(screen.getByTestId("agent-selector-trigger")).toBeInTheDocument()
 	})
 
 	test("falls back to default description when no custom prompt", () => {
-		render(<ModeSelector value={"code" as Mode} onChange={vi.fn()} modeShortcutText="Ctrl+M" />)
+		render(<AgentSelector value={"code" as Mode} onChange={vi.fn()} modeShortcutText="Ctrl+M" />)
 
 		// The component should be rendered
-		expect(screen.getByTestId("mode-selector-trigger")).toBeInTheDocument()
+		expect(screen.getByTestId("agent-selector-trigger")).toBeInTheDocument()
 	})
 
 	test("shows search bar when there are more than 6 modes", () => {
@@ -84,16 +84,16 @@ describe("ModeSelector", () => {
 			groups: ["read", "edit"],
 		}))
 
-		render(<ModeSelector value={"mode-0" as Mode} onChange={vi.fn()} modeShortcutText="Ctrl+M" />)
+		render(<AgentSelector value={"mode-0" as Mode} onChange={vi.fn()} modeShortcutText="Ctrl+M" />)
 
 		// Click to open the popover
-		fireEvent.click(screen.getByTestId("mode-selector-trigger"))
+		fireEvent.click(screen.getByTestId("agent-selector-trigger"))
 
 		// Search input should be visible
-		expect(screen.getByTestId("mode-search-input")).toBeInTheDocument()
+		expect(screen.getByTestId("agent-search-input")).toBeInTheDocument()
 
 		// Info icon should be visible
-		expect(screen.getByText("chat:modeSelector.title")).toBeInTheDocument()
+		expect(screen.getByText("chat:agentSelector.title")).toBeInTheDocument()
 		const infoIcon = document.querySelector(".codicon-info")
 		expect(infoIcon).toBeInTheDocument()
 	})
@@ -108,16 +108,16 @@ describe("ModeSelector", () => {
 			groups: ["read", "edit"],
 		}))
 
-		render(<ModeSelector value={"mode-0" as Mode} onChange={vi.fn()} modeShortcutText="Ctrl+M" />)
+		render(<AgentSelector value={"mode-0" as Mode} onChange={vi.fn()} modeShortcutText="Ctrl+M" />)
 
 		// Click to open the popover
-		fireEvent.click(screen.getByTestId("mode-selector-trigger"))
+		fireEvent.click(screen.getByTestId("agent-selector-trigger"))
 
 		// Search input should NOT be visible
-		expect(screen.queryByTestId("mode-search-input")).not.toBeInTheDocument()
+		expect(screen.queryByTestId("agent-search-input")).not.toBeInTheDocument()
 
 		// Info blurb should be visible
-		expect(screen.getByText(/chat:modeSelector.description/)).toBeInTheDocument()
+		expect(screen.getByText(/chat:agentSelector.description/)).toBeInTheDocument()
 
 		// Info icon should NOT be visible
 		const infoIcon = document.querySelector(".codicon-info")
@@ -134,17 +134,17 @@ describe("ModeSelector", () => {
 			groups: ["read", "edit"],
 		}))
 
-		render(<ModeSelector value={"mode-0" as Mode} onChange={vi.fn()} modeShortcutText="Ctrl+M" />)
+		render(<AgentSelector value={"mode-0" as Mode} onChange={vi.fn()} modeShortcutText="Ctrl+M" />)
 
 		// Click to open the popover
-		fireEvent.click(screen.getByTestId("mode-selector-trigger"))
+		fireEvent.click(screen.getByTestId("agent-selector-trigger"))
 
 		// Type in search
-		const searchInput = screen.getByTestId("mode-search-input")
+		const searchInput = screen.getByTestId("agent-search-input")
 		fireEvent.change(searchInput, { target: { value: "Mode 3" } })
 
 		// Should show filtered results
-		const modeItems = screen.getAllByTestId("mode-selector-item")
+		const modeItems = screen.getAllByTestId("agent-selector-item")
 		expect(modeItems.length).toBeLessThan(7) // Should have filtered some out
 	})
 
@@ -159,17 +159,22 @@ describe("ModeSelector", () => {
 		}))
 
 		render(
-			<ModeSelector value={"mode-0" as Mode} onChange={vi.fn()} modeShortcutText="Ctrl+M" disableSearch={true} />,
+			<AgentSelector
+				value={"mode-0" as Mode}
+				onChange={vi.fn()}
+				modeShortcutText="Ctrl+M"
+				disableSearch={true}
+			/>,
 		)
 
 		// Click to open the popover
-		fireEvent.click(screen.getByTestId("mode-selector-trigger"))
+		fireEvent.click(screen.getByTestId("agent-selector-trigger"))
 
 		// Search input should NOT be visible even with 10 modes
-		expect(screen.queryByTestId("mode-search-input")).not.toBeInTheDocument()
+		expect(screen.queryByTestId("agent-search-input")).not.toBeInTheDocument()
 
 		// Info blurb should be visible instead
-		expect(screen.getByText(/chat:modeSelector.description/)).toBeInTheDocument()
+		expect(screen.getByText(/chat:agentSelector.description/)).toBeInTheDocument()
 
 		// Info icon should NOT be visible
 		const infoIcon = document.querySelector(".codicon-info")
@@ -187,13 +192,13 @@ describe("ModeSelector", () => {
 		}))
 
 		// Don't pass disableSearch prop (should default to false)
-		render(<ModeSelector value={"mode-0" as Mode} onChange={vi.fn()} modeShortcutText="Ctrl+M" />)
+		render(<AgentSelector value={"mode-0" as Mode} onChange={vi.fn()} modeShortcutText="Ctrl+M" />)
 
 		// Click to open the popover
-		fireEvent.click(screen.getByTestId("mode-selector-trigger"))
+		fireEvent.click(screen.getByTestId("agent-selector-trigger"))
 
 		// Search input should be visible
-		expect(screen.getByTestId("mode-search-input")).toBeInTheDocument()
+		expect(screen.getByTestId("agent-search-input")).toBeInTheDocument()
 
 		// Info icon should be visible
 		const infoIcon = document.querySelector(".codicon-info")

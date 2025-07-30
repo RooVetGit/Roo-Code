@@ -1,11 +1,11 @@
 {
 	"type-group": {
-		"modes": "Modes",
+		"agents": "Agents",
 		"mcps": "Serveurs MCP",
 		"match": "correspondance"
 	},
 	"item-card": {
-		"type-mode": "Mode",
+		"type-agent": "Agent",
 		"type-mcp": "Serveur MCP",
 		"type-other": "Autre",
 		"by-author": "par {{author}}",

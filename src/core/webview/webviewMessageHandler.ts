@@ -211,7 +211,7 @@ export const webviewMessageHandler = async (
 	switch (message.type) {
 		case "webviewDidLaunch":
 			// Load custom modes first
-			const customModes = await provider.customModesManager.getCustomModes()
+			const customModes = await provider.customAgentsManager.getCustomModes()
 			await updateGlobalState("customModes", customModes)
 
 			provider.postStateToWebview()
@@ -491,7 +491,7 @@ export const webviewMessageHandler = async (
 			await importSettingsWithFeedback({
 				providerSettingsManager: provider.providerSettingsManager,
 				contextProxy: provider.contextProxy,
-				customModesManager: provider.customModesManager,
+				customModesManager: provider.customAgentsManager,
 				provider: provider,
 			})
 
@@ -772,7 +772,7 @@ export const webviewMessageHandler = async (
 			break
 		}
 		case "openCustomModesSettings": {
-			const customModesFilePath = await provider.customModesManager.getCustomModesFilePath()
+			const customModesFilePath = await provider.customAgentsManager.getCustomModesFilePath()
 
 			if (customModesFilePath) {
 				openFile(customModesFilePath)
@@ -1638,12 +1638,12 @@ export const webviewMessageHandler = async (
 		case "updateCustomMode":
 			if (message.modeConfig) {
 				// Check if this is a new mode or an update to an existing mode
-				const existingModes = await provider.customModesManager.getCustomModes()
+				const existingModes = await provider.customAgentsManager.getCustomModes()
 				const isNewMode = !existingModes.some((mode) => mode.slug === message.modeConfig?.slug)
 
-				await provider.customModesManager.updateCustomMode(message.modeConfig.slug, message.modeConfig)
+				await provider.customAgentsManager.updateCustomMode(message.modeConfig.slug, message.modeConfig)
 				// Update state after saving the mode
-				const customModes = await provider.customModesManager.getCustomModes()
+				const customModes = await provider.customAgentsManager.getCustomModes()
 				await updateGlobalState("customModes", customModes)
 				await updateGlobalState("mode", message.modeConfig.slug)
 				await provider.postStateToWebview()
@@ -1677,7 +1677,7 @@ export const webviewMessageHandler = async (
 		case "deleteCustomMode":
 			if (message.slug) {
 				// Get the mode details to determine source and rules folder path
-				const customModes = await provider.customModesManager.getCustomModes()
+				const customModes = await provider.customAgentsManager.getCustomModes()
 				const modeToDelete = customModes.find((mode) => mode.slug === message.slug)
 
 				if (!modeToDelete) {
@@ -1716,7 +1716,7 @@ export const webviewMessageHandler = async (
 				}
 
 				// Delete the mode
-				await provider.customModesManager.deleteCustomMode(message.slug)
+				await provider.customAgentsManager.deleteCustomMode(message.slug)
 
 				// Delete the rules folder if it exists
 				if (rulesFolderExists) {
@@ -1749,7 +1749,7 @@ export const webviewMessageHandler = async (
 					const customPrompt = customModePrompts[message.slug]
 
 					// Export the mode with any customizations merged directly
-					const result = await provider.customModesManager.exportModeWithRules(message.slug, customPrompt)
+					const result = await provider.customAgentsManager.exportModeWithRules(message.slug, customPrompt)
 
 					if (result.success && result.yaml) {
 						// Get last used directory for export
@@ -1796,7 +1796,9 @@ export const webviewMessageHandler = async (
 							})
 
 							// Show info message
-							vscode.window.showInformationMessage(t("common:info.mode_exported", { mode: message.slug }))
+							vscode.window.showInformationMessage(
+								t("common:info.agent_exported", { agent: message.slug }),
+							)
 						} else {
 							// User cancelled the save dialog
 							provider.postMessageToWebview({
@@ -1885,7 +1887,7 @@ export const webviewMessageHandler = async (
 						})
 
 						// Show success message
-						vscode.window.showInformationMessage(t("common:info.mode_imported"))
+						vscode.window.showInformationMessage(t("common:info.agent_imported"))
 					} else {
 						// Send error message to webview
 						provider.postMessageToWebview({
@@ -1922,7 +1924,7 @@ export const webviewMessageHandler = async (
 			break
 		case "checkRulesDirectory":
 			if (message.slug) {
-				const hasContent = await provider.customModesManager.checkRulesDirectoryHasContent(message.slug)
+				const hasContent = await provider.customAgentsManager.checkRulesDirectoryHasContent(message.slug)
 
 				provider.postMessageToWebview({
 					type: "checkRulesDirectoryResult",

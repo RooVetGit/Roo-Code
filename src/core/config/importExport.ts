@@ -12,12 +12,13 @@ import { TelemetryService } from "@roo-code/telemetry"
 import { ProviderSettingsManager, providerProfilesSchema } from "./ProviderSettingsManager"
 import { ContextProxy } from "./ContextProxy"
 import { CustomModesManager } from "./CustomModesManager"
+import { CustomAgentsManager } from "./CustomAgentsManager"
 import { t } from "../../i18n"
 
 export type ImportOptions = {
 	providerSettingsManager: ProviderSettingsManager
 	contextProxy: ContextProxy
-	customModesManager: CustomModesManager
+	customModesManager: CustomModesManager | CustomAgentsManager
 }
 
 type ExportOptions = {
@@ -65,7 +66,14 @@ export async function importSettingsFromPath(
 		}
 
 		await Promise.all(
-			(globalSettings.customModes ?? []).map((mode) => customModesManager.updateCustomMode(mode.slug, mode)),
+			(globalSettings.customModes ?? []).map((mode) => {
+				// Support both CustomModesManager and CustomAgentsManager
+				if ("updateCustomAgent" in customModesManager) {
+					return customModesManager.updateCustomAgent(mode.slug, mode)
+				} else {
+					return customModesManager.updateCustomMode(mode.slug, mode)
+				}
+			}),
 		)
 
 		// OpenAI Compatible settings are now correctly stored in codebaseIndexConfig

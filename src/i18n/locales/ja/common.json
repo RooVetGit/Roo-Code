@@ -17,7 +17,7 @@
 	"confirmation": {
 		"reset_state": "拡張機能のすべての状態とシークレットストレージをリセットしてもよろしいですか？この操作は元に戻せません。",
 		"delete_config_profile": "この設定プロファイルを削除してもよろしいですか？",
-		"delete_custom_mode_with_rules": "この{scope}モードを削除してもよろしいですか？\n\nこれにより、関連するルールフォルダも次の場所で削除されます:\n{rulesFolderPath}"
+		"delete_custom_agent_with_rules": "この{scope}エージェントを削除してもよろしいですか？\n\nこれにより、関連するルールフォルダも次の場所で削除されます:\n{rulesFolderPath}"
 	},
 	"errors": {
 		"invalid_data_uri": "データURIフォーマットが無効です",
@@ -43,7 +43,7 @@
 		"list_api_config": "API設定リストの取得に失敗しました",
 		"update_server_timeout": "サーバータイムアウトの更新に失敗しました",
 		"hmr_not_running": "ローカル開発サーバーが実行されていないため、HMRは機能しません。HMRを有効にするには、拡張機能を起動する前に'npm run dev'を実行してください。",
-		"retrieve_current_mode": "現在のモードを状態から取得する際にエラーが発生しました。",
+		"retrieve_current_agent": "現在のエージェントを状態から取得する際にエラーが発生しました。",
 		"failed_delete_repo": "関連するシャドウリポジトリまたはブランチの削除に失敗しました：{{error}}",
 		"failed_remove_directory": "タスクディレクトリの削除に失敗しました：{{error}}",
 		"custom_storage_path_unusable": "カスタムストレージパス \"{{path}}\" が使用できないため、デフォルトパスを使用します",
@@ -69,7 +69,7 @@
 		"share_auth_required": "認証が必要です。タスクを共有するにはサインインしてください。",
 		"share_not_enabled": "この組織ではタスク共有が有効になっていません。",
 		"share_task_not_found": "タスクが見つからないか、アクセスが拒否されました。",
-		"mode_import_failed": "モードのインポートに失敗しました：{{error}}",
+		"agent_import_failed": "エージェントのインポートに失敗しました：{{error}}",
 		"delete_rules_folder_failed": "ルールフォルダの削除に失敗しました：{{rulesFolderPath}}。エラー：{{error}}",
 		"command_not_found": "コマンド '{{name}}' が見つかりません",
 		"open_command_file": "コマンドファイルを開けませんでした",
@@ -109,8 +109,8 @@
 		"image_saved": "画像を{{path}}に保存しました",
 		"organization_share_link_copied": "組織共有リンクがクリップボードにコピーされました！",
 		"public_share_link_copied": "公開共有リンクがクリップボードにコピーされました！",
-		"mode_exported": "モード「{{mode}}」が正常にエクスポートされました",
-		"mode_imported": "モードが正常にインポートされました"
+		"agent_exported": "エージェント「{{agent}}」が正常にエクスポートされました",
+		"agent_imported": "エージェントが正常にインポートされました"
 	},
 	"answers": {
 		"yes": "はい",
@@ -150,17 +150,17 @@
 			}
 		}
 	},
-	"customModes": {
+	"customAgents": {
 		"errors": {
-			"yamlParseError": ".roomodes ファイルの {{line}} 行目で無効な YAML です。以下を確認してください：\n• 正しいインデント（タブではなくスペースを使用）\n• 引用符と括弧の対応\n• 有効な YAML 構文",
-			"schemaValidationError": ".roomodes のカスタムモード形式が無効です：\n{{issues}}",
-			"invalidFormat": "カスタムモード形式が無効です。設定が正しい YAML 形式に従っていることを確認してください。",
-			"updateFailed": "カスタムモードの更新に失敗しました：{{error}}",
-			"deleteFailed": "カスタムモードの削除に失敗しました：{{error}}",
-			"resetFailed": "カスタムモードのリセットに失敗しました：{{error}}",
-			"modeNotFound": "書き込みエラー：モードが見つかりません",
-			"noWorkspaceForProject": "プロジェクト固有モード用のワークスペースフォルダーが見つかりません",
-			"rulesCleanupFailed": "モードは正常に削除されましたが、{{rulesFolderPath}} にあるルールフォルダの削除に失敗しました。手動で削除する必要がある場合があります。"
+			"yamlParseError": ".rooagents ファイルの {{line}} 行目で無効な YAML です。以下を確認してください：\n• 正しいインデント（タブではなくスペースを使用）\n• 引用符と括弧の対応\n• 有効な YAML 構文",
+			"schemaValidationError": ".rooagents のカスタムエージェント形式が無効です：\n{{issues}}",
+			"invalidFormat": "カスタムエージェント形式が無効です。設定が正しい YAML 形式に従っていることを確認してください。",
+			"updateFailed": "カスタムエージェントの更新に失敗しました：{{error}}",
+			"deleteFailed": "カスタムエージェントの削除に失敗しました：{{error}}",
+			"resetFailed": "カスタムエージェントのリセットに失敗しました：{{error}}",
+			"agentNotFound": "書き込みエラー：エージェントが見つかりません",
+			"noWorkspaceForProject": "プロジェクト固有エージェント用のワークスペースフォルダーが見つかりません",
+			"rulesCleanupFailed": "エージェントは正常に削除されましたが、{{rulesFolderPath}} にあるルールフォルダの削除に失敗しました。手動で削除する必要がある場合があります。"
 		},
 		"scope": {
 			"project": "プロジェクト",
@@ -168,8 +168,8 @@
 		}
 	},
 	"marketplace": {
-		"mode": {
-			"rulesCleanupFailed": "モードは正常に削除されましたが、{{rulesFolderPath}} にあるルールフォルダの削除に失敗しました。手動で削除する必要がある場合があります。"
+		"agent": {
+			"rulesCleanupFailed": "エージェントは正常に削除されましたが、{{rulesFolderPath}} にあるルールフォルダの削除に失敗しました。手動で削除する必要がある場合があります。"
 		}
 	},
 	"mdm": {

@@ -5,6 +5,7 @@ import * as yaml from "yaml"
 import type { MarketplaceItem, MarketplaceItemType, InstallMarketplaceItemOptions, McpParameter } from "@roo-code/types"
 import { GlobalFileNames } from "../../shared/globalFileNames"
 import { ensureSettingsDirectoryExists } from "../../utils/globalContext"
+import type { CustomAgentsManager } from "../../core/config/CustomAgentsManager"
 import type { CustomModesManager } from "../../core/config/CustomModesManager"
 
 export interface InstallOptions extends InstallMarketplaceItemOptions {
@@ -15,7 +16,7 @@ export interface InstallOptions extends InstallMarketplaceItemOptions {
 export class SimpleInstaller {
 	constructor(
 		private readonly context: vscode.ExtensionContext,
-		private readonly customModesManager?: CustomModesManager,
+		private readonly customAgentsManager?: CustomAgentsManager | CustomModesManager,
 	) {}
 
 	async installItem(item: MarketplaceItem, options: InstallOptions): Promise<{ filePath: string; line?: number }> {
@@ -44,16 +45,16 @@ export class SimpleInstaller {
 			throw new Error("Mode content should not be an array")
 		}
 
-		// If CustomModesManager is available, use importModeWithRules
-		if (this.customModesManager) {
+		// If CustomAgentsManager is available, use importModeWithRules
+		if (this.customAgentsManager) {
 			// Transform marketplace content to import format (wrap in customModes array)
 			const importData = {
 				customModes: [yaml.parse(item.content)],
 			}
 			const importYaml = yaml.stringify(importData)
 
-			// Call customModesManager.importModeWithRules
-			const result = await this.customModesManager.importModeWithRules(importYaml, target)
+			// Call customAgentsManager.importModeWithRules (backward compatible method)
+			const result = await this.customAgentsManager.importModeWithRules(importYaml, target)
 
 			if (!result.success) {
 				throw new Error(result.error || "Failed to import mode")
@@ -294,7 +295,7 @@ export class SimpleInstaller {
 	}
 
 	private async removeMode(item: MarketplaceItem, target: "project" | "global"): Promise<void> {
-		if (!this.customModesManager) {
+		if (!this.customAgentsManager) {
 			throw new Error("CustomModesManager is not available")
 		}
 
@@ -320,12 +321,12 @@ export class SimpleInstaller {
 		}
 
 		// Get the current modes to determine the source
-		const modes = await this.customModesManager.getCustomModes()
+		const modes = await this.customAgentsManager.getCustomModes()
 		const mode = modes.find((m) => m.slug === modeSlug)
 
-		// Use CustomModesManager to delete the mode configuration
+		// Use CustomAgentsManager to delete the mode configuration
 		// This also handles rules folder deletion
-		await this.customModesManager.deleteCustomMode(modeSlug, true)
+		await this.customAgentsManager.deleteCustomMode(modeSlug, true)
 	}
 
 	private async removeMcp(item: MarketplaceItem, target: "project" | "global"): Promise<void> {
@@ -362,7 +363,18 @@ export class SimpleInstaller {
 			if (!workspaceFolder) {
 				throw new Error("No workspace folder found")
 			}
-			return path.join(workspaceFolder.uri.fsPath, ".roomodes")
+
+			// Check if .rooagents exists, otherwise use .roomodes for backward compatibility
+			const rooagentsPath = path.join(workspaceFolder.uri.fsPath, ".rooagents")
+			const roomodesPath = path.join(workspaceFolder.uri.fsPath, ".roomodes")
+
+			try {
+				await fs.access(rooagentsPath)
+				return rooagentsPath
+			} catch {
+				// .rooagents doesn't exist, use .roomodes for backward compatibility
+				return roomodesPath
+			}
 		} else {
 			const globalSettingsPath = await ensureSettingsDirectoryExists(this.context)
 			return path.join(globalSettingsPath, GlobalFileNames.customModes)

@@ -17,7 +17,7 @@
 	"confirmation": {
 		"reset_state": "확장 프로그램의 모든 상태와 보안 저장소를 재설정하시겠습니까? 이 작업은 취소할 수 없습니다.",
 		"delete_config_profile": "이 구성 프로필을 삭제하시겠습니까?",
-		"delete_custom_mode_with_rules": "이 {scope} 모드를 삭제하시겠습니까?\n\n이렇게 하면 연결된 규칙 폴더도 다음 위치에서 삭제됩니다:\n{rulesFolderPath}"
+		"delete_custom_agent_with_rules": "이 {scope} 모드를 삭제하시겠습니까?\n\n이렇게 하면 연결된 규칙 폴더도 다음 위치에서 삭제됩니다:\n{rulesFolderPath}"
 	},
 	"errors": {
 		"invalid_data_uri": "잘못된 데이터 URI 형식",
@@ -69,7 +69,7 @@
 		"share_auth_required": "인증이 필요합니다. 작업을 공유하려면 로그인하세요.",
 		"share_not_enabled": "이 조직에서는 작업 공유가 활성화되지 않았습니다.",
 		"share_task_not_found": "작업을 찾을 수 없거나 액세스가 거부되었습니다.",
-		"mode_import_failed": "모드 가져오기 실패: {{error}}",
+		"agent_import_failed": "모드 가져오기 실패: {{error}}",
 		"delete_rules_folder_failed": "규칙 폴더 삭제 실패: {{rulesFolderPath}}. 오류: {{error}}",
 		"command_not_found": "'{{name}}' 명령을 찾을 수 없습니다",
 		"open_command_file": "명령 파일을 열 수 없습니다",
@@ -109,8 +109,8 @@
 		"image_saved": "이미지가 {{path}}에 저장되었습니다",
 		"organization_share_link_copied": "조직 공유 링크가 클립보드에 복사되었습니다!",
 		"public_share_link_copied": "공개 공유 링크가 클립보드에 복사되었습니다!",
-		"mode_exported": "'{{mode}}' 모드가 성공적으로 내보내졌습니다",
-		"mode_imported": "모드를 성공적으로 가져왔습니다"
+		"agent_exported": "'{{에이전트}}' 모드가 성공적으로 내보내졌습니다",
+		"agent_imported": "모드를 성공적으로 가져왔습니다"
 	},
 	"answers": {
 		"yes": "예",
@@ -150,10 +150,10 @@
 			}
 		}
 	},
-	"customModes": {
+	"customAgents": {
 		"errors": {
-			"yamlParseError": ".roomodes 파일의 {{line}}번째 줄에서 유효하지 않은 YAML입니다. 다음을 확인하세요:\n• 올바른 들여쓰기 (탭이 아닌 공백 사용)\n• 일치하는 따옴표와 괄호\n• 유효한 YAML 구문",
-			"schemaValidationError": ".roomodes의 사용자 정의 모드 형식이 유효하지 않습니다:\n{{issues}}",
+			"yamlParseError": ".rooagents 파일의 {{line}}번째 줄에서 유효하지 않은 YAML입니다. 다음을 확인하세요:\n• 올바른 들여쓰기 (탭이 아닌 공백 사용)\n• 일치하는 따옴표와 괄호\n• 유효한 YAML 구문",
+			"schemaValidationError": ".rooagents의 사용자 정의 모드 형식이 유효하지 않습니다:\n{{issues}}",
 			"invalidFormat": "사용자 정의 모드 형식이 유효하지 않습니다. 설정이 올바른 YAML 형식을 따르는지 확인하세요.",
 			"updateFailed": "사용자 정의 모드 업데이트 실패: {{error}}",
 			"deleteFailed": "사용자 정의 모드 삭제 실패: {{error}}",
@@ -168,7 +168,7 @@
 		}
 	},
 	"marketplace": {
-		"mode": {
+		"에이전트": {
 			"rulesCleanupFailed": "모드가 성공적으로 제거되었지만 {{rulesFolderPath}}의 규칙 폴더를 삭제하지 못했습니다. 수동으로 삭제해야 할 수도 있습니다."
 		}
 	},
@@ -180,7 +180,7 @@
 		}
 	},
 	"prompts": {
-		"deleteMode": {
+		"deleteAgent": {
 			"title": "사용자 정의 모드 삭제",
 			"description": "이 {{scope}} 모드를 삭제하시겠습니까? 이렇게 하면 {{rulesFolderPath}}의 관련 규칙 폴더도 삭제됩니다.",
 			"descriptionNoRules": "이 사용자 정의 모드를 삭제하시겠습니까?",

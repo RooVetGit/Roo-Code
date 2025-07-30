@@ -1,11 +1,11 @@
 {
 	"type-group": {
-		"modes": "मोड्स",
+		"एजेंट": "मोड्स",
 		"mcps": "MCP सर्वर",
 		"match": "मैच"
 	},
 	"item-card": {
-		"type-mode": "मोड",
+		"type-एजेंट": "मोड",
 		"type-mcp": "MCP सर्वर",
 		"type-other": "अन्य",
 		"by-author": "{{author}} द्वारा",
@@ -23,7 +23,7 @@
 		"type": {
 			"label": "प्रकार",
 			"all": "सभी प्रकार",
-			"mode": "मोड",
+			"एजेंट": "मोड",
 			"mcpServer": "MCP सर्वर"
 		},
 		"sort": {

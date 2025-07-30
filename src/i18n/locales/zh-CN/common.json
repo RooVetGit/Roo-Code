@@ -17,7 +17,7 @@
 	"confirmation": {
 		"reset_state": "您确定要重置扩展中的所有状态和密钥存储吗？此操作无法撤消。",
 		"delete_config_profile": "您确定要删除此配置文件吗？",
-		"delete_custom_mode_with_rules": "您确定要删除此 {scope} 模式吗？\n\n这也将删除位于以下位置的关联规则文件夹：\n{rulesFolderPath}"
+		"delete_custom_agent_with_rules": "您确定要删除此 {scope} 代理吗？\n\n这也将删除位于以下位置的关联规则文件夹：\n{rulesFolderPath}"
 	},
 	"errors": {
 		"invalid_mcp_config": "项目MCP配置格式无效",
@@ -48,7 +48,7 @@
 		"list_api_config": "获取API配置列表失败",
 		"update_server_timeout": "更新服务器超时设置失败",
 		"hmr_not_running": "本地开发服务器未运行，HMR将不起作用。请在启动扩展前运行'npm run dev'以启用HMR。",
-		"retrieve_current_mode": "从状态中检索当前模式失败。",
+		"retrieve_current_agent": "从状态中检索当前代理失败。",
 		"failed_delete_repo": "删除关联的影子仓库或分支失败：{{error}}",
 		"failed_remove_directory": "删除任务目录失败：{{error}}",
 		"custom_storage_path_unusable": "自定义存储路径 \"{{path}}\" 不可用，将使用默认路径",
@@ -74,7 +74,7 @@
 		"share_auth_required": "需要身份验证。请登录以分享任务。",
 		"share_not_enabled": "此组织未启用任务分享功能。",
 		"share_task_not_found": "未找到任务或访问被拒绝。",
-		"mode_import_failed": "导入模式失败：{{error}}",
+		"agent_import_failed": "导入代理失败：{{error}}",
 		"delete_rules_folder_failed": "删除规则文件夹失败：{{rulesFolderPath}}。错误：{{error}}",
 		"command_not_found": "未找到命令 '{{name}}'",
 		"open_command_file": "打开命令文件失败",
@@ -114,8 +114,8 @@
 		"image_saved": "图片已保存到 {{path}}",
 		"organization_share_link_copied": "组织分享链接已复制到剪贴板！",
 		"public_share_link_copied": "公开分享链接已复制到剪贴板！",
-		"mode_exported": "模式 '{{mode}}' 已成功导出",
-		"mode_imported": "模式已成功导入"
+		"agent_exported": "代理 '{{agent}}' 已成功导出",
+		"agent_imported": "代理已成功导入"
 	},
 	"answers": {
 		"yes": "是",
@@ -155,17 +155,17 @@
 			}
 		}
 	},
-	"customModes": {
+	"customAgents": {
 		"errors": {
-			"yamlParseError": ".roomodes 文件第 {{line}} 行 YAML 格式无效。请检查：\n• 正确的缩进（使用空格，不要使用制表符）\n• 匹配的引号和括号\n• 有效的 YAML 语法",
-			"schemaValidationError": ".roomodes 中自定义模式格式无效：\n{{issues}}",
-			"invalidFormat": "自定义模式格式无效。请确保你的设置遵循正确的 YAML 格式。",
-			"updateFailed": "更新自定义模式失败：{{error}}",
-			"deleteFailed": "删除自定义模式失败：{{error}}",
-			"resetFailed": "重置自定义模式失败：{{error}}",
-			"modeNotFound": "写入错误：未找到模式",
-			"noWorkspaceForProject": "未找到项目特定模式的工作区文件夹",
-			"rulesCleanupFailed": "模式删除成功，但无法删除位于 {{rulesFolderPath}} 的规则文件夹。您可能需要手动删除。"
+			"yamlParseError": ".rooagents 文件第 {{line}} 行 YAML 格式无效。请检查：\n• 正确的缩进（使用空格，不要使用制表符）\n• 匹配的引号和括号\n• 有效的 YAML 语法",
+			"schemaValidationError": ".rooagents 中自定义代理格式无效：\n{{issues}}",
+			"invalidFormat": "自定义代理格式无效。请确保你的设置遵循正确的 YAML 格式。",
+			"updateFailed": "更新自定义代理失败：{{error}}",
+			"deleteFailed": "删除自定义代理失败：{{error}}",
+			"resetFailed": "重置自定义代理失败：{{error}}",
+			"agentNotFound": "写入错误：未找到代理",
+			"noWorkspaceForProject": "未找到项目特定代理的工作区文件夹",
+			"rulesCleanupFailed": "代理删除成功，但无法删除位于 {{rulesFolderPath}} 的规则文件夹。您可能需要手动删除。"
 		},
 		"scope": {
 			"project": "项目",
@@ -173,8 +173,8 @@
 		}
 	},
 	"marketplace": {
-		"mode": {
-			"rulesCleanupFailed": "模式已成功移除，但无法删除位于 {{rulesFolderPath}} 的规则文件夹。您可能需要手动删除。"
+		"agent": {
+			"rulesCleanupFailed": "代理已成功移除，但无法删除位于 {{rulesFolderPath}} 的规则文件夹。您可能需要手动删除。"
 		}
 	},
 	"mdm": {
@@ -185,10 +185,10 @@
 		}
 	},
 	"prompts": {
-		"deleteMode": {
-			"title": "删除自定义模式",
-			"description": "您确定要删除此 {{scope}} 模式吗？这也将删除位于 {{rulesFolderPath}} 的关联规则文件夹",
-			"descriptionNoRules": "您确定要删除此自定义模式吗？",
+		"deleteAgent": {
+			"title": "删除自定义代理",
+			"description": "您确定要删除此 {{scope}} 代理吗？这也将删除位于 {{rulesFolderPath}} 的关联规则文件夹",
+			"descriptionNoRules": "您确定要删除此自定义代理吗？",
 			"confirm": "删除"
 		}
 	},

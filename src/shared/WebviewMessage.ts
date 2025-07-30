@@ -4,6 +4,7 @@ import type {
 	ProviderSettings,
 	PromptComponent,
 	ModeConfig,
+	AgentConfig,
 	InstallMarketplaceItemOptions,
 	MarketplaceItem,
 	ShareVisibility,
@@ -145,8 +146,11 @@ export interface WebviewMessage {
 		| "autoApprovalEnabled"
 		| "updateCustomMode"
 		| "deleteCustomMode"
+		| "updateCustomAgent"
+		| "deleteCustomAgent"
 		| "setopenAiCustomModelInfo"
 		| "openCustomModesSettings"
+		| "openCustomAgentsSettings"
 		| "checkpointDiff"
 		| "checkpointRestore"
 		| "deleteMcpServer"
@@ -200,6 +204,10 @@ export interface WebviewMessage {
 		| "exportModeResult"
 		| "importMode"
 		| "importModeResult"
+		| "exportAgent"
+		| "exportAgentResult"
+		| "importAgent"
+		| "importAgentResult"
 		| "checkRulesDirectory"
 		| "checkRulesDirectoryResult"
 		| "saveCodeIndexSettingsAtomic"
@@ -211,7 +219,7 @@ export interface WebviewMessage {
 		| "insertTextIntoTextarea"
 	text?: string
 	editedMessageContent?: string
-	tab?: "settings" | "history" | "mcp" | "modes" | "chat" | "marketplace" | "account"
+	tab?: "settings" | "history" | "mcp" | "modes" | "agents" | "chat" | "marketplace" | "account"
 	disabled?: boolean
 	context?: string
 	dataUri?: string
@@ -235,6 +243,7 @@ export interface WebviewMessage {
 	setting?: string
 	slug?: string
 	modeConfig?: ModeConfig
+	agentConfig?: AgentConfig
 	timeout?: number
 	payload?: WebViewMessagePayload
 	source?: "global" | "project"

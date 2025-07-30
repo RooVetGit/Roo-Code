@@ -1,11 +1,11 @@
 {
 	"type-group": {
-		"modes": "Modes",
+		"Agents": "Agents",
 		"mcps": "Servidors MCP",
 		"match": "coincidència"
 	},
 	"item-card": {
-		"type-mode": "Mode",
+		"type-Agent": "Agent",
 		"type-mcp": "Servidor MCP",
 		"type-other": "Altre",
 		"by-author": "per {{author}}",
@@ -23,7 +23,7 @@
 		"type": {
 			"label": "Tipus",
 			"all": "Tots els tipus",
-			"mode": "Mode",
+			"Agent": "Agent",
 			"mcpServer": "Servidor MCP"
 		},
 		"sort": {

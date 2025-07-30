@@ -4,6 +4,9 @@ import type {
 	ProviderSettings,
 	HistoryItem,
 	ModeConfig,
+	AgentConfig,
+	CustomModePrompts,
+	CustomAgentPrompts,
 	TelemetrySetting,
 	Experiments,
 	ClineMessage,
@@ -83,8 +86,12 @@ export interface ExtensionMessage {
 		| "autoApprovalEnabled"
 		| "updateCustomMode"
 		| "deleteCustomMode"
+		| "updateCustomAgent"
+		| "deleteCustomAgent"
 		| "exportModeResult"
 		| "importModeResult"
+		| "exportAgentResult"
+		| "importAgentResult"
 		| "checkRulesDirectoryResult"
 		| "deleteCustomModeCheck"
 		| "currentCheckpointUpdated"
@@ -170,6 +177,7 @@ export interface ExtensionMessage {
 	listApiConfig?: ProviderSettingsEntry[]
 	mode?: Mode
 	customMode?: ModeConfig
+	customAgent?: AgentConfig
 	slug?: string
 	success?: boolean
 	values?: Record<string, any>
@@ -297,6 +305,7 @@ export type ExtensionState = Pick<
 
 	mode: Mode
 	customModes: ModeConfig[]
+	customAgents?: AgentConfig[] // Optional for backward compatibility
 	toolRequirements?: Record<string, boolean> // Map of tool names to their requirements (e.g. {"apply_diff": true} if diffEnabled)
 
 	cwd?: string // Current working directory

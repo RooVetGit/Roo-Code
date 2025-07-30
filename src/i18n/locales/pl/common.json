@@ -17,7 +17,7 @@
 	"confirmation": {
 		"reset_state": "Czy na pewno chcesz zresetować wszystkie stany i tajne magazyny w rozszerzeniu? Tej operacji nie można cofnąć.",
 		"delete_config_profile": "Czy na pewno chcesz usunąć ten profil konfiguracyjny?",
-		"delete_custom_mode_with_rules": "Czy na pewno chcesz usunąć ten tryb {scope}?\n\nSpowoduje to również usunięcie powiązanego folderu reguł pod adresem:\n{rulesFolderPath}"
+		"delete_custom_agent_with_rules": "Czy na pewno chcesz usunąć ten tryb {scope}?\n\nSpowoduje to również usunięcie powiązanego folderu reguł pod adresem:\n{rulesFolderPath}"
 	},
 	"errors": {
 		"invalid_data_uri": "Nieprawidłowy format URI danych",
@@ -69,7 +69,7 @@
 		"share_auth_required": "Wymagana autoryzacja. Zaloguj się, aby udostępniać zadania.",
 		"share_not_enabled": "Udostępnianie zadań nie jest włączone dla tej organizacji.",
 		"share_task_not_found": "Zadanie nie znalezione lub dostęp odmówiony.",
-		"mode_import_failed": "Import trybu nie powiódł się: {{error}}",
+		"agent_import_failed": "Import trybu nie powiódł się: {{error}}",
 		"delete_rules_folder_failed": "Nie udało się usunąć folderu reguł: {{rulesFolderPath}}. Błąd: {{error}}",
 		"command_not_found": "Polecenie '{{name}}' nie zostało znalezione",
 		"open_command_file": "Nie udało się otworzyć pliku polecenia",
@@ -109,8 +109,8 @@
 		"image_saved": "Obraz zapisany w {{path}}",
 		"organization_share_link_copied": "Link udostępniania organizacji skopiowany do schowka!",
 		"public_share_link_copied": "Publiczny link udostępniania skopiowany do schowka!",
-		"mode_exported": "Tryb '{{mode}}' pomyślnie wyeksportowany",
-		"mode_imported": "Tryb pomyślnie zaimportowany"
+		"agent_exported": "Tryb '{{Agent}}' pomyślnie wyeksportowany",
+		"agent_imported": "Tryb pomyślnie zaimportowany"
 	},
 	"answers": {
 		"yes": "Tak",
@@ -150,10 +150,10 @@
 			}
 		}
 	},
-	"customModes": {
+	"customAgents": {
 		"errors": {
-			"yamlParseError": "Nieprawidłowy YAML w pliku .roomodes w linii {{line}}. Sprawdź:\n• Prawidłowe wcięcia (używaj spacji, nie tabulatorów)\n• Pasujące cudzysłowy i nawiasy\n• Prawidłową składnię YAML",
-			"schemaValidationError": "Nieprawidłowy format trybów niestandardowych w .roomodes:\n{{issues}}",
+			"yamlParseError": "Nieprawidłowy YAML w pliku .rooagents w linii {{line}}. Sprawdź:\n• Prawidłowe wcięcia (używaj spacji, nie tabulatorów)\n• Pasujące cudzysłowy i nawiasy\n• Prawidłową składnię YAML",
+			"schemaValidationError": "Nieprawidłowy format trybów niestandardowych w .rooagents:\n{{issues}}",
 			"invalidFormat": "Nieprawidłowy format trybów niestandardowych. Upewnij się, że twoje ustawienia są zgodne z prawidłowym formatem YAML.",
 			"updateFailed": "Aktualizacja trybu niestandardowego nie powiodła się: {{error}}",
 			"deleteFailed": "Usunięcie trybu niestandardowego nie powiodło się: {{error}}",
@@ -168,7 +168,7 @@
 		}
 	},
 	"marketplace": {
-		"mode": {
+		"Agent": {
 			"rulesCleanupFailed": "Tryb został pomyślnie usunięty, ale nie udało się usunąć folderu reguł w {{rulesFolderPath}}. Może być konieczne ręczne usunięcie."
 		}
 	},
@@ -180,7 +180,7 @@
 		}
 	},
 	"prompts": {
-		"deleteMode": {
+		"deleteAgent": {
 			"title": "Usuń tryb niestandardowy",
 			"description": "Czy na pewno chcesz usunąć ten tryb {{scope}}? Spowoduje to również usunięcie powiązanego folderu z regułami w {{rulesFolderPath}}",
 			"descriptionNoRules": "Czy na pewno chcesz usunąć ten tryb niestandardowy?",

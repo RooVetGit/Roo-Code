@@ -5,6 +5,7 @@ import {
 	type ProviderSettingsEntry,
 	type CustomModePrompts,
 	type ModeConfig,
+	type AgentConfig,
 	type ExperimentId,
 	type OrganizationAllowList,
 	ORGANIZATION_ALLOW_ALL,
@@ -112,6 +113,9 @@ export interface ExtensionStateContextType extends ExtensionState {
 	setAutoApprovalEnabled: (value: boolean) => void
 	customModes: ModeConfig[]
 	setCustomModes: (value: ModeConfig[]) => void
+	// New agent-specific properties with backward compatibility
+	customAgents: AgentConfig[]
+	setCustomAgents: (value: AgentConfig[]) => void
 	setMaxOpenTabsContext: (value: number) => void
 	maxWorkspaceFiles: number
 	setMaxWorkspaceFiles: (value: number) => void
@@ -208,6 +212,7 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 		hasOpenedModeSelector: false, // Default to false (not opened yet)
 		autoApprovalEnabled: false,
 		customModes: [],
+		customAgents: [], // Initialize empty agents array
 		maxOpenTabsContext: 20,
 		maxWorkspaceFiles: 200,
 		cwd: "",
@@ -463,6 +468,14 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 			setState((prevState) => ({ ...prevState, enhancementApiConfigId: value })),
 		setAutoApprovalEnabled: (value) => setState((prevState) => ({ ...prevState, autoApprovalEnabled: value })),
 		setCustomModes: (value) => setState((prevState) => ({ ...prevState, customModes: value })),
+		// Agent-specific setters with backward compatibility
+		customAgents: state.customAgents || state.customModes || [], // Fall back to customModes if customAgents not set
+		setCustomAgents: (value) =>
+			setState((prevState) => ({
+				...prevState,
+				customAgents: value,
+				customModes: value, // Keep customModes in sync for backward compatibility
+			})),
 		setMaxOpenTabsContext: (value) => setState((prevState) => ({ ...prevState, maxOpenTabsContext: value })),
 		setMaxWorkspaceFiles: (value) => setState((prevState) => ({ ...prevState, maxWorkspaceFiles: value })),
 		setBrowserToolEnabled: (value) => setState((prevState) => ({ ...prevState, browserToolEnabled: value })),

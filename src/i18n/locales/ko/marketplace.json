@@ -1,11 +1,11 @@
 {
 	"type-group": {
-		"modes": "모드",
+		"에이전트": "모드",
 		"mcps": "MCP 서버",
 		"match": "일치"
 	},
 	"item-card": {
-		"type-mode": "모드",
+		"type-에이전트": "모드",
 		"type-mcp": "MCP 서버",
 		"type-other": "기타",
 		"by-author": "{{author}} 작성",
@@ -23,7 +23,7 @@
 		"type": {
 			"label": "유형",
 			"all": "모든 유형",
-			"mode": "모드",
+			"에이전트": "모드",
 			"mcpServer": "MCP 서버"
 		},
 		"sort": {

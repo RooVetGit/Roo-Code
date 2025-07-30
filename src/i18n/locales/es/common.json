@@ -17,7 +17,7 @@
 	"confirmation": {
 		"reset_state": "¿Estás seguro de que deseas restablecer todo el estado y el almacenamiento secreto en la extensión? Esta acción no se puede deshacer.",
 		"delete_config_profile": "¿Estás seguro de que deseas eliminar este perfil de configuración?",
-		"delete_custom_mode_with_rules": "¿Estás seguro de que quieres eliminar este modo {scope}?\n\nEsto también eliminará la carpeta de reglas asociada en:\n{rulesFolderPath}"
+		"delete_custom_agent_with_rules": "¿Estás seguro de que quieres eliminar este agente {scope}?\n\nEsto también eliminará la carpeta de reglas asociada en:\n{rulesFolderPath}"
 	},
 	"errors": {
 		"invalid_data_uri": "Formato de URI de datos no válido",
@@ -43,7 +43,7 @@
 		"list_api_config": "Error al obtener la lista de configuraciones de API",
 		"update_server_timeout": "Error al actualizar el tiempo de espera del servidor",
 		"hmr_not_running": "El servidor de desarrollo local no está en ejecución, HMR no funcionará. Por favor, ejecuta 'npm run dev' antes de lanzar la extensión para habilitar HMR.",
-		"retrieve_current_mode": "Error al recuperar el modo actual del estado.",
+		"retrieve_current_agent": "Error al recuperar el agente actual del estado.",
 		"failed_delete_repo": "Error al eliminar el repositorio o rama asociada: {{error}}",
 		"failed_remove_directory": "Error al eliminar el directorio de tareas: {{error}}",
 		"custom_storage_path_unusable": "La ruta de almacenamiento personalizada \"{{path}}\" no es utilizable, se usará la ruta predeterminada",
@@ -69,7 +69,7 @@
 		"share_auth_required": "Se requiere autenticación. Por favor, inicia sesión para compartir tareas.",
 		"share_not_enabled": "La compartición de tareas no está habilitada para esta organización.",
 		"share_task_not_found": "Tarea no encontrada o acceso denegado.",
-		"mode_import_failed": "Error al importar el modo: {{error}}",
+		"agent_import_failed": "Error al importar el agente: {{error}}",
 		"delete_rules_folder_failed": "Error al eliminar la carpeta de reglas: {{rulesFolderPath}}. Error: {{error}}",
 		"command_not_found": "Comando '{{name}}' no encontrado",
 		"open_command_file": "Error al abrir el archivo de comandos",
@@ -109,8 +109,8 @@
 		"image_saved": "Imagen guardada en {{path}}",
 		"organization_share_link_copied": "¡Enlace de compartición de organización copiado al portapapeles!",
 		"public_share_link_copied": "¡Enlace de compartición pública copiado al portapapeles!",
-		"mode_exported": "Modo '{{mode}}' exportado correctamente",
-		"mode_imported": "Modo importado correctamente"
+		"agent_exported": "Agente '{{agent}}' exportado correctamente",
+		"agent_imported": "Agente importado correctamente"
 	},
 	"answers": {
 		"yes": "Sí",
@@ -168,8 +168,8 @@
 		}
 	},
 	"marketplace": {
-		"mode": {
-			"rulesCleanupFailed": "El modo se eliminó correctamente, pero no se pudo eliminar la carpeta de reglas en {{rulesFolderPath}}. Es posible que debas eliminarla manually."
+		"agent": {
+			"rulesCleanupFailed": "El agente se eliminó correctamente, pero no se pudo eliminar la carpeta de reglas en {{rulesFolderPath}}. Es posible que debas eliminarla manualmente."
 		}
 	},
 	"mdm": {
@@ -180,10 +180,10 @@
 		}
 	},
 	"prompts": {
-		"deleteMode": {
-			"title": "Eliminar modo personalizado",
-			"description": "¿Estás seguro de que quieres eliminar este modo {{scope}}? Esto también eliminará la carpeta de reglas asociada en: {{rulesFolderPath}}",
-			"descriptionNoRules": "¿Estás seguro de que quieres eliminar este modo personalizado?",
+		"deleteAgent": {
+			"title": "Eliminar agente personalizado",
+			"description": "¿Estás seguro de que quieres eliminar este agente {{scope}}? Esto también eliminará la carpeta de reglas asociada en: {{rulesFolderPath}}",
+			"descriptionNoRules": "¿Estás seguro de que quieres eliminar este agente personalizado?",
 			"confirm": "Eliminar"
 		}
 	},

@@ -17,7 +17,7 @@ import SettingsView, { SettingsViewRef } from "./components/settings/SettingsVie
 import WelcomeView from "./components/welcome/WelcomeView"
 import McpView from "./components/mcp/McpView"
 import { MarketplaceView } from "./components/marketplace/MarketplaceView"
-import ModesView from "./components/modes/ModesView"
+import AgentsView from "./components/agents/AgentsView"
 import { HumanRelayDialog } from "./components/human-relay/HumanRelayDialog"
 import { DeleteMessageDialog, EditMessageDialog } from "./components/chat/MessageModificationConfirmationDialog"
 import ErrorBoundary from "./components/ErrorBoundary"
@@ -26,7 +26,7 @@ import { useAddNonInteractiveClickListener } from "./components/ui/hooks/useNonI
 import { TooltipProvider } from "./components/ui/tooltip"
 import { STANDARD_TOOLTIP_DELAY } from "./components/ui/standard-tooltip"
 
-type Tab = "settings" | "history" | "mcp" | "modes" | "chat" | "marketplace" | "account"
+type Tab = "settings" | "history" | "mcp" | "agents" | "chat" | "marketplace" | "account"
 
 interface HumanRelayDialogState {
 	isOpen: boolean
@@ -54,7 +54,7 @@ const MemoizedHumanRelayDialog = React.memo(HumanRelayDialog)
 const tabsByMessageAction: Partial<Record<NonNullable<ExtensionMessage["action"]>, Tab>> = {
 	chatButtonClicked: "chat",
 	settingsButtonClicked: "settings",
-	promptsButtonClicked: "modes",
+	promptsButtonClicked: "agents",
 	mcpButtonClicked: "mcp",
 	historyButtonClicked: "history",
 	marketplaceButtonClicked: "marketplace",
@@ -233,7 +233,7 @@ const App = () => {
 		<WelcomeView />
 	) : (
 		<>
-			{tab === "modes" && <ModesView onDone={() => switchTab("chat")} />}
+			{tab === "agents" && <AgentsView onDone={() => switchTab("chat")} />}
 			{tab === "mcp" && <McpView onDone={() => switchTab("chat")} />}
 			{tab === "history" && <HistoryView onDone={() => switchTab("chat")} />}
 			{tab === "settings" && (

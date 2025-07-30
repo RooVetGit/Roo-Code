@@ -39,7 +39,7 @@ export const groupEntrySchema = z.union([toolGroupsSchema, z.tuple([toolGroupsSc
 export type GroupEntry = z.infer<typeof groupEntrySchema>
 
 /**
- * ModeConfig
+ * AgentConfig (new primary type)
  */
 
 const groupEntryArraySchema = z.array(groupEntrySchema).refine(
@@ -61,7 +61,7 @@ const groupEntryArraySchema = z.array(groupEntrySchema).refine(
 	{ message: "Duplicate groups are not allowed" },
 )
 
-export const modeConfigSchema = z.object({
+export const agentConfigSchema = z.object({
 	slug: z.string().regex(/^[a-zA-Z0-9-]+$/, "Slug must contain only letters numbers and dashes"),
 	name: z.string().min(1, "Name is required"),
 	roleDefinition: z.string().min(1, "Role definition is required"),
@@ -72,10 +72,44 @@ export const modeConfigSchema = z.object({
 	source: z.enum(["global", "project"]).optional(),
 })
 
-export type ModeConfig = z.infer<typeof modeConfigSchema>
+export type AgentConfig = z.infer<typeof agentConfigSchema>
 
 /**
- * CustomModesSettings
+ * ModeConfig (backward compatibility alias)
+ */
+
+export const modeConfigSchema = agentConfigSchema
+
+export type ModeConfig = AgentConfig
+
+/**
+ * CustomAgentsSettings (new primary type)
+ */
+
+export const customAgentsSettingsSchema = z.object({
+	customAgents: z.array(agentConfigSchema).refine(
+		(agents) => {
+			const slugs = new Set()
+
+			return agents.every((agent) => {
+				if (slugs.has(agent.slug)) {
+					return false
+				}
+
+				slugs.add(agent.slug)
+				return true
+			})
+		},
+		{
+			message: "Duplicate agent slugs are not allowed",
+		},
+	),
+})
+
+export type CustomAgentsSettings = z.infer<typeof customAgentsSettingsSchema>
+
+/**
+ * CustomModesSettings (backward compatibility alias)
  */
 
 export const customModesSettingsSchema = z.object({
@@ -114,12 +148,20 @@ export const promptComponentSchema = z.object({
 export type PromptComponent = z.infer<typeof promptComponentSchema>
 
 /**
- * CustomModePrompts
+ * CustomAgentPrompts (new primary type)
  */
 
-export const customModePromptsSchema = z.record(z.string(), promptComponentSchema.optional())
+export const customAgentPromptsSchema = z.record(z.string(), promptComponentSchema.optional())
 
-export type CustomModePrompts = z.infer<typeof customModePromptsSchema>
+export type CustomAgentPrompts = z.infer<typeof customAgentPromptsSchema>
+
+/**
+ * CustomModePrompts (backward compatibility alias)
+ */
+
+export const customModePromptsSchema = customAgentPromptsSchema
+
+export type CustomModePrompts = CustomAgentPrompts
 
 /**
  * CustomSupportPrompts
@@ -130,10 +172,10 @@ export const customSupportPromptsSchema = z.record(z.string(), z.string().option
 export type CustomSupportPrompts = z.infer<typeof customSupportPromptsSchema>
 
 /**
- * DEFAULT_MODES
+ * DEFAULT_AGENTS (new primary constant)
  */
 
-export const DEFAULT_MODES: readonly ModeConfig[] = [
+export const DEFAULT_AGENTS: readonly AgentConfig[] = [
 	{
 		slug: "architect",
 		name: "🏗️ Architect",
@@ -193,3 +235,9 @@ export const DEFAULT_MODES: readonly ModeConfig[] = [
 			"Your role is to coordinate complex workflows by delegating tasks to specialized modes. As an orchestrator, you should:\n\n1. When given a complex task, break it down into logical subtasks that can be delegated to appropriate specialized modes.\n\n2. For each subtask, use the `new_task` tool to delegate. Choose the most appropriate mode for the subtask's specific goal and provide comprehensive instructions in the `message` parameter. These instructions must include:\n    *   All necessary context from the parent task or previous subtasks required to complete the work.\n    *   A clearly defined scope, specifying exactly what the subtask should accomplish.\n    *   An explicit statement that the subtask should *only* perform the work outlined in these instructions and not deviate.\n    *   An instruction for the subtask to signal completion by using the `attempt_completion` tool, providing a concise yet thorough summary of the outcome in the `result` parameter, keeping in mind that this summary will be the source of truth used to keep track of what was completed on this project.\n    *   A statement that these specific instructions supersede any conflicting general instructions the subtask's mode might have.\n\n3. Track and manage the progress of all subtasks. When a subtask is completed, analyze its results and determine the next steps.\n\n4. Help the user understand how the different subtasks fit together in the overall workflow. Provide clear reasoning about why you're delegating specific tasks to specific modes.\n\n5. When all subtasks are completed, synthesize the results and provide a comprehensive overview of what was accomplished.\n\n6. Ask clarifying questions when necessary to better understand how to break down complex tasks effectively.\n\n7. Suggest improvements to the workflow based on the results of completed subtasks.\n\nUse subtasks to maintain clarity. If a request significantly shifts focus or requires a different expertise (mode), consider creating a subtask rather than overloading the current one.",
 	},
 ] as const
+
+/**
+ * DEFAULT_MODES (backward compatibility alias)
+ */
+
+export const DEFAULT_MODES: readonly ModeConfig[] = DEFAULT_AGENTS
