@@ -735,4 +735,217 @@ describe("TelemetryClient", () => {
 			expect(fileContent).toBe("[]")
 		})
 	})
+
+	describe("captureWithRetry", () => {
+		it("should return true when event is captured successfully", async () => {
+			const client = new TelemetryClient(mockAuthService, mockSettingsService)
+
+			const providerProperties = {
+				appName: "roo-code",
+				appVersion: "1.0.0",
+				vscodeVersion: "1.60.0",
+				platform: "darwin",
+				editorName: "vscode",
+				language: "en",
+				mode: "code",
+			}
+
+			const mockProvider: TelemetryPropertiesProvider = {
+				getTelemetryProperties: vi.fn().mockResolvedValue(providerProperties),
+			}
+
+			client.setProvider(mockProvider)
+
+			const captureWithRetry = getPrivateProperty<
+				(event: { event: TelemetryEventName; properties?: Record<string, any> }) => Promise<boolean>
+			>(client, "captureWithRetry").bind(client)
+
+			const result = await captureWithRetry({
+				event: TelemetryEventName.TASK_CREATED,
+				properties: { taskId: "test-task-id" },
+			})
+
+			expect(result).toBe(true)
+			expect(mockFetch).toHaveBeenCalled()
+		})
+
+		it("should return true for invalid events (don't retry invalid events)", async () => {
+			const client = new TelemetryClient(mockAuthService, mockSettingsService)
+
+			const captureWithRetry = getPrivateProperty<
+				(event: { event: TelemetryEventName; properties?: Record<string, any> }) => Promise<boolean>
+			>(client, "captureWithRetry").bind(client)
+
+			const result = await captureWithRetry({
+				event: TelemetryEventName.TASK_CREATED,
+				properties: { test: "value" }, // Invalid properties
+			})
+
+			expect(result).toBe(true) // Don't retry invalid events
+			expect(mockFetch).not.toHaveBeenCalled()
+			expect(console.error).toHaveBeenCalledWith(expect.stringContaining("Invalid telemetry event"))
+		})
+
+		it("should return false when fetch fails", async () => {
+			const client = new TelemetryClient(mockAuthService, mockSettingsService)
+
+			mockFetch.mockRejectedValue(new Error("Network error"))
+
+			const providerProperties = {
+				appName: "roo-code",
+				appVersion: "1.0.0",
+				vscodeVersion: "1.60.0",
+				platform: "darwin",
+				editorName: "vscode",
+				language: "en",
+				mode: "code",
+			}
+
+			const mockProvider: TelemetryPropertiesProvider = {
+				getTelemetryProperties: vi.fn().mockResolvedValue(providerProperties),
+			}
+
+			client.setProvider(mockProvider)
+
+			const captureWithRetry = getPrivateProperty<
+				(event: { event: TelemetryEventName; properties?: Record<string, any> }) => Promise<boolean>
+			>(client, "captureWithRetry").bind(client)
+
+			const result = await captureWithRetry({
+				event: TelemetryEventName.TASK_CREATED,
+				properties: { taskId: "test-task-id" },
+			})
+
+			expect(result).toBe(false)
+		})
+	})
+
+	describe("queue integration", () => {
+		it("should add event to queue when captureWithRetry fails", async () => {
+			const client = new TelemetryClient(mockAuthService, mockSettingsService)
+
+			// Create a mock queue
+			const mockQueue = {
+				addEvent: vi.fn(),
+			} as any
+
+			client.setQueue(mockQueue)
+
+			// Make captureWithRetry fail
+			mockFetch.mockRejectedValue(new Error("Network error"))
+
+			const providerProperties = {
+				appName: "roo-code",
+				appVersion: "1.0.0",
+				vscodeVersion: "1.60.0",
+				platform: "darwin",
+				editorName: "vscode",
+				language: "en",
+				mode: "code",
+			}
+
+			const mockProvider: TelemetryPropertiesProvider = {
+				getTelemetryProperties: vi.fn().mockResolvedValue(providerProperties),
+			}
+
+			client.setProvider(mockProvider)
+
+			await client.capture({
+				event: TelemetryEventName.TASK_CREATED,
+				properties: { taskId: "test-task-id" },
+			})
+
+			expect(mockQueue.addEvent).toHaveBeenCalledWith(
+				{
+					event: TelemetryEventName.TASK_CREATED,
+					properties: { taskId: "test-task-id" },
+				},
+				"cloud",
+			)
+		})
+
+		it("should not add event to queue when captureWithRetry succeeds", async () => {
+			const client = new TelemetryClient(mockAuthService, mockSettingsService)
+
+			// Create a mock queue
+			const mockQueue = {
+				addEvent: vi.fn(),
+			} as any
+
+			client.setQueue(mockQueue)
+
+			const providerProperties = {
+				appName: "roo-code",
+				appVersion: "1.0.0",
+				vscodeVersion: "1.60.0",
+				platform: "darwin",
+				editorName: "vscode",
+				language: "en",
+				mode: "code",
+			}
+
+			const mockProvider: TelemetryPropertiesProvider = {
+				getTelemetryProperties: vi.fn().mockResolvedValue(providerProperties),
+			}
+
+			client.setProvider(mockProvider)
+
+			await client.capture({
+				event: TelemetryEventName.TASK_CREATED,
+				properties: { taskId: "test-task-id" },
+			})
+
+			expect(mockQueue.addEvent).not.toHaveBeenCalled()
+		})
+
+		it("should not fail when queue is not set", async () => {
+			const client = new TelemetryClient(mockAuthService, mockSettingsService)
+
+			// Make captureWithRetry fail
+			mockFetch.mockRejectedValue(new Error("Network error"))
+
+			const providerProperties = {
+				appName: "roo-code",
+				appVersion: "1.0.0",
+				vscodeVersion: "1.60.0",
+				platform: "darwin",
+				editorName: "vscode",
+				language: "en",
+				mode: "code",
+			}
+
+			const mockProvider: TelemetryPropertiesProvider = {
+				getTelemetryProperties: vi.fn().mockResolvedValue(providerProperties),
+			}
+
+			client.setProvider(mockProvider)
+
+			// Should not throw even without queue
+			await expect(
+				client.capture({
+					event: TelemetryEventName.TASK_CREATED,
+					properties: { taskId: "test-task-id" },
+				}),
+			).resolves.toBeUndefined()
+		})
+
+		it("should not add invalid events to queue", async () => {
+			const client = new TelemetryClient(mockAuthService, mockSettingsService)
+
+			// Create a mock queue
+			const mockQueue = {
+				addEvent: vi.fn(),
+			} as any
+
+			client.setQueue(mockQueue)
+
+			await client.capture({
+				event: TelemetryEventName.TASK_CREATED,
+				properties: { test: "value" }, // Invalid properties
+			})
+
+			// Should not add invalid events to queue
+			expect(mockQueue.addEvent).not.toHaveBeenCalled()
+		})
+	})
 })

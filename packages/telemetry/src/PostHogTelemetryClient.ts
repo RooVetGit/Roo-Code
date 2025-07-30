@@ -54,11 +54,37 @@ export class PostHogTelemetryClient extends BaseTelemetryClient {
 			console.info(`[PostHogTelemetryClient#capture] ${event.event}`)
 		}
 
-		this.client.capture({
-			distinctId: this.distinctId,
-			event: event.event,
-			properties: await this.getEventProperties(event),
-		})
+		// Try to send directly first
+		const success = await this.captureWithRetry(event)
+
+		// If failed and queue is available, add to queue
+		if (!success && this.queue) {
+			await this.queue.addEvent(event, "posthog")
+		}
+	}
+
+	/**
+	 * Attempts to capture an event with retry capability
+	 * @param event The telemetry event to capture
+	 * @returns True if the event was successfully sent, false if it should be retried
+	 */
+	protected override async captureWithRetry(event: TelemetryEvent): Promise<boolean> {
+		try {
+			// PostHog client has its own internal queue, but we need to detect if it's failing
+			// We'll wrap the capture call and check for errors
+			this.client.capture({
+				distinctId: this.distinctId,
+				event: event.event,
+				properties: await this.getEventProperties(event),
+			})
+
+			// PostHog's capture is async but doesn't return a promise by default
+			// We assume success - PostHog has its own internal queue
+			return true
+		} catch (_error) {
+			// Return false to trigger queue retry
+			return false
+		}
 	}
 
 	/**

@@ -1,6 +1,9 @@
 import { ZodError } from "zod"
+import * as vscode from "vscode"
 
 import { type TelemetryClient, type TelemetryPropertiesProvider, TelemetryEventName } from "@roo-code/types"
+import { TelemetryQueue, QueuedTelemetryEvent } from "./TelemetryQueue"
+import { BaseTelemetryClient } from "./BaseTelemetryClient"
 
 /**
  * TelemetryService wrapper class that defers initialization.
@@ -8,6 +11,8 @@ import { type TelemetryClient, type TelemetryPropertiesProvider, TelemetryEventN
  * variables are loaded.
  */
 export class TelemetryService {
+	private queue?: TelemetryQueue
+
 	constructor(private clients: TelemetryClient[]) {}
 
 	public register(client: TelemetryClient): void {
@@ -234,12 +239,81 @@ export class TelemetryService {
 		return this.isReady && this.clients.some((client) => client.isTelemetryEnabled())
 	}
 
+	/**
+	 * Initializes the telemetry queue and sets up retry callbacks
+	 * @param context VSCode extension context for persistent storage
+	 */
+	public initializeQueue(context: vscode.ExtensionContext): void {
+		if (!this.isReady) {
+			return
+		}
+
+		// Create the queue
+		this.queue = new TelemetryQueue(context)
+
+		// Set up retry callback
+		this.queue.setRetryCallback(async (event: QueuedTelemetryEvent) => {
+			// Find the appropriate client for this event
+			const client = this.clients.find((c) => {
+				if (event.clientType === "posthog" && c.constructor.name === "PostHogTelemetryClient") {
+					return true
+				}
+				if (event.clientType === "cloud" && c.constructor.name === "TelemetryClient") {
+					return true
+				}
+				return false
+			})
+
+			if (!client || !(client instanceof BaseTelemetryClient)) {
+				return false
+			}
+
+			// Attempt to send using the client's retry method
+			return await client["captureWithRetry"](event.event)
+		})
+
+		// Distribute queue to all clients
+		this.clients.forEach((client) => {
+			if (client instanceof BaseTelemetryClient) {
+				client.setQueue(this.queue!)
+			}
+		})
+
+		// Start processing the queue
+		this.queue.start()
+	}
+
+	/**
+	 * Shuts down the telemetry service and flushes the queue
+	 * @param timeoutMs Maximum time to wait for queue flush
+	 */
+	public async shutdownQueue(timeoutMs?: number): Promise<void> {
+		if (this.queue) {
+			await this.queue.shutdown(timeoutMs)
+		}
+	}
+
+	/**
+	 * Gets the current queue status
+	 * @returns Object with queue size and number of clients
+	 */
+	public getQueueStatus(): { size: number; clients: number } {
+		return {
+			size: this.queue?.getQueueSize() || 0,
+			clients: this.clients.length,
+		}
+	}
+
 	public async shutdown(): Promise<void> {
 		if (!this.isReady) {
 			return
 		}
 
-		this.clients.forEach((client) => client.shutdown())
+		// Shutdown queue first
+		await this.shutdownQueue()
+
+		// Then shutdown clients
+		await Promise.all(this.clients.map((client) => client.shutdown()))
 	}
 
 	private static _instance: TelemetryService | null = null

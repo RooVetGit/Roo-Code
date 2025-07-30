@@ -111,6 +111,14 @@ export async function activate(context: vscode.ExtensionContext) {
 	const provider = new ClineProvider(context, outputChannel, "sidebar", contextProxy, codeIndexManager, mdmService)
 	TelemetryService.instance.setProvider(provider)
 
+	// Initialize the telemetry queue with error handling
+	try {
+		TelemetryService.instance.initializeQueue(context)
+	} catch (error) {
+		// Queue initialization failure shouldn't break extension activation
+		outputChannel.appendLine(`Failed to initialize telemetry queue: ${error}`)
+	}
+
 	if (codeIndexManager) {
 		context.subscriptions.push(codeIndexManager)
 	}
@@ -215,6 +223,13 @@ export async function activate(context: vscode.ExtensionContext) {
 export async function deactivate() {
 	outputChannel.appendLine(`${Package.name} extension deactivated`)
 	await McpServerManager.cleanup(extensionContext)
-	TelemetryService.instance.shutdown()
+
+	// Flush telemetry queues with timeout
+	try {
+		await TelemetryService.instance.shutdownQueue(5000)
+	} catch (error) {
+		outputChannel.appendLine(`Failed to flush telemetry queue during shutdown: ${error}`)
+	}
+
 	TerminalRegistry.cleanup()
 }

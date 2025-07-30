@@ -58,29 +58,46 @@ export class TelemetryClient extends BaseTelemetryClient {
 			return
 		}
 
-		const payload = {
-			type: event.event,
-			properties: await this.getEventProperties(event),
+		// Try to send directly first
+		const success = await this.captureWithRetry(event)
+
+		// If failed and queue is available, add to queue
+		if (!success && this.queue) {
+			await this.queue.addEvent(event, "cloud")
 		}
+	}
 
-		if (this.debug) {
-			console.info(`[TelemetryClient#capture] ${JSON.stringify(payload)}`)
-		}
-
-		const result = rooCodeTelemetryEventSchema.safeParse(payload)
-
-		if (!result.success) {
-			console.error(
-				`[TelemetryClient#capture] Invalid telemetry event: ${result.error.message} - ${JSON.stringify(payload)}`,
-			)
-
-			return
-		}
-
+	/**
+	 * Attempts to capture an event with retry capability
+	 * @param event The telemetry event to capture
+	 * @returns True if the event was successfully sent, false if it should be retried
+	 */
+	protected override async captureWithRetry(event: TelemetryEvent): Promise<boolean> {
 		try {
+			const payload = {
+				type: event.event,
+				properties: await this.getEventProperties(event),
+			}
+
+			if (this.debug) {
+				console.info(`[TelemetryClient#captureWithRetry] ${JSON.stringify(payload)}`)
+			}
+
+			const result = rooCodeTelemetryEventSchema.safeParse(payload)
+
+			if (!result.success) {
+				console.error(
+					`[TelemetryClient#captureWithRetry] Invalid telemetry event: ${result.error.message} - ${JSON.stringify(payload)}`,
+				)
+				// Don't retry invalid events
+				return true
+			}
+
 			await this.fetch(`events`, { method: "POST", body: JSON.stringify(result.data) })
-		} catch (error) {
-			console.error(`[TelemetryClient#capture] Error sending telemetry event: ${error}`)
+			return true
+		} catch (_error) {
+			// Return false to trigger queue retry
+			return false
 		}
 	}
 

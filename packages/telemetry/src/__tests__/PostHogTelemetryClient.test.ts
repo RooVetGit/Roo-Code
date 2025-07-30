@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 // npx vitest run src/__tests__/PostHogTelemetryClient.test.ts
 
 import * as vscode from "vscode"
@@ -8,6 +6,7 @@ import { PostHog } from "posthog-node"
 import { type TelemetryPropertiesProvider, TelemetryEventName } from "@roo-code/types"
 
 import { PostHogTelemetryClient } from "../PostHogTelemetryClient"
+import { TelemetryQueue } from "../TelemetryQueue"
 
 vi.mock("posthog-node")
 
@@ -21,11 +20,16 @@ vi.mock("vscode", () => ({
 }))
 
 describe("PostHogTelemetryClient", () => {
-	const getPrivateProperty = <T>(instance: any, propertyName: string): T => {
-		return instance[propertyName]
+	const getPrivateProperty = <T>(instance: PostHogTelemetryClient, propertyName: string): T => {
+		return (instance as unknown as Record<string, T>)[propertyName]
 	}
 
-	let mockPostHogClient: any
+	let mockPostHogClient: {
+		capture: ReturnType<typeof vi.fn>
+		optIn: ReturnType<typeof vi.fn>
+		optOut: ReturnType<typeof vi.fn>
+		shutdown: ReturnType<typeof vi.fn>
+	}
 
 	beforeEach(() => {
 		vi.clearAllMocks()
@@ -36,11 +40,11 @@ describe("PostHogTelemetryClient", () => {
 			optOut: vi.fn(),
 			shutdown: vi.fn().mockResolvedValue(undefined),
 		}
-		;(PostHog as any).mockImplementation(() => mockPostHogClient)
+		;(PostHog as unknown as ReturnType<typeof vi.fn>).mockImplementation(() => mockPostHogClient)
 
 		// @ts-expect-error - Accessing private static property for testing
 		PostHogTelemetryClient._instance = undefined
-		;(vscode.workspace.getConfiguration as any).mockReturnValue({
+		;(vscode.workspace.getConfiguration as unknown as ReturnType<typeof vi.fn>).mockReturnValue({
 			get: vi.fn().mockReturnValue("all"),
 		})
 	})
@@ -111,7 +115,10 @@ describe("PostHogTelemetryClient", () => {
 			client.setProvider(mockProvider)
 
 			const getEventProperties = getPrivateProperty<
-				(event: { event: TelemetryEventName; properties?: Record<string, any> }) => Promise<Record<string, any>>
+				(event: {
+					event: TelemetryEventName
+					properties?: Record<string, unknown>
+				}) => Promise<Record<string, unknown>>
 			>(client, "getEventProperties").bind(client)
 
 			const result = await getEventProperties({
@@ -156,7 +163,10 @@ describe("PostHogTelemetryClient", () => {
 			client.setProvider(mockProvider)
 
 			const getEventProperties = getPrivateProperty<
-				(event: { event: TelemetryEventName; properties?: Record<string, any> }) => Promise<Record<string, any>>
+				(event: {
+					event: TelemetryEventName
+					properties?: Record<string, unknown>
+				}) => Promise<Record<string, unknown>>
 			>(client, "getEventProperties").bind(client)
 
 			const result = await getEventProperties({
@@ -194,7 +204,10 @@ describe("PostHogTelemetryClient", () => {
 			client.setProvider(mockProvider)
 
 			const getEventProperties = getPrivateProperty<
-				(event: { event: TelemetryEventName; properties?: Record<string, any> }) => Promise<Record<string, any>>
+				(event: {
+					event: TelemetryEventName
+					properties?: Record<string, unknown>
+				}) => Promise<Record<string, unknown>>
 			>(client, "getEventProperties").bind(client)
 
 			const result = await getEventProperties({
@@ -214,7 +227,10 @@ describe("PostHogTelemetryClient", () => {
 			const client = new PostHogTelemetryClient()
 
 			const getEventProperties = getPrivateProperty<
-				(event: { event: TelemetryEventName; properties?: Record<string, any> }) => Promise<Record<string, any>>
+				(event: {
+					event: TelemetryEventName
+					properties?: Record<string, unknown>
+				}) => Promise<Record<string, unknown>>
 			>(client, "getEventProperties").bind(client)
 
 			const result = await getEventProperties({
@@ -330,7 +346,7 @@ describe("PostHogTelemetryClient", () => {
 		it("should enable telemetry when user opts in and global telemetry is enabled", () => {
 			const client = new PostHogTelemetryClient()
 
-			;(vscode.workspace.getConfiguration as any).mockReturnValue({
+			;(vscode.workspace.getConfiguration as unknown as ReturnType<typeof vi.fn>).mockReturnValue({
 				get: vi.fn().mockReturnValue("all"),
 			})
 
@@ -343,7 +359,7 @@ describe("PostHogTelemetryClient", () => {
 		it("should disable telemetry when user opts out", () => {
 			const client = new PostHogTelemetryClient()
 
-			;(vscode.workspace.getConfiguration as any).mockReturnValue({
+			;(vscode.workspace.getConfiguration as unknown as ReturnType<typeof vi.fn>).mockReturnValue({
 				get: vi.fn().mockReturnValue("all"),
 			})
 
@@ -356,7 +372,7 @@ describe("PostHogTelemetryClient", () => {
 		it("should disable telemetry when global telemetry is disabled, regardless of user opt-in", () => {
 			const client = new PostHogTelemetryClient()
 
-			;(vscode.workspace.getConfiguration as any).mockReturnValue({
+			;(vscode.workspace.getConfiguration as unknown as ReturnType<typeof vi.fn>).mockReturnValue({
 				get: vi.fn().mockReturnValue("off"),
 			})
 
@@ -371,6 +387,131 @@ describe("PostHogTelemetryClient", () => {
 			const client = new PostHogTelemetryClient()
 			await client.shutdown()
 			expect(mockPostHogClient.shutdown).toHaveBeenCalled()
+		})
+	})
+
+	describe("captureWithRetry", () => {
+		it("should return true when event is captured successfully", async () => {
+			const client = new PostHogTelemetryClient()
+			client.updateTelemetryState(true)
+
+			const captureWithRetry = getPrivateProperty<
+				(event: { event: TelemetryEventName; properties?: Record<string, unknown> }) => Promise<boolean>
+			>(client, "captureWithRetry").bind(client)
+
+			const result = await captureWithRetry({
+				event: TelemetryEventName.TASK_CREATED,
+				properties: { test: "value" },
+			})
+
+			expect(result).toBe(true)
+			expect(mockPostHogClient.capture).toHaveBeenCalled()
+		})
+
+		it("should return true even when PostHog has many events", async () => {
+			const client = new PostHogTelemetryClient()
+			client.updateTelemetryState(true)
+
+			const captureWithRetry = getPrivateProperty<
+				(event: { event: TelemetryEventName; properties?: Record<string, unknown> }) => Promise<boolean>
+			>(client, "captureWithRetry").bind(client)
+
+			const result = await captureWithRetry({
+				event: TelemetryEventName.TASK_CREATED,
+				properties: { test: "value" },
+			})
+
+			expect(result).toBe(true)
+			expect(mockPostHogClient.capture).toHaveBeenCalled()
+		})
+
+		it("should return false when capture throws an error", async () => {
+			const client = new PostHogTelemetryClient()
+			client.updateTelemetryState(true)
+
+			mockPostHogClient.capture.mockImplementation(() => {
+				throw new Error("Network error")
+			})
+
+			const captureWithRetry = getPrivateProperty<
+				(event: { event: TelemetryEventName; properties?: Record<string, unknown> }) => Promise<boolean>
+			>(client, "captureWithRetry").bind(client)
+
+			const result = await captureWithRetry({
+				event: TelemetryEventName.TASK_CREATED,
+				properties: { test: "value" },
+			})
+
+			expect(result).toBe(false)
+		})
+	})
+
+	describe("queue integration", () => {
+		it("should add event to queue when captureWithRetry fails", async () => {
+			const client = new PostHogTelemetryClient()
+			client.updateTelemetryState(true)
+
+			// Create a mock queue
+			const mockQueue = {
+				addEvent: vi.fn(),
+			} as unknown as TelemetryQueue
+
+			client.setQueue(mockQueue)
+
+			// Make captureWithRetry fail
+			mockPostHogClient.capture.mockImplementation(() => {
+				throw new Error("Network error")
+			})
+
+			await client.capture({
+				event: TelemetryEventName.TASK_CREATED,
+				properties: { test: "value" },
+			})
+
+			expect(mockQueue.addEvent).toHaveBeenCalledWith(
+				{
+					event: TelemetryEventName.TASK_CREATED,
+					properties: { test: "value" },
+				},
+				"posthog",
+			)
+		})
+
+		it("should not add event to queue when captureWithRetry succeeds", async () => {
+			const client = new PostHogTelemetryClient()
+			client.updateTelemetryState(true)
+
+			// Create a mock queue
+			const mockQueue = {
+				addEvent: vi.fn(),
+			} as unknown as TelemetryQueue
+
+			client.setQueue(mockQueue)
+
+			await client.capture({
+				event: TelemetryEventName.TASK_CREATED,
+				properties: { test: "value" },
+			})
+
+			expect(mockQueue.addEvent).not.toHaveBeenCalled()
+		})
+
+		it("should not fail when queue is not set", async () => {
+			const client = new PostHogTelemetryClient()
+			client.updateTelemetryState(true)
+
+			// Make captureWithRetry fail
+			mockPostHogClient.capture.mockImplementation(() => {
+				throw new Error("Network error")
+			})
+
+			// Should not throw even without queue
+			await expect(
+				client.capture({
+					event: TelemetryEventName.TASK_CREATED,
+					properties: { test: "value" },
+				}),
+			).resolves.toBeUndefined()
 		})
 	})
 })

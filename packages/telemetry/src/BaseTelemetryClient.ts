@@ -5,10 +5,12 @@ import {
 	TelemetryPropertiesProvider,
 	TelemetryEventSubscription,
 } from "@roo-code/types"
+import { TelemetryQueue } from "./TelemetryQueue"
 
 export abstract class BaseTelemetryClient implements TelemetryClient {
 	protected providerRef: WeakRef<TelemetryPropertiesProvider> | null = null
 	protected telemetryEnabled: boolean = false
+	protected queue?: TelemetryQueue
 
 	constructor(
 		public readonly subscription?: TelemetryEventSubscription,
@@ -58,6 +60,29 @@ export abstract class BaseTelemetryClient implements TelemetryClient {
 	}
 
 	public abstract capture(event: TelemetryEvent): Promise<void>
+
+	/**
+	 * Attempts to capture an event with retry capability
+	 * @param event The telemetry event to capture
+	 * @returns True if the event was successfully sent, false if it should be retried
+	 */
+	protected abstract captureWithRetry(event: TelemetryEvent): Promise<boolean>
+
+	/**
+	 * Gets the queue instance if available
+	 * @returns The TelemetryQueue instance or undefined
+	 */
+	protected getQueue(): TelemetryQueue | undefined {
+		return this.queue
+	}
+
+	/**
+	 * Sets the queue instance for this client
+	 * @param queue The TelemetryQueue instance
+	 */
+	public setQueue(queue: TelemetryQueue): void {
+		this.queue = queue
+	}
 
 	public setProvider(provider: TelemetryPropertiesProvider): void {
 		this.providerRef = new WeakRef(provider)
