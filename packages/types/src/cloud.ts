@@ -2,6 +2,7 @@ import { z } from "zod"
 
 import { globalSettingsSchema } from "./global-settings.js"
 import { mcpMarketplaceItemSchema } from "./marketplace.js"
+import { providerSettingsSchema } from "./provider-settings.js"
 
 /**
  * CloudUserInfo
@@ -103,6 +104,30 @@ export const organizationCloudSettingsSchema = z.object({
 export type OrganizationCloudSettings = z.infer<typeof organizationCloudSettingsSchema>
 
 /**
+ * OrganizationDefaultProviders
+ */
+
+export const organizationDefaultProviderProfileSchema = z.object({
+	id: z.string(),
+	name: z.string(),
+	description: z.string().optional(),
+	isRecommended: z.boolean().optional(),
+	priority: z.number().optional(),
+	settings: providerSettingsSchema,
+})
+
+export type OrganizationDefaultProviderProfile = z.infer<typeof organizationDefaultProviderProfileSchema>
+
+export const organizationDefaultProvidersSchema = z.object({
+	enabled: z.boolean().optional(),
+	profiles: z.array(organizationDefaultProviderProfileSchema).optional(),
+	primaryProfileId: z.string().optional(),
+	fallbackProfileIds: z.array(z.string()).optional(),
+})
+
+export type OrganizationDefaultProviders = z.infer<typeof organizationDefaultProvidersSchema>
+
+/**
  * Organization Settings
  */
 
@@ -111,6 +136,7 @@ export const organizationSettingsSchema = z.object({
 	cloudSettings: organizationCloudSettingsSchema.optional(),
 	defaultSettings: organizationDefaultSettingsSchema,
 	allowList: organizationAllowListSchema,
+	defaultProviders: organizationDefaultProvidersSchema.optional(),
 	hiddenMcps: z.array(z.string()).optional(),
 	hideMarketplaceMcps: z.boolean().optional(),
 	mcps: z.array(mcpMarketplaceItemSchema).optional(),
@@ -137,6 +163,10 @@ export const ORGANIZATION_DEFAULT: OrganizationSettings = {
 	},
 	defaultSettings: {},
 	allowList: ORGANIZATION_ALLOW_ALL,
+	defaultProviders: {
+		enabled: false,
+		profiles: [],
+	},
 } as const
 
 /**

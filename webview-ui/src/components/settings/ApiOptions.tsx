@@ -87,6 +87,7 @@ import { RateLimitSecondsControl } from "./RateLimitSecondsControl"
 import { ConsecutiveMistakeLimitControl } from "./ConsecutiveMistakeLimitControl"
 import { BedrockCustomArn } from "./providers/BedrockCustomArn"
 import { buildDocLink } from "@src/utils/docLinks"
+import OrganizationDefaultProviders from "./OrganizationDefaultProviders"
 
 export interface ApiOptionsProps {
 	uriScheme: string | undefined
@@ -95,6 +96,9 @@ export interface ApiOptionsProps {
 	fromWelcomeView?: boolean
 	errorMessage: string | undefined
 	setErrorMessage: React.Dispatch<React.SetStateAction<string | undefined>>
+	organizationSettings?: any
+	onUpdateOrganizationSettings?: (settings: any) => void
+	showOrganizationDefaults?: boolean
 }
 
 const ApiOptions = ({
@@ -104,6 +108,9 @@ const ApiOptions = ({
 	fromWelcomeView,
 	errorMessage,
 	setErrorMessage,
+	organizationSettings,
+	onUpdateOrganizationSettings,
+	showOrganizationDefaults = false,
 }: ApiOptionsProps) => {
 	const { t } = useAppTranslation()
 	const { organizationAllowList } = useExtensionState()
@@ -349,6 +356,22 @@ const ApiOptions = ({
 
 	return (
 		<div className="flex flex-col gap-3">
+			{/* Organization Default Providers Section */}
+			{showOrganizationDefaults && organizationSettings && onUpdateOrganizationSettings && (
+				<div className="border-b border-vscode-panel-border pb-4 mb-4">
+					<OrganizationDefaultProviders
+						defaultProviders={organizationSettings.defaultProviders || { enabled: false, profiles: [] }}
+						onUpdate={(defaultProviders) =>
+							onUpdateOrganizationSettings({
+								...organizationSettings,
+								defaultProviders,
+							})
+						}
+						organizationAllowList={organizationAllowList}
+					/>
+				</div>
+			)}
+
 			<div className="flex flex-col gap-1 relative">
 				<div className="flex justify-between items-center">
 					<label className="block font-medium mb-1">{t("settings:providers.apiProvider")}</label>
