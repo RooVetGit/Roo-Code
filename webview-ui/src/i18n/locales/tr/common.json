@@ -66,6 +66,12 @@
 		"deleteWarning": "Bu mesajı silmek, konuşmadaki sonraki tüm mesajları da silecektir. Devam etmek istiyor musun?",
 		"editMessage": "Mesajı Düzenle",
 		"editWarning": "Bu mesajı düzenlemek, konuşmadaki sonraki tüm mesajları da silecektir. Devam etmek istiyor musun?",
-		"proceed": "Devam Et"
+		"editQuestionWithCheckpoint": "Bu mesajı düzenlemek, konuşmadaki sonraki tüm mesajları da silecektir. Bu kontrol noktasına kadar olan tüm kod değişikliklerini de geri almak istiyor musun?",
+		"deleteQuestionWithCheckpoint": "Bu mesajı silmek, konuşmadaki sonraki tüm mesajları da silecektir. Bu kontrol noktasına kadar olan tüm kod değişikliklerini de geri almak istiyor musun?",
+		"editOnly": "Hayır, sadece mesajı düzenle",
+		"deleteOnly": "Hayır, sadece mesajı sil",
+		"restoreToCheckpoint": "Evet, kodu kontrol noktasına geri yükle",
+		"proceed": "Devam Et",
+		"dontShowAgain": "Tekrar gösterme"
 	}
 }

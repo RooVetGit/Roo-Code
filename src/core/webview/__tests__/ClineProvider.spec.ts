@@ -46,6 +46,12 @@ vi.mock("axios", () => ({
 
 vi.mock("../../../utils/safeWriteJson")
 
+vi.mock("../../../utils/storage", () => ({
+	getSettingsDirectoryPath: vi.fn().mockResolvedValue("/test/settings/path"),
+	getTaskDirectoryPath: vi.fn().mockResolvedValue("/test/task/path"),
+	getGlobalStoragePath: vi.fn().mockResolvedValue("/test/storage/path"),
+}))
+
 vi.mock("@modelcontextprotocol/sdk/types.js", () => ({
 	CallToolResultSchema: {},
 	ListResourcesResultSchema: {},
@@ -1175,8 +1181,8 @@ describe("ClineProvider", () => {
 			const mockMessages = [
 				{ ts: 1000, type: "say", say: "user_feedback" }, // User message 1
 				{ ts: 2000, type: "say", say: "tool" }, // Tool message
-				{ ts: 3000, type: "say", say: "text", value: 4000 }, // Message to delete
-				{ ts: 4000, type: "say", say: "browser_action" }, // Response to delete
+				{ ts: 3000, type: "say", say: "text" }, // Message before delete
+				{ ts: 4000, type: "say", say: "browser_action" }, // Message to delete
 				{ ts: 5000, type: "say", say: "user_feedback" }, // Next user message
 				{ ts: 6000, type: "say", say: "user_feedback" }, // Final message
 			] as ClineMessage[]
@@ -1212,22 +1218,28 @@ describe("ClineProvider", () => {
 			expect(mockPostMessage).toHaveBeenCalledWith({
 				type: "showDeleteMessageDialog",
 				messageTs: 4000,
+				hasCheckpoint: false,
 			})
 
 			// Simulate user confirming deletion through the dialog
 			await messageHandler({ type: "deleteMessageConfirm", messageTs: 4000 })
 
 			// Verify only messages before the deleted message were kept
-			expect(mockCline.overwriteClineMessages).toHaveBeenCalledWith([mockMessages[0], mockMessages[1]])
+			expect(mockCline.overwriteClineMessages).toHaveBeenCalledWith([
+				mockMessages[0],
+				mockMessages[1],
+				mockMessages[2],
+			])
 
 			// Verify only API messages before the deleted message were kept
 			expect(mockCline.overwriteApiConversationHistory).toHaveBeenCalledWith([
 				mockApiHistory[0],
 				mockApiHistory[1],
+				mockApiHistory[2],
 			])
 
-			// Verify initClineWithHistoryItem was called
-			expect((provider as any).initClineWithHistoryItem).toHaveBeenCalledWith({ id: "test-task-id" })
+			// initClineWithHistoryItem is only called when restoring checkpoints or aborting tasks
+			expect((provider as any).initClineWithHistoryItem).not.toHaveBeenCalled()
 		})
 
 		test("handles case when no current task exists", async () => {
@@ -1257,8 +1269,8 @@ describe("ClineProvider", () => {
 			const mockMessages = [
 				{ ts: 1000, type: "say", say: "user_feedback" }, // User message 1
 				{ ts: 2000, type: "say", say: "tool" }, // Tool message
-				{ ts: 3000, type: "say", say: "text", value: 4000 }, // Message to edit
-				{ ts: 4000, type: "say", say: "browser_action" }, // Response to edit
+				{ ts: 3000, type: "say", say: "text" }, // Message before edit
+				{ ts: 4000, type: "say", say: "browser_action" }, // Message to edit
 				{ ts: 5000, type: "say", say: "user_feedback" }, // Next user message
 				{ ts: 6000, type: "say", say: "user_feedback" }, // Final message
 			] as ClineMessage[]
@@ -1305,6 +1317,8 @@ describe("ClineProvider", () => {
 				type: "showEditMessageDialog",
 				messageTs: 4000,
 				text: "Edited message content",
+				hasCheckpoint: false,
+				images: undefined,
 			})
 
 			// Simulate user confirming edit through the dialog
@@ -1315,12 +1329,17 @@ describe("ClineProvider", () => {
 			})
 
 			// Verify correct messages were kept (only messages before the edited one)
-			expect(mockCline.overwriteClineMessages).toHaveBeenCalledWith([mockMessages[0], mockMessages[1]])
+			expect(mockCline.overwriteClineMessages).toHaveBeenCalledWith([
+				mockMessages[0],
+				mockMessages[1],
+				mockMessages[2],
+			])
 
 			// Verify correct API messages were kept (only messages before the edited one)
 			expect(mockCline.overwriteApiConversationHistory).toHaveBeenCalledWith([
 				mockApiHistory[0],
 				mockApiHistory[1],
+				mockApiHistory[2],
 			])
 
 			// The new flow calls webviewMessageHandler recursively with askResponse
@@ -2976,6 +2995,8 @@ describe("ClineProvider - Comprehensive Edit/Delete Edge Cases", () => {
 				type: "showEditMessageDialog",
 				messageTs: 3000,
 				text: "Edited message with preserved images",
+				hasCheckpoint: false,
+				images: undefined,
 			})
 
 			// Simulate confirmation
@@ -2985,9 +3006,9 @@ describe("ClineProvider - Comprehensive Edit/Delete Edge Cases", () => {
 				text: "Edited message with preserved images",
 			})
 
-			// Verify messages were edited correctly - only the first message should remain
-			expect(mockCline.overwriteClineMessages).toHaveBeenCalledWith([mockMessages[0]])
-			expect(mockCline.overwriteApiConversationHistory).toHaveBeenCalledWith([{ ts: 1000 }])
+			// Verify messages were edited correctly - messages up to the edited message should remain
+			expect(mockCline.overwriteClineMessages).toHaveBeenCalledWith([mockMessages[0], mockMessages[1]])
+			expect(mockCline.overwriteApiConversationHistory).toHaveBeenCalledWith([{ ts: 1000 }, { ts: 2000 }])
 		})
 
 		test("handles editing messages with file attachments", async () => {
@@ -3028,6 +3049,8 @@ describe("ClineProvider - Comprehensive Edit/Delete Edge Cases", () => {
 				type: "showEditMessageDialog",
 				messageTs: 3000,
 				text: "Edited message with file attachment",
+				hasCheckpoint: false,
+				images: undefined,
 			})
 
 			// Simulate user confirming the edit
@@ -3084,6 +3107,8 @@ describe("ClineProvider - Comprehensive Edit/Delete Edge Cases", () => {
 				type: "showEditMessageDialog",
 				messageTs: 2000,
 				text: "Edited message",
+				hasCheckpoint: false,
+				images: undefined,
 			})
 
 			// Simulate user confirming the edit
@@ -3124,6 +3149,8 @@ describe("ClineProvider - Comprehensive Edit/Delete Edge Cases", () => {
 				type: "showEditMessageDialog",
 				messageTs: 2000,
 				text: "Edited message",
+				hasCheckpoint: false,
+				images: undefined,
 			})
 
 			// Simulate user confirming the edit
@@ -3180,11 +3207,15 @@ describe("ClineProvider - Comprehensive Edit/Delete Edge Cases", () => {
 				type: "showEditMessageDialog",
 				messageTs: 2000,
 				text: "Edited message 1",
+				hasCheckpoint: false,
+				images: undefined,
 			})
 			expect(mockPostMessage).toHaveBeenCalledWith({
 				type: "showEditMessageDialog",
 				messageTs: 4000,
 				text: "Edited message 2",
+				hasCheckpoint: false,
+				images: undefined,
 			})
 
 			// Simulate user confirming both edits
@@ -3370,6 +3401,8 @@ describe("ClineProvider - Comprehensive Edit/Delete Edge Cases", () => {
 					type: "showEditMessageDialog",
 					messageTs: 5000,
 					text: "Edited non-existent message",
+					hasCheckpoint: false,
+					images: undefined,
 				})
 
 				// Simulate user confirming the edit
@@ -3410,6 +3443,7 @@ describe("ClineProvider - Comprehensive Edit/Delete Edge Cases", () => {
 				expect(mockPostMessage).toHaveBeenCalledWith({
 					type: "showDeleteMessageDialog",
 					messageTs: 5000,
+					hasCheckpoint: false,
 				})
 
 				// Simulate user confirming the delete
@@ -3461,6 +3495,8 @@ describe("ClineProvider - Comprehensive Edit/Delete Edge Cases", () => {
 					type: "showEditMessageDialog",
 					messageTs: 2000,
 					text: "Edited message",
+					hasCheckpoint: false,
+					images: undefined,
 				})
 
 				// Simulate user confirming the edit
@@ -3500,6 +3536,7 @@ describe("ClineProvider - Comprehensive Edit/Delete Edge Cases", () => {
 				expect(mockPostMessage).toHaveBeenCalledWith({
 					type: "showDeleteMessageDialog",
 					messageTs: 2000,
+					hasCheckpoint: false,
 				})
 
 				// Simulate user confirming the delete
@@ -3553,6 +3590,8 @@ describe("ClineProvider - Comprehensive Edit/Delete Edge Cases", () => {
 					type: "showEditMessageDialog",
 					messageTs: 2000,
 					text: largeEditedContent,
+					hasCheckpoint: false,
+					images: undefined,
 				})
 
 				// Simulate user confirming the edit
@@ -3595,18 +3634,23 @@ describe("ClineProvider - Comprehensive Edit/Delete Edge Cases", () => {
 				expect(mockPostMessage).toHaveBeenCalledWith({
 					type: "showDeleteMessageDialog",
 					messageTs: 3000,
+					hasCheckpoint: false,
 				})
 
 				// Simulate user confirming the delete
 				await messageHandler({ type: "deleteMessageConfirm", messageTs: 3000 })
 
-				// Should handle large payloads without issues
-				expect(mockCline.overwriteClineMessages).toHaveBeenCalledWith([mockMessages[0]])
-				expect(mockCline.overwriteApiConversationHistory).toHaveBeenCalledWith([{ ts: 1000 }])
+				// Should handle large payloads without issues - keeps messages before the deleted one
+				expect(mockCline.overwriteClineMessages).toHaveBeenCalledWith([mockMessages[0], mockMessages[1]])
+				expect(mockCline.overwriteApiConversationHistory).toHaveBeenCalledWith([{ ts: 1000 }, { ts: 2000 }])
 			})
 		})
 
 		describe("Error Messaging and User Feedback", () => {
+			beforeEach(async () => {
+				await provider.resolveWebviewView(mockWebviewView)
+			})
+
 			// Note: Error messaging test removed as the implementation may not have proper error handling in place
 
 			test("provides user feedback for successful operations", async () => {
@@ -3633,6 +3677,7 @@ describe("ClineProvider - Comprehensive Edit/Delete Edge Cases", () => {
 				expect(mockPostMessage).toHaveBeenCalledWith({
 					type: "showDeleteMessageDialog",
 					messageTs: 2000,
+					hasCheckpoint: false,
 				})
 
 				// Simulate user confirming the delete
@@ -3640,7 +3685,7 @@ describe("ClineProvider - Comprehensive Edit/Delete Edge Cases", () => {
 
 				// Verify successful operation completed
 				expect(mockCline.overwriteClineMessages).toHaveBeenCalled()
-				expect(provider.initClineWithHistoryItem).toHaveBeenCalled()
+				// initClineWithHistoryItem is only called when restoring checkpoints or aborting tasks
 				expect(vscode.window.showErrorMessage).not.toHaveBeenCalled()
 			})
 
@@ -3706,6 +3751,7 @@ describe("ClineProvider - Comprehensive Edit/Delete Edge Cases", () => {
 				expect(mockPostMessage).toHaveBeenCalledWith({
 					type: "showDeleteMessageDialog",
 					messageTs: 1000,
+					hasCheckpoint: false,
 				})
 
 				// Simulate user confirming the delete
@@ -3756,6 +3802,8 @@ describe("ClineProvider - Comprehensive Edit/Delete Edge Cases", () => {
 					type: "showEditMessageDialog",
 					messageTs: futureTimestamp + 1000,
 					text: "Edited future message",
+					hasCheckpoint: false,
+					images: undefined,
 				})
 
 				// Simulate user confirming the edit

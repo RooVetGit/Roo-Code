@@ -66,6 +66,12 @@
 		"deleteWarning": "刪除此訊息將刪除對話中的所有後續訊息。是否繼續？",
 		"editMessage": "編輯訊息",
 		"editWarning": "編輯此訊息將刪除對話中的所有後續訊息。是否繼續？",
-		"proceed": "繼續"
+		"editQuestionWithCheckpoint": "編輯此訊息將刪除對話中的所有後續訊息。是否同時將程式碼變更撤銷到此存檔點？",
+		"deleteQuestionWithCheckpoint": "刪除此訊息將刪除對話中的所有後續訊息。是否同時將程式碼變更撤銷到此存檔點？",
+		"editOnly": "否，僅編輯訊息",
+		"deleteOnly": "否，僅刪除訊息",
+		"restoreToCheckpoint": "是，恢復程式碼到存檔點",
+		"proceed": "繼續",
+		"dontShowAgain": "不再顯示"
 	}
 }

@@ -66,6 +66,12 @@
 		"deleteWarning": "Eliminar este mensaje eliminará todos los mensajes posteriores en la conversación. ¿Deseas continuar?",
 		"editMessage": "Editar mensaje",
 		"editWarning": "Editar este mensaje eliminará todos los mensajes posteriores en la conversación. ¿Deseas continuar?",
-		"proceed": "Continuar"
+		"editQuestionWithCheckpoint": "Editar este mensaje eliminará todos los mensajes posteriores en la conversación. ¿También deseas deshacer todos los cambios de código hasta este punto de control?",
+		"deleteQuestionWithCheckpoint": "Eliminar este mensaje eliminará todos los mensajes posteriores en la conversación. ¿También deseas deshacer todos los cambios de código hasta este punto de control?",
+		"editOnly": "No, solo editar el mensaje",
+		"deleteOnly": "No, solo eliminar el mensaje",
+		"restoreToCheckpoint": "Sí, restaurar código al punto de control",
+		"proceed": "Continuar",
+		"dontShowAgain": "No mostrar esto de nuevo"
 	}
 }

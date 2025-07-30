@@ -66,6 +66,12 @@
 		"deleteWarning": "Het verwijderen van dit bericht zal alle volgende berichten in het gesprek verwijderen. Wil je doorgaan?",
 		"editMessage": "Bericht Bewerken",
 		"editWarning": "Het bewerken van dit bericht zal alle volgende berichten in het gesprek verwijderen. Wil je doorgaan?",
-		"proceed": "Doorgaan"
+		"editQuestionWithCheckpoint": "Het bewerken van dit bericht zal alle latere berichten in het gesprek verwijderen. Wil je ook alle codewijzigingen ongedaan maken tot dit checkpoint?",
+		"deleteQuestionWithCheckpoint": "Het verwijderen van dit bericht zal alle latere berichten in het gesprek verwijderen. Wil je ook alle codewijzigingen ongedaan maken tot dit checkpoint?",
+		"editOnly": "Nee, alleen bericht bewerken",
+		"deleteOnly": "Nee, alleen bericht verwijderen",
+		"restoreToCheckpoint": "Ja, code herstellen naar checkpoint",
+		"proceed": "Doorgaan",
+		"dontShowAgain": "Niet meer tonen"
 	}
 }

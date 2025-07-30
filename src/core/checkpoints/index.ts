@@ -192,35 +192,36 @@ async function getInitializedCheckpointService(
 }
 
 export async function checkpointSave(cline: Task, force = false) {
-	const service = getCheckpointService(cline)
+	try {
+		// Use getInitializedCheckpointService to wait for initialization
+		const service = await getInitializedCheckpointService(cline)
 
-	if (!service) {
-		return
-	}
+		if (!service) {
+			return
+		}
 
-	if (!service.isInitialized) {
-		const provider = cline.providerRef.deref()
-		provider?.log("[checkpointSave] checkpoints didn't initialize in time, disabling checkpoints for this task")
-		cline.enableCheckpoints = false
-		return
-	}
+		TelemetryService.instance.captureCheckpointCreated(cline.taskId)
 
-	TelemetryService.instance.captureCheckpointCreated(cline.taskId)
-
-	// Start the checkpoint process in the background.
-	return service.saveCheckpoint(`Task: ${cline.taskId}, Time: ${Date.now()}`, { allowEmpty: force }).catch((err) => {
+		// Start the checkpoint process in the background.
+		return await service.saveCheckpoint(`Task: ${cline.taskId}, Time: ${Date.now()}`, { allowEmpty: force })
+	} catch (err) {
 		console.error("[Task#checkpointSave] caught unexpected error, disabling checkpoints", err)
 		cline.enableCheckpoints = false
-	})
+		return undefined
+	}
 }
 
 export type CheckpointRestoreOptions = {
 	ts: number
 	commitHash: string
 	mode: "preview" | "restore"
+	operation?: "delete" | "edit" // Optional to maintain backward compatibility
 }
 
-export async function checkpointRestore(cline: Task, { ts, commitHash, mode }: CheckpointRestoreOptions) {
+export async function checkpointRestore(
+	cline: Task,
+	{ ts, commitHash, mode, operation = "delete" }: CheckpointRestoreOptions,
+) {
 	const service = await getInitializedCheckpointService(cline)
 
 	if (!service) {
@@ -249,7 +250,10 @@ export async function checkpointRestore(cline: Task, { ts, commitHash, mode }: C
 				cline.combineMessages(deletedMessages),
 			)
 
-			await cline.overwriteClineMessages(cline.clineMessages.slice(0, index + 1))
+			// For delete operations, exclude the checkpoint message itself
+			// For edit operations, include the checkpoint message (to be edited)
+			const endIndex = operation === "edit" ? index + 1 : index
+			await cline.overwriteClineMessages(cline.clineMessages.slice(0, endIndex))
 
 			// TODO: Verify that this is working as expected.
 			await cline.say(
