@@ -155,3 +155,32 @@ export function convertToAnthropicRole(vsCodeLmMessageRole: vscode.LanguageModel
 			return null
 	}
 }
+
+export function extractTextCountFromMessage(message: vscode.LanguageModelChatMessage): string {
+	let text = ""
+	if (Array.isArray(message.content)) {
+		for (const item of message.content) {
+			if (item instanceof vscode.LanguageModelTextPart) {
+				text += item.value
+			}
+			if (item instanceof vscode.LanguageModelToolResultPart) {
+				text += item.callId
+				for (const part of item.content) {
+					if (part instanceof vscode.LanguageModelTextPart) {
+						text += part.value
+					}
+				}
+			}
+			if (item instanceof vscode.LanguageModelToolCallPart) {
+				text += item.name
+				text += item.callId
+				if (item.input && Object.keys(item.input).length > 0) {
+					text += JSON.stringify(item.input)
+				}
+			}
+		}
+	} else if (typeof message.content === "string") {
+		text += message.content
+	}
+	return text
+}
