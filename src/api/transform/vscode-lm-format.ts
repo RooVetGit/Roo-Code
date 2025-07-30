@@ -156,6 +156,11 @@ export function convertToAnthropicRole(vsCodeLmMessageRole: vscode.LanguageModel
 	}
 }
 
+/**
+ * Extracts the text content from a VS Code Language Model chat message.
+ * @param message A VS Code Language Model chat message.
+ * @returns The extracted text content.
+ */
 export function extractTextCountFromMessage(message: vscode.LanguageModelChatMessage): string {
 	let text = ""
 	if (Array.isArray(message.content)) {
@@ -175,7 +180,11 @@ export function extractTextCountFromMessage(message: vscode.LanguageModelChatMes
 				text += item.name
 				text += item.callId
 				if (item.input && Object.keys(item.input).length > 0) {
-					text += JSON.stringify(item.input)
+					try {
+						text += JSON.stringify(item.input)
+					} catch (error) {
+						console.error("Roo Code <Language Model API>: Failed to stringify tool call input:", error)
+					}
 				}
 			}
 		}
