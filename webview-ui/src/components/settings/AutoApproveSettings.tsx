@@ -4,12 +4,15 @@ import { X } from "lucide-react"
 import { useAppTranslation } from "@/i18n/TranslationContext"
 import { VSCodeCheckbox } from "@vscode/webview-ui-toolkit/react"
 import { vscode } from "@/utils/vscode"
-import { Button, Input, Slider } from "@/components/ui"
+import { Button, Input, Slider, StandardTooltip } from "@/components/ui"
 
 import { SetCachedStateField } from "./types"
 import { SectionHeader } from "./SectionHeader"
 import { Section } from "./Section"
 import { AutoApproveToggle } from "./AutoApproveToggle"
+import { useExtensionState } from "@/context/ExtensionStateContext"
+import { useAutoApprovalState } from "@/hooks/useAutoApprovalState"
+import { useAutoApprovalToggles } from "@/hooks/useAutoApprovalToggles"
 
 type AutoApproveSettingsProps = HTMLAttributes<HTMLDivElement> & {
 	alwaysAllowReadOnly?: boolean
@@ -17,7 +20,6 @@ type AutoApproveSettingsProps = HTMLAttributes<HTMLDivElement> & {
 	alwaysAllowWrite?: boolean
 	alwaysAllowWriteOutsideWorkspace?: boolean
 	alwaysAllowWriteProtected?: boolean
-	writeDelayMs: number
 	alwaysAllowBrowser?: boolean
 	alwaysApproveResubmit?: boolean
 	requestDelaySeconds: number
@@ -36,7 +38,6 @@ type AutoApproveSettingsProps = HTMLAttributes<HTMLDivElement> & {
 		| "alwaysAllowWrite"
 		| "alwaysAllowWriteOutsideWorkspace"
 		| "alwaysAllowWriteProtected"
-		| "writeDelayMs"
 		| "alwaysAllowBrowser"
 		| "alwaysApproveResubmit"
 		| "requestDelaySeconds"
@@ -58,7 +59,6 @@ export const AutoApproveSettings = ({
 	alwaysAllowWrite,
 	alwaysAllowWriteOutsideWorkspace,
 	alwaysAllowWriteProtected,
-	writeDelayMs,
 	alwaysAllowBrowser,
 	alwaysApproveResubmit,
 	requestDelaySeconds,
@@ -77,6 +77,11 @@ export const AutoApproveSettings = ({
 	const { t } = useAppTranslation()
 	const [commandInput, setCommandInput] = useState("")
 	const [deniedCommandInput, setDeniedCommandInput] = useState("")
+	const { autoApprovalEnabled, setAutoApprovalEnabled } = useExtensionState()
+
+	const toggles = useAutoApprovalToggles()
+
+	const { hasEnabledOptions, effectiveAutoApprovalEnabled } = useAutoApprovalState(toggles, autoApprovalEnabled)
 
 	const handleAddCommand = () => {
 		const currentCommands = allowedCommands ?? []
@@ -104,6 +109,30 @@ export const AutoApproveSettings = ({
 		<div {...props}>
 			<SectionHeader description={t("settings:autoApprove.description")}>
 				<div className="flex items-center gap-2">
+					{!hasEnabledOptions ? (
+						<StandardTooltip content={t("settings:autoApprove.selectOptionsFirst")}>
+							<VSCodeCheckbox
+								checked={effectiveAutoApprovalEnabled}
+								disabled={!hasEnabledOptions}
+								aria-label={t("settings:autoApprove.disabledAriaLabel")}
+								onChange={() => {
+									// Do nothing when no options are enabled
+									return
+								}}
+							/>
+						</StandardTooltip>
+					) : (
+						<VSCodeCheckbox
+							checked={effectiveAutoApprovalEnabled}
+							disabled={!hasEnabledOptions}
+							aria-label={t("settings:autoApprove.toggleAriaLabel")}
+							onChange={() => {
+								const newValue = !(autoApprovalEnabled ?? false)
+								setAutoApprovalEnabled(newValue)
+								vscode.postMessage({ type: "autoApprovalEnabled", bool: newValue })
+							}}
+						/>
+					)}
 					<span className="codicon codicon-check w-4" />
 					<div>{t("settings:sections.autoApprove")}</div>
 				</div>
@@ -182,22 +211,6 @@ export const AutoApproveSettings = ({
 							</VSCodeCheckbox>
 							<div className="text-vscode-descriptionForeground text-sm mt-1 mb-3">
 								{t("settings:autoApprove.write.protected.description")}
-							</div>
-						</div>
-						<div>
-							<div className="flex items-center gap-2">
-								<Slider
-									min={0}
-									max={5000}
-									step={100}
-									value={[writeDelayMs]}
-									onValueChange={([value]) => setCachedStateField("writeDelayMs", value)}
-									data-testid="write-delay-slider"
-								/>
-								<span className="w-20">{writeDelayMs}ms</span>
-							</div>
-							<div className="text-vscode-descriptionForeground text-sm mt-1">
-								{t("settings:autoApprove.write.delayLabel")}
 							</div>
 						</div>
 					</div>

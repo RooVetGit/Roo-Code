@@ -155,6 +155,7 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 		soundVolume,
 		telemetrySetting,
 		terminalOutputLineLimit,
+		terminalOutputCharacterLimit,
 		terminalShellIntegrationTimeout,
 		terminalShellIntegrationDisabled, // Added from upstream
 		terminalCommandDelay,
@@ -167,6 +168,8 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 		showRooIgnoredFiles,
 		remoteBrowserEnabled,
 		maxReadFileLine,
+		maxImageFileSize,
+		maxTotalImageSize,
 		terminalCompressProgressBar,
 		maxConcurrentFileReads,
 		condensingApiConfigId,
@@ -176,6 +179,8 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 		alwaysAllowFollowupQuestions,
 		alwaysAllowUpdateTodoList,
 		followupAutoApproveTimeoutMs,
+		includeDiagnosticMessages,
+		maxDiagnosticMessages,
 	} = cachedState
 
 	const apiConfiguration = useMemo(() => cachedState.apiConfiguration ?? {}, [cachedState.apiConfiguration])
@@ -218,7 +223,15 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 					return prevState
 				}
 
-				setChangeDetected(true)
+				const previousValue = prevState.apiConfiguration?.[field]
+
+				// Don't treat initial sync from undefined to a defined value as a user change
+				// This prevents the dirty state when the component initializes and auto-syncs the model ID
+				const isInitialSync = previousValue === undefined && value !== undefined
+
+				if (!isInitialSync) {
+					setChangeDetected(true)
+				}
 				return { ...prevState, apiConfiguration: { ...prevState.apiConfiguration, [field]: value } }
 			})
 		},
@@ -293,6 +306,7 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 			vscode.postMessage({ type: "writeDelayMs", value: writeDelayMs })
 			vscode.postMessage({ type: "screenshotQuality", value: screenshotQuality ?? 75 })
 			vscode.postMessage({ type: "terminalOutputLineLimit", value: terminalOutputLineLimit ?? 500 })
+			vscode.postMessage({ type: "terminalOutputCharacterLimit", value: terminalOutputCharacterLimit ?? 50000 })
 			vscode.postMessage({ type: "terminalShellIntegrationTimeout", value: terminalShellIntegrationTimeout })
 			vscode.postMessage({ type: "terminalShellIntegrationDisabled", bool: terminalShellIntegrationDisabled })
 			vscode.postMessage({ type: "terminalCommandDelay", value: terminalCommandDelay })
@@ -309,7 +323,11 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 			vscode.postMessage({ type: "maxWorkspaceFiles", value: maxWorkspaceFiles ?? 200 })
 			vscode.postMessage({ type: "showRooIgnoredFiles", bool: showRooIgnoredFiles })
 			vscode.postMessage({ type: "maxReadFileLine", value: maxReadFileLine ?? -1 })
+			vscode.postMessage({ type: "maxImageFileSize", value: maxImageFileSize ?? 5 })
+			vscode.postMessage({ type: "maxTotalImageSize", value: maxTotalImageSize ?? 20 })
 			vscode.postMessage({ type: "maxConcurrentFileReads", value: cachedState.maxConcurrentFileReads ?? 5 })
+			vscode.postMessage({ type: "includeDiagnosticMessages", bool: includeDiagnosticMessages })
+			vscode.postMessage({ type: "maxDiagnosticMessages", value: maxDiagnosticMessages ?? 50 })
 			vscode.postMessage({ type: "currentApiConfigName", text: currentApiConfigName })
 			vscode.postMessage({ type: "updateExperimental", values: experiments })
 			vscode.postMessage({ type: "alwaysAllowModeSwitch", bool: alwaysAllowModeSwitch })
@@ -596,7 +614,6 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 							alwaysAllowWrite={alwaysAllowWrite}
 							alwaysAllowWriteOutsideWorkspace={alwaysAllowWriteOutsideWorkspace}
 							alwaysAllowWriteProtected={alwaysAllowWriteProtected}
-							writeDelayMs={writeDelayMs}
 							alwaysAllowBrowser={alwaysAllowBrowser}
 							alwaysApproveResubmit={alwaysApproveResubmit}
 							requestDelaySeconds={requestDelaySeconds}
@@ -649,15 +666,18 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 						<ContextManagementSettings
 							autoCondenseContext={autoCondenseContext}
 							autoCondenseContextPercent={autoCondenseContextPercent}
-							condensingApiConfigId={condensingApiConfigId}
-							customCondensingPrompt={customCondensingPrompt}
 							listApiConfigMeta={listApiConfigMeta ?? []}
 							maxOpenTabsContext={maxOpenTabsContext}
 							maxWorkspaceFiles={maxWorkspaceFiles ?? 200}
 							showRooIgnoredFiles={showRooIgnoredFiles}
 							maxReadFileLine={maxReadFileLine}
+							maxImageFileSize={maxImageFileSize}
+							maxTotalImageSize={maxTotalImageSize}
 							maxConcurrentFileReads={maxConcurrentFileReads}
 							profileThresholds={profileThresholds}
+							includeDiagnosticMessages={includeDiagnosticMessages}
+							maxDiagnosticMessages={maxDiagnosticMessages}
+							writeDelayMs={writeDelayMs}
 							setCachedStateField={setCachedStateField}
 						/>
 					)}
@@ -666,6 +686,7 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 					{activeTab === "terminal" && (
 						<TerminalSettings
 							terminalOutputLineLimit={terminalOutputLineLimit}
+							terminalOutputCharacterLimit={terminalOutputCharacterLimit}
 							terminalShellIntegrationTimeout={terminalShellIntegrationTimeout}
 							terminalShellIntegrationDisabled={terminalShellIntegrationDisabled}
 							terminalCommandDelay={terminalCommandDelay}

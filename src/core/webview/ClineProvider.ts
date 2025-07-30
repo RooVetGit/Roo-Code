@@ -28,6 +28,7 @@ import {
 	openRouterDefaultModelId,
 	glamaDefaultModelId,
 	ORGANIZATION_ALLOW_ALL,
+	DEFAULT_TERMINAL_OUTPUT_CHARACTER_LIMIT,
 } from "@roo-code/types"
 import { TelemetryService } from "@roo-code/telemetry"
 import { CloudService, getRooCodeApiUrl } from "@roo-code/cloud"
@@ -39,9 +40,10 @@ import { findLast } from "../../shared/array"
 import { supportPrompt } from "../../shared/support-prompt"
 import { GlobalFileNames } from "../../shared/globalFileNames"
 import { ExtensionMessage, MarketplaceInstalledMetadata } from "../../shared/ExtensionMessage"
-import { Mode, defaultModeSlug } from "../../shared/modes"
+import { Mode, defaultModeSlug, getModeBySlug } from "../../shared/modes"
 import { experimentDefault, experiments, EXPERIMENT_IDS } from "../../shared/experiments"
 import { formatLanguage } from "../../shared/language"
+import { DEFAULT_WRITE_DELAY_MS } from "@roo-code/types"
 import { Terminal } from "../../integrations/terminal/Terminal"
 import { downloadTask } from "../../integrations/misc/export-markdown"
 import { getTheme } from "../../integrations/theme/getTheme"
@@ -110,7 +112,7 @@ export class ClineProvider
 
 	public isViewLaunched = false
 	public settingsImportedAt?: number
-	public readonly latestAnnouncementId = "jul-09-2025-3-23-0" // Update for v3.23.0 announcement
+	public readonly latestAnnouncementId = "jul-29-2025-3-25-0" // Update for v3.25.0 announcement
 	public readonly providerSettingsManager: ProviderSettingsManager
 	public readonly customModesManager: CustomModesManager
 
@@ -156,7 +158,7 @@ export class ClineProvider
 				this.log(`Failed to initialize MCP Hub: ${error}`)
 			})
 
-		this.marketplaceManager = new MarketplaceManager(this.context)
+		this.marketplaceManager = new MarketplaceManager(this.context, this.customModesManager)
 	}
 
 	// Adds a new Cline instance to clineStack, marking the start of a new task.
@@ -553,6 +555,7 @@ export class ClineProvider
 			enableDiff,
 			enableCheckpoints,
 			fuzzyMatchThreshold,
+			consecutiveMistakeLimit: apiConfiguration.consecutiveMistakeLimit,
 			task,
 			images,
 			experiments,
@@ -575,6 +578,49 @@ export class ClineProvider
 	public async initClineWithHistoryItem(historyItem: HistoryItem & { rootTask?: Task; parentTask?: Task }) {
 		await this.removeClineFromStack()
 
+		// If the history item has a saved mode, restore it and its associated API configuration
+		if (historyItem.mode) {
+			// Validate that the mode still exists
+			const customModes = await this.customModesManager.getCustomModes()
+			const modeExists = getModeBySlug(historyItem.mode, customModes) !== undefined
+
+			if (!modeExists) {
+				// Mode no longer exists, fall back to default mode
+				this.log(
+					`Mode '${historyItem.mode}' from history no longer exists. Falling back to default mode '${defaultModeSlug}'.`,
+				)
+				historyItem.mode = defaultModeSlug
+			}
+
+			await this.updateGlobalState("mode", historyItem.mode)
+
+			// Load the saved API config for the restored mode if it exists
+			const savedConfigId = await this.providerSettingsManager.getModeConfigId(historyItem.mode)
+			const listApiConfig = await this.providerSettingsManager.listConfig()
+
+			// Update listApiConfigMeta first to ensure UI has latest data
+			await this.updateGlobalState("listApiConfigMeta", listApiConfig)
+
+			// If this mode has a saved config, use it
+			if (savedConfigId) {
+				const profile = listApiConfig.find(({ id }) => id === savedConfigId)
+
+				if (profile?.name) {
+					try {
+						await this.activateProviderProfile({ name: profile.name })
+					} catch (error) {
+						// Log the error but continue with task restoration
+						this.log(
+							`Failed to restore API configuration for mode '${historyItem.mode}': ${
+								error instanceof Error ? error.message : String(error)
+							}. Continuing with default configuration.`,
+						)
+						// The task will continue with the current/default configuration
+					}
+				}
+			}
+		}
+
 		const {
 			apiConfiguration,
 			diffEnabled: enableDiff,
@@ -589,6 +635,7 @@ export class ClineProvider
 			enableDiff,
 			enableCheckpoints,
 			fuzzyMatchThreshold,
+			consecutiveMistakeLimit: apiConfiguration.consecutiveMistakeLimit,
 			historyItem,
 			experiments,
 			rootTask: historyItem.rootTask,
@@ -678,7 +725,7 @@ export class ClineProvider
 			`img-src ${webview.cspSource} https://storage.googleapis.com https://img.clerk.com data:`,
 			`media-src ${webview.cspSource}`,
 			`script-src 'unsafe-eval' ${webview.cspSource} https://* https://*.posthog.com http://${localServerUrl} http://0.0.0.0:${localPort} 'nonce-${nonce}'`,
-			`connect-src https://* https://*.posthog.com ws://${localServerUrl} ws://0.0.0.0:${localPort} http://${localServerUrl} http://0.0.0.0:${localPort}`,
+			`connect-src ${webview.cspSource} https://* https://*.posthog.com ws://${localServerUrl} ws://0.0.0.0:${localPort} http://${localServerUrl} http://0.0.0.0:${localPort}`,
 		]
 
 		return /*html*/ `
@@ -760,7 +807,7 @@ export class ClineProvider
             <meta charset="utf-8">
             <meta name="viewport" content="width=device-width,initial-scale=1,shrink-to-fit=no">
             <meta name="theme-color" content="#000000">
-            <meta http-equiv="Content-Security-Policy" content="default-src 'none'; font-src ${webview.cspSource} data:; style-src ${webview.cspSource} 'unsafe-inline'; img-src ${webview.cspSource} https://storage.googleapis.com https://img.clerk.com data:; media-src ${webview.cspSource}; script-src ${webview.cspSource} 'wasm-unsafe-eval' 'nonce-${nonce}' https://us-assets.i.posthog.com 'strict-dynamic'; connect-src https://openrouter.ai https://api.requesty.ai https://us.i.posthog.com https://us-assets.i.posthog.com;">
+            <meta http-equiv="Content-Security-Policy" content="default-src 'none'; font-src ${webview.cspSource} data:; style-src ${webview.cspSource} 'unsafe-inline'; img-src ${webview.cspSource} https://storage.googleapis.com https://img.clerk.com data:; media-src ${webview.cspSource}; script-src ${webview.cspSource} 'wasm-unsafe-eval' 'nonce-${nonce}' https://us-assets.i.posthog.com 'strict-dynamic'; connect-src ${webview.cspSource} https://openrouter.ai https://api.requesty.ai https://us.i.posthog.com https://us-assets.i.posthog.com;">
             <link rel="stylesheet" type="text/css" href="${stylesUri}">
 			<link href="${codiconsUri}" rel="stylesheet" />
 			<script nonce="${nonce}">
@@ -803,6 +850,31 @@ export class ClineProvider
 		if (cline) {
 			TelemetryService.instance.captureModeSwitch(cline.taskId, newMode)
 			cline.emit("taskModeSwitched", cline.taskId, newMode)
+
+			// Store the current mode in case we need to rollback
+			const previousMode = (cline as any)._taskMode
+
+			try {
+				// Update the task history with the new mode first
+				const history = this.getGlobalState("taskHistory") ?? []
+				const taskHistoryItem = history.find((item) => item.id === cline.taskId)
+				if (taskHistoryItem) {
+					taskHistoryItem.mode = newMode
+					await this.updateTaskHistory(taskHistoryItem)
+				}
+
+				// Only update the task's mode after successful persistence
+				;(cline as any)._taskMode = newMode
+			} catch (error) {
+				// If persistence fails, log the error but don't update the in-memory state
+				this.log(
+					`Failed to persist mode switch for task ${cline.taskId}: ${error instanceof Error ? error.message : String(error)}`,
+				)
+
+				// Optionally, we could emit an event to notify about the failure
+				// This ensures the in-memory state remains consistent with persisted state
+				throw error
+			}
 		}
 
 		await this.updateGlobalState("mode", newMode)
@@ -1256,10 +1328,10 @@ export class ClineProvider
 	 */
 	async fetchMarketplaceData() {
 		try {
-			const [marketplaceItems, marketplaceInstalledMetadata] = await Promise.all([
-				this.marketplaceManager.getCurrentItems().catch((error) => {
+			const [marketplaceResult, marketplaceInstalledMetadata] = await Promise.all([
+				this.marketplaceManager.getMarketplaceItems().catch((error) => {
 					console.error("Failed to fetch marketplace items:", error)
-					return [] as MarketplaceItem[]
+					return { organizationMcps: [], marketplaceItems: [], errors: [error.message] }
 				}),
 				this.marketplaceManager.getInstallationMetadata().catch((error) => {
 					console.error("Failed to fetch installation metadata:", error)
@@ -1270,16 +1342,20 @@ export class ClineProvider
 			// Send marketplace data separately
 			this.postMessageToWebview({
 				type: "marketplaceData",
-				marketplaceItems: marketplaceItems || [],
+				organizationMcps: marketplaceResult.organizationMcps || [],
+				marketplaceItems: marketplaceResult.marketplaceItems || [],
 				marketplaceInstalledMetadata: marketplaceInstalledMetadata || { project: {}, global: {} },
+				errors: marketplaceResult.errors,
 			})
 		} catch (error) {
 			console.error("Failed to fetch marketplace data:", error)
 			// Send empty data on error to prevent UI from hanging
 			this.postMessageToWebview({
 				type: "marketplaceData",
+				organizationMcps: [],
 				marketplaceItems: [],
 				marketplaceInstalledMetadata: { project: {}, global: {} },
+				errors: [error instanceof Error ? error.message : String(error)],
 			})
 
 			// Show user-friendly error notification for network issues
@@ -1390,6 +1466,7 @@ export class ClineProvider
 			cachedChromeHostUrl,
 			writeDelayMs,
 			terminalOutputLineLimit,
+			terminalOutputCharacterLimit,
 			terminalShellIntegrationTimeout,
 			terminalShellIntegrationDisabled,
 			terminalCommandDelay,
@@ -1420,6 +1497,8 @@ export class ClineProvider
 			showRooIgnoredFiles,
 			language,
 			maxReadFileLine,
+			maxImageFileSize,
+			maxTotalImageSize,
 			terminalCompressProgressBar,
 			historyPreviewCollapsed,
 			cloudUserInfo,
@@ -1434,6 +1513,8 @@ export class ClineProvider
 			profileThresholds,
 			alwaysAllowFollowupQuestions,
 			followupAutoApproveTimeoutMs,
+			includeDiagnosticMessages,
+			maxDiagnosticMessages,
 		} = await this.getState()
 
 		const telemetryKey = process.env.POSTHOG_API_KEY
@@ -1487,8 +1568,9 @@ export class ClineProvider
 			remoteBrowserHost,
 			remoteBrowserEnabled: remoteBrowserEnabled ?? false,
 			cachedChromeHostUrl: cachedChromeHostUrl,
-			writeDelayMs: writeDelayMs ?? 1000,
+			writeDelayMs: writeDelayMs ?? DEFAULT_WRITE_DELAY_MS,
 			terminalOutputLineLimit: terminalOutputLineLimit ?? 500,
+			terminalOutputCharacterLimit: terminalOutputCharacterLimit ?? DEFAULT_TERMINAL_OUTPUT_CHARACTER_LIMIT,
 			terminalShellIntegrationTimeout: terminalShellIntegrationTimeout ?? Terminal.defaultShellIntegrationTimeout,
 			terminalShellIntegrationDisabled: terminalShellIntegrationDisabled ?? false,
 			terminalCommandDelay: terminalCommandDelay ?? 0,
@@ -1524,6 +1606,8 @@ export class ClineProvider
 			language: language ?? formatLanguage(vscode.env.language),
 			renderContext: this.renderContext,
 			maxReadFileLine: maxReadFileLine ?? -1,
+			maxImageFileSize: maxImageFileSize ?? 5,
+			maxTotalImageSize: maxTotalImageSize ?? 20,
 			maxConcurrentFileReads: maxConcurrentFileReads ?? 5,
 			settingsImportedAt: this.settingsImportedAt,
 			terminalCompressProgressBar: terminalCompressProgressBar ?? true,
@@ -1553,6 +1637,8 @@ export class ClineProvider
 			hasOpenedModeSelector: this.getGlobalState("hasOpenedModeSelector") ?? false,
 			alwaysAllowFollowupQuestions: alwaysAllowFollowupQuestions ?? false,
 			followupAutoApproveTimeoutMs: followupAutoApproveTimeoutMs ?? 60000,
+			includeDiagnosticMessages: includeDiagnosticMessages ?? true,
+			maxDiagnosticMessages: maxDiagnosticMessages ?? 50,
 		}
 	}
 
@@ -1636,6 +1722,7 @@ export class ClineProvider
 			alwaysAllowFollowupQuestions: stateValues.alwaysAllowFollowupQuestions ?? false,
 			alwaysAllowUpdateTodoList: stateValues.alwaysAllowUpdateTodoList ?? false,
 			followupAutoApproveTimeoutMs: stateValues.followupAutoApproveTimeoutMs ?? 60000,
+			diagnosticsEnabled: stateValues.diagnosticsEnabled ?? true,
 			allowedMaxRequests: stateValues.allowedMaxRequests,
 			autoCondenseContext: stateValues.autoCondenseContext ?? true,
 			autoCondenseContextPercent: stateValues.autoCondenseContextPercent ?? 100,
@@ -1654,8 +1741,10 @@ export class ClineProvider
 			remoteBrowserEnabled: stateValues.remoteBrowserEnabled ?? false,
 			cachedChromeHostUrl: stateValues.cachedChromeHostUrl as string | undefined,
 			fuzzyMatchThreshold: stateValues.fuzzyMatchThreshold ?? 1.0,
-			writeDelayMs: stateValues.writeDelayMs ?? 1000,
+			writeDelayMs: stateValues.writeDelayMs ?? DEFAULT_WRITE_DELAY_MS,
 			terminalOutputLineLimit: stateValues.terminalOutputLineLimit ?? 500,
+			terminalOutputCharacterLimit:
+				stateValues.terminalOutputCharacterLimit ?? DEFAULT_TERMINAL_OUTPUT_CHARACTER_LIMIT,
 			terminalShellIntegrationTimeout:
 				stateValues.terminalShellIntegrationTimeout ?? Terminal.defaultShellIntegrationTimeout,
 			terminalShellIntegrationDisabled: stateValues.terminalShellIntegrationDisabled ?? false,
@@ -1689,6 +1778,8 @@ export class ClineProvider
 			telemetrySetting: stateValues.telemetrySetting || "unset",
 			showRooIgnoredFiles: stateValues.showRooIgnoredFiles ?? true,
 			maxReadFileLine: stateValues.maxReadFileLine ?? -1,
+			maxImageFileSize: stateValues.maxImageFileSize ?? 5,
+			maxTotalImageSize: stateValues.maxTotalImageSize ?? 20,
 			maxConcurrentFileReads: stateValues.maxConcurrentFileReads ?? 5,
 			historyPreviewCollapsed: stateValues.historyPreviewCollapsed ?? false,
 			cloudUserInfo,
@@ -1715,6 +1806,9 @@ export class ClineProvider
 				codebaseIndexSearchMinScore: stateValues.codebaseIndexConfig?.codebaseIndexSearchMinScore,
 			},
 			profileThresholds: stateValues.profileThresholds ?? {},
+			// Add diagnostic message settings
+			includeDiagnosticMessages: stateValues.includeDiagnosticMessages ?? true,
+			maxDiagnosticMessages: stateValues.maxDiagnosticMessages ?? 50,
 		}
 	}
 
@@ -1853,6 +1947,19 @@ export class ClineProvider
 		// Get git repository information
 		const gitInfo = await getWorkspaceGitInfo()
 
+		// Calculate todo list statistics
+		const todoList = task?.todoList
+		let todos: { total: number; completed: number; inProgress: number; pending: number } | undefined
+
+		if (todoList && todoList.length > 0) {
+			todos = {
+				total: todoList.length,
+				completed: todoList.filter((todo) => todo.status === "completed").length,
+				inProgress: todoList.filter((todo) => todo.status === "in_progress").length,
+				pending: todoList.filter((todo) => todo.status === "pending").length,
+			}
+		}
+
 		// Return all properties including git info - clients will filter as needed
 		return {
 			appName: packageJSON?.name ?? Package.name,
@@ -1867,6 +1974,7 @@ export class ClineProvider
 			diffStrategy: task?.diffStrategy?.getName(),
 			isSubtask: task ? !!task.parentTask : undefined,
 			cloudIsAuthenticated,
+			...(todos && { todos }),
 			...gitInfo,
 		}
 	}

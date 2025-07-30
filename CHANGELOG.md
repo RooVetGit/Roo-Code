@@ -1,5 +1,129 @@
 # Roo Code Changelog
 
+## [3.25.2] - 2025-07-29
+
+- Fix: Show diff view before approval when background edits are disabled (thanks @daniel-lxs!)
+- Add support for organization-level MCP controls
+- Fix zap icon hover state
+
+## [3.25.1] - 2025-07-29
+
+- Add support for GLM-4.5-Air model to Chutes AI provider (#6376 by @matbgn, PR by @app/roomote)
+- Improve subshell validation for commands
+
+## [3.25.0] - 2025-07-29
+
+- Add message queueing (thanks @app/roomote!)
+- Add custom slash commands
+- Add options for URL Context and Grounding with Google Search to the Gemini provider (thanks @HahaBill!)
+- Add image support to read_file tool (thanks @samhvw8!)
+- Add experimental setting to prevent editor focus disruption (#4784 by @hannesrudolph, PR by @app/roomote)
+- Add prompt caching support for LiteLLM (#5791 by @steve-gore-snapdocs, PR by @MuriloFP)
+- Add markdown table rendering support
+- Fix list_files recursive mode now works for dot directories (#2992 by @avtc, #4807 by @zhang157686, #5409 by @MuriloFP, PR by @MuriloFP)
+- Add search functionality to mode selector popup and reorganize layout
+- Sync API config selector style with mode selector
+- Fix keyboard shortcuts for non-QWERTY layouts (#6161 by @shlgug, PR by @app/roomote)
+- Add ESC key handling for modes, API provider, and indexing settings popovers (thanks @app/roomote!)
+- Make task mode sticky to task (thanks @app/roomote!)
+- Add text wrapping to command patterns in Manage Command Permissions (thanks @app/roomote!)
+- Update list-files test for fixed hidden files bug (thanks @daniel-lxs!)
+- Fix normalize Windows paths to forward slashes in mode export (#6307 by @hannesrudolph, PR by @app/roomote)
+- Ensure form-data >= 4.0.4
+- Fix filter out non-text tab inputs (Kilo-Org/kilocode#712 by @szermatt, PR by @hassoncs)
+
+## [3.24.0] - 2025-07-25
+
+- Add Hugging Face provider with support for open source models (thanks @TGlide!)
+- Add terminal command permissions UI to chat interface
+- Add support for Agent Rules standard via AGENTS.md (thanks @sgryphon!)
+- Add settings to control diagnostic messages
+- Fix auto-approve checkbox to be toggled at any time (thanks @KJ7LNW!)
+- Add efficiency warning for single SEARCH/REPLACE blocks in apply_diff (thanks @KJ7LNW!)
+- Fix respect maxReadFileLine setting for file mentions to prevent context exhaustion (thanks @sebinseban!)
+- Fix Ollama API URL normalization by removing trailing slashes (thanks @Naam!)
+- Fix restore list styles for markdown lists in chat interface (thanks @village-way!)
+- Add support for bedrock api keys
+- Add confirmation dialog and proper cleanup for marketplace mode removal
+- Fix cancel auto-approve timer when editing follow-up suggestion (thanks @hassoncs!)
+- Fix add error message when no workspace folder is open for code indexing
+
+## [3.23.19] - 2025-07-23
+
+- Add Roo Code Cloud Waitlist CTAs (thanks @brunobergher!)
+- Split commands on newlines when evaluating auto-approve
+- Smarter auto-deny of commands
+
+## [3.23.18] - 2025-07-23
+
+- Fix: Resolve 'Bad substitution' error in command parsing (#5978 by @KJ7LNW, PR by @daniel-lxs)
+- Fix: Add ErrorBoundary component for better error handling (#5731 by @elianiva, PR by @KJ7LNW)
+- Fix: Todo list toggle not working (thanks @chrarnoldus!)
+- Improve: Use SIGKILL for command execution timeouts in the "execa" variant (thanks @cte!)
+
+## [3.23.17] - 2025-07-22
+
+- Add: todo list tool enable checkbox to provider advanced settings
+- Add: Moonshot provider (thanks @CellenLee!)
+- Add: Qwen/Qwen3-235B-A22B-Instruct-2507 model to Chutes AI provider
+- Fix: move context condensing prompt to Prompts section (thanks @SannidhyaSah!)
+- Add: jump icon for newly created files
+- Fix: add character limit to prevent terminal output context explosion
+- Fix: resolve global mode export not including rules files
+- Fix: enable export, share, and copy buttons during API operations (thanks @MuriloFP!)
+- Add: configurable timeout for evals (5-10 min)
+- Add: auto-omit MCP content when no servers are configured
+- Fix: sort symlinked rules files by symlink names, not target names
+- Docs: clarify when to use update_todo_list tool
+- Add: Mistral embedding provider (thanks @SannidhyaSah!)
+- Fix: add run parameter to vitest command in rules (thanks @KJ7LNW!)
+- Update: the max_tokens fallback logic in the sliding window
+- Fix: Bedrock and Vertext token counting improvements (thanks @daniel-lxs!)
+- Add: llama-4-maverick model to Vertex AI provider (thanks @MuriloFP!)
+- Fix: properly distinguish between user cancellations and API failures
+- Fix: add case sensitivity mention to suggested fixes in apply_diff error message
+
+## [3.23.16] - 2025-07-19
+
+- Add global rate limiting for OpenAI-compatible embeddings (thanks @daniel-lxs!)
+- Add batch limiting to code indexer (thanks @daniel-lxs!)
+- Fix Docker port conflicts for evals services
+
+## [3.23.15] - 2025-07-18
+
+- Fix configurable delay for diagnostics to prevent premature error reporting
+- Add command timeout allowlist
+- Add description and whenToUse fields to custom modes in .roomodes (thanks @RandalSchwartz!)
+- Fix Claude model detection by name for API protocol selection (thanks @daniel-lxs!)
+- Move marketplace icon from overflow menu to top navigation
+- Optional setting to prevent completion with open todos
+- Added YouTube to website footer (thanks @thill2323!)
+
+## [3.23.14] - 2025-07-17
+
+- Log api-initiated tasks to a tmp directory
+
+## [3.23.13] - 2025-07-17
+
+- Add the ability to "undo" enhance prompt changes
+- Fix a bug where the path component of the baseURL for the LiteLLM provider contains path in it (thanks @ChuKhaLi)
+- Add support for Vertex AI model name formatting when using Claude Code with Vertex AI (thanks @janaki-sasidhar)
+- The list-files tool must include at least the first-level directory contents (thanks @qdaxb)
+- Add a configurable limit that controls both consecutive errors and tool repetitions (thanks @MuriloFP)
+- Add `.terraform/` and `.terragrunt-cache/` directories to the checkpoint exclusion patterns (thanks @MuriloFP)
+- Increase Ollama API timeout values (thanks @daniel-lxs)
+- Fix an issue where you need to "discard changes" before saving even though there are no settings changes
+- Fix `DirectoryScanner` memory leak and improve file limit handling (thanks @daniel-lxs)
+- Fix time formatting in environment (thanks @chrarnoldus)
+- Prevent empty mode names from being saved (thanks @daniel-lxs)
+- Improve auto-approve checkbox UX
+- Improve the chat message edit / delete functionality (thanks @liwilliam2021)
+- Add `commandExecutionTimeout` to `GlobalSettings`
+
+## [3.23.12] - 2025-07-15
+
+- Update the max-token calculation in model-params to better support Kimi K2 and others
+
 ## [3.23.11] - 2025-07-14
 
 - Add Kimi K2 model to Groq along with fixes to context condensing math

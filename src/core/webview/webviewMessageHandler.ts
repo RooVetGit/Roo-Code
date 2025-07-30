@@ -78,55 +78,6 @@ export const webviewMessageHandler = async (
 	}
 
 	/**
-	 * Removes just the target message, preserving messages after the next user message
-	 */
-	const removeMessagesJustThis = async (
-		currentCline: any,
-		messageIndex: number,
-		apiConversationHistoryIndex: number,
-	) => {
-		// Find the next user message first
-		const nextUserMessage = currentCline.clineMessages
-			.slice(messageIndex + 1)
-			.find((msg: ClineMessage) => msg.type === "say" && msg.say === "user_feedback")
-
-		// Handle UI messages
-		if (nextUserMessage) {
-			// Find absolute index of next user message
-			const nextUserMessageIndex = currentCline.clineMessages.findIndex(
-				(msg: ClineMessage) => msg === nextUserMessage,
-			)
-
-			// Keep messages before current message and after next user message
-			await currentCline.overwriteClineMessages([
-				...currentCline.clineMessages.slice(0, messageIndex),
-				...currentCline.clineMessages.slice(nextUserMessageIndex),
-			])
-		} else {
-			// If no next user message, keep only messages before current message
-			await currentCline.overwriteClineMessages(currentCline.clineMessages.slice(0, messageIndex))
-		}
-
-		// Handle API messages
-		if (apiConversationHistoryIndex !== -1) {
-			if (nextUserMessage && nextUserMessage.ts) {
-				// Keep messages before current API message and after next user message
-				await currentCline.overwriteApiConversationHistory([
-					...currentCline.apiConversationHistory.slice(0, apiConversationHistoryIndex),
-					...currentCline.apiConversationHistory.filter(
-						(msg: ApiMessage) => msg.ts && msg.ts >= nextUserMessage.ts,
-					),
-				])
-			} else {
-				// If no next user message, keep only messages before current API message
-				await currentCline.overwriteApiConversationHistory(
-					currentCline.apiConversationHistory.slice(0, apiConversationHistoryIndex),
-				)
-			}
-		}
-	}
-
-	/**
 	 * Removes the target message and all subsequent messages
 	 */
 	const removeMessagesThisAndSubsequent = async (
@@ -148,19 +99,19 @@ export const webviewMessageHandler = async (
 	 * Handles message deletion operations with user confirmation
 	 */
 	const handleDeleteOperation = async (messageTs: number): Promise<void> => {
-		const options = [
-			t("common:confirmation.delete_just_this_message"),
-			t("common:confirmation.delete_this_and_subsequent"),
-		]
+		// Send message to webview to show delete confirmation dialog
+		await provider.postMessageToWebview({
+			type: "showDeleteMessageDialog",
+			messageTs,
+		})
+	}
 
-		const answer = await vscode.window.showInformationMessage(
-			t("common:confirmation.delete_message"),
-			{ modal: true },
-			...options,
-		)
-
-		// Only proceed if user selected one of the options and we have a current cline
-		if (answer && options.includes(answer) && provider.getCurrentCline()) {
+	/**
+	 * Handles confirmed message deletion from webview dialog
+	 */
+	const handleDeleteMessageConfirm = async (messageTs: number): Promise<void> => {
+		// Only proceed if we have a current cline
+		if (provider.getCurrentCline()) {
 			const currentCline = provider.getCurrentCline()!
 			const { messageIndex, apiConversationHistoryIndex } = findMessageIndices(messageTs, currentCline)
 
@@ -168,14 +119,8 @@ export const webviewMessageHandler = async (
 				try {
 					const { historyItem } = await provider.getTaskWithId(currentCline.taskId)
 
-					// Check which option the user selected
-					if (answer === options[0]) {
-						// Delete just this message
-						await removeMessagesJustThis(currentCline, messageIndex, apiConversationHistoryIndex)
-					} else if (answer === options[1]) {
-						// Delete this message and all subsequent
-						await removeMessagesThisAndSubsequent(currentCline, messageIndex, apiConversationHistoryIndex)
-					}
+					// Delete this message and all subsequent messages
+					await removeMessagesThisAndSubsequent(currentCline, messageIndex, apiConversationHistoryIndex)
 
 					// Initialize with history item after deletion
 					await provider.initClineWithHistoryItem(historyItem)
@@ -192,15 +137,26 @@ export const webviewMessageHandler = async (
 	/**
 	 * Handles message editing operations with user confirmation
 	 */
-	const handleEditOperation = async (messageTs: number, editedContent: string): Promise<void> => {
-		const answer = await vscode.window.showWarningMessage(
-			t("common:confirmation.edit_warning"),
-			{ modal: true },
-			t("common:confirmation.proceed"),
-		)
+	const handleEditOperation = async (messageTs: number, editedContent: string, images?: string[]): Promise<void> => {
+		// Send message to webview to show edit confirmation dialog
+		await provider.postMessageToWebview({
+			type: "showEditMessageDialog",
+			messageTs,
+			text: editedContent,
+			images,
+		})
+	}
 
-		// Only proceed if user selected "Proceed" and we have a current cline
-		if (answer === t("common:confirmation.proceed") && provider.getCurrentCline()) {
+	/**
+	 * Handles confirmed message editing from webview dialog
+	 */
+	const handleEditMessageConfirm = async (
+		messageTs: number,
+		editedContent: string,
+		images?: string[],
+	): Promise<void> => {
+		// Only proceed if we have a current cline
+		if (provider.getCurrentCline()) {
 			const currentCline = provider.getCurrentCline()!
 
 			// Use findMessageIndices to find messages based on timestamp
@@ -217,6 +173,7 @@ export const webviewMessageHandler = async (
 						type: "askResponse",
 						askResponse: "messageResponse",
 						text: editedContent,
+						images,
 					})
 
 					// Don't initialize with history item for edit operations
@@ -242,11 +199,12 @@ export const webviewMessageHandler = async (
 		messageTs: number,
 		operation: "delete" | "edit",
 		editedContent?: string,
+		images?: string[],
 	): Promise<void> => {
 		if (operation === "delete") {
 			await handleDeleteOperation(messageTs)
 		} else if (operation === "edit" && editedContent) {
-			await handleEditOperation(messageTs, editedContent)
+			await handleEditOperation(messageTs, editedContent, images)
 		}
 	}
 
@@ -416,7 +374,12 @@ export const webviewMessageHandler = async (
 			break
 		case "selectImages":
 			const images = await selectImages()
-			await provider.postMessageToWebview({ type: "selectedImages", images })
+			await provider.postMessageToWebview({
+				type: "selectedImages",
+				images,
+				context: message.context,
+				messageTs: message.messageTs,
+			})
 			break
 		case "exportCurrentTask":
 			const currentTaskId = provider.getCurrentCline()?.taskId
@@ -710,6 +673,22 @@ export const webviewMessageHandler = async (
 			const vsCodeLmModels = await getVsCodeLmModels()
 			// TODO: Cache like we do for OpenRouter, etc?
 			provider.postMessageToWebview({ type: "vsCodeLmModels", vsCodeLmModels })
+			break
+		case "requestHuggingFaceModels":
+			try {
+				const { getHuggingFaceModelsWithMetadata } = await import("../../api/providers/fetchers/huggingface")
+				const huggingFaceModelsResponse = await getHuggingFaceModelsWithMetadata()
+				provider.postMessageToWebview({
+					type: "huggingFaceModels",
+					huggingFaceModels: huggingFaceModelsResponse.models,
+				})
+			} catch (error) {
+				console.error("Failed to fetch Hugging Face models:", error)
+				provider.postMessageToWebview({
+					type: "huggingFaceModels",
+					huggingFaceModels: [],
+				})
+			}
 			break
 		case "openImage":
 			openImage(message.text!, { values: message.values })
@@ -1081,9 +1060,34 @@ export const webviewMessageHandler = async (
 			await updateGlobalState("writeDelayMs", message.value)
 			await provider.postStateToWebview()
 			break
-		case "terminalOutputLineLimit":
-			await updateGlobalState("terminalOutputLineLimit", message.value)
+		case "diagnosticsEnabled":
+			await updateGlobalState("diagnosticsEnabled", message.bool ?? true)
 			await provider.postStateToWebview()
+			break
+		case "terminalOutputLineLimit":
+			// Validate that the line limit is a positive number
+			const lineLimit = message.value
+			if (typeof lineLimit === "number" && lineLimit > 0) {
+				await updateGlobalState("terminalOutputLineLimit", lineLimit)
+				await provider.postStateToWebview()
+			} else {
+				vscode.window.showErrorMessage(
+					t("common:errors.invalid_line_limit") || "Terminal output line limit must be a positive number",
+				)
+			}
+			break
+		case "terminalOutputCharacterLimit":
+			// Validate that the character limit is a positive number
+			const charLimit = message.value
+			if (typeof charLimit === "number" && charLimit > 0) {
+				await updateGlobalState("terminalOutputCharacterLimit", charLimit)
+				await provider.postStateToWebview()
+			} else {
+				vscode.window.showErrorMessage(
+					t("common:errors.invalid_character_limit") ||
+						"Terminal output character limit must be a positive number",
+				)
+			}
 			break
 		case "terminalShellIntegrationTimeout":
 			await updateGlobalState("terminalShellIntegrationTimeout", message.value)
@@ -1209,7 +1213,12 @@ export const webviewMessageHandler = async (
 				message.value &&
 				message.editedMessageContent
 			) {
-				await handleMessageModificationsOperation(message.value, "edit", message.editedMessageContent)
+				await handleMessageModificationsOperation(
+					message.value,
+					"edit",
+					message.editedMessageContent,
+					message.images,
+				)
 			}
 			break
 		}
@@ -1256,9 +1265,27 @@ export const webviewMessageHandler = async (
 			await updateGlobalState("maxReadFileLine", message.value)
 			await provider.postStateToWebview()
 			break
+		case "maxImageFileSize":
+			await updateGlobalState("maxImageFileSize", message.value)
+			await provider.postStateToWebview()
+			break
+		case "maxTotalImageSize":
+			await updateGlobalState("maxTotalImageSize", message.value)
+			await provider.postStateToWebview()
+			break
 		case "maxConcurrentFileReads":
 			const valueToSave = message.value // Capture the value intended for saving
 			await updateGlobalState("maxConcurrentFileReads", valueToSave)
+			await provider.postStateToWebview()
+			break
+		case "includeDiagnosticMessages":
+			// Only apply default if the value is truly undefined (not false)
+			const includeValue = message.bool !== undefined ? message.bool : true
+			await updateGlobalState("includeDiagnosticMessages", includeValue)
+			await provider.postStateToWebview()
+			break
+		case "maxDiagnosticMessages":
+			await updateGlobalState("maxDiagnosticMessages", message.value ?? 50)
 			await provider.postStateToWebview()
 			break
 		case "setHistoryPreviewCollapsed": // Add the new case handler
@@ -1289,6 +1316,11 @@ export const webviewMessageHandler = async (
 			await provider.postStateToWebview()
 			break
 		case "updateCondensingPrompt":
+			// Store the condensing prompt in customSupportPrompts["CONDENSE"] instead of customCondensingPrompt
+			const currentSupportPrompts = getGlobalState("customSupportPrompts") ?? {}
+			const updatedSupportPrompts = { ...currentSupportPrompts, CONDENSE: message.text }
+			await updateGlobalState("customSupportPrompts", updatedSupportPrompts)
+			// Also update the old field for backward compatibility during migration
 			await updateGlobalState("customCondensingPrompt", message.text)
 			await provider.postStateToWebview()
 			break
@@ -1540,6 +1572,16 @@ export const webviewMessageHandler = async (
 
 					vscode.window.showErrorMessage(t("common:errors.delete_api_config"))
 				}
+			}
+			break
+		case "deleteMessageConfirm":
+			if (message.messageTs) {
+				await handleDeleteMessageConfirm(message.messageTs)
+			}
+			break
+		case "editMessageConfirm":
+			if (message.messageTs && message.text) {
+				await handleEditMessageConfirm(message.messageTs, message.text, message.images)
 			}
 			break
 		case "getListApiConfiguration":
@@ -1988,6 +2030,12 @@ export const webviewMessageHandler = async (
 						settings.codebaseIndexGeminiApiKey,
 					)
 				}
+				if (settings.codebaseIndexMistralApiKey !== undefined) {
+					await provider.contextProxy.storeSecret(
+						"codebaseIndexMistralApiKey",
+						settings.codebaseIndexMistralApiKey,
+					)
+				}
 
 				// Send success response first - settings are saved regardless of validation
 				await provider.postMessageToWebview({
@@ -2052,6 +2100,19 @@ export const webviewMessageHandler = async (
 							}
 						}
 					}
+				} else {
+					// No workspace open - send error status
+					provider.log("Cannot save code index settings: No workspace folder open")
+					await provider.postMessageToWebview({
+						type: "indexingStatusUpdate",
+						values: {
+							systemStatus: "Error",
+							message: t("embeddings:orchestrator.indexingRequiresWorkspace"),
+							processedItems: 0,
+							totalItems: 0,
+							currentItemUnit: "items",
+						},
+					})
 				}
 			} catch (error) {
 				provider.log(`Error saving code index settings: ${error.message || error}`)
@@ -2065,7 +2126,22 @@ export const webviewMessageHandler = async (
 		}
 
 		case "requestIndexingStatus": {
-			const status = provider.codeIndexManager!.getCurrentStatus()
+			const manager = provider.codeIndexManager
+			if (!manager) {
+				// No workspace open - send error status
+				provider.postMessageToWebview({
+					type: "indexingStatusUpdate",
+					values: {
+						systemStatus: "Error",
+						message: t("embeddings:orchestrator.indexingRequiresWorkspace"),
+						processedItems: 0,
+						totalItems: 0,
+						currentItemUnit: "items",
+					},
+				})
+				return
+			}
+			const status = manager.getCurrentStatus()
 			provider.postMessageToWebview({
 				type: "indexingStatusUpdate",
 				values: status,
@@ -2080,6 +2156,7 @@ export const webviewMessageHandler = async (
 				"codebaseIndexOpenAiCompatibleApiKey",
 			))
 			const hasGeminiApiKey = !!(await provider.context.secrets.get("codebaseIndexGeminiApiKey"))
+			const hasMistralApiKey = !!(await provider.context.secrets.get("codebaseIndexMistralApiKey"))
 
 			provider.postMessageToWebview({
 				type: "codeIndexSecretStatus",
@@ -2088,13 +2165,29 @@ export const webviewMessageHandler = async (
 					hasQdrantApiKey,
 					hasOpenAiCompatibleApiKey,
 					hasGeminiApiKey,
+					hasMistralApiKey,
 				},
 			})
 			break
 		}
 		case "startIndexing": {
 			try {
-				const manager = provider.codeIndexManager!
+				const manager = provider.codeIndexManager
+				if (!manager) {
+					// No workspace open - send error status
+					provider.postMessageToWebview({
+						type: "indexingStatusUpdate",
+						values: {
+							systemStatus: "Error",
+							message: t("embeddings:orchestrator.indexingRequiresWorkspace"),
+							processedItems: 0,
+							totalItems: 0,
+							currentItemUnit: "items",
+						},
+					})
+					provider.log("Cannot start indexing: No workspace folder open")
+					return
+				}
 				if (manager.isFeatureEnabled && manager.isFeatureConfigured) {
 					if (!manager.isInitialized) {
 						await manager.initialize(provider.contextProxy)
@@ -2109,7 +2202,18 @@ export const webviewMessageHandler = async (
 		}
 		case "clearIndexData": {
 			try {
-				const manager = provider.codeIndexManager!
+				const manager = provider.codeIndexManager
+				if (!manager) {
+					provider.log("Cannot clear index data: No workspace folder open")
+					provider.postMessageToWebview({
+						type: "indexCleared",
+						values: {
+							success: false,
+							error: t("embeddings:orchestrator.indexingRequiresWorkspace"),
+						},
+					})
+					return
+				}
 				await manager.clearIndexData()
 				provider.postMessageToWebview({ type: "indexCleared", values: { success: true } })
 			} catch (error) {
@@ -2187,8 +2291,45 @@ export const webviewMessageHandler = async (
 				try {
 					await marketplaceManager.removeInstalledMarketplaceItem(message.mpItem, message.mpInstallOptions)
 					await provider.postStateToWebview()
+
+					// Send success message to webview
+					provider.postMessageToWebview({
+						type: "marketplaceRemoveResult",
+						success: true,
+						slug: message.mpItem.id,
+					})
 				} catch (error) {
 					console.error(`Error removing marketplace item: ${error}`)
+
+					// Show error message to user
+					vscode.window.showErrorMessage(
+						`Failed to remove marketplace item: ${error instanceof Error ? error.message : String(error)}`,
+					)
+
+					// Send error message to webview
+					provider.postMessageToWebview({
+						type: "marketplaceRemoveResult",
+						success: false,
+						error: error instanceof Error ? error.message : String(error),
+						slug: message.mpItem.id,
+					})
+				}
+			} else {
+				// MarketplaceManager not available or missing required parameters
+				const errorMessage = !marketplaceManager
+					? "Marketplace manager is not available"
+					: "Missing required parameters for marketplace item removal"
+				console.error(errorMessage)
+
+				vscode.window.showErrorMessage(errorMessage)
+
+				if (message.mpItem?.id) {
+					provider.postMessageToWebview({
+						type: "marketplaceRemoveResult",
+						success: false,
+						error: errorMessage,
+						slug: message.mpItem.id,
+					})
 				}
 			}
 			break
@@ -2220,6 +2361,200 @@ export const webviewMessageHandler = async (
 				}
 
 				await provider.postMessageToWebview({ type: "action", action: "switchTab", tab: message.tab })
+			}
+			break
+		}
+		case "requestCommands": {
+			try {
+				const { getCommands } = await import("../../services/command/commands")
+				const commands = await getCommands(provider.cwd || "")
+
+				// Convert to the format expected by the frontend
+				const commandList = commands.map((command) => ({
+					name: command.name,
+					source: command.source,
+					filePath: command.filePath,
+					description: command.description,
+					argumentHint: command.argumentHint,
+				}))
+
+				await provider.postMessageToWebview({
+					type: "commands",
+					commands: commandList,
+				})
+			} catch (error) {
+				provider.log(`Error fetching commands: ${JSON.stringify(error, Object.getOwnPropertyNames(error), 2)}`)
+				// Send empty array on error
+				await provider.postMessageToWebview({
+					type: "commands",
+					commands: [],
+				})
+			}
+			break
+		}
+		case "openCommandFile": {
+			try {
+				if (message.text) {
+					const { getCommand } = await import("../../services/command/commands")
+					const command = await getCommand(provider.cwd || "", message.text)
+
+					if (command && command.filePath) {
+						openFile(command.filePath)
+					} else {
+						vscode.window.showErrorMessage(t("common:errors.command_not_found", { name: message.text }))
+					}
+				}
+			} catch (error) {
+				provider.log(
+					`Error opening command file: ${JSON.stringify(error, Object.getOwnPropertyNames(error), 2)}`,
+				)
+				vscode.window.showErrorMessage(t("common:errors.open_command_file"))
+			}
+			break
+		}
+		case "deleteCommand": {
+			try {
+				if (message.text && message.values?.source) {
+					const { getCommand } = await import("../../services/command/commands")
+					const command = await getCommand(provider.cwd || "", message.text)
+
+					if (command && command.filePath) {
+						// Delete the command file
+						await fs.unlink(command.filePath)
+						provider.log(`Deleted command file: ${command.filePath}`)
+					} else {
+						vscode.window.showErrorMessage(t("common:errors.command_not_found", { name: message.text }))
+					}
+				}
+			} catch (error) {
+				provider.log(`Error deleting command: ${JSON.stringify(error, Object.getOwnPropertyNames(error), 2)}`)
+				vscode.window.showErrorMessage(t("common:errors.delete_command"))
+			}
+			break
+		}
+		case "createCommand": {
+			try {
+				const source = message.values?.source as "global" | "project"
+				const fileName = message.text // Custom filename from user input
+
+				if (!source) {
+					provider.log("Missing source for createCommand")
+					break
+				}
+
+				// Determine the commands directory based on source
+				let commandsDir: string
+				if (source === "global") {
+					const globalConfigDir = path.join(os.homedir(), ".roo")
+					commandsDir = path.join(globalConfigDir, "commands")
+				} else {
+					// Project commands
+					const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath
+					if (!workspaceRoot) {
+						vscode.window.showErrorMessage(t("common:errors.no_workspace_for_project_command"))
+						break
+					}
+					commandsDir = path.join(workspaceRoot, ".roo", "commands")
+				}
+
+				// Ensure the commands directory exists
+				await fs.mkdir(commandsDir, { recursive: true })
+
+				// Use provided filename or generate a unique one
+				let commandName: string
+				if (fileName && fileName.trim()) {
+					let cleanFileName = fileName.trim()
+
+					// Strip leading slash if present
+					if (cleanFileName.startsWith("/")) {
+						cleanFileName = cleanFileName.substring(1)
+					}
+
+					// Remove .md extension if present BEFORE slugification
+					if (cleanFileName.toLowerCase().endsWith(".md")) {
+						cleanFileName = cleanFileName.slice(0, -3)
+					}
+
+					// Slugify the command name: lowercase, replace spaces with dashes, remove special characters
+					commandName = cleanFileName
+						.toLowerCase()
+						.replace(/\s+/g, "-") // Replace spaces with dashes
+						.replace(/[^a-z0-9-]/g, "") // Remove special characters except dashes
+						.replace(/-+/g, "-") // Replace multiple dashes with single dash
+						.replace(/^-|-$/g, "") // Remove leading/trailing dashes
+
+					// Ensure we have a valid command name
+					if (!commandName || commandName.length === 0) {
+						commandName = "new-command"
+					}
+				} else {
+					// Generate a unique command name
+					commandName = "new-command"
+					let counter = 1
+					let filePath = path.join(commandsDir, `${commandName}.md`)
+
+					while (
+						await fs
+							.access(filePath)
+							.then(() => true)
+							.catch(() => false)
+					) {
+						commandName = `new-command-${counter}`
+						filePath = path.join(commandsDir, `${commandName}.md`)
+						counter++
+					}
+				}
+
+				const filePath = path.join(commandsDir, `${commandName}.md`)
+
+				// Check if file already exists
+				if (
+					await fs
+						.access(filePath)
+						.then(() => true)
+						.catch(() => false)
+				) {
+					vscode.window.showErrorMessage(t("common:errors.command_already_exists", { commandName }))
+					break
+				}
+
+				// Create the command file with template content
+				const templateContent = t("common:errors.command_template_content")
+
+				await fs.writeFile(filePath, templateContent, "utf8")
+				provider.log(`Created new command file: ${filePath}`)
+
+				// Open the new file in the editor
+				openFile(filePath)
+
+				// Refresh commands list
+				const { getCommands } = await import("../../services/command/commands")
+				const commands = await getCommands(provider.cwd || "")
+				const commandList = commands.map((command) => ({
+					name: command.name,
+					source: command.source,
+					filePath: command.filePath,
+					description: command.description,
+				}))
+				await provider.postMessageToWebview({
+					type: "commands",
+					commands: commandList,
+				})
+			} catch (error) {
+				provider.log(`Error creating command: ${JSON.stringify(error, Object.getOwnPropertyNames(error), 2)}`)
+				vscode.window.showErrorMessage(t("common:errors.create_command_failed"))
+			}
+			break
+		}
+
+		case "insertTextIntoTextarea": {
+			const text = message.text
+			if (text) {
+				// Send message to insert text into the chat textarea
+				await provider.postMessageToWebview({
+					type: "insertTextIntoTextarea",
+					text: text,
+				})
 			}
 			break
 		}

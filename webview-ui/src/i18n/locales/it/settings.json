@@ -47,6 +47,9 @@
 		"geminiProvider": "Gemini",
 		"geminiApiKeyLabel": "Chiave API:",
 		"geminiApiKeyPlaceholder": "Inserisci la tua chiave API Gemini",
+		"mistralProvider": "Mistral",
+		"mistralApiKeyLabel": "Chiave API:",
+		"mistralApiKeyPlaceholder": "Inserisci la tua chiave API Mistral",
 		"openaiCompatibleProvider": "Compatibile con OpenAI",
 		"openAiKeyLabel": "Chiave API OpenAI",
 		"openAiKeyPlaceholder": "Inserisci la tua chiave API OpenAI",
@@ -109,6 +112,7 @@
 			"modelIdRequired": "È richiesto l'ID del modello",
 			"modelDimensionRequired": "È richiesta la dimensione del modello",
 			"geminiApiKeyRequired": "È richiesta la chiave API Gemini",
+			"mistralApiKeyRequired": "La chiave API di Mistral è richiesta",
 			"ollamaBaseUrlRequired": "È richiesto l'URL di base di Ollama",
 			"baseUrlRequired": "È richiesto l'URL di base",
 			"modelDimensionMinValue": "La dimensione del modello deve essere maggiore di 0"
@@ -123,6 +127,8 @@
 	},
 	"autoApprove": {
 		"description": "Permetti a Roo di eseguire automaticamente operazioni senza richiedere approvazione. Abilita queste impostazioni solo se ti fidi completamente dell'IA e comprendi i rischi di sicurezza associati.",
+		"toggleAriaLabel": "Attiva/disattiva approvazione automatica",
+		"disabledAriaLabel": "Approvazione automatica disabilitata - seleziona prima le opzioni",
 		"readOnly": {
 			"label": "Leggi",
 			"description": "Quando abilitato, Roo visualizzerà automaticamente i contenuti della directory e leggerà i file senza richiedere di cliccare sul pulsante Approva.",
@@ -190,7 +196,8 @@
 			"title": "Richieste massime",
 			"description": "Esegui automaticamente questo numero di richieste API prima di chiedere l'approvazione per continuare con l'attività.",
 			"unlimited": "Illimitato"
-		}
+		},
+		"selectOptionsFirst": "Seleziona almeno un'opzione qui sotto per abilitare l'approvazione automatica"
 	},
 	"providers": {
 		"providerDocumentation": "Documentazione {{provider}}",
@@ -246,9 +253,25 @@
 		"getChutesApiKey": "Ottieni chiave API Chutes",
 		"deepSeekApiKey": "Chiave API DeepSeek",
 		"getDeepSeekApiKey": "Ottieni chiave API DeepSeek",
+		"moonshotApiKey": "Chiave API Moonshot",
+		"getMoonshotApiKey": "Ottieni chiave API Moonshot",
+		"moonshotBaseUrl": "Punto di ingresso Moonshot",
 		"geminiApiKey": "Chiave API Gemini",
 		"getGroqApiKey": "Ottieni chiave API Groq",
 		"groqApiKey": "Chiave API Groq",
+		"getHuggingFaceApiKey": "Ottieni chiave API Hugging Face",
+		"huggingFaceApiKey": "Chiave API Hugging Face",
+		"huggingFaceModelId": "ID modello",
+		"huggingFaceLoading": "Caricamento...",
+		"huggingFaceModelsCount": "({{count}} modelli)",
+		"huggingFaceSelectModel": "Seleziona un modello...",
+		"huggingFaceSearchModels": "Cerca modelli...",
+		"huggingFaceNoModelsFound": "Nessun modello trovato",
+		"huggingFaceProvider": "Provider",
+		"huggingFaceProviderAuto": "Automatico",
+		"huggingFaceSelectProvider": "Seleziona un provider...",
+		"huggingFaceSearchProviders": "Cerca provider...",
+		"huggingFaceNoProvidersFound": "Nessun provider trovato",
 		"getGeminiApiKey": "Ottieni chiave API Gemini",
 		"openAiApiKey": "Chiave API OpenAI",
 		"apiKey": "Chiave API",
@@ -264,6 +287,7 @@
 		"litellmBaseUrl": "URL base LiteLLM",
 		"awsCredentials": "Credenziali AWS",
 		"awsProfile": "Profilo AWS",
+		"awsApiKey": "Chiave API Amazon Bedrock",
 		"awsProfileName": "Nome profilo AWS",
 		"awsAccessKey": "Chiave di accesso AWS",
 		"awsSecretKey": "Chiave segreta AWS",
@@ -280,6 +304,17 @@
 		"cacheUsageNote": "Nota: Se non vedi l'utilizzo della cache, prova a selezionare un modello diverso e poi seleziona nuovamente il modello desiderato.",
 		"vscodeLmModel": "Modello linguistico",
 		"vscodeLmWarning": "Nota: Questa è un'integrazione molto sperimentale e il supporto del fornitore varierà. Se ricevi un errore relativo a un modello non supportato, si tratta di un problema del fornitore.",
+		"geminiParameters": {
+			"urlContext": {
+				"title": "Abilita contesto URL",
+				"description": "Consente a Gemini di accedere e processare URL per contesto aggiuntivo durante la generazione delle risposte. Utile per attività che richiedono analisi di contenuti web."
+			},
+			"groundingSearch": {
+				"title": "Abilita grounding con ricerca Google",
+				"description": "Consente a Gemini di cercare informazioni aggiornate su Google e basare le risposte su dati in tempo reale. Utile per query che richiedono informazioni aggiornate."
+			}
+		},
+
 		"googleCloudSetup": {
 			"title": "Per utilizzare Google Cloud Vertex AI, è necessario:",
 			"step1": "1. Creare un account Google Cloud, abilitare l'API Vertex AI e abilitare i modelli Claude desiderati.",
@@ -366,6 +401,12 @@
 		"rateLimitSeconds": {
 			"label": "Limite di frequenza",
 			"description": "Tempo minimo tra le richieste API."
+		},
+		"consecutiveMistakeLimit": {
+			"label": "Limite di errori e ripetizioni",
+			"description": "Numero di errori consecutivi o azioni ripetute prima di mostrare la finestra di dialogo 'Roo sta riscontrando problemi'",
+			"unlimitedDescription": "Tentativi illimitati abilitati (procedi automaticamente). La finestra di dialogo non verrà mai visualizzata.",
+			"warning": "⚠️ L'impostazione a 0 consente tentativi illimitati che possono consumare un notevole utilizzo dell'API"
 		},
 		"reasoningEffort": {
 			"label": "Sforzo di ragionamento del modello",
@@ -472,6 +513,23 @@
 			"label": "Limite letture simultanee",
 			"description": "Numero massimo di file che lo strumento 'read_file' può elaborare contemporaneamente. Valori più alti possono velocizzare la lettura di più file piccoli ma aumentano l'utilizzo della memoria."
 		},
+		"diagnostics": {
+			"includeMessages": {
+				"label": "Includi automaticamente la diagnostica nel contesto",
+				"description": "Quando abilitato, i messaggi diagnostici (errori) dai file modificati verranno automaticamente inclusi nel contesto. Puoi sempre includere manualmente tutta la diagnostica del workspace usando @problems."
+			},
+			"maxMessages": {
+				"label": "Numero massimo di messaggi diagnostici",
+				"description": "Numero massimo di messaggi diagnostici da includere per file. Questo limite si applica sia all'inclusione automatica (quando la casella è abilitata) che alle menzioni manuali di @problems. Valori più alti forniscono più contesto ma aumentano l'utilizzo dei token.",
+				"resetTooltip": "Ripristina al valore predefinito (50)",
+				"unlimited": "Messaggi diagnostici illimitati",
+				"unlimitedLabel": "Illimitato"
+			},
+			"delayAfterWrite": {
+				"label": "Ritardo dopo le scritture per consentire alla diagnostica di rilevare potenziali problemi",
+				"description": "Tempo di attesa dopo la scrittura dei file prima di procedere, consentendo agli strumenti di diagnostica di elaborare le modifiche e rilevare i problemi."
+			}
+		},
 		"condensingThreshold": {
 			"label": "Soglia di attivazione condensazione",
 			"selectProfile": "Configura soglia per profilo",
@@ -480,6 +538,16 @@
 			"profileDescription": "Soglia personalizzata solo per questo profilo (sovrascrive il predefinito globale)",
 			"inheritDescription": "Questo profilo eredita la soglia predefinita globale ({{threshold}}%)",
 			"usesGlobal": "(usa globale {{threshold}}%)"
+		},
+		"maxImageFileSize": {
+			"label": "Dimensione massima file immagine",
+			"mb": "MB",
+			"description": "Dimensione massima (in MB) per i file immagine che possono essere elaborati dallo strumento di lettura file."
+		},
+		"maxTotalImageSize": {
+			"label": "Dimensione totale massima immagini",
+			"mb": "MB",
+			"description": "Limite di dimensione cumulativa massima (in MB) per tutte le immagini elaborate in una singola operazione read_file. Durante la lettura di più immagini, la dimensione di ogni immagine viene aggiunta al totale. Se l'inclusione di un'altra immagine supererebbe questo limite, verrà saltata."
 		}
 	},
 	"terminal": {
@@ -494,6 +562,10 @@
 		"outputLineLimit": {
 			"label": "Limite output terminale",
 			"description": "Numero massimo di righe da includere nell'output del terminale durante l'esecuzione dei comandi. Quando superato, le righe verranno rimosse dal centro, risparmiando token. <0>Scopri di più</0>"
+		},
+		"outputCharacterLimit": {
+			"label": "Limite di caratteri del terminale",
+			"description": "Numero massimo di caratteri da includere nell'output del terminale durante l'esecuzione dei comandi. Questo limite ha la precedenza sul limite di righe per prevenire problemi di memoria causati da righe estremamente lunghe. Se superato, l'output verrà troncato. <0>Scopri di più</0>"
 		},
 		"shellIntegrationTimeout": {
 			"label": "Timeout integrazione shell del terminale",
@@ -536,6 +608,9 @@
 			"description": "Quando abilitato, il terminale eredita le variabili d'ambiente dal processo padre di VSCode, come le impostazioni di integrazione della shell definite nel profilo utente. Questo attiva direttamente l'impostazione globale di VSCode `terminal.integrated.inheritEnv`. <0>Scopri di più</0>"
 		}
 	},
+	"advancedSettings": {
+		"title": "Impostazioni avanzate"
+	},
 	"advanced": {
 		"diff": {
 			"label": "Abilita modifica tramite diff",
@@ -557,6 +632,10 @@
 				"label": "Precisione corrispondenza",
 				"description": "Questo cursore controlla quanto precisamente le sezioni di codice devono corrispondere quando si applicano i diff. Valori più bassi consentono corrispondenze più flessibili ma aumentano il rischio di sostituzioni errate. Usa valori inferiori al 100% con estrema cautela."
 			}
+		},
+		"todoList": {
+			"label": "Abilita strumento lista di cose da fare",
+			"description": "Quando abilitato, Roo può creare e gestire liste di cose da fare per tracciare il progresso delle attività. Questo aiuta a organizzare attività complesse in passaggi gestibili."
 		}
 	},
 	"experimental": {
@@ -591,6 +670,10 @@
 		"MULTI_FILE_APPLY_DIFF": {
 			"name": "Abilita modifiche di file concorrenti",
 			"description": "Quando abilitato, Roo può modificare più file in una singola richiesta. Quando disabilitato, Roo deve modificare i file uno alla volta. Disabilitare questa opzione può aiutare quando lavori con modelli meno capaci o quando vuoi più controllo sulle modifiche dei file."
+		},
+		"PREVENT_FOCUS_DISRUPTION": {
+			"name": "Modifica in background",
+			"description": "Previene l'interruzione del focus dell'editor quando abilitato. Le modifiche ai file avvengono in background senza aprire viste di differenze o rubare il focus. Puoi continuare a lavorare senza interruzioni mentre Roo effettua modifiche. I file possono essere aperti senza focus per catturare diagnostiche o rimanere completamente chiusi."
 		}
 	},
 	"promptCaching": {
@@ -698,5 +781,8 @@
 		"useCustomArn": "Usa ARN personalizzato..."
 	},
 	"includeMaxOutputTokens": "Includi token di output massimi",
-	"includeMaxOutputTokensDescription": "Invia il parametro dei token di output massimi nelle richieste API. Alcuni provider potrebbero non supportarlo."
+	"includeMaxOutputTokensDescription": "Invia il parametro dei token di output massimi nelle richieste API. Alcuni provider potrebbero non supportarlo.",
+	"limitMaxTokensDescription": "Limita il numero massimo di token nella risposta",
+	"maxOutputTokensLabel": "Token di output massimi",
+	"maxTokensGenerateDescription": "Token massimi da generare nella risposta"
 }
