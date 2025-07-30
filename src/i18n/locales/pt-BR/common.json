@@ -93,6 +93,15 @@
 			"generate_stream": "Erro de fluxo de contexto de geração do Gemini: {{error}}",
 			"generate_complete_prompt": "Erro de conclusão do Gemini: {{error}}",
 			"sources": "Fontes:"
+		},
+		"cerebras": {
+			"authenticationFailed": "Falha na autenticação da API Cerebras. Verifique se sua chave de API é válida e não expirou.",
+			"accessForbidden": "Acesso à API Cerebras negado. Sua chave de API pode não ter acesso ao modelo ou recurso solicitado.",
+			"rateLimitExceeded": "Limite de taxa da API Cerebras excedido. Aguarde antes de fazer outra solicitação.",
+			"serverError": "Erro do servidor da API Cerebras ({{status}}). Tente novamente mais tarde.",
+			"genericError": "Erro da API Cerebras ({{status}}): {{message}}",
+			"noResponseBody": "Erro da API Cerebras: Sem corpo de resposta",
+			"completionError": "Erro de conclusão do Cerebras: {{error}}"
 		}
 	},
 	"warnings": {

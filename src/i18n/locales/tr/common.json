@@ -89,6 +89,15 @@
 			"generate_stream": "Gemini oluşturma bağlam akışı hatası: {{error}}",
 			"generate_complete_prompt": "Gemini tamamlama hatası: {{error}}",
 			"sources": "Kaynaklar:"
+		},
+		"cerebras": {
+			"authenticationFailed": "Cerebras API kimlik doğrulama başarısız oldu. API anahtarınızın geçerli olduğunu ve süresi dolmadığını kontrol edin.",
+			"accessForbidden": "Cerebras API erişimi yasak. API anahtarınız istenen modele veya özelliğe erişimi olmayabilir.",
+			"rateLimitExceeded": "Cerebras API hız sınırı aşıldı. Başka bir istek yapmadan önce bekleyin.",
+			"serverError": "Cerebras API sunucu hatası ({{status}}). Lütfen daha sonra tekrar deneyin.",
+			"genericError": "Cerebras API Hatası ({{status}}): {{message}}",
+			"noResponseBody": "Cerebras API Hatası: Yanıt gövdesi yok",
+			"completionError": "Cerebras tamamlama hatası: {{error}}"
 		}
 	},
 	"warnings": {

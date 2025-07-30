@@ -89,6 +89,15 @@
 			"generate_stream": "Lỗi luồng ngữ cảnh tạo Gemini: {{error}}",
 			"generate_complete_prompt": "Lỗi hoàn thành Gemini: {{error}}",
 			"sources": "Nguồn:"
+		},
+		"cerebras": {
+			"authenticationFailed": "Xác thực API Cerebras thất bại. Vui lòng kiểm tra khóa API của bạn có hợp lệ và chưa hết hạn.",
+			"accessForbidden": "Truy cập API Cerebras bị từ chối. Khóa API của bạn có thể không có quyền truy cập vào mô hình hoặc tính năng được yêu cầu.",
+			"rateLimitExceeded": "Vượt quá giới hạn tốc độ API Cerebras. Vui lòng chờ trước khi thực hiện yêu cầu khác.",
+			"serverError": "Lỗi máy chủ API Cerebras ({{status}}). Vui lòng thử lại sau.",
+			"genericError": "Lỗi API Cerebras ({{status}}): {{message}}",
+			"noResponseBody": "Lỗi API Cerebras: Không có nội dung phản hồi",
+			"completionError": "Lỗi hoàn thành Cerebras: {{error}}"
 		}
 	},
 	"warnings": {

@@ -89,6 +89,15 @@
 			"generate_stream": "Gemini 生成コンテキスト ストリーム エラー: {{error}}",
 			"generate_complete_prompt": "Gemini 完了エラー: {{error}}",
 			"sources": "ソース:"
+		},
+		"cerebras": {
+			"authenticationFailed": "Cerebras API認証が失敗しました。APIキーが有効で期限切れではないことを確認してください。",
+			"accessForbidden": "Cerebras APIアクセスが禁止されています。あなたのAPIキーは要求されたモデルや機能にアクセスできない可能性があります。",
+			"rateLimitExceeded": "Cerebras APIレート制限を超過しました。別のリクエストを行う前にお待ちください。",
+			"serverError": "Cerebras APIサーバーエラー ({{status}})。しばらくしてからもう一度お試しください。",
+			"genericError": "Cerebras APIエラー ({{status}}): {{message}}",
+			"noResponseBody": "Cerebras APIエラー: レスポンスボディなし",
+			"completionError": "Cerebras完了エラー: {{error}}"
 		}
 	},
 	"warnings": {

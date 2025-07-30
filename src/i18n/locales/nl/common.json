@@ -89,6 +89,15 @@
 			"generate_stream": "Fout bij het genereren van contextstream door Gemini: {{error}}",
 			"generate_complete_prompt": "Fout bij het voltooien door Gemini: {{error}}",
 			"sources": "Bronnen:"
+		},
+		"cerebras": {
+			"authenticationFailed": "Cerebras API-authenticatie mislukt. Controleer of je API-sleutel geldig is en niet verlopen.",
+			"accessForbidden": "Cerebras API-toegang geweigerd. Je API-sleutel heeft mogelijk geen toegang tot het gevraagde model of de functie.",
+			"rateLimitExceeded": "Cerebras API-snelheidslimiet overschreden. Wacht voordat je een ander verzoek doet.",
+			"serverError": "Cerebras API-serverfout ({{status}}). Probeer het later opnieuw.",
+			"genericError": "Cerebras API-fout ({{status}}): {{message}}",
+			"noResponseBody": "Cerebras API-fout: Geen responslichaam",
+			"completionError": "Cerebras-voltooiingsfout: {{error}}"
 		}
 	},
 	"warnings": {

@@ -41,7 +41,7 @@ export const Cerebras = ({ apiConfiguration, setApiConfigurationField }: Cerebra
 				{t("settings:providers.apiKeyStorageNotice")}
 			</div>
 			{!apiConfiguration?.cerebrasApiKey && (
-				<VSCodeButtonLink href="https://inference.cerebras.ai/dashboard" appearance="secondary">
+				<VSCodeButtonLink href="https://cloud.cerebras.ai?utm_source=roocode" appearance="secondary">
 					{t("settings:providers.getCerebrasApiKey")}
 				</VSCodeButtonLink>
 			)}

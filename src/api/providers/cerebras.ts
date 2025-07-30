@@ -10,6 +10,8 @@ import { XmlMatcher } from "../../utils/xml-matcher"
 
 import type { ApiHandlerCreateMessageMetadata, SingleCompletionHandler } from "../index"
 import { BaseProvider } from "./base-provider"
+import { DEFAULT_HEADERS } from "./constants"
+import { t } from "../../i18n"
 
 const CEREBRAS_BASE_URL = "https://api.cerebras.ai/v1"
 const CEREBRAS_DEFAULT_TEMPERATURE = 0
@@ -138,9 +140,9 @@ export class CerebrasHandler extends BaseProvider implements SingleCompletionHan
 			const response = await fetch(`${CEREBRAS_BASE_URL}/chat/completions`, {
 				method: "POST",
 				headers: {
+					...DEFAULT_HEADERS,
 					"Content-Type": "application/json",
 					Authorization: `Bearer ${this.apiKey}`,
-					"User-Agent": "roo-cline/1.0.0",
 				},
 				body: JSON.stringify(requestBody),
 			})
@@ -158,24 +160,22 @@ export class CerebrasHandler extends BaseProvider implements SingleCompletionHan
 
 				// Provide more actionable error messages
 				if (response.status === 401) {
-					throw new Error(
-						`Cerebras API authentication failed. Please check your API key is valid and not expired.`,
-					)
+					throw new Error(t("common:errors.cerebras.authenticationFailed"))
 				} else if (response.status === 403) {
-					throw new Error(
-						`Cerebras API access forbidden. Your API key may not have access to the requested model or feature.`,
-					)
+					throw new Error(t("common:errors.cerebras.accessForbidden"))
 				} else if (response.status === 429) {
-					throw new Error(`Cerebras API rate limit exceeded. Please wait before making another request.`)
+					throw new Error(t("common:errors.cerebras.rateLimitExceeded"))
 				} else if (response.status >= 500) {
-					throw new Error(`Cerebras API server error (${response.status}). Please try again later.`)
+					throw new Error(t("common:errors.cerebras.serverError", { status: response.status }))
 				} else {
-					throw new Error(`Cerebras API Error (${response.status}): ${errorMessage}`)
+					throw new Error(
+						t("common:errors.cerebras.genericError", { status: response.status, message: errorMessage }),
+					)
 				}
 			}
 
 			if (!response.body) {
-				throw new Error("Cerebras API Error: No response body")
+				throw new Error(t("common:errors.cerebras.noResponseBody"))
 			}
 
 			// Initialize XmlMatcher to parse <think>...</think> tags
@@ -262,7 +262,7 @@ export class CerebrasHandler extends BaseProvider implements SingleCompletionHan
 			}
 		} catch (error) {
 			if (error instanceof Error) {
-				throw new Error(`Cerebras API error: ${error.message}`)
+				throw new Error(t("common:errors.cerebras.completionError", { error: error.message }))
 			}
 			throw error
 		}
@@ -282,9 +282,9 @@ export class CerebrasHandler extends BaseProvider implements SingleCompletionHan
 			const response = await fetch(`${CEREBRAS_BASE_URL}/chat/completions`, {
 				method: "POST",
 				headers: {
+					...DEFAULT_HEADERS,
 					"Content-Type": "application/json",
 					Authorization: `Bearer ${this.apiKey}`,
-					"User-Agent": "roo-cline/1.0.0",
 				},
 				body: JSON.stringify(requestBody),
 			})
@@ -294,19 +294,17 @@ export class CerebrasHandler extends BaseProvider implements SingleCompletionHan
 
 				// Provide consistent error handling with createMessage
 				if (response.status === 401) {
-					throw new Error(
-						`Cerebras API authentication failed. Please check your API key is valid and not expired.`,
-					)
+					throw new Error(t("common:errors.cerebras.authenticationFailed"))
 				} else if (response.status === 403) {
-					throw new Error(
-						`Cerebras API access forbidden. Your API key may not have access to the requested model or feature.`,
-					)
+					throw new Error(t("common:errors.cerebras.accessForbidden"))
 				} else if (response.status === 429) {
-					throw new Error(`Cerebras API rate limit exceeded. Please wait before making another request.`)
+					throw new Error(t("common:errors.cerebras.rateLimitExceeded"))
 				} else if (response.status >= 500) {
-					throw new Error(`Cerebras API server error (${response.status}). Please try again later.`)
+					throw new Error(t("common:errors.cerebras.serverError", { status: response.status }))
 				} else {
-					throw new Error(`Cerebras API Error (${response.status}): ${errorText}`)
+					throw new Error(
+						t("common:errors.cerebras.genericError", { status: response.status, message: errorText }),
+					)
 				}
 			}
 
@@ -314,7 +312,7 @@ export class CerebrasHandler extends BaseProvider implements SingleCompletionHan
 			return result.choices?.[0]?.message?.content || ""
 		} catch (error) {
 			if (error instanceof Error) {
-				throw new Error(`Cerebras completion error: ${error.message}`)
+				throw new Error(t("common:errors.cerebras.completionError", { error: error.message }))
 			}
 			throw error
 		}

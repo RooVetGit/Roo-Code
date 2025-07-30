@@ -89,6 +89,15 @@
 			"generate_stream": "Kesalahan aliran konteks pembuatan Gemini: {{error}}",
 			"generate_complete_prompt": "Kesalahan penyelesaian Gemini: {{error}}",
 			"sources": "Sumber:"
+		},
+		"cerebras": {
+			"authenticationFailed": "Autentikasi API Cerebras gagal. Silakan periksa apakah kunci API Anda valid dan belum kedaluwarsa.",
+			"accessForbidden": "Akses API Cerebras ditolak. Kunci API Anda mungkin tidak memiliki akses ke model atau fitur yang diminta.",
+			"rateLimitExceeded": "Batas kecepatan API Cerebras terlampaui. Silakan tunggu sebelum membuat permintaan lain.",
+			"serverError": "Kesalahan server API Cerebras ({{status}}). Silakan coba lagi nanti.",
+			"genericError": "Kesalahan API Cerebras ({{status}}): {{message}}",
+			"noResponseBody": "Kesalahan API Cerebras: Tidak ada isi respons",
+			"completionError": "Kesalahan penyelesaian Cerebras: {{error}}"
 		}
 	},
 	"warnings": {
