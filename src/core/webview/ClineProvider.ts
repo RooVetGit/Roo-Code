@@ -1617,6 +1617,7 @@ export class ClineProvider
 			cloudIsAuthenticated: cloudIsAuthenticated ?? false,
 			sharingEnabled: sharingEnabled ?? false,
 			organizationAllowList,
+			organizationSettingsVersion: this.getOrganizationSettingsVersion(),
 			condensingApiConfigId,
 			customCondensingPrompt,
 			codebaseIndexModels: codebaseIndexModels ?? EMBEDDING_MODEL_PROFILES,
@@ -1977,5 +1978,20 @@ export class ClineProvider
 			...(todos && { todos }),
 			...gitInfo,
 		}
+	}
+
+	/**
+	 * Get the current organization settings version
+	 */
+	private getOrganizationSettingsVersion(): number | undefined {
+		try {
+			if (CloudService.hasInstance()) {
+				const settings = CloudService.instance.getOrganizationSettings()
+				return settings?.version
+			}
+		} catch (error) {
+			this.log(`Failed to get organization settings version: ${error}`)
+		}
+		return undefined
 	}
 }

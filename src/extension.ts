@@ -76,7 +76,14 @@ export async function activate(context: vscode.ExtensionContext) {
 
 	// Initialize Roo Code Cloud service.
 	await CloudService.createInstance(context, {
-		stateChanged: () => ClineProvider.getVisibleInstance()?.postStateToWebview(),
+		stateChanged: () => {
+			const provider = ClineProvider.getVisibleInstance()
+			if (provider) {
+				provider.postStateToWebview()
+				// Also refresh marketplace data when organization settings change
+				provider.fetchMarketplaceData()
+			}
+		},
 		log: cloudLogger,
 	})
 
