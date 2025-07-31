@@ -11,6 +11,7 @@ import {
 	type ProviderSettings,
 	type GlobalState,
 	type ClineMessage,
+	type ModeConfig,
 	TelemetryEventName,
 } from "@roo-code/types"
 import { CloudService } from "@roo-code/cloud"
@@ -1876,12 +1877,47 @@ export const webviewMessageHandler = async (
 						// Update state after importing
 						const customModes = await provider.customModesManager.getCustomModes()
 						await updateGlobalState("customModes", customModes)
-						await provider.postStateToWebview()
 
-						// Send success message to webview
+						// Switch to the first imported mode if any were imported
+						if (result.importedModes && result.importedModes.length > 0) {
+							try {
+								// Switch to the first imported mode
+								const modeToSwitch = result.importedModes[0]
+
+								// Validate the mode exists before switching
+								const allModes = await provider.customModesManager.getCustomModes()
+								const validMode = allModes.find((m: ModeConfig) => m.slug === modeToSwitch)
+
+								if (validMode) {
+									// Validate that the mode slug is a valid string before type assertion
+									if (typeof modeToSwitch === "string" && modeToSwitch.length > 0) {
+										await provider.handleModeSwitch(modeToSwitch as Mode)
+										// Update the webview with the new mode
+										await provider.postStateToWebview()
+
+										// Track telemetry for automatic mode switch after import
+										TelemetryService.instance.captureEvent(TelemetryEventName.MODE_SWITCH, {
+											taskId: provider.getCurrentCline()?.taskId || "no-task",
+											newMode: modeToSwitch,
+											trigger: "auto-import",
+										})
+									} else {
+										provider.log(`Invalid mode slug for switching: ${modeToSwitch}`)
+									}
+								}
+							} catch (error) {
+								provider.log(
+									`Failed to switch to imported mode: ${error instanceof Error ? error.message : String(error)}`,
+								)
+								// Continue with success response - import succeeded even if switch failed
+							}
+						}
+
+						// Send success message to webview with imported modes info
 						provider.postMessageToWebview({
 							type: "importModeResult",
 							success: true,
+							payload: { importedModes: result.importedModes },
 						})
 
 						// Show success message

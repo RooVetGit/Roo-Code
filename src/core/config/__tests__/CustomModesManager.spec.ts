@@ -1235,6 +1235,47 @@ describe("CustomModesManager", () => {
 				const newRulePath = Object.keys(writtenFiles).find((p) => p.includes("new-rule.md"))
 				expect(writtenFiles[newRulePath!]).toBe("New rule content")
 			})
+
+			it("should return imported mode slugs on successful import", async () => {
+				const importYaml = yaml.stringify({
+					customModes: [
+						{
+							slug: "mode-one",
+							name: "Mode One",
+							roleDefinition: "Role One",
+							groups: ["read"],
+						},
+						{
+							slug: "mode-two",
+							name: "Mode Two",
+							roleDefinition: "Role Two",
+							groups: ["edit"],
+						},
+					],
+				})
+
+				let roomodesContent: any = null
+				;(fs.readFile as Mock).mockImplementation(async (path: string) => {
+					if (path === mockSettingsPath) {
+						return yaml.stringify({ customModes: [] })
+					}
+					if (path === mockRoomodes && roomodesContent) {
+						return yaml.stringify(roomodesContent)
+					}
+					throw new Error("File not found")
+				})
+				;(fs.writeFile as Mock).mockImplementation(async (path: string, content: string) => {
+					if (path === mockRoomodes) {
+						roomodesContent = yaml.parse(content)
+					}
+					return Promise.resolve()
+				})
+
+				const result = await manager.importModeWithRules(importYaml)
+
+				expect(result.success).toBe(true)
+				expect(result.importedModes).toEqual(["mode-one", "mode-two"])
+			})
 		})
 	})
 
