@@ -361,9 +361,26 @@ describe("TaskActions", () => {
 			expect(screen.getByText("1024 B")).toBeInTheDocument()
 		})
 
-		it("does not render delete button when item has no size", () => {
+		it("renders delete button even when item has no size", () => {
 			const itemWithoutSize = { ...mockItem, size: 0 }
 			render(<TaskActions item={itemWithoutSize} buttonsDisabled={false} />)
+
+			const deleteButton = screen.queryByLabelText("Delete Task (Shift + Click to skip confirmation)")
+			expect(deleteButton).toBeInTheDocument()
+			// File size should not be displayed when size is 0
+			expect(screen.queryByText("0 B")).not.toBeInTheDocument()
+		})
+
+		it("renders delete button when item has undefined size", () => {
+			const itemWithUndefinedSize = { ...mockItem, size: undefined }
+			render(<TaskActions item={itemWithUndefinedSize} buttonsDisabled={false} />)
+
+			const deleteButton = screen.queryByLabelText("Delete Task (Shift + Click to skip confirmation)")
+			expect(deleteButton).toBeInTheDocument()
+		})
+
+		it("does not render delete button when item is undefined", () => {
+			render(<TaskActions item={undefined} buttonsDisabled={false} />)
 
 			const deleteButton = screen.queryByLabelText("Delete Task (Shift + Click to skip confirmation)")
 			expect(deleteButton).not.toBeInTheDocument()
