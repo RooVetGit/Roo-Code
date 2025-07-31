@@ -72,7 +72,7 @@ import { ToolRepetitionDetector } from "../tools/ToolRepetitionDetector"
 import { FileContextTracker } from "../context-tracking/FileContextTracker"
 import { RooIgnoreController } from "../ignore/RooIgnoreController"
 import { RooProtectedController } from "../protect/RooProtectedController"
-import { type AssistantMessageContent, presentAssistantMessage } from "../assistant-message"
+import { type AssistantMessageContent, presentAssistantMessage, parseAssistantMessage } from "../assistant-message"
 import { AssistantMessageParser } from "../assistant-message/AssistantMessageParser"
 import { truncateConversationIfNeeded } from "../sliding-window"
 import { ClineProvider } from "../webview/ClineProvider"
@@ -261,7 +261,8 @@ export class Task extends EventEmitter<TaskEvents> {
 	didRejectTool = false
 	didAlreadyUseTool = false
 	didCompleteReadingStream = false
-	assistantMessageParser = new AssistantMessageParser()
+	assistantMessageParser?: AssistantMessageParser
+	isAssistantMessageParserEnabled = false
 
 	constructor({
 		provider,
@@ -1536,7 +1537,9 @@ export class Task extends EventEmitter<TaskEvents> {
 			this.didAlreadyUseTool = false
 			this.presentAssistantMessageLocked = false
 			this.presentAssistantMessageHasPendingUpdates = false
-			this.assistantMessageParser.reset()
+			if (this.assistantMessageParser) {
+				this.assistantMessageParser.reset()
+			}
 
 			await this.diffViewProvider.reset()
 
@@ -1573,7 +1576,12 @@ export class Task extends EventEmitter<TaskEvents> {
 
 							// Parse raw assistant message chunk into content blocks.
 							const prevLength = this.assistantMessageContent.length
-							this.assistantMessageContent = this.assistantMessageParser.processChunk(chunk.text)
+							if (this.isAssistantMessageParserEnabled && this.assistantMessageParser) {
+								this.assistantMessageContent = this.assistantMessageParser.processChunk(chunk.text)
+							} else {
+								// Use the old parsing method when experiment is disabled
+								this.assistantMessageContent = parseAssistantMessage(assistantMessage)
+							}
 
 							if (this.assistantMessageContent.length > prevLength) {
 								// New content we need to present, reset to
@@ -1694,8 +1702,13 @@ export class Task extends EventEmitter<TaskEvents> {
 			// this.assistantMessageContent.forEach((e) => (e.partial = false))
 
 			// Now that the stream is complete, finalize any remaining partial content blocks
-			this.assistantMessageParser.finalizeContentBlocks()
-			this.assistantMessageContent = this.assistantMessageParser.getContentBlocks()
+			if (this.isAssistantMessageParserEnabled && this.assistantMessageParser) {
+				this.assistantMessageParser.finalizeContentBlocks()
+				this.assistantMessageContent = this.assistantMessageParser.getContentBlocks()
+			} else {
+				// When using old parser, parse the complete message
+				this.assistantMessageContent = parseAssistantMessage(assistantMessage)
+			}
 
 			if (partialBlocks.length > 0) {
 				// If there is content to update then it will complete and
@@ -1711,7 +1724,9 @@ export class Task extends EventEmitter<TaskEvents> {
 			await this.providerRef.deref()?.postStateToWebview()
 
 			// Reset parser after each complete conversation round
-			this.assistantMessageParser.reset()
+			if (this.assistantMessageParser) {
+				this.assistantMessageParser.reset()
+			}
 
 			// Now add to apiConversationHistory.
 			// Need to save assistant responses to file before proceeding to
