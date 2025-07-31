@@ -7,17 +7,20 @@ import type {
 	OrganizationSettings,
 	ClineMessage,
 	ShareVisibility,
+	TaskBridgeRegisterResponse,
 } from "@roo-code/types"
 import { TelemetryService } from "@roo-code/telemetry"
 
 import { CloudServiceCallbacks } from "./types"
-import type { AuthService } from "./auth"
-import { WebAuthService, StaticTokenAuthService } from "./auth"
+import { type AuthService, WebAuthService, StaticTokenAuthService } from "./auth"
+import { TaskNotFoundError } from "./errors"
+
 import type { SettingsService } from "./SettingsService"
 import { CloudSettingsService } from "./CloudSettingsService"
 import { StaticSettingsService } from "./StaticSettingsService"
 import { TelemetryClient } from "./TelemetryClient"
-import { ShareService, TaskNotFoundError } from "./ShareService"
+import { CloudShareService } from "./CloudShareService"
+import { CloudAPI } from "./CloudAPI"
 
 export class CloudService {
 	private static _instance: CloudService | null = null
@@ -28,7 +31,8 @@ export class CloudService {
 	private authService: AuthService | null = null
 	private settingsService: SettingsService | null = null
 	private telemetryClient: TelemetryClient | null = null
-	private shareService: ShareService | null = null
+	private shareService: CloudShareService | null = null
+	private cloudAPI: CloudAPI | null = null
 	private isInitialized = false
 	private log: (...args: unknown[]) => void
 
@@ -80,8 +84,9 @@ export class CloudService {
 				this.settingsService = cloudSettingsService
 			}
 
+			this.cloudAPI = new CloudAPI(this.authService, this.log)
 			this.telemetryClient = new TelemetryClient(this.authService, this.settingsService)
-			this.shareService = new ShareService(this.authService, this.settingsService, this.log)
+			this.shareService = new CloudShareService(this.cloudAPI, this.settingsService, this.log)
 
 			try {
 				TelemetryService.instance.register(this.telemetryClient)
@@ -202,7 +207,7 @@ export class CloudService {
 			return await this.shareService!.shareTask(taskId, visibility)
 		} catch (error) {
 			if (error instanceof TaskNotFoundError && clineMessages) {
-				// Backfill messages and retry
+				// Backfill messages and retry.
 				await this.telemetryClient!.backfillMessages(clineMessages, taskId)
 				return await this.shareService!.shareTask(taskId, visibility)
 			}
@@ -215,6 +220,13 @@ export class CloudService {
 		return this.shareService!.canShareTask()
 	}
 
+	// Task Bridge
+
+	public async registerTaskBridge(taskId: string, bridgeUrl?: string): Promise<TaskBridgeRegisterResponse> {
+		this.ensureInitialized()
+		return this.cloudAPI!.registerTaskBridge(taskId, bridgeUrl)
+	}
+
 	// Lifecycle
 
 	public dispose(): void {
@@ -225,6 +237,7 @@ export class CloudService {
 			this.authService.off("logged-out", this.authListener)
 			this.authService.off("user-info", this.authListener)
 		}
+
 		if (this.settingsService) {
 			this.settingsService.dispose()
 		}

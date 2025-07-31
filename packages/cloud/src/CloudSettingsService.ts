@@ -7,7 +7,7 @@ import {
 	organizationSettingsSchema,
 } from "@roo-code/types"
 
-import { getRooCodeApiUrl } from "./Config"
+import { getRooCodeApiUrl } from "./config"
 import type { AuthService } from "./auth"
 import { RefreshTimer } from "./RefreshTimer"
 import type { SettingsService } from "./SettingsService"

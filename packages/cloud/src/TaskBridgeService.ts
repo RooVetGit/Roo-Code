@@ -1,7 +1,7 @@
 import Redis from "ioredis"
 import { z } from "zod"
 
-import { type TaskEvents, type TaskEventHandlers, Task } from "../../core/task/Task"
+import type { TaskLike, TaskEventHandlers } from "@roo-code/types"
 
 const NAMESPACE = "bridge"
 
@@ -58,7 +58,7 @@ export class TaskBridgeService {
 	private isConnected: boolean = false
 	private reconnectAttempts: number = 0
 	private reconnectTimeout: NodeJS.Timeout | null = null
-	private subscribedTasks: Map<string, Task> = new Map()
+	private subscribedTasks: Map<string, TaskLike> = new Map()
 	private taskEventHandlers: Record<string, Partial<TaskEventHandlers>> = {}
 
 	private messageQueues: Map<string, InternalQueuedMessage[]> = new Map()
@@ -193,6 +193,7 @@ export class TaskBridgeService {
 					console.error("Error handling incoming message:", error)
 				}
 			})
+
 			await Promise.all([this.publisher.connect(), this.subscriber.connect()])
 			await Promise.all([this.waitForConnection(this.publisher), this.waitForConnection(this.subscriber)])
 
@@ -217,7 +218,7 @@ export class TaskBridgeService {
 		}
 	}
 
-	public async subscribeToTask(task: Task): Promise<void> {
+	public async subscribeToTask(task: TaskLike): Promise<void> {
 		const channel = this.serverChannel(task.taskId)
 		console.log(`[TaskBridgeService] subscribeToTask -> ${channel}`)
 
@@ -386,7 +387,7 @@ export class TaskBridgeService {
 		}, this.config.reconnectDelay)
 	}
 
-	private setupTaskEventListeners(task: Task) {
+	private setupTaskEventListeners(task: TaskLike) {
 		const callbacks: Partial<TaskEventHandlers> = {
 			// message: ({ action, message }) =>
 			// 	this.publish(task.taskId, "task_event", { eventType: "message", data: { action, message } }),
@@ -427,21 +428,39 @@ export class TaskBridgeService {
 
 		this.taskEventHandlers[task.taskId] = callbacks
 
-		for (const [eventName, handler] of Object.entries(callbacks)) {
-			task.on(eventName as keyof TaskEvents, handler)
+		const registerHandler = <K extends keyof TaskEventHandlers>(
+			eventName: K,
+			handler: TaskEventHandlers[K] | undefined,
+		) => {
+			if (handler) {
+				task.on(eventName, handler)
+			}
 		}
+
+		;(Object.keys(callbacks) as Array<keyof TaskEventHandlers>).forEach((eventName) => {
+			registerHandler(eventName, callbacks[eventName])
+		})
 	}
 
-	private removeTaskEventListeners(task: Task): void {
+	private removeTaskEventListeners(task: TaskLike): void {
 		const handlers = this.taskEventHandlers[task.taskId]
 
 		if (!handlers) {
 			return
 		}
 
-		for (const [eventName, handler] of Object.entries(handlers)) {
-			task.off(eventName as keyof TaskEvents, handler)
+		const unregisterHandler = <K extends keyof TaskEventHandlers>(
+			eventName: K,
+			handler: TaskEventHandlers[K] | undefined,
+		) => {
+			if (handler) {
+				task.off(eventName, handler)
+			}
 		}
+
+		;(Object.keys(handlers) as Array<keyof TaskEventHandlers>).forEach((eventName) => {
+			unregisterHandler(eventName, handlers[eventName])
+		})
 
 		delete this.taskEventHandlers[task.taskId]
 	}
@@ -506,7 +525,7 @@ export class TaskBridgeService {
 		console.log(`[TaskBridgeService#${taskId}] busy`)
 
 		try {
-			await task.handleWebviewAskResponse("messageResponse", message.text, message.images)
+			task.setMessageResponse(message.text, message.images)
 			return true
 		} catch (error) {
 			console.error(`Failed to deliver message to task ${taskId}:`, error)

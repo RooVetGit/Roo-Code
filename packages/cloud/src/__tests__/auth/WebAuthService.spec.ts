@@ -6,7 +6,7 @@ import * as vscode from "vscode"
 
 import { WebAuthService } from "../../auth/WebAuthService"
 import { RefreshTimer } from "../../RefreshTimer"
-import * as Config from "../../Config"
+import * as Config from "../../config"
 import * as utils from "../../utils"
 
 // Mock external dependencies

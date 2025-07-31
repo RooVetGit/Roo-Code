@@ -6,10 +6,18 @@ import { z } from "zod"
 
 import type { CloudUserInfo, CloudOrganizationMembership } from "@roo-code/types"
 
-import { getClerkBaseUrl, getRooCodeApiUrl, PRODUCTION_CLERK_BASE_URL } from "../Config"
-import { RefreshTimer } from "../RefreshTimer"
+import { getClerkBaseUrl, getRooCodeApiUrl, PRODUCTION_CLERK_BASE_URL } from "../config"
 import { getUserAgent } from "../utils"
+import { InvalidClientTokenError } from "../errors"
+import { RefreshTimer } from "../RefreshTimer"
+
 import type { AuthService, AuthServiceEvents, AuthState } from "./AuthService"
+
+const AUTH_STATE_KEY = "clerk-auth-state"
+
+/**
+ * AuthCredentials
+ */
 
 const authCredentialsSchema = z.object({
 	clientToken: z.string().min(1, "Client token cannot be empty"),
@@ -19,7 +27,9 @@ const authCredentialsSchema = z.object({
 
 type AuthCredentials = z.infer<typeof authCredentialsSchema>
 
-const AUTH_STATE_KEY = "clerk-auth-state"
+/**
+ * Clerk Schemas
+ */
 
 const clerkSignInResponseSchema = z.object({
 	response: z.object({
@@ -69,13 +79,6 @@ const clerkOrganizationMembershipsSchema = z.object({
 	),
 })
 
-class InvalidClientTokenError extends Error {
-	constructor() {
-		super("Invalid/Expired client token")
-		Object.setPrototypeOf(this, InvalidClientTokenError.prototype)
-	}
-}
-
 export class WebAuthService extends EventEmitter<AuthServiceEvents> implements AuthService {
 	private context: vscode.ExtensionContext
 	private timer: RefreshTimer
@@ -94,8 +97,9 @@ export class WebAuthService extends EventEmitter<AuthServiceEvents> implements A
 		this.context = context
 		this.log = log || console.log
 
-		// Calculate auth credentials key based on Clerk base URL
+		// Calculate auth credentials key based on Clerk base URL.
 		const clerkBaseUrl = getClerkBaseUrl()
+
 		if (clerkBaseUrl !== PRODUCTION_CLERK_BASE_URL) {
 			this.authCredentialsKey = `clerk-auth-credentials-${clerkBaseUrl}`
 		} else {

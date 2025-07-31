@@ -152,3 +152,14 @@ export const shareResponseSchema = z.object({
 })
 
 export type ShareResponse = z.infer<typeof shareResponseSchema>
+
+/**
+ * Task Bridge Types
+ */
+
+export const taskBridgeRegisterResponseSchema = z.object({
+	success: z.boolean(),
+	error: z.string().optional(),
+})
+
+export type TaskBridgeRegisterResponse = z.infer<typeof taskBridgeRegisterResponseSchema>

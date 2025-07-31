@@ -10,6 +10,8 @@ import pWaitFor from "p-wait-for"
 import { serializeError } from "serialize-error"
 
 import {
+	type TaskLike,
+	type TaskEvents,
 	type ProviderSettings,
 	type TokenUsage,
 	type ToolUsage,
@@ -19,15 +21,15 @@ import {
 	type ClineMessage,
 	type ClineSay,
 	type ToolProgressStatus,
-	DEFAULT_CONSECUTIVE_MISTAKE_LIMIT,
 	type HistoryItem,
 	TelemetryEventName,
 	TodoItem,
 	getApiProtocol,
 	getModelId,
+	DEFAULT_CONSECUTIVE_MISTAKE_LIMIT,
 } from "@roo-code/types"
 import { TelemetryService } from "@roo-code/telemetry"
-import { CloudService } from "@roo-code/cloud"
+import { CloudService, TaskBridgeService } from "@roo-code/cloud"
 
 // api
 import { ApiHandler, ApiHandlerCreateMessageMetadata, buildApiHandler } from "../../api"
@@ -52,7 +54,6 @@ import { BrowserSession } from "../../services/browser/BrowserSession"
 import { McpHub } from "../../services/mcp/McpHub"
 import { McpServerManager } from "../../services/mcp/McpServerManager"
 import { RepoPerTaskCheckpointService } from "../../services/checkpoints"
-import { TaskBridgeService } from "../../services/task-bridge/TaskBridgeService"
 
 // integrations
 import { DiffViewProvider } from "../../integrations/editor/DiffViewProvider"
@@ -96,24 +97,6 @@ import { restoreTodoListForTask } from "../tools/updateTodoListTool"
 
 const MAX_EXPONENTIAL_BACKOFF_SECONDS = 600 // 10 minutes
 
-export type TaskEvents = {
-	message: [{ action: "created" | "updated"; message: ClineMessage }]
-	taskStarted: []
-	taskModeSwitched: [taskId: string, mode: string]
-	taskPaused: []
-	taskUnpaused: []
-	taskAskResponded: []
-	taskAborted: []
-	taskSpawned: [taskId: string]
-	taskCompleted: [taskId: string, tokenUsage: TokenUsage, toolUsage: ToolUsage]
-	taskTokenUsageUpdated: [taskId: string, tokenUsage: TokenUsage]
-	taskToolFailed: [taskId: string, tool: ToolName, error: string]
-}
-
-export type TaskEventHandlers = {
-	[K in keyof TaskEvents]: (...args: TaskEvents[K]) => void | Promise<void>
-}
-
 export type TaskOptions = {
 	provider: ClineProvider
 	apiConfiguration: ProviderSettings
@@ -132,7 +115,7 @@ export type TaskOptions = {
 	onCreated?: (task: Task) => void
 }
 
-export class Task extends EventEmitter<TaskEvents> {
+export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 	todoList?: TodoItem[]
 	readonly taskId: string
 	readonly instanceId: string
@@ -729,7 +712,11 @@ export class Task extends EventEmitter<TaskEvents> {
 		return result
 	}
 
-	public async handleWebviewAskResponse(askResponse: ClineAskResponse, text?: string, images?: string[]) {
+	public setMessageResponse(text: string, images?: string[]) {
+		this.handleWebviewAskResponse("messageResponse", text, images)
+	}
+
+	handleWebviewAskResponse(askResponse: ClineAskResponse, text?: string, images?: string[]) {
 		this.askResponse = askResponse
 		this.askResponseText = text
 		this.askResponseImages = images
