@@ -1705,10 +1705,8 @@ export class Task extends EventEmitter<TaskEvents> {
 			if (this.isAssistantMessageParserEnabled && this.assistantMessageParser) {
 				this.assistantMessageParser.finalizeContentBlocks()
 				this.assistantMessageContent = this.assistantMessageParser.getContentBlocks()
-			} else {
-				// When using old parser, parse the complete message
-				this.assistantMessageContent = parseAssistantMessage(assistantMessage)
 			}
+			// When using old parser, no finalization needed - parsing already happened during streaming
 
 			if (partialBlocks.length > 0) {
 				// If there is content to update then it will complete and
