@@ -118,7 +118,11 @@
 		"settings": "मोड सेटिंग्स",
 		"description": "विशेष व्यक्तित्व जो Roo के व्यवहार को अनुकूलित करते हैं।",
 		"searchPlaceholder": "मोड खोजें...",
-		"noResults": "कोई परिणाम नहीं मिला"
+		"noResults": "कोई परिणाम नहीं मिला",
+		"global": "वैश्विक",
+		"project": "प्रोजेक्ट",
+		"globalShort": "G",
+		"projectShort": "P"
 	},
 	"errorReadingFile": "फ़ाइल पढ़ने में त्रुटि:",
 	"noValidImages": "कोई मान्य चित्र प्रोसेस नहीं किया गया",

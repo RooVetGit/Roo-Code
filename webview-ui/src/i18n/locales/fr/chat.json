@@ -118,7 +118,11 @@
 		"settings": "Paramètres des Modes",
 		"description": "Personas spécialisés qui adaptent le comportement de Roo.",
 		"searchPlaceholder": "Rechercher des modes...",
-		"noResults": "Aucun résultat trouvé"
+		"noResults": "Aucun résultat trouvé",
+		"global": "Global",
+		"project": "Projet",
+		"globalShort": "G",
+		"projectShort": "P"
 	},
 	"errorReadingFile": "Erreur lors de la lecture du fichier :",
 	"noValidImages": "Aucune image valide n'a été traitée",
