@@ -242,8 +242,6 @@ export async function parseMentions(
 				commandOutput += command.content
 				parsedText += `\n\n<command name="${commandName}">\n${commandOutput}\n</command>`
 			}
-			// Note: We don't add error messages for non-existent commands anymore
-			// since we only process commands that we've already verified exist
 		} catch (error) {
 			parsedText += `\n\n<command name="${commandName}">\nError loading command '${commandName}': ${error.message}\n</command>`
 		}
