@@ -23,12 +23,12 @@ import {
 	type TerminalActionPromptType,
 	type HistoryItem,
 	type CloudUserInfo,
-	type MarketplaceItem,
 	requestyDefaultModelId,
 	openRouterDefaultModelId,
 	glamaDefaultModelId,
 	ORGANIZATION_ALLOW_ALL,
 	DEFAULT_TERMINAL_OUTPUT_CHARACTER_LIMIT,
+	DEFAULT_WRITE_DELAY_MS,
 } from "@roo-code/types"
 import { TelemetryService } from "@roo-code/telemetry"
 import { CloudService, getRooCodeApiUrl } from "@roo-code/cloud"
@@ -41,9 +41,8 @@ import { supportPrompt } from "../../shared/support-prompt"
 import { GlobalFileNames } from "../../shared/globalFileNames"
 import { ExtensionMessage, MarketplaceInstalledMetadata } from "../../shared/ExtensionMessage"
 import { Mode, defaultModeSlug, getModeBySlug } from "../../shared/modes"
-import { experimentDefault, experiments, EXPERIMENT_IDS } from "../../shared/experiments"
+import { experimentDefault } from "../../shared/experiments"
 import { formatLanguage } from "../../shared/language"
-import { DEFAULT_WRITE_DELAY_MS } from "@roo-code/types"
 import { Terminal } from "../../integrations/terminal/Terminal"
 import { downloadTask } from "../../integrations/misc/export-markdown"
 import { getTheme } from "../../integrations/theme/getTheme"
@@ -78,13 +77,7 @@ import { getWorkspaceGitInfo } from "../../utils/git"
  */
 
 export type ClineProviderEvents = {
-	clineCreated: [cline: Task]
-}
-
-class OrganizationAllowListViolationError extends Error {
-	constructor(message: string) {
-		super(message)
-	}
+	taskCreated: [task: Task]
 }
 
 export class ClineProvider
@@ -380,6 +373,7 @@ export class ClineProvider
 				// Errors from terminal commands seem to get swallowed / ignored.
 				vscode.window.showErrorMessage(error.message)
 			}
+
 			throw error
 		}
 	}
@@ -526,7 +520,7 @@ export class ClineProvider
 	// of tasks, each one being a sub task of the previous one until the main
 	// task is finished.
 	public async initClineWithTask(
-		task?: string,
+		text?: string,
 		images?: string[],
 		parentTask?: Task,
 		options: Partial<
@@ -549,30 +543,30 @@ export class ClineProvider
 			throw new OrganizationAllowListViolationError(t("common:errors.violated_organization_allowlist"))
 		}
 
-		const cline = new Task({
+		const task = new Task({
 			provider: this,
 			apiConfiguration,
 			enableDiff,
 			enableCheckpoints,
 			fuzzyMatchThreshold,
 			consecutiveMistakeLimit: apiConfiguration.consecutiveMistakeLimit,
-			task,
+			task: text,
 			images,
 			experiments,
 			rootTask: this.clineStack.length > 0 ? this.clineStack[0] : undefined,
 			parentTask,
 			taskNumber: this.clineStack.length + 1,
-			onCreated: (cline) => this.emit("clineCreated", cline),
+			onCreated: (instance) => this.emit("taskCreated", instance),
 			...options,
 		})
 
-		await this.addClineToStack(cline)
+		await this.addClineToStack(task)
 
 		this.log(
-			`[subtasks] ${cline.parentTask ? "child" : "parent"} task ${cline.taskId}.${cline.instanceId} instantiated`,
+			`[subtasks] ${task.parentTask ? "child" : "parent"} task ${task.taskId}.${task.instanceId} instantiated`,
 		)
 
-		return cline
+		return task
 	}
 
 	public async initClineWithHistoryItem(historyItem: HistoryItem & { rootTask?: Task; parentTask?: Task }) {
@@ -629,7 +623,7 @@ export class ClineProvider
 			experiments,
 		} = await this.getState()
 
-		const cline = new Task({
+		const task = new Task({
 			provider: this,
 			apiConfiguration,
 			enableDiff,
@@ -641,14 +635,16 @@ export class ClineProvider
 			rootTask: historyItem.rootTask,
 			parentTask: historyItem.parentTask,
 			taskNumber: historyItem.number,
-			onCreated: (cline) => this.emit("clineCreated", cline),
+			onCreated: (instance) => this.emit("taskCreated", instance),
 		})
 
-		await this.addClineToStack(cline)
+		await this.addClineToStack(task)
+
 		this.log(
-			`[subtasks] ${cline.parentTask ? "child" : "parent"} task ${cline.taskId}.${cline.instanceId} instantiated`,
+			`[subtasks] ${task.parentTask ? "child" : "parent"} task ${task.taskId}.${task.instanceId} instantiated`,
 		)
-		return cline
+
+		return task
 	}
 
 	public async postMessageToWebview(message: ExtensionMessage) {
@@ -1505,6 +1501,7 @@ export class ClineProvider
 			cloudIsAuthenticated,
 			sharingEnabled,
 			organizationAllowList,
+			organizationSettingsVersion,
 			maxConcurrentFileReads,
 			condensingApiConfigId,
 			customCondensingPrompt,
@@ -1515,6 +1512,7 @@ export class ClineProvider
 			followupAutoApproveTimeoutMs,
 			includeDiagnosticMessages,
 			maxDiagnosticMessages,
+			includeTaskHistoryInEnhance,
 		} = await this.getState()
 
 		const telemetryKey = process.env.POSTHOG_API_KEY
@@ -1617,6 +1615,7 @@ export class ClineProvider
 			cloudIsAuthenticated: cloudIsAuthenticated ?? false,
 			sharingEnabled: sharingEnabled ?? false,
 			organizationAllowList,
+			organizationSettingsVersion,
 			condensingApiConfigId,
 			customCondensingPrompt,
 			codebaseIndexModels: codebaseIndexModels ?? EMBEDDING_MODEL_PROFILES,
@@ -1639,6 +1638,7 @@ export class ClineProvider
 			followupAutoApproveTimeoutMs: followupAutoApproveTimeoutMs ?? 60000,
 			includeDiagnosticMessages: includeDiagnosticMessages ?? true,
 			maxDiagnosticMessages: maxDiagnosticMessages ?? 50,
+			includeTaskHistoryInEnhance: includeTaskHistoryInEnhance ?? false,
 		}
 	}
 
@@ -1700,6 +1700,19 @@ export class ClineProvider
 		} catch (error) {
 			console.error(
 				`[getState] failed to get sharing enabled state: ${error instanceof Error ? error.message : String(error)}`,
+			)
+		}
+
+		let organizationSettingsVersion: number = -1
+
+		try {
+			if (CloudService.hasInstance()) {
+				const settings = CloudService.instance.getOrganizationSettings()
+				organizationSettingsVersion = settings?.version ?? -1
+			}
+		} catch (error) {
+			console.error(
+				`[getState] failed to get organization settings version: ${error instanceof Error ? error.message : String(error)}`,
 			)
 		}
 
@@ -1786,6 +1799,7 @@ export class ClineProvider
 			cloudIsAuthenticated,
 			sharingEnabled,
 			organizationAllowList,
+			organizationSettingsVersion,
 			// Explicitly add condensing settings
 			condensingApiConfigId: stateValues.condensingApiConfigId,
 			customCondensingPrompt: stateValues.customCondensingPrompt,
@@ -1809,6 +1823,8 @@ export class ClineProvider
 			// Add diagnostic message settings
 			includeDiagnosticMessages: stateValues.includeDiagnosticMessages ?? true,
 			maxDiagnosticMessages: stateValues.maxDiagnosticMessages ?? 50,
+			// Add includeTaskHistoryInEnhance setting
+			includeTaskHistoryInEnhance: stateValues.includeTaskHistoryInEnhance ?? false,
 		}
 	}
 
@@ -1977,5 +1993,11 @@ export class ClineProvider
 			...(todos && { todos }),
 			...gitInfo,
 		}
+	}
+}
+
+class OrganizationAllowListViolationError extends Error {
+	constructor(message: string) {
+		super(message)
 	}
 }
