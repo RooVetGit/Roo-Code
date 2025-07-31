@@ -8,13 +8,7 @@ import {
 } from "@google/genai"
 import type { JWTInput } from "google-auth-library"
 
-import {
-	type ModelInfo,
-	type GeminiModelId,
-	geminiDefaultModelId,
-	geminiModels,
-	legacyGeminiModels,
-} from "@roo-code/types"
+import { type ModelInfo, geminiDefaultModelId, geminiModels, mapLegacyGeminiModel } from "@roo-code/types"
 
 import type { ApiHandlerOptions } from "../../shared/api"
 import { safeJsonParse } from "../../shared/safeJsonParse"
@@ -35,56 +29,6 @@ export class GeminiHandler extends BaseProvider implements SingleCompletionHandl
 	protected options: ApiHandlerOptions
 
 	private client: GoogleGenAI
-
-	/**
-	 * Maps legacy Gemini model IDs to current supported models
-	 */
-	private mapLegacyGeminiModel(modelId: string): GeminiModelId {
-		if (modelId in geminiModels) {
-			return modelId as GeminiModelId
-		}
-
-		if (modelId in legacyGeminiModels) {
-			if (modelId.startsWith("gemini-2.5-pro-preview-")) {
-				return "gemini-2.5-pro"
-			}
-
-			if (modelId.startsWith("gemini-1.5-pro-")) {
-				return geminiDefaultModelId
-			}
-
-			if (modelId.startsWith("gemini-1.5-flash-")) {
-				return geminiDefaultModelId
-			}
-
-			if (modelId.startsWith("gemini-2.5-pro-exp-")) {
-				return "gemini-2.5-pro"
-			}
-
-			if (modelId === "gemini-exp-1206") {
-				return geminiDefaultModelId
-			}
-
-			if (modelId === "gemini-2.0-pro-exp-02-05") {
-				return "gemini-2.5-pro"
-			}
-
-			if (
-				modelId === "gemini-2.0-flash-thinking-exp-1219" ||
-				modelId === "gemini-2.0-flash-thinking-exp-01-21" ||
-				modelId === "gemini-2.5-flash-preview-04-17" ||
-				modelId === "gemini-2.5-flash-preview-04-17:thinking"
-			) {
-				return "gemini-2.5-flash-preview-05-20"
-			}
-
-			if (modelId === "gemini-2.0-flash-exp") {
-				return geminiDefaultModelId
-			}
-		}
-
-		return geminiDefaultModelId
-	}
 
 	constructor({ isVertex, ...options }: GeminiHandlerOptions) {
 		super()
@@ -220,7 +164,7 @@ export class GeminiHandler extends BaseProvider implements SingleCompletionHandl
 
 	override getModel() {
 		const modelId = this.options.apiModelId
-		let id = modelId ? this.mapLegacyGeminiModel(modelId) : geminiDefaultModelId
+		let id = modelId ? mapLegacyGeminiModel(modelId) : geminiDefaultModelId
 
 		if (modelId && modelId !== id) {
 			this.options.apiModelId = id

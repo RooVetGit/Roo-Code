@@ -321,3 +321,45 @@ export const legacyVertexModels = {
 		outputPrice: 0.6,
 	},
 } as const satisfies Record<string, ModelInfo>
+
+/**
+ * Maps legacy Vertex model IDs to current supported models
+ */
+export function mapLegacyVertexModel(modelId: string): VertexModelId {
+	if (modelId in vertexModels) {
+		return modelId as VertexModelId
+	}
+
+	if (modelId in legacyVertexModels) {
+		if (modelId.startsWith("gemini-2.5-pro-preview-")) {
+			return "gemini-2.5-pro"
+		}
+
+		if (modelId.startsWith("gemini-1.5-pro-")) {
+			return "gemini-2.0-flash-001"
+		}
+
+		if (modelId.startsWith("gemini-1.5-flash-")) {
+			return "gemini-2.0-flash-001"
+		}
+
+		if (modelId.startsWith("gemini-2.5-pro-exp-")) {
+			return "gemini-2.5-pro"
+		}
+
+		if (modelId === "gemini-2.0-pro-exp-02-05") {
+			return "gemini-2.5-pro"
+		}
+
+		if (
+			modelId === "gemini-2.0-flash-thinking-exp-1219" ||
+			modelId === "gemini-2.0-flash-thinking-exp-01-21" ||
+			modelId === "gemini-2.5-flash-preview-04-17" ||
+			modelId === "gemini-2.5-flash-preview-04-17:thinking"
+		) {
+			return "gemini-2.5-flash-preview-05-20"
+		}
+	}
+
+	return vertexDefaultModelId
+}

@@ -12,7 +12,6 @@ import {
 	moonshotModels,
 	geminiDefaultModelId,
 	geminiModels,
-	legacyGeminiModels,
 	mistralDefaultModelId,
 	mistralModels,
 	openAiModelInfoSaneDefaults,
@@ -20,7 +19,6 @@ import {
 	openAiNativeModels,
 	vertexDefaultModelId,
 	vertexModels,
-	legacyVertexModels,
 	xaiDefaultModelId,
 	xaiModels,
 	groqModels,
@@ -40,6 +38,8 @@ import {
 	sambaNovaDefaultModelId,
 	doubaoModels,
 	doubaoDefaultModelId,
+	mapLegacyGeminiModel,
+	mapLegacyVertexModel,
 } from "@roo-code/types"
 
 import type { ModelRecord, RouterModels } from "@roo/api"
@@ -47,98 +47,6 @@ import type { ModelRecord, RouterModels } from "@roo/api"
 import { useRouterModels } from "./useRouterModels"
 import { useOpenRouterModelProviders } from "./useOpenRouterModelProviders"
 import { useLmStudioModels } from "./useLmStudioModels"
-
-/**
- * Maps legacy Gemini model IDs to current supported models
- */
-function mapLegacyGeminiModel(modelId: string): string {
-	if (modelId in geminiModels) {
-		return modelId
-	}
-
-	if (modelId in legacyGeminiModels) {
-		if (modelId.startsWith("gemini-2.5-pro-preview-")) {
-			return "gemini-2.5-pro"
-		}
-
-		if (modelId.startsWith("gemini-1.5-pro-")) {
-			return geminiDefaultModelId
-		}
-
-		if (modelId.startsWith("gemini-1.5-flash-")) {
-			return geminiDefaultModelId
-		}
-
-		if (modelId.startsWith("gemini-2.5-pro-exp-")) {
-			return "gemini-2.5-pro"
-		}
-
-		if (modelId === "gemini-exp-1206") {
-			return geminiDefaultModelId
-		}
-
-		if (modelId === "gemini-2.0-pro-exp-02-05") {
-			return "gemini-2.5-pro"
-		}
-
-		if (
-			modelId === "gemini-2.0-flash-thinking-exp-1219" ||
-			modelId === "gemini-2.0-flash-thinking-exp-01-21" ||
-			modelId === "gemini-2.5-flash-preview-04-17" ||
-			modelId === "gemini-2.5-flash-preview-04-17:thinking"
-		) {
-			return "gemini-2.5-flash-preview-05-20"
-		}
-
-		if (modelId === "gemini-2.0-flash-exp") {
-			return geminiDefaultModelId
-		}
-	}
-
-	return geminiDefaultModelId
-}
-
-/**
- * Maps legacy Vertex model IDs to current supported models
- */
-function mapLegacyVertexModel(modelId: string): string {
-	if (modelId in vertexModels) {
-		return modelId
-	}
-
-	if (modelId in legacyVertexModels) {
-		if (modelId.startsWith("gemini-2.5-pro-preview-")) {
-			return "gemini-2.5-pro"
-		}
-
-		if (modelId.startsWith("gemini-1.5-pro-")) {
-			return "gemini-2.0-flash-001"
-		}
-
-		if (modelId.startsWith("gemini-1.5-flash-")) {
-			return "gemini-2.0-flash-001"
-		}
-
-		if (modelId.startsWith("gemini-2.5-pro-exp-")) {
-			return "gemini-2.5-pro"
-		}
-
-		if (modelId === "gemini-2.0-pro-exp-02-05") {
-			return "gemini-2.5-pro"
-		}
-
-		if (
-			modelId === "gemini-2.0-flash-thinking-exp-1219" ||
-			modelId === "gemini-2.0-flash-thinking-exp-01-21" ||
-			modelId === "gemini-2.5-flash-preview-04-17" ||
-			modelId === "gemini-2.5-flash-preview-04-17:thinking"
-		) {
-			return "gemini-2.5-flash-preview-05-20"
-		}
-	}
-
-	return vertexDefaultModelId
-}
 
 export const useSelectedModel = (apiConfiguration?: ProviderSettings) => {
 	const provider = apiConfiguration?.apiProvider || "anthropic"

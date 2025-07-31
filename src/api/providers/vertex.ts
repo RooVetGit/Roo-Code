@@ -1,10 +1,4 @@
-import {
-	type ModelInfo,
-	type VertexModelId,
-	vertexDefaultModelId,
-	vertexModels,
-	legacyVertexModels,
-} from "@roo-code/types"
+import { type ModelInfo, vertexDefaultModelId, vertexModels, mapLegacyVertexModel } from "@roo-code/types"
 
 import type { ApiHandlerOptions } from "../../shared/api"
 
@@ -18,51 +12,9 @@ export class VertexHandler extends GeminiHandler implements SingleCompletionHand
 		super({ ...options, isVertex: true })
 	}
 
-	/**
-	 * Maps legacy Vertex model IDs to current supported models
-	 */
-	private mapLegacyVertexModel(modelId: string): VertexModelId {
-		if (modelId in vertexModels) {
-			return modelId as VertexModelId
-		}
-
-		if (modelId in legacyVertexModels) {
-			if (modelId.startsWith("gemini-2.5-pro-preview-")) {
-				return "gemini-2.5-pro"
-			}
-
-			if (modelId.startsWith("gemini-1.5-pro-")) {
-				return "gemini-2.0-flash-001"
-			}
-
-			if (modelId.startsWith("gemini-1.5-flash-")) {
-				return "gemini-2.0-flash-001"
-			}
-
-			if (modelId.startsWith("gemini-2.5-pro-exp-")) {
-				return "gemini-2.5-pro"
-			}
-
-			if (modelId === "gemini-2.0-pro-exp-02-05") {
-				return "gemini-2.5-pro"
-			}
-
-			if (
-				modelId === "gemini-2.0-flash-thinking-exp-1219" ||
-				modelId === "gemini-2.0-flash-thinking-exp-01-21" ||
-				modelId === "gemini-2.5-flash-preview-04-17" ||
-				modelId === "gemini-2.5-flash-preview-04-17:thinking"
-			) {
-				return "gemini-2.5-flash-preview-05-20"
-			}
-		}
-
-		return vertexDefaultModelId
-	}
-
 	override getModel() {
 		const modelId = this.options.apiModelId
-		let id = modelId ? this.mapLegacyVertexModel(modelId) : vertexDefaultModelId
+		let id = modelId ? mapLegacyVertexModel(modelId) : vertexDefaultModelId
 
 		if (modelId && id && modelId !== id) {
 			this.options.apiModelId = id
