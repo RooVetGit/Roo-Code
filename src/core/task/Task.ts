@@ -108,6 +108,8 @@ export type TaskEvents = {
 	taskCompleted: [taskId: string, tokenUsage: TokenUsage, toolUsage: ToolUsage]
 	taskTokenUsageUpdated: [taskId: string, tokenUsage: TokenUsage]
 	taskToolFailed: [taskId: string, tool: ToolName, error: string]
+	taskBusy: [taskId: string]
+	taskFree: [taskId: string]
 }
 
 export type TaskEventHandlers = {
@@ -727,7 +729,7 @@ export class Task extends EventEmitter<TaskEvents> {
 		return result
 	}
 
-	async handleWebviewAskResponse(askResponse: ClineAskResponse, text?: string, images?: string[]) {
+	public async handleWebviewAskResponse(askResponse: ClineAskResponse, text?: string, images?: string[]) {
 		this.askResponse = askResponse
 		this.askResponseText = text
 		this.askResponseImages = images
@@ -1333,7 +1335,7 @@ export class Task extends EventEmitter<TaskEvents> {
 
 		while (!this.abort) {
 			const didEndLoop = await this.recursivelyMakeClineRequests(nextUserContent, includeFileDetails)
-			includeFileDetails = false // we only need file details the first time
+			includeFileDetails = false // We only need file details the first time.
 
 			// The way this agentic loop works is that cline will be given a
 			// task that he then calls tools to complete. Unless there's an
@@ -1570,6 +1572,7 @@ export class Task extends EventEmitter<TaskEvents> {
 			let assistantMessage = ""
 			let reasoningMessage = ""
 			this.isStreaming = true
+			this.emit("taskBusy", this.taskId)
 
 			try {
 				for await (const chunk of stream) {
@@ -1659,13 +1662,13 @@ export class Task extends EventEmitter<TaskEvents> {
 					// If this.abort is already true, it means the user clicked cancel, so we should
 					// treat this as "user_cancelled" rather than "streaming_failed"
 					const cancelReason = this.abort ? "user_cancelled" : "streaming_failed"
+
 					const streamingFailedMessage = this.abort
 						? undefined
 						: (error.message ?? JSON.stringify(serializeError(error), null, 2))
 
-					// Now call abortTask after determining the cancel reason
+					// Now call abortTask after determining the cancel reason.
 					await this.abortTask()
-
 					await abortStream(cancelReason, streamingFailedMessage)
 
 					const history = await provider?.getTaskWithId(this.taskId)
@@ -1676,6 +1679,7 @@ export class Task extends EventEmitter<TaskEvents> {
 				}
 			} finally {
 				this.isStreaming = false
+				this.emit("taskFree", this.taskId)
 			}
 
 			if (inputTokens > 0 || outputTokens > 0 || cacheWriteTokens > 0 || cacheReadTokens > 0) {
