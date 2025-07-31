@@ -19,6 +19,9 @@ export class LocalVectorStore implements IVectorStore {
 	private readonly collectionName: string
 	private cachedCollectionId: number | null = null
 
+	private readonly UPDATE_BATCH_SIZE = 1000
+	private readonly SEARCH_BATCH_SIZE = 10000
+
 	constructor(workspacePath: string, vectorSize: number, dbDirectory: string) {
 		this.vectorSize = vectorSize
 		const basename = path.basename(workspacePath)
@@ -181,7 +184,7 @@ export class LocalVectorStore implements IVectorStore {
 			const existingFilesFinal = allFiles
 			const fileIdMap = new Map(existingFilesFinal.map((f) => [f.file_path, f.id]))
 
-			const batchSize = 1000
+			const batchSize = this.UPDATE_BATCH_SIZE
 			for (let i = 0; i < valids.length; i += batchSize) {
 				const validBatch = valids.slice(i, i + batchSize)
 
@@ -272,7 +275,7 @@ export class LocalVectorStore implements IVectorStore {
 
 			const cpuCores = os.cpus().length
 			const maxParallelism = Math.max(1, Math.ceil(cpuCores / 2))
-			const batchSize = 10000
+			const batchSize = this.SEARCH_BATCH_SIZE
 			const totalBatches = Math.ceil(totalCount / batchSize)
 			const actualParallelism = Math.min(maxParallelism, totalBatches)
 
