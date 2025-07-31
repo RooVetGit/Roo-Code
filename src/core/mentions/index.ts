@@ -86,13 +86,30 @@ export async function parseMentions(
 	maxReadFileLine?: number,
 ): Promise<string> {
 	const mentions: Set<string> = new Set()
-	const commandMentions: Set<string> = new Set()
+	const validCommandMentions: Set<string> = new Set()
 
-	// First pass: extract command mentions (starting with /)
-	let parsedText = text.replace(commandRegexGlobal, (match, commandName) => {
-		commandMentions.add(commandName)
-		return `Command '${commandName}' (see below for command content)`
-	})
+	// First pass: check which command mentions exist before replacing text
+	const commandMatches = Array.from(text.matchAll(commandRegexGlobal))
+	const commandExistenceChecks = await Promise.all(
+		commandMatches.map(async ([match, commandName]) => {
+			try {
+				const command = await getCommand(cwd, commandName)
+				return { match, commandName, exists: !!command }
+			} catch (error) {
+				// If there's an error checking command existence, treat it as non-existent
+				return { match, commandName, exists: false }
+			}
+		}),
+	)
+
+	// Only replace text for commands that actually exist
+	let parsedText = text
+	for (const { match, commandName, exists } of commandExistenceChecks) {
+		if (exists) {
+			validCommandMentions.add(commandName)
+			parsedText = parsedText.replace(match, `Command '${commandName}' (see below for command content)`)
+		}
+	}
 
 	// Second pass: handle regular mentions
 	parsedText = parsedText.replace(mentionRegexGlobal, (match, mention) => {
@@ -213,8 +230,8 @@ export async function parseMentions(
 		}
 	}
 
-	// Process command mentions
-	for (const commandName of commandMentions) {
+	// Process valid command mentions only
+	for (const commandName of validCommandMentions) {
 		try {
 			const command = await getCommand(cwd, commandName)
 			if (command) {
@@ -224,9 +241,9 @@ export async function parseMentions(
 				}
 				commandOutput += command.content
 				parsedText += `\n\n<command name="${commandName}">\n${commandOutput}\n</command>`
-			} else {
-				parsedText += `\n\n<command name="${commandName}">\nCommand '${commandName}' not found. Available commands can be found in .roo/commands/ or ~/.roo/commands/\n</command>`
 			}
+			// Note: We don't add error messages for non-existent commands anymore
+			// since we only process commands that we've already verified exist
 		} catch (error) {
 			parsedText += `\n\n<command name="${commandName}">\nError loading command '${commandName}': ${error.message}\n</command>`
 		}
