@@ -61,10 +61,7 @@ export class CloudService {
 
 			await this.authService.initialize()
 
-			this.authService.on("attempting-session", this.authListener)
-			this.authService.on("inactive-session", this.authListener)
-			this.authService.on("active-session", this.authListener)
-			this.authService.on("logged-out", this.authListener)
+			this.authService.on("auth-state-changed", this.authListener)
 			this.authService.on("user-info", this.authListener)
 
 			// Check for static settings environment variable.
@@ -220,10 +217,7 @@ export class CloudService {
 
 	public dispose(): void {
 		if (this.authService) {
-			this.authService.off("attempting-session", this.authListener)
-			this.authService.off("inactive-session", this.authListener)
-			this.authService.off("active-session", this.authListener)
-			this.authService.off("logged-out", this.authListener)
+			this.authService.off("auth-state-changed", this.authListener)
 			this.authService.off("user-info", this.authListener)
 		}
 		if (this.settingsService) {

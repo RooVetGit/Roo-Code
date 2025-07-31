@@ -143,8 +143,7 @@ describe("CloudSettingsService", () => {
 		it("should set up auth service event listeners", () => {
 			cloudSettingsService.initialize()
 
-			expect(mockAuthService.on).toHaveBeenCalledWith("active-session", expect.any(Function))
-			expect(mockAuthService.on).toHaveBeenCalledWith("logged-out", expect.any(Function))
+			expect(mockAuthService.on).toHaveBeenCalledWith("auth-state-changed", expect.any(Function))
 		})
 
 		it("should start timer if user has active session", () => {
@@ -445,25 +444,31 @@ describe("CloudSettingsService", () => {
 	})
 
 	describe("auth service event handlers", () => {
-		it("should start timer when active-session event is triggered", () => {
+		it("should start timer when auth-state-changed event is triggered with active-session", () => {
 			cloudSettingsService.initialize()
 
-			// Get the active-session handler
-			const activeSessionHandler = mockAuthService.on.mock.calls.find((call) => call[0] === "active-session")?.[1]
-			expect(activeSessionHandler).toBeDefined()
+			// Get the auth-state-changed handler
+			const authStateChangedHandler = mockAuthService.on.mock.calls.find(
+				(call) => call[0] === "auth-state-changed",
+			)?.[1]
+			expect(authStateChangedHandler).toBeDefined()
 
-			activeSessionHandler()
+			// Simulate active-session state change
+			authStateChangedHandler({ state: "active-session", previousState: "attempting-session" })
 			expect(mockRefreshTimer.start).toHaveBeenCalled()
 		})
 
-		it("should stop timer and remove settings when logged-out event is triggered", async () => {
+		it("should stop timer and remove settings when auth-state-changed event is triggered with logged-out", async () => {
 			cloudSettingsService.initialize()
 
-			// Get the logged-out handler
-			const loggedOutHandler = mockAuthService.on.mock.calls.find((call) => call[0] === "logged-out")?.[1]
-			expect(loggedOutHandler).toBeDefined()
+			// Get the auth-state-changed handler
+			const authStateChangedHandler = mockAuthService.on.mock.calls.find(
+				(call) => call[0] === "auth-state-changed",
+			)?.[1]
+			expect(authStateChangedHandler).toBeDefined()
 
-			await loggedOutHandler()
+			// Simulate logged-out state change from active-session
+			await authStateChangedHandler({ state: "logged-out", previousState: "active-session" })
 			expect(mockRefreshTimer.stop).toHaveBeenCalled()
 			expect(mockContext.globalState.update).toHaveBeenCalledWith("organization-settings", undefined)
 		})

@@ -9,7 +9,7 @@ import {
 } from "@roo-code/types"
 
 import { getRooCodeApiUrl } from "./Config"
-import type { AuthService } from "./auth"
+import type { AuthService, AuthState } from "./auth"
 import { RefreshTimer } from "./RefreshTimer"
 import type { SettingsService } from "./SettingsService"
 
@@ -56,13 +56,16 @@ export class CloudSettingsService extends EventEmitter<SettingsServiceEvents> im
 			this.removeSettings()
 		}
 
-		this.authService.on("active-session", () => {
-			this.timer.start()
-		})
+		this.authService.on("auth-state-changed", (data: { state: AuthState; previousState: AuthState }) => {
+			if (data.state === "active-session") {
+				this.timer.start()
+			} else if (data.previousState === "active-session") {
+				this.timer.stop()
 
-		this.authService.on("logged-out", () => {
-			this.timer.stop()
-			this.removeSettings()
+				if (data.state === "logged-out") {
+					this.removeSettings()
+				}
+			}
 		})
 
 		if (this.authService.hasActiveSession()) {
