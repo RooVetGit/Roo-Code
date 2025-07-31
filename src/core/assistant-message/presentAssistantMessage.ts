@@ -6,6 +6,7 @@ import { TelemetryService } from "@roo-code/telemetry"
 
 import { defaultModeSlug, getModeBySlug } from "../../shared/modes"
 import type { ToolParamName, ToolResponse } from "../../shared/tools"
+import { compressToolResult, getCompressionLimitsForContextWindow } from "../tools/compressToolResult"
 
 import { fetchInstructionsTool } from "../tools/fetchInstructionsTool"
 import { listFilesTool } from "../tools/listFilesTool"
@@ -249,9 +250,34 @@ export async function presentAssistantMessage(cline: Task) {
 				cline.userMessageContent.push({ type: "text", text: `${toolDescription()} Result:` })
 
 				if (typeof content === "string") {
-					cline.userMessageContent.push({ type: "text", text: content || "(tool did not return anything)" })
+					// Get compression limits based on the model's context window
+					const modelInfo = cline.api.getModel().info
+					const contextWindow = modelInfo.contextWindow
+					const { characterLimit, lineLimit } = getCompressionLimitsForContextWindow(contextWindow)
+
+					// Compress the tool result if it's too large
+					const processedContent = compressToolResult(
+						content || "(tool did not return anything)",
+						characterLimit,
+						lineLimit,
+					)
+					cline.userMessageContent.push({ type: "text", text: processedContent })
 				} else {
-					cline.userMessageContent.push(...content)
+					// For non-string content (arrays of blocks), we still need to process text blocks
+					const processedContent = content.map((block) => {
+						if (block.type === "text" && block.text) {
+							const modelInfo = cline.api.getModel().info
+							const contextWindow = modelInfo.contextWindow
+							const { characterLimit, lineLimit } = getCompressionLimitsForContextWindow(contextWindow)
+
+							return {
+								...block,
+								text: compressToolResult(block.text, characterLimit, lineLimit),
+							}
+						}
+						return block
+					})
+					cline.userMessageContent.push(...processedContent)
 				}
 
 				// Once a tool result has been collected, ignore all other tool
