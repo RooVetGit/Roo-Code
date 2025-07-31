@@ -33,15 +33,31 @@ vi.mock("@vscode/webview-ui-toolkit/react", () => ({
 }))
 
 // Mock the ExtensionStateContext
+const { mockGetCurrentTaskItem, mockSetCurrentTaskItem } = vi.hoisted(() => {
+	let currentTaskItem: any = { id: "test-task-id", mode: "code" }
+	return {
+		mockGetCurrentTaskItem: () => currentTaskItem,
+		mockSetCurrentTaskItem: (newItem: any) => {
+			currentTaskItem = newItem
+		},
+	}
+})
+
 vi.mock("@src/context/ExtensionStateContext", () => ({
 	useExtensionState: () => ({
 		apiConfiguration: {
 			apiProvider: "anthropic",
-			apiKey: "test-api-key", // Add relevant fields
-			apiModelId: "claude-3-opus-20240229", // Add relevant fields
-		} as ProviderSettings, // Optional: Add type assertion if ProviderSettings is imported
-		currentTaskItem: { id: "test-task-id" },
+			apiKey: "test-api-key",
+			apiModelId: "claude-3-opus-20240229",
+		} as ProviderSettings,
+		currentTaskItem: mockGetCurrentTaskItem(),
+		customModes: [],
 	}),
+}))
+
+// Mock ModeBadge component
+vi.mock("@/components/common/ModeBadge", () => ({
+	ModeBadge: ({ modeSlug }: { modeSlug: string }) => <div data-testid="mode-badge">{modeSlug}</div>,
 }))
 
 describe("TaskHeader", () => {
@@ -121,5 +137,32 @@ describe("TaskHeader", () => {
 		expect(condenseButton).toBeDisabled()
 		fireEvent.click(condenseButton!)
 		expect(handleCondenseContext).not.toHaveBeenCalled()
+	})
+
+	it("should display mode badge when currentTaskItem has mode", () => {
+		renderTaskHeader()
+		expect(screen.getByTestId("mode-badge")).toBeInTheDocument()
+		expect(screen.getByText("code")).toBeInTheDocument()
+	})
+
+	it("should not display mode badge when currentTaskItem has no mode", () => {
+		// Override the mock for this test
+		const originalTaskItem = mockGetCurrentTaskItem()
+		mockSetCurrentTaskItem({
+			id: "test-task-id",
+			number: 1,
+			ts: Date.now(),
+			task: "Test task",
+			tokensIn: 100,
+			tokensOut: 50,
+			totalCost: 0.05,
+			// No mode property
+		})
+
+		renderTaskHeader()
+		expect(screen.queryByTestId("mode-badge")).not.toBeInTheDocument()
+
+		// Restore original mock
+		mockSetCurrentTaskItem(originalTaskItem)
 	})
 })
