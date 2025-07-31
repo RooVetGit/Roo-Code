@@ -1953,7 +1953,7 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 																<VSCodeButton
 																	appearance="primary"
 																	disabled={!enableButtons}
-																	className="ml-[6px] align-middle"
+																	className="ml-1 w-9 flex items-center justify-center p-0"
 																	onClick={() => {
 																		// Find and click the share button
 																		const shareButtons =
