@@ -33,15 +33,9 @@ vi.mock("@vscode/webview-ui-toolkit/react", () => ({
 }))
 
 // Mock the ExtensionStateContext
-const { mockGetCurrentTaskItem, mockSetCurrentTaskItem } = vi.hoisted(() => {
-	let currentTaskItem: any = { id: "test-task-id", mode: "code" }
-	return {
-		mockGetCurrentTaskItem: () => currentTaskItem,
-		mockSetCurrentTaskItem: (newItem: any) => {
-			currentTaskItem = newItem
-		},
-	}
-})
+const mockCurrentTaskItem = vi.hoisted(() => ({
+	value: { id: "test-task-id", mode: "code" } as any,
+}))
 
 vi.mock("@src/context/ExtensionStateContext", () => ({
 	useExtensionState: () => ({
@@ -50,7 +44,7 @@ vi.mock("@src/context/ExtensionStateContext", () => ({
 			apiKey: "test-api-key",
 			apiModelId: "claude-3-opus-20240229",
 		} as ProviderSettings,
-		currentTaskItem: mockGetCurrentTaskItem(),
+		currentTaskItem: mockCurrentTaskItem.value,
 		customModes: [],
 	}),
 }))
@@ -147,22 +141,16 @@ describe("TaskHeader", () => {
 
 	it("should not display mode badge when currentTaskItem has no mode", () => {
 		// Override the mock for this test
-		const originalTaskItem = mockGetCurrentTaskItem()
-		mockSetCurrentTaskItem({
+		const originalTaskItem = mockCurrentTaskItem.value
+		mockCurrentTaskItem.value = {
 			id: "test-task-id",
-			number: 1,
-			ts: Date.now(),
-			task: "Test task",
-			tokensIn: 100,
-			tokensOut: 50,
-			totalCost: 0.05,
 			// No mode property
-		})
+		}
 
 		renderTaskHeader()
 		expect(screen.queryByTestId("mode-badge")).not.toBeInTheDocument()
 
 		// Restore original mock
-		mockSetCurrentTaskItem(originalTaskItem)
+		mockCurrentTaskItem.value = originalTaskItem
 	})
 })

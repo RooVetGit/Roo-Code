@@ -3,13 +3,12 @@ import { ModeBadge } from "../ModeBadge"
 
 // Mock the shared modes module
 vi.mock("@roo/modes", () => ({
-	findModeBySlug: vi.fn((slug, _modes) => {
+	getModeBySlug: vi.fn((slug, _customModes) => {
 		if (slug === "code") return { slug: "code", name: "💻 Code" }
 		if (slug === "architect") return { slug: "architect", name: "🏗️ Architect" }
 		if (slug === "custom") return { slug: "custom", name: "Very Long Custom Mode Name That Should Be Truncated" }
 		return undefined
 	}),
-	getAllModes: vi.fn(() => []),
 }))
 
 // Mock ExtensionStateContext
@@ -42,10 +41,11 @@ describe("ModeBadge", () => {
 		expect(badge).toHaveClass("max-w-[120px]")
 	})
 
-	it("shows full name in tooltip", async () => {
+	it("shows full name in tooltip", () => {
 		render(<ModeBadge modeSlug="custom" />)
-		// Tooltip content would be tested with user interaction
-		// This is a simplified test
-		expect(screen.getByText(/Very Long Custom Mode Name/)).toBeInTheDocument()
+		// The tooltip content is set via the StandardTooltip's content prop
+		// We verify the text is rendered in the badge itself
+		const badge = screen.getByText(/Very Long Custom Mode Name/)
+		expect(badge).toBeInTheDocument()
 	})
 })

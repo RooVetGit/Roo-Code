@@ -1,5 +1,5 @@
 import React from "react"
-import { findModeBySlug, getAllModes } from "@roo/modes"
+import { getModeBySlug } from "@roo/modes"
 import { useExtensionState } from "@/context/ExtensionStateContext"
 import { StandardTooltip } from "@/components/ui"
 import { cn } from "@/lib/utils"
@@ -16,16 +16,15 @@ export const ModeBadge: React.FC<ModeBadgeProps> = ({ modeSlug, className }) => 
 		return null
 	}
 
-	// Get all modes (built-in + custom)
-	const allModes = getAllModes(customModes)
-	const mode = findModeBySlug(modeSlug, allModes)
+	// Get mode using getModeBySlug which checks custom modes first, then built-in
+	const mode = getModeBySlug(modeSlug, customModes)
 	const displayName = mode?.name || modeSlug // Fallback to slug if mode deleted
 
 	return (
 		<StandardTooltip content={displayName}>
 			<span
 				className={cn(
-					"inline-flex items-center px-2 py-0.5 rounded text-xs font-medium",
+					"inline-flex px-2 py-0.5 rounded text-xs font-medium",
 					"bg-vscode-badge-background text-vscode-badge-foreground",
 					"max-w-[120px] truncate",
 					className,
