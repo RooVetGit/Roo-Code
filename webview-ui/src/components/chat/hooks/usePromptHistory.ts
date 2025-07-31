@@ -161,18 +161,23 @@ export const usePromptHistory = ({
 						// Allow them to go back to history
 						if (historyIndex === -1 && tempInput !== "") {
 							// User typed something after navigating history, but wants to go back
-							// Save their current edits
-							setTempInput(inputValue)
-							// Go to the first history item
+							// Don't overwrite tempInput - it contains the original input we want to preserve
+							// Go to the most recent history item (index 0)
 							return navigateToHistory(0, textarea, isAtBeginning ? "start" : "end")
 						} else if (historyIndex >= 0) {
 							if (historyIndex > 0) {
 								// Keep cursor position consistent with where we started
 								return navigateToHistory(historyIndex - 1, textarea, isAtBeginning ? "start" : "end")
 							} else if (historyIndex === 0) {
+								// At the most recent history item, go back to original input
 								returnToCurrentInput(textarea, isAtBeginning ? "start" : "end")
 								return true
 							}
+						} else if (historyIndex === -1 && inputValue !== "") {
+							// User is at their original input (or any input) and wants to clear it
+							setInputValue("")
+							setCursorPosition(textarea, isAtBeginning ? "start" : "end", 0)
+							return true
 						}
 					}
 				}
