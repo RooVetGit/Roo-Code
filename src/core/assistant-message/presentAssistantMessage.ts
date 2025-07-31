@@ -82,7 +82,7 @@ export async function presentAssistantMessage(cline: Task) {
 
 	switch (block.type) {
 		case "text": {
-			if (cline.didRejectTool || cline.didAlreadyUseTool) {
+			if (cline.didRejectTool) {
 				break
 			}
 
@@ -551,7 +551,12 @@ export async function presentAssistantMessage(cline: Task) {
 	// skip execution since `didRejectTool` and iterate until `contentIndex` is
 	// set to message length and it sets userMessageContentReady to true itself
 	// (instead of preemptively doing it in iterator).
-	if (!block.partial || cline.didRejectTool || cline.didAlreadyUseTool) {
+	if (
+		!block.partial ||
+		cline.didRejectTool ||
+		(cline.didAlreadyUseTool && block.type !== "tool_use") ||
+		(cline.didAlreadyUseTool && block.type === "tool_use")
+	) {
 		// Block is finished streaming and executing.
 		if (cline.currentStreamingContentIndex === cline.assistantMessageContent.length - 1) {
 			// It's okay that we increment if !didCompleteReadingStream, it'll
