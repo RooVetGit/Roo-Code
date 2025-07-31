@@ -575,11 +575,13 @@ const ApiOptions = ({
 							onChange={handleInputChange("modelTemperature", noTransform)}
 							maxValue={2}
 						/>
-						<MaxTokensSlider
-							value={apiConfiguration.modelMaxTokens}
-							onChange={(value) => setApiConfigurationField("modelMaxTokens", value)}
-							modelInfo={selectedModelInfo}
-						/>
+						{selectedProvider !== "openai" && (
+							<MaxTokensSlider
+								value={apiConfiguration.modelMaxTokens}
+								onChange={(value) => setApiConfigurationField("modelMaxTokens", value)}
+								modelInfo={selectedModelInfo}
+							/>
+						)}
 						<RateLimitSecondsControl
 							value={apiConfiguration.rateLimitSeconds || 0}
 							onChange={(value) => setApiConfigurationField("rateLimitSeconds", value)}

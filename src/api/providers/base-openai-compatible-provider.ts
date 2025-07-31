@@ -4,7 +4,6 @@ import OpenAI from "openai"
 import type { ModelInfo } from "@roo-code/types"
 
 import type { ApiHandlerOptions } from "../../shared/api"
-import { getModelMaxOutputTokens } from "../../shared/api"
 import { ApiStream } from "../transform/stream"
 import { convertToOpenAiMessages } from "../transform/openai-format"
 
@@ -68,17 +67,15 @@ export abstract class BaseOpenAiCompatibleProvider<ModelName extends string>
 		messages: Anthropic.Messages.MessageParam[],
 		metadata?: ApiHandlerCreateMessageMetadata,
 	): ApiStream {
-		const model = this.getModel()
-		const max_tokens = getModelMaxOutputTokens({
-			modelId: model.id,
-			model: model.info,
-			settings: this.options as any,
-		})
+		const {
+			id: model,
+			info: { maxTokens: max_tokens },
+		} = this.getModel()
 
 		const temperature = this.options.modelTemperature ?? this.defaultTemperature
 
 		const params: OpenAI.Chat.Completions.ChatCompletionCreateParamsStreaming = {
-			model: model.id,
+			model,
 			max_tokens,
 			temperature,
 			messages: [{ role: "system", content: systemPrompt }, ...convertToOpenAiMessages(messages)],
