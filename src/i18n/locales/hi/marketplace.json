@@ -2,7 +2,8 @@
 	"type-group": {
 		"modes": "मोड्स",
 		"mcps": "MCP सर्वर",
-		"match": "मैच"
+		"match": "मैच",
+		"agents": "एजेंट्स"
 	},
 	"item-card": {
 		"type-mode": "मोड",
@@ -14,7 +15,8 @@
 		"filter-by-tag": "टैग द्वारा फ़िल्टर करें: {{tag}}",
 		"component-details": "कंपोनेंट विवरण",
 		"view": "देखें",
-		"source": "स्रोत"
+		"source": "स्रोत",
+		"type-agent": "एजेंट"
 	},
 	"filters": {
 		"search": {
@@ -24,7 +26,8 @@
 			"label": "प्रकार",
 			"all": "सभी प्रकार",
 			"mode": "मोड",
-			"mcpServer": "MCP सर्वर"
+			"mcpServer": "MCP सर्वर",
+			"agent": "एजेंट"
 		},
 		"sort": {
 			"label": "इसके द्वारा क्रमबद्ध करें",

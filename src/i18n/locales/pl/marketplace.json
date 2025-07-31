@@ -2,7 +2,8 @@
 	"type-group": {
 		"modes": "Tryby",
 		"mcps": "Serwery MCP",
-		"match": "dopasowanie"
+		"match": "dopasowanie",
+		"agents": "Agenci"
 	},
 	"item-card": {
 		"type-mode": "Tryb",
@@ -14,7 +15,8 @@
 		"filter-by-tag": "Filtruj według tagu: {{tag}}",
 		"component-details": "Szczegóły komponentu",
 		"view": "Zobacz",
-		"source": "Źródło"
+		"source": "Źródło",
+		"type-agent": "Agent"
 	},
 	"filters": {
 		"search": {
@@ -24,7 +26,8 @@
 			"label": "Typ",
 			"all": "Wszystkie typy",
 			"mode": "Tryb",
-			"mcpServer": "Serwer MCP"
+			"mcpServer": "Serwer MCP",
+			"agent": "Agent"
 		},
 		"sort": {
 			"label": "Sortuj według",

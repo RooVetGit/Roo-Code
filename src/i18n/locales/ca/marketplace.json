@@ -2,7 +2,8 @@
 	"type-group": {
 		"modes": "Modes",
 		"mcps": "Servidors MCP",
-		"match": "coincidència"
+		"match": "coincidència",
+		"agents": "Agents"
 	},
 	"item-card": {
 		"type-mode": "Mode",
@@ -14,7 +15,8 @@
 		"filter-by-tag": "Filtrar per etiqueta: {{tag}}",
 		"component-details": "Detalls del component",
 		"view": "Veure",
-		"source": "Font"
+		"source": "Font",
+		"type-agent": "Agent"
 	},
 	"filters": {
 		"search": {
@@ -24,7 +26,8 @@
 			"label": "Tipus",
 			"all": "Tots els tipus",
 			"mode": "Mode",
-			"mcpServer": "Servidor MCP"
+			"mcpServer": "Servidor MCP",
+			"agent": "Agent"
 		},
 		"sort": {
 			"label": "Ordenar per",

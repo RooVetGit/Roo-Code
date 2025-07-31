@@ -2,7 +2,8 @@
 	"type-group": {
 		"modes": "モード",
 		"mcps": "MCPサーバー",
-		"match": "マッチ"
+		"match": "マッチ",
+		"agents": "エージェント"
 	},
 	"item-card": {
 		"type-mode": "モード",
@@ -14,7 +15,8 @@
 		"filter-by-tag": "タグでフィルター: {{tag}}",
 		"component-details": "コンポーネントの詳細",
 		"view": "表示",
-		"source": "ソース"
+		"source": "ソース",
+		"type-agent": "エージェント"
 	},
 	"filters": {
 		"search": {
@@ -24,7 +26,8 @@
 			"label": "タイプ",
 			"all": "すべてのタイプ",
 			"mode": "モード",
-			"mcpServer": "MCPサーバー"
+			"mcpServer": "MCPサーバー",
+			"agent": "エージェント"
 		},
 		"sort": {
 			"label": "並び替え",

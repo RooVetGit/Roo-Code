@@ -14,5 +14,11 @@
 		"errors": {
 			"policy_restriction": "ポリシー制限により新しいタスクを作成できませんでした。"
 		}
+	},
+	"agentSelector": {
+		"selectAgent": "エージェントを選択",
+		"currentAgent": "現在のエージェント: {{agent}}",
+		"switchAgent": "{{agent}}に切り替え",
+		"noAgentsAvailable": "利用可能なエージェントがありません"
 	}
 }
