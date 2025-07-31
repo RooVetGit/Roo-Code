@@ -3,6 +3,7 @@ import type { HistoryItem } from "@roo-code/types"
 import { formatDate } from "@/utils/format"
 import { DeleteButton } from "./DeleteButton"
 import { cn } from "@/lib/utils"
+import { ModeBadge } from "@/components/common/ModeBadge"
 
 export interface TaskItemHeaderProps {
 	item: HistoryItem
@@ -22,6 +23,7 @@ const TaskItemHeader: React.FC<TaskItemHeaderProps> = ({ item, isSelectionMode, 
 				<span className="text-vscode-descriptionForeground font-medium text-sm uppercase">
 					{formatDate(item.ts)}
 				</span>
+				{item.mode && <ModeBadge modeSlug={item.mode} />}
 			</div>
 
 			{/* Action Buttons */}
