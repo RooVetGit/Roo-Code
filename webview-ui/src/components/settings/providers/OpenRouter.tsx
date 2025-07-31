@@ -10,6 +10,7 @@ import type { RouterModels } from "@roo/api"
 import { useAppTranslation } from "@src/i18n/TranslationContext"
 import { getOpenRouterAuthUrl } from "@src/oauth/urls"
 import { VSCodeButtonLink } from "@src/components/common/VSCodeButtonLink"
+import { ApiKeyInput } from "@src/components/common/ApiKeyInput"
 
 import { inputEventTransform, noTransform } from "../transforms"
 
@@ -53,14 +54,12 @@ export const OpenRouter = ({
 
 	return (
 		<>
-			<VSCodeTextField
+			<ApiKeyInput
 				value={apiConfiguration?.openRouterApiKey || ""}
-				type="password"
 				onInput={handleInputChange("openRouterApiKey")}
 				placeholder={t("settings:placeholders.apiKey")}
-				className="w-full">
+				label={t("settings:providers.openRouterApiKey")}>
 				<div className="flex justify-between items-center mb-1">
-					<label className="block font-medium">{t("settings:providers.openRouterApiKey")}</label>
 					{apiConfiguration?.openRouterApiKey && (
 						<OpenRouterBalanceDisplay
 							apiKey={apiConfiguration.openRouterApiKey}
@@ -68,7 +67,7 @@ export const OpenRouter = ({
 						/>
 					)}
 				</div>
-			</VSCodeTextField>
+			</ApiKeyInput>
 			<div className="text-sm text-vscode-descriptionForeground -mt-2">
 				{t("settings:providers.apiKeyStorageNotice")}
 			</div>

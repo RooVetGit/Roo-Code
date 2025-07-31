@@ -5,6 +5,7 @@ import type { ProviderSettings } from "@roo-code/types"
 
 import { useAppTranslation } from "@src/i18n/TranslationContext"
 import { VSCodeButtonLink } from "@src/components/common/VSCodeButtonLink"
+import { ApiKeyInput } from "@src/components/common/ApiKeyInput"
 
 import { inputEventTransform } from "../transforms"
 
@@ -29,14 +30,12 @@ export const Groq = ({ apiConfiguration, setApiConfigurationField }: GroqProps) 
 
 	return (
 		<>
-			<VSCodeTextField
+			<ApiKeyInput
 				value={apiConfiguration?.groqApiKey || ""}
-				type="password"
 				onInput={handleInputChange("groqApiKey")}
 				placeholder={t("settings:placeholders.apiKey")}
-				className="w-full">
-				<label className="block font-medium mb-1">{t("settings:providers.groqApiKey")}</label>
-			</VSCodeTextField>
+				label={t("settings:providers.groqApiKey")}
+			/>
 			<div className="text-sm text-vscode-descriptionForeground -mt-2">
 				{t("settings:providers.apiKeyStorageNotice")}
 			</div>
