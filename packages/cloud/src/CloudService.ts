@@ -24,7 +24,7 @@ type AuthStateChangedPayload = CloudServiceEvents["auth-state-changed"][0]
 type AuthUserInfoPayload = CloudServiceEvents["user-info"][0]
 type SettingsPayload = CloudServiceEvents["settings-updated"][0]
 
-export class CloudService extends EventEmitter<CloudServiceEvents> {
+export class CloudService extends EventEmitter<CloudServiceEvents> implements vscode.Disposable {
 	private static _instance: CloudService | null = null
 
 	private context: vscode.ExtensionContext
