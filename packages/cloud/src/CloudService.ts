@@ -1,4 +1,5 @@
 import * as vscode from "vscode"
+import EventEmitter from "events"
 
 import type {
 	CloudUserInfo,
@@ -10,7 +11,7 @@ import type {
 } from "@roo-code/types"
 import { TelemetryService } from "@roo-code/telemetry"
 
-import { CloudServiceCallbacks } from "./types"
+import { CloudServiceEvents } from "./types"
 import type { AuthService } from "./auth"
 import { WebAuthService, StaticTokenAuthService } from "./auth"
 import type { SettingsService } from "./SettingsService"
@@ -19,29 +20,37 @@ import { StaticSettingsService } from "./StaticSettingsService"
 import { TelemetryClient } from "./TelemetryClient"
 import { ShareService, TaskNotFoundError } from "./ShareService"
 
-export class CloudService {
+type AuthStateChangedPayload = CloudServiceEvents["auth-state-changed"][0]
+type AuthUserInfoPayload = CloudServiceEvents["user-info"][0]
+type SettingsPayload = CloudServiceEvents["settings-updated"][0]
+
+export class CloudService extends EventEmitter<CloudServiceEvents> {
 	private static _instance: CloudService | null = null
 
 	private context: vscode.ExtensionContext
-	private callbacks: CloudServiceCallbacks
-	private authListener: () => void
+	private authStateListener: (data: AuthStateChangedPayload) => void
+	private authUserInfoListener: (data: AuthUserInfoPayload) => void
 	private authService: AuthService | null = null
-	private settingsListener: () => void
+	private settingsListener: (data: SettingsPayload) => void
 	private settingsService: SettingsService | null = null
 	private telemetryClient: TelemetryClient | null = null
 	private shareService: ShareService | null = null
 	private isInitialized = false
 	private log: (...args: unknown[]) => void
 
-	private constructor(context: vscode.ExtensionContext, callbacks: CloudServiceCallbacks) {
+	private constructor(context: vscode.ExtensionContext, log?: (...args: unknown[]) => void) {
+		super()
+
 		this.context = context
-		this.callbacks = callbacks
-		this.log = callbacks.log || console.log
-		this.authListener = () => {
-			this.callbacks.stateChanged?.()
+		this.log = log || console.log
+		this.authStateListener = (data: AuthStateChangedPayload) => {
+			this.emit("auth-state-changed", data)
 		}
-		this.settingsListener = () => {
-			this.callbacks.stateChanged?.()
+		this.authUserInfoListener = (data: AuthUserInfoPayload) => {
+			this.emit("user-info", data)
+		}
+		this.settingsListener = (data: SettingsPayload) => {
+			this.emit("settings-updated", data)
 		}
 	}
 
@@ -61,8 +70,8 @@ export class CloudService {
 
 			await this.authService.initialize()
 
-			this.authService.on("auth-state-changed", this.authListener)
-			this.authService.on("user-info", this.authListener)
+			this.authService.on("auth-state-changed", this.authStateListener)
+			this.authService.on("user-info", this.authUserInfoListener)
 
 			// Check for static settings environment variable.
 			const staticOrgSettings = process.env.ROO_CODE_CLOUD_ORG_SETTINGS
@@ -217,8 +226,8 @@ export class CloudService {
 
 	public dispose(): void {
 		if (this.authService) {
-			this.authService.off("auth-state-changed", this.authListener)
-			this.authService.off("user-info", this.authListener)
+			this.authService.off("auth-state-changed", this.authStateListener)
+			this.authService.off("user-info", this.authUserInfoListener)
 		}
 		if (this.settingsService) {
 			if (this.settingsService instanceof CloudSettingsService) {
@@ -246,13 +255,13 @@ export class CloudService {
 
 	static async createInstance(
 		context: vscode.ExtensionContext,
-		callbacks: CloudServiceCallbacks = {},
+		log?: (...args: unknown[]) => void,
 	): Promise<CloudService> {
 		if (this._instance) {
 			throw new Error("CloudService instance already created")
 		}
 
-		this._instance = new CloudService(context, callbacks)
+		this._instance = new CloudService(context, log)
 		await this._instance.initialize()
 		return this._instance
 	}

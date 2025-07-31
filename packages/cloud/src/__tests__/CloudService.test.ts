@@ -9,7 +9,6 @@ import { CloudSettingsService } from "../CloudSettingsService"
 import { ShareService, TaskNotFoundError } from "../ShareService"
 import { TelemetryClient } from "../TelemetryClient"
 import { TelemetryService } from "@roo-code/telemetry"
-import { CloudServiceCallbacks } from "../types"
 
 vi.mock("vscode", () => ({
 	ExtensionContext: vi.fn(),
@@ -172,11 +171,9 @@ describe("CloudService", () => {
 
 	describe("createInstance", () => {
 		it("should create and initialize CloudService instance", async () => {
-			const callbacks = {
-				stateChanged: vi.fn(),
-			}
+			const mockLog = vi.fn()
 
-			const cloudService = await CloudService.createInstance(mockContext, callbacks)
+			const cloudService = await CloudService.createInstance(mockContext, mockLog)
 
 			expect(cloudService).toBeInstanceOf(CloudService)
 			expect(WebAuthService).toHaveBeenCalledWith(mockContext, expect.any(Function))
@@ -184,11 +181,9 @@ describe("CloudService", () => {
 		})
 
 		it("should set up event listeners for CloudSettingsService", async () => {
-			const callbacks = {
-				stateChanged: vi.fn(),
-			}
+			const mockLog = vi.fn()
 
-			await CloudService.createInstance(mockContext, callbacks)
+			await CloudService.createInstance(mockContext, mockLog)
 
 			expect(mockSettingsService.on).toHaveBeenCalledWith("settings-updated", expect.any(Function))
 		})
@@ -204,11 +199,9 @@ describe("CloudService", () => {
 
 	describe("authentication methods", () => {
 		let cloudService: CloudService
-		let callbacks: CloudServiceCallbacks
 
 		beforeEach(async () => {
-			callbacks = { stateChanged: vi.fn() }
-			cloudService = await CloudService.createInstance(mockContext, callbacks)
+			cloudService = await CloudService.createInstance(mockContext)
 		})
 
 		it("should delegate login to AuthService", async () => {
@@ -457,23 +450,24 @@ describe("CloudService", () => {
 
 	describe("settings event handling", () => {
 		let _cloudService: CloudService
-		let callbacks: CloudServiceCallbacks
 
 		beforeEach(async () => {
-			callbacks = { stateChanged: vi.fn() }
-			_cloudService = await CloudService.createInstance(mockContext, callbacks)
+			_cloudService = await CloudService.createInstance(mockContext)
 		})
 
-		it("should call stateChanged callback when settings are updated", async () => {
-			// Get the settings listener that was registered
-			const settingsListener = mockSettingsService.on.mock.calls.find(
+		it("should emit settings-updated event when settings are updated", async () => {
+			const settingsListener = vi.fn()
+			_cloudService.on("settings-updated", settingsListener)
+
+			// Get the settings listener that was registered with the settings service
+			const serviceSettingsListener = mockSettingsService.on.mock.calls.find(
 				(call) => call[0] === "settings-updated",
 			)?.[1]
 
-			expect(settingsListener).toBeDefined()
+			expect(serviceSettingsListener).toBeDefined()
 
 			// Simulate settings update event
-			settingsListener({
+			const settingsData = {
 				settings: {
 					version: 2,
 					defaultSettings: {},
@@ -484,9 +478,10 @@ describe("CloudService", () => {
 					defaultSettings: {},
 					allowList: { allowAll: true, providers: {} },
 				},
-			})
+			}
+			serviceSettingsListener(settingsData)
 
-			expect(callbacks.stateChanged).toHaveBeenCalled()
+			expect(settingsListener).toHaveBeenCalledWith(settingsData)
 		})
 	})
 
@@ -503,7 +498,7 @@ describe("CloudService", () => {
 			mockAuthService.hasOrIsAcquiringActiveSession.mockReturnValue(true)
 			mockAuthService.getState.mockReturnValue("active")
 
-			cloudService = await CloudService.createInstance(mockContext, {})
+			cloudService = await CloudService.createInstance(mockContext)
 		})
 
 		it("should call shareTask without retry when successful", async () => {
