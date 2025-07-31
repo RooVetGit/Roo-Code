@@ -52,6 +52,7 @@ import { BrowserSession } from "../../services/browser/BrowserSession"
 import { McpHub } from "../../services/mcp/McpHub"
 import { McpServerManager } from "../../services/mcp/McpServerManager"
 import { RepoPerTaskCheckpointService } from "../../services/checkpoints"
+import { TaskBridgeService } from "../../services/task-bridge/TaskBridgeService"
 
 // integrations
 import { DiffViewProvider } from "../../integrations/editor/DiffViewProvider"
@@ -247,6 +248,9 @@ export class Task extends EventEmitter<TaskEvents> {
 	checkpointService?: RepoPerTaskCheckpointService
 	checkpointServiceInitializing = false
 
+	// Task Bridge
+	taskBridgeService?: TaskBridgeService
+
 	// Streaming
 	isWaitingForFirstChunk = false
 	isStreaming = false
@@ -350,6 +354,12 @@ export class Task extends EventEmitter<TaskEvents> {
 		}
 
 		this.toolRepetitionDetector = new ToolRepetitionDetector(this.consecutiveMistakeLimit)
+
+		// TODO: Figure out when to enable task bridge.
+		// eslint-disable-next-line no-constant-condition
+		if (true) {
+			this.taskBridgeService = TaskBridgeService.getInstance()
+		}
 
 		onCreated?.(this)
 
@@ -1210,6 +1220,13 @@ export class Task extends EventEmitter<TaskEvents> {
 			this.pauseInterval = undefined
 		}
 
+		// Unsubscribe from TaskBridge service.
+		if (this.taskBridgeService) {
+			this.taskBridgeService
+				.unsubscribeFromTask(this.taskId)
+				.catch((error) => console.error("Error unsubscribing from task bridge:", error))
+		}
+
 		// Release any terminals associated with this task.
 		try {
 			// Release any terminals associated with this task.
@@ -1303,6 +1320,11 @@ export class Task extends EventEmitter<TaskEvents> {
 	private async initiateTaskLoop(userContent: Anthropic.Messages.ContentBlockParam[]): Promise<void> {
 		// Kicks off the checkpoints initialization process in the background.
 		getCheckpointService(this)
+
+		if (this.taskBridgeService) {
+			await this.taskBridgeService.initialize()
+			await this.taskBridgeService.subscribeToTask(this)
+		}
 
 		let nextUserContent = userContent
 		let includeFileDetails = true
