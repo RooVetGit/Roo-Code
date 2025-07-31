@@ -11,6 +11,7 @@ import {
 	type ProviderSettings,
 	type GlobalState,
 	type ClineMessage,
+	type ModeConfig,
 	TelemetryEventName,
 } from "@roo-code/types"
 import { CloudService } from "@roo-code/cloud"
@@ -25,6 +26,7 @@ import { supportPrompt } from "../../shared/support-prompt"
 import { MessageEnhancer } from "./messageEnhancer"
 
 import { checkoutDiffPayloadSchema, checkoutRestorePayloadSchema, WebviewMessage } from "../../shared/WebviewMessage"
+import { ExtensionMessage } from "../../shared/ExtensionMessage"
 import { checkExistKey } from "../../shared/checkExistApiConfig"
 import { experimentDefault } from "../../shared/experiments"
 import { Terminal } from "../../integrations/terminal/Terminal"
@@ -1876,13 +1878,34 @@ export const webviewMessageHandler = async (
 						// Update state after importing
 						const customModes = await provider.customModesManager.getCustomModes()
 						await updateGlobalState("customModes", customModes)
-						await provider.postStateToWebview()
 
-						// Send success message to webview
+						// Switch to the first imported mode if any were imported
+						if (result.importedModes && result.importedModes.length > 0) {
+							try {
+								// Switch to the first imported mode
+								const modeToSwitch = result.importedModes[0]
+
+								// Validate the mode exists before switching
+								const allModes = await provider.customModesManager.getCustomModes()
+								const validMode = allModes.find((m: ModeConfig) => m.slug === modeToSwitch)
+
+								if (validMode) {
+									await provider.handleModeSwitch(modeToSwitch as Mode)
+									// Update the webview with the new mode
+									await provider.postStateToWebview()
+								}
+							} catch (error) {
+								provider.log(`Failed to switch to imported mode: ${error}`)
+								// Continue with success response - import succeeded even if switch failed
+							}
+						}
+
+						// Send success message to webview with imported modes info
 						provider.postMessageToWebview({
 							type: "importModeResult",
 							success: true,
-						})
+							importedModes: result.importedModes,
+						} as ExtensionMessage)
 
 						// Show success message
 						vscode.window.showInformationMessage(t("common:info.mode_imported"))
@@ -1892,7 +1915,7 @@ export const webviewMessageHandler = async (
 							type: "importModeResult",
 							success: false,
 							error: result.error,
-						})
+						} as ExtensionMessage)
 
 						// Show error message
 						vscode.window.showErrorMessage(t("common:errors.mode_import_failed", { error: result.error }))
