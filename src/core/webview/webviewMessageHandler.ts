@@ -57,6 +57,15 @@ const ALLOWED_VSCODE_SETTINGS = new Set(["terminal.integrated.inheritEnv"])
 import { MarketplaceManager, MarketplaceItemType } from "../../services/marketplace"
 import { setPendingTodoList } from "../tools/updateTodoListTool"
 
+/**
+ * Helper function to extract error messages consistently
+ * @param error - The error to extract message from
+ * @returns A string representation of the error
+ */
+function extractErrorMessage(error: unknown): string {
+	return error instanceof Error ? error.message : String(error)
+}
+
 export const webviewMessageHandler = async (
 	provider: ClineProvider,
 	message: WebviewMessage,
@@ -128,9 +137,7 @@ export const webviewMessageHandler = async (
 					await provider.initClineWithHistoryItem(historyItem)
 				} catch (error) {
 					console.error("Error in delete message:", error)
-					vscode.window.showErrorMessage(
-						`Error deleting message: ${error instanceof Error ? error.message : String(error)}`,
-					)
+					vscode.window.showErrorMessage(`Error deleting message: ${extractErrorMessage(error)}`)
 				}
 			}
 		}
@@ -182,9 +189,7 @@ export const webviewMessageHandler = async (
 					// The webviewMessageHandler will handle the conversation state
 				} catch (error) {
 					console.error("Error in edit message:", error)
-					vscode.window.showErrorMessage(
-						`Error editing message: ${error instanceof Error ? error.message : String(error)}`,
-					)
+					vscode.window.showErrorMessage(`Error editing message: ${extractErrorMessage(error)}`)
 				}
 			}
 		}
@@ -462,9 +467,7 @@ export const webviewMessageHandler = async (
 							return { id, success: true }
 						} catch (error) {
 							// Keep error logging for debugging purposes
-							console.log(
-								`Failed to delete task ${id}: ${error instanceof Error ? error.message : String(error)}`,
-							)
+							console.log(`Failed to delete task ${id}: ${extractErrorMessage(error)}`)
 							return { id, success: false }
 						}
 					})
@@ -829,7 +832,7 @@ export const webviewMessageHandler = async (
 				// Refresh the webview state
 				await provider.postStateToWebview()
 			} catch (error) {
-				const errorMessage = error instanceof Error ? error.message : String(error)
+				const errorMessage = extractErrorMessage(error)
 				provider.log(`Failed to delete MCP server: ${errorMessage}`)
 				// Error messages are already handled by McpHub.deleteServer
 			}
@@ -1454,7 +1457,7 @@ export const webviewMessageHandler = async (
 					requestId: message.requestId,
 				})
 			} catch (error) {
-				const errorMessage = error instanceof Error ? error.message : String(error)
+				const errorMessage = extractErrorMessage(error)
 
 				// Send error response to webview
 				await provider.postMessageToWebview({
@@ -1731,7 +1734,7 @@ export const webviewMessageHandler = async (
 						vscode.window.showErrorMessage(
 							t("common:errors.delete_rules_folder_failed", {
 								rulesFolderPath,
-								error: error instanceof Error ? error.message : String(error),
+								error: extractErrorMessage(error),
 							}),
 						)
 						// Continue with mode deletion even if folder deletion fails
@@ -1818,7 +1821,7 @@ export const webviewMessageHandler = async (
 						})
 					}
 				} catch (error) {
-					const errorMessage = error instanceof Error ? error.message : String(error)
+					const errorMessage = extractErrorMessage(error)
 					provider.log(`Failed to export mode ${message.slug}: ${errorMessage}`)
 
 					// Send error message to webview
@@ -1890,12 +1893,24 @@ export const webviewMessageHandler = async (
 								const validMode = allModes.find((m: ModeConfig) => m.slug === modeToSwitch)
 
 								if (validMode) {
-									await provider.handleModeSwitch(modeToSwitch as Mode)
-									// Update the webview with the new mode
-									await provider.postStateToWebview()
+									// Validate that the mode slug is a valid string before type assertion
+									if (typeof modeToSwitch === "string" && modeToSwitch.length > 0) {
+										await provider.handleModeSwitch(modeToSwitch as Mode)
+										// Update the webview with the new mode
+										await provider.postStateToWebview()
+
+										// Track telemetry for automatic mode switch after import
+										TelemetryService.instance.captureEvent(TelemetryEventName.MODE_SWITCH, {
+											taskId: provider.getCurrentCline()?.taskId || "no-task",
+											newMode: modeToSwitch,
+											trigger: "auto-import",
+										})
+									} else {
+										provider.log(`Invalid mode slug for switching: ${modeToSwitch}`)
+									}
 								}
 							} catch (error) {
-								provider.log(`Failed to switch to imported mode: ${error}`)
+								provider.log(`Failed to switch to imported mode: ${extractErrorMessage(error)}`)
 								// Continue with success response - import succeeded even if switch failed
 							}
 						}
@@ -1929,7 +1944,7 @@ export const webviewMessageHandler = async (
 					})
 				}
 			} catch (error) {
-				const errorMessage = error instanceof Error ? error.message : String(error)
+				const errorMessage = extractErrorMessage(error)
 				provider.log(`Failed to import mode: ${errorMessage}`)
 
 				// Send error message to webview
@@ -2086,7 +2101,7 @@ export const webviewMessageHandler = async (
 						} catch (error) {
 							// Validation failed - the error state is already set by handleSettingsChange
 							provider.log(
-								`Embedder validation failed after provider change: ${error instanceof Error ? error.message : String(error)}`,
+								`Embedder validation failed after provider change: ${extractErrorMessage(error)}`,
 							)
 							// Send validation error to webview
 							await provider.postMessageToWebview({
@@ -2102,9 +2117,7 @@ export const webviewMessageHandler = async (
 							await provider.codeIndexManager.handleSettingsChange()
 						} catch (error) {
 							// Log but don't fail - settings are saved
-							provider.log(
-								`Settings change handling error: ${error instanceof Error ? error.message : String(error)}`,
-							)
+							provider.log(`Settings change handling error: ${extractErrorMessage(error)}`)
 						}
 					}
 
@@ -2118,9 +2131,7 @@ export const webviewMessageHandler = async (
 								await provider.codeIndexManager.initialize(provider.contextProxy)
 								provider.log(`Code index manager initialized after settings save`)
 							} catch (error) {
-								provider.log(
-									`Code index initialization failed: ${error instanceof Error ? error.message : String(error)}`,
-								)
+								provider.log(`Code index initialization failed: ${extractErrorMessage(error)}`)
 								// Send error status to webview
 								await provider.postMessageToWebview({
 									type: "indexingStatusUpdate",
@@ -2225,7 +2236,7 @@ export const webviewMessageHandler = async (
 					manager.startIndexing()
 				}
 			} catch (error) {
-				provider.log(`Error starting indexing: ${error instanceof Error ? error.message : String(error)}`)
+				provider.log(`Error starting indexing: ${extractErrorMessage(error)}`)
 			}
 			break
 		}
@@ -2246,12 +2257,12 @@ export const webviewMessageHandler = async (
 				await manager.clearIndexData()
 				provider.postMessageToWebview({ type: "indexCleared", values: { success: true } })
 			} catch (error) {
-				provider.log(`Error clearing index data: ${error instanceof Error ? error.message : String(error)}`)
+				provider.log(`Error clearing index data: ${extractErrorMessage(error)}`)
 				provider.postMessageToWebview({
 					type: "indexCleared",
 					values: {
 						success: false,
-						error: error instanceof Error ? error.message : String(error),
+						error: extractErrorMessage(error),
 					},
 				})
 			}
@@ -2307,7 +2318,7 @@ export const webviewMessageHandler = async (
 					provider.postMessageToWebview({
 						type: "marketplaceInstallResult",
 						success: false,
-						error: error instanceof Error ? error.message : String(error),
+						error: extractErrorMessage(error),
 						slug: message.mpItem.id,
 					})
 				}
@@ -2331,15 +2342,13 @@ export const webviewMessageHandler = async (
 					console.error(`Error removing marketplace item: ${error}`)
 
 					// Show error message to user
-					vscode.window.showErrorMessage(
-						`Failed to remove marketplace item: ${error instanceof Error ? error.message : String(error)}`,
-					)
+					vscode.window.showErrorMessage(`Failed to remove marketplace item: ${extractErrorMessage(error)}`)
 
 					// Send error message to webview
 					provider.postMessageToWebview({
 						type: "marketplaceRemoveResult",
 						success: false,
-						error: error instanceof Error ? error.message : String(error),
+						error: extractErrorMessage(error),
 						slug: message.mpItem.id,
 					})
 				}
@@ -2374,9 +2383,7 @@ export const webviewMessageHandler = async (
 					console.log(`Marketplace item with parameters installed and config file opened: ${configFilePath}`)
 				} catch (error) {
 					console.error(`Error installing marketplace item with parameters: ${error}`)
-					vscode.window.showErrorMessage(
-						`Failed to install marketplace item: ${error instanceof Error ? error.message : String(error)}`,
-					)
+					vscode.window.showErrorMessage(`Failed to install marketplace item: ${extractErrorMessage(error)}`)
 				}
 			}
 			break

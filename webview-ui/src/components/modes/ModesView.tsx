@@ -500,6 +500,7 @@ const ModesView = ({ onDone }: ModesViewProps) => {
 
 		window.addEventListener("message", handler)
 		return () => window.removeEventListener("message", handler)
+		// Re-register handler when dependencies change to ensure it has access to latest values
 	}, [customModes, findModeBySlug, handleModeSwitch, modes])
 
 	const handleAgentReset = (
