@@ -97,7 +97,7 @@ describe("Command Mentions", () => {
 
 			expect(mockGetCommand).toHaveBeenCalledWith("/test/cwd", "setup")
 			expect(mockGetCommand).toHaveBeenCalledWith("/test/cwd", "deploy")
-			expect(mockGetCommand).toHaveBeenCalledTimes(4) // Each command called twice (existence check + processing)
+			expect(mockGetCommand).toHaveBeenCalledTimes(2) // Each unique command called once (optimized)
 			expect(result).toContain('<command name="setup">')
 			expect(result).toContain("# Setup Environment")
 			expect(result).toContain('<command name="deploy">')
@@ -105,6 +105,7 @@ describe("Command Mentions", () => {
 		})
 
 		it("should leave non-existent commands unchanged", async () => {
+			mockGetCommand.mockReset()
 			mockGetCommand.mockResolvedValue(undefined)
 
 			const input = "/nonexistent command"
@@ -119,6 +120,7 @@ describe("Command Mentions", () => {
 		})
 
 		it("should handle command loading errors during existence check", async () => {
+			mockGetCommand.mockReset()
 			mockGetCommand.mockRejectedValue(new Error("Failed to load command"))
 
 			const input = "/error-command test"
@@ -131,21 +133,19 @@ describe("Command Mentions", () => {
 		})
 
 		it("should handle command loading errors during processing", async () => {
-			// First call (existence check) succeeds, second call (processing) fails
-			mockGetCommand
-				.mockResolvedValueOnce({
-					name: "error-command",
-					content: "# Error command",
-					source: "project",
-					filePath: "/project/.roo/commands/error-command.md",
-				})
-				.mockRejectedValueOnce(new Error("Failed to load command"))
+			// With optimization, command is loaded once and cached
+			mockGetCommand.mockResolvedValue({
+				name: "error-command",
+				content: "# Error command",
+				source: "project",
+				filePath: "/project/.roo/commands/error-command.md",
+			})
 
 			const input = "/error-command test"
 			const result = await callParseMentions(input)
 
 			expect(result).toContain('<command name="error-command">')
-			expect(result).toContain("Error loading command")
+			expect(result).toContain("# Error command")
 			expect(result).toContain("</command>")
 		})
 
