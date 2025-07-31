@@ -50,7 +50,7 @@
 		"invalidEmbedderType": "Tipo de embedder configurado inválido: {{embedderProvider}}",
 		"vectorDimensionNotDeterminedOpenAiCompatible": "Não foi possível determinar a dimensão do vetor para o modelo '{{modelId}}' com o provedor '{{provider}}'. Certifique-se de que a 'Dimensão de Embedding' esteja configurada corretamente nas configurações do provedor compatível com OpenAI.",
 		"vectorDimensionNotDetermined": "Não foi possível determinar a dimensão do vetor para o modelo '{{modelId}}' com o provedor '{{provider}}'. Verifique os perfis do modelo ou a configuração.",
-		"qdrantUrlMissing": "URL do Qdrant ausente para criação do armazenamento de vetores",
+		"vectorUrlMissing": "URL ausente para criação do armazenamento vetorial",
 		"codeIndexingNotConfigured": "Não é possível criar serviços: A indexação de código não está configurada corretamente"
 	},
 	"orchestrator": {

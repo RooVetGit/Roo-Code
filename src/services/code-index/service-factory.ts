@@ -142,7 +142,7 @@ export class CodeIndexServiceFactory {
 		}
 
 		// Assuming constructor is updated: new QdrantVectorStore(workspacePath, url, vectorSize, apiKey?)
-		throw new Error(t("embeddings:serviceFactory.vectorStoreUrlMissing"))
+		throw new Error(t("embeddings:serviceFactory.vectorUrlMissing"))
 	}
 
 	/**

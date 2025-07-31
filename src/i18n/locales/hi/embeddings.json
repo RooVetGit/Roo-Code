@@ -50,7 +50,7 @@
 		"invalidEmbedderType": "अमान्य एम्बेडर प्रकार कॉन्फ़िगर किया गया: {{embedderProvider}}",
 		"vectorDimensionNotDeterminedOpenAiCompatible": "प्रदाता '{{provider}}' के साथ मॉडल '{{modelId}}' के लिए वेक्टर आयाम निर्धारित नहीं कर सका। कृपया सुनिश्चित करें कि OpenAI-संगत प्रदाता सेटिंग्स में 'एम्बेडिंग आयाम' सही तरीके से सेट है।",
 		"vectorDimensionNotDetermined": "प्रदाता '{{provider}}' के साथ मॉडल '{{modelId}}' के लिए वेक्टर आयाम निर्धारित नहीं कर सका। मॉडल प्रोफ़ाइल या कॉन्फ़िगरेशन की जांच करें।",
-		"qdrantUrlMissing": "वेक्टर स्टोर बनाने के लिए Qdrant URL गायब है",
+		"vectorUrlMissing": "वेक्टर स्टोर बनाने के लिए URL गायब है",
 		"codeIndexingNotConfigured": "सेवाएं नहीं बना सकते: कोड इंडेक्सिंग ठीक से कॉन्फ़िगर नहीं है"
 	},
 	"orchestrator": {

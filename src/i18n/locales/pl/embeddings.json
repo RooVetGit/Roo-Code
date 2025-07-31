@@ -50,7 +50,7 @@
 		"invalidEmbedderType": "Skonfigurowano nieprawidłowy typ embeddera: {{embedderProvider}}",
 		"vectorDimensionNotDeterminedOpenAiCompatible": "Nie można określić wymiaru wektora dla modelu '{{modelId}}' z dostawcą '{{provider}}'. Upewnij się, że 'Wymiar osadzania' jest poprawnie ustawiony w ustawieniach dostawcy kompatybilnego z OpenAI.",
 		"vectorDimensionNotDetermined": "Nie można określić wymiaru wektora dla modelu '{{modelId}}' z dostawcą '{{provider}}'. Sprawdź profile modelu lub konfigurację.",
-		"qdrantUrlMissing": "Brak adresu URL Qdrant do utworzenia magazynu wektorów",
+		"vectorUrlMissing": "Brak adresu URL do utworzenia magazynu wektorowego",
 		"codeIndexingNotConfigured": "Nie można utworzyć usług: Indeksowanie kodu nie jest poprawnie skonfigurowane"
 	},
 	"orchestrator": {

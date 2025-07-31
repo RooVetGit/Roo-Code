@@ -657,7 +657,7 @@ describe("CodeIndexServiceFactory", () => {
 			mockGetModelDimension.mockReturnValue(1536)
 
 			// Act & Assert
-			expect(() => factory.createVectorStore()).toThrow("serviceFactory.qdrantUrlMissing")
+			expect(() => factory.createVectorStore()).toThrow("serviceFactory.vectorUrlMissing")
 		})
 	})
 
