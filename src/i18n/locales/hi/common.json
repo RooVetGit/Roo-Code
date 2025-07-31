@@ -165,7 +165,9 @@
 		},
 		"scope": {
 			"project": "परियोजना",
-			"global": "वैश्विक"
+			"global": "वैश्विक",
+			"projectShort": "P",
+			"globalShort": "G"
 		}
 	},
 	"marketplace": {

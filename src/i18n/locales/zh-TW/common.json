@@ -165,7 +165,9 @@
 		},
 		"scope": {
 			"project": "專案",
-			"global": "全域"
+			"global": "全域",
+			"projectShort": "P",
+			"globalShort": "G"
 		}
 	},
 	"marketplace": {

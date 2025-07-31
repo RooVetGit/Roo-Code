@@ -154,7 +154,9 @@
 		},
 		"scope": {
 			"project": "project",
-			"global": "global"
+			"global": "global",
+			"projectShort": "P",
+			"globalShort": "G"
 		}
 	},
 	"marketplace": {

@@ -165,7 +165,9 @@
 		},
 		"scope": {
 			"project": "proje",
-			"global": "küresel"
+			"global": "küresel",
+			"projectShort": "P",
+			"globalShort": "G"
 		}
 	},
 	"marketplace": {
