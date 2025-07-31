@@ -108,8 +108,6 @@ export type TaskEvents = {
 	taskCompleted: [taskId: string, tokenUsage: TokenUsage, toolUsage: ToolUsage]
 	taskTokenUsageUpdated: [taskId: string, tokenUsage: TokenUsage]
 	taskToolFailed: [taskId: string, tool: ToolName, error: string]
-	taskBusy: [taskId: string]
-	taskFree: [taskId: string]
 }
 
 export type TaskEventHandlers = {
@@ -712,7 +710,9 @@ export class Task extends EventEmitter<TaskEvents> {
 			await this.addToClineMessages({ ts: askTs, type: "ask", ask: type, text, isProtected })
 		}
 
+		console.log(`[Task#${this.taskId}] pWaitFor askResponse...`, type)
 		await pWaitFor(() => this.askResponse !== undefined || this.lastMessageTs !== askTs, { interval: 100 })
+		console.log(`[Task#${this.taskId}] pWaitFor askResponse done!`, this.askResponse)
 
 		if (this.lastMessageTs !== askTs) {
 			// Could happen if we send multiple asks in a row i.e. with
@@ -1019,7 +1019,7 @@ export class Task extends EventEmitter<TaskEvents> {
 		const lastClineMessage = this.clineMessages
 			.slice()
 			.reverse()
-			.find((m) => !(m.ask === "resume_task" || m.ask === "resume_completed_task")) // could be multiple resume tasks
+			.find((m) => !(m.ask === "resume_task" || m.ask === "resume_completed_task")) // Could be multiple resume tasks.
 
 		let askType: ClineAsk
 		if (lastClineMessage?.ask === "completion_result") {
@@ -1030,9 +1030,11 @@ export class Task extends EventEmitter<TaskEvents> {
 
 		this.isInitialized = true
 
-		const { response, text, images } = await this.ask(askType) // calls poststatetowebview
+		const { response, text, images } = await this.ask(askType) // Calls `postStateToWebview`.
+
 		let responseText: string | undefined
 		let responseImages: string[] | undefined
+
 		if (response === "messageResponse") {
 			await this.say("user_feedback", text, images)
 			responseText = text
@@ -1572,7 +1574,6 @@ export class Task extends EventEmitter<TaskEvents> {
 			let assistantMessage = ""
 			let reasoningMessage = ""
 			this.isStreaming = true
-			this.emit("taskBusy", this.taskId)
 
 			try {
 				for await (const chunk of stream) {
@@ -1679,7 +1680,6 @@ export class Task extends EventEmitter<TaskEvents> {
 				}
 			} finally {
 				this.isStreaming = false
-				this.emit("taskFree", this.taskId)
 			}
 
 			if (inputTokens > 0 || outputTokens > 0 || cacheWriteTokens > 0 || cacheReadTokens > 0) {

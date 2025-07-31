@@ -19,10 +19,7 @@ const taskBridgeMessageTypes = ["message", "task_event"] as const
 
 type TaskBridgeMessageType = (typeof taskBridgeMessageTypes)[number]
 
-const taskBridgeMessagePayloadSchema = z.object({
-	eventType: z.string(),
-	data: z.record(z.string(), z.unknown()),
-})
+const taskBridgeMessagePayloadSchema = z.record(z.string(), z.unknown())
 
 type TaskBridgeMessagePayload = z.infer<typeof taskBridgeMessagePayloadSchema>
 
@@ -35,11 +32,13 @@ const taskBridgeMessageSchema = z.object({
 
 export type TaskBridgeMessage = z.infer<typeof taskBridgeMessageSchema>
 
-export interface QueuedMessage {
-	text: string
-	images?: string[]
-	timestamp: number
-}
+const queuedMessageSchema = z.object({
+	text: z.string(),
+	images: z.array(z.string()).optional(),
+	timestamp: z.number(),
+})
+
+export type QueuedMessage = z.infer<typeof queuedMessageSchema>
 
 interface InternalQueuedMessage {
 	id: string
@@ -90,7 +89,30 @@ export class TaskBridgeService {
 			connectionTimeout,
 			commandTimeout,
 		}
-		this.validateConfig()
+
+		if (!this.config.url) {
+			throw new Error("[TaskBridgeService] Redis URL is required")
+		}
+
+		if (!this.config.namespace || this.config.namespace.trim() === "") {
+			throw new Error("[TaskBridgeService] Namespace is required")
+		}
+
+		if (this.config.maxReconnectAttempts! < 0) {
+			throw new Error("[TaskBridgeService] maxReconnectAttempts must be non-negative")
+		}
+
+		if (this.config.reconnectDelay! < 0) {
+			throw new Error("[TaskBridgeService] reconnectDelay must be non-negative")
+		}
+
+		if (this.config.connectionTimeout! < 0) {
+			throw new Error("[TaskBridgeService] connectionTimeout must be non-negative")
+		}
+
+		if (this.config.commandTimeout! < 0) {
+			throw new Error("[TaskBridgeService] commandTimeout must be non-negative")
+		}
 	}
 
 	public static getInstance(config?: TaskBridgeConfig) {
@@ -164,7 +186,6 @@ export class TaskBridgeService {
 
 					switch (message.type) {
 						case "message":
-							console.log(`Received message event for task: ${taskId}`, message.payload)
 							this.handleQueuedMessage(taskId, message.payload)
 							break
 					}
@@ -172,10 +193,7 @@ export class TaskBridgeService {
 					console.error("Error handling incoming message:", error)
 				}
 			})
-
-			// Connect explicitly
 			await Promise.all([this.publisher.connect(), this.subscriber.connect()])
-
 			await Promise.all([this.waitForConnection(this.publisher), this.waitForConnection(this.subscriber)])
 
 			this.isConnected = true
@@ -183,30 +201,39 @@ export class TaskBridgeService {
 
 			console.log(`[TaskBridgeService] connected -> ${this.config.url}`)
 		} catch (error) {
-			// Clean up on failure
 			if (this.publisher) {
+				console.log(`[TaskBridgeService] disconnecting publisher`)
 				await this.publisher.quit().catch(() => {})
 				this.publisher = null
 			}
+
 			if (this.subscriber) {
+				console.log(`[TaskBridgeService] disconnecting subscriber`)
 				await this.subscriber.quit().catch(() => {})
 				this.subscriber = null
 			}
+
 			throw error
 		}
 	}
 
 	public async subscribeToTask(task: Task): Promise<void> {
+		const channel = this.serverChannel(task.taskId)
+		console.log(`[TaskBridgeService] subscribeToTask -> ${channel}`)
+
 		if (!this.isConnected || !this.subscriber) {
 			throw new Error("TaskBridgeService is not connected")
 		}
 
+		await this.subscriber.subscribe(channel)
 		this.subscribedTasks.set(task.taskId, task)
-		await this.subscriber.subscribe(this.serverChannel(task.taskId))
 		this.setupTaskEventListeners(task)
 	}
 
 	public async unsubscribeFromTask(taskId: string): Promise<void> {
+		const channel = this.serverChannel(taskId)
+		console.log(`[TaskBridgeService] unsubscribeFromTask -> ${channel}`)
+
 		if (!this.subscriber) {
 			return
 		}
@@ -218,15 +245,13 @@ export class TaskBridgeService {
 			this.subscribedTasks.delete(taskId)
 		}
 
-		await this.subscriber.unsubscribe(this.serverChannel(taskId))
+		await this.subscriber.unsubscribe(channel)
 	}
 
 	public async publish(taskId: string, type: TaskBridgeMessageType, payload: TaskBridgeMessagePayload) {
 		if (!this.isConnected || !this.publisher) {
 			throw new Error("TaskBridgeService is not connected")
 		}
-
-		const channel = this.clientChannel(taskId)
 
 		const data: TaskBridgeMessage = {
 			taskId,
@@ -235,38 +260,42 @@ export class TaskBridgeService {
 			timestamp: Date.now(),
 		}
 
-		console.log(`[TaskBridgeService] publishing to ${channel}`, data)
-		await this.publisher.publish(channel, JSON.stringify(data))
+		await this.publisher.publish(this.clientChannel(taskId), JSON.stringify(data))
 	}
 
 	public async disconnect(): Promise<void> {
-		// Clear reconnection timeout
+		console.log(`[TaskBridgeService] disconnecting`)
+
 		if (this.reconnectTimeout) {
 			clearTimeout(this.reconnectTimeout)
 			this.reconnectTimeout = null
 		}
 
-		// Clear all queue processing timeouts
 		for (const timeoutId of this.queueProcessingTimeouts.values()) {
 			clearTimeout(timeoutId)
 		}
+
 		this.queueProcessingTimeouts.clear()
 
-		// Wait for all processing to complete
+		// Wait for all processing to complete.
 		const processingPromises = Array.from(this.processingPromises.values())
+
 		if (processingPromises.length > 0) {
 			await Promise.allSettled(processingPromises)
 		}
+
 		this.processingPromises.clear()
 
-		// Unsubscribe from all tasks
+		// Unsubscribe from all tasks.
 		const unsubscribePromises = []
+
 		for (const taskId of this.subscribedTasks.keys()) {
 			unsubscribePromises.push(this.unsubscribeFromTask(taskId))
 		}
+
 		await Promise.allSettled(unsubscribePromises)
 
-		// Remove event listeners before closing connections
+		// Remove event listeners before closing connections.
 		if (this.publisher) {
 			this.publisher.removeAllListeners()
 			await this.publisher.quit()
@@ -279,13 +308,12 @@ export class TaskBridgeService {
 			this.subscriber = null
 		}
 
-		// Clear all internal state
+		// Clear internal state.
 		this.messageQueues.clear()
 		this.taskStatuses.clear()
 		this.processingQueues.clear()
 		this.subscribedTasks.clear()
 		this.taskEventHandlers = {}
-
 		this.isConnected = false
 		TaskBridgeService.instance = null
 	}
@@ -325,7 +353,6 @@ export class TaskBridgeService {
 	private handleConnectionError(error?: Error): void {
 		this.isConnected = false
 
-		// Log the error for debugging
 		if (error) {
 			console.error("[TaskBridgeService] Connection error:", error.message)
 		}
@@ -345,6 +372,7 @@ export class TaskBridgeService {
 		}
 
 		this.reconnectAttempts++
+
 		console.log(
 			`[TaskBridgeService] Scheduling reconnection attempt ${this.reconnectAttempts}/${this.config.maxReconnectAttempts}`,
 		)
@@ -362,28 +390,38 @@ export class TaskBridgeService {
 		const callbacks: Partial<TaskEventHandlers> = {
 			// message: ({ action, message }) =>
 			// 	this.publish(task.taskId, "task_event", { eventType: "message", data: { action, message } }),
-			taskStarted: () =>
-				this.publish(task.taskId, "task_event", { eventType: "status", data: { status: "started" } }),
-			taskPaused: () =>
-				this.publish(task.taskId, "task_event", { eventType: "status", data: { status: "paused" } }),
-			taskUnpaused: () =>
-				this.publish(task.taskId, "task_event", { eventType: "status", data: { status: "unpaused" } }),
+			taskStarted: () => {
+				console.log(`[TaskBridgeService#${task.taskId}] taskStarted`)
+				this.taskStatuses.set(task.taskId, false)
+				console.log(`[TaskBridgeService#${task.taskId}] busy`)
+				this.publish(task.taskId, "task_event", { eventType: "status", data: { status: "started" } })
+			},
+			taskUnpaused: () => {
+				console.log(`[TaskBridgeService#${task.taskId}] taskUnpaused`)
+				this.taskStatuses.set(task.taskId, false)
+				console.log(`[TaskBridgeService#${task.taskId}] busy`)
+				this.publish(task.taskId, "task_event", { eventType: "status", data: { status: "unpaused" } })
+			},
+			taskPaused: () => {
+				console.log(`[TaskBridgeService#${task.taskId}] taskPaused`)
+				this.taskStatuses.set(task.taskId, true)
+				console.log(`[TaskBridgeService#${task.taskId}] free`)
+				this.processQueueForTask(task.taskId)
+				this.publish(task.taskId, "task_event", { eventType: "status", data: { status: "paused" } })
+			},
 			taskAborted: () => {
-				this.cleanupTaskQueue(task.taskId)
+				console.log(`[TaskBridgeService#${task.taskId}] taskAborted`)
+				this.taskStatuses.set(task.taskId, true)
+				this.processQueueForTask(task.taskId)
+				console.log(`[TaskBridgeService#${task.taskId}] free`)
 				this.publish(task.taskId, "task_event", { eventType: "status", data: { status: "aborted" } })
 			},
 			taskCompleted: () => {
-				this.cleanupTaskQueue(task.taskId)
+				console.log(`[TaskBridgeService#${task.taskId}] taskCompleted`)
+				this.taskStatuses.set(task.taskId, true)
+				console.log(`[TaskBridgeService#${task.taskId}] free`)
+				this.processQueueForTask(task.taskId)
 				this.publish(task.taskId, "task_event", { eventType: "status", data: { status: "completed" } })
-			},
-			taskBusy: (taskId: string) => {
-				this.taskStatuses.set(taskId, false)
-				this.publish(task.taskId, "task_event", { eventType: "status", data: { status: "busy" } })
-			},
-			taskFree: (taskId: string) => {
-				this.taskStatuses.set(taskId, true)
-				this.processQueueForTask(taskId)
-				this.publish(task.taskId, "task_event", { eventType: "status", data: { status: "free" } })
 			},
 		}
 
@@ -420,24 +458,22 @@ export class TaskBridgeService {
 		return this.taskStatuses.get(taskId) ?? false
 	}
 
-	private handleQueuedMessage(taskId: string, payload: TaskBridgeMessagePayload): void {
-		const messageData = payload.data as { text?: string; images?: string[] }
+	private handleQueuedMessage(taskId: string, payload: TaskBridgeMessagePayload) {
+		try {
+			console.log(`[TaskBridgeService#${taskId}] handleQueuedMessage`, payload)
+			const queuedMessage = queuedMessageSchema.parse(payload)
+			const isReady = this.isTaskReady(taskId)
+			console.log(`[TaskBridgeService#${taskId}] Task ready status: ${isReady}`)
 
-		if (!messageData.text) {
-			console.warn(`Received queued message without text for task: ${taskId}`)
-			return
-		}
-
-		const queuedMessage: QueuedMessage = {
-			text: messageData.text,
-			images: messageData.images,
-			timestamp: Date.now(),
-		}
-
-		if (this.isTaskReady(taskId)) {
-			this.deliverMessage(taskId, queuedMessage)
-		} else {
-			this.enqueueMessage(taskId, queuedMessage)
+			if (isReady) {
+				console.log(`[TaskBridgeService#${taskId}] Task is ready, delivering message immediately`)
+				this.deliverMessage(taskId, queuedMessage)
+			} else {
+				console.log(`[TaskBridgeService#${taskId}] Task is busy, enqueuing message`)
+				this.enqueueMessage(taskId, queuedMessage)
+			}
+		} catch (error) {
+			console.error(`[TaskBridgeService#${taskId}] Error handling queued message:`, error, payload)
 		}
 	}
 
@@ -458,12 +494,16 @@ export class TaskBridgeService {
 	}
 
 	private async deliverMessage(taskId: string, message: QueuedMessage): Promise<boolean> {
+		console.log(`[TaskBridgeService#${taskId}] deliverMessage: ${message.text}`)
 		const task = this.subscribedTasks.get(taskId)
 
 		if (!task) {
 			console.warn(`Cannot deliver message: task ${taskId} not found`)
 			return false
 		}
+
+		this.taskStatuses.set(taskId, false)
+		console.log(`[TaskBridgeService#${taskId}] busy`)
 
 		try {
 			await task.handleWebviewAskResponse("messageResponse", message.text, message.images)
@@ -475,10 +515,14 @@ export class TaskBridgeService {
 	}
 
 	private async processQueueForTask(taskId: string): Promise<void> {
+		console.log(`[TaskBridgeService#${taskId}] processQueueForTask`)
+
 		// Check if there's already a processing promise for this task.
 		const existingPromise = this.processingPromises.get(taskId)
 
 		if (existingPromise) {
+			console.log(`[TaskBridgeService#${taskId}] waiting for existing processing to complete`)
+
 			// Wait for the existing processing to complete.
 			await existingPromise
 
@@ -487,6 +531,7 @@ export class TaskBridgeService {
 			if (this.messageQueues.has(taskId) && this.isTaskReady(taskId)) {
 				return this.processQueueForTask(taskId)
 			}
+
 			return
 		}
 
@@ -494,25 +539,29 @@ export class TaskBridgeService {
 		const queue = this.messageQueues.get(taskId)
 
 		if (!queue || queue.length === 0) {
+			console.log(`[TaskBridgeService#${taskId}] processQueueForTask - no queued message`)
 			return
 		}
 
-		// Create and store the processing promise.
-		const processingPromise = this._processQueue(taskId)
-		this.processingPromises.set(taskId, processingPromise)
+		setTimeout(async () => {
+			// Create and store the processing promise.
+			const processingPromise = this._processQueue(taskId)
+			this.processingPromises.set(taskId, processingPromise)
 
-		try {
-			await processingPromise
-		} finally {
-			// Clean up the promise reference.
-			this.processingPromises.delete(taskId)
-		}
+			try {
+				await processingPromise
+			} finally {
+				// Clean up the promise reference.
+				this.processingPromises.delete(taskId)
+			}
+		}, 500)
 	}
 
 	private async _processQueue(taskId: string): Promise<void> {
 		const queue = this.messageQueues.get(taskId)
 
 		if (!queue || queue.length === 0) {
+			console.log(`[TaskBridgeService#${taskId}] _processQueue - no queued messages`)
 			return
 		}
 
@@ -521,7 +570,7 @@ export class TaskBridgeService {
 		try {
 			while (queue.length > 0 && this.isTaskReady(taskId)) {
 				const queuedMessage = queue[0]
-				console.log(`Processing queued message for task ${taskId}. Remaining: ${queue.length}`)
+				console.log(`Processing queued message for task ${taskId}: ${JSON.stringify(queuedMessage)}`)
 				const success = await this.deliverMessage(taskId, queuedMessage.message)
 
 				if (success) {
@@ -561,57 +610,6 @@ export class TaskBridgeService {
 		}
 	}
 
-	private cleanupTaskQueue(taskId: string): void {
-		const timeoutId = this.queueProcessingTimeouts.get(taskId)
-
-		if (timeoutId) {
-			clearTimeout(timeoutId)
-			this.queueProcessingTimeouts.delete(taskId)
-		}
-
-		// Wait for any ongoing processing to complete before cleaning up..
-		const processingPromise = this.processingPromises.get(taskId)
-
-		if (processingPromise) {
-			// Don't await here to avoid blocking, just delete the reference.
-			this.processingPromises.delete(taskId)
-		}
-
-		this.processingQueues.delete(taskId)
-		this.messageQueues.delete(taskId)
-		this.taskStatuses.delete(taskId)
-		console.log(`Cleaned up queue for task ${taskId}`)
-	}
-
-	private validateConfig(): void {
-		if (!this.config.url) {
-			throw new Error("[TaskBridgeService] Redis URL is required")
-		}
-
-		if (!this.config.namespace || this.config.namespace.trim() === "") {
-			throw new Error("[TaskBridgeService] Namespace is required")
-		}
-
-		if (this.config.maxReconnectAttempts! < 0) {
-			throw new Error("[TaskBridgeService] maxReconnectAttempts must be non-negative")
-		}
-
-		if (this.config.reconnectDelay! < 0) {
-			throw new Error("[TaskBridgeService] reconnectDelay must be non-negative")
-		}
-
-		if (this.config.connectionTimeout! < 0) {
-			throw new Error("[TaskBridgeService] connectionTimeout must be non-negative")
-		}
-
-		if (this.config.commandTimeout! < 0) {
-			throw new Error("[TaskBridgeService] commandTimeout must be non-negative")
-		}
-	}
-
-	/**
-	 * Get the current connection status
-	 */
 	public getStatus(): {
 		connected: boolean
 		reconnectAttempts: number
@@ -620,6 +618,7 @@ export class TaskBridgeService {
 		processingTasks: number
 	} {
 		let totalQueuedMessages = 0
+
 		for (const queue of this.messageQueues.values()) {
 			totalQueuedMessages += queue.length
 		}

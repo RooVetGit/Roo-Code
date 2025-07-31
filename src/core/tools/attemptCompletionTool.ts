@@ -41,11 +41,13 @@ export async function attemptCompletionTool(
 	if (preventCompletionWithOpenTodos && hasIncompleteTodos) {
 		cline.consecutiveMistakeCount++
 		cline.recordToolError("attempt_completion")
+
 		pushToolResult(
 			formatResponse.toolError(
 				"Cannot complete task while there are incomplete todos. Please finish all todos before attempting completion.",
 			),
 		)
+
 		return
 	}
 
@@ -72,7 +74,7 @@ export async function attemptCompletionTool(
 					await cline.ask("command", removeClosingTag("command", command), block.partial).catch(() => {})
 				}
 			} else {
-				// no command, still outputting partial result
+				// No command, still outputting partial result
 				await cline.say("completion_result", removeClosingTag("result", result), undefined, block.partial)
 			}
 			return
