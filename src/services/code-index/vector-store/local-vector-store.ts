@@ -274,7 +274,7 @@ export class LocalVectorStore implements IVectorStore {
 			}
 
 			const cpuCores = os.cpus().length
-			const maxParallelism = Math.max(1, Math.ceil(cpuCores / 2))
+			const maxParallelism = Math.min(8, Math.max(1, Math.ceil(cpuCores / 2)))
 			const batchSize = this.SEARCH_BATCH_SIZE
 			const totalBatches = Math.ceil(totalCount / batchSize)
 			const actualParallelism = Math.min(maxParallelism, totalBatches)
