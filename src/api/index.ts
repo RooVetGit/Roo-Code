@@ -32,6 +32,7 @@ import {
 	LiteLLMHandler,
 	ClaudeCodeHandler,
 	SambaNovaHandler,
+	DoubaoHandler,
 } from "./providers"
 
 export interface SingleCompletionHandler {
@@ -93,6 +94,8 @@ export function buildApiHandler(configuration: ProviderSettings): ApiHandler {
 			return new OpenAiNativeHandler(options)
 		case "deepseek":
 			return new DeepSeekHandler(options)
+		case "doubao":
+			return new DoubaoHandler(options)
 		case "moonshot":
 			return new MoonshotHandler(options)
 		case "vscode-lm":
