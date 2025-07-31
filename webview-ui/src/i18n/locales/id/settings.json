@@ -201,7 +201,14 @@
 			"description": "Secara otomatis membuat sejumlah permintaan API ini sebelum meminta persetujuan untuk melanjutkan tugas.",
 			"unlimited": "Tidak terbatas"
 		},
-		"selectOptionsFirst": "Pilih setidaknya satu opsi di bawah ini untuk mengaktifkan persetujuan otomatis"
+		"selectOptionsFirst": "Pilih setidaknya satu opsi di bawah ini untuk mengaktifkan persetujuan otomatis",
+		"apiCostLimit": {
+			"title": "Biaya Maksimal",
+			"unlimited": "Tidak Terbatas"
+		},
+		"maxLimits": {
+			"description": "Secara otomatis membuat permintaan hingga batas ini sebelum meminta persetujuan untuk melanjutkan."
+		}
 	},
 	"providers": {
 		"providerDocumentation": "Dokumentasi {{provider}}",
@@ -257,12 +264,16 @@
 		"getChutesApiKey": "Dapatkan Chutes API Key",
 		"deepSeekApiKey": "DeepSeek API Key",
 		"getDeepSeekApiKey": "Dapatkan DeepSeek API Key",
+		"doubaoApiKey": "Kunci API Doubao",
+		"getDoubaoApiKey": "Dapatkan Kunci API Doubao",
 		"moonshotApiKey": "Kunci API Moonshot",
 		"getMoonshotApiKey": "Dapatkan Kunci API Moonshot",
 		"moonshotBaseUrl": "Titik Masuk Moonshot",
 		"geminiApiKey": "Gemini API Key",
 		"getGroqApiKey": "Dapatkan Groq API Key",
 		"groqApiKey": "Groq API Key",
+		"getSambaNovaApiKey": "Dapatkan SambaNova API Key",
+		"sambaNovaApiKey": "SambaNova API Key",
 		"getHuggingFaceApiKey": "Dapatkan Kunci API Hugging Face",
 		"huggingFaceApiKey": "Kunci API Hugging Face",
 		"huggingFaceModelId": "ID Model",
@@ -318,7 +329,6 @@
 				"description": "Memungkinkan Gemini mencari informasi terkini di Google dan mendasarkan respons pada data waktu nyata. Berguna untuk kueri yang memerlukan informasi terkini."
 			}
 		},
-
 		"googleCloudSetup": {
 			"title": "Untuk menggunakan Google Cloud Vertex AI, kamu perlu:",
 			"step1": "1. Buat akun Google Cloud, aktifkan Vertex AI API & aktifkan model Claude yang diinginkan.",
@@ -542,6 +552,16 @@
 			"description": "Roo membaca sejumlah baris ini ketika model menghilangkan nilai start/end. Jika angka ini kurang dari total file, Roo menghasilkan indeks nomor baris dari definisi kode. Kasus khusus: -1 menginstruksikan Roo untuk membaca seluruh file (tanpa indexing), dan 0 menginstruksikannya untuk tidak membaca baris dan hanya menyediakan indeks baris untuk konteks minimal. Nilai yang lebih rendah meminimalkan penggunaan konteks awal, memungkinkan pembacaan rentang baris yang tepat selanjutnya. Permintaan start/end eksplisit tidak dibatasi oleh pengaturan ini.",
 			"lines": "baris",
 			"always_full_read": "Selalu baca seluruh file"
+		},
+		"maxImageFileSize": {
+			"label": "Ukuran file gambar maksimum",
+			"mb": "MB",
+			"description": "Ukuran maksimum (dalam MB) untuk file gambar yang dapat diproses oleh alat baca file."
+		},
+		"maxTotalImageSize": {
+			"label": "Ukuran total gambar maksimum",
+			"mb": "MB",
+			"description": "Batas ukuran kumulatif maksimum (dalam MB) untuk semua gambar yang diproses dalam satu operasi read_file. Saat membaca beberapa gambar, ukuran setiap gambar ditambahkan ke total. Jika menyertakan gambar lain akan melebihi batas ini, gambar tersebut akan dilewati."
 		}
 	},
 	"terminal": {
@@ -689,6 +709,10 @@
 		"MULTI_FILE_APPLY_DIFF": {
 			"name": "Aktifkan edit file bersamaan",
 			"description": "Ketika diaktifkan, Roo dapat mengedit beberapa file dalam satu permintaan. Ketika dinonaktifkan, Roo harus mengedit file satu per satu. Menonaktifkan ini dapat membantu saat bekerja dengan model yang kurang mampu atau ketika kamu ingin kontrol lebih terhadap modifikasi file."
+		},
+		"PREVENT_FOCUS_DISRUPTION": {
+			"name": "Pengeditan Latar Belakang",
+			"description": "Ketika diaktifkan, mencegah gangguan fokus editor. Pengeditan file terjadi di latar belakang tanpa membuka tampilan diff atau mencuri fokus. Anda dapat terus bekerja tanpa gangguan saat Roo melakukan perubahan. File mungkin dibuka tanpa fokus untuk menangkap diagnostik atau tetap tertutup sepenuhnya."
 		}
 	},
 	"promptCaching": {

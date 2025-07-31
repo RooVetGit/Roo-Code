@@ -36,12 +36,17 @@ import {
 	litellmDefaultModelId,
 	claudeCodeDefaultModelId,
 	claudeCodeModels,
+	sambaNovaModels,
+	sambaNovaDefaultModelId,
+	doubaoModels,
+	doubaoDefaultModelId,
 } from "@roo-code/types"
 
-import type { RouterModels } from "@roo/api"
+import type { ModelRecord, RouterModels } from "@roo/api"
 
 import { useRouterModels } from "./useRouterModels"
 import { useOpenRouterModelProviders } from "./useOpenRouterModelProviders"
+import { useLmStudioModels } from "./useLmStudioModels"
 
 /**
  * Maps legacy Gemini model IDs to current supported models
@@ -138,12 +143,15 @@ function mapLegacyVertexModel(modelId: string): string {
 export const useSelectedModel = (apiConfiguration?: ProviderSettings) => {
 	const provider = apiConfiguration?.apiProvider || "anthropic"
 	const openRouterModelId = provider === "openrouter" ? apiConfiguration?.openRouterModelId : undefined
+	const lmStudioModelId = provider === "lmstudio" ? apiConfiguration?.lmStudioModelId : undefined
 
 	const routerModels = useRouterModels()
 	const openRouterModelProviders = useOpenRouterModelProviders(openRouterModelId)
+	const lmStudioModels = useLmStudioModels(lmStudioModelId)
 
 	const { id, info } =
 		apiConfiguration &&
+		(typeof lmStudioModelId === "undefined" || typeof lmStudioModels.data !== "undefined") &&
 		typeof routerModels.data !== "undefined" &&
 		typeof openRouterModelProviders.data !== "undefined"
 			? getSelectedModel({
@@ -151,6 +159,7 @@ export const useSelectedModel = (apiConfiguration?: ProviderSettings) => {
 					apiConfiguration,
 					routerModels: routerModels.data,
 					openRouterModelProviders: openRouterModelProviders.data,
+					lmStudioModels: lmStudioModels.data,
 				})
 			: { id: anthropicDefaultModelId, info: undefined }
 
@@ -158,8 +167,14 @@ export const useSelectedModel = (apiConfiguration?: ProviderSettings) => {
 		provider,
 		id,
 		info,
-		isLoading: routerModels.isLoading || openRouterModelProviders.isLoading,
-		isError: routerModels.isError || openRouterModelProviders.isError,
+		isLoading:
+			routerModels.isLoading ||
+			openRouterModelProviders.isLoading ||
+			(apiConfiguration?.lmStudioModelId && lmStudioModels!.isLoading),
+		isError:
+			routerModels.isError ||
+			openRouterModelProviders.isError ||
+			(apiConfiguration?.lmStudioModelId && lmStudioModels!.isError),
 	}
 }
 
@@ -168,11 +183,13 @@ function getSelectedModel({
 	apiConfiguration,
 	routerModels,
 	openRouterModelProviders,
+	lmStudioModels,
 }: {
 	provider: ProviderName
 	apiConfiguration: ProviderSettings
 	routerModels: RouterModels
 	openRouterModelProviders: Record<string, ModelInfo>
+	lmStudioModels: ModelRecord | undefined
 }): { id: string; info: ModelInfo | undefined } {
 	// the `undefined` case are used to show the invalid selection to prevent
 	// users from seeing the default model if their selection is invalid
@@ -270,6 +287,11 @@ function getSelectedModel({
 			const info = deepSeekModels[id as keyof typeof deepSeekModels]
 			return { id, info }
 		}
+		case "doubao": {
+			const id = apiConfiguration.apiModelId ?? doubaoDefaultModelId
+			const info = doubaoModels[id as keyof typeof doubaoModels]
+			return { id, info }
+		}
 		case "moonshot": {
 			const id = apiConfiguration.apiModelId ?? moonshotDefaultModelId
 			const info = moonshotModels[id as keyof typeof moonshotModels]
@@ -300,7 +322,7 @@ function getSelectedModel({
 		}
 		case "lmstudio": {
 			const id = apiConfiguration.lmStudioModelId ?? ""
-			const info = routerModels.lmstudio && routerModels.lmstudio[id]
+			const info = lmStudioModels && lmStudioModels[apiConfiguration.lmStudioModelId!]
 			return {
 				id,
 				info: info || undefined,
@@ -319,6 +341,11 @@ function getSelectedModel({
 			const id = apiConfiguration.apiModelId ?? claudeCodeDefaultModelId
 			const info = claudeCodeModels[id as keyof typeof claudeCodeModels]
 			return { id, info: { ...openAiModelInfoSaneDefaults, ...info } }
+		}
+		case "sambanova": {
+			const id = apiConfiguration.apiModelId ?? sambaNovaDefaultModelId
+			const info = sambaNovaModels[id as keyof typeof sambaNovaModels]
+			return { id, info }
 		}
 		// case "anthropic":
 		// case "human-relay":

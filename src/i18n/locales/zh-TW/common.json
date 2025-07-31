@@ -70,12 +70,20 @@
 		"share_not_enabled": "此組織未啟用工作分享功能。",
 		"share_task_not_found": "未找到工作或存取被拒絕。",
 		"delete_rules_folder_failed": "刪除規則資料夾失敗: {{rulesFolderPath}}。錯誤: {{error}}",
+		"command_not_found": "找不到指令 '{{name}}'",
+		"open_command_file": "開啟指令檔案失敗",
+		"delete_command": "刪除指令失敗",
+		"no_workspace_for_project_command": "找不到專案指令的工作區資料夾",
+		"command_already_exists": "指令 \"{{commandName}}\" 已存在",
+		"create_command_failed": "建立指令失敗",
+		"command_template_content": "---\ndescription: \"此指令功能的簡要描述\"\n---\n\n這是一個新的斜線指令。編輯此檔案以自訂指令行為。",
 		"claudeCode": {
 			"processExited": "Claude Code 程序退出，退出碼：{{exitCode}}。",
 			"errorOutput": "錯誤輸出：{{output}}",
 			"processExitedWithError": "Claude Code 程序退出，退出碼：{{exitCode}}。錯誤輸出：{{output}}",
 			"stoppedWithReason": "Claude Code 停止，原因：{{reason}}",
-			"apiKeyModelPlanMismatch": "API 金鑰和訂閱方案允許不同的模型。請確保所選模型包含在您的方案中。"
+			"apiKeyModelPlanMismatch": "API 金鑰和訂閱方案允許不同的模型。請確保所選模型包含在您的方案中。",
+			"notFound": "找不到 Claude Code 可執行檔案 '{{claudePath}}'。\n\n請安裝 Claude Code CLI：\n1. 造訪 {{installationUrl}} 下載 Claude Code\n2. 依照作業系統的安裝說明進行操作\n3. 確保 'claude' 指令在 PATH 中可用\n4. 或者在 Roo 設定中的 'Claude Code 路徑' 下設定自訂路徑\n\n原始錯誤：{{originalError}}"
 		},
 		"gemini": {
 			"generate_stream": "Gemini 產生內容串流錯誤：{{error}}",

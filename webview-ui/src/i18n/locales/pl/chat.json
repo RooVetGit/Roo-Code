@@ -108,7 +108,7 @@
 	"stopTts": "Zatrzymaj syntezę mowy",
 	"typeMessage": "Wpisz wiadomość...",
 	"typeTask": "Wpisz swoje zadanie tutaj...",
-	"addContext": "@ aby dodać kontekst, / aby zmienić tryb",
+	"addContext": "@ aby dodać kontekst, / dla poleceń",
 	"dragFiles": "przytrzymaj shift, aby przeciągnąć pliki",
 	"dragFilesImages": "przytrzymaj shift, aby przeciągnąć pliki/obrazy",
 	"enhancePromptDescription": "Przycisk 'Ulepsz podpowiedź' pomaga ulepszyć Twoją prośbę, dostarczając dodatkowy kontekst, wyjaśnienia lub przeformułowania. Spróbuj wpisać prośbę tutaj i kliknij przycisk ponownie, aby zobaczyć, jak to działa.",
@@ -265,9 +265,9 @@
 		"title": "🎉 Roo Code {{version}} wydany",
 		"description": "Roo Code {{version}} wprowadza potężne nowe funkcje i znaczące ulepszenia, aby ulepszyć Twój przepływ pracy programistycznej.",
 		"whatsNew": "Co nowego",
-		"feature1": "<bold>Dostawca Hugging Face</bold>: Uzyskaj dostęp do mnóstwa wspaniałych modeli open source bezpośrednio przez nowego dostawcę Hugging Face z bezproblemową integracją i wyborem modeli.",
-		"feature2": "<bold>Kontrole Poleceń Inline</bold>: Nowe kontrole automatycznego zatwierdzania i odrzucania dla wykonywania poleceń dają ci precyzyjną kontrolę nad operacjami terminala z konfigurowalnymi uprawnieniami.",
-		"feature3": "<bold>Wsparcie Reguł AGENTS.md</bold>: Dodaje wsparcie dla standardowego pliku AGENTS.md społeczności w katalogu głównym projektu.",
+		"feature1": "<bold>Kolejka Wiadomości</bold>: Umieszczaj wiele wiadomości w kolejce podczas pracy Roo, pozwalając na kontynuowanie planowania przepływu pracy bez przerw.",
+		"feature2": "<bold>Niestandardowe Polecenia Slash</bold>: Twórz spersonalizowane polecenia slash dla szybkiego dostępu do często używanych promptów i przepływów pracy, z pełnym zarządzaniem interfejsu użytkownika.",
+		"feature3": "<bold>Ulepszone Narzędzia Gemini</bold>: Nowe możliwości kontekstu URL i ugruntowania wyszukiwania Google zapewniają modelom Gemini informacje internetowe w czasie rzeczywistym i ulepszone możliwości badawcze.",
 		"hideButton": "Ukryj ogłoszenie",
 		"detailsDiscussLinks": "Uzyskaj więcej szczegółów i dołącz do dyskusji na <discordLink>Discord</discordLink> i <redditLink>Reddit</redditLink> 🚀"
 	},
@@ -314,6 +314,11 @@
 			"title": "Osiągnięto limit automatycznie zatwierdzonych żądań",
 			"description": "Roo osiągnął automatycznie zatwierdzony limit {{count}} żądania/żądań API. Czy chcesz zresetować licznik i kontynuować zadanie?",
 			"button": "Zresetuj i kontynuuj"
+		},
+		"autoApprovedCostLimitReached": {
+			"button": "Zresetuj i Kontynuuj",
+			"title": "Osiągnięto limit kosztów z automatycznym zatwierdzaniem",
+			"description": "Roo osiągnął automatycznie zatwierdzony limit kosztów wynoszący ${{count}}. Czy chcesz zresetować koszt i kontynuować zadanie?"
 		}
 	},
 	"codebaseSearch": {
@@ -351,6 +356,24 @@
 	},
 	"command": {
 		"triggerDescription": "Uruchom polecenie {{name}}"
+	},
+	"slashCommands": {
+		"tooltip": "Zarządzaj poleceniami slash",
+		"title": "Polecenia Slash",
+		"description": "Twórz niestandardowe polecenia slash dla szybkiego dostępu do często używanych promptów i przepływów pracy. <DocsLink>Dokumentacja</DocsLink>",
+		"globalCommands": "Polecenia Globalne",
+		"workspaceCommands": "Polecenia Obszaru Roboczego",
+		"globalCommand": "Polecenie globalne",
+		"editCommand": "Edytuj polecenie",
+		"deleteCommand": "Usuń polecenie",
+		"newGlobalCommandPlaceholder": "Nowe polecenie globalne...",
+		"newWorkspaceCommandPlaceholder": "Nowe polecenie obszaru roboczego...",
+		"deleteDialog": {
+			"title": "Usuń Polecenie",
+			"description": "Czy na pewno chcesz usunąć polecenie \"{{name}}\"? Tej akcji nie można cofnąć.",
+			"cancel": "Anuluj",
+			"confirm": "Usuń"
+		}
 	},
 	"queuedMessages": {
 		"title": "Wiadomości w kolejce:",

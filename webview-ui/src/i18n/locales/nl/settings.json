@@ -197,7 +197,14 @@
 			"description": "Voer automatisch dit aantal API-verzoeken uit voordat om goedkeuring wordt gevraagd om door te gaan met de taak.",
 			"unlimited": "Onbeperkt"
 		},
-		"selectOptionsFirst": "Selecteer ten minste één optie hieronder om automatische goedkeuring in te schakelen"
+		"selectOptionsFirst": "Selecteer ten minste één optie hieronder om automatische goedkeuring in te schakelen",
+		"apiCostLimit": {
+			"title": "Max kosten",
+			"unlimited": "Onbeperkt"
+		},
+		"maxLimits": {
+			"description": "Automatisch verzoeken indienen tot aan deze limieten voordat om goedkeuring wordt gevraagd om door te gaan."
+		}
 	},
 	"providers": {
 		"providerDocumentation": "{{provider}} documentatie",
@@ -253,12 +260,16 @@
 		"getChutesApiKey": "Chutes API-sleutel ophalen",
 		"deepSeekApiKey": "DeepSeek API-sleutel",
 		"getDeepSeekApiKey": "DeepSeek API-sleutel ophalen",
+		"doubaoApiKey": "Doubao API-sleutel",
+		"getDoubaoApiKey": "Doubao API-sleutel ophalen",
 		"moonshotApiKey": "Moonshot API-sleutel",
 		"getMoonshotApiKey": "Moonshot API-sleutel ophalen",
 		"moonshotBaseUrl": "Moonshot-ingangspunt",
 		"geminiApiKey": "Gemini API-sleutel",
 		"getGroqApiKey": "Groq API-sleutel ophalen",
 		"groqApiKey": "Groq API-sleutel",
+		"getSambaNovaApiKey": "SambaNova API-sleutel ophalen",
+		"sambaNovaApiKey": "SambaNova API-sleutel",
 		"getGeminiApiKey": "Gemini API-sleutel ophalen",
 		"getHuggingFaceApiKey": "Hugging Face API-sleutel ophalen",
 		"huggingFaceApiKey": "Hugging Face API-sleutel",
@@ -314,7 +325,6 @@
 				"description": "Staat Gemini toe om Google te doorzoeken voor actuele informatie en antwoorden op realtime gegevens te baseren. Handig voor vragen die actuele informatie vereisen."
 			}
 		},
-
 		"googleCloudSetup": {
 			"title": "Om Google Cloud Vertex AI te gebruiken, moet je:",
 			"step1": "1. Maak een Google Cloud-account aan, schakel de Vertex AI API in en activeer de gewenste Claude-modellen.",
@@ -513,6 +523,16 @@
 			"label": "Limiet gelijktijdige bestandslezingen",
 			"description": "Maximum aantal bestanden dat de 'read_file' tool tegelijkertijd kan verwerken. Hogere waarden kunnen het lezen van meerdere kleine bestanden versnellen maar verhogen het geheugengebruik."
 		},
+		"maxImageFileSize": {
+			"label": "Maximum afbeeldingsbestandsgrootte",
+			"mb": "MB",
+			"description": "Maximale grootte (in MB) voor afbeeldingsbestanden die kunnen worden verwerkt door de read file tool."
+		},
+		"maxTotalImageSize": {
+			"label": "Maximale totale afbeeldingsgrootte",
+			"mb": "MB",
+			"description": "Maximale cumulatieve groottelimiet (in MB) voor alle afbeeldingen die in één read_file-bewerking worden verwerkt. Bij het lezen van meerdere afbeeldingen wordt de grootte van elke afbeelding bij het totaal opgeteld. Als het toevoegen van een andere afbeelding deze limiet zou overschrijden, wordt deze overgeslagen."
+		},
 		"diagnostics": {
 			"includeMessages": {
 				"label": "Automatisch diagnostiek opnemen in context",
@@ -660,6 +680,10 @@
 		"MULTI_FILE_APPLY_DIFF": {
 			"name": "Gelijktijdige bestandsbewerkingen inschakelen",
 			"description": "Wanneer ingeschakeld, kan Roo meerdere bestanden in één verzoek bewerken. Wanneer uitgeschakeld, moet Roo bestanden één voor één bewerken. Het uitschakelen hiervan kan helpen wanneer je werkt met minder capabele modellen of wanneer je meer controle wilt over bestandswijzigingen."
+		},
+		"PREVENT_FOCUS_DISRUPTION": {
+			"name": "Achtergrondbewerking",
+			"description": "Voorkomt editor focus verstoring wanneer ingeschakeld. Bestandsbewerkingen gebeuren op de achtergrond zonder diff-weergaven te openen of focus te stelen. Je kunt ononderbroken doorwerken terwijl Roo wijzigingen aanbrengt. Bestanden kunnen zonder focus worden geopend om diagnostiek vast te leggen of volledig gesloten blijven."
 		}
 	},
 	"promptCaching": {

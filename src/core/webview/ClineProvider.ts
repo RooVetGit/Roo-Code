@@ -23,12 +23,12 @@ import {
 	type TerminalActionPromptType,
 	type HistoryItem,
 	type CloudUserInfo,
-	type MarketplaceItem,
 	requestyDefaultModelId,
 	openRouterDefaultModelId,
 	glamaDefaultModelId,
 	ORGANIZATION_ALLOW_ALL,
 	DEFAULT_TERMINAL_OUTPUT_CHARACTER_LIMIT,
+	DEFAULT_WRITE_DELAY_MS,
 } from "@roo-code/types"
 import { TelemetryService } from "@roo-code/telemetry"
 import { CloudService, getRooCodeApiUrl } from "@roo-code/cloud"
@@ -40,10 +40,9 @@ import { findLast } from "../../shared/array"
 import { supportPrompt } from "../../shared/support-prompt"
 import { GlobalFileNames } from "../../shared/globalFileNames"
 import { ExtensionMessage, MarketplaceInstalledMetadata } from "../../shared/ExtensionMessage"
-import { Mode, defaultModeSlug } from "../../shared/modes"
-import { experimentDefault, experiments, EXPERIMENT_IDS } from "../../shared/experiments"
+import { Mode, defaultModeSlug, getModeBySlug } from "../../shared/modes"
+import { experimentDefault } from "../../shared/experiments"
 import { formatLanguage } from "../../shared/language"
-import { DEFAULT_WRITE_DELAY_MS } from "@roo-code/types"
 import { Terminal } from "../../integrations/terminal/Terminal"
 import { downloadTask } from "../../integrations/misc/export-markdown"
 import { getTheme } from "../../integrations/theme/getTheme"
@@ -71,6 +70,7 @@ import { WebviewMessage } from "../../shared/WebviewMessage"
 import { EMBEDDING_MODEL_PROFILES } from "../../shared/embeddingModels"
 import { ProfileValidator } from "../../shared/ProfileValidator"
 import { getWorkspaceGitInfo } from "../../utils/git"
+import { forceFullModelDetailsLoad, hasLoadedFullDetails } from "../../api/providers/fetchers/lmstudio"
 
 /**
  * https://github.com/microsoft/vscode-webview-ui-toolkit-samples/blob/main/default/weather-webview/src/providers/WeatherViewProvider.ts
@@ -78,13 +78,7 @@ import { getWorkspaceGitInfo } from "../../utils/git"
  */
 
 export type ClineProviderEvents = {
-	clineCreated: [cline: Task]
-}
-
-class OrganizationAllowListViolationError extends Error {
-	constructor(message: string) {
-		super(message)
-	}
+	taskCreated: [task: Task]
 }
 
 export class ClineProvider
@@ -112,7 +106,7 @@ export class ClineProvider
 
 	public isViewLaunched = false
 	public settingsImportedAt?: number
-	public readonly latestAnnouncementId = "jul-26-2025-3-24-0" // Update for v3.24.0 announcement
+	public readonly latestAnnouncementId = "jul-29-2025-3-25-0" // Update for v3.25.0 announcement
 	public readonly providerSettingsManager: ProviderSettingsManager
 	public readonly customModesManager: CustomModesManager
 
@@ -170,11 +164,31 @@ export class ClineProvider
 		// Add this cline instance into the stack that represents the order of all the called tasks.
 		this.clineStack.push(cline)
 
+		// Perform special setup provider specific tasks
+		await this.performPreparationTasks(cline)
+
 		// Ensure getState() resolves correctly.
 		const state = await this.getState()
 
 		if (!state || typeof state.mode !== "string") {
 			throw new Error(t("common:errors.retrieve_current_mode"))
+		}
+	}
+
+	async performPreparationTasks(cline: Task) {
+		// LMStudio: we need to force model loading in order to read its context size; we do it now since we're starting a task with that model selected
+		if (cline.apiConfiguration && cline.apiConfiguration.apiProvider === "lmstudio") {
+			try {
+				if (!hasLoadedFullDetails(cline.apiConfiguration.lmStudioModelId!)) {
+					await forceFullModelDetailsLoad(
+						cline.apiConfiguration.lmStudioBaseUrl ?? "http://localhost:1234",
+						cline.apiConfiguration.lmStudioModelId!,
+					)
+				}
+			} catch (error) {
+				this.log(`Failed to load full model details for LM Studio: ${error}`)
+				vscode.window.showErrorMessage(error.message)
+			}
 		}
 	}
 
@@ -380,6 +394,7 @@ export class ClineProvider
 				// Errors from terminal commands seem to get swallowed / ignored.
 				vscode.window.showErrorMessage(error.message)
 			}
+
 			throw error
 		}
 	}
@@ -526,7 +541,7 @@ export class ClineProvider
 	// of tasks, each one being a sub task of the previous one until the main
 	// task is finished.
 	public async initClineWithTask(
-		task?: string,
+		text?: string,
 		images?: string[],
 		parentTask?: Task,
 		options: Partial<
@@ -549,34 +564,77 @@ export class ClineProvider
 			throw new OrganizationAllowListViolationError(t("common:errors.violated_organization_allowlist"))
 		}
 
-		const cline = new Task({
+		const task = new Task({
 			provider: this,
 			apiConfiguration,
 			enableDiff,
 			enableCheckpoints,
 			fuzzyMatchThreshold,
 			consecutiveMistakeLimit: apiConfiguration.consecutiveMistakeLimit,
-			task,
+			task: text,
 			images,
 			experiments,
 			rootTask: this.clineStack.length > 0 ? this.clineStack[0] : undefined,
 			parentTask,
 			taskNumber: this.clineStack.length + 1,
-			onCreated: (cline) => this.emit("clineCreated", cline),
+			onCreated: (instance) => this.emit("taskCreated", instance),
 			...options,
 		})
 
-		await this.addClineToStack(cline)
+		await this.addClineToStack(task)
 
 		this.log(
-			`[subtasks] ${cline.parentTask ? "child" : "parent"} task ${cline.taskId}.${cline.instanceId} instantiated`,
+			`[subtasks] ${task.parentTask ? "child" : "parent"} task ${task.taskId}.${task.instanceId} instantiated`,
 		)
 
-		return cline
+		return task
 	}
 
 	public async initClineWithHistoryItem(historyItem: HistoryItem & { rootTask?: Task; parentTask?: Task }) {
 		await this.removeClineFromStack()
+
+		// If the history item has a saved mode, restore it and its associated API configuration
+		if (historyItem.mode) {
+			// Validate that the mode still exists
+			const customModes = await this.customModesManager.getCustomModes()
+			const modeExists = getModeBySlug(historyItem.mode, customModes) !== undefined
+
+			if (!modeExists) {
+				// Mode no longer exists, fall back to default mode
+				this.log(
+					`Mode '${historyItem.mode}' from history no longer exists. Falling back to default mode '${defaultModeSlug}'.`,
+				)
+				historyItem.mode = defaultModeSlug
+			}
+
+			await this.updateGlobalState("mode", historyItem.mode)
+
+			// Load the saved API config for the restored mode if it exists
+			const savedConfigId = await this.providerSettingsManager.getModeConfigId(historyItem.mode)
+			const listApiConfig = await this.providerSettingsManager.listConfig()
+
+			// Update listApiConfigMeta first to ensure UI has latest data
+			await this.updateGlobalState("listApiConfigMeta", listApiConfig)
+
+			// If this mode has a saved config, use it
+			if (savedConfigId) {
+				const profile = listApiConfig.find(({ id }) => id === savedConfigId)
+
+				if (profile?.name) {
+					try {
+						await this.activateProviderProfile({ name: profile.name })
+					} catch (error) {
+						// Log the error but continue with task restoration
+						this.log(
+							`Failed to restore API configuration for mode '${historyItem.mode}': ${
+								error instanceof Error ? error.message : String(error)
+							}. Continuing with default configuration.`,
+						)
+						// The task will continue with the current/default configuration
+					}
+				}
+			}
+		}
 
 		const {
 			apiConfiguration,
@@ -586,7 +644,7 @@ export class ClineProvider
 			experiments,
 		} = await this.getState()
 
-		const cline = new Task({
+		const task = new Task({
 			provider: this,
 			apiConfiguration,
 			enableDiff,
@@ -598,14 +656,16 @@ export class ClineProvider
 			rootTask: historyItem.rootTask,
 			parentTask: historyItem.parentTask,
 			taskNumber: historyItem.number,
-			onCreated: (cline) => this.emit("clineCreated", cline),
+			onCreated: (instance) => this.emit("taskCreated", instance),
 		})
 
-		await this.addClineToStack(cline)
+		await this.addClineToStack(task)
+
 		this.log(
-			`[subtasks] ${cline.parentTask ? "child" : "parent"} task ${cline.taskId}.${cline.instanceId} instantiated`,
+			`[subtasks] ${task.parentTask ? "child" : "parent"} task ${task.taskId}.${task.instanceId} instantiated`,
 		)
-		return cline
+
+		return task
 	}
 
 	public async postMessageToWebview(message: ExtensionMessage) {
@@ -807,6 +867,31 @@ export class ClineProvider
 		if (cline) {
 			TelemetryService.instance.captureModeSwitch(cline.taskId, newMode)
 			cline.emit("taskModeSwitched", cline.taskId, newMode)
+
+			// Store the current mode in case we need to rollback
+			const previousMode = (cline as any)._taskMode
+
+			try {
+				// Update the task history with the new mode first
+				const history = this.getGlobalState("taskHistory") ?? []
+				const taskHistoryItem = history.find((item) => item.id === cline.taskId)
+				if (taskHistoryItem) {
+					taskHistoryItem.mode = newMode
+					await this.updateTaskHistory(taskHistoryItem)
+				}
+
+				// Only update the task's mode after successful persistence
+				;(cline as any)._taskMode = newMode
+			} catch (error) {
+				// If persistence fails, log the error but don't update the in-memory state
+				this.log(
+					`Failed to persist mode switch for task ${cline.taskId}: ${error instanceof Error ? error.message : String(error)}`,
+				)
+
+				// Optionally, we could emit an event to notify about the failure
+				// This ensures the in-memory state remains consistent with persisted state
+				throw error
+			}
 		}
 
 		await this.updateGlobalState("mode", newMode)
@@ -1260,10 +1345,10 @@ export class ClineProvider
 	 */
 	async fetchMarketplaceData() {
 		try {
-			const [marketplaceItems, marketplaceInstalledMetadata] = await Promise.all([
-				this.marketplaceManager.getCurrentItems().catch((error) => {
+			const [marketplaceResult, marketplaceInstalledMetadata] = await Promise.all([
+				this.marketplaceManager.getMarketplaceItems().catch((error) => {
 					console.error("Failed to fetch marketplace items:", error)
-					return [] as MarketplaceItem[]
+					return { organizationMcps: [], marketplaceItems: [], errors: [error.message] }
 				}),
 				this.marketplaceManager.getInstallationMetadata().catch((error) => {
 					console.error("Failed to fetch installation metadata:", error)
@@ -1274,16 +1359,20 @@ export class ClineProvider
 			// Send marketplace data separately
 			this.postMessageToWebview({
 				type: "marketplaceData",
-				marketplaceItems: marketplaceItems || [],
+				organizationMcps: marketplaceResult.organizationMcps || [],
+				marketplaceItems: marketplaceResult.marketplaceItems || [],
 				marketplaceInstalledMetadata: marketplaceInstalledMetadata || { project: {}, global: {} },
+				errors: marketplaceResult.errors,
 			})
 		} catch (error) {
 			console.error("Failed to fetch marketplace data:", error)
 			// Send empty data on error to prevent UI from hanging
 			this.postMessageToWebview({
 				type: "marketplaceData",
+				organizationMcps: [],
 				marketplaceItems: [],
 				marketplaceInstalledMetadata: { project: {}, global: {} },
+				errors: [error instanceof Error ? error.message : String(error)],
 			})
 
 			// Show user-friendly error notification for network issues
@@ -1378,6 +1467,7 @@ export class ClineProvider
 			alwaysAllowSubtasks,
 			alwaysAllowUpdateTodoList,
 			allowedMaxRequests,
+			allowedMaxCost,
 			autoCondenseContext,
 			autoCondenseContextPercent,
 			soundEnabled,
@@ -1425,12 +1515,15 @@ export class ClineProvider
 			showRooIgnoredFiles,
 			language,
 			maxReadFileLine,
+			maxImageFileSize,
+			maxTotalImageSize,
 			terminalCompressProgressBar,
 			historyPreviewCollapsed,
 			cloudUserInfo,
 			cloudIsAuthenticated,
 			sharingEnabled,
 			organizationAllowList,
+			organizationSettingsVersion,
 			maxConcurrentFileReads,
 			condensingApiConfigId,
 			customCondensingPrompt,
@@ -1441,6 +1534,7 @@ export class ClineProvider
 			followupAutoApproveTimeoutMs,
 			includeDiagnosticMessages,
 			maxDiagnosticMessages,
+			includeTaskHistoryInEnhance,
 		} = await this.getState()
 
 		const telemetryKey = process.env.POSTHOG_API_KEY
@@ -1469,6 +1563,7 @@ export class ClineProvider
 			alwaysAllowSubtasks: alwaysAllowSubtasks ?? false,
 			alwaysAllowUpdateTodoList: alwaysAllowUpdateTodoList ?? false,
 			allowedMaxRequests,
+			allowedMaxCost,
 			autoCondenseContext: autoCondenseContext ?? true,
 			autoCondenseContextPercent: autoCondenseContextPercent ?? 100,
 			uriScheme: vscode.env.uriScheme,
@@ -1532,6 +1627,8 @@ export class ClineProvider
 			language: language ?? formatLanguage(vscode.env.language),
 			renderContext: this.renderContext,
 			maxReadFileLine: maxReadFileLine ?? -1,
+			maxImageFileSize: maxImageFileSize ?? 5,
+			maxTotalImageSize: maxTotalImageSize ?? 20,
 			maxConcurrentFileReads: maxConcurrentFileReads ?? 5,
 			settingsImportedAt: this.settingsImportedAt,
 			terminalCompressProgressBar: terminalCompressProgressBar ?? true,
@@ -1541,6 +1638,7 @@ export class ClineProvider
 			cloudIsAuthenticated: cloudIsAuthenticated ?? false,
 			sharingEnabled: sharingEnabled ?? false,
 			organizationAllowList,
+			organizationSettingsVersion,
 			condensingApiConfigId,
 			customCondensingPrompt,
 			codebaseIndexModels: codebaseIndexModels ?? EMBEDDING_MODEL_PROFILES,
@@ -1563,6 +1661,7 @@ export class ClineProvider
 			followupAutoApproveTimeoutMs: followupAutoApproveTimeoutMs ?? 60000,
 			includeDiagnosticMessages: includeDiagnosticMessages ?? true,
 			maxDiagnosticMessages: maxDiagnosticMessages ?? 50,
+			includeTaskHistoryInEnhance: includeTaskHistoryInEnhance ?? false,
 		}
 	}
 
@@ -1627,6 +1726,19 @@ export class ClineProvider
 			)
 		}
 
+		let organizationSettingsVersion: number = -1
+
+		try {
+			if (CloudService.hasInstance()) {
+				const settings = CloudService.instance.getOrganizationSettings()
+				organizationSettingsVersion = settings?.version ?? -1
+			}
+		} catch (error) {
+			console.error(
+				`[getState] failed to get organization settings version: ${error instanceof Error ? error.message : String(error)}`,
+			)
+		}
+
 		// Return the same structure as before
 		return {
 			apiConfiguration: providerSettings,
@@ -1648,6 +1760,7 @@ export class ClineProvider
 			followupAutoApproveTimeoutMs: stateValues.followupAutoApproveTimeoutMs ?? 60000,
 			diagnosticsEnabled: stateValues.diagnosticsEnabled ?? true,
 			allowedMaxRequests: stateValues.allowedMaxRequests,
+			allowedMaxCost: stateValues.allowedMaxCost,
 			autoCondenseContext: stateValues.autoCondenseContext ?? true,
 			autoCondenseContextPercent: stateValues.autoCondenseContextPercent ?? 100,
 			taskHistory: stateValues.taskHistory,
@@ -1702,12 +1815,15 @@ export class ClineProvider
 			telemetrySetting: stateValues.telemetrySetting || "unset",
 			showRooIgnoredFiles: stateValues.showRooIgnoredFiles ?? true,
 			maxReadFileLine: stateValues.maxReadFileLine ?? -1,
+			maxImageFileSize: stateValues.maxImageFileSize ?? 5,
+			maxTotalImageSize: stateValues.maxTotalImageSize ?? 20,
 			maxConcurrentFileReads: stateValues.maxConcurrentFileReads ?? 5,
 			historyPreviewCollapsed: stateValues.historyPreviewCollapsed ?? false,
 			cloudUserInfo,
 			cloudIsAuthenticated,
 			sharingEnabled,
 			organizationAllowList,
+			organizationSettingsVersion,
 			// Explicitly add condensing settings
 			condensingApiConfigId: stateValues.condensingApiConfigId,
 			customCondensingPrompt: stateValues.customCondensingPrompt,
@@ -1731,6 +1847,8 @@ export class ClineProvider
 			// Add diagnostic message settings
 			includeDiagnosticMessages: stateValues.includeDiagnosticMessages ?? true,
 			maxDiagnosticMessages: stateValues.maxDiagnosticMessages ?? 50,
+			// Add includeTaskHistoryInEnhance setting
+			includeTaskHistoryInEnhance: stateValues.includeTaskHistoryInEnhance ?? false,
 		}
 	}
 
@@ -1899,5 +2017,11 @@ export class ClineProvider
 			...(todos && { todos }),
 			...gitInfo,
 		}
+	}
+}
+
+class OrganizationAllowListViolationError extends Error {
+	constructor(message: string) {
+		super(message)
 	}
 }

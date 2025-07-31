@@ -29,9 +29,10 @@ export function insertMention(
 	text: string,
 	position: number,
 	value: string,
+	isSlashCommand: boolean = false,
 ): { newValue: string; mentionIndex: number } {
-	// Handle slash command
-	if (text.startsWith("/")) {
+	// Handle slash command selection (only when explicitly selecting a slash command)
+	if (isSlashCommand) {
 		return {
 			newValue: value,
 			mentionIndex: 0,
@@ -107,6 +108,7 @@ export enum ContextMenuOptionType {
 	NoResults = "noResults",
 	Mode = "mode", // Add mode type
 	Command = "command", // Add command type
+	SectionHeader = "sectionHeader", // Add section header type
 }
 
 export interface ContextMenuQueryItem {
@@ -115,12 +117,13 @@ export interface ContextMenuQueryItem {
 	label?: string
 	description?: string
 	icon?: string
+	slashCommand?: string
+	secondaryText?: string
+	argumentHint?: string
 }
 
 export function getContextMenuOptions(
 	query: string,
-	inputValue: string,
-	t: (key: string, options?: { name?: string }) => string,
 	selectedType: ContextMenuOptionType | null = null,
 	queryItems: ContextMenuQueryItem[],
 	dynamicSearchResults: SearchResult[] = [],
@@ -128,42 +131,12 @@ export function getContextMenuOptions(
 	commands?: Command[],
 ): ContextMenuQueryItem[] {
 	// Handle slash commands for modes and commands
-	if (query.startsWith("/") && inputValue.startsWith("/")) {
+	// Only process as slash command if the query itself starts with "/" (meaning we're typing a slash command)
+	if (query.startsWith("/")) {
 		const slashQuery = query.slice(1)
 		const results: ContextMenuQueryItem[] = []
 
-		// Add mode suggestions
-		if (modes?.length) {
-			// Create searchable strings array for fzf
-			const searchableItems = modes.map((mode) => ({
-				original: mode,
-				searchStr: mode.name,
-			}))
-
-			// Initialize fzf instance for fuzzy search
-			const fzf = new Fzf(searchableItems, {
-				selector: (item) => item.searchStr,
-			})
-
-			// Get fuzzy matching items
-			const matchingModes = slashQuery
-				? fzf.find(slashQuery).map((result) => ({
-						type: ContextMenuOptionType.Mode,
-						value: result.item.original.slug,
-						label: result.item.original.name,
-						description: getModeDescription(result.item.original),
-					}))
-				: modes.map((mode) => ({
-						type: ContextMenuOptionType.Mode,
-						value: mode.slug,
-						label: mode.name,
-						description: getModeDescription(mode),
-					}))
-
-			results.push(...matchingModes)
-		}
-
-		// Add command suggestions
+		// Add command suggestions first (prioritize commands at the top)
 		if (commands?.length) {
 			// Create searchable strings array for fzf
 			const searchableCommands = commands.map((command) => ({
@@ -181,19 +154,62 @@ export function getContextMenuOptions(
 				? fzf.find(slashQuery).map((result) => ({
 						type: ContextMenuOptionType.Command,
 						value: result.item.original.name,
-						label: result.item.original.name,
-						description: t("chat:command.triggerDescription", { name: result.item.original.name }),
-						icon: "$(play)",
+						slashCommand: `/${result.item.original.name}`,
+						description: result.item.original.description,
+						argumentHint: result.item.original.argumentHint,
 					}))
 				: commands.map((command) => ({
 						type: ContextMenuOptionType.Command,
 						value: command.name,
-						label: command.name,
-						description: t("chat:command.triggerDescription", { name: command.name }),
-						icon: "$(play)",
+						slashCommand: `/${command.name}`,
+						description: command.description,
+						argumentHint: command.argumentHint,
 					}))
 
-			results.push(...matchingCommands)
+			if (matchingCommands.length > 0) {
+				results.push({
+					type: ContextMenuOptionType.SectionHeader,
+					label: "Custom Commands",
+				})
+				results.push(...matchingCommands)
+			}
+		}
+
+		// Add mode suggestions second
+		if (modes?.length) {
+			// Create searchable strings array for fzf
+			const searchableItems = modes.map((mode) => ({
+				original: mode,
+				searchStr: mode.name,
+			}))
+
+			// Initialize fzf instance for fuzzy search
+			const fzf = new Fzf(searchableItems, {
+				selector: (item) => item.searchStr,
+			})
+
+			// Get fuzzy matching items
+			const matchingModes = slashQuery
+				? fzf.find(slashQuery).map((result) => ({
+						type: ContextMenuOptionType.Mode,
+						value: result.item.original.slug,
+						slashCommand: `/${result.item.original.slug}`,
+						description: getModeDescription(result.item.original),
+					}))
+				: modes.map((mode) => ({
+						type: ContextMenuOptionType.Mode,
+						value: mode.slug,
+						slashCommand: `/${mode.slug}`,
+						description: getModeDescription(mode),
+					}))
+
+			if (matchingModes.length > 0) {
+				results.push({
+					type: ContextMenuOptionType.SectionHeader,
+					label: "Modes",
+				})
+				results.push(...matchingModes)
+			}
 		}
 
 		return results.length > 0 ? results : [{ type: ContextMenuOptionType.NoResults }]
@@ -350,11 +366,14 @@ export function getContextMenuOptions(
 }
 
 export function shouldShowContextMenu(text: string, position: number): boolean {
-	// Handle slash command
-	if (text.startsWith("/")) {
-		return position <= text.length && !text.includes(" ")
-	}
 	const beforeCursor = text.slice(0, position)
+
+	// Check if we're in a slash command context (at the beginning and no space yet)
+	if (text.startsWith("/") && !text.includes(" ") && position <= text.length) {
+		return true
+	}
+
+	// Check for @ mention context
 	const atIndex = beforeCursor.lastIndexOf("@")
 
 	if (atIndex === -1) {

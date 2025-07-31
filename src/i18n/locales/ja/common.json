@@ -71,17 +71,25 @@
 		"share_task_not_found": "タスクが見つからないか、アクセスが拒否されました。",
 		"mode_import_failed": "モードのインポートに失敗しました：{{error}}",
 		"delete_rules_folder_failed": "ルールフォルダの削除に失敗しました：{{rulesFolderPath}}。エラー：{{error}}",
+		"command_not_found": "コマンド '{{name}}' が見つかりません",
+		"open_command_file": "コマンドファイルを開けませんでした",
+		"delete_command": "コマンドの削除に失敗しました",
+		"no_workspace_for_project_command": "プロジェクトコマンド用のワークスペースフォルダが見つかりません",
+		"command_already_exists": "コマンド \"{{commandName}}\" は既に存在します",
+		"create_command_failed": "コマンドの作成に失敗しました",
+		"command_template_content": "---\ndescription: \"このコマンドが何をするかの簡潔な説明\"\n---\n\nこれは新しいスラッシュコマンドです。このファイルを編集してコマンドの動作をカスタマイズしてください。",
 		"claudeCode": {
 			"processExited": "Claude Code プロセスがコード {{exitCode}} で終了しました。",
 			"errorOutput": "エラー出力：{{output}}",
 			"processExitedWithError": "Claude Code プロセスがコード {{exitCode}} で終了しました。エラー出力：{{output}}",
 			"stoppedWithReason": "Claude Code が理由により停止しました：{{reason}}",
-			"apiKeyModelPlanMismatch": "API キーとサブスクリプションプランでは異なるモデルが利用可能です。選択したモデルがプランに含まれていることを確認してください。"
+			"apiKeyModelPlanMismatch": "API keys and subscription plans allow different models. Make sure the selected model is included in your plan.",
+			"notFound": "Claude Code executable '{{claudePath}}' not found.\n\nPlease install Claude Code CLI:\n1. Visit {{installationUrl}} to download Claude Code\n2. Follow the installation instructions for your operating system\n3. Ensure the 'claude' command is available in your PATH\n4. Alternatively, configure a custom path in Roo settings under 'Claude Code Path'\n\nOriginal error: {{originalError}}"
 		},
 		"gemini": {
-			"generate_stream": "Gemini 生成コンテキスト ストリーム エラー: {{error}}",
-			"generate_complete_prompt": "Gemini 完了エラー: {{error}}",
-			"sources": "ソース:"
+			"generate_stream": "Gemini generate context stream error: {{error}}",
+			"generate_complete_prompt": "Gemini completion error: {{error}}",
+			"sources": "Sources:"
 		}
 	},
 	"warnings": {

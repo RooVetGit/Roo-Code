@@ -71,17 +71,25 @@
 		"share_task_not_found": "Attività non trovata o accesso negato.",
 		"mode_import_failed": "Importazione della modalità non riuscita: {{error}}",
 		"delete_rules_folder_failed": "Impossibile eliminare la cartella delle regole: {{rulesFolderPath}}. Errore: {{error}}",
+		"command_not_found": "Comando '{{name}}' non trovato",
+		"open_command_file": "Impossibile aprire il file di comando",
+		"delete_command": "Impossibile eliminare il comando",
+		"no_workspace_for_project_command": "Nessuna cartella workspace trovata per il comando di progetto",
+		"command_already_exists": "Il comando \"{{commandName}}\" esiste già",
+		"create_command_failed": "Errore nella creazione del comando",
+		"command_template_content": "---\ndescription: \"Breve descrizione di cosa fa questo comando\"\n---\n\nQuesto è un nuovo comando slash. Modifica questo file per personalizzare il comportamento del comando.",
 		"claudeCode": {
 			"processExited": "Il processo Claude Code è terminato con codice {{exitCode}}.",
 			"errorOutput": "Output di errore: {{output}}",
 			"processExitedWithError": "Il processo Claude Code è terminato con codice {{exitCode}}. Output di errore: {{output}}",
 			"stoppedWithReason": "Claude Code si è fermato per il motivo: {{reason}}",
-			"apiKeyModelPlanMismatch": "Le chiavi API e i piani di abbonamento consentono modelli diversi. Assicurati che il modello selezionato sia incluso nel tuo piano."
+			"apiKeyModelPlanMismatch": "API keys and subscription plans allow different models. Make sure the selected model is included in your plan.",
+			"notFound": "Claude Code executable '{{claudePath}}' not found.\n\nPlease install Claude Code CLI:\n1. Visit {{installationUrl}} to download Claude Code\n2. Follow the installation instructions for your operating system\n3. Ensure the 'claude' command is available in your PATH\n4. Alternatively, configure a custom path in Roo settings under 'Claude Code Path'\n\nOriginal error: {{originalError}}"
 		},
 		"gemini": {
-			"generate_stream": "Errore del flusso di contesto di generazione Gemini: {{error}}",
-			"generate_complete_prompt": "Errore di completamento Gemini: {{error}}",
-			"sources": "Fonti:"
+			"generate_stream": "Gemini generate context stream error: {{error}}",
+			"generate_complete_prompt": "Gemini completion error: {{error}}",
+			"sources": "Sources:"
 		}
 	},
 	"warnings": {
