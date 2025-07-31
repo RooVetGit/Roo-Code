@@ -8,13 +8,19 @@ import Link from "next/link"
 
 interface FAQItem {
 	question: string
-	answer: string | React.ReactNode
+	answer: React.ReactNode
 }
 
 const faqs: FAQItem[] = [
 	{
 		question: "What exactly is Roo Code?",
-		answer: "Roo Code is an open-source, AI-powered coding assistant that runs in VS Code. It goes beyond simple autocompletion by reading and writing across multiple files, executing commands, and adapting to your workflow—like having a whole dev team right inside your editor.",
+		answer: (
+			<>
+				Roo Code is an open-source, AI-powered coding assistant that runs in VS Code. It goes beyond simple
+				autocompletion by reading and writing across multiple files, executing commands, and adapting to your
+				workflow—like having a whole dev team right inside your editor.
+			</>
+		),
 	},
 	{
 		question: "How does Roo Code differ from Copilot, Cursor, or Windsurf?",
@@ -32,19 +38,44 @@ const faqs: FAQItem[] = [
 	},
 	{
 		question: "Is Roo Code really free?",
-		answer: "Yes! Roo Code is completely free and open-source. You'll only pay for the AI model usage if you use a paid API (like OpenAI). If you choose free or self-hosted models, there's no cost at all.",
+		answer: (
+			<>
+				Yes! Roo Code is completely free and open-source. You&apos;ll only pay for the AI model usage if you use
+				a paid API (like OpenAI). If you choose free or self-hosted models, there&apos;s no cost at all.
+			</>
+		),
 	},
 	{
 		question: "Will my code stay private?",
-		answer: "Yes. Because Roo Code is an extension in your local VS Code, your code never leaves your machine unless you connect to an external AI API. Even then, you control exactly what is sent to the AI model. You can use tools like .rooignore to exclude sensitive files, and you can also run Roo Code with offline/local models for full privacy.",
+		answer: (
+			<>
+				Yes. Because Roo Code is an extension in your local VS Code, your code never leaves your machine unless
+				you connect to an external AI API. Even then, you control exactly what is sent to the AI model. You can
+				use tools like .rooignore to exclude sensitive files, and you can also run Roo Code with offline/local
+				models for full privacy.
+			</>
+		),
 	},
 	{
 		question: "Which AI models does Roo Code support?",
-		answer: "Roo Code is fully model-agnostic, giving you the flexibility to work with whatever AI models you prefer. It supports OpenAI models (like GPT-3.5 and GPT-4), Anthropic&apos;s Claude, and local LLMs via APIs or specialized plugins. You can even connect any other model that follows Roo Code&apos;s Model Context Protocol (MCP).",
+		answer: (
+			<>
+				Roo Code is fully model-agnostic, giving you the flexibility to work with whatever AI models you prefer.
+				It supports OpenAI models (like GPT-4o, GPT-4, and o1), Anthropic&apos;s Claude (including Claude 3.5
+				Sonnet), Google&apos;s Gemini models, and local LLMs via APIs or specialized plugins. You can even
+				connect any other model that follows Roo Code&apos;s Model Context Protocol (MCP).
+			</>
+		),
 	},
 	{
 		question: "Does Roo Code support my programming language?",
-		answer: "Likely yes! Roo Code supports a wide range of languages—Python, Java, C#, JavaScript/TypeScript, Go, Rust, etc. Since it leverages the AI model's understanding, new or lesser-known languages may also work, depending on model support.",
+		answer: (
+			<>
+				Likely yes! Roo Code supports a wide range of languages—Python, Java, C#, JavaScript/TypeScript, Go,
+				Rust, etc. Since it leverages the AI model&apos;s understanding, new or lesser-known languages may also
+				work, depending on model support.
+			</>
+		),
 	},
 	{
 		question: "How do I install and get started?",
@@ -103,11 +134,23 @@ const faqs: FAQItem[] = [
 	},
 	{
 		question: "Can Roo Code run commands and tests automatically?",
-		answer: "Yes! One of Roo Code&apos;s biggest strengths is its ability to execute commands—always optional and fully permission-based. It can run terminal commands like npm install, execute your test suites, and even open a web browser for integration testing when you approve it.",
+		answer: (
+			<>
+				Yes! One of Roo Code&apos;s biggest strengths is its ability to execute commands—always optional and
+				fully permission-based. It can run terminal commands like npm install, execute your test suites, and
+				even open a web browser for integration testing when you approve it.
+			</>
+		),
 	},
 	{
 		question: "What if I just want a casual coding 'vibe'?",
-		answer: "Roo Code shines for both serious enterprise development and casual &apos;vibe coding.&apos; You can ask it to quickly prototype ideas, refactor on the fly, or provide design suggestions—without a rigid, step-by-step process.",
+		answer: (
+			<>
+				Roo Code shines for both serious enterprise development and casual &quot;vibe coding.&quot; You can ask
+				it to quickly prototype ideas, refactor on the fly, or provide design suggestions—without a rigid,
+				step-by-step process.
+			</>
+		),
 	},
 	{
 		question: "Can I contribute to Roo Code?",
@@ -249,9 +292,7 @@ export function FAQSection() {
 											"overflow-hidden transition-all duration-300 ease-in-out",
 											openIndex === index ? "max-h-96 pb-6" : "max-h-0",
 										)}>
-										<div className="px-6 text-muted-foreground">
-											{typeof faq.answer === "string" ? <p>{faq.answer}</p> : faq.answer}
-										</div>
+										<div className="px-6 text-muted-foreground">{faq.answer}</div>
 									</div>
 								</div>
 							</motion.div>

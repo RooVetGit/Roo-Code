@@ -63,7 +63,7 @@ export function NavBar({ stars, downloads }: NavBarProps) {
 						Docs
 					</a>
 					<a
-						href="https://discord.com/invite/roocode"
+						href={EXTERNAL_LINKS.DISCORD}
 						target="_blank"
 						rel="noopener noreferrer"
 						className="text-muted-foreground transition-transform duration-200 hover:scale-105 hover:text-foreground">
@@ -174,7 +174,7 @@ export function NavBar({ stars, downloads }: NavBarProps) {
 						Docs
 					</a>
 					<a
-						href="https://discord.com/invite/roocode"
+						href={EXTERNAL_LINKS.DISCORD}
 						target="_blank"
 						rel="noopener noreferrer"
 						className="w-full px-8 py-3 text-left text-sm font-medium text-foreground/80 transition-colors hover:bg-accent hover:text-foreground"
