@@ -13,7 +13,7 @@ export class CodeIndexConfigManager {
 	private codebaseIndexEnabled: boolean = true
 	private embedderProvider: EmbedderProvider = "openai"
 	private vectorStoreProvider: "local" | "qdrant" = "qdrant"
-	private localVectorStoreDirectoryPlaceholder?: string
+	private localVectorStoreDirectory?: string
 	private modelId?: string
 	private modelDimension?: number
 	private openAiOptions?: ApiHandlerOptions
@@ -83,7 +83,7 @@ export class CodeIndexConfigManager {
 		// Update instance variables with configuration
 		this.codebaseIndexEnabled = codebaseIndexEnabled ?? true
 		this.vectorStoreProvider = codebaseIndexVectorStoreProvider ?? "qdrant"
-		this.localVectorStoreDirectoryPlaceholder = codebaseIndexLocalVectorStoreDirectory
+		this.localVectorStoreDirectory = codebaseIndexLocalVectorStoreDirectory
 		this.qdrantUrl = codebaseIndexQdrantUrl
 		this.qdrantApiKey = qdrantApiKey ?? ""
 		this.searchMinScore = codebaseIndexSearchMinScore
@@ -165,7 +165,7 @@ export class CodeIndexConfigManager {
 			configured: this.isConfigured(),
 			embedderProvider: this.embedderProvider,
 			vectorStoreProvider: this.vectorStoreProvider,
-			localVectorStoreDirectoryPlaceholder: this.localVectorStoreDirectoryPlaceholder,
+			localVectorStoreDirectory: this.localVectorStoreDirectory,
 			modelId: this.modelId,
 			modelDimension: this.modelDimension,
 			openAiKey: this.openAiOptions?.openAiNativeApiKey ?? "",
@@ -272,7 +272,7 @@ export class CodeIndexConfigManager {
 		const prevQdrantUrl = prev?.qdrantUrl ?? ""
 		const prevQdrantApiKey = prev?.qdrantApiKey ?? ""
 		const prevVectorStoreProvider = prev?.vectorStoreProvider ?? "qdrant"
-		const prevLocalDbPath = prev?.localVectorStoreDirectoryPlaceholder ?? ""
+		const prevLocalDbPath = prev?.localVectorStoreDirectory ?? ""
 
 		// 1. Transition from disabled/unconfigured to enabled/configured
 		if ((!prevEnabled || !prevConfigured) && this.codebaseIndexEnabled && nowConfigured) {
@@ -306,10 +306,7 @@ export class CodeIndexConfigManager {
 		}
 
 		// Local DB path change (only affects local vector store)
-		if (
-			this.vectorStoreProvider === "local" &&
-			prevLocalDbPath !== (this.localVectorStoreDirectoryPlaceholder ?? "")
-		) {
+		if (this.vectorStoreProvider === "local" && prevLocalDbPath !== (this.localVectorStoreDirectory ?? "")) {
 			return true
 		}
 
@@ -323,7 +320,7 @@ export class CodeIndexConfigManager {
 		const currentMistralApiKey = this.mistralOptions?.apiKey ?? ""
 		const currentQdrantUrl = this.qdrantUrl ?? ""
 		const currentQdrantApiKey = this.qdrantApiKey ?? ""
-		const currentLocalDbPath = this.localVectorStoreDirectoryPlaceholder ?? ""
+		const currentLocalDbPath = this.localVectorStoreDirectory ?? ""
 
 		if (prevOpenAiKey !== currentOpenAiKey) {
 			return true
@@ -404,7 +401,7 @@ export class CodeIndexConfigManager {
 			isConfigured: this.isConfigured(),
 			embedderProvider: this.embedderProvider,
 			vectorStoreProvider: this.vectorStoreProvider ?? "qdrant",
-			localVectorStoreDirectoryPlaceholder: this.localVectorStoreDirectoryPlaceholder,
+			localVectorStoreDirectoryPlaceholder: this.localVectorStoreDirectory,
 			modelId: this.modelId,
 			modelDimension: this.modelDimension,
 			openAiOptions: this.openAiOptions,
@@ -502,6 +499,6 @@ export class CodeIndexConfigManager {
 	 * Gets the current local database path for vector storage
 	 */
 	public get currentLocalDbPath(): string | undefined {
-		return this.localVectorStoreDirectoryPlaceholder
+		return this.localVectorStoreDirectory
 	}
 }
