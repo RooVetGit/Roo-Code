@@ -76,7 +76,7 @@ const TaskHeader = ({
 			<div
 				className={cn(
 					"p-2.5 flex flex-col gap-1.5 relative z-1 cursor-pointer",
-					"bg-vscode-button-secondaryBackground hover:bg-vscode-button-secondaryBackground/90",
+					"bg-vscode-input-background hover:bg-vscode-input-background/90",
 					"text-vscode-foreground/80 hover:text-vscode-foreground",
 					"transition-colors duration-150",
 					hasTodos ? "rounded-t-xs border-b-0" : "rounded-xs",
