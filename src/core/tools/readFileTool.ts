@@ -610,11 +610,18 @@ export async function readFileTool(
 					xmlContent: `<file><path>${relPath}</path>\n${xmlInfo}</file>`,
 				})
 			} catch (error) {
-				const errorMsg = error instanceof Error ? error.message : String(error)
+				let errorMsg = error instanceof Error ? error.message : String(error)
+				let userFriendlyError = errorMsg
+
+				// Check if this is a file not found error
+				if (error instanceof Error && "code" in error && error.code === "ENOENT") {
+					userFriendlyError = `File not found: The requested file does not exist in the current workspace.`
+				}
+
 				updateFileResult(relPath, {
 					status: "error",
-					error: `Error reading file: ${errorMsg}`,
-					xmlContent: `<file><path>${relPath}</path><error>Error reading file: ${errorMsg}</error></file>`,
+					error: userFriendlyError,
+					xmlContent: `<file><path>${relPath}</path><error>${userFriendlyError}</error></file>`,
 				})
 				await handleError(`reading file ${relPath}`, error instanceof Error ? error : new Error(errorMsg))
 			}
@@ -694,14 +701,20 @@ export async function readFileTool(
 	} catch (error) {
 		// Handle all errors using per-file format for consistency
 		const relPath = fileEntries[0]?.path || "unknown"
-		const errorMsg = error instanceof Error ? error.message : String(error)
+		let errorMsg = error instanceof Error ? error.message : String(error)
+		let userFriendlyError = errorMsg
+
+		// Check if this is a file not found error
+		if (error instanceof Error && "code" in error && error.code === "ENOENT") {
+			userFriendlyError = `File not found: The requested file does not exist in the current workspace.`
+		}
 
 		// If we have file results, update the first one with the error
 		if (fileResults.length > 0) {
 			updateFileResult(relPath, {
 				status: "error",
-				error: `Error reading file: ${errorMsg}`,
-				xmlContent: `<file><path>${relPath}</path><error>Error reading file: ${errorMsg}</error></file>`,
+				error: userFriendlyError,
+				xmlContent: `<file><path>${relPath}</path><error>${userFriendlyError}</error></file>`,
 			})
 		}
 

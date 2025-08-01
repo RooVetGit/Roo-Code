@@ -187,7 +187,9 @@
 		"didSearchReplace": "Roo performed search and replace on this file:",
 		"wantsToInsert": "Roo wants to insert content into this file:",
 		"wantsToInsertWithLineNumber": "Roo wants to insert content into this file at line {{lineNumber}}:",
-		"wantsToInsertAtEnd": "Roo wants to append content to the end of this file:"
+		"wantsToInsertAtEnd": "Roo wants to append content to the end of this file:",
+		"fileNotFound": "File Not Found",
+		"fileNotFoundMessage": "The requested file does not exist in the current workspace."
 	},
 	"directoryOperations": {
 		"wantsToViewTopLevel": "Roo wants to view the top level files in this directory:",
