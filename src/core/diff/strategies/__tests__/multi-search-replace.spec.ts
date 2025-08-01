@@ -13,6 +13,11 @@ describe("MultiSearchReplaceDiffStrategy", () => {
 			expect(strategy["validateMarkerSequencing"](diff).success).toBe(true)
 		})
 
+		it("validates correct marker sequence with extra > in SEARCH", () => {
+			const diff = "<<<<<<< SEARCH>\n" + "some content\n" + "=======\n" + "new content\n" + ">>>>>>> REPLACE"
+			expect(strategy["validateMarkerSequencing"](diff).success).toBe(true)
+		})
+
 		it("validates multiple correct marker sequences", () => {
 			const diff =
 				"<<<<<<< SEARCH\n" +

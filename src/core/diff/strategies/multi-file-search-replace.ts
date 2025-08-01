@@ -260,6 +260,7 @@ Each file requires its own path, start_line, and diff elements.
 		const state = { current: State.START, line: 0 }
 
 		const SEARCH = "<<<<<<< SEARCH"
+		const SEARCH_PATTERN = /^<<<<<<< SEARCH>?$/
 		const SEP = "======="
 		const REPLACE = ">>>>>>> REPLACE"
 		const SEARCH_PREFIX = "<<<<<<< "
@@ -329,7 +330,7 @@ Each file requires its own path, start_line, and diff elements.
 		})
 
 		const lines = diffContent.split("\n")
-		const searchCount = lines.filter((l) => l.trim() === SEARCH).length
+		const searchCount = lines.filter((l) => SEARCH_PATTERN.test(l.trim())).length
 		const sepCount = lines.filter((l) => l.trim() === SEP).length
 		const replaceCount = lines.filter((l) => l.trim() === REPLACE).length
 
@@ -357,12 +358,12 @@ Each file requires its own path, start_line, and diff elements.
 							: reportMergeConflictError(SEP, SEARCH)
 					if (marker === REPLACE) return reportInvalidDiffError(REPLACE, SEARCH)
 					if (marker.startsWith(REPLACE_PREFIX)) return reportMergeConflictError(marker, SEARCH)
-					if (marker === SEARCH) state.current = State.AFTER_SEARCH
+					if (SEARCH_PATTERN.test(marker)) state.current = State.AFTER_SEARCH
 					else if (marker.startsWith(SEARCH_PREFIX)) return reportMergeConflictError(marker, SEARCH)
 					break
 
 				case State.AFTER_SEARCH:
-					if (marker === SEARCH) return reportInvalidDiffError(SEARCH, SEP)
+					if (SEARCH_PATTERN.test(marker)) return reportInvalidDiffError(SEARCH, SEP)
 					if (marker.startsWith(SEARCH_PREFIX)) return reportMergeConflictError(marker, SEARCH)
 					if (marker === REPLACE) return reportInvalidDiffError(REPLACE, SEP)
 					if (marker.startsWith(REPLACE_PREFIX)) return reportMergeConflictError(marker, SEARCH)
@@ -370,7 +371,7 @@ Each file requires its own path, start_line, and diff elements.
 					break
 
 				case State.AFTER_SEPARATOR:
-					if (marker === SEARCH) return reportInvalidDiffError(SEARCH, REPLACE)
+					if (SEARCH_PATTERN.test(marker)) return reportInvalidDiffError(SEARCH, REPLACE)
 					if (marker.startsWith(SEARCH_PREFIX)) return reportMergeConflictError(marker, REPLACE)
 					if (marker === SEP)
 						return likelyBadStructure
@@ -467,7 +468,7 @@ Each file requires its own path, start_line, and diff elements.
 		*/
 		let matches = [
 			...diffContent.matchAll(
-				/(?:^|\n)(?<!\\)<<<<<<< SEARCH\s*\n((?:\:start_line:\s*(\d+)\s*\n))?((?:\:end_line:\s*(\d+)\s*\n))?((?<!\\)-------\s*\n)?([\s\S]*?)(?:\n)?(?:(?<=\n)(?<!\\)=======\s*\n)([\s\S]*?)(?:\n)?(?:(?<=\n)(?<!\\)>>>>>>> REPLACE)(?=\n|$)/g,
+				/(?:^|\n)(?<!\\)<<<<<<< SEARCH>?\s*\n((?:\:start_line:\s*(\d+)\s*\n))?((?:\:end_line:\s*(\d+)\s*\n))?((?<!\\)-------\s*\n)?([\s\S]*?)(?:\n)?(?:(?<=\n)(?<!\\)=======\s*\n)([\s\S]*?)(?:\n)?(?:(?<=\n)(?<!\\)>>>>>>> REPLACE)(?=\n|$)/g,
 			),
 		]
 
