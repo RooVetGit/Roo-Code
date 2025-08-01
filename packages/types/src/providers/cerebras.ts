@@ -14,7 +14,7 @@ export const cerebrasModels = {
 		inputPrice: 0,
 		outputPrice: 0,
 		description:
-			"SOTA coding model with ~2000 tokens/s ($0 free tier)\n\n• Use this if you don't have a Cerebras subscription\n• 64K context window\n• Rate limits: 150K TPM, 1M TPH/TPD, 10 RPM, 100 RPH/RPD\n\nUpgrade for higher limits: [https://cloud.cerebras.ai/?utm=cline](https://cloud.cerebras.ai/?utm=cline)",
+			"SOTA coding model with ~2000 tokens/s ($0 free tier)\n\n• Use this if you don't have a Cerebras subscription\n• 64K context window\n• Rate limits: 150K TPM, 1M TPH/TPD, 10 RPM, 100 RPH/RPD\n\nUpgrade for higher limits: [https://cloud.cerebras.ai/?utm=roocode](https://cloud.cerebras.ai/?utm=roocode)",
 	},
 	"qwen-3-coder-480b": {
 		maxTokens: 40000,
@@ -61,5 +61,6 @@ export const cerebrasModels = {
 		inputPrice: 0,
 		outputPrice: 0,
 		description: "SOTA performance with ~1500 tokens/s",
+		supportsReasoningEffort: true,
 	},
 } as const satisfies Record<string, ModelInfo>
