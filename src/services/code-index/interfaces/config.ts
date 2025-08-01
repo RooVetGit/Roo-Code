@@ -30,7 +30,7 @@ export type PreviousConfigSnapshot = {
 	configured: boolean
 	embedderProvider: EmbedderProvider
 	vectorStoreProvider?: "local" | "qdrant"
-	localVectorStoreDirectoryPlaceholder?: string
+	localVectorStoreDirectory?: string
 	modelId?: string
 	modelDimension?: number // Generic dimension property
 	openAiKey?: string
