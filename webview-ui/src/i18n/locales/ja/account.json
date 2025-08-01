@@ -11,7 +11,7 @@
 	"cloudBenefitSharing": "共有とコラボレーション機能",
 	"cloudBenefitMetrics": "タスク、Token、コストベースの使用メトリクス",
 	"visitCloudWebsite": "Roo Code Cloudを訪問",
-	"telemetryOnline": "Telemetry Connected",
+	"telemetryOnline": "テレメトリ接続済み",
 	"telemetryOffline": "Telemetry Disconnected",
 	"telemetryQueued": "events queued"
 }
