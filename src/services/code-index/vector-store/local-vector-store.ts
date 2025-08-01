@@ -21,6 +21,10 @@ export class LocalVectorStore implements IVectorStore {
 
 	private readonly UPDATE_BATCH_SIZE = 1000
 	private readonly SEARCH_BATCH_SIZE = 10000
+	private deletedFileCount = 0
+	private lastCleanupTime: Date | null = null
+	private readonly RESIZE_FILE_THRESHOLD = 50
+	private readonly RESIZE_TIME_THRESHOLD_MS = 60 * 60 * 1000
 
 	constructor(workspacePath: string, vectorSize: number, dbDirectory: string) {
 		this.vectorSize = vectorSize
@@ -409,6 +413,19 @@ export class LocalVectorStore implements IVectorStore {
 		return this.deletePointsByMultipleFilePaths([filePath])
 	}
 
+	private async checkAndResize(): Promise<void> {
+		const now = new Date()
+		const shouldResize =
+			this.deletedFileCount >= this.RESIZE_FILE_THRESHOLD ||
+			(this.lastCleanupTime && now.getTime() - this.lastCleanupTime.getTime() > this.RESIZE_TIME_THRESHOLD_MS)
+
+		if (shouldResize) {
+			await this.resizeCollection()
+			this.deletedFileCount = 0
+			this.lastCleanupTime = now
+		}
+	}
+
 	async deletePointsByMultipleFilePaths(filePaths: string[]): Promise<void> {
 		if (filePaths.length === 0) {
 			return
@@ -425,7 +442,7 @@ export class LocalVectorStore implements IVectorStore {
 
 			const workspaceRoot = getWorkspacePath()
 			const normalizedPaths = filePaths.map((fp) =>
-				path.normalize(path.resolve(workspaceRoot, fp)).substring(workspaceRoot.length + 1),
+				path.normalize(path.isAbsolute(fp) ? path.relative(workspaceRoot, fp) : fp),
 			)
 
 			const placeholders = normalizedPaths.map(() => "?").join(",")
@@ -443,6 +460,8 @@ export class LocalVectorStore implements IVectorStore {
 			}
 
 			await db.exec("COMMIT")
+			this.deletedFileCount += filePaths.length
+			await this.checkAndResize()
 		} catch (error) {
 			await db.exec("ROLLBACK")
 			console.error("Failed to delete points by file paths:", error)
