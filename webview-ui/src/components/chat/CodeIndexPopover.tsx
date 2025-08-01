@@ -462,9 +462,7 @@ export const CodeIndexPopover: React.FC<CodeIndexPopoverProps> = ({
 		setSaveError(null)
 
 		// Prepare settings to save
-		const settingsToSave: any = {
-			codebaseIndexEnabled: currentSettings.codebaseIndexEnabled,
-		}
+		const settingsToSave: any = {}
 
 		// Iterate through all current settings
 		for (const [key, value] of Object.entries(currentSettings)) {
@@ -473,6 +471,9 @@ export const CodeIndexPopover: React.FC<CodeIndexPopoverProps> = ({
 			// Include all other fields, including empty strings (which clear secrets)
 			settingsToSave[key] = value
 		}
+
+		// Always include codebaseIndexEnabled to ensure it's persisted
+		settingsToSave.codebaseIndexEnabled = currentSettings.codebaseIndexEnabled
 
 		// Save settings to backend
 		vscode.postMessage({

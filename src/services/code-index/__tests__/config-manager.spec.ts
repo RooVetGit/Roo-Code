@@ -102,11 +102,17 @@ describe("CodeIndexConfigManager", () => {
 
 			expect(result.currentConfig).toEqual({
 				isConfigured: false,
+				geminiOptions: undefined,
+				mistralOptions: undefined,
+				modelDimension: undefined,
+				openAiCompatibleOptions: undefined,
+				searchProvider: undefined,
 				embedderProvider: "openai",
 				modelId: undefined,
 				openAiOptions: { openAiNativeApiKey: "" },
 				ollamaOptions: { ollamaBaseUrl: "" },
 				qdrantUrl: "http://localhost:6333",
+				valkeyUrl: "http://localhost:6379",
 				qdrantApiKey: "",
 				searchMinScore: 0.4,
 			})

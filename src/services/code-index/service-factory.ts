@@ -135,13 +135,12 @@ export class CodeIndexServiceFactory {
 
 		const searchProvider = config.searchProvider
 
-		if (searchProvider === "qdrant" && config.qdrantUrl) {
+		if (searchProvider && searchProvider === "qdrant" && config.qdrantUrl) {
 			return new QdrantVectorStore(this.workspacePath, config.qdrantUrl, vectorSize, config.qdrantApiKey)
 		} else if (searchProvider === "valkey" && config.valkeyUrl) {
 			return new ValkeySearchVectorStore(this.workspacePath, config.valkeyUrl, vectorSize)
 		}
 
-		// Assuming constructor is updated: new QdrantVectorStore(workspacePath, url, vectorSize, apiKey?)
 		throw new Error(t("embeddings:serviceFactory.vectorUrlMissing"))
 	}
 

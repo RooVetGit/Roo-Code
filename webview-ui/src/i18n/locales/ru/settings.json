@@ -68,6 +68,7 @@
 		"qdrantProvider": "Qdrant",
 		"valkeyProvider": "Valkey Search",
 		"valkeyUrlLabel": "URL Valkey",
+		"qdrantKeyLabel": "URL Qdrant",
 		"valkeyUrlPlaceholder": "Введите URL сервера Valkey",
 		"startIndexingButton": "Начать",
 		"clearIndexDataButton": "Очистить индекс",

@@ -352,6 +352,7 @@ describe("CodeIndexServiceFactory", () => {
 				embedderProvider: "openai",
 				modelId: testModelId,
 				qdrantUrl: "http://localhost:6333",
+				searchProvider: "qdrant",
 				qdrantApiKey: "test-key",
 			}
 			mockConfigManager.getConfig.mockReturnValue(testConfig as any)
@@ -377,6 +378,7 @@ describe("CodeIndexServiceFactory", () => {
 				embedderProvider: "ollama",
 				modelId: testModelId,
 				qdrantUrl: "http://localhost:6333",
+				searchProvider: "qdrant",
 				qdrantApiKey: "test-key",
 			}
 			mockConfigManager.getConfig.mockReturnValue(testConfig as any)
@@ -402,6 +404,7 @@ describe("CodeIndexServiceFactory", () => {
 				embedderProvider: "openai-compatible",
 				modelId: testModelId,
 				qdrantUrl: "http://localhost:6333",
+				searchProvider: "qdrant",
 				qdrantApiKey: "test-key",
 			}
 			mockConfigManager.getConfig.mockReturnValue(testConfig as any)
@@ -434,6 +437,7 @@ describe("CodeIndexServiceFactory", () => {
 					apiKey: "test-api-key",
 				},
 				qdrantUrl: "http://localhost:6333",
+				searchProvider: "qdrant",
 				qdrantApiKey: "test-key",
 			}
 			mockConfigManager.getConfig.mockReturnValue(testConfig as any)
@@ -465,6 +469,7 @@ describe("CodeIndexServiceFactory", () => {
 					apiKey: "test-api-key",
 				},
 				qdrantUrl: "http://localhost:6333",
+				searchProvider: "qdrant",
 				qdrantApiKey: "test-key",
 			}
 			mockConfigManager.getConfig.mockReturnValue(testConfig as any)
@@ -495,6 +500,7 @@ describe("CodeIndexServiceFactory", () => {
 				},
 				qdrantUrl: "http://localhost:6333",
 				qdrantApiKey: "test-key",
+				searchProvider: "qdrant",
 			}
 			mockConfigManager.getConfig.mockReturnValue(testConfig as any)
 			mockGetModelDimension.mockReturnValue(768)
@@ -525,6 +531,7 @@ describe("CodeIndexServiceFactory", () => {
 				},
 				qdrantUrl: "http://localhost:6333",
 				qdrantApiKey: "test-key",
+				searchProvider: "qdrant",
 			}
 			mockConfigManager.getConfig.mockReturnValue(testConfig as any)
 			mockGetModelDimension.mockReturnValue(undefined)
@@ -547,6 +554,7 @@ describe("CodeIndexServiceFactory", () => {
 				},
 				qdrantUrl: "http://localhost:6333",
 				qdrantApiKey: "test-key",
+				searchProvider: "qdrant",
 			}
 			mockConfigManager.getConfig.mockReturnValue(testConfig as any)
 			mockGetModelDimension.mockReturnValue(undefined)
@@ -563,6 +571,7 @@ describe("CodeIndexServiceFactory", () => {
 				embedderProvider: "gemini",
 				modelId: "gemini-embedding-001",
 				qdrantUrl: "http://localhost:6333",
+				searchProvider: "qdrant",
 				qdrantApiKey: "test-key",
 			}
 			mockConfigManager.getConfig.mockReturnValue(testConfig as any)
@@ -586,6 +595,7 @@ describe("CodeIndexServiceFactory", () => {
 			const testConfig = {
 				embedderProvider: "gemini",
 				qdrantUrl: "http://localhost:6333",
+				searchProvider: "qdrant",
 				qdrantApiKey: "test-key",
 			}
 			mockConfigManager.getConfig.mockReturnValue(testConfig as any)
@@ -612,6 +622,7 @@ describe("CodeIndexServiceFactory", () => {
 				embedderProvider: "openai",
 				modelId: undefined,
 				qdrantUrl: "http://localhost:6333",
+				searchProvider: "qdrant",
 				qdrantApiKey: "test-key",
 			}
 			mockConfigManager.getConfig.mockReturnValue(testConfig as any)
@@ -636,6 +647,7 @@ describe("CodeIndexServiceFactory", () => {
 				embedderProvider: "openai",
 				modelId: "unknown-model",
 				qdrantUrl: "http://localhost:6333",
+				searchProvider: "qdrant",
 				qdrantApiKey: "test-key",
 			}
 			mockConfigManager.getConfig.mockReturnValue(testConfig as any)
@@ -651,6 +663,7 @@ describe("CodeIndexServiceFactory", () => {
 				embedderProvider: "openai",
 				modelId: "text-embedding-3-small",
 				qdrantUrl: undefined,
+				searchProvider: "qdrant",
 				qdrantApiKey: "test-key",
 			}
 			mockConfigManager.getConfig.mockReturnValue(testConfig as any)

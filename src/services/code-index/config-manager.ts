@@ -171,7 +171,7 @@ export class CodeIndexConfigManager {
 			mistralApiKey: this.mistralOptions?.apiKey ?? "",
 			qdrantUrl: this.qdrantUrl ?? "",
 			valkeyUrl: this.valkeyUrl ?? "",
-			searchProvider: this.searchProvider,
+			searchProvider: this.searchProvider ?? "",
 			qdrantApiKey: this.qdrantApiKey ?? "",
 		}
 
@@ -344,11 +344,15 @@ export class CodeIndexConfigManager {
 			return true
 		}
 
+		if (prevSearchProvider !== currentSearchProvider) {
+			return true
+		}
+
 		if (prevValkeyUrl !== currentValkeyUrl) {
 			return true
 		}
 
-		if (currentSearchProvider != this.searchProvider) {
+		if (currentSearchProvider != prevSearchProvider) {
 			return true
 		}
 
