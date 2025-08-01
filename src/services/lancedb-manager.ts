@@ -33,6 +33,7 @@ export class LanceDBManager {
 		let packageName: string
 		let nodeFileName: string
 
+		let isMusl = false
 		switch (platform) {
 			case "win32":
 				if (arch === "x64") {
@@ -57,18 +58,29 @@ export class LanceDBManager {
 				}
 				break
 			case "linux":
+				isMusl = process.versions?.musl !== undefined
 				if (arch === "x64") {
-					packageName = "@lancedb/lancedb-linux-x64-gnu"
-					nodeFileName = "lancedb.linux-x64-gnu.node"
+					if (isMusl) {
+						packageName = "@lancedb/lancedb-linux-x64-musl"
+						nodeFileName = "lancedb.linux-x64-musl.node"
+					} else {
+						packageName = "@lancedb/lancedb-linux-x64-gnu"
+						nodeFileName = "lancedb.linux-x64-gnu.node"
+					}
 				} else if (arch === "arm64") {
-					packageName = "@lancedb/lancedb-linux-arm64-gnu"
-					nodeFileName = "lancedb.linux-arm64-gnu.node"
+					if (isMusl) {
+						packageName = "@lancedb/lancedb-linux-arm64-musl"
+						nodeFileName = "lancedb.linux-arm64-musl.node"
+					} else {
+						packageName = "@lancedb/lancedb-linux-arm64-gnu"
+						nodeFileName = "lancedb.linux-arm64-gnu.node"
+					}
 				} else {
 					throw new Error(`Unsupported Linux architecture: ${arch}`)
 				}
 				break
 			default:
-				throw new Error(`Unsupported platform: ${platform}`)
+				throw new Error(`Unsupported platform: ${platform}, arch: ${arch}`)
 		}
 
 		return { platform, arch, packageName, nodeFileName }
