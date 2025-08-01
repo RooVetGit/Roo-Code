@@ -7,6 +7,11 @@ import { ApiHandlerOptions } from "../../../shared/api"
 
 // Mock OpenAI client
 const mockCreate = vitest.fn()
+const mockResponsesCreate = vitest.fn()
+const mockFetch = vitest.fn()
+
+// Mock global fetch
+global.fetch = mockFetch as any
 
 vitest.mock("openai", () => {
 	return {
@@ -62,6 +67,9 @@ vitest.mock("openai", () => {
 					}),
 				},
 			},
+			responses: {
+				create: mockResponsesCreate,
+			},
 		})),
 	}
 })
@@ -84,6 +92,8 @@ describe("OpenAiNativeHandler", () => {
 		}
 		handler = new OpenAiNativeHandler(mockOptions)
 		mockCreate.mockClear()
+		mockResponsesCreate.mockClear()
+		mockFetch.mockClear()
 	})
 
 	describe("constructor", () => {
@@ -441,6 +451,76 @@ describe("OpenAiNativeHandler", () => {
 		})
 	})
 
+	describe("codex-mini-latest model", () => {
+		beforeEach(() => {
+			handler = new OpenAiNativeHandler({
+				...mockOptions,
+				apiModelId: "codex-mini-latest",
+			})
+		})
+
+		it("should handle streaming responses via v1/responses", async () => {
+			// Mock the responses.create method to return an async iterable
+			mockResponsesCreate.mockImplementation(async (options) => {
+				expect(options.stream).toBe(true)
+
+				return {
+					[Symbol.asyncIterator]: async function* () {
+						yield { type: "response.output_text.delta", delta: "Hello" }
+						yield { type: "response.output_text.delta", delta: " world" }
+						yield { type: "response.completed" }
+					},
+				}
+			})
+
+			const responseStream = handler.createMessage(systemPrompt, messages)
+			const chunks: any[] = []
+			for await (const chunk of responseStream) {
+				chunks.push(chunk)
+			}
+
+			expect(mockResponsesCreate).toHaveBeenCalledWith({
+				model: "codex-mini-latest",
+				instructions: systemPrompt,
+				input: "Hello!",
+				stream: true,
+			})
+
+			const textChunks = chunks.filter((chunk) => chunk.type === "text")
+			expect(textChunks).toHaveLength(2)
+			expect(textChunks[0].text).toBe("Hello")
+			expect(textChunks[1].text).toBe(" world")
+		})
+
+		it("should handle non-streaming completion via v1/responses", async () => {
+			mockResponsesCreate.mockResolvedValueOnce({
+				output_text: "Test response",
+			})
+
+			const result = await handler.completePrompt("Test prompt")
+
+			expect(mockResponsesCreate).toHaveBeenCalledWith({
+				model: "codex-mini-latest",
+				instructions: "Complete the following prompt:",
+				input: "Test prompt",
+				stream: false,
+			})
+
+			expect(result).toBe("Test response")
+		})
+
+		it("should handle API errors", async () => {
+			mockResponsesCreate.mockRejectedValueOnce(new Error("This model is only supported in v1/responses"))
+
+			const stream = handler.createMessage(systemPrompt, messages)
+			await expect(async () => {
+				for await (const _chunk of stream) {
+					// Should not reach here
+				}
+			}).rejects.toThrow("OpenAI Responses API error: This model is only supported in v1/responses")
+		})
+	})
+
 	describe("getModel", () => {
 		it("should return model info", () => {
 			const modelInfo = handler.getModel()
@@ -457,6 +537,19 @@ describe("OpenAiNativeHandler", () => {
 			const modelInfo = handlerWithoutModel.getModel()
 			expect(modelInfo.id).toBe("gpt-4.1") // Default model
 			expect(modelInfo.info).toBeDefined()
+		})
+
+		it("should return correct info for codex-mini-latest", () => {
+			const codexHandler = new OpenAiNativeHandler({
+				apiModelId: "codex-mini-latest",
+				openAiNativeApiKey: "test-api-key",
+			})
+			const modelInfo = codexHandler.getModel()
+			expect(modelInfo.id).toBe("codex-mini-latest")
+			expect(modelInfo.info.maxTokens).toBe(16_384) // Updated to standard max tokens
+			expect(modelInfo.info.contextWindow).toBe(200_000)
+			expect(modelInfo.info.supportsImages).toBe(false)
+			expect(modelInfo.info.supportsPromptCache).toBe(false)
 		})
 	})
 })
