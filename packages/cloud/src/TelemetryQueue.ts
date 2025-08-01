@@ -202,14 +202,12 @@ export class TelemetryQueue {
 	}
 
 	private async saveQueueState(): Promise<void> {
-private async saveQueueState(): Promise<void> {
-	try {
-		await this.context.globalState.update(TelemetryQueue.QUEUE_STATE_KEY, this.queueState)
-	} catch (error) {
-		console.error(`[TelemetryQueue] Failed to save queue state: ${error}`)
-		// Continue operation even if persistence fails
-	}
-}
+		try {
+			await this.context.globalState.update(TelemetryQueue.QUEUE_STATE_KEY, this.queueState)
+		} catch (error) {
+			console.error(`[TelemetryQueue] Failed to save queue state: ${error}`)
+			// Continue operation even if persistence fails
+		}
 	}
 
 	private calculateRetryDelay(retryCount: number): number {
@@ -257,16 +255,7 @@ private async saveQueueState(): Promise<void> {
 
 	private startConnectionMonitoring(): void {
 		// Check connection status periodically
-private disposed = false;
-
-private startConnectionMonitoring(): void {
-	// Check connection status periodically
-	this.connectionCheckTimer = setInterval(() => {
-		if (!this.disposed) {
-			vscode.commands.executeCommand("roo-code.checkTelemetryConnection")
-		}
-	}, TelemetryQueue.CONNECTION_CHECK_INTERVAL_MS)
-}
+		this.connectionCheckTimer = setInterval(() => {
 			vscode.commands.executeCommand("roo-code.checkTelemetryConnection")
 		}, TelemetryQueue.CONNECTION_CHECK_INTERVAL_MS)
 	}
