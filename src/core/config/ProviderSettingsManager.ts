@@ -704,8 +704,8 @@ export class ProviderSettingsManager {
 				}
 
 				// Step 5: Handle case where all profiles might be deleted
-				if (Object.keys(providerProfiles.apiConfigs).length === 0) {
-					// Create a default profile
+				if (Object.keys(providerProfiles.apiConfigs).length === 0 && changedProfiles.length > 0) {
+					// Create a default profile only if we have changed profiles
 					const defaultProfile = { id: this.generateId() }
 					providerProfiles.apiConfigs["default"] = defaultProfile
 					activeProfileChanged = true
