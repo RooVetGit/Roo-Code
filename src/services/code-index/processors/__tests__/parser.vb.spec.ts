@@ -21,6 +21,9 @@ describe("CodeParser - VB.NET and Fallback Extensions Support", () => {
 	})
 
 	it("should use fallback chunking for VB.NET files", async () => {
+		// First verify that shouldUseFallbackChunking works
+		expect(shouldUseFallbackChunking(".vb")).toBe(true)
+
 		const vbContent = `
 Imports System
 Imports System.Collections.Generic
