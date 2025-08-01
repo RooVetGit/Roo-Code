@@ -120,6 +120,7 @@ export interface ExtensionMessage {
 		| "showEditMessageDialog"
 		| "commands"
 		| "insertTextIntoTextarea"
+		| "telemetryConnectionStatus"
 	text?: string
 	payload?: any // Add a generic payload for now, can refine later
 	action?:
@@ -194,6 +195,8 @@ export interface ExtensionMessage {
 	messageTs?: number
 	context?: string
 	commands?: Command[]
+	status?: "online" | "offline" // For telemetryConnectionStatus
+	queueSize?: number // For telemetryConnectionStatus
 }
 
 export type ExtensionState = Pick<

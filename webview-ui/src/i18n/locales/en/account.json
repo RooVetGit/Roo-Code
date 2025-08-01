@@ -10,5 +10,8 @@
 	"cloudBenefitHistory": "Online task history",
 	"cloudBenefitSharing": "Sharing and collaboration features",
 	"cloudBenefitMetrics": "Task, token, and cost-based usage metrics",
-	"visitCloudWebsite": "Visit Roo Code Cloud"
+	"visitCloudWebsite": "Visit Roo Code Cloud",
+	"telemetryOnline": "Telemetry Connected",
+	"telemetryOffline": "Telemetry Disconnected",
+	"telemetryQueued": "events queued"
 }

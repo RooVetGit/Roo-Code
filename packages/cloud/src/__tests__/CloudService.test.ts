@@ -67,6 +67,10 @@ describe("CloudService", () => {
 	}
 	let mockTelemetryClient: {
 		backfillMessages: ReturnType<typeof vi.fn>
+		setContext: ReturnType<typeof vi.fn>
+		checkConnection: ReturnType<typeof vi.fn>
+		getConnectionStatus: ReturnType<typeof vi.fn>
+		getQueueSize: ReturnType<typeof vi.fn>
 	}
 	let mockTelemetryService: {
 		hasInstance: ReturnType<typeof vi.fn>
@@ -143,6 +147,10 @@ describe("CloudService", () => {
 
 		mockTelemetryClient = {
 			backfillMessages: vi.fn().mockResolvedValue(undefined),
+			setContext: vi.fn(),
+			checkConnection: vi.fn().mockResolvedValue(undefined),
+			getConnectionStatus: vi.fn().mockReturnValue("online"),
+			getQueueSize: vi.fn().mockReturnValue(0),
 		}
 
 		mockTelemetryService = {
@@ -167,11 +175,17 @@ describe("CloudService", () => {
 	afterEach(() => {
 		vi.clearAllMocks()
 		CloudService.resetInstance()
+		// Reset environment variables
+		delete process.env.ROO_CODE_CLOUD_TOKEN
+		delete process.env.ROO_CODE_CLOUD_ORG_SETTINGS
 	})
 
 	describe("createInstance", () => {
 		it("should create and initialize CloudService instance", async () => {
 			const mockLog = vi.fn()
+			// Ensure we're not using static token auth or static settings
+			delete process.env.ROO_CODE_CLOUD_TOKEN
+			delete process.env.ROO_CODE_CLOUD_ORG_SETTINGS
 
 			const cloudService = await CloudService.createInstance(mockContext, mockLog)
 
@@ -182,6 +196,8 @@ describe("CloudService", () => {
 
 		it("should set up event listeners for CloudSettingsService", async () => {
 			const mockLog = vi.fn()
+			// Ensure we're not using static token auth
+			delete process.env.ROO_CODE_CLOUD_TOKEN
 
 			await CloudService.createInstance(mockContext, mockLog)
 
@@ -189,6 +205,9 @@ describe("CloudService", () => {
 		})
 
 		it("should throw error if instance already exists", async () => {
+			// Ensure we're not using static token auth
+			delete process.env.ROO_CODE_CLOUD_TOKEN
+
 			await CloudService.createInstance(mockContext)
 
 			await expect(CloudService.createInstance(mockContext)).rejects.toThrow(
@@ -201,6 +220,8 @@ describe("CloudService", () => {
 		let cloudService: CloudService
 
 		beforeEach(async () => {
+			// Ensure we're not using static token auth
+			delete process.env.ROO_CODE_CLOUD_TOKEN
 			cloudService = await CloudService.createInstance(mockContext)
 		})
 
@@ -347,6 +368,8 @@ describe("CloudService", () => {
 		let cloudService: CloudService
 
 		beforeEach(async () => {
+			// Ensure we're not using static token auth
+			delete process.env.ROO_CODE_CLOUD_TOKEN
 			cloudService = await CloudService.createInstance(mockContext)
 		})
 
@@ -372,6 +395,8 @@ describe("CloudService", () => {
 		})
 
 		it("should return true when instance exists and is initialized", async () => {
+			// Ensure we're not using static token auth
+			delete process.env.ROO_CODE_CLOUD_TOKEN
 			await CloudService.createInstance(mockContext)
 			expect(CloudService.hasInstance()).toBe(true)
 		})
@@ -379,6 +404,8 @@ describe("CloudService", () => {
 
 	describe("dispose", () => {
 		it("should dispose of all services and clean up", async () => {
+			// Ensure we're not using static token auth
+			delete process.env.ROO_CODE_CLOUD_TOKEN
 			const cloudService = await CloudService.createInstance(mockContext)
 			cloudService.dispose()
 
@@ -386,6 +413,9 @@ describe("CloudService", () => {
 		})
 
 		it("should remove event listeners from CloudSettingsService", async () => {
+			// Ensure we're not using static token auth
+			delete process.env.ROO_CODE_CLOUD_TOKEN
+
 			// Create a mock that will pass the instanceof check
 			const mockCloudSettingsService = Object.create(CloudSettingsService.prototype)
 			Object.assign(mockCloudSettingsService, {
@@ -419,6 +449,8 @@ describe("CloudService", () => {
 		it("should handle disposal when using StaticSettingsService", async () => {
 			// Reset the instance first
 			CloudService.resetInstance()
+			// Ensure we're not using static token auth
+			delete process.env.ROO_CODE_CLOUD_TOKEN
 
 			// Mock a StaticSettingsService (which doesn't extend CloudSettingsService)
 			const mockStaticSettingsService = {
@@ -452,6 +484,8 @@ describe("CloudService", () => {
 		let _cloudService: CloudService
 
 		beforeEach(async () => {
+			// Ensure we're not using static token auth
+			delete process.env.ROO_CODE_CLOUD_TOKEN
 			_cloudService = await CloudService.createInstance(mockContext)
 		})
 
@@ -498,6 +532,8 @@ describe("CloudService", () => {
 			mockAuthService.hasOrIsAcquiringActiveSession.mockReturnValue(true)
 			mockAuthService.getState.mockReturnValue("active")
 
+			// Ensure we're not using static token auth
+			delete process.env.ROO_CODE_CLOUD_TOKEN
 			cloudService = await CloudService.createInstance(mockContext)
 		})
 

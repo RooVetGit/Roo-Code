@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react"
+import { useEffect, useRef, useState } from "react"
 import { VSCodeButton } from "@vscode/webview-ui-toolkit/react"
 
 import type { CloudUserInfo } from "@roo-code/types"
@@ -18,6 +18,9 @@ type AccountViewProps = {
 export const AccountView = ({ userInfo, isAuthenticated, cloudApiUrl, onDone }: AccountViewProps) => {
 	const { t } = useAppTranslation()
 	const wasAuthenticatedRef = useRef(false)
+	const [telemetryStatus, setTelemetryStatus] = useState<{ status: "online" | "offline"; queueSize: number } | null>(
+		null,
+	)
 
 	const rooLogoUri = (window as any).IMAGES_BASE_URI + "/roo-logo.svg"
 
@@ -31,6 +34,22 @@ export const AccountView = ({ userInfo, isAuthenticated, cloudApiUrl, onDone }: 
 			wasAuthenticatedRef.current = false
 		}
 	}, [isAuthenticated])
+
+	// Listen for telemetry connection status updates
+	useEffect(() => {
+		const handleMessage = (event: MessageEvent) => {
+			const message = event.data
+			if (message.type === "telemetryConnectionStatus") {
+				setTelemetryStatus({
+					status: message.status,
+					queueSize: message.queueSize || 0,
+				})
+			}
+		}
+
+		window.addEventListener("message", handleMessage)
+		return () => window.removeEventListener("message", handleMessage)
+	}, [])
 
 	const handleConnectClick = () => {
 		// Send telemetry for account connect action
@@ -96,6 +115,26 @@ export const AccountView = ({ userInfo, isAuthenticated, cloudApiUrl, onDone }: 
 							)}
 						</div>
 					)}
+
+					{/* Telemetry Connection Status */}
+					{telemetryStatus && (
+						<div className="flex items-center justify-center gap-2 mb-4 p-2 rounded bg-vscode-editor-background">
+							<div
+								className={`w-2 h-2 rounded-full ${telemetryStatus.status === "online" ? "bg-green-500" : "bg-red-500"}`}
+							/>
+							<span className="text-sm text-vscode-descriptionForeground">
+								{telemetryStatus.status === "online"
+									? t("account:telemetryOnline")
+									: t("account:telemetryOffline")}
+							</span>
+							{telemetryStatus.queueSize > 0 && (
+								<span className="text-xs text-vscode-descriptionForeground">
+									({telemetryStatus.queueSize} {t("account:telemetryQueued")})
+								</span>
+							)}
+						</div>
+					)}
+
 					<div className="flex flex-col gap-2 mt-4">
 						<VSCodeButton appearance="secondary" onClick={handleVisitCloudWebsite} className="w-full">
 							{t("account:visitCloudWebsite")}

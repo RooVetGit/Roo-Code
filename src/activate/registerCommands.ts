@@ -16,6 +16,7 @@ import { CodeIndexManager } from "../services/code-index/manager"
 import { importSettingsWithFeedback } from "../core/config/importExport"
 import { MdmService } from "../services/mdm/MdmService"
 import { t } from "../i18n"
+import { CloudService } from "@roo-code/cloud"
 
 /**
  * Helper to get the visible ClineProvider instance or log if not found.
@@ -217,6 +218,47 @@ const getCommandsMap = ({ context, outputChannel, provider }: RegisterCommandOpt
 		}
 
 		visibleProvider.postMessageToWebview({ type: "acceptInput" })
+	},
+	processTelemetryQueue: async () => {
+		// Process queued telemetry events
+		if (CloudService.hasInstance()) {
+			const cloudService = CloudService.instance
+			const telemetryClient = (cloudService as any).telemetryClient
+			if (telemetryClient && telemetryClient.processQueuedEvents) {
+				await telemetryClient.processQueuedEvents()
+			}
+		}
+	},
+	checkTelemetryConnection: async () => {
+		// Check telemetry connection status
+		if (CloudService.hasInstance()) {
+			const cloudService = CloudService.instance
+			const telemetryClient = (cloudService as any).telemetryClient
+			if (telemetryClient && telemetryClient.checkConnection) {
+				await telemetryClient.checkConnection()
+			}
+		}
+	},
+	telemetryConnectionStatusChanged: async (status: "online" | "offline") => {
+		// Handle telemetry connection status change
+		const visibleProvider = getVisibleProviderOrLog(outputChannel)
+		if (visibleProvider) {
+			let queueSize = 0
+			if (CloudService.hasInstance()) {
+				try {
+					queueSize = CloudService.instance.getTelemetryQueueSize()
+				} catch (error) {
+					// Ignore errors getting queue size
+				}
+			}
+
+			// Post message to webview to update UI
+			visibleProvider.postMessageToWebview({
+				type: "telemetryConnectionStatus",
+				status,
+				queueSize,
+			})
+		}
 	},
 })
 

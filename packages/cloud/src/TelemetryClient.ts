@@ -1,3 +1,4 @@
+import * as vscode from "vscode"
 import {
 	TelemetryEventName,
 	type TelemetryEvent,
@@ -9,8 +10,13 @@ import { BaseTelemetryClient } from "@roo-code/telemetry"
 import { getRooCodeApiUrl } from "./Config"
 import type { AuthService } from "./auth"
 import type { SettingsService } from "./SettingsService"
+import { TelemetryQueue } from "./TelemetryQueue"
 
 export class TelemetryClient extends BaseTelemetryClient {
+	private telemetryQueue: TelemetryQueue | null = null
+	private context: vscode.ExtensionContext | null = null
+	private isOnline = true
+
 	constructor(
 		private authService: AuthService,
 		private settingsService: SettingsService,
@@ -25,27 +31,56 @@ export class TelemetryClient extends BaseTelemetryClient {
 		)
 	}
 
-	private async fetch(path: string, options: RequestInit) {
+	public setContext(context: vscode.ExtensionContext): void {
+		this.context = context
+
+		try {
+			this.telemetryQueue = new TelemetryQueue(context)
+
+			// Process any queued events on initialization
+			this.processQueuedEvents()
+		} catch (error) {
+			console.error(`Failed to initialize telemetry queue: ${error}`)
+			// Continue without queue functionality
+			this.telemetryQueue = null
+		}
+	}
+
+	private async fetch(path: string, options: RequestInit): Promise<boolean> {
 		if (!this.authService.isAuthenticated()) {
-			return
+			return false
 		}
 
 		const token = this.authService.getSessionToken()
 
 		if (!token) {
 			console.error(`[TelemetryClient#fetch] Unauthorized: No session token available.`)
-			return
+			return false
 		}
 
-		const response = await fetch(`${getRooCodeApiUrl()}/api/${path}`, {
-			...options,
-			headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-		})
+		try {
+			const response = await fetch(`${getRooCodeApiUrl()}/api/${path}`, {
+				...options,
+				headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+			})
 
-		if (!response.ok) {
-			console.error(
-				`[TelemetryClient#fetch] ${options.method} ${path} -> ${response.status} ${response.statusText}`,
-			)
+			const isSuccess = response.ok
+
+			if (!isSuccess) {
+				console.error(
+					`[TelemetryClient#fetch] ${options.method} ${path} -> ${response.status} ${response.statusText}`,
+				)
+			}
+
+			// Update connection status based on response
+			this.updateConnectionStatus(isSuccess || response.status < 500)
+
+			return isSuccess
+		} catch (error) {
+			// Network error - we're offline
+			console.error(`[TelemetryClient#fetch] Network error: ${error}`)
+			this.updateConnectionStatus(false)
+			return false
 		}
 	}
 
@@ -78,9 +113,19 @@ export class TelemetryClient extends BaseTelemetryClient {
 		}
 
 		try {
-			await this.fetch(`events`, { method: "POST", body: JSON.stringify(result.data) })
+			const success = await this.fetch(`events`, { method: "POST", body: JSON.stringify(result.data) })
+
+			if (!success && this.telemetryQueue) {
+				// Failed to send, add to queue
+				await this.telemetryQueue.enqueue(event)
+			}
 		} catch (error) {
 			console.error(`[TelemetryClient#capture] Error sending telemetry event: ${error}`)
+
+			// Add to queue on error
+			if (this.telemetryQueue) {
+				await this.telemetryQueue.enqueue(event)
+			}
 		}
 	}
 
@@ -165,5 +210,67 @@ export class TelemetryClient extends BaseTelemetryClient {
 		return true
 	}
 
-	public override async shutdown() {}
+	public override async shutdown() {
+		if (this.telemetryQueue) {
+			this.telemetryQueue.dispose()
+		}
+	}
+
+	private updateConnectionStatus(isOnline: boolean): void {
+		this.isOnline = isOnline
+
+		if (this.telemetryQueue) {
+			this.telemetryQueue.updateConnectionStatus(isOnline)
+
+			// If we're back online, process queued events
+			if (isOnline) {
+				this.processQueuedEvents()
+			}
+		}
+	}
+
+	private async processQueuedEvents(): Promise<void> {
+		if (!this.telemetryQueue) {
+			return
+		}
+
+		await this.telemetryQueue.processQueue(async (event) => {
+			// Reuse the capture logic but send directly
+			const payload = {
+				type: event.event,
+				properties: await this.getEventProperties(event),
+			}
+
+			const result = rooCodeTelemetryEventSchema.safeParse(payload)
+
+			if (!result.success) {
+				// Invalid event, don't retry
+				return true
+			}
+
+			return await this.fetch(`events`, { method: "POST", body: JSON.stringify(result.data) })
+		})
+	}
+
+	public async checkConnection(): Promise<void> {
+		// Simple health check to update connection status
+		try {
+			const response = await fetch(`${getRooCodeApiUrl()}/api/health`, {
+				method: "GET",
+				headers: { "Content-Type": "application/json" },
+			})
+
+			this.updateConnectionStatus(response.ok)
+		} catch {
+			this.updateConnectionStatus(false)
+		}
+	}
+
+	public getConnectionStatus(): "online" | "offline" {
+		return this.telemetryQueue?.getConnectionStatus() || "online"
+	}
+
+	public getQueueSize(): number {
+		return this.telemetryQueue?.getQueueSize() || 0
+	}
 }

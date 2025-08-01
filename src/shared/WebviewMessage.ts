@@ -210,6 +210,7 @@ export interface WebviewMessage {
 		| "deleteCommand"
 		| "createCommand"
 		| "insertTextIntoTextarea"
+		| "telemetryConnectionStatus"
 	text?: string
 	editedMessageContent?: string
 	tab?: "settings" | "history" | "mcp" | "modes" | "chat" | "marketplace" | "account"
@@ -272,6 +273,8 @@ export interface WebviewMessage {
 		codebaseIndexGeminiApiKey?: string
 		codebaseIndexMistralApiKey?: string
 	}
+	status?: "online" | "offline" // For telemetryConnectionStatus
+	queueSize?: number // For telemetryConnectionStatus
 }
 
 export const checkoutDiffPayloadSchema = z.object({

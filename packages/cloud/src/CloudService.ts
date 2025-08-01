@@ -88,6 +88,7 @@ export class CloudService extends EventEmitter<CloudServiceEvents> implements vs
 			}
 
 			this.telemetryClient = new TelemetryClient(this.authService, this.settingsService)
+			this.telemetryClient.setContext(this.context)
 			this.shareService = new ShareService(this.authService, this.settingsService, this.log)
 
 			try {
@@ -194,6 +195,16 @@ export class CloudService extends EventEmitter<CloudServiceEvents> implements vs
 	public captureEvent(event: TelemetryEvent): void {
 		this.ensureInitialized()
 		this.telemetryClient!.capture(event)
+	}
+
+	public getTelemetryConnectionStatus(): "online" | "offline" {
+		this.ensureInitialized()
+		return this.telemetryClient!.getConnectionStatus()
+	}
+
+	public getTelemetryQueueSize(): number {
+		this.ensureInitialized()
+		return this.telemetryClient!.getQueueSize()
 	}
 
 	// ShareService

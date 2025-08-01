@@ -1338,6 +1338,17 @@ export class ClineProvider
 		if (!this.checkMdmCompliance()) {
 			await this.postMessageToWebview({ type: "action", action: "accountButtonClicked" })
 		}
+
+		// Send telemetry connection status
+		if (CloudService.hasInstance()) {
+			const isConnected = CloudService.instance.getTelemetryConnectionStatus()
+			const queueSize = CloudService.instance.getTelemetryQueueSize()
+			await this.postMessageToWebview({
+				type: "telemetryConnectionStatus",
+				status: isConnected ? "online" : "offline",
+				queueSize: queueSize,
+			})
+		}
 	}
 
 	/**
