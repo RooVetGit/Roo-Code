@@ -26,6 +26,7 @@ import {
 } from "lucide-react"
 
 import type { ProviderSettings, ExperimentId } from "@roo-code/types"
+import { mapLegacyGeminiModel, mapLegacyVertexModel } from "@roo-code/types"
 
 import { TelemetrySetting } from "@roo/TelemetrySetting"
 
@@ -231,7 +232,17 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 				// This prevents the dirty state when the component initializes and auto-syncs the model ID
 				const isInitialSync = previousValue === undefined && value !== undefined
 
-				if (!isInitialSync) {
+				let isLegacyGeminiMapping = false
+				if (field === "apiModelId" && typeof previousValue === "string" && typeof value === "string") {
+					const provider = prevState.apiConfiguration?.apiProvider
+					if (provider === "gemini") {
+						isLegacyGeminiMapping = mapLegacyGeminiModel(previousValue) === value
+					} else if (provider === "vertex") {
+						isLegacyGeminiMapping = mapLegacyVertexModel(previousValue) === value
+					}
+				}
+
+				if (!isInitialSync && !isLegacyGeminiMapping) {
 					setChangeDetected(true)
 				}
 				return { ...prevState, apiConfiguration: { ...prevState.apiConfiguration, [field]: value } }
