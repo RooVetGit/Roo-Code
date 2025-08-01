@@ -134,9 +134,7 @@ export const AutoApproveSettings = ({
 										// Do nothing when no options are enabled
 										return
 									}}>
-									}>
 									<span className="font-medium">{t("settings:autoApprove.enabled")}</span>
-								</VSCodeCheckbox>
 								</VSCodeCheckbox>
 							</StandardTooltip>
 						) : (
