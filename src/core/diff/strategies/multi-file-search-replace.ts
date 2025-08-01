@@ -99,6 +99,8 @@ Description: Request to apply PRECISE, TARGETED modifications to one or more fil
 
 You can perform multiple distinct search and replace operations within a single \`apply_diff\` call by providing multiple SEARCH/REPLACE blocks in the \`diff\` parameter. This is the preferred way to make several targeted changes efficiently.
 
+**IMPORTANT: Using multiple SEARCH/REPLACE blocks in a single request is more efficient for the LLM. If you have multiple changes to make, include them all in one apply_diff call rather than making separate calls.**
+
 The SEARCH section must exactly match existing content including whitespace and indentation.
 If you're not confident in the exact content to search for, use the read_file tool first to get the exact content.
 When applying the diffs, be extra careful to remember to change any closing brackets or other syntax that may be affected by the diff farther down in the file.
