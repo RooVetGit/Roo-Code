@@ -243,7 +243,7 @@ const TaskHeader = ({
 										(typeof cacheWrites === "number" && cacheWrites > 0)) && (
 										<tr>
 											<th className="font-bold text-left align-top w-1 whitespace-nowrap pl-1 pr-2  h-[24px]">
-												Cache size
+												{t("chat:task.cache")}
 											</th>
 											<td className="align-top">
 												{prettyBytes(((cacheReads || 0) + (cacheWrites || 0)) * 4)}
@@ -255,7 +255,7 @@ const TaskHeader = ({
 									{!!currentTaskItem?.size && currentTaskItem.size > 0 && (
 										<tr>
 											<th className="font-bold text-left align-top w-1 whitespace-nowrap pl-1 pr-2  h-[20px]">
-												Size
+												{t("chat:task.size")}
 											</th>
 											<td className="align-top">{prettyBytes(currentTaskItem.size)}</td>
 										</tr>
