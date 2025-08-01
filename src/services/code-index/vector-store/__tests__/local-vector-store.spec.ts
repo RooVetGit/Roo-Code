@@ -1,4 +1,4 @@
-// npm vitest run src/services/code-index/vector-store/__tests__/local-vector-store.spec.ts
+// npx vitest run services/code-index/vector-store/__tests__/local-vector-store.spec.ts
 
 /**
  * Comprehensive tests for LocalVectorStore.
@@ -9,24 +9,56 @@ import { describe, it, beforeEach, afterEach, expect, vi } from "vitest"
 import { LocalVectorStore } from "../local-vector-store"
 import { LanceDBManager } from "../../../lancedb-manager"
 import { Payload } from "../../interfaces"
+import * as path from "path"
 const fs = require("fs")
-
-const mockDb = {
-	tableNames: vi.fn(),
-	openTable: vi.fn(),
-	createTable: vi.fn(),
-	dropTable: vi.fn(),
-	connect: vi.fn(),
-	close: vi.fn(),
-}
 const mockTable = {
-	query: vi.fn(),
-	add: vi.fn(),
-	delete: vi.fn(),
-	search: vi.fn(),
+	delete: vi.fn().mockResolvedValue(undefined),
+	add: vi.fn().mockResolvedValue(undefined),
+	query: vi.fn().mockReturnThis(),
+	where: vi.fn().mockReturnThis(),
+	toArray: vi.fn().mockResolvedValue([]),
+	vectorSearch: vi.fn().mockReturnThis(),
+	limit: vi.fn().mockReturnThis(),
+	refineFactor: vi.fn().mockReturnThis(),
+	postfilter: vi.fn().mockReturnThis(),
+	openTable: vi.fn().mockResolvedValue(undefined),
+	search: vi.fn().mockReturnThis(),
+	name: "vector",
+	isOpen: true,
+	close: vi.fn(),
+	display: vi.fn(),
+	schema: {},
+	count: vi.fn(),
+	get: vi.fn(),
+	create: vi.fn(),
+	drop: vi.fn(),
+	insert: vi.fn(),
+	update: vi.fn(),
+	find: vi.fn(),
+	remove: vi.fn(),
+	createIndex: vi.fn(),
+	dropIndex: vi.fn(),
+	indexes: [],
+	columns: [],
+	primaryKey: "id",
+	metadata: {},
+	batch: vi.fn(),
+	distanceRange: vi.fn().mockReturnThis(),
 }
+const mockDb = {
+	openTable: vi.fn().mockResolvedValue(mockTable),
+	createTable: vi.fn().mockResolvedValue(mockTable),
+	dropTable: vi.fn().mockResolvedValue(undefined),
+	tableNames: vi.fn().mockResolvedValue(["vector", "metadata"]),
+	close: vi.fn().mockResolvedValue(undefined),
+	isOpen: true,
+	display: vi.fn(),
+	createEmptyTable: vi.fn(),
+	dropAllTables: vi.fn(),
+}
+
 const mockLanceDBModule = {
-	connect: vi.fn(() => Promise.resolve(mockDb)),
+	connect: vi.fn().mockResolvedValue(mockDb),
 }
 const mockLanceDBManager = {
 	ensureLanceDBAvailable: vi.fn(),
@@ -34,13 +66,10 @@ const mockLanceDBManager = {
 }
 
 vi.mock("@lancedb/lancedb", () => mockLanceDBModule)
-vi.mock("../../lancedb-manager", () => ({
-	LanceDBManager: vi.fn(() => mockLanceDBManager),
-}))
 
-const workspacePath = "/mock/workspace"
-const vectorSize = 3
-const dbDirectory = "/mock/db"
+const workspacePath = path.join("mock", "workspace")
+const vectorSize = 768
+const dbDirectory = path.join("mock", "db")
 let store: LocalVectorStore
 
 describe("LocalVectorStore", () => {

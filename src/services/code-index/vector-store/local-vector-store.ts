@@ -213,9 +213,11 @@ export class LocalVectorStore implements IVectorStore {
 				await this._dropTableIfExists(db, this.metadataTableName)
 				await this._createVectorTable(db)
 				await this._createMetadataTable(db)
+				this.optimizeTable()
+
 				return true
 			}
-
+			this.optimizeTable()
 			return false
 		} catch (error) {
 			console.error(`[LocalVectorStore] Failed to initialize:`, error)
@@ -395,6 +397,9 @@ export class LocalVectorStore implements IVectorStore {
 			} catch (metadataError) {
 				console.warn("Failed to clear metadata table:", metadataError)
 			}
+
+			// Run optimization to clean up disk space after clearing
+			await this.optimizeTable()
 		} catch (error) {
 			console.error("Failed to clear collection:", error)
 			throw error
@@ -418,6 +423,24 @@ export class LocalVectorStore implements IVectorStore {
 		if (this.db) {
 			await this.db.close()
 			this.db = null
+		}
+	}
+
+	/**
+	 * Optimizes the table to reduce disk space usage and improve performance.
+	 * This method performs compaction, pruning of old versions, and index optimization.
+	 * Should be called periodically to prevent unbounded disk space growth.
+	 */
+	async optimizeTable(): Promise<void> {
+		try {
+			const table = await this.getTable()
+
+			await table.optimize({
+				cleanupOlderThan: new Date(),
+				deleteUnverified: false,
+			})
+		} catch (error) {
+			console.error("[LocalVectorStore] Failed to optimize table:", error)
 		}
 	}
 }
