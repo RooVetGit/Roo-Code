@@ -39,7 +39,14 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 		const apiKey = this.options.openAiApiKey ?? "not-provided"
 		const isAzureAiInference = this._isAzureAiInference(this.options.openAiBaseUrl)
 		const urlHost = this._getUrlHost(this.options.openAiBaseUrl)
-		const isAzureOpenAi = urlHost === "azure.com" || urlHost.endsWith(".azure.com") || options.openAiUseAzure
+
+		// Improved Azure detection logic similar to Cline
+		// Primary indicator is azureApiVersion, then check URL patterns
+		const isAzureOpenAi = !!(
+			this.options.azureApiVersion ||
+			options.openAiUseAzure ||
+			(urlHost && this._isAzureHost(urlHost) && !this.options.openAiModelId?.toLowerCase().includes("deepseek"))
+		)
 
 		const headers = {
 			...DEFAULT_HEADERS,
@@ -57,8 +64,11 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 		} else if (isAzureOpenAi) {
 			// Azure API shape slightly differs from the core API shape:
 			// https://github.com/openai/openai-node?tab=readme-ov-file#microsoft-azure-openai
+			// Extract base URL without query parameters for Azure client
+			const cleanBaseURL = this._extractBaseUrl(baseURL)
+
 			this.client = new AzureOpenAI({
-				baseURL,
+				baseURL: cleanBaseURL,
 				apiKey,
 				apiVersion: this.options.azureApiVersion || azureOpenAiDefaultApiVersion,
 				defaultHeaders: headers,
@@ -77,163 +87,194 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 		messages: Anthropic.Messages.MessageParam[],
 		metadata?: ApiHandlerCreateMessageMetadata,
 	): ApiStream {
-		const { info: modelInfo, reasoning } = this.getModel()
-		const modelUrl = this.options.openAiBaseUrl ?? ""
-		const modelId = this.options.openAiModelId ?? ""
-		const enabledR1Format = this.options.openAiR1FormatEnabled ?? false
-		const enabledLegacyFormat = this.options.openAiLegacyFormat ?? false
-		const isAzureAiInference = this._isAzureAiInference(modelUrl)
-		const deepseekReasoner = modelId.includes("deepseek-reasoner") || enabledR1Format
-		const ark = modelUrl.includes(".volces.com")
+		try {
+			const { info: modelInfo, reasoning } = this.getModel()
+			const modelUrl = this.options.openAiBaseUrl ?? ""
+			const modelId = this.options.openAiModelId ?? ""
+			const enabledR1Format = this.options.openAiR1FormatEnabled ?? false
+			const enabledLegacyFormat = this.options.openAiLegacyFormat ?? false
+			const isAzureAiInference = this._isAzureAiInference(modelUrl)
+			const deepseekReasoner = modelId.includes("deepseek-reasoner") || enabledR1Format
+			const ark = this._isVolcesHost(modelUrl)
 
-		if (modelId.includes("o1") || modelId.includes("o3") || modelId.includes("o4")) {
-			yield* this.handleO3FamilyMessage(modelId, systemPrompt, messages)
-			return
-		}
-
-		if (this.options.openAiStreamingEnabled ?? true) {
-			let systemMessage: OpenAI.Chat.ChatCompletionSystemMessageParam = {
-				role: "system",
-				content: systemPrompt,
+			// Handle reasoning models (o1, o3, o4) separately
+			// These models don't support system messages in the traditional way
+			if (modelId.includes("o1") || modelId.includes("o3") || modelId.includes("o4")) {
+				yield* this.handleO3FamilyMessage(modelId, systemPrompt, messages)
+				return
 			}
 
-			let convertedMessages
-
-			if (deepseekReasoner) {
-				convertedMessages = convertToR1Format([{ role: "user", content: systemPrompt }, ...messages])
-			} else if (ark || enabledLegacyFormat) {
-				convertedMessages = [systemMessage, ...convertToSimpleMessages(messages)]
-			} else {
-				if (modelInfo.supportsPromptCache) {
-					systemMessage = {
-						role: "system",
-						content: [
-							{
-								type: "text",
-								text: systemPrompt,
-								// @ts-ignore-next-line
-								cache_control: { type: "ephemeral" },
-							},
-						],
-					}
+			if (this.options.openAiStreamingEnabled ?? true) {
+				let systemMessage: OpenAI.Chat.ChatCompletionSystemMessageParam = {
+					role: "system",
+					content: systemPrompt,
 				}
 
-				convertedMessages = [systemMessage, ...convertToOpenAiMessages(messages)]
+				let convertedMessages
 
-				if (modelInfo.supportsPromptCache) {
-					// Note: the following logic is copied from openrouter:
-					// Add cache_control to the last two user messages
-					// (note: this works because we only ever add one user message at a time, but if we added multiple we'd need to mark the user message before the last assistant message)
-					const lastTwoUserMessages = convertedMessages.filter((msg) => msg.role === "user").slice(-2)
-
-					lastTwoUserMessages.forEach((msg) => {
-						if (typeof msg.content === "string") {
-							msg.content = [{ type: "text", text: msg.content }]
+				if (deepseekReasoner) {
+					convertedMessages = convertToR1Format([{ role: "user", content: systemPrompt }, ...messages])
+				} else if (ark || enabledLegacyFormat) {
+					convertedMessages = [systemMessage, ...convertToSimpleMessages(messages)]
+				} else {
+					if (modelInfo.supportsPromptCache) {
+						systemMessage = {
+							role: "system",
+							content: [
+								{
+									type: "text",
+									text: systemPrompt,
+									cache_control: { type: "ephemeral" },
+								} as OpenAI.Chat.ChatCompletionContentPartText & { cache_control?: { type: string } },
+							],
 						}
+					}
 
-						if (Array.isArray(msg.content)) {
-							// NOTE: this is fine since env details will always be added at the end. but if it weren't there, and the user added a image_url type message, it would pop a text part before it and then move it after to the end.
-							let lastTextPart = msg.content.filter((part) => part.type === "text").pop()
+					convertedMessages = [systemMessage, ...convertToOpenAiMessages(messages)]
 
-							if (!lastTextPart) {
-								lastTextPart = { type: "text", text: "..." }
-								msg.content.push(lastTextPart)
+					if (modelInfo.supportsPromptCache) {
+						// Note: the following logic is copied from openrouter:
+						// Add cache_control to the last two user messages
+						// (note: this works because we only ever add one user message at a time, but if we added multiple we'd need to mark the user message before the last assistant message)
+						const lastTwoUserMessages = convertedMessages.filter((msg) => msg.role === "user").slice(-2)
+
+						lastTwoUserMessages.forEach((msg) => {
+							if (typeof msg.content === "string") {
+								msg.content = [{ type: "text", text: msg.content }]
 							}
 
-							// @ts-ignore-next-line
-							lastTextPart["cache_control"] = { type: "ephemeral" }
+							if (Array.isArray(msg.content)) {
+								// NOTE: this is fine since env details will always be added at the end. but if it weren't there, and the user added a image_url type message, it would pop a text part before it and then move it after to the end.
+								let lastTextPart = msg.content.filter((part) => part.type === "text").pop()
+
+								if (!lastTextPart) {
+									lastTextPart = { type: "text", text: "..." }
+									msg.content.push(lastTextPart)
+								}
+
+								// Type assertion to add cache_control property
+								;(lastTextPart as any).cache_control = { type: "ephemeral" }
+							}
+						})
+					}
+				}
+
+				const isGrokXAI = this._isGrokXAI(this.options.openAiBaseUrl)
+
+				const requestOptions: OpenAI.Chat.Completions.ChatCompletionCreateParamsStreaming = {
+					model: modelId,
+					temperature:
+						this.options.modelTemperature ?? (deepseekReasoner ? DEEP_SEEK_DEFAULT_TEMPERATURE : 0),
+					messages: convertedMessages,
+					stream: true as const,
+					...(isGrokXAI ? {} : { stream_options: { include_usage: true } }),
+					...(reasoning && reasoning),
+				}
+
+				// Add max_tokens if needed
+				this.addMaxTokensIfNeeded(requestOptions, modelInfo)
+
+				const stream = await this.client.chat.completions.create(
+					requestOptions,
+					isAzureAiInference ? { path: OPENAI_AZURE_AI_INFERENCE_PATH } : {},
+				)
+
+				const matcher = new XmlMatcher(
+					"think",
+					(chunk) =>
+						({
+							type: chunk.matched ? "reasoning" : "text",
+							text: chunk.data,
+						}) as const,
+				)
+
+				let lastUsage
+
+				for await (const chunk of stream) {
+					const delta = chunk.choices[0]?.delta ?? {}
+
+					if (delta.content) {
+						for (const chunk of matcher.update(delta.content)) {
+							yield chunk
 						}
-					})
-				}
-			}
+					}
 
-			const isGrokXAI = this._isGrokXAI(this.options.openAiBaseUrl)
-
-			const requestOptions: OpenAI.Chat.Completions.ChatCompletionCreateParamsStreaming = {
-				model: modelId,
-				temperature: this.options.modelTemperature ?? (deepseekReasoner ? DEEP_SEEK_DEFAULT_TEMPERATURE : 0),
-				messages: convertedMessages,
-				stream: true as const,
-				...(isGrokXAI ? {} : { stream_options: { include_usage: true } }),
-				...(reasoning && reasoning),
-			}
-
-			// Add max_tokens if needed
-			this.addMaxTokensIfNeeded(requestOptions, modelInfo)
-
-			const stream = await this.client.chat.completions.create(
-				requestOptions,
-				isAzureAiInference ? { path: OPENAI_AZURE_AI_INFERENCE_PATH } : {},
-			)
-
-			const matcher = new XmlMatcher(
-				"think",
-				(chunk) =>
-					({
-						type: chunk.matched ? "reasoning" : "text",
-						text: chunk.data,
-					}) as const,
-			)
-
-			let lastUsage
-
-			for await (const chunk of stream) {
-				const delta = chunk.choices[0]?.delta ?? {}
-
-				if (delta.content) {
-					for (const chunk of matcher.update(delta.content)) {
-						yield chunk
+					if ("reasoning_content" in delta && delta.reasoning_content) {
+						yield {
+							type: "reasoning",
+							text: (delta.reasoning_content as string | undefined) || "",
+						}
+					}
+					if (chunk.usage) {
+						lastUsage = chunk.usage
 					}
 				}
 
-				if ("reasoning_content" in delta && delta.reasoning_content) {
-					yield {
-						type: "reasoning",
-						text: (delta.reasoning_content as string | undefined) || "",
-					}
+				for (const chunk of matcher.final()) {
+					yield chunk
 				}
-				if (chunk.usage) {
-					lastUsage = chunk.usage
+
+				if (lastUsage) {
+					yield this.processUsageMetrics(lastUsage, modelInfo)
 				}
+			} else {
+				// o1 for instance doesnt support streaming, non-1 temp, or system prompt
+				const systemMessage: OpenAI.Chat.ChatCompletionUserMessageParam = {
+					role: "user",
+					content: systemPrompt,
+				}
+
+				const requestOptions: OpenAI.Chat.Completions.ChatCompletionCreateParamsNonStreaming = {
+					model: modelId,
+					messages: deepseekReasoner
+						? convertToR1Format([{ role: "user", content: systemPrompt }, ...messages])
+						: enabledLegacyFormat
+							? [systemMessage, ...convertToSimpleMessages(messages)]
+							: [systemMessage, ...convertToOpenAiMessages(messages)],
+				}
+
+				// Add max_tokens if needed
+				this.addMaxTokensIfNeeded(requestOptions, modelInfo)
+
+				const response = await this.client.chat.completions.create(
+					requestOptions,
+					this._isAzureAiInference(modelUrl) ? { path: OPENAI_AZURE_AI_INFERENCE_PATH } : {},
+				)
+
+				yield {
+					type: "text",
+					text: response.choices[0]?.message.content || "",
+				}
+
+				yield this.processUsageMetrics(response.usage, modelInfo)
 			}
-
-			for (const chunk of matcher.final()) {
-				yield chunk
+		} catch (error: any) {
+			// Handle Azure-specific errors
+			if (error?.status === 400 && error?.message?.includes("does not support 'system'")) {
+				const sanitizedModelId = String(this.options.openAiModelId || "unknown").substring(0, 100)
+				throw new Error(
+					`Azure OpenAI error: This model does not support system messages. ` +
+						`For reasoning models (o1, o3, o4), please ensure the model ID is correctly set. ` +
+						`Current model: ${sanitizedModelId}`,
+				)
+			} else if (error?.status === 404) {
+				const sanitizedApiVersion = String(
+					this.options.azureApiVersion || azureOpenAiDefaultApiVersion,
+				).substring(0, 50)
+				throw new Error(
+					`Azure OpenAI error: Resource not found. Please check: ` +
+						`1) Your deployment name is correct, ` +
+						`2) The base URL format is correct (e.g., https://YOUR-RESOURCE.openai.azure.com), ` +
+						`3) The API version is supported (current: ${sanitizedApiVersion})`,
+				)
+			} else if (error?.message?.includes("api-key")) {
+				throw new Error(
+					`Azure OpenAI authentication error: Invalid API key. ` +
+						`Please ensure you're using the correct Azure OpenAI API key from your Azure portal.`,
+				)
 			}
-
-			if (lastUsage) {
-				yield this.processUsageMetrics(lastUsage, modelInfo)
-			}
-		} else {
-			// o1 for instance doesnt support streaming, non-1 temp, or system prompt
-			const systemMessage: OpenAI.Chat.ChatCompletionUserMessageParam = {
-				role: "user",
-				content: systemPrompt,
-			}
-
-			const requestOptions: OpenAI.Chat.Completions.ChatCompletionCreateParamsNonStreaming = {
-				model: modelId,
-				messages: deepseekReasoner
-					? convertToR1Format([{ role: "user", content: systemPrompt }, ...messages])
-					: enabledLegacyFormat
-						? [systemMessage, ...convertToSimpleMessages(messages)]
-						: [systemMessage, ...convertToOpenAiMessages(messages)],
-			}
-
-			// Add max_tokens if needed
-			this.addMaxTokensIfNeeded(requestOptions, modelInfo)
-
-			const response = await this.client.chat.completions.create(
-				requestOptions,
-				this._isAzureAiInference(modelUrl) ? { path: OPENAI_AZURE_AI_INFERENCE_PATH } : {},
-			)
-
-			yield {
-				type: "text",
-				text: response.choices[0]?.message.content || "",
-			}
-
-			yield this.processUsageMetrics(response.usage, modelInfo)
+			// Re-throw other errors as-is
+			throw error
 		}
 	}
 
@@ -290,19 +331,39 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 	): ApiStream {
 		const modelInfo = this.getModel().info
 		const methodIsAzureAiInference = this._isAzureAiInference(this.options.openAiBaseUrl)
+		const urlHost = this._getUrlHost(this.options.openAiBaseUrl)
+		const isAzureOpenAi = !!(
+			this.options.azureApiVersion ||
+			this.options.openAiUseAzure ||
+			(urlHost && this._isAzureHost(urlHost))
+		)
 
 		if (this.options.openAiStreamingEnabled ?? true) {
 			const isGrokXAI = this._isGrokXAI(this.options.openAiBaseUrl)
 
+			// For Azure OpenAI, we need to handle the system prompt differently
+			// Azure's o1/o3 models don't support the "developer" role
+			const openAiMessages: OpenAI.Chat.ChatCompletionMessageParam[] = isAzureOpenAi
+				? [
+						// For Azure, combine system prompt with first user message
+						{
+							role: "user",
+							content: systemPrompt + "\n\n" + (messages[0]?.content || ""),
+						},
+						...convertToOpenAiMessages(messages.slice(1)),
+					]
+				: [
+						// For standard OpenAI, use developer role
+						{
+							role: "developer",
+							content: `Formatting re-enabled\n${systemPrompt}`,
+						},
+						...convertToOpenAiMessages(messages),
+					]
+
 			const requestOptions: OpenAI.Chat.Completions.ChatCompletionCreateParamsStreaming = {
 				model: modelId,
-				messages: [
-					{
-						role: "developer",
-						content: `Formatting re-enabled\n${systemPrompt}`,
-					},
-					...convertToOpenAiMessages(messages),
-				],
+				messages: openAiMessages,
 				stream: true,
 				...(isGrokXAI ? {} : { stream_options: { include_usage: true } }),
 				reasoning_effort: modelInfo.reasoningEffort,
@@ -321,15 +382,28 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 
 			yield* this.handleStreamResponse(stream)
 		} else {
+			// For Azure OpenAI, we need to handle the system prompt differently
+			const openAiMessages: OpenAI.Chat.ChatCompletionMessageParam[] = isAzureOpenAi
+				? [
+						// For Azure, combine system prompt with first user message
+						{
+							role: "user",
+							content: systemPrompt + "\n\n" + (messages[0]?.content || ""),
+						},
+						...convertToOpenAiMessages(messages.slice(1)),
+					]
+				: [
+						// For standard OpenAI, use developer role
+						{
+							role: "developer",
+							content: `Formatting re-enabled\n${systemPrompt}`,
+						},
+						...convertToOpenAiMessages(messages),
+					]
+
 			const requestOptions: OpenAI.Chat.Completions.ChatCompletionCreateParamsNonStreaming = {
 				model: modelId,
-				messages: [
-					{
-						role: "developer",
-						content: `Formatting re-enabled\n${systemPrompt}`,
-					},
-					...convertToOpenAiMessages(messages),
-				],
+				messages: openAiMessages,
 				reasoning_effort: modelInfo.reasoningEffort,
 				temperature: undefined,
 			}
@@ -391,6 +465,38 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 	}
 
 	/**
+	 * Extracts the base URL without query parameters
+	 * This is needed for Azure OpenAI endpoints that include api-version in the URL
+	 */
+	private _extractBaseUrl(url: string): string {
+		try {
+			// Validate URL before parsing
+			if (!url || typeof url !== "string") {
+				return ""
+			}
+
+			const urlObj = new URL(url)
+			// For Azure OpenAI, we need to preserve the path up to /openai/deployments/{deployment-name}
+			// but remove /chat/completions and query parameters
+			const pathParts = urlObj.pathname.split("/").filter((part) => part.length > 0)
+			const deploymentIndex = pathParts.indexOf("deployments")
+
+			if (deploymentIndex !== -1 && deploymentIndex + 1 < pathParts.length) {
+				// Keep path up to and including the deployment name
+				const basePath = "/" + pathParts.slice(0, deploymentIndex + 2).join("/")
+				return `${urlObj.protocol}//${urlObj.host}${basePath}`
+			}
+
+			// If not a deployment URL, just return origin + pathname without query
+			return `${urlObj.protocol}//${urlObj.host}${urlObj.pathname}`
+		} catch (error) {
+			// If URL parsing fails, return empty string to avoid potential security issues
+			console.error("Failed to parse URL:", error)
+			return ""
+		}
+	}
+
+	/**
 	 * Adds max_completion_tokens to the request body if needed based on provider configuration
 	 * Note: max_tokens is deprecated in favor of max_completion_tokens as per OpenAI documentation
 	 * O3 family models handle max_tokens separately in handleO3FamilyMessage
@@ -407,6 +513,25 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 			// Using max_completion_tokens as max_tokens is deprecated
 			requestOptions.max_completion_tokens = this.options.modelMaxTokens || modelInfo.maxTokens
 		}
+	}
+
+	/**
+	 * Checks if the host is an Azure domain
+	 * Properly validates the hostname to prevent security issues
+	 */
+	private _isAzureHost(host: string): boolean {
+		// Check for exact Azure domain suffixes
+		return host.endsWith(".azure.com") || host.endsWith(".azure.us") || host === "azure.com" || host === "azure.us"
+	}
+
+	/**
+	 * Checks if the URL is from Volces (Ark) service
+	 * Properly validates the hostname to prevent security issues
+	 */
+	private _isVolcesHost(baseUrl?: string): boolean {
+		const urlHost = this._getUrlHost(baseUrl)
+		// Check for exact Volces domain suffix
+		return urlHost.endsWith(".volces.com") || urlHost === "volces.com"
 	}
 }
 
