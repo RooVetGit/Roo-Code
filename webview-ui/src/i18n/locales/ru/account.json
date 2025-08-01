@@ -11,7 +11,7 @@
 	"cloudBenefitSharing": "Функции обмена и совместной работы",
 	"cloudBenefitMetrics": "Метрики использования на основе задач, токенов и затрат",
 	"visitCloudWebsite": "Посетить Roo Code Cloud",
-	"telemetryOnline": "Telemetry Connected",
+	"telemetryOnline": "Телеметрия подключена",
 	"telemetryOffline": "Telemetry Disconnected",
 	"telemetryQueued": "events queued"
 }
