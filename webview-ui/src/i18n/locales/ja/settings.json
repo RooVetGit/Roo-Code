@@ -66,6 +66,7 @@
 		"qdrantUrlLabel": "Qdrant URL",
 		"qdrantKeyLabel": "Qdrantキー：",
 		"startIndexingButton": "開始",
+		"resumeIndexingButton": "再開",
 		"clearIndexDataButton": "インデックスクリア",
 		"unsavedSettingsMessage": "インデックス作成プロセスを開始する前に設定を保存してください。",
 		"clearDataDialog": {
