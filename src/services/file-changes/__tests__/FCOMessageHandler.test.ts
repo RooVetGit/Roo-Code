@@ -10,7 +10,7 @@ import { WebviewMessage } from "../../../shared/WebviewMessage"
 import type { FileChange } from "@roo-code/types"
 import type { TaskMetadata } from "../../../core/context-tracking/FileContextTrackerTypes"
 import type { FileContextTracker } from "../../../core/context-tracking/FileContextTracker"
-import { getCheckpointService } from "../../../core/checkpoints"
+import { getCheckpointService, checkpointSave } from "../../../core/checkpoints"
 
 // Mock VS Code
 vi.mock("vscode", () => ({
@@ -59,6 +59,7 @@ vi.mock("path", () => ({
 // Mock checkpoints
 vi.mock("../../../core/checkpoints", () => ({
 	getCheckpointService: vi.fn(),
+	checkpointSave: vi.fn(),
 }))
 
 describe("FCOMessageHandler", () => {
@@ -76,6 +77,9 @@ describe("FCOMessageHandler", () => {
 		// Setup getCheckpointService mock
 		vi.mocked(getCheckpointService).mockImplementation((task) => task?.checkpointService || undefined)
 
+		// Reset checkpointSave mock
+		vi.mocked(checkpointSave).mockReset()
+
 		// Mock FileContextTracker
 		mockFileContextTracker = {
 			getTaskMetadata: vi.fn().mockResolvedValue({
@@ -92,6 +96,7 @@ describe("FCOMessageHandler", () => {
 			baseHash: "base123",
 			getDiff: vi.fn(),
 			getContent: vi.fn(),
+			getCurrentCheckpoint: vi.fn().mockReturnValue("checkpoint-123"),
 		}
 
 		// Mock FileChangeManager
@@ -120,6 +125,12 @@ describe("FCOMessageHandler", () => {
 			getFileChangeManager: vi.fn().mockReturnValue(mockFileChangeManager),
 			ensureFileChangeManager: vi.fn().mockResolvedValue(mockFileChangeManager),
 			postMessageToWebview: vi.fn(),
+			getGlobalState: vi.fn(),
+			contextProxy: {
+				setValue: vi.fn(),
+			},
+			postStateToWebview: vi.fn(),
+			log: vi.fn(),
 		}
 
 		handler = new FCOMessageHandler(mockProvider)
@@ -140,6 +151,7 @@ describe("FCOMessageHandler", () => {
 				"rejectAllFileChanges",
 				"filesChangedRequest",
 				"filesChangedBaselineUpdate",
+				"filesChangedEnabled",
 			]
 
 			fcoMessageTypes.forEach((type) => {
@@ -646,6 +658,190 @@ describe("FCOMessageHandler", () => {
 
 			// Should find the file and create diff view
 			expect(vscode.commands.executeCommand).toHaveBeenCalled()
+		})
+	})
+
+	describe("filesChangedEnabled", () => {
+		it("should trigger baseline reset when FCO is enabled (false -> true) during active task", async () => {
+			// Mock previous state as disabled
+			mockProvider.getGlobalState.mockReturnValue(false)
+
+			// Mock getCurrentCheckpoint to return "HEAD" to trigger checkpoint creation
+			mockCheckpointService.getCurrentCheckpoint.mockReturnValue("HEAD")
+
+			// Mock checkpointSave to return new checkpoint
+			vi.mocked(checkpointSave).mockResolvedValue({ commit: "new-checkpoint-456" })
+
+			await handler.handleMessage({
+				type: "filesChangedEnabled",
+				bool: true, // Enable FCO
+			})
+
+			// Should update global state
+			expect(mockProvider.contextProxy.setValue).toHaveBeenCalledWith("filesChangedEnabled", true)
+
+			// Should create new checkpoint
+			expect(vi.mocked(checkpointSave)).toHaveBeenCalledWith(mockTask, true)
+
+			// Should update baseline
+			expect(mockFileChangeManager.updateBaseline).toHaveBeenCalledWith("new-checkpoint-456")
+
+			// Should clear existing files
+			expect(mockFileChangeManager.setFiles).toHaveBeenCalledWith([])
+
+			// Should send updated changeset to webview
+			expect(mockProvider.postMessageToWebview).toHaveBeenCalledWith({
+				type: "filesChanged",
+				filesChanged: undefined,
+			})
+
+			// Should post state to webview
+			expect(mockProvider.postStateToWebview).toHaveBeenCalled()
+		})
+
+		it("should NOT trigger baseline reset when FCO remains enabled (true -> true)", async () => {
+			// Mock previous state as already enabled
+			mockProvider.getGlobalState.mockReturnValue(true)
+
+			await handler.handleMessage({
+				type: "filesChangedEnabled",
+				bool: true, // Keep FCO enabled (no change)
+			})
+
+			// Should update global state
+			expect(mockProvider.contextProxy.setValue).toHaveBeenCalledWith("filesChangedEnabled", true)
+
+			// Should NOT trigger baseline reset operations
+			expect(mockFileChangeManager.updateBaseline).not.toHaveBeenCalled()
+			expect(mockFileChangeManager.setFiles).not.toHaveBeenCalled()
+
+			// Should still update state
+			expect(mockProvider.postStateToWebview).toHaveBeenCalled()
+		})
+
+		it("should NOT trigger baseline reset when FCO is disabled (true -> false)", async () => {
+			// Mock previous state as enabled
+			mockProvider.getGlobalState.mockReturnValue(true)
+
+			await handler.handleMessage({
+				type: "filesChangedEnabled",
+				bool: false, // Disable FCO
+			})
+
+			// Should update global state
+			expect(mockProvider.contextProxy.setValue).toHaveBeenCalledWith("filesChangedEnabled", false)
+
+			// Should NOT trigger baseline reset operations
+			expect(mockFileChangeManager.updateBaseline).not.toHaveBeenCalled()
+			expect(mockFileChangeManager.setFiles).not.toHaveBeenCalled()
+
+			// Should still update state
+			expect(mockProvider.postStateToWebview).toHaveBeenCalled()
+		})
+
+		it("should NOT trigger baseline reset when no active task exists", async () => {
+			// Mock previous state as disabled
+			mockProvider.getGlobalState.mockReturnValue(false)
+			// Mock no active task
+			mockProvider.getCurrentCline.mockReturnValue(null)
+
+			await handler.handleMessage({
+				type: "filesChangedEnabled",
+				bool: true, // Enable FCO
+			})
+
+			// Should update global state
+			expect(mockProvider.contextProxy.setValue).toHaveBeenCalledWith("filesChangedEnabled", true)
+
+			// Should NOT trigger baseline reset operations (no active task)
+			expect(mockFileChangeManager.updateBaseline).not.toHaveBeenCalled()
+			expect(mockFileChangeManager.setFiles).not.toHaveBeenCalled()
+
+			// Should still update state
+			expect(mockProvider.postStateToWebview).toHaveBeenCalled()
+		})
+
+		it("should use existing checkpoint when available", async () => {
+			// Mock previous state as disabled
+			mockProvider.getGlobalState.mockReturnValue(false)
+			// Mock existing checkpoint
+			mockCheckpointService.getCurrentCheckpoint.mockReturnValue("existing-checkpoint-789")
+
+			await handler.handleMessage({
+				type: "filesChangedEnabled",
+				bool: true, // Enable FCO
+			})
+
+			// Should NOT create new checkpoint
+			// Note: checkpointSave should not be called when existing checkpoint is available
+
+			// Should update baseline with existing checkpoint
+			expect(mockFileChangeManager.updateBaseline).toHaveBeenCalledWith("existing-checkpoint-789")
+
+			// Should clear existing files
+			expect(mockFileChangeManager.setFiles).toHaveBeenCalledWith([])
+
+			// Should post state to webview
+			expect(mockProvider.postStateToWebview).toHaveBeenCalled()
+		})
+
+		it("should handle baseline reset errors gracefully", async () => {
+			// Mock previous state as disabled
+			mockProvider.getGlobalState.mockReturnValue(false)
+			// Mock updateBaseline to throw error
+			mockFileChangeManager.updateBaseline.mockRejectedValue(new Error("Baseline update failed"))
+
+			// Should not throw error
+			await expect(
+				handler.handleMessage({
+					type: "filesChangedEnabled",
+					bool: true,
+				}),
+			).resolves.not.toThrow()
+
+			// Should log error
+			expect(mockProvider.log).toHaveBeenCalledWith(expect.stringContaining("Error resetting FCO baseline"))
+
+			// Should still update global state and post state
+			expect(mockProvider.contextProxy.setValue).toHaveBeenCalledWith("filesChangedEnabled", true)
+			expect(mockProvider.postStateToWebview).toHaveBeenCalled()
+		})
+
+		it("should handle missing FileChangeManager", async () => {
+			// Mock previous state as disabled
+			mockProvider.getGlobalState.mockReturnValue(false)
+			// Mock no FileChangeManager initially
+			mockProvider.getFileChangeManager.mockReturnValue(null)
+
+			await handler.handleMessage({
+				type: "filesChangedEnabled",
+				bool: true, // Enable FCO
+			})
+
+			// Should ensure FileChangeManager is created
+			expect(mockProvider.ensureFileChangeManager).toHaveBeenCalled()
+
+			// Should still update state
+			expect(mockProvider.postStateToWebview).toHaveBeenCalled()
+		})
+
+		it("should default bool to true when not provided", async () => {
+			// Mock previous state as disabled
+			mockProvider.getGlobalState.mockReturnValue(false)
+
+			await handler.handleMessage({
+				type: "filesChangedEnabled",
+				// No bool property provided
+			})
+
+			// Should update global state to true (default)
+			expect(mockProvider.contextProxy.setValue).toHaveBeenCalledWith("filesChangedEnabled", true)
+
+			// Should trigger baseline reset since it's an enable event
+			expect(mockFileChangeManager.updateBaseline).toHaveBeenCalled()
+
+			// Should post state to webview
+			expect(mockProvider.postStateToWebview).toHaveBeenCalled()
 		})
 	})
 })

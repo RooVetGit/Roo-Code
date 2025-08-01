@@ -26,6 +26,7 @@ export class FCOMessageHandler {
 			"rejectAllFileChanges",
 			"filesChangedRequest",
 			"filesChangedBaselineUpdate",
+			"filesChangedEnabled",
 		]
 
 		return fcoMessageTypes.includes(message.type)
@@ -89,6 +90,11 @@ export class FCOMessageHandler {
 
 			case "filesChangedBaselineUpdate": {
 				await this.handleFilesChangedBaselineUpdate(message, task)
+				break
+			}
+
+			case "filesChangedEnabled": {
+				await this.handleFilesChangedEnabled(message, task)
 				break
 			}
 		}
@@ -410,6 +416,95 @@ export class FCOMessageHandler {
 				type: "filesChanged",
 				filesChanged: undefined,
 			})
+		}
+	}
+
+	/**
+	 * Handle Files Changed Overview (FCO) enabled/disabled setting changes
+	 */
+	private async handleFilesChangedEnabled(message: WebviewMessage, task: any): Promise<void> {
+		const filesChangedEnabled = message.bool ?? true
+		const previousFilesChangedEnabled = this.provider.getGlobalState("filesChangedEnabled") ?? true
+
+		// Update global state
+		await this.provider.contextProxy.setValue("filesChangedEnabled", filesChangedEnabled)
+
+		// Detect enable event (transition from false to true) during active task
+		if (!previousFilesChangedEnabled && filesChangedEnabled) {
+			const currentTask = this.provider.getCurrentCline()
+			if (currentTask && currentTask.taskId) {
+				try {
+					await this.handleFCOEnableResetBaseline(currentTask)
+				} catch (error) {
+					// Log error but don't throw - allow the setting change to complete
+					this.provider.log(`[FCOMessageHandler] Error handling FCO enable: ${error}`)
+				}
+			}
+		}
+
+		// Post updated state to webview
+		await this.provider.postStateToWebview()
+	}
+
+	/**
+	 * Handle FCO being enabled mid-task by creating a checkpoint and resetting baseline
+	 */
+	private async handleFCOEnableResetBaseline(currentTask: any): Promise<void> {
+		if (!currentTask || !currentTask.taskId) {
+			return
+		}
+
+		this.provider.log("[FCOMessageHandler] FCO enabled mid-task, resetting baseline")
+
+		try {
+			if (currentTask.checkpointService) {
+				// Get current checkpoint or create one
+				let currentCheckpoint = currentTask.checkpointService.getCurrentCheckpoint()
+
+				// If no current checkpoint exists, create one as the new baseline
+				if (!currentCheckpoint || currentCheckpoint === "HEAD") {
+					this.provider.log("[FCOMessageHandler] Creating new checkpoint for FCO baseline reset")
+					const { checkpointSave } = await import("../../core/checkpoints")
+					const checkpointResult = await checkpointSave(currentTask, true) // Force save
+					if (checkpointResult && checkpointResult.commit) {
+						currentCheckpoint = checkpointResult.commit
+						this.provider.log(
+							`[FCOMessageHandler] Created checkpoint ${currentCheckpoint} for FCO baseline`,
+						)
+					}
+				}
+
+				// Reset FileChangeManager baseline to current checkpoint
+				if (currentCheckpoint && currentCheckpoint !== "HEAD") {
+					let fileChangeManager = this.provider.getFileChangeManager()
+					if (!fileChangeManager) {
+						fileChangeManager = await this.provider.ensureFileChangeManager()
+					}
+
+					if (fileChangeManager) {
+						await fileChangeManager.updateBaseline(currentCheckpoint)
+						this.provider.log(`[FCOMessageHandler] Reset FCO baseline to ${currentCheckpoint}`)
+
+						// Clear any existing file changes since we're starting fresh
+						fileChangeManager.setFiles([])
+
+						// Send updated (likely empty) file changes to webview
+						if (currentTask.taskId && currentTask.fileContextTracker) {
+							const filteredChangeset = await fileChangeManager.getLLMOnlyChanges(
+								currentTask.taskId,
+								currentTask.fileContextTracker,
+							)
+							this.provider.postMessageToWebview({
+								type: "filesChanged",
+								filesChanged: filteredChangeset.files.length > 0 ? filteredChangeset : undefined,
+							})
+						}
+					}
+				}
+			}
+		} catch (error) {
+			this.provider.log(`[FCOMessageHandler] Error resetting FCO baseline: ${error}`)
+			// Don't throw - allow the setting change to complete even if baseline reset fails
 		}
 	}
 

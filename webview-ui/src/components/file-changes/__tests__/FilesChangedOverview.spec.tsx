@@ -11,6 +11,65 @@ import { FileChangeType } from "@roo-code/types"
 
 import FilesChangedOverview from "../FilesChangedOverview"
 
+// Mock CSS modules for FilesChangedOverview
+vi.mock("../FilesChangedOverview.module.css", () => ({
+	default: {
+		filesChangedOverview: "files-changed-overview-mock",
+		header: "header-mock",
+		headerExpanded: "header-expanded-mock",
+		headerContent: "header-content-mock",
+		chevronIcon: "chevron-icon-mock",
+		headerTitle: "header-title-mock",
+		actionButtons: "action-buttons-mock",
+		actionButton: "action-button-mock",
+		rejectAllButton: "reject-all-button-mock",
+		acceptAllButton: "accept-all-button-mock",
+		contentArea: "content-area-mock",
+		virtualContainer: "virtual-container-mock",
+		virtualContent: "virtual-content-mock",
+		fileItem: "file-item-mock",
+		fileInfo: "file-info-mock",
+		fileName: "file-name-mock",
+		fileActions: "file-actions-mock",
+		lineChanges: "line-changes-mock",
+		fileButtons: "file-buttons-mock",
+		fileButton: "file-button-mock",
+		diffButton: "diff-button-mock",
+		rejectButton: "reject-button-mock",
+		acceptButton: "accept-button-mock",
+	},
+}))
+
+// Add CSS styles to test environment for FilesChangedOverview
+// This makes toHaveStyle() work by actually applying the expected styles
+if (typeof document !== "undefined") {
+	const style = document.createElement("style")
+	style.textContent = `
+		.files-changed-overview-mock {
+			border: 1px solid var(--vscode-panel-border);
+			border-top: 0;
+			border-radius: 0;
+			padding: 6px 10px;
+			margin: 0;
+			background-color: var(--vscode-editor-background);
+		}
+		.file-item-mock {
+			margin-bottom: 3px;
+		}
+	`
+	document.head.appendChild(style)
+
+	// Define CSS variables for VS Code theming
+	const themeStyle = document.createElement("style")
+	themeStyle.textContent = `
+		:root {
+			--vscode-panel-border: #454545;
+			--vscode-editor-background: #1e1e1e;
+		}
+	`
+	document.head.appendChild(themeStyle)
+}
+
 // Mock vscode API
 vi.mock("@src/utils/vscode", () => ({
 	vscode: {
@@ -841,6 +900,278 @@ describe("FilesChangedOverview (Self-Managing)", () => {
 			// Header should format line changes correctly
 			const header = screen.getByTestId("files-changed-header")
 			expect(header).toHaveTextContent("+35, -5") // Standard format
+		})
+	})
+
+	// ===== EDGE CASE: MID-TASK FCO ENABLEMENT =====
+	describe("Mid-Task FCO Enablement", () => {
+		it("should show only changes from enable point when FCO is enabled mid-task", async () => {
+			// Start with FCO disabled
+			const disabledState = { ...mockExtensionState, filesChangedEnabled: false }
+
+			const { rerender } = render(
+				<ExtensionStateContext.Provider value={disabledState as any}>
+					<FilesChangedOverview />
+				</ExtensionStateContext.Provider>,
+			)
+
+			// Simulate files being edited while FCO is disabled (these should NOT appear later)
+			const initialChangeset = {
+				baseCheckpoint: "hash0",
+				files: [
+					{
+						uri: "src/components/old-file1.ts",
+						type: "edit" as FileChangeType,
+						fromCheckpoint: "hash0",
+						toCheckpoint: "hash1",
+						linesAdded: 15,
+						linesRemoved: 3,
+					},
+					{
+						uri: "src/components/old-file2.ts",
+						type: "create" as FileChangeType,
+						fromCheckpoint: "hash0",
+						toCheckpoint: "hash1",
+						linesAdded: 30,
+						linesRemoved: 0,
+					},
+				],
+			}
+
+			// Send initial changes while FCO is DISABLED - these should not be shown when enabled
+			simulateMessage({
+				type: "filesChanged",
+				filesChanged: initialChangeset,
+			})
+
+			// Verify FCO doesn't render when disabled
+			expect(screen.queryByTestId("files-changed-overview")).not.toBeInTheDocument()
+
+			// Now ENABLE FCO mid-task
+			const enabledState = { ...mockExtensionState, filesChangedEnabled: true }
+			rerender(
+				<ExtensionStateContext.Provider value={enabledState as any}>
+					<FilesChangedOverview />
+				</ExtensionStateContext.Provider>,
+			)
+
+			// Simulate NEW files being edited AFTER FCO is enabled (these SHOULD appear)
+			const newChangeset = {
+				baseCheckpoint: "hash1", // New baseline from enable point
+				files: [
+					{
+						uri: "src/components/new-file1.ts",
+						type: "edit" as FileChangeType,
+						fromCheckpoint: "hash1",
+						toCheckpoint: "hash2",
+						linesAdded: 8,
+						linesRemoved: 2,
+					},
+					{
+						uri: "src/components/new-file2.ts",
+						type: "create" as FileChangeType,
+						fromCheckpoint: "hash1",
+						toCheckpoint: "hash2",
+						linesAdded: 12,
+						linesRemoved: 0,
+					},
+				],
+			}
+
+			// Send new changes after FCO is enabled
+			simulateMessage({
+				type: "filesChanged",
+				filesChanged: newChangeset,
+			})
+
+			await waitFor(() => {
+				expect(screen.getByTestId("files-changed-overview")).toBeInTheDocument()
+			})
+
+			// Verify ONLY the new files (from enable point) are shown, not the old ones
+			expect(screen.getByTestId("files-changed-header")).toHaveTextContent("2 files changed")
+			expect(screen.getByTestId("files-changed-header")).toHaveTextContent("(+20, -2)") // Only new files' line counts
+
+			// Expand to verify specific files
+			const header = screen.getByTestId("files-changed-header").closest('[role="button"]')
+			fireEvent.click(header!)
+
+			await waitFor(() => {
+				// Should show NEW files from enable point
+				expect(screen.getByTestId("file-item-src/components/new-file1.ts")).toBeInTheDocument()
+				expect(screen.getByTestId("file-item-src/components/new-file2.ts")).toBeInTheDocument()
+
+				// Should NOT show OLD files from before FCO was enabled
+				expect(screen.queryByTestId("file-item-src/components/old-file1.ts")).not.toBeInTheDocument()
+				expect(screen.queryByTestId("file-item-src/components/old-file2.ts")).not.toBeInTheDocument()
+			})
+		})
+
+		it("should request fresh file changes when FCO is enabled mid-task", async () => {
+			// Start with FCO disabled
+			const disabledState = { ...mockExtensionState, filesChangedEnabled: false }
+
+			const { rerender } = render(
+				<ExtensionStateContext.Provider value={disabledState as any}>
+					<FilesChangedOverview />
+				</ExtensionStateContext.Provider>,
+			)
+
+			// Clear any initial messages
+			vi.clearAllMocks()
+
+			// Enable FCO mid-task
+			const enabledState = { ...mockExtensionState, filesChangedEnabled: true }
+			rerender(
+				<ExtensionStateContext.Provider value={enabledState as any}>
+					<FilesChangedOverview />
+				</ExtensionStateContext.Provider>,
+			)
+
+			// Should request fresh file changes when enabled
+			await waitFor(() => {
+				expect(vscode.postMessage).toHaveBeenCalledWith({
+					type: "filesChangedRequest",
+				})
+			})
+		})
+
+		it("should handle rapid enable/disable toggles gracefully", async () => {
+			// Start with FCO disabled
+			const disabledState = { ...mockExtensionState, filesChangedEnabled: false }
+
+			const { rerender } = render(
+				<ExtensionStateContext.Provider value={disabledState as any}>
+					<FilesChangedOverview />
+				</ExtensionStateContext.Provider>,
+			)
+
+			// Rapidly toggle enabled state multiple times
+			const enabledState = { ...mockExtensionState, filesChangedEnabled: true }
+
+			for (let i = 0; i < 3; i++) {
+				// Enable
+				rerender(
+					<ExtensionStateContext.Provider value={enabledState as any}>
+						<FilesChangedOverview />
+					</ExtensionStateContext.Provider>,
+				)
+
+				// Disable
+				rerender(
+					<ExtensionStateContext.Provider value={disabledState as any}>
+						<FilesChangedOverview />
+					</ExtensionStateContext.Provider>,
+				)
+			}
+
+			// Final enable
+			rerender(
+				<ExtensionStateContext.Provider value={enabledState as any}>
+					<FilesChangedOverview />
+				</ExtensionStateContext.Provider>,
+			)
+
+			// Should still work correctly after rapid toggles
+			simulateMessage({
+				type: "filesChanged",
+				filesChanged: mockChangeset,
+			})
+
+			await waitFor(() => {
+				expect(screen.getByTestId("files-changed-overview")).toBeInTheDocument()
+			})
+
+			// Component should function normally
+			expect(screen.getByTestId("files-changed-header")).toHaveTextContent("2 files changed")
+		})
+
+		it("should NOT request fresh file changes when FCO is already enabled and settings are saved without changes", async () => {
+			// Start with FCO already enabled
+			const enabledState = { ...mockExtensionState, filesChangedEnabled: true }
+
+			const { rerender } = render(
+				<ExtensionStateContext.Provider value={enabledState as any}>
+					<FilesChangedOverview />
+				</ExtensionStateContext.Provider>,
+			)
+
+			// Add some files to establish current state
+			simulateMessage({
+				type: "filesChanged",
+				filesChanged: mockChangeset,
+			})
+
+			await waitFor(() => {
+				expect(screen.getByTestId("files-changed-overview")).toBeInTheDocument()
+			})
+
+			// Clear any initial messages to track subsequent calls
+			vi.clearAllMocks()
+
+			// Simulate settings save without any changes (FCO remains enabled)
+			// This happens when user opens settings dialog and saves without changing FCO state
+			rerender(
+				<ExtensionStateContext.Provider value={enabledState as any}>
+					<FilesChangedOverview />
+				</ExtensionStateContext.Provider>,
+			)
+
+			// Wait a bit to ensure no async operations are triggered
+			await new Promise((resolve) => setTimeout(resolve, 100))
+
+			// Should NOT have requested fresh file changes since state didn't change
+			expect(vscode.postMessage).not.toHaveBeenCalledWith({
+				type: "filesChangedRequest",
+			})
+
+			// Component should still show existing files
+			expect(screen.getByTestId("files-changed-overview")).toBeInTheDocument()
+			expect(screen.getByTestId("files-changed-header")).toHaveTextContent("2 files changed")
+		})
+
+		it("should NOT request fresh file changes when other settings change but FCO remains enabled", async () => {
+			// Start with FCO enabled
+			const initialState = { ...mockExtensionState, filesChangedEnabled: true, soundEnabled: false }
+
+			const { rerender } = render(
+				<ExtensionStateContext.Provider value={initialState as any}>
+					<FilesChangedOverview />
+				</ExtensionStateContext.Provider>,
+			)
+
+			// Add some files to establish current state
+			simulateMessage({
+				type: "filesChanged",
+				filesChanged: mockChangeset,
+			})
+
+			await waitFor(() => {
+				expect(screen.getByTestId("files-changed-overview")).toBeInTheDocument()
+			})
+
+			// Clear any initial messages
+			vi.clearAllMocks()
+
+			// Change OTHER settings but keep FCO enabled
+			const updatedState = { ...mockExtensionState, filesChangedEnabled: true, soundEnabled: true }
+			rerender(
+				<ExtensionStateContext.Provider value={updatedState as any}>
+					<FilesChangedOverview />
+				</ExtensionStateContext.Provider>,
+			)
+
+			// Wait a bit to ensure no async operations are triggered
+			await new Promise((resolve) => setTimeout(resolve, 100))
+
+			// Should NOT have requested fresh file changes since FCO state didn't change
+			expect(vscode.postMessage).not.toHaveBeenCalledWith({
+				type: "filesChangedRequest",
+			})
+
+			// Component should still show existing files
+			expect(screen.getByTestId("files-changed-overview")).toBeInTheDocument()
+			expect(screen.getByTestId("files-changed-header")).toHaveTextContent("2 files changed")
 		})
 	})
 

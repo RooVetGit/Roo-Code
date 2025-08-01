@@ -1535,6 +1535,7 @@ export class ClineProvider
 			hasOpenedModeSelector: this.getGlobalState("hasOpenedModeSelector") ?? false,
 			alwaysAllowFollowupQuestions: alwaysAllowFollowupQuestions ?? false,
 			followupAutoApproveTimeoutMs: followupAutoApproveTimeoutMs ?? 60000,
+			diagnosticsEnabled: true,
 			filesChangedEnabled: this.getGlobalState("filesChangedEnabled") ?? true,
 		}
 	}
@@ -1714,7 +1715,7 @@ export class ClineProvider
 	}
 
 	// @deprecated - Use `ContextProxy#getValue` instead.
-	private getGlobalState<K extends keyof GlobalState>(key: K) {
+	public getGlobalState<K extends keyof GlobalState>(key: K) {
 		return this.contextProxy.getValue(key)
 	}
 

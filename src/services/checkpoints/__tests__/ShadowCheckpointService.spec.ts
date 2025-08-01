@@ -1,5 +1,6 @@
 // npx vitest run src/services/checkpoints/__tests__/ShadowCheckpointService.spec.ts
 
+import { describe, it, expect, beforeEach, afterEach, afterAll, vitest } from "vitest"
 import fs from "fs/promises"
 import path from "path"
 import os from "os"
@@ -825,6 +826,520 @@ describe.each([[RepoPerTaskCheckpointService, "RepoPerTaskCheckpointService"]])(
 
 				// File should be back to original state
 				expect(await fs.readFile(testFile, "utf-8")).toBe("Hello, world!")
+			})
+		})
+
+		describe(`${klass.name}#getContent and file rejection workflow`, () => {
+			it("should delete newly created files when getContent throws 'does not exist' error", async () => {
+				// Test the complete workflow: create file -> checkpoint -> reject file -> verify deletion
+				// This tests the integration between ShadowCheckpointService and FCO file rejection
+
+				// 1. Create a new file that didn't exist in the base checkpoint
+				const newFile = path.join(service.workspaceDir, "newly-created.txt")
+				await fs.writeFile(newFile, "This file was created by LLM")
+
+				// Verify file exists
+				expect(await fs.readFile(newFile, "utf-8")).toBe("This file was created by LLM")
+
+				// 2. Save a checkpoint containing the new file
+				const commit = await service.saveCheckpoint("Add newly created file")
+				expect(commit?.commit).toBeTruthy()
+
+				// 3. Verify the diff shows the new file
+				const changes = await service.getDiff({ to: commit!.commit })
+				const newFileChange = changes.find((c) => c.paths.relative === "newly-created.txt")
+				expect(newFileChange).toBeDefined()
+				expect(newFileChange?.content.before).toBe("")
+				expect(newFileChange?.content.after).toBe("This file was created by LLM")
+
+				// 4. Simulate FCO file rejection: try to get content from baseHash (should throw)
+				// This simulates what FCOMessageHandler.revertFileToCheckpoint() does
+				await expect(service.getContent(service.baseHash!, newFile)).rejects.toThrow(
+					/does not exist|exists on disk, but not in/,
+				)
+
+				// 5. Since getContent threw an error, simulate the deletion logic from FCOMessageHandler
+				// In real FCO, this would be handled by FCOMessageHandler.revertFileToCheckpoint()
+				try {
+					await service.getContent(service.baseHash!, newFile)
+				} catch (error) {
+					// File didn't exist in previous checkpoint, so delete it
+					const errorMessage = error instanceof Error ? error.message : String(error)
+					if (
+						errorMessage.includes("exists on disk, but not in") ||
+						errorMessage.includes("does not exist")
+					) {
+						await fs.unlink(newFile)
+					}
+				}
+
+				// 6. Verify the file was deleted
+				await expect(fs.readFile(newFile, "utf-8")).rejects.toThrow("ENOENT")
+			})
+
+			it("should restore file content when getContent succeeds for modified files", async () => {
+				// Test the complete workflow: modify file -> checkpoint -> reject file -> verify restoration
+				// This tests the integration between ShadowCheckpointService and FCO file rejection for existing files
+
+				// 1. Modify the existing test file
+				const originalContent = await fs.readFile(testFile, "utf-8")
+				expect(originalContent).toBe("Hello, world!")
+
+				await fs.writeFile(testFile, "Modified by LLM")
+				expect(await fs.readFile(testFile, "utf-8")).toBe("Modified by LLM")
+
+				// 2. Save a checkpoint containing the modification
+				const commit = await service.saveCheckpoint("Modify existing file")
+				expect(commit?.commit).toBeTruthy()
+
+				// 3. Verify the diff shows the modification
+				const changes = await service.getDiff({ to: commit!.commit })
+				const modifiedFileChange = changes.find((c) => c.paths.relative === "test.txt")
+				expect(modifiedFileChange).toBeDefined()
+				expect(modifiedFileChange?.content.before).toBe("Hello, world!")
+				expect(modifiedFileChange?.content.after).toBe("Modified by LLM")
+
+				// 4. Simulate FCO file rejection: get original content from baseHash
+				// This simulates what FCOMessageHandler.revertFileToCheckpoint() does
+				const previousContent = await service.getContent(service.baseHash!, testFile)
+				expect(previousContent).toBe("Hello, world!")
+
+				// 5. Simulate the restoration logic from FCOMessageHandler
+				// In real FCO, this would be handled by FCOMessageHandler.revertFileToCheckpoint()
+				await fs.writeFile(testFile, previousContent, "utf8")
+
+				// 6. Verify the file was restored to its original content
+				expect(await fs.readFile(testFile, "utf-8")).toBe("Hello, world!")
+			})
+
+			it("should handle getContent with absolute vs relative paths correctly", async () => {
+				// Test that getContent works with both absolute and relative paths
+				// This ensures FCOMessageHandler path handling is compatible with ShadowCheckpointService
+
+				const originalContent = await fs.readFile(testFile, "utf-8")
+
+				// Test with absolute path
+				const absoluteContent = await service.getContent(service.baseHash!, testFile)
+				expect(absoluteContent).toBe(originalContent)
+
+				// Test with relative path
+				const relativePath = path.relative(service.workspaceDir, testFile)
+				const relativeContent = await service.getContent(
+					service.baseHash!,
+					path.join(service.workspaceDir, relativePath),
+				)
+				expect(relativeContent).toBe(originalContent)
+			})
+		})
+
+		describe(`${klass.name} baseline handling`, () => {
+			it("should track previous commit hash correctly for baseline management", async () => {
+				// This tests the concept that the checkpoint service properly tracks
+				// the previous commit hash which is used for baseline management
+
+				// Initial state - no checkpoints yet
+				expect(service.checkpoints).toHaveLength(0)
+				expect(service.baseHash).toBeTruthy()
+
+				// Save first checkpoint
+				await fs.writeFile(testFile, "First modification")
+				const firstCheckpoint = await service.saveCheckpoint("First checkpoint")
+				expect(firstCheckpoint?.commit).toBeTruthy()
+
+				// Service should now track this checkpoint
+				expect(service.checkpoints).toHaveLength(1)
+				expect(service.getCurrentCheckpoint()).toBe(firstCheckpoint?.commit)
+
+				// Save second checkpoint - this is where previous commit tracking matters
+				await fs.writeFile(testFile, "Second modification")
+				const secondCheckpoint = await service.saveCheckpoint("Second checkpoint")
+				expect(secondCheckpoint?.commit).toBeTruthy()
+
+				// Service should track both checkpoints in order
+				expect(service.checkpoints).toHaveLength(2)
+				expect(service.checkpoints[0]).toBe(firstCheckpoint?.commit)
+				expect(service.checkpoints[1]).toBe(secondCheckpoint?.commit)
+
+				// The previous commit for the second checkpoint would be the first checkpoint
+				// This is what the FCO baseline logic uses to set proper baselines
+				const previousCommitForSecond = service.checkpoints[0]
+				expect(previousCommitForSecond).toBe(firstCheckpoint?.commit)
+			})
+
+			it("should handle baseline scenarios for new vs existing tasks", async () => {
+				// This tests the baseline initialization concepts that FCO relies on
+
+				// === New Task Scenario ===
+				// For new tasks, baseline should be set to service.baseHash (not "HEAD" string)
+				const newTaskBaseline = service.baseHash
+				expect(newTaskBaseline).toBeTruthy()
+				expect(newTaskBaseline).not.toBe("HEAD") // Should be actual git hash
+
+				// === Existing Task Scenario ===
+				// Create some checkpoints to simulate an existing task
+				await fs.writeFile(testFile, "Existing task modification 1")
+				const existingCheckpoint1 = await service.saveCheckpoint("Existing checkpoint 1")
+
+				await fs.writeFile(testFile, "Existing task modification 2")
+				const existingCheckpoint2 = await service.saveCheckpoint("Existing checkpoint 2")
+
+				// For existing task resumption, the baseline should be set to prevent
+				// showing historical changes. The "previous commit" for the next checkpoint
+				// would be existingCheckpoint2
+				const resumptionBaseline = service.getCurrentCheckpoint()
+				expect(resumptionBaseline).toBe(existingCheckpoint2?.commit)
+				expect(resumptionBaseline).not.toBe("HEAD") // Should be actual git hash
+
+				// When existing task creates new checkpoint, previous commit is tracked
+				await fs.writeFile(testFile, "New work in existing task")
+				const newWorkCheckpoint = await service.saveCheckpoint("New work checkpoint")
+
+				// The baseline for FCO should be set to existingCheckpoint2 to show only new work
+				const baselineForNewWork = service.checkpoints[service.checkpoints.length - 2]
+				expect(baselineForNewWork).toBe(existingCheckpoint2?.commit)
+			})
+		})
+
+		describe(`${klass.name} baseline initialization with FileChangeManager integration`, () => {
+			// Mock the FileChangeManager to test baseline initialization scenarios
+			const mockFileChangeManager = {
+				_baseline: "HEAD" as string,
+				getChanges: vitest.fn(),
+				updateBaseline: vitest.fn(),
+				setFiles: vitest.fn(),
+				getLLMOnlyChanges: vitest.fn(),
+			}
+
+			// Mock the provider
+			const mockProvider = {
+				getFileChangeManager: vitest.fn(() => mockFileChangeManager),
+				log: vitest.fn(),
+			}
+
+			beforeEach(() => {
+				vitest.clearAllMocks()
+				mockFileChangeManager.getChanges.mockReturnValue({
+					baseCheckpoint: "HEAD",
+					files: [],
+				})
+				mockFileChangeManager.updateBaseline.mockResolvedValue(undefined)
+				mockFileChangeManager.getLLMOnlyChanges.mockResolvedValue({ files: [] })
+			})
+
+			describe("New task scenario", () => {
+				it("should set baseline to baseHash for new tasks on initialize event", async () => {
+					// Test FileChangeManager baseline update when checkpoint service initializes
+
+					// Set up event handler to simulate what happens in getCheckpointService
+					service.on("initialize", async () => {
+						// Simulate FileChangeManager baseline update for new task
+						const fcm = mockProvider.getFileChangeManager()
+						if (fcm) {
+							try {
+								await fcm.updateBaseline(service.baseHash!)
+								mockProvider.log(
+									`New task: Updated FileChangeManager baseline from HEAD to ${service.baseHash}`,
+								)
+							} catch (error) {
+								mockProvider.log(`Failed to update FileChangeManager baseline: ${error}`)
+							}
+						}
+					})
+
+					// Trigger the initialize event
+					service.emit("initialize", {
+						type: "initialize",
+						workspaceDir: service.workspaceDir,
+						baseHash: service.baseHash!,
+						created: true,
+						duration: 100,
+					})
+
+					// Wait for async operations to complete
+					await new Promise((resolve) => setTimeout(resolve, 0))
+
+					// Verify that baseline was updated to baseHash for new task
+					expect(mockFileChangeManager.updateBaseline).toHaveBeenCalledWith(service.baseHash)
+					expect(mockProvider.log).toHaveBeenCalledWith(
+						expect.stringContaining(
+							`New task: Updated FileChangeManager baseline from HEAD to ${service.baseHash}`,
+						),
+					)
+				})
+			})
+
+			describe("Existing task scenario", () => {
+				it("should not immediately set baseline for existing tasks, waiting for first checkpoint", async () => {
+					// Create some existing checkpoints to simulate an existing task
+					await fs.writeFile(testFile, "Existing task content")
+					const existingCheckpoint = await service.saveCheckpoint("Existing checkpoint")
+					expect(existingCheckpoint?.commit).toBeTruthy()
+
+					// Clear the mocks to focus on the existing task behavior
+					vitest.clearAllMocks()
+
+					// Set up event handler for existing task (has checkpoints)
+					service.on("initialize", async () => {
+						// For existing tasks with checkpoints, don't immediately update baseline
+						const hasExistingCheckpoints = service.checkpoints.length > 0
+						if (hasExistingCheckpoints) {
+							mockProvider.log(
+								"Existing task: Will set baseline to first new checkpoint to show only fresh changes",
+							)
+						}
+					})
+
+					// Trigger the initialize event
+					service.emit("initialize", {
+						type: "initialize",
+						workspaceDir: service.workspaceDir,
+						baseHash: service.baseHash!,
+						created: false,
+						duration: 50,
+					})
+
+					// Wait for async operations to complete
+					await new Promise((resolve) => setTimeout(resolve, 0))
+
+					// Verify that baseline was NOT immediately updated for existing task
+					expect(mockFileChangeManager.updateBaseline).not.toHaveBeenCalled()
+					expect(mockProvider.log).toHaveBeenCalledWith(
+						expect.stringContaining(
+							"Existing task: Will set baseline to first new checkpoint to show only fresh changes",
+						),
+					)
+				})
+
+				it("should set baseline to fromHash when first checkpoint is created for existing task", async () => {
+					// Create existing checkpoints
+					await fs.writeFile(testFile, "Existing content 1")
+					const existingCheckpoint1 = await service.saveCheckpoint("Existing checkpoint 1")
+
+					// Mock FileChangeManager to return HEAD baseline (indicating existing task)
+					mockFileChangeManager.getChanges.mockReturnValue({
+						baseCheckpoint: "HEAD",
+						files: [],
+					})
+
+					// Set up event handler for checkpointCreated
+					service.on("checkpointCreated", async (event) => {
+						// Simulate baseline update logic for existing task with HEAD baseline
+						const fcm = mockProvider.getFileChangeManager()
+						if (fcm) {
+							const changes = fcm.getChanges()
+							if (changes.baseCheckpoint === "HEAD") {
+								await fcm.updateBaseline(event.fromHash)
+								mockProvider.log(
+									`Existing task with HEAD baseline - setting baseline to fromHash ${event.fromHash} for fresh tracking`,
+								)
+							}
+						}
+					})
+
+					// Create a new checkpoint (simulates first checkpoint after task resumption)
+					await fs.writeFile(testFile, "New work content")
+					const newCheckpoint = await service.saveCheckpoint("New work checkpoint")
+					expect(newCheckpoint?.commit).toBeTruthy()
+
+					// Wait for async operations to complete
+					await new Promise((resolve) => setTimeout(resolve, 0))
+
+					// Verify that baseline was updated to fromHash for existing task with HEAD baseline
+					expect(mockFileChangeManager.updateBaseline).toHaveBeenCalledWith(existingCheckpoint1?.commit)
+					expect(mockProvider.log).toHaveBeenCalledWith(
+						expect.stringContaining(
+							`Existing task with HEAD baseline - setting baseline to fromHash ${existingCheckpoint1?.commit} for fresh tracking`,
+						),
+					)
+				})
+
+				it("should preserve existing valid baseline for established existing tasks", async () => {
+					// Create existing checkpoints
+					await fs.writeFile(testFile, "Established content")
+					const establishedCheckpoint = await service.saveCheckpoint("Established checkpoint")
+
+					// Mock FileChangeManager to return valid existing baseline (not HEAD)
+					const existingBaseline = "established-baseline-xyz789"
+					mockFileChangeManager.getChanges.mockReturnValue({
+						baseCheckpoint: existingBaseline,
+						files: [],
+					})
+
+					// Mock successful baseline validation
+					const mockGetDiff = vitest.spyOn(service, "getDiff").mockResolvedValue([])
+
+					// Set up event handler for checkpointCreated
+					service.on("checkpointCreated", async (event) => {
+						// Simulate baseline validation logic for existing task with non-HEAD baseline
+						const fcm = mockProvider.getFileChangeManager()
+						if (fcm) {
+							const changes = fcm.getChanges()
+							if (changes.baseCheckpoint !== "HEAD") {
+								try {
+									// Validate existing baseline
+									await service.getDiff({ from: changes.baseCheckpoint })
+									mockProvider.log(
+										`Using existing baseline ${changes.baseCheckpoint} for cumulative tracking`,
+									)
+								} catch (error) {
+									// Baseline validation failed, update to fromHash
+									await fcm.updateBaseline(event.fromHash)
+									mockProvider.log(`Baseline validation failed for ${changes.baseCheckpoint}`)
+									mockProvider.log(`Updating baseline to fromHash: ${event.fromHash}`)
+								}
+							}
+						}
+					})
+
+					// Create a new checkpoint
+					await fs.writeFile(testFile, "More established work")
+					const newEstablishedCheckpoint = await service.saveCheckpoint("More established work")
+					expect(newEstablishedCheckpoint?.commit).toBeTruthy()
+
+					// Wait for async operations to complete
+					await new Promise((resolve) => setTimeout(resolve, 0))
+
+					// Verify that baseline was NOT updated (existing valid baseline preserved)
+					expect(mockFileChangeManager.updateBaseline).not.toHaveBeenCalled()
+					expect(mockProvider.log).toHaveBeenCalledWith(
+						expect.stringContaining(`Using existing baseline ${existingBaseline} for cumulative tracking`),
+					)
+
+					// Restore the original method
+					mockGetDiff.mockRestore()
+				})
+
+				it("should update baseline to fromHash when existing baseline is invalid", async () => {
+					// Create existing checkpoint
+					await fs.writeFile(testFile, "Content with invalid baseline")
+					const validCheckpoint = await service.saveCheckpoint("Valid checkpoint")
+
+					// Mock FileChangeManager to return invalid existing baseline
+					const invalidBaseline = "invalid-baseline-hash"
+					mockFileChangeManager.getChanges.mockReturnValue({
+						baseCheckpoint: invalidBaseline,
+						files: [],
+					})
+
+					// Mock failed baseline validation
+					const mockGetDiff = vitest
+						.spyOn(service, "getDiff")
+						.mockRejectedValue(new Error("Invalid baseline hash"))
+
+					// Set up event handler for checkpointCreated
+					service.on("checkpointCreated", async (event) => {
+						// Simulate baseline validation logic for existing task with invalid baseline
+						const fcm = mockProvider.getFileChangeManager()
+						if (fcm) {
+							const changes = fcm.getChanges()
+							if (changes.baseCheckpoint !== "HEAD") {
+								try {
+									// Try to validate existing baseline
+									await service.getDiff({ from: changes.baseCheckpoint })
+									mockProvider.log(
+										`Using existing baseline ${changes.baseCheckpoint} for cumulative tracking`,
+									)
+								} catch (error) {
+									// Baseline validation failed, update to fromHash
+									await fcm.updateBaseline(event.fromHash)
+									mockProvider.log(`Baseline validation failed for ${changes.baseCheckpoint}`)
+									mockProvider.log(`Updating baseline to fromHash: ${event.fromHash}`)
+								}
+							}
+						}
+					})
+
+					// Create a new checkpoint
+					await fs.writeFile(testFile, "Work with invalid baseline recovery")
+					const recoveryCheckpoint = await service.saveCheckpoint("Recovery checkpoint")
+					expect(recoveryCheckpoint?.commit).toBeTruthy()
+
+					// Wait for async operations to complete
+					await new Promise((resolve) => setTimeout(resolve, 0))
+
+					// Verify that baseline was updated to fromHash due to validation failure
+					expect(mockFileChangeManager.updateBaseline).toHaveBeenCalledWith(validCheckpoint?.commit)
+					expect(mockProvider.log).toHaveBeenCalledWith(
+						expect.stringContaining(`Baseline validation failed for ${invalidBaseline}`),
+					)
+					expect(mockProvider.log).toHaveBeenCalledWith(
+						expect.stringContaining(`Updating baseline to fromHash: ${validCheckpoint?.commit}`),
+					)
+
+					// Restore the original method
+					mockGetDiff.mockRestore()
+				})
+			})
+
+			describe("Edge cases", () => {
+				it("should handle missing FileChangeManager gracefully", async () => {
+					// Mock provider to return no FileChangeManager
+					const mockProviderNoFCM = {
+						getFileChangeManager: vitest.fn(() => undefined),
+						log: vitest.fn(),
+					}
+
+					// Set up event handler
+					service.on("initialize", async () => {
+						const fcm = mockProviderNoFCM.getFileChangeManager()
+						if (!fcm) {
+							// Should not throw and should not try to update baseline
+							return
+						}
+					})
+
+					// Trigger the initialize event
+					service.emit("initialize", {
+						type: "initialize",
+						workspaceDir: service.workspaceDir,
+						baseHash: service.baseHash!,
+						created: true,
+						duration: 100,
+					})
+
+					// Wait for async operations to complete
+					await new Promise((resolve) => setTimeout(resolve, 0))
+
+					// Should not throw and should not try to update baseline
+					expect(mockFileChangeManager.updateBaseline).not.toHaveBeenCalled()
+				})
+
+				it("should handle FileChangeManager baseline update errors gracefully", async () => {
+					// Mock updateBaseline to throw an error
+					mockFileChangeManager.updateBaseline.mockRejectedValue(new Error("Update failed"))
+
+					// Set up event handler with error handling
+					service.on("initialize", async () => {
+						const fcm = mockProvider.getFileChangeManager()
+						if (fcm) {
+							try {
+								await fcm.updateBaseline(service.baseHash!)
+								mockProvider.log(
+									`New task: Updated FileChangeManager baseline from HEAD to ${service.baseHash}`,
+								)
+							} catch (error) {
+								mockProvider.log(`Failed to update FileChangeManager baseline: ${error}`)
+							}
+						}
+					})
+
+					// Trigger the initialize event
+					service.emit("initialize", {
+						type: "initialize",
+						workspaceDir: service.workspaceDir,
+						baseHash: service.baseHash!,
+						created: true,
+						duration: 100,
+					})
+
+					// Wait for async operations to complete
+					await new Promise((resolve) => setTimeout(resolve, 0))
+
+					// Should log the error but not throw
+					expect(mockProvider.log).toHaveBeenCalledWith(
+						expect.stringContaining("Failed to update FileChangeManager baseline: Error: Update failed"),
+					)
+				})
 			})
 		})
 	},

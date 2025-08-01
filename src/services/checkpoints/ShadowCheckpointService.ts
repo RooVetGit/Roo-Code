@@ -346,6 +346,27 @@ export abstract class ShadowCheckpointService extends EventEmitter {
 		return this.git.show([`${commitHash}:${relativePath}`])
 	}
 
+	public async getCheckpointTimestamp(commitHash: string): Promise<number | null> {
+		if (!this.git) {
+			throw new Error("Shadow git repo not initialized")
+		}
+
+		try {
+			// Use git show to get commit timestamp in Unix format
+			const result = await this.git.raw(["show", "-s", "--format=%ct", commitHash])
+			const unixTimestamp = parseInt(result.trim(), 10)
+
+			if (!isNaN(unixTimestamp)) {
+				return unixTimestamp * 1000 // Convert to milliseconds
+			}
+
+			return null
+		} catch (error) {
+			this.log(`Failed to get timestamp for commit ${commitHash}: ${error}`)
+			return null
+		}
+	}
+
 	/**
 	 * EventEmitter
 	 */
