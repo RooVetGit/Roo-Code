@@ -154,100 +154,118 @@ const TaskHeader = ({
 						</div>
 						{task.images && task.images.length > 0 && <Thumbnails images={task.images} />}
 
-						<div className="flex flex-col gap-1">
-							{contextWindow > 0 && (
-								<div
-									className={`w-full flex ${windowWidth < 400 ? "flex-col" : "flex-row"} gap-1 h-auto`}>
-									<div className="flex items-center gap-1 flex-shrink-0">
-										<span className="font-bold" data-testid="context-window-label">
-											{t("chat:task.contextWindow")}
-										</span>
-									</div>
-									<ContextWindowProgress
-										contextWindow={contextWindow}
-										contextTokens={contextTokens || 0}
-										maxTokens={
-											model
-												? getModelMaxOutputTokens({
-														modelId,
-														model,
-														settings: apiConfiguration,
-													})
-												: undefined
-										}
-									/>
-									{condenseButton}
-								</div>
-							)}
-
-							<div className="flex items-center gap-1 flex-wrap h-[20px]">
-								<span className="font-bold">{t("chat:task.tokens")}</span>
-								{typeof tokensIn === "number" && tokensIn > 0 && (
-									<span className="flex items-center gap-0.5">
-										<i className="codicon codicon-arrow-up text-xs font-bold" />
-										{formatLargeNumber(tokensIn)}
-									</span>
-								)}
-								{typeof tokensOut === "number" && tokensOut > 0 && (
-									<span className="flex items-center gap-0.5">
-										<i className="codicon codicon-arrow-down text-xs font-bold" />
-										{formatLargeNumber(tokensOut)}
-									</span>
-								)}
-							</div>
-
-							{((typeof cacheReads === "number" && cacheReads > 0) ||
-								(typeof cacheWrites === "number" && cacheWrites > 0)) && (
-								<div className="flex items-center gap-1 flex-wrap h-[20px]">
-									<span className="font-bold">{t("chat:task.cache")}</span>
-									{typeof cacheWrites === "number" && cacheWrites > 0 && (
-										<span className="flex items-center gap-0.5">
-											<CloudUpload size={16} />
-											{formatLargeNumber(cacheWrites)}
-										</span>
+						<div className="border-t border-b border-vscode-panel-border/50 py-4 mt-2 mb-1">
+							<table className="w-full">
+								<tbody>
+									{contextWindow > 0 && (
+										<tr>
+											<th
+												className="font-bold text-left align-top w-1 whitespace-nowrap pl-1 pr-2 h-[24px]"
+												data-testid="context-window-label">
+												{t("chat:task.contextWindow")}
+											</th>
+											<td className="align-top">
+												<div
+													className={`max-w-64 flex ${windowWidth < 400 ? "flex-col" : "flex-row"} gap-1 h-auto`}>
+													<ContextWindowProgress
+														contextWindow={contextWindow}
+														contextTokens={contextTokens || 0}
+														maxTokens={
+															model
+																? getModelMaxOutputTokens({
+																		modelId,
+																		model,
+																		settings: apiConfiguration,
+																	})
+																: undefined
+														}
+													/>
+													{condenseButton}
+												</div>
+											</td>
+										</tr>
 									)}
-									{typeof cacheReads === "number" && cacheReads > 0 && (
-										<span className="flex items-center gap-0.5">
-											<CloudDownload size={16} />
-											{formatLargeNumber(cacheReads)}
-										</span>
+
+									<tr>
+										<th className="font-bold text-left align-top w-1 whitespace-nowrap pl-1 pr-2  h-[24px]">
+											{t("chat:task.tokens")}
+										</th>
+										<td className="align-top">
+											<div className="flex items-center gap-1 flex-wrap">
+												{typeof tokensIn === "number" && tokensIn > 0 && (
+													<span>↑ {formatLargeNumber(tokensIn)}</span>
+												)}
+												{typeof tokensOut === "number" && tokensOut > 0 && (
+													<span>↓ {formatLargeNumber(tokensOut)}</span>
+												)}
+											</div>
+										</td>
+									</tr>
+
+									{((typeof cacheReads === "number" && cacheReads > 0) ||
+										(typeof cacheWrites === "number" && cacheWrites > 0)) && (
+										<tr>
+											<th className="font-bold text-left align-top w-1 whitespace-nowrap pl-1 pr-2  h-[24px]">
+												{t("chat:task.cache")}
+											</th>
+											<td className="align-top">
+												<div className="flex items-center gap-1 flex-wrap">
+													{typeof cacheWrites === "number" && cacheWrites > 0 && (
+														<span className="flex items-center gap-1">
+															<CloudUpload size={14} />
+															{formatLargeNumber(cacheWrites)}
+														</span>
+													)}
+													{typeof cacheReads === "number" && cacheReads > 0 && (
+														<span className="flex items-center gap-1">
+															<CloudDownload size={14} />
+															{formatLargeNumber(cacheReads)}
+														</span>
+													)}
+												</div>
+											</td>
+										</tr>
 									)}
-								</div>
-							)}
 
-							{!!totalCost && (
-								<div className="flex items-center gap-1 h-[20px]">
-									<span className="font-bold">{t("chat:task.apiCost")}</span>
-									<span>${totalCost?.toFixed(2)}</span>
-								</div>
-							)}
+									{!!totalCost && (
+										<tr>
+											<th className="font-bold text-left align-top w-1 whitespace-nowrap pl-1 pr-2  h-[24px]">
+												{t("chat:task.apiCost")}
+											</th>
+											<td className="align-top">
+												<span>${totalCost?.toFixed(2)}</span>
+											</td>
+										</tr>
+									)}
 
-							{/* Cache size display */}
-							{((typeof cacheReads === "number" && cacheReads > 0) ||
-								(typeof cacheWrites === "number" && cacheWrites > 0)) && (
-								<div className="flex items-center gap-1 h-[20px]">
-									<span className="font-bold">Cache size</span>
-									<span className="text-xs text-vscode-foreground opacity-85">
-										{prettyBytes(((cacheReads || 0) + (cacheWrites || 0)) * 4)}
-									</span>
-								</div>
-							)}
+									{/* Cache size display */}
+									{((typeof cacheReads === "number" && cacheReads > 0) ||
+										(typeof cacheWrites === "number" && cacheWrites > 0)) && (
+										<tr>
+											<th className="font-bold text-left align-top w-1 whitespace-nowrap pl-1 pr-2  h-[24px]">
+												Cache size
+											</th>
+											<td className="align-top">
+												{prettyBytes(((cacheReads || 0) + (cacheWrites || 0)) * 4)}
+											</td>
+										</tr>
+									)}
 
-							{/* Size display */}
-							{!!currentTaskItem?.size && currentTaskItem.size > 0 && (
-								<div className="flex items-center gap-1 h-[20px]">
-									<span className="font-bold">Size</span>
-									<span className="text-xs text-vscode-foreground opacity-85">
-										{prettyBytes(currentTaskItem.size)}
-									</span>
-								</div>
-							)}
+									{/* Size display */}
+									{!!currentTaskItem?.size && currentTaskItem.size > 0 && (
+										<tr>
+											<th className="font-bold text-left align-top w-1 whitespace-nowrap pl-1 pr-2  h-[20px]">
+												Size
+											</th>
+											<td className="align-top">{prettyBytes(currentTaskItem.size)}</td>
+										</tr>
+									)}
+								</tbody>
+							</table>
 						</div>
 
 						{/* Footer with task management buttons */}
-						<div
-							className="border-t border-vscode-panel-border/50 pt-2 mt-2"
-							onClick={(e) => e.stopPropagation()}>
+						<div onClick={(e) => e.stopPropagation()}>
 							<TaskActions item={currentTaskItem} buttonsDisabled={buttonsDisabled} />
 						</div>
 					</>
