@@ -1806,6 +1806,7 @@ export class Task extends EventEmitter<TaskEvents> {
 			customModes,
 			customModePrompts,
 			customInstructions,
+			customInstructionPaths,
 			experiments,
 			enableMcpServerCreation,
 			browserToolEnabled,
@@ -1843,6 +1844,7 @@ export class Task extends EventEmitter<TaskEvents> {
 					maxConcurrentFileReads: maxConcurrentFileReads ?? 5,
 					todoListEnabled: apiConfiguration?.todoListEnabled ?? true,
 					useAgentRules: vscode.workspace.getConfiguration("roo-cline").get<boolean>("useAgentRules") ?? true,
+					customInstructionPaths,
 				},
 			)
 		})()
