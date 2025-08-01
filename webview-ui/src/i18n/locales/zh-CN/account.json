@@ -11,7 +11,7 @@
 	"cloudBenefitSharing": "共享和协作功能",
 	"cloudBenefitMetrics": "基于任务、Token 和成本的使用指标",
 	"visitCloudWebsite": "访问 Roo Code Cloud",
-	"telemetryOnline": "Telemetry Connected",
+	"telemetryOnline": "遥测已连接",
 	"telemetryOffline": "Telemetry Disconnected",
 	"telemetryQueued": "events queued"
 }
