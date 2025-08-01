@@ -381,7 +381,11 @@ export class QdrantVectorStore implements IVectorStore {
 					// Don't create a filter - search entire workspace
 					filter = undefined
 				} else {
-					const segments = normalizedPrefix.split("/").filter(Boolean)
+					// Remove leading "./" from paths like "./src" to normalize them
+					const cleanedPrefix = normalizedPrefix.startsWith("./")
+						? normalizedPrefix.slice(2)
+						: normalizedPrefix
+					const segments = cleanedPrefix.split("/").filter(Boolean)
 					if (segments.length > 0) {
 						filter = {
 							must: segments.map((segment, index) => ({

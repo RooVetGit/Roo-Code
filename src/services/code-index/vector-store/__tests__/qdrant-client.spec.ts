@@ -1679,14 +1679,10 @@ describe("QdrantVectorStore", () => {
 						must: [
 							{
 								key: "pathSegments.0",
-								match: { value: "." },
-							},
-							{
-								key: "pathSegments.1",
 								match: { value: "src" },
 							},
 						],
-					}, // Should still create filter for actual relative paths
+					}, // Should normalize "./src" to "src"
 					score_threshold: DEFAULT_SEARCH_MIN_SCORE,
 					limit: DEFAULT_MAX_SEARCH_RESULTS,
 					params: {
