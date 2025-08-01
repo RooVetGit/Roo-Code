@@ -1,8 +1,8 @@
 import { memo, useRef, useState } from "react"
 import { useWindowSize } from "react-use"
 import { useTranslation } from "react-i18next"
-import { VSCodeBadge } from "@vscode/webview-ui-toolkit/react"
-import { CloudUpload, CloudDownload, FoldVertical } from "lucide-react"
+import { CloudUpload, CloudDownload, FoldVertical, ChevronUp } from "lucide-react"
+import prettyBytes from "pretty-bytes"
 
 import type { ClineMessage } from "@roo-code/types"
 
@@ -10,7 +10,7 @@ import { getModelMaxOutputTokens } from "@roo/api"
 
 import { formatLargeNumber } from "@src/utils/format"
 import { cn } from "@src/lib/utils"
-import { Button, StandardTooltip } from "@src/components/ui"
+import { StandardTooltip } from "@src/components/ui"
 import { useExtensionState } from "@src/context/ExtensionStateContext"
 import { useSelectedModel } from "@/components/ui/hooks/useSelectedModel"
 
@@ -32,7 +32,6 @@ export interface TaskHeaderProps {
 	contextTokens: number
 	buttonsDisabled: boolean
 	handleCondenseContext: (taskId: string) => void
-	onClose: () => void
 	todos?: any[]
 }
 
@@ -46,7 +45,6 @@ const TaskHeader = ({
 	contextTokens,
 	buttonsDisabled,
 	handleCondenseContext,
-	onClose,
 	todos,
 }: TaskHeaderProps) => {
 	const { t } = useTranslation()
@@ -74,55 +72,67 @@ const TaskHeader = ({
 	const hasTodos = todos && Array.isArray(todos) && todos.length > 0
 
 	return (
-		<div className="py-2 px-3">
+		<div className="pt-2 pb-0 px-3">
 			<div
 				className={cn(
-					"p-2.5 flex flex-col gap-1.5 relative z-1 border",
+					"p-2.5 flex flex-col gap-1.5 relative z-1 cursor-pointer",
+					"bg-vscode-button-secondaryBackground hover:bg-vscode-button-secondaryBackground/90",
+					"text-vscode-foreground/80 hover:text-vscode-foreground",
+					"transition-colors duration-150",
 					hasTodos ? "rounded-t-xs border-b-0" : "rounded-xs",
-					isTaskExpanded
-						? "border-vscode-panel-border text-vscode-foreground"
-						: "border-vscode-panel-border/80 text-vscode-foreground/80",
-				)}>
-				<div className="flex justify-between items-center gap-2">
-					<div
-						className="flex items-center cursor-pointer -ml-0.5 select-none grow min-w-0"
-						onClick={() => setIsTaskExpanded(!isTaskExpanded)}>
-						<div className="flex items-center shrink-0">
-							<span className={`codicon codicon-chevron-${isTaskExpanded ? "down" : "right"}`}></span>
+				)}
+				onClick={(e) => {
+					// Don't expand if clicking on buttons or interactive elements
+					if (
+						e.target instanceof Element &&
+						(e.target.closest("button") ||
+							e.target.closest('[role="button"]') ||
+							e.target.closest(".share-button") ||
+							e.target.closest("[data-radix-popper-content-wrapper]") ||
+							e.target.closest("img") ||
+							e.target.tagName === "IMG")
+					) {
+						return
+					}
+
+					// Don't expand/collapse if user is selecting text
+					const selection = window.getSelection()
+					if (selection && selection.toString().length > 0) {
+						return
+					}
+
+					setIsTaskExpanded(!isTaskExpanded)
+				}}>
+				<div className="flex justify-between items-center gap-0">
+					<div className="flex items-center select-none grow min-w-0">
+						<div className="whitespace-nowrap overflow-hidden text-ellipsis grow min-w-0">
+							{isTaskExpanded && <span className="font-bold">Task Details</span>}
+							{!isTaskExpanded && <Mention text={task.text} />}
 						</div>
-						<div className="ml-1.5 whitespace-nowrap overflow-hidden text-ellipsis grow min-w-0">
-							<span className="font-bold">
-								{t("chat:task.title")}
-								{!isTaskExpanded && ":"}
-							</span>
-							{!isTaskExpanded && (
-								<span className="ml-1">
-									<Mention text={task.text} />
-								</span>
-							)}
-						</div>
+						{isTaskExpanded && (
+							<div className="flex items-center shrink-0 ml-2" onClick={(e) => e.stopPropagation()}>
+								<StandardTooltip content={t("chat:task.collapse")}>
+									<button
+										onClick={() => setIsTaskExpanded(false)}
+										className="shrink-0 min-h-[20px] min-w-[20px] p-[2px] cursor-pointer opacity-85 hover:opacity-100 bg-transparent border-none rounded-md">
+										<ChevronUp size={16} />
+									</button>
+								</StandardTooltip>
+							</div>
+						)}
 					</div>
-					<StandardTooltip content={t("chat:task.closeAndStart")}>
-						<Button variant="ghost" size="icon" onClick={onClose} className="shrink-0 w-5 h-5">
-							<span className="codicon codicon-close" />
-						</Button>
-					</StandardTooltip>
+					{!isTaskExpanded && (
+						<div className="share-button" onClick={(e) => e.stopPropagation()}>
+							<ShareButton item={currentTaskItem} disabled={buttonsDisabled} />
+						</div>
+					)}
 				</div>
-				{/* Collapsed state: Track context and cost if we have any */}
 				{!isTaskExpanded && contextWindow > 0 && (
-					<div className={`w-full flex flex-row items-center gap-1 h-auto`}>
-						<ContextWindowProgress
-							contextWindow={contextWindow}
-							contextTokens={contextTokens || 0}
-							maxTokens={
-								model
-									? getModelMaxOutputTokens({ modelId, model, settings: apiConfiguration })
-									: undefined
-							}
-						/>
-						{condenseButton}
-						<ShareButton item={currentTaskItem} disabled={buttonsDisabled} />
-						{!!totalCost && <VSCodeBadge>${totalCost.toFixed(2)}</VSCodeBadge>}
+					<div className="flex items-center gap-2 text-sm" onClick={(e) => e.stopPropagation()}>
+						<span>
+							{formatLargeNumber(contextTokens || 0)} / {formatLargeNumber(contextWindow)}
+						</span>
+						{!!totalCost && <span>${totalCost.toFixed(2)}</span>}
 					</div>
 				)}
 				{/* Expanded state: Show task text and images */}
@@ -145,7 +155,7 @@ const TaskHeader = ({
 						{task.images && task.images.length > 0 && <Thumbnails images={task.images} />}
 
 						<div className="flex flex-col gap-1">
-							{isTaskExpanded && contextWindow > 0 && (
+							{contextWindow > 0 && (
 								<div
 									className={`w-full flex ${windowWidth < 400 ? "flex-col" : "flex-row"} gap-1 h-auto`}>
 									<div className="flex items-center gap-1 flex-shrink-0">
@@ -169,23 +179,21 @@ const TaskHeader = ({
 									{condenseButton}
 								</div>
 							)}
-							<div className="flex justify-between items-center h-[20px]">
-								<div className="flex items-center gap-1 flex-wrap">
-									<span className="font-bold">{t("chat:task.tokens")}</span>
-									{typeof tokensIn === "number" && tokensIn > 0 && (
-										<span className="flex items-center gap-0.5">
-											<i className="codicon codicon-arrow-up text-xs font-bold" />
-											{formatLargeNumber(tokensIn)}
-										</span>
-									)}
-									{typeof tokensOut === "number" && tokensOut > 0 && (
-										<span className="flex items-center gap-0.5">
-											<i className="codicon codicon-arrow-down text-xs font-bold" />
-											{formatLargeNumber(tokensOut)}
-										</span>
-									)}
-								</div>
-								{!totalCost && <TaskActions item={currentTaskItem} buttonsDisabled={buttonsDisabled} />}
+
+							<div className="flex items-center gap-1 flex-wrap h-[20px]">
+								<span className="font-bold">{t("chat:task.tokens")}</span>
+								{typeof tokensIn === "number" && tokensIn > 0 && (
+									<span className="flex items-center gap-0.5">
+										<i className="codicon codicon-arrow-up text-xs font-bold" />
+										{formatLargeNumber(tokensIn)}
+									</span>
+								)}
+								{typeof tokensOut === "number" && tokensOut > 0 && (
+									<span className="flex items-center gap-0.5">
+										<i className="codicon codicon-arrow-down text-xs font-bold" />
+										{formatLargeNumber(tokensOut)}
+									</span>
+								)}
 							</div>
 
 							{((typeof cacheReads === "number" && cacheReads > 0) ||
@@ -208,14 +216,39 @@ const TaskHeader = ({
 							)}
 
 							{!!totalCost && (
-								<div className="flex justify-between items-center h-[20px]">
-									<div className="flex items-center gap-1">
-										<span className="font-bold">{t("chat:task.apiCost")}</span>
-										<span>${totalCost?.toFixed(2)}</span>
-									</div>
-									<TaskActions item={currentTaskItem} buttonsDisabled={buttonsDisabled} />
+								<div className="flex items-center gap-1 h-[20px]">
+									<span className="font-bold">{t("chat:task.apiCost")}</span>
+									<span>${totalCost?.toFixed(2)}</span>
 								</div>
 							)}
+
+							{/* Cache size display */}
+							{((typeof cacheReads === "number" && cacheReads > 0) ||
+								(typeof cacheWrites === "number" && cacheWrites > 0)) && (
+								<div className="flex items-center gap-1 h-[20px]">
+									<span className="font-bold">Cache size</span>
+									<span className="text-xs text-vscode-foreground opacity-85">
+										{prettyBytes(((cacheReads || 0) + (cacheWrites || 0)) * 4)}
+									</span>
+								</div>
+							)}
+
+							{/* Size display */}
+							{!!currentTaskItem?.size && currentTaskItem.size > 0 && (
+								<div className="flex items-center gap-1 h-[20px]">
+									<span className="font-bold">Size</span>
+									<span className="text-xs text-vscode-foreground opacity-85">
+										{prettyBytes(currentTaskItem.size)}
+									</span>
+								</div>
+							)}
+						</div>
+
+						{/* Footer with task management buttons */}
+						<div
+							className="border-t border-vscode-panel-border/50 pt-2 mt-2"
+							onClick={(e) => e.stopPropagation()}>
+							<TaskActions item={currentTaskItem} buttonsDisabled={buttonsDisabled} />
 						</div>
 					</>
 				)}
