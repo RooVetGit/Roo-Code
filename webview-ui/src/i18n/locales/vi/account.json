@@ -11,7 +11,7 @@
 	"cloudBenefitSharing": "Tính năng chia sẻ và cộng tác",
 	"cloudBenefitMetrics": "Số liệu sử dụng dựa trên tác vụ, token và chi phí",
 	"visitCloudWebsite": "Truy cập Roo Code Cloud",
-	"telemetryOnline": "Telemetry Connected",
+	"telemetryOnline": "Đã kết nối Telemetry",
 	"telemetryOffline": "Telemetry Disconnected",
 	"telemetryQueued": "events queued"
 }
