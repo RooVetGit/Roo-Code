@@ -1,4 +1,5 @@
 // npx vitest run src/__tests__/TelemetryQueue.test.ts
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest"
 import { TelemetryQueue } from "../TelemetryQueue"
