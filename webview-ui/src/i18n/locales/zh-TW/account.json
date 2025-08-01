@@ -10,5 +10,8 @@
 	"cloudBenefitHistory": "線上工作歷史",
 	"cloudBenefitSharing": "分享和協作功能",
 	"cloudBenefitMetrics": "基於工作、Token 和成本的使用指標",
-	"visitCloudWebsite": "造訪 Roo Code Cloud"
+	"visitCloudWebsite": "造訪 Roo Code Cloud",
+	"telemetryOnline": "Telemetry Connected",
+	"telemetryOffline": "Telemetry Disconnected",
+	"telemetryQueued": "events queued"
 }

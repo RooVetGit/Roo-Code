@@ -10,5 +10,8 @@
 	"cloudBenefitHistory": "Riwayat tugas online",
 	"cloudBenefitSharing": "Fitur berbagi dan kolaborasi",
 	"cloudBenefitMetrics": "Metrik penggunaan berdasarkan tugas, token, dan biaya",
-	"visitCloudWebsite": "Kunjungi Roo Code Cloud"
+	"visitCloudWebsite": "Kunjungi Roo Code Cloud",
+	"telemetryOnline": "Telemetry Connected",
+	"telemetryOffline": "Telemetry Disconnected",
+	"telemetryQueued": "events queued"
 }

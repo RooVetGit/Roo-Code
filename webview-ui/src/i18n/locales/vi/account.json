@@ -10,5 +10,8 @@
 	"cloudBenefitHistory": "Lịch sử tác vụ trực tuyến",
 	"cloudBenefitSharing": "Tính năng chia sẻ và cộng tác",
 	"cloudBenefitMetrics": "Số liệu sử dụng dựa trên tác vụ, token và chi phí",
-	"visitCloudWebsite": "Truy cập Roo Code Cloud"
+	"visitCloudWebsite": "Truy cập Roo Code Cloud",
+	"telemetryOnline": "Telemetry Connected",
+	"telemetryOffline": "Telemetry Disconnected",
+	"telemetryQueued": "events queued"
 }

@@ -18,6 +18,8 @@ vi.mock("@roo-code/cloud", () => ({
 			hasActiveSession: vi.fn(),
 			hasOrIsAcquiringActiveSession: vi.fn(),
 			getOrganizationId: vi.fn(),
+			getTelemetryConnectionStatus: vi.fn().mockReturnValue("online"),
+			getTelemetryQueueSize: vi.fn().mockReturnValue(0),
 		},
 	},
 	getClerkBaseUrl: vi.fn(),

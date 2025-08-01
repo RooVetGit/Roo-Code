@@ -319,6 +319,8 @@ vi.mock("@roo-code/cloud", () => ({
 		get instance() {
 			return {
 				isAuthenticated: vi.fn().mockReturnValue(false),
+				getTelemetryConnectionStatus: vi.fn().mockReturnValue("online"),
+				getTelemetryQueueSize: vi.fn().mockReturnValue(0),
 			}
 		},
 	},

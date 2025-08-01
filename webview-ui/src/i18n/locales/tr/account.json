@@ -10,5 +10,8 @@
 	"cloudBenefitHistory": "Çevrimiçi görev geçmişi",
 	"cloudBenefitSharing": "Paylaşım ve işbirliği özellikleri",
 	"cloudBenefitMetrics": "Görev, token ve maliyet tabanlı kullanım metrikleri",
-	"visitCloudWebsite": "Roo Code Cloud'u ziyaret et"
+	"visitCloudWebsite": "Roo Code Cloud'u ziyaret et",
+	"telemetryOnline": "Telemetry Connected",
+	"telemetryOffline": "Telemetry Disconnected",
+	"telemetryQueued": "events queued"
 }

@@ -10,5 +10,8 @@
 	"cloudBenefitHistory": "ऑनलाइन कार्य इतिहास",
 	"cloudBenefitSharing": "साझाकरण और सहयोग सुविधाएं",
 	"cloudBenefitMetrics": "कार्य, token और लागत आधारित उपयोग मेट्रिक्स",
-	"visitCloudWebsite": "Roo Code Cloud पर जाएं"
+	"visitCloudWebsite": "Roo Code Cloud पर जाएं",
+	"telemetryOnline": "Telemetry Connected",
+	"telemetryOffline": "Telemetry Disconnected",
+	"telemetryQueued": "events queued"
 }
