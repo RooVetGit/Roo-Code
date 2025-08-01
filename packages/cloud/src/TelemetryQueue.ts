@@ -202,7 +202,14 @@ export class TelemetryQueue {
 	}
 
 	private async saveQueueState(): Promise<void> {
+private async saveQueueState(): Promise<void> {
+	try {
 		await this.context.globalState.update(TelemetryQueue.QUEUE_STATE_KEY, this.queueState)
+	} catch (error) {
+		console.error(`[TelemetryQueue] Failed to save queue state: ${error}`)
+		// Continue operation even if persistence fails
+	}
+}
 	}
 
 	private calculateRetryDelay(retryCount: number): number {
