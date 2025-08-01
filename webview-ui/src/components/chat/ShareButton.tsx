@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react"
 import { useTranslation } from "react-i18next"
+import { Share } from "lucide-react"
 
 import type { HistoryItem, ShareVisibility } from "@roo-code/types"
 import { TelemetryEventName } from "@roo-code/types"
@@ -159,7 +160,7 @@ export const ShareButton = ({ item, disabled = false }: ShareButtonProps) => {
 								disabled={disabled || shareButtonState.disabled}
 								className="h-7 w-7 p-1.5 hover:bg-vscode-toolbar-hoverBackground"
 								onClick={handleShareButtonClick}>
-								<span className="codicon codicon-link"></span>
+								<Share size={16} />
 							</Button>
 						</PopoverTrigger>
 					</StandardTooltip>
@@ -221,7 +222,7 @@ export const ShareButton = ({ item, disabled = false }: ShareButtonProps) => {
 						disabled={disabled || shareButtonState.disabled}
 						className="h-7 w-7 p-1.5 hover:bg-vscode-toolbar-hoverBackground"
 						onClick={handleShareButtonClick}>
-						<span className="codicon codicon-link"></span>
+						<Share size={16} />
 					</Button>
 				</StandardTooltip>
 			)}
