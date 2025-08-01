@@ -376,12 +376,12 @@ export class QdrantVectorStore implements IVectorStore {
 
 			if (directoryPrefix) {
 				// Check if the path represents current directory
-				const normalizedPrefix = directoryPrefix.replace(/\\/g, "/").replace(/\/+$/, "")
+				const normalizedPrefix = directoryPrefix.toPosix()
 				if (normalizedPrefix === "." || normalizedPrefix === "" || normalizedPrefix === "./") {
 					// Don't create a filter - search entire workspace
 					filter = undefined
 				} else {
-					const segments = directoryPrefix.split(path.sep).filter(Boolean)
+					const segments = normalizedPrefix.split("/").filter(Boolean)
 					if (segments.length > 0) {
 						filter = {
 							must: segments.map((segment, index) => ({
