@@ -61,5 +61,6 @@ export const cerebrasModels = {
 		inputPrice: 0,
 		outputPrice: 0,
 		description: "SOTA performance with ~1500 tokens/s",
+		supportsReasoningEffort: true,
 	},
 } as const satisfies Record<string, ModelInfo>
