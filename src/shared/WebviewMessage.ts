@@ -259,6 +259,8 @@ export interface WebviewMessage {
 		codebaseIndexEnabled: boolean
 		codebaseIndexQdrantUrl: string
 		codebaseIndexEmbedderProvider: "openai" | "ollama" | "openai-compatible" | "gemini" | "mistral"
+		codebaseIndexVectorStoreProvider?: "local" | "qdrant"
+		codebaseIndexLocalVectorStoreDirectory?: string
 		codebaseIndexEmbedderBaseUrl?: string
 		codebaseIndexEmbedderModelId: string
 		codebaseIndexEmbedderModelDimension?: number // Generic dimension for all providers
