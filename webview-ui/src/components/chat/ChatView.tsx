@@ -1,7 +1,7 @@
 import { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from "react"
 import { useDeepCompareEffect, useEvent, useMount } from "react-use"
 import debounce from "debounce"
-import { Virtuoso, type VirtuosoHandle } from "react-virtuoso"
+import { Virtuoso, type VirtuosoHandle, type ListRange } from "react-virtuoso"
 import removeMd from "remove-markdown"
 import { VSCodeButton } from "@vscode/webview-ui-toolkit/react"
 import useSound from "use-sound"
@@ -188,6 +188,19 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 	const autoApproveTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 	const userRespondedRef = useRef<boolean>(false)
 	const [currentFollowUpTs, setCurrentFollowUpTs] = useState<number | null>(null)
+
+	// Pagination state - Initialize to show last 20 messages
+	const [visibleRange, setVisibleRange] = useState(() => {
+		// Initialize with a default range that will be updated when messages load
+		return { start: 0, end: 20 }
+	})
+	const [isLoadingTop, setIsLoadingTop] = useState(false)
+	const [isLoadingBottom, setIsLoadingBottom] = useState(false)
+
+	// Buffer configuration
+	const VISIBLE_MESSAGE_COUNT = 20
+	const BUFFER_SIZE = 20
+	const LOAD_THRESHOLD = 5 // Load more when within 5 messages of edge
 
 	const clineAskRef = useRef(clineAsk)
 	useEffect(() => {
@@ -451,6 +464,15 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 		// Clear retry counts
 		retryCountRef.current.clear()
 	}, [task?.ts])
+
+	// Separate effect to handle initial pagination setup when task changes
+	useEffect(() => {
+		if (task) {
+			// Reset pagination state when task changes
+			// The actual range will be set when messages are processed
+			setVisibleRange({ start: 0, end: VISIBLE_MESSAGE_COUNT })
+		}
+	}, [task?.ts, task, VISIBLE_MESSAGE_COUNT])
 
 	useEffect(() => {
 		if (isHidden) {
@@ -1306,6 +1328,214 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 		return result
 	}, [isCondensing, visibleMessages])
 
+	// Update visible range when groupedMessages changes
+	useEffect(() => {
+		if (groupedMessages.length > 0) {
+			setVisibleRange((prev) => {
+				const totalMessages = groupedMessages.length
+
+				// If this looks like initial load (we're at default range and have many messages)
+				if (prev.start === 0 && prev.end === VISIBLE_MESSAGE_COUNT && totalMessages > VISIBLE_MESSAGE_COUNT) {
+					// Start at the bottom of the conversation
+					return {
+						start: Math.max(0, totalMessages - VISIBLE_MESSAGE_COUNT),
+						end: totalMessages,
+					}
+				}
+
+				// If we're already at the end and new messages arrived, adjust to include them
+				if (prev.end === totalMessages - 1 || (isAtBottom && totalMessages > prev.end)) {
+					return {
+						start: Math.max(0, totalMessages - VISIBLE_MESSAGE_COUNT),
+						end: totalMessages,
+					}
+				}
+
+				// Otherwise keep current range
+				return prev
+			})
+		}
+	}, [groupedMessages.length, isAtBottom])
+
+	// Message windowing logic
+	const windowedMessages = useMemo(() => {
+		const totalWindowSize = VISIBLE_MESSAGE_COUNT + BUFFER_SIZE * 2 // 60 messages total
+
+		// Handle small conversations (less than total window size)
+		if (groupedMessages.length <= totalWindowSize) {
+			return {
+				messages: groupedMessages,
+				startIndex: 0,
+				endIndex: groupedMessages.length,
+				totalCount: groupedMessages.length,
+				startPadding: 0,
+				endPadding: 0,
+			}
+		}
+
+		// Calculate the window with buffers
+		const bufferStart = Math.max(0, visibleRange.start - BUFFER_SIZE)
+		const bufferEnd = Math.min(groupedMessages.length, visibleRange.end + BUFFER_SIZE)
+
+		// Slice the messages array
+		const windowed = groupedMessages.slice(bufferStart, bufferEnd)
+
+		// Add placeholder items for virtualization
+		const startPadding = bufferStart
+		const endPadding = Math.max(0, groupedMessages.length - bufferEnd)
+
+		return {
+			messages: windowed,
+			startIndex: bufferStart,
+			endIndex: bufferEnd,
+			totalCount: groupedMessages.length,
+			startPadding,
+			endPadding,
+		}
+	}, [groupedMessages, visibleRange])
+
+	// Loading functions
+	const loadMoreMessagesTop = useCallback(() => {
+		setIsLoadingTop(true)
+
+		// Simulate async loading with setTimeout (in real implementation, this would be instant)
+		setTimeout(() => {
+			setVisibleRange((prev) => ({
+				start: Math.max(0, prev.start - VISIBLE_MESSAGE_COUNT),
+				end: prev.end,
+			}))
+			setIsLoadingTop(false)
+		}, 100)
+	}, [])
+
+	const loadMoreMessagesBottom = useCallback(() => {
+		setIsLoadingBottom(true)
+
+		setTimeout(() => {
+			setVisibleRange((prev) => ({
+				start: prev.start,
+				end: Math.min(groupedMessages.length, prev.end + VISIBLE_MESSAGE_COUNT),
+			}))
+			setIsLoadingBottom(false)
+		}, 100)
+	}, [groupedMessages.length])
+
+	// Debounced range change handler to prevent excessive updates
+	const debouncedRangeChanged = useMemo(
+		() =>
+			debounce((range: ListRange) => {
+				const { startIndex, endIndex } = range
+
+				// Check if we need to load more messages at the top
+				if (startIndex <= LOAD_THRESHOLD && visibleRange.start > 0 && !isLoadingTop) {
+					loadMoreMessagesTop()
+				}
+
+				// Check if we need to load more messages at the bottom
+				if (
+					endIndex >= windowedMessages.messages.length - LOAD_THRESHOLD &&
+					visibleRange.end < groupedMessages.length &&
+					!isLoadingBottom
+				) {
+					loadMoreMessagesBottom()
+				}
+			}, 100),
+		[
+			visibleRange,
+			groupedMessages.length,
+			isLoadingTop,
+			isLoadingBottom,
+			windowedMessages.messages.length,
+			loadMoreMessagesTop,
+			loadMoreMessagesBottom,
+		],
+	)
+
+	// Scroll position tracking
+	const handleRangeChanged = useCallback(
+		(range: ListRange) => {
+			// Call the debounced function for loading more messages
+			debouncedRangeChanged(range)
+		},
+		[debouncedRangeChanged],
+	)
+
+	// Cleanup debounced function on unmount
+	useEffect(() => {
+		return () => {
+			if (debouncedRangeChanged && typeof (debouncedRangeChanged as any).cancel === "function") {
+				;(debouncedRangeChanged as any).cancel()
+			}
+		}
+	}, [debouncedRangeChanged])
+
+	// TEMPORARY DEBUGGING: Memory usage monitoring
+	useEffect(() => {
+		// Only run in browsers that support performance.memory (Chrome/Edge)
+		if (!("memory" in performance)) {
+			console.log("[ChatView Memory Monitor] performance.memory API not available in this browser")
+			return
+		}
+
+		const logMemoryUsage = () => {
+			const now = new Date()
+			const timestamp = now.toTimeString().split(" ")[0] // HH:MM:SS format
+
+			// Get memory info
+			const memoryInfo = (performance as any).memory
+			const heapUsedMB = (memoryInfo.usedJSHeapSize / 1048576).toFixed(1)
+
+			// Get message counts
+			const messagesInDOM = windowedMessages.messages.length
+			const totalMessages = groupedMessages.length
+
+			// Get visible range info
+			const visibleStart = windowedMessages.startIndex
+			const visibleEnd = windowedMessages.endIndex
+			const bufferStart = Math.max(0, visibleRange.start - BUFFER_SIZE)
+			const bufferEnd = Math.min(groupedMessages.length, visibleRange.end + BUFFER_SIZE)
+
+			// Check if pagination is active
+			const isPaginationActive = groupedMessages.length > VISIBLE_MESSAGE_COUNT
+
+			// Format and log the information
+			console.log(
+				`[ChatView Memory Monitor - ${timestamp}]\n` +
+					`- Heap Used: ${heapUsedMB} MB\n` +
+					`- Messages in DOM: ${messagesInDOM} / ${totalMessages} total\n` +
+					`- Visible Range: ${visibleStart}-${visibleEnd} (buffer: ${bufferStart}-${bufferEnd})\n` +
+					`- Pagination Active: ${isPaginationActive}`,
+			)
+		}
+
+		// Log immediately
+		logMemoryUsage()
+
+		// Set up interval to log every 5 seconds
+		const intervalId = setInterval(logMemoryUsage, 5000)
+
+		// Cleanup on unmount
+		return () => {
+			clearInterval(intervalId)
+		}
+	}, [
+		windowedMessages.messages.length,
+		windowedMessages.startIndex,
+		windowedMessages.endIndex,
+		groupedMessages.length,
+		visibleRange,
+		BUFFER_SIZE,
+		VISIBLE_MESSAGE_COUNT,
+	])
+	// END TEMPORARY DEBUGGING
+
+	// Loading indicator component
+	const LoadingIndicator = () => (
+		<div className="flex justify-center items-center py-4">
+			<div className="animate-spin rounded-full h-6 w-6 border-b-2 border-vscode-progressBar-background"></div>
+		</div>
+	)
+
 	// scrolling
 
 	const scrollToBottomSmooth = useMemo(
@@ -1471,12 +1701,15 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 
 	const itemContent = useCallback(
 		(index: number, messageOrGroup: ClineMessage | ClineMessage[]) => {
+			// Get the actual index in the original array
+			const actualIndex = windowedMessages.startIndex + index
+
 			// browser session group
 			if (Array.isArray(messageOrGroup)) {
 				return (
 					<BrowserSessionRow
 						messages={messageOrGroup}
-						isLast={index === groupedMessages.length - 1}
+						isLast={actualIndex === groupedMessages.length - 1}
 						lastModifiedMessage={modifiedMessages.at(-1)}
 						onHeightChange={handleRowHeightChange}
 						isStreaming={isStreaming}
@@ -1499,7 +1732,7 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 					isExpanded={expandedRows[messageOrGroup.ts] || false}
 					onToggleExpand={toggleRowExpansion} // This was already stabilized
 					lastModifiedMessage={modifiedMessages.at(-1)} // Original direct access
-					isLast={index === groupedMessages.length - 1} // Original direct access
+					isLast={actualIndex === groupedMessages.length - 1} // Use actual index
 					onHeightChange={handleRowHeightChange}
 					isStreaming={isStreaming}
 					onSuggestionClick={handleSuggestionClickInRow} // This was already stabilized
@@ -1528,6 +1761,7 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 			)
 		},
 		[
+			windowedMessages.startIndex,
 			expandedRows,
 			toggleRowExpansion,
 			modifiedMessages,
@@ -1842,12 +2076,16 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 					<div className="grow flex" ref={scrollContainerRef}>
 						<Virtuoso
 							ref={virtuosoRef}
-							key={task.ts} // trick to make sure virtuoso re-renders when task changes, and we use initialTopMostItemIndex to start at the bottom
+							key={task.ts}
 							className="scrollable grow overflow-y-scroll mb-1"
-							// increasing top by 3_000 to prevent jumping around when user collapses a row
-							increaseViewportBy={{ top: 3_000, bottom: Number.MAX_SAFE_INTEGER }} // hack to make sure the last message is always rendered to get truly perfect scroll to bottom animation when new messages are added (Number.MAX_SAFE_INTEGER is safe for arithmetic operations, which is all virtuoso uses this value for in src/sizeRangeSystem.ts)
-							data={groupedMessages} // messages is the raw format returned by extension, modifiedMessages is the manipulated structure that combines certain messages of related type, and visibleMessages is the filtered structure that removes messages that should not be rendered
+							data={windowedMessages.messages}
 							itemContent={itemContent}
+							rangeChanged={handleRangeChanged}
+							overscan={5} // Render 5 extra items outside viewport
+							components={{
+								Header: () => (isLoadingTop ? <LoadingIndicator /> : null),
+								Footer: () => (isLoadingBottom ? <LoadingIndicator /> : null),
+							}}
 							atBottomStateChange={(isAtBottom) => {
 								setIsAtBottom(isAtBottom)
 								if (isAtBottom) {
@@ -1855,8 +2093,10 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 								}
 								setShowScrollToBottom(disableAutoScrollRef.current && !isAtBottom)
 							}}
-							atBottomThreshold={10} // anything lower causes issues with followOutput
-							initialTopMostItemIndex={groupedMessages.length - 1}
+							atBottomThreshold={10}
+							initialTopMostItemIndex={
+								windowedMessages.messages.length > 0 ? windowedMessages.messages.length - 1 : 0
+							}
 						/>
 					</div>
 					<div className={`flex-initial min-h-0 ${!areButtonsVisible ? "mb-1" : ""}`}>
