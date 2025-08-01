@@ -247,8 +247,31 @@ export abstract class ShadowCheckpointService extends EventEmitter {
 			}
 
 			const start = Date.now()
-			await this.git.clean("f", ["-d", "-f"])
-			await this.git.reset(["--hard", commitHash])
+
+			// Get list of files in the target commit
+			const filesInCommit = await this.git.raw(["ls-tree", "-r", "--name-only", commitHash])
+			const files = filesInCommit
+				.trim()
+				.split("\n")
+				.filter((f) => f.length > 0)
+
+			if (files.length > 0) {
+				// If there are files in the commit, checkout only those files
+				// This restores tracked files without affecting untracked files
+				await this.git.checkout([commitHash, "--", ...files])
+			}
+
+			// Remove files that exist in working directory but not in the target commit
+			const currentFiles = await this.git.raw(["ls-files"])
+			const currentFilesList = currentFiles
+				.trim()
+				.split("\n")
+				.filter((f) => f.length > 0)
+			const filesToRemove = currentFilesList.filter((f) => !files.includes(f))
+
+			if (filesToRemove.length > 0) {
+				await this.git.rm(filesToRemove)
+			}
 
 			// Remove all checkpoints after the specified commitHash.
 			const checkpointIndex = this._checkpoints.indexOf(commitHash)
