@@ -7,6 +7,8 @@ import { EmbedderProvider } from "./manager"
 export interface CodeIndexConfig {
 	isConfigured: boolean
 	embedderProvider: EmbedderProvider
+	vectorStoreProvider?: "local" | "qdrant"
+	localVectorStoreDirectoryPlaceholder?: string
 	modelId?: string
 	modelDimension?: number // Generic dimension property for all providers
 	openAiOptions?: ApiHandlerOptions
@@ -27,6 +29,8 @@ export type PreviousConfigSnapshot = {
 	enabled: boolean
 	configured: boolean
 	embedderProvider: EmbedderProvider
+	vectorStoreProvider?: "local" | "qdrant"
+	localVectorStoreDirectoryPlaceholder?: string
 	modelId?: string
 	modelDimension?: number // Generic dimension property
 	openAiKey?: string
