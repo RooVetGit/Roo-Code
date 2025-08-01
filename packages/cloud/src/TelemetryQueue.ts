@@ -250,7 +250,16 @@ export class TelemetryQueue {
 
 	private startConnectionMonitoring(): void {
 		// Check connection status periodically
-		this.connectionCheckTimer = setInterval(() => {
+private disposed = false;
+
+private startConnectionMonitoring(): void {
+	// Check connection status periodically
+	this.connectionCheckTimer = setInterval(() => {
+		if (!this.disposed) {
+			vscode.commands.executeCommand("roo-code.checkTelemetryConnection")
+		}
+	}, TelemetryQueue.CONNECTION_CHECK_INTERVAL_MS)
+}
 			vscode.commands.executeCommand("roo-code.checkTelemetryConnection")
 		}, TelemetryQueue.CONNECTION_CHECK_INTERVAL_MS)
 	}
