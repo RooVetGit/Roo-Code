@@ -21,10 +21,6 @@ export class LocalVectorStore implements IVectorStore {
 
 	private readonly UPDATE_BATCH_SIZE = 1000
 	private readonly SEARCH_BATCH_SIZE = 10000
-	private deletedFileCount = 0
-	private lastCleanupTime: Date | null = null
-	private readonly RESIZE_FILE_THRESHOLD = 50
-	private readonly RESIZE_TIME_THRESHOLD_MS = 60 * 60 * 1000
 
 	constructor(workspacePath: string, vectorSize: number, dbDirectory: string) {
 		this.vectorSize = vectorSize
@@ -57,11 +53,13 @@ export class LocalVectorStore implements IVectorStore {
 		if (!this.db) return
 
 		this.db.exec(`
-			PRAGMA journal_mode = WAL;
+			PRAGMA journal_mode = MEMORY;
 			PRAGMA synchronous = NORMAL;
 			PRAGMA cache_size = 100000;
 			PRAGMA locking_mode = NORMAL;
 			PRAGMA temp_store = MEMORY;
+			PRAGMA auto_vacuum = INCREMENTAL;
+			PRAGMA optimize;
 		`)
 		// Create tables if they don't exist
 		await this.db.exec(`
@@ -133,7 +131,6 @@ export class LocalVectorStore implements IVectorStore {
 				this.cachedCollectionId = collection.id != null ? Number(collection.id) : null
 				return true
 			}
-
 			this.cachedCollectionId = collection.id != null ? Number(collection.id) : null
 			return false
 		} catch (error) {
@@ -413,19 +410,6 @@ export class LocalVectorStore implements IVectorStore {
 		return this.deletePointsByMultipleFilePaths([filePath])
 	}
 
-	private async checkAndResize(): Promise<void> {
-		const now = new Date()
-		const shouldResize =
-			this.deletedFileCount >= this.RESIZE_FILE_THRESHOLD ||
-			(this.lastCleanupTime && now.getTime() - this.lastCleanupTime.getTime() > this.RESIZE_TIME_THRESHOLD_MS)
-
-		if (shouldResize) {
-			await this.resizeCollection()
-			this.deletedFileCount = 0
-			this.lastCleanupTime = now
-		}
-	}
-
 	async deletePointsByMultipleFilePaths(filePaths: string[]): Promise<void> {
 		if (filePaths.length === 0) {
 			return
@@ -460,8 +444,6 @@ export class LocalVectorStore implements IVectorStore {
 			}
 
 			await db.exec("COMMIT")
-			this.deletedFileCount += filePaths.length
-			await this.checkAndResize()
 		} catch (error) {
 			await db.exec("ROLLBACK")
 			console.error("Failed to delete points by file paths:", error)
@@ -489,7 +471,6 @@ export class LocalVectorStore implements IVectorStore {
 			if (collectionId != null) {
 				await db.prepare("DELETE FROM vectors WHERE collection_id = ?").run(collectionId)
 				await db.prepare("DELETE FROM files WHERE collection_id = ?").run(collectionId)
-				await this.resizeCollection()
 			}
 		} catch (error) {
 			console.error("Failed to clear collection:", error)

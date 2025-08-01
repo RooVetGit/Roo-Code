@@ -1,4 +1,4 @@
-// src/services/code-index/vector-store/__tests__/local-vector-store.spec.ts
+// npx  vitest run services/code-index/vector-store/__tests__/local-vector-store.spec.ts
 import { describe, it, expect, beforeEach, vi, afterEach } from "vitest"
 import { LocalVectorStore } from "../local-vector-store"
 import type { Payload, VectorStoreSearchResult } from "../../interfaces"
