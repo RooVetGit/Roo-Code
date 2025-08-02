@@ -21,6 +21,7 @@ import { ShareButton } from "./ShareButton"
 import { ContextWindowProgress } from "./ContextWindowProgress"
 import { Mention } from "./Mention"
 import { TodoListDisplay } from "./TodoListDisplay"
+import { ModeBadge } from "@/components/common/ModeBadge"
 
 export interface TaskHeaderProps {
 	task: ClineMessage
@@ -90,11 +91,12 @@ const TaskHeader = ({
 						<div className="flex items-center shrink-0">
 							<span className={`codicon codicon-chevron-${isTaskExpanded ? "down" : "right"}`}></span>
 						</div>
-						<div className="ml-1.5 whitespace-nowrap overflow-hidden text-ellipsis grow min-w-0">
+						<div className="ml-1.5 whitespace-nowrap overflow-hidden text-ellipsis grow min-w-0 flex items-center gap-2">
 							<span className="font-bold">
 								{t("chat:task.title")}
 								{!isTaskExpanded && ":"}
 							</span>
+							{currentTaskItem?.mode && <ModeBadge modeSlug={currentTaskItem.mode} />}
 							{!isTaskExpanded && (
 								<span className="ml-1">
 									<Mention text={task.text} />

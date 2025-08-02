@@ -8,6 +8,11 @@ vi.mock("@src/i18n/TranslationContext", () => ({
 	}),
 }))
 
+// Mock ModeBadge component
+vi.mock("@/components/common/ModeBadge", () => ({
+	ModeBadge: ({ modeSlug }: { modeSlug: string }) => <div data-testid="mode-badge">{modeSlug}</div>,
+}))
+
 const mockItem = {
 	id: "1",
 	number: 1,
@@ -31,5 +36,21 @@ describe("TaskItemHeader", () => {
 		render(<TaskItemHeader item={mockItem} isSelectionMode={false} onDelete={vi.fn()} />)
 
 		expect(screen.getByRole("button")).toBeInTheDocument()
+	})
+
+	it("shows mode badge when item has mode", () => {
+		const itemWithMode = { ...mockItem, mode: "code" }
+		render(<TaskItemHeader item={itemWithMode} isSelectionMode={false} onDelete={vi.fn()} />)
+
+		// ModeBadge would be mocked in the test
+		expect(screen.getByTestId("mode-badge")).toBeInTheDocument()
+		expect(screen.getByText("code")).toBeInTheDocument()
+	})
+
+	it("does not show mode badge when item has no mode", () => {
+		render(<TaskItemHeader item={mockItem} isSelectionMode={false} onDelete={vi.fn()} />)
+
+		// Verify no mode badge is rendered
+		expect(screen.queryByTestId("mode-badge")).not.toBeInTheDocument()
 	})
 })
