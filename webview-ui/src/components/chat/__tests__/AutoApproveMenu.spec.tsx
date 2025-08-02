@@ -111,8 +111,9 @@ describe("AutoApproveMenu", () => {
 
 			render(<AutoApproveMenu />)
 
-			// Check that the text shows the enabled option
-			expect(screen.getByText("Read-only operations")).toBeInTheDocument()
+			// Check that the icon for read-only operations is shown
+			const container = screen.getByText("Auto-approve").parentElement?.parentElement
+			expect(container?.querySelector(".codicon-eye")).toBeInTheDocument()
 		})
 
 		it("should not allow toggling master checkbox when no options are selected", () => {
@@ -222,8 +223,11 @@ describe("AutoApproveMenu", () => {
 
 			render(<AutoApproveMenu />)
 
-			// Should show all enabled options in the summary
-			expect(screen.getByText("Read-only operations, Write operations, Execute operations")).toBeInTheDocument()
+			// Should show icons for all enabled options
+			const container = screen.getByText("Auto-approve").parentElement?.parentElement
+			expect(container?.querySelector(".codicon-eye")).toBeInTheDocument() // Read
+			expect(container?.querySelector(".codicon-edit")).toBeInTheDocument() // Write
+			expect(container?.querySelector(".codicon-terminal")).toBeInTheDocument() // Execute
 		})
 
 		it("should handle enabling first option when none selected", async () => {
