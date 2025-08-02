@@ -1,5 +1,6 @@
 import { Anthropic } from "@anthropic-ai/sdk"
 import OpenAI from "openai"
+import * as vscode from "vscode"
 
 import { type ModelInfo, openAiModelInfoSaneDefaults, DEEP_SEEK_DEFAULT_TEMPERATURE } from "@roo-code/types"
 
@@ -23,9 +24,12 @@ export class OllamaHandler extends BaseProvider implements SingleCompletionHandl
 	constructor(options: ApiHandlerOptions) {
 		super()
 		this.options = options
+		const timeoutSeconds = vscode.workspace.getConfiguration("roo-cline").get<number>("apiRequestTimeout", 600)
+
 		this.client = new OpenAI({
 			baseURL: (this.options.ollamaBaseUrl || "http://localhost:11434") + "/v1",
 			apiKey: "ollama",
+			timeout: timeoutSeconds * 1000, // Convert to milliseconds
 		})
 	}
 
