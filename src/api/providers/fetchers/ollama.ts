@@ -43,16 +43,25 @@ export const parseOllamaModel = (rawModel: OllamaModelInfoResponse): ModelInfo =
 		contextKey && typeof rawModel.model_info[contextKey] === "number" ? rawModel.model_info[contextKey] : undefined
 
 	// Check if this is a Qwen model that should support computer use
-	const isQwenModel = rawModel.details.family?.includes("qwen") ||
-		rawModel.details.families?.some(family => family.includes("qwen")) ||
+	const isQwenModel =
+		rawModel.details.family?.includes("qwen") ||
+		rawModel.details.families?.some((family) => family.includes("qwen")) ||
 		rawModel.details.parameter_size?.includes("qwen")
+
+	const supportsComputerUse =
+		Array.isArray(rawModel.capabilities) &&
+		rawModel.capabilities.some(
+			(cap) =>
+				typeof cap === "string" &&
+				["computer_use", "computer-use", "browser", "tool_use", "tool-use"].includes(cap.toLowerCase()),
+		)
 
 	const modelInfo: ModelInfo = Object.assign({}, ollamaDefaultModelInfo, {
 		description: `Family: ${rawModel.details.family}, Context: ${contextWindow}, Size: ${rawModel.details.parameter_size}`,
 		contextWindow: contextWindow || ollamaDefaultModelInfo.contextWindow,
 		supportsPromptCache: true,
 		supportsImages: rawModel.capabilities?.includes("vision"),
-		supportsComputerUse: isQwenModel ? true : false,
+		supportsComputerUse: supportsComputerUse,
 		maxTokens: contextWindow || ollamaDefaultModelInfo.contextWindow,
 	})
 

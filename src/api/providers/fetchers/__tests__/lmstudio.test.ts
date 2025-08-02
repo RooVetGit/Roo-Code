@@ -70,6 +70,68 @@ describe("LMStudio Fetcher", () => {
 			const result = parseLMStudioModel(rawModel)
 			expect(result).toEqual(expectedModelInfo)
 		})
+
+		it("should set supportsComputerUse true if capabilities includes computer_use", () => {
+			const rawModel: any = {
+				type: "llm",
+				modelKey: "test-key",
+				format: "gguf",
+				displayName: "Test Model",
+				path: "test/model",
+				sizeBytes: 123456,
+				architecture: "testarch",
+				identifier: "test/model",
+				instanceReference: "ref",
+				vision: false,
+				trainedForToolUse: false,
+				maxContextLength: 4096,
+				contextLength: 4096,
+				capabilities: ["completion", "computer_use"],
+			}
+			const result = parseLMStudioModel(rawModel)
+			expect(result.supportsComputerUse).toBe(true)
+		})
+
+		it("should set supportsComputerUse true if trainedForToolUse is true", () => {
+			const rawModel: any = {
+				type: "llm",
+				modelKey: "test-key",
+				format: "gguf",
+				displayName: "Test Model",
+				path: "test/model",
+				sizeBytes: 123456,
+				architecture: "testarch",
+				identifier: "test/model",
+				instanceReference: "ref",
+				vision: false,
+				trainedForToolUse: true,
+				maxContextLength: 4096,
+				contextLength: 4096,
+			}
+			const result = parseLMStudioModel(rawModel)
+			expect(result.supportsComputerUse).toBe(true)
+		})
+
+		it("should set supportsComputerUse false if neither capabilities nor trainedForToolUse indicate support", () => {
+			const rawModel: any = {
+				type: "llm",
+				modelKey: "test-key",
+				format: "gguf",
+				displayName: "Test Model",
+				path: "test/model",
+				sizeBytes: 123456,
+				architecture: "testarch",
+				identifier: "test/model",
+				instanceReference: "ref",
+				vision: false,
+				trainedForToolUse: false,
+				maxContextLength: 4096,
+				contextLength: 4096,
+				capabilities: ["completion"],
+			}
+			const result = parseLMStudioModel(rawModel)
+			expect(result.supportsComputerUse).toBe(false)
+		})
 	})
 
 	describe("getLMStudioModels", () => {

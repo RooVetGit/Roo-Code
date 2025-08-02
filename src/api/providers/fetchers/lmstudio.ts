@@ -38,16 +38,22 @@ export const parseLMStudioModel = (rawModel: LLMInstanceInfo | LLMInfo): ModelIn
 	// Handle both LLMInstanceInfo (from loaded models) and LLMInfo (from downloaded models)
 	const contextLength = "contextLength" in rawModel ? rawModel.contextLength : rawModel.maxContextLength
 
-	// Check if this is a Qwen model that should support computer use
-	const isQwenModel = rawModel.displayName?.toLowerCase().includes("qwen") ||
-		rawModel.path?.toLowerCase().includes("qwen")
+	// Generic capability detection for computer/tool/browser use
+	const supportsComputerUse =
+		(Array.isArray((rawModel as any).capabilities) &&
+			(rawModel as any).capabilities.some(
+				(cap: string) =>
+					typeof cap === "string" &&
+					["computer_use", "computer-use", "browser", "tool_use", "tool-use"].includes(cap.toLowerCase()),
+			)) ||
+		(rawModel as any).trainedForToolUse === true
 
 	const modelInfo: ModelInfo = Object.assign({}, lMStudioDefaultModelInfo, {
 		description: `${rawModel.displayName} - ${rawModel.path}`,
 		contextWindow: contextLength,
 		supportsPromptCache: true,
 		supportsImages: rawModel.vision,
-		supportsComputerUse: isQwenModel ? true : false,
+		supportsComputerUse: supportsComputerUse,
 		maxTokens: contextLength,
 	})
 

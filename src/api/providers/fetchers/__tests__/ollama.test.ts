@@ -32,6 +32,24 @@ describe("Ollama Fetcher", () => {
 			})
 		})
 
+		it("should set supportsComputerUse true if capabilities includes computer_use", () => {
+			const modelData = {
+				...ollamaModelsData["qwen3-2to16:latest"],
+				capabilities: ["completion", "computer_use"],
+			}
+			const parsedModel = parseOllamaModel(modelData)
+			expect(parsedModel.supportsComputerUse).toBe(true)
+		})
+
+		it("should set supportsComputerUse false if capabilities does not include computer_use", () => {
+			const modelData = {
+				...ollamaModelsData["qwen3-2to16:latest"],
+				capabilities: ["completion"],
+			}
+			const parsedModel = parseOllamaModel(modelData)
+			expect(parsedModel.supportsComputerUse).toBe(false)
+		})
+
 		it("should handle models with null families field", () => {
 			const modelDataWithNullFamilies = {
 				...ollamaModelsData["qwen3-2to16:latest"],
