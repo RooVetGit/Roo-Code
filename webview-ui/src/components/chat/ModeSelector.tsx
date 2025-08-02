@@ -46,6 +46,32 @@ export const ModeSelector = ({
 	const { hasOpenedModeSelector, setHasOpenedModeSelector } = useExtensionState()
 	const { t } = useAppTranslation()
 
+	// Helper function to get mode source
+	const getModeSource = React.useCallback(
+		(modeSlug: string): "global" | "project" | null => {
+			const customMode = customModes?.find((mode) => mode.slug === modeSlug)
+			if (!customMode) return null
+			return customMode.source || "global" // Default to "global" if source is undefined
+		},
+		[customModes],
+	)
+
+	// Helper function to get source display text
+	const getSourceDisplayText = React.useCallback(
+		(source: "global" | "project" | null, isShort: boolean = false): string => {
+			if (!source) return ""
+			if (isShort) {
+				return source === "global"
+					? ` (${t("common:customModes.scope.globalShort")})`
+					: ` (${t("common:customModes.scope.projectShort")})`
+			}
+			return source === "global"
+				? ` (${t("common:customModes.scope.global")})`
+				: ` (${t("common:customModes.scope.project")})`
+		},
+		[t],
+	)
+
 	const trackModeSelectorOpened = React.useCallback(() => {
 		// Track telemetry every time the mode selector is opened
 		telemetryClient.capture(TelemetryEventName.MODE_SELECTOR_OPENED)
@@ -159,6 +185,9 @@ export const ModeSelector = ({
 	// Combine instruction text for tooltip
 	const instructionText = `${t("chat:modeSelector.description")} ${modeShortcutText}`
 
+	// Get source for selected mode
+	const selectedModeSource = React.useMemo(() => getModeSource(value), [value, getModeSource])
+
 	const trigger = (
 		<PopoverTrigger
 			disabled={disabled}
@@ -176,7 +205,14 @@ export const ModeSelector = ({
 					: null,
 			)}>
 			<ChevronUp className="pointer-events-none opacity-80 flex-shrink-0 size-3" />
-			<span className="truncate">{selectedMode?.name || ""}</span>
+			<span className="truncate">
+				{selectedMode?.name || ""}
+				{selectedModeSource && (
+					<span className="text-vscode-descriptionForeground">
+						{getSourceDisplayText(selectedModeSource)}
+					</span>
+				)}
+			</span>
 		</PopoverTrigger>
 	)
 
@@ -225,29 +261,39 @@ export const ModeSelector = ({
 							</div>
 						) : (
 							<div className="py-1">
-								{filteredModes.map((mode) => (
-									<div
-										key={mode.slug}
-										onClick={() => handleSelect(mode.slug)}
-										className={cn(
-											"px-3 py-1.5 text-sm cursor-pointer flex items-center",
-											"hover:bg-vscode-list-hoverBackground",
-											mode.slug === value
-												? "bg-vscode-list-activeSelectionBackground text-vscode-list-activeSelectionForeground"
-												: "",
-										)}
-										data-testid="mode-selector-item">
-										<div className="flex-1 min-w-0">
-											<div className="font-bold truncate">{mode.name}</div>
-											{mode.description && (
-												<div className="text-xs text-vscode-descriptionForeground truncate">
-													{mode.description}
-												</div>
+								{filteredModes.map((mode) => {
+									const modeSource = getModeSource(mode.slug)
+									return (
+										<div
+											key={mode.slug}
+											onClick={() => handleSelect(mode.slug)}
+											className={cn(
+												"px-3 py-1.5 text-sm cursor-pointer flex items-center",
+												"hover:bg-vscode-list-hoverBackground",
+												mode.slug === value
+													? "bg-vscode-list-activeSelectionBackground text-vscode-list-activeSelectionForeground"
+													: "",
 											)}
+											data-testid="mode-selector-item">
+											<div className="flex-1 min-w-0">
+												<div className="font-bold truncate">
+													{mode.name}
+													{modeSource && (
+														<span className="text-vscode-descriptionForeground font-normal">
+															{getSourceDisplayText(modeSource, true)}
+														</span>
+													)}
+												</div>
+												{mode.description && (
+													<div className="text-xs text-vscode-descriptionForeground truncate">
+														{mode.description}
+													</div>
+												)}
+											</div>
+											{mode.slug === value && <Check className="ml-auto size-4 p-0.5" />}
 										</div>
-										{mode.slug === value && <Check className="ml-auto size-4 p-0.5" />}
-									</div>
-								))}
+									)
+								})}
 							</div>
 						)}
 					</div>
