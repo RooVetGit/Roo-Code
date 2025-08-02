@@ -2,7 +2,7 @@
 	"name": "roo-code",
 	"packageManager": "pnpm@10.8.1",
 	"engines": {
-		"node": "20.19.2"
+		"node": "22.17.1"
 	},
 	"scripts": {
 		"preinstall": "node scripts/bootstrap.mjs",
