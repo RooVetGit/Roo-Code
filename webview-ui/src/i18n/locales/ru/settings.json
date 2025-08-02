@@ -127,6 +127,7 @@
 	},
 	"autoApprove": {
 		"description": "Разрешить Roo автоматически выполнять операции без необходимости одобрения. Включайте эти параметры только если полностью доверяете ИИ и понимаете связанные с этим риски безопасности.",
+		"enabled": "Автоодобрение включено",
 		"toggleAriaLabel": "Переключить автоодобрение",
 		"disabledAriaLabel": "Автоодобрение отключено - сначала выберите опции",
 		"readOnly": {
@@ -197,7 +198,14 @@
 			"description": "Автоматически выполнять это количество API-запросов перед запросом разрешения на продолжение задачи.",
 			"unlimited": "Без ограничений"
 		},
-		"selectOptionsFirst": "Выберите хотя бы один вариант ниже, чтобы включить автоодобрение"
+		"selectOptionsFirst": "Выберите хотя бы один вариант ниже, чтобы включить автоодобрение",
+		"apiCostLimit": {
+			"title": "Максимальная стоимость",
+			"unlimited": "Безлимитный"
+		},
+		"maxLimits": {
+			"description": "Автоматически выполнять запросы до указанных лимитов, прежде чем запрашивать разрешение на продолжение."
+		}
 	},
 	"providers": {
 		"providerDocumentation": "Документация {{provider}}",
@@ -249,6 +257,8 @@
 		"anthropicApiKey": "Anthropic API-ключ",
 		"getAnthropicApiKey": "Получить Anthropic API-ключ",
 		"anthropicUseAuthToken": "Передавать Anthropic API-ключ как Authorization-заголовок вместо X-Api-Key",
+		"cerebrasApiKey": "Cerebras API-ключ",
+		"getCerebrasApiKey": "Получить Cerebras API-ключ",
 		"chutesApiKey": "Chutes API-ключ",
 		"getChutesApiKey": "Получить Chutes API-ключ",
 		"deepSeekApiKey": "DeepSeek API-ключ",
@@ -318,7 +328,6 @@
 				"description": "Позволяет Gemini искать актуальную информацию в Google и основывать ответы на данных в реальном времени. Полезно для запросов, требующих актуальной информации."
 			}
 		},
-
 		"googleCloudSetup": {
 			"title": "Для использования Google Cloud Vertex AI необходимо:",
 			"step1": "1. Создайте аккаунт Google Cloud, включите Vertex AI API и нужные модели Claude.",
