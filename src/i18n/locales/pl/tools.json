@@ -3,6 +3,8 @@
 		"linesRange": " (linie {{start}}-{{end}})",
 		"definitionsOnly": " (tylko definicje)",
 		"maxLines": " (maks. {{max}} linii)",
+		"showingOnlyLines": "Pokazuję tylko {{shown}} z {{total}} wszystkich linii. Użyj line_range jeśli potrzebujesz przeczytać więcej linii",
+		"contextLimitInstructions": "Aby przeczytać określone sekcje tego pliku, użyj następującego formatu:\n<read_file>\n<args>\n  <file>\n    <path>{{path}}</path>\n    <line_range>początek-koniec</line_range>\n  </file>\n</args>\n</read_file>\n\nNa przykład, aby przeczytać linie 2001-3000:\n<read_file>\n<args>\n  <file>\n    <path>{{path}}</path>\n    <line_range>2001-3000</line_range>\n  </file>\n</args>\n</read_file>",
 		"imageTooLarge": "Plik obrazu jest zbyt duży ({{size}} MB). Maksymalny dozwolony rozmiar to {{max}} MB.",
 		"imageWithSize": "Plik obrazu ({{size}} KB)"
 	},

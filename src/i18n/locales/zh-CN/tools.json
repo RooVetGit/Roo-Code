@@ -3,6 +3,8 @@
 		"linesRange": " (第 {{start}}-{{end}} 行)",
 		"definitionsOnly": " (仅定义)",
 		"maxLines": " (最多 {{max}} 行)",
+		"showingOnlyLines": "仅显示 {{shown}} 行，共 {{total}} 行。如需阅读更多行请使用 line_range",
+		"contextLimitInstructions": "要阅读此文件的特定部分，请使用以下格式：\n<read_file>\n<args>\n  <file>\n    <path>{{path}}</path>\n    <line_range>开始-结束</line_range>\n  </file>\n</args>\n</read_file>\n\n例如，要阅读第 2001-3000 行：\n<read_file>\n<args>\n  <file>\n    <path>{{path}}</path>\n    <line_range>2001-3000</line_range>\n  </file>\n</args>\n</read_file>",
 		"imageTooLarge": "图片文件过大 ({{size}} MB)。允许的最大大小为 {{max}} MB。",
 		"imageWithSize": "图片文件 ({{size}} KB)"
 	},
