@@ -59,6 +59,44 @@ export async function activate(context: vscode.ExtensionContext) {
 	context.subscriptions.push(outputChannel)
 	outputChannel.appendLine(`${Package.name} extension activated - ${JSON.stringify(Package)}`)
 
+	// Check for potential extension conflicts
+	const claudeCodeExtension = vscode.extensions.getExtension("anthropic.claude-code")
+	if (claudeCodeExtension) {
+		outputChannel.appendLine(`[Warning] Claude Code extension detected. Implementing conflict prevention measures.`)
+
+		// Add a small delay to prevent race conditions during activation
+		await new Promise((resolve) => setTimeout(resolve, 100))
+	}
+
+	// Wrap the activation process with a timeout to prevent hanging
+	const ACTIVATION_TIMEOUT = 30000 // 30 seconds
+	const activationPromise = performActivation(context, outputChannel)
+
+	try {
+		await Promise.race([
+			activationPromise,
+			new Promise((_, reject) => setTimeout(() => reject(new Error("Activation timeout")), ACTIVATION_TIMEOUT)),
+		])
+	} catch (error) {
+		outputChannel.appendLine(`[Error] Extension activation failed: ${error}`)
+		// Show a user-friendly error message
+		vscode.window
+			.showErrorMessage(
+				`Roo Code activation failed. ${claudeCodeExtension ? "This may be due to a conflict with Claude Code extension. " : ""}Please try reloading the window.`,
+				"Reload Window",
+			)
+			.then((selection) => {
+				if (selection === "Reload Window") {
+					vscode.commands.executeCommand("workbench.action.reloadWindow")
+				}
+			})
+		throw error
+	}
+
+	return activationPromise
+}
+
+async function performActivation(context: vscode.ExtensionContext, outputChannel: vscode.OutputChannel) {
 	// Migrate old settings to new
 	await migrateSettings(context, outputChannel)
 
@@ -180,7 +218,13 @@ export async function activate(context: vscode.ExtensionContext) {
 	registerTerminalActions(context)
 
 	// Allows other extensions to activate once Roo is ready.
-	vscode.commands.executeCommand(`${Package.name}.activationCompleted`)
+	// Use a try-catch to prevent activation completion from blocking
+	try {
+		await vscode.commands.executeCommand(`${Package.name}.activationCompleted`)
+	} catch (error) {
+		outputChannel.appendLine(`[Warning] Failed to execute activationCompleted command: ${error}`)
+		// Continue activation even if this fails
+	}
 
 	// Implements the `RooCodeAPI` interface.
 	const socketPath = process.env.ROO_CODE_IPC_SOCKET_PATH
