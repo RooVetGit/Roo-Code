@@ -38,12 +38,16 @@ export const parseLMStudioModel = (rawModel: LLMInstanceInfo | LLMInfo): ModelIn
 	// Handle both LLMInstanceInfo (from loaded models) and LLMInfo (from downloaded models)
 	const contextLength = "contextLength" in rawModel ? rawModel.contextLength : rawModel.maxContextLength
 
+	// Check if this is a Qwen model that should support computer use
+	const isQwenModel = rawModel.displayName?.toLowerCase().includes("qwen") ||
+		rawModel.path?.toLowerCase().includes("qwen")
+
 	const modelInfo: ModelInfo = Object.assign({}, lMStudioDefaultModelInfo, {
 		description: `${rawModel.displayName} - ${rawModel.path}`,
 		contextWindow: contextLength,
 		supportsPromptCache: true,
 		supportsImages: rawModel.vision,
-		supportsComputerUse: false,
+		supportsComputerUse: isQwenModel ? true : false,
 		maxTokens: contextLength,
 	})
 
