@@ -7,7 +7,7 @@ import { IconButton } from "./IconButton"
 import { vscode } from "@/utils/vscode"
 import { useExtensionState } from "@/context/ExtensionStateContext"
 import { useAppTranslation } from "@/i18n/TranslationContext"
-import { Mode, getAllModes } from "@roo/modes"
+import { Mode, getAllModes, isCustomMode } from "@roo/modes"
 import { ModeConfig, CustomModePrompts } from "@roo-code/types"
 import { telemetryClient } from "@/utils/TelemetryClient"
 import { TelemetryEventName } from "@roo-code/types"
@@ -15,6 +15,32 @@ import { Fzf } from "fzf"
 
 // Minimum number of modes required to show search functionality
 const SEARCH_THRESHOLD = 6
+
+// Helper function to get the source of a custom mode
+function getModeSource(mode: ModeConfig, customModes?: ModeConfig[]): "global" | "project" | null {
+	if (!isCustomMode(mode.slug, customModes)) {
+		return null // Built-in mode, no source indicator needed
+	}
+
+	// Find the mode in customModes to get its source
+	const customMode = customModes?.find((m) => m.slug === mode.slug)
+	return customMode?.source || "global" // Default to global if source is not specified
+}
+
+// Helper function to get the display text for mode source
+function getSourceDisplayText(
+	source: "global" | "project" | null,
+	t: (key: string) => string,
+	short: boolean = false,
+): string {
+	if (!source) return ""
+
+	if (short) {
+		return source === "global" ? t("chat:modeSelector.globalShort") : t("chat:modeSelector.projectShort")
+	}
+
+	return source === "global" ? t("chat:modeSelector.global") : t("chat:modeSelector.project")
+}
 
 interface ModeSelectorProps {
 	value: Mode
@@ -159,6 +185,10 @@ export const ModeSelector = ({
 	// Combine instruction text for tooltip
 	const instructionText = `${t("chat:modeSelector.description")} ${modeShortcutText}`
 
+	// Get source indicator for selected mode
+	const selectedModeSource = selectedMode ? getModeSource(selectedMode, customModes) : null
+	const selectedModeSourceText = getSourceDisplayText(selectedModeSource, t, false)
+
 	const trigger = (
 		<PopoverTrigger
 			disabled={disabled}
@@ -176,7 +206,12 @@ export const ModeSelector = ({
 					: null,
 			)}>
 			<ChevronUp className="pointer-events-none opacity-80 flex-shrink-0 size-3" />
-			<span className="truncate">{selectedMode?.name || ""}</span>
+			<span className="truncate">
+				{selectedMode?.name || ""}
+				{selectedModeSourceText && (
+					<span className="text-vscode-descriptionForeground ml-1">({selectedModeSourceText})</span>
+				)}
+			</span>
 		</PopoverTrigger>
 	)
 
@@ -225,29 +260,41 @@ export const ModeSelector = ({
 							</div>
 						) : (
 							<div className="py-1">
-								{filteredModes.map((mode) => (
-									<div
-										key={mode.slug}
-										onClick={() => handleSelect(mode.slug)}
-										className={cn(
-											"px-3 py-1.5 text-sm cursor-pointer flex items-center",
-											"hover:bg-vscode-list-hoverBackground",
-											mode.slug === value
-												? "bg-vscode-list-activeSelectionBackground text-vscode-list-activeSelectionForeground"
-												: "",
-										)}
-										data-testid="mode-selector-item">
-										<div className="flex-1 min-w-0">
-											<div className="font-bold truncate">{mode.name}</div>
-											{mode.description && (
-												<div className="text-xs text-vscode-descriptionForeground truncate">
-													{mode.description}
-												</div>
+								{filteredModes.map((mode) => {
+									const modeSource = getModeSource(mode, customModes)
+									const sourceShortText = getSourceDisplayText(modeSource, t, true)
+
+									return (
+										<div
+											key={mode.slug}
+											onClick={() => handleSelect(mode.slug)}
+											className={cn(
+												"px-3 py-1.5 text-sm cursor-pointer flex items-center",
+												"hover:bg-vscode-list-hoverBackground",
+												mode.slug === value
+													? "bg-vscode-list-activeSelectionBackground text-vscode-list-activeSelectionForeground"
+													: "",
 											)}
+											data-testid="mode-selector-item">
+											<div className="flex-1 min-w-0">
+												<div className="font-bold truncate flex items-center gap-1.5">
+													{mode.name}
+													{sourceShortText && (
+														<span className="text-xs text-vscode-descriptionForeground font-normal">
+															({sourceShortText})
+														</span>
+													)}
+												</div>
+												{mode.description && (
+													<div className="text-xs text-vscode-descriptionForeground truncate">
+														{mode.description}
+													</div>
+												)}
+											</div>
+											{mode.slug === value && <Check className="ml-auto size-4 p-0.5" />}
 										</div>
-										{mode.slug === value && <Check className="ml-auto size-4 p-0.5" />}
-									</div>
-								))}
+									)
+								})}
 							</div>
 						)}
 					</div>
