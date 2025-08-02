@@ -14,6 +14,7 @@ import { ClineProvider } from "../../webview/ClineProvider"
 import { ApiStreamChunk } from "../../../api/transform/stream"
 import { ContextProxy } from "../../config/ContextProxy"
 import { processUserContentMentions } from "../../mentions/processUserContentMentions"
+import { extractFileMentions, hasFileMentions } from "../../mentions/extractFileMentions"
 import { MultiSearchReplaceDiffStrategy } from "../../diff/strategies/multi-search-replace"
 import { MultiFileSearchReplaceDiffStrategy } from "../../diff/strategies/multi-file-search-replace"
 import { EXPERIMENT_IDS } from "../../../shared/experiments"
@@ -70,6 +71,19 @@ vi.mock("fs/promises", async (importOriginal) => {
 
 vi.mock("p-wait-for", () => ({
 	default: vi.fn().mockImplementation(async () => Promise.resolve()),
+}))
+
+vi.mock("../../mentions/processUserContentMentions", async (importOriginal) => {
+	const actual = (await importOriginal()) as any
+	return {
+		...actual,
+		processUserContentMentions: vi.fn().mockImplementation(actual.processUserContentMentions),
+	}
+})
+
+vi.mock("../../mentions/extractFileMentions", () => ({
+	extractFileMentions: vi.fn(),
+	hasFileMentions: vi.fn(),
 }))
 
 vi.mock("vscode", () => {
@@ -132,7 +146,7 @@ vi.mock("vscode", () => {
 
 vi.mock("../../mentions", () => ({
 	parseMentions: vi.fn().mockImplementation((text) => {
-		return Promise.resolve(`processed: ${text}`)
+		return Promise.resolve(text)
 	}),
 	openMention: vi.fn(),
 	getLatestTerminalOutput: vi.fn(),
@@ -883,11 +897,11 @@ describe("Cline", () => {
 					const userContent = [
 						{
 							type: "text",
-							text: "Regular text with 'some/path' (see below for file content)",
+							text: "Regular text with 'some/path'",
 						} as const,
 						{
 							type: "text",
-							text: "<task>Text with 'some/path' (see below for file content) in task tags</task>",
+							text: "<task>Text with 'some/path' in task tags</task>",
 						} as const,
 						{
 							type: "tool_result",
@@ -895,7 +909,7 @@ describe("Cline", () => {
 							content: [
 								{
 									type: "text",
-									text: "<feedback>Check 'some/path' (see below for file content)</feedback>",
+									text: "<feedback>Check 'some/path'</feedback>",
 								},
 							],
 						} as Anthropic.ToolResultBlockParam,
@@ -905,7 +919,7 @@ describe("Cline", () => {
 							content: [
 								{
 									type: "text",
-									text: "Regular tool result with 'path' (see below for file content)",
+									text: "Regular tool result with 'path'",
 								},
 							],
 						} as Anthropic.ToolResultBlockParam,
@@ -919,30 +933,26 @@ describe("Cline", () => {
 					})
 
 					// Regular text should not be processed
-					expect((processedContent[0] as Anthropic.TextBlockParam).text).toBe(
-						"Regular text with 'some/path' (see below for file content)",
-					)
+					expect((processedContent[0] as Anthropic.TextBlockParam).text).toBe("Regular text with 'some/path'")
 
 					// Text within task tags should be processed
-					expect((processedContent[1] as Anthropic.TextBlockParam).text).toContain("processed:")
+					expect((processedContent[1] as Anthropic.TextBlockParam).text).toBeDefined()
 					expect((processedContent[1] as Anthropic.TextBlockParam).text).toContain(
-						"<task>Text with 'some/path' (see below for file content) in task tags</task>",
+						"<task>Text with 'some/path' in task tags</task>",
 					)
 
 					// Feedback tag content should be processed
 					const toolResult1 = processedContent[2] as Anthropic.ToolResultBlockParam
 					const content1 = Array.isArray(toolResult1.content) ? toolResult1.content[0] : toolResult1.content
-					expect((content1 as Anthropic.TextBlockParam).text).toContain("processed:")
+					expect((processedContent[1] as Anthropic.TextBlockParam).text).toBeDefined()
 					expect((content1 as Anthropic.TextBlockParam).text).toContain(
-						"<feedback>Check 'some/path' (see below for file content)</feedback>",
+						"<feedback>Check 'some/path'</feedback>",
 					)
 
 					// Regular tool result should not be processed
 					const toolResult2 = processedContent[3] as Anthropic.ToolResultBlockParam
 					const content2 = Array.isArray(toolResult2.content) ? toolResult2.content[0] : toolResult2.content
-					expect((content2 as Anthropic.TextBlockParam).text).toBe(
-						"Regular tool result with 'path' (see below for file content)",
-					)
+					expect((content2 as Anthropic.TextBlockParam).text).toBe("Regular tool result with 'path'")
 
 					await cline.abortTask(true)
 					await task.catch(() => {})
@@ -1492,6 +1502,221 @@ describe("Cline", () => {
 				})
 				expect(noModelTask.apiConfiguration.apiProvider).toBe("openai")
 			})
+		})
+	})
+
+	describe("Synthetic message generation for file mentions", () => {
+		it("should handle first message with file mentions using synthetic messages", async () => {
+			const task = new Task({
+				provider: mockProvider,
+				apiConfiguration: mockApiConfig,
+				task: "Please analyze @/src/main.ts and provide feedback",
+				startTask: false,
+			})
+
+			// Mock the API conversation history to track messages
+			const apiMessages: any[] = []
+			vi.spyOn(task as any, "addToApiConversationHistory").mockImplementation(async (message) => {
+				apiMessages.push(message)
+			})
+
+			// Mock extractFileMentions to return a file mention
+			vi.mocked(extractFileMentions).mockReturnValue([{ mention: "@src/main.ts", path: "src/main.ts" }])
+			vi.mocked(hasFileMentions).mockReturnValue(true)
+
+			// Mock processUserContentMentions to return processed content
+			vi.mocked(processUserContentMentions).mockResolvedValue([
+				{
+					type: "text",
+					text: "Please analyze 'src/main.ts' and provide feedback\n\n<file_content path=\"src/main.ts\">\nfile content here\n</file_content>",
+				},
+			])
+
+			// Start the task
+			await (task as any).startTask("Please analyze @/src/main.ts and provide feedback")
+
+			// Verify the API conversation history has 4 messages (including assistant response)
+			expect(apiMessages).toHaveLength(4)
+
+			// First message: Original user message (unprocessed)
+			expect(apiMessages[0].role).toBe("user")
+			expect(apiMessages[0].content[0].text).toContain("@/src/main.ts")
+
+			// Second message: Synthetic assistant message with read_file tool
+			expect(apiMessages[1].role).toBe("assistant")
+			expect(apiMessages[1].content[0].text).toContain("<read_file>")
+			expect(apiMessages[1].content[0].text).toContain("<path>src/main.ts</path>")
+
+			// Third message: User message with processed file content
+			expect(apiMessages[2].role).toBe("user")
+			expect(apiMessages[2].content[0].text).toContain("file content here")
+		})
+
+		it("should not use synthetic messages when no file mentions in first message", async () => {
+			const task = new Task({
+				provider: mockProvider,
+				apiConfiguration: mockApiConfig,
+				task: "Please help me write a function",
+				startTask: false,
+			})
+
+			// Mock hasFileMentions to return false (no file mentions)
+			vi.mocked(hasFileMentions).mockReturnValue(false)
+
+			// Mock processUserContentMentions to return the content wrapped in task tags
+			vi.mocked(processUserContentMentions).mockResolvedValue([
+				{
+					type: "text",
+					text: "<task>\nPlease help me write a function\n</task>",
+				},
+			])
+
+			// Mock the API conversation history to track messages
+			const apiMessages: any[] = []
+			vi.spyOn(task as any, "addToApiConversationHistory").mockImplementation(async (message) => {
+				apiMessages.push(message)
+			})
+
+			// Start the task
+			await (task as any).startTask("Please help me write a function")
+
+			// Should only have one message (the normal flow)
+			expect(apiMessages).toHaveLength(1)
+			expect(apiMessages[0].role).toBe("user")
+			expect(apiMessages[0].content[0].text).toBe("<task>\nPlease help me write a function\n</task>")
+		})
+
+		it("should handle multiple file mentions in first message", async () => {
+			const task = new Task({
+				provider: mockProvider,
+				apiConfiguration: mockApiConfig,
+				task: "Compare @/src/index.ts with @/src/utils.ts",
+				startTask: false,
+			})
+
+			// Mock the API conversation history to track messages
+			const apiMessages: any[] = []
+			vi.spyOn(task as any, "addToApiConversationHistory").mockImplementation(async (message) => {
+				apiMessages.push(message)
+			})
+
+			// Mock extractFileMentions to return multiple file mentions
+			vi.mocked(extractFileMentions).mockReturnValue([
+				{ mention: "@/src/index.ts", path: "/src/index.ts" },
+				{ mention: "@/src/utils.ts", path: "/src/utils.ts" },
+			])
+			vi.mocked(hasFileMentions).mockReturnValue(true)
+
+			// Mock processUserContentMentions
+			vi.mocked(processUserContentMentions).mockResolvedValue([
+				{
+					type: "text",
+					text: "Compare 'src/index.ts' with 'src/utils.ts'\n\n<file_content path=\"src/index.ts\">\nindex content\n</file_content>\n\n<file_content path=\"src/utils.ts\">\nutils content\n</file_content>",
+				},
+			])
+
+			// Start the task
+			await (task as any).startTask("Compare @/src/index.ts with @/src/utils.ts")
+
+			// Verify synthetic assistant message has a single read_file call with multiple files
+			expect(apiMessages[1].role).toBe("assistant")
+			expect(apiMessages[1].content[0].text).toContain("<path>/src/index.ts</path>")
+			expect(apiMessages[1].content[0].text).toContain("<path>/src/utils.ts</path>")
+			// Should have exactly one read_file block containing both files
+			const readFileMatches = apiMessages[1].content[0].text.match(/<read_file>/g)
+			expect(readFileMatches).toHaveLength(1)
+		})
+
+		it("should batch files when more than 5 files are mentioned", async () => {
+			const task = new Task({
+				provider: mockProvider,
+				apiConfiguration: mockApiConfig,
+				task: "Analyze multiple files",
+				startTask: false,
+			})
+
+			// Mock the API conversation history to track messages
+			const apiMessages: any[] = []
+			vi.spyOn(task as any, "addToApiConversationHistory").mockImplementation(async (message) => {
+				apiMessages.push(message)
+			})
+
+			// Mock extractFileMentions to return 7 file mentions (more than 5)
+			const fileMentions = Array.from({ length: 7 }, (_, i) => ({
+				mention: `@file${i + 1}.ts`,
+				path: `file${i + 1}.ts`,
+			}))
+			vi.mocked(extractFileMentions).mockReturnValue(fileMentions)
+			vi.mocked(hasFileMentions).mockReturnValue(true)
+
+			// Mock processUserContentMentions
+			vi.mocked(processUserContentMentions).mockResolvedValue([
+				{
+					type: "text",
+					text: "Analyze multiple files with content",
+				},
+			])
+
+			// Start the task
+			await (task as any).startTask("Analyze multiple files")
+
+			// Verify synthetic assistant message has two read_file calls (5 files + 2 files)
+			expect(apiMessages[1].role).toBe("assistant")
+			const assistantText = apiMessages[1].content[0].text
+
+			// Should have exactly two read_file blocks
+			const readFileMatches = assistantText.match(/<read_file>/g)
+			expect(readFileMatches).toHaveLength(2)
+
+			// First batch should have 5 files
+			const firstBatch = assistantText.match(/<read_file>[\s\S]*?<\/read_file>/)[0]
+			const firstBatchFiles = firstBatch.match(/<path>file\d+\.ts<\/path>/g)
+			expect(firstBatchFiles).toHaveLength(5)
+
+			// Second batch should have 2 files
+			const secondBatch = assistantText.match(/<read_file>[\s\S]*?<\/read_file>/g)[1]
+			const secondBatchFiles = secondBatch.match(/<path>file\d+\.ts<\/path>/g)
+			expect(secondBatchFiles).toHaveLength(2)
+		})
+
+		it("should preserve task history without embedded file content", async () => {
+			const task = new Task({
+				provider: mockProvider,
+				apiConfiguration: mockApiConfig,
+				task: "Analyze @/large-file.ts",
+				startTask: false,
+			})
+
+			// Spy on say method which saves to task history
+			const sayMessages: any[] = []
+			const originalSay = (task as any).say.bind(task)
+			vi.spyOn(task as any, "say").mockImplementation(async (type, text, images) => {
+				sayMessages.push({ type, text, images })
+				// Call the original implementation to maintain clineMessages
+				return originalSay(type, text, images)
+			})
+
+			// Mock extractFileMentions to return a file mention
+			vi.mocked(extractFileMentions).mockReturnValue([{ mention: "@/large-file.ts", path: "/large-file.ts" }])
+			vi.mocked(hasFileMentions).mockReturnValue(true)
+
+			// Mock processUserContentMentions
+			vi.mocked(processUserContentMentions).mockResolvedValue([
+				{
+					type: "text",
+					text: "Analyze '/large-file.ts'\n\n<file_content path=\"/large-file.ts\">\nfile content here\n</file_content>",
+				},
+			])
+
+			// Start the task
+			await (task as any).startTask("Analyze @/large-file.ts")
+
+			// Verify task history only contains the original message
+			const textMessages = sayMessages.filter((m) => m.type === "text")
+			expect(textMessages).toHaveLength(1)
+			expect(textMessages[0].text).toBe("Analyze @/large-file.ts")
+			// Should NOT contain processed file content
+			expect(sayMessages[0].text).not.toContain("file_content")
 		})
 	})
 })

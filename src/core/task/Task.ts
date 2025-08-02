@@ -80,6 +80,11 @@ import { MultiFileSearchReplaceDiffStrategy } from "../diff/strategies/multi-fil
 import { readApiMessages, saveApiMessages, readTaskMessages, saveTaskMessages, taskMetadata } from "../task-persistence"
 import { getEnvironmentDetails } from "../environment/getEnvironmentDetails"
 import {
+	shouldUseSyntheticMessages,
+	handleFirstMessageWithFileMentions,
+	createSyntheticReadFileMessage,
+} from "./synthetic-messages"
+import {
 	type CheckpointDiffOptions,
 	type CheckpointRestoreOptions,
 	getCheckpointService,
@@ -511,7 +516,7 @@ export class Task extends EventEmitter<TaskEvents> {
 		return readApiMessages({ taskId: this.taskId, globalStoragePath: this.globalStoragePath })
 	}
 
-	private async addToApiConversationHistory(message: Anthropic.MessageParam) {
+	public async addToApiConversationHistory(message: Anthropic.MessageParam) {
 		const messageWithTs = { ...message, ts: Date.now() }
 		this.apiConversationHistory.push(messageWithTs)
 		await this.saveApiConversationHistory()
@@ -1294,6 +1299,8 @@ export class Task extends EventEmitter<TaskEvents> {
 		})
 	}
 
+	// Helper methods for synthetic message generation
+
 	// Task Loop
 
 	private async initiateTaskLoop(userContent: Anthropic.Messages.ContentBlockParam[]): Promise<void> {
@@ -1302,12 +1309,24 @@ export class Task extends EventEmitter<TaskEvents> {
 
 		let nextUserContent = userContent
 		let includeFileDetails = true
+		let isFirstMessage = true
 
 		this.emit("taskStarted")
 
 		while (!this.abort) {
+			// Check if this is the first message and contains file mentions
+			if (isFirstMessage && shouldUseSyntheticMessages(nextUserContent)) {
+				// Handle first message with file mentions using synthetic messages
+				await handleFirstMessageWithFileMentions(this, nextUserContent)
+				isFirstMessage = false
+				// The synthetic messages have been processed, continue with normal flow
+				// but skip the first iteration since we've already handled it
+				continue
+			}
+
 			const didEndLoop = await this.recursivelyMakeClineRequests(nextUserContent, includeFileDetails)
 			includeFileDetails = false // we only need file details the first time
+			isFirstMessage = false
 
 			// The way this agentic loop works is that cline will be given a
 			// task that he then calls tools to complete. Unless there's an
