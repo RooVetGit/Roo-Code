@@ -259,7 +259,19 @@ export function validateModelId(apiConfiguration: ProviderSettings, routerModels
 
 	const models = routerModels?.[provider]
 
-	if (models && Object.keys(models).length > 1 && !Object.keys(models).includes(modelId)) {
+	// For Ollama, we should not validate against the model list if it's empty or has only one model
+	// This allows users to connect to external Ollama servers where model discovery might not work
+	if (provider === "ollama") {
+		// Only validate if we have a substantial list of models (more than 1)
+		// This prevents blocking users from using custom models on external servers
+		if (models && Object.keys(models).length > 1 && !Object.keys(models).includes(modelId)) {
+			return i18next.t("settings:validation.modelAvailability", { modelId })
+		}
+		return undefined
+	}
+
+	// For other providers, validate if we have any models in the list
+	if (models && Object.keys(models).length > 0 && !Object.keys(models).includes(modelId)) {
 		return i18next.t("settings:validation.modelAvailability", { modelId })
 	}
 
