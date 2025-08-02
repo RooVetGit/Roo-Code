@@ -189,6 +189,7 @@ export const SECRET_STATE_KEYS = [
 	"codebaseIndexOpenAiCompatibleApiKey",
 	"codebaseIndexGeminiApiKey",
 	"codebaseIndexMistralApiKey",
+	"codebaseIndexJinaApiKey",
 	"huggingFaceApiKey",
 	"sambaNovaApiKey",
 ] as const satisfies readonly (keyof ProviderSettings)[]

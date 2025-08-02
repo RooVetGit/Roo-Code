@@ -2046,6 +2046,9 @@ export const webviewMessageHandler = async (
 						settings.codebaseIndexMistralApiKey,
 					)
 				}
+				if (settings.codebaseIndexJinaApiKey !== undefined) {
+					await provider.contextProxy.storeSecret("codebaseIndexJinaApiKey", settings.codebaseIndexJinaApiKey)
+				}
 
 				// Send success response first - settings are saved regardless of validation
 				await provider.postMessageToWebview({
@@ -2167,6 +2170,7 @@ export const webviewMessageHandler = async (
 			))
 			const hasGeminiApiKey = !!(await provider.context.secrets.get("codebaseIndexGeminiApiKey"))
 			const hasMistralApiKey = !!(await provider.context.secrets.get("codebaseIndexMistralApiKey"))
+			const hasJinaApiKey = !!(await provider.context.secrets.get("codebaseIndexJinaApiKey"))
 
 			provider.postMessageToWebview({
 				type: "codeIndexSecretStatus",
@@ -2176,6 +2180,7 @@ export const webviewMessageHandler = async (
 					hasOpenAiCompatibleApiKey,
 					hasGeminiApiKey,
 					hasMistralApiKey,
+					hasJinaApiKey,
 				},
 			})
 			break
