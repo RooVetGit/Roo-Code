@@ -4,6 +4,7 @@ import OpenAI from "openai"
 import { unboundDefaultModelId, unboundDefaultModelInfo } from "@roo-code/types"
 
 import type { ApiHandlerOptions } from "../../shared/api"
+import { getModelMaxOutputTokens } from "../../shared/api"
 
 import { ApiStream, ApiStreamUsageChunk } from "../transform/stream"
 import { convertToOpenAiMessages } from "../transform/openai-format"
@@ -76,12 +77,14 @@ export class UnboundHandler extends RouterProvider implements SingleCompletionHa
 			addVertexCacheBreakpoints(messages)
 		}
 
-		// Required by Anthropic; other providers default to max tokens allowed.
-		let maxTokens: number | undefined
-
-		if (modelId.startsWith("anthropic/")) {
-			maxTokens = info.maxTokens ?? undefined
-		}
+		// Use getModelMaxOutputTokens to respect user's custom max tokens setting
+		const maxTokens = modelId.startsWith("anthropic/")
+			? getModelMaxOutputTokens({
+					modelId,
+					model: info,
+					settings: this.options as any,
+				})
+			: undefined
 
 		const requestOptions: UnboundChatCompletionCreateParamsStreaming = {
 			model: modelId.split("/")[1],
@@ -149,7 +152,11 @@ export class UnboundHandler extends RouterProvider implements SingleCompletionHa
 			}
 
 			if (modelId.startsWith("anthropic/")) {
-				requestOptions.max_tokens = info.maxTokens
+				requestOptions.max_tokens = getModelMaxOutputTokens({
+					modelId,
+					model: info,
+					settings: this.options as any,
+				})
 			}
 
 			const response = await this.client.chat.completions.create(requestOptions, { headers: DEFAULT_HEADERS })

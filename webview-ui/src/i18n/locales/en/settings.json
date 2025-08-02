@@ -414,6 +414,15 @@
 			"label": "Rate limit",
 			"description": "Minimum time between API requests."
 		},
+		"maxOutputTokens": {
+			"label": "Max Output Tokens",
+			"description": "Maximum number of tokens to reserve for model output. Default is 8192.",
+			"validation": {
+				"tooHigh": "Value exceeds model's maximum of {{max}} tokens",
+				"tooLow": "Value must be at least {{min}} tokens"
+			},
+			"modelSupports": "This model supports up to {{max}} tokens"
+		},
 		"consecutiveMistakeLimit": {
 			"label": "Error & Repetition Limit",
 			"description": "Number of consecutive errors or repeated actions before showing 'Roo is having trouble' dialog",
@@ -739,7 +748,6 @@
 		}
 	},
 	"thinkingBudget": {
-		"maxTokens": "Max Tokens",
 		"maxThinkingTokens": "Max Thinking Tokens"
 	},
 	"validation": {

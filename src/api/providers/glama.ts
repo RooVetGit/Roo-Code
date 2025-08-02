@@ -5,7 +5,7 @@ import OpenAI from "openai"
 import { glamaDefaultModelId, glamaDefaultModelInfo, GLAMA_DEFAULT_TEMPERATURE } from "@roo-code/types"
 
 import { Package } from "../../shared/package"
-import { ApiHandlerOptions } from "../../shared/api"
+import { ApiHandlerOptions, getModelMaxOutputTokens } from "../../shared/api"
 
 import { ApiStream } from "../transform/stream"
 import { convertToOpenAiMessages } from "../transform/openai-format"
@@ -49,12 +49,14 @@ export class GlamaHandler extends RouterProvider implements SingleCompletionHand
 			addCacheBreakpoints(systemPrompt, openAiMessages)
 		}
 
-		// Required by Anthropic; other providers default to max tokens allowed.
-		let maxTokens: number | undefined
-
-		if (modelId.startsWith("anthropic/")) {
-			maxTokens = info.maxTokens ?? undefined
-		}
+		// Use getModelMaxOutputTokens to respect user's custom max tokens setting
+		const maxTokens = modelId.startsWith("anthropic/")
+			? getModelMaxOutputTokens({
+					modelId,
+					model: info,
+					settings: this.options as any,
+				})
+			: undefined
 
 		const requestOptions: OpenAI.Chat.ChatCompletionCreateParams = {
 			model: modelId,
@@ -130,7 +132,11 @@ export class GlamaHandler extends RouterProvider implements SingleCompletionHand
 			}
 
 			if (modelId.startsWith("anthropic/")) {
-				requestOptions.max_tokens = info.maxTokens
+				requestOptions.max_tokens = getModelMaxOutputTokens({
+					modelId,
+					model: info,
+					settings: this.options as any,
+				})
 			}
 
 			const response = await this.client.chat.completions.create(requestOptions)

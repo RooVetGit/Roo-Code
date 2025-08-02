@@ -3,6 +3,7 @@ import { Anthropic } from "@anthropic-ai/sdk"
 import OpenAI from "openai"
 
 import type { ApiHandlerOptions } from "../../shared/api"
+import { getModelMaxOutputTokens } from "../../shared/api"
 import { XmlMatcher } from "../../utils/xml-matcher"
 import { convertToR1Format } from "../transform/r1-format"
 import { convertToOpenAiMessages } from "../transform/openai-format"
@@ -27,15 +28,17 @@ export class ChutesHandler extends BaseOpenAiCompatibleProvider<ChutesModelId> {
 		systemPrompt: string,
 		messages: Anthropic.Messages.MessageParam[],
 	): OpenAI.Chat.Completions.ChatCompletionCreateParamsStreaming {
-		const {
-			id: model,
-			info: { maxTokens: max_tokens },
-		} = this.getModel()
+		const model = this.getModel()
+		const max_tokens = getModelMaxOutputTokens({
+			modelId: model.id,
+			model: model.info,
+			settings: this.options as any,
+		})
 
-		const temperature = this.options.modelTemperature ?? this.getModel().info.temperature
+		const temperature = this.options.modelTemperature ?? model.info.temperature
 
 		return {
-			model,
+			model: model.id,
 			max_tokens,
 			temperature,
 			messages: [{ role: "system", content: systemPrompt }, ...convertToOpenAiMessages(messages)],

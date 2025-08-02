@@ -3,7 +3,7 @@ import { Mistral } from "@mistralai/mistralai"
 
 import { type MistralModelId, mistralDefaultModelId, mistralModels, MISTRAL_DEFAULT_TEMPERATURE } from "@roo-code/types"
 
-import { ApiHandlerOptions } from "../../shared/api"
+import { ApiHandlerOptions, getModelMaxOutputTokens } from "../../shared/api"
 
 import { convertToMistralMessages } from "../transform/mistral-format"
 import { ApiStream } from "../transform/stream"
@@ -78,7 +78,13 @@ export class MistralHandler extends BaseProvider implements SingleCompletionHand
 		const info = mistralModels[id as MistralModelId] ?? mistralModels[mistralDefaultModelId]
 
 		// @TODO: Move this to the `getModelParams` function.
-		const maxTokens = this.options.includeMaxTokens ? info.maxTokens : undefined
+		const maxTokens = this.options.includeMaxTokens
+			? getModelMaxOutputTokens({
+					modelId: id,
+					model: info,
+					settings: { ...this.options, apiProvider: "mistral" } as any,
+				})
+			: undefined
 		const temperature = this.options.modelTemperature ?? MISTRAL_DEFAULT_TEMPERATURE
 
 		return { id, info, maxTokens, temperature }

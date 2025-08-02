@@ -10,7 +10,7 @@ import {
 	OPENAI_AZURE_AI_INFERENCE_PATH,
 } from "@roo-code/types"
 
-import type { ApiHandlerOptions } from "../../shared/api"
+import { ApiHandlerOptions, getModelMaxOutputTokens } from "../../shared/api"
 
 import { XmlMatcher } from "../../utils/xml-matcher"
 
@@ -403,9 +403,14 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 	): void {
 		// Only add max_completion_tokens if includeMaxTokens is true
 		if (this.options.includeMaxTokens === true) {
-			// Use user-configured modelMaxTokens if available, otherwise fall back to model's default maxTokens
+			// Use getModelMaxOutputTokens to properly handle user settings and model limits
 			// Using max_completion_tokens as max_tokens is deprecated
-			requestOptions.max_completion_tokens = this.options.modelMaxTokens || modelInfo.maxTokens
+			const modelId = this.options.openAiModelId ?? ""
+			requestOptions.max_completion_tokens = getModelMaxOutputTokens({
+				modelId,
+				model: modelInfo,
+				settings: { ...this.options, apiProvider: "openai" } as any,
+			})
 		}
 	}
 }

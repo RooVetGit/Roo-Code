@@ -59,38 +59,19 @@ export const ThinkingBudget = ({ apiConfiguration, setApiConfigurationField, mod
 				</div>
 			)}
 			{(isReasoningBudgetRequired || enableReasoningEffort) && (
-				<>
-					<div className="flex flex-col gap-1">
-						<div className="font-medium">{t("settings:thinkingBudget.maxTokens")}</div>
-						<div className="flex items-center gap-1">
-							<Slider
-								min={8192}
-								max={Math.max(
-									modelInfo.maxTokens || 8192,
-									customMaxOutputTokens,
-									DEFAULT_HYBRID_REASONING_MODEL_MAX_TOKENS,
-								)}
-								step={1024}
-								value={[customMaxOutputTokens]}
-								onValueChange={([value]) => setApiConfigurationField("modelMaxTokens", value)}
-							/>
-							<div className="w-12 text-sm text-center">{customMaxOutputTokens}</div>
-						</div>
+				<div className="flex flex-col gap-1">
+					<div className="font-medium">{t("settings:thinkingBudget.maxThinkingTokens")}</div>
+					<div className="flex items-center gap-1" data-testid="reasoning-budget">
+						<Slider
+							min={1024}
+							max={modelMaxThinkingTokens}
+							step={1024}
+							value={[Math.min(customMaxThinkingTokens, modelMaxThinkingTokens)]}
+							onValueChange={([value]) => setApiConfigurationField("modelMaxThinkingTokens", value)}
+						/>
+						<div className="w-12 text-sm text-center">{customMaxThinkingTokens}</div>
 					</div>
-					<div className="flex flex-col gap-1">
-						<div className="font-medium">{t("settings:thinkingBudget.maxThinkingTokens")}</div>
-						<div className="flex items-center gap-1" data-testid="reasoning-budget">
-							<Slider
-								min={1024}
-								max={modelMaxThinkingTokens}
-								step={1024}
-								value={[customMaxThinkingTokens]}
-								onValueChange={([value]) => setApiConfigurationField("modelMaxThinkingTokens", value)}
-							/>
-							<div className="w-12 text-sm text-center">{customMaxThinkingTokens}</div>
-						</div>
-					</div>
-				</>
+				</div>
 			)}
 		</>
 	) : isReasoningEffortSupported ? (
