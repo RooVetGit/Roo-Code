@@ -43,14 +43,76 @@ async function loadLanguage(langName: string, sourceDirectory?: string) {
 
 	try {
 		const { Language } = require("web-tree-sitter")
-		return await Language.load(wasmPath)
+
+		// Add timeout for WASM loading to prevent hanging
+		const loadTimeout = new Promise((_, reject) => {
+			setTimeout(() => reject(new Error(`Timeout loading WASM file: ${wasmPath}`)), 30000)
+		})
+
+		const language = await Promise.race([Language.load(wasmPath), loadTimeout])
+
+		if (!language) {
+			throw new Error(`Failed to load language from ${wasmPath}`)
+		}
+
+		return language
 	} catch (error) {
 		console.error(`Error loading language: ${wasmPath}: ${error instanceof Error ? error.message : error}`)
-		throw error
+		// Return null instead of throwing to prevent crashes
+		return null
 	}
 }
 
 let isParserInitialized = false
+let loadedParsers: Map<string, { parser: ParserT; query: QueryT; lastUsed: number }> = new Map()
+const MAX_PARSERS_IN_MEMORY = 10
+const PARSER_CLEANUP_INTERVAL = 60000 // 1 minute
+
+// Cleanup old parsers to prevent memory leaks
+function cleanupOldParsers() {
+	if (loadedParsers.size <= MAX_PARSERS_IN_MEMORY) {
+		return
+	}
+
+	const now = Date.now()
+	const parsersToRemove: string[] = []
+
+	// Find parsers that haven't been used recently
+	for (const [key, value] of loadedParsers.entries()) {
+		if (now - value.lastUsed > PARSER_CLEANUP_INTERVAL) {
+			parsersToRemove.push(key)
+		}
+	}
+
+	// Remove old parsers
+	for (const key of parsersToRemove) {
+		const parserData = loadedParsers.get(key)
+		if (parserData) {
+			try {
+				// Clean up parser resources
+				parserData.parser.delete()
+			} catch (error) {
+				console.warn(`Error cleaning up parser for ${key}: ${error}`)
+			}
+			loadedParsers.delete(key)
+		}
+	}
+}
+
+// Set up periodic cleanup
+let cleanupInterval: NodeJS.Timeout | null = null
+function startCleanupInterval() {
+	if (!cleanupInterval) {
+		cleanupInterval = setInterval(cleanupOldParsers, PARSER_CLEANUP_INTERVAL)
+	}
+}
+
+function stopCleanupInterval() {
+	if (cleanupInterval) {
+		clearInterval(cleanupInterval)
+		cleanupInterval = null
+	}
+}
 
 /*
 Using node bindings for tree-sitter is problematic in vscode extensions 
@@ -88,6 +150,8 @@ export async function loadRequiredLanguageParsers(filesToParse: string[], source
 		}
 	}
 
+	startCleanupInterval()
+
 	const extensionsToLoad = new Set(filesToParse.map((file) => path.extname(file).toLowerCase().slice(1)))
 	const parsers: LanguageParser = {}
 
@@ -96,136 +160,199 @@ export async function loadRequiredLanguageParsers(filesToParse: string[], source
 		let query: QueryT
 		let parserKey = ext // Default to using extension as key
 
-		switch (ext) {
-			case "js":
-			case "jsx":
-			case "json":
-				language = await loadLanguage("javascript", sourceDirectory)
-				query = new Query(language, javascriptQuery)
-				break
-			case "ts":
-				language = await loadLanguage("typescript", sourceDirectory)
-				query = new Query(language, typescriptQuery)
-				break
-			case "tsx":
-				language = await loadLanguage("tsx", sourceDirectory)
-				query = new Query(language, tsxQuery)
-				break
-			case "py":
-				language = await loadLanguage("python", sourceDirectory)
-				query = new Query(language, pythonQuery)
-				break
-			case "rs":
-				language = await loadLanguage("rust", sourceDirectory)
-				query = new Query(language, rustQuery)
-				break
-			case "go":
-				language = await loadLanguage("go", sourceDirectory)
-				query = new Query(language, goQuery)
-				break
-			case "cpp":
-			case "hpp":
-				language = await loadLanguage("cpp", sourceDirectory)
-				query = new Query(language, cppQuery)
-				break
-			case "c":
-			case "h":
-				language = await loadLanguage("c", sourceDirectory)
-				query = new Query(language, cQuery)
-				break
-			case "cs":
-				language = await loadLanguage("c_sharp", sourceDirectory)
-				query = new Query(language, csharpQuery)
-				break
-			case "rb":
-				language = await loadLanguage("ruby", sourceDirectory)
-				query = new Query(language, rubyQuery)
-				break
-			case "java":
-				language = await loadLanguage("java", sourceDirectory)
-				query = new Query(language, javaQuery)
-				break
-			case "php":
-				language = await loadLanguage("php", sourceDirectory)
-				query = new Query(language, phpQuery)
-				break
-			case "swift":
-				language = await loadLanguage("swift", sourceDirectory)
-				query = new Query(language, swiftQuery)
-				break
-			case "kt":
-			case "kts":
-				language = await loadLanguage("kotlin", sourceDirectory)
-				query = new Query(language, kotlinQuery)
-				break
-			case "css":
-				language = await loadLanguage("css", sourceDirectory)
-				query = new Query(language, cssQuery)
-				break
-			case "html":
-				language = await loadLanguage("html", sourceDirectory)
-				query = new Query(language, htmlQuery)
-				break
-			case "ml":
-			case "mli":
-				language = await loadLanguage("ocaml", sourceDirectory)
-				query = new Query(language, ocamlQuery)
-				break
-			case "scala":
-				language = await loadLanguage("scala", sourceDirectory)
-				query = new Query(language, luaQuery) // Temporarily use Lua query until Scala is implemented
-				break
-			case "sol":
-				language = await loadLanguage("solidity", sourceDirectory)
-				query = new Query(language, solidityQuery)
-				break
-			case "toml":
-				language = await loadLanguage("toml", sourceDirectory)
-				query = new Query(language, tomlQuery)
-				break
-			case "vue":
-				language = await loadLanguage("vue", sourceDirectory)
-				query = new Query(language, vueQuery)
-				break
-			case "lua":
-				language = await loadLanguage("lua", sourceDirectory)
-				query = new Query(language, luaQuery)
-				break
-			case "rdl":
-				language = await loadLanguage("systemrdl", sourceDirectory)
-				query = new Query(language, systemrdlQuery)
-				break
-			case "tla":
-				language = await loadLanguage("tlaplus", sourceDirectory)
-				query = new Query(language, tlaPlusQuery)
-				break
-			case "zig":
-				language = await loadLanguage("zig", sourceDirectory)
-				query = new Query(language, zigQuery)
-				break
-			case "ejs":
-			case "erb":
-				parserKey = "embedded_template" // Use same key for both extensions.
-				language = await loadLanguage("embedded_template", sourceDirectory)
-				query = new Query(language, embeddedTemplateQuery)
-				break
-			case "el":
-				language = await loadLanguage("elisp", sourceDirectory)
-				query = new Query(language, elispQuery)
-				break
-			case "ex":
-			case "exs":
-				language = await loadLanguage("elixir", sourceDirectory)
-				query = new Query(language, elixirQuery)
-				break
-			default:
-				throw new Error(`Unsupported language: ${ext}`)
-		}
+		try {
+			switch (ext) {
+				case "js":
+				case "jsx":
+				case "json":
+					language = await loadLanguage("javascript", sourceDirectory)
+					if (!language) continue
+					query = new Query(language, javascriptQuery)
+					break
+				case "ts":
+					language = await loadLanguage("typescript", sourceDirectory)
+					if (!language) continue
+					query = new Query(language, typescriptQuery)
+					break
+				case "tsx":
+					language = await loadLanguage("tsx", sourceDirectory)
+					if (!language) continue
+					query = new Query(language, tsxQuery)
+					break
+				case "py":
+					language = await loadLanguage("python", sourceDirectory)
+					if (!language) continue
+					query = new Query(language, pythonQuery)
+					break
+				case "rs":
+					language = await loadLanguage("rust", sourceDirectory)
+					if (!language) continue
+					query = new Query(language, rustQuery)
+					break
+				case "go":
+					language = await loadLanguage("go", sourceDirectory)
+					if (!language) continue
+					query = new Query(language, goQuery)
+					break
+				case "cpp":
+				case "hpp":
+					language = await loadLanguage("cpp", sourceDirectory)
+					if (!language) continue
+					query = new Query(language, cppQuery)
+					break
+				case "c":
+				case "h":
+					language = await loadLanguage("c", sourceDirectory)
+					if (!language) continue
+					query = new Query(language, cQuery)
+					break
+				case "cs":
+					language = await loadLanguage("c_sharp", sourceDirectory)
+					if (!language) continue
+					query = new Query(language, csharpQuery)
+					break
+				case "rb":
+					language = await loadLanguage("ruby", sourceDirectory)
+					if (!language) continue
+					query = new Query(language, rubyQuery)
+					break
+				case "java":
+					language = await loadLanguage("java", sourceDirectory)
+					if (!language) continue
+					query = new Query(language, javaQuery)
+					break
+				case "php":
+					language = await loadLanguage("php", sourceDirectory)
+					if (!language) continue
+					query = new Query(language, phpQuery)
+					break
+				case "swift":
+					language = await loadLanguage("swift", sourceDirectory)
+					if (!language) continue
+					query = new Query(language, swiftQuery)
+					break
+				case "kt":
+				case "kts":
+					language = await loadLanguage("kotlin", sourceDirectory)
+					if (!language) continue
+					query = new Query(language, kotlinQuery)
+					break
+				case "css":
+					language = await loadLanguage("css", sourceDirectory)
+					if (!language) continue
+					query = new Query(language, cssQuery)
+					break
+				case "html":
+					language = await loadLanguage("html", sourceDirectory)
+					if (!language) continue
+					query = new Query(language, htmlQuery)
+					break
+				case "ml":
+				case "mli":
+					language = await loadLanguage("ocaml", sourceDirectory)
+					if (!language) continue
+					query = new Query(language, ocamlQuery)
+					break
+				case "scala":
+					language = await loadLanguage("scala", sourceDirectory)
+					if (!language) continue
+					query = new Query(language, luaQuery) // Temporarily use Lua query until Scala is implemented
+					break
+				case "sol":
+					language = await loadLanguage("solidity", sourceDirectory)
+					if (!language) continue
+					query = new Query(language, solidityQuery)
+					break
+				case "toml":
+					language = await loadLanguage("toml", sourceDirectory)
+					if (!language) continue
+					query = new Query(language, tomlQuery)
+					break
+				case "vue":
+					language = await loadLanguage("vue", sourceDirectory)
+					if (!language) continue
+					query = new Query(language, vueQuery)
+					break
+				case "lua":
+					language = await loadLanguage("lua", sourceDirectory)
+					if (!language) continue
+					query = new Query(language, luaQuery)
+					break
+				case "rdl":
+					language = await loadLanguage("systemrdl", sourceDirectory)
+					if (!language) continue
+					query = new Query(language, systemrdlQuery)
+					break
+				case "tla":
+					language = await loadLanguage("tlaplus", sourceDirectory)
+					if (!language) continue
+					query = new Query(language, tlaPlusQuery)
+					break
+				case "zig":
+					language = await loadLanguage("zig", sourceDirectory)
+					if (!language) continue
+					query = new Query(language, zigQuery)
+					break
+				case "ejs":
+				case "erb":
+					parserKey = "embedded_template" // Use same key for both extensions.
+					language = await loadLanguage("embedded_template", sourceDirectory)
+					if (!language) continue
+					query = new Query(language, embeddedTemplateQuery)
+					break
+				case "el":
+					language = await loadLanguage("elisp", sourceDirectory)
+					if (!language) continue
+					query = new Query(language, elispQuery)
+					break
+				case "ex":
+				case "exs":
+					language = await loadLanguage("elixir", sourceDirectory)
+					if (!language) continue
+					query = new Query(language, elixirQuery)
+					break
+				default:
+					console.warn(`Unsupported language: ${ext}`)
+					continue
+			}
 
-		const parser = new Parser()
-		parser.setLanguage(language)
-		parsers[parserKey] = { parser, query }
+			const parser = new Parser()
+			parser.setLanguage(language)
+
+			// Store in cache with timestamp
+			const parserData = { parser, query, lastUsed: Date.now() }
+			loadedParsers.set(parserKey, parserData)
+			parsers[parserKey] = { parser, query }
+		} catch (error) {
+			console.error(`Error loading parser for ${ext}: ${error instanceof Error ? error.message : error}`)
+			// Continue with other parsers instead of failing completely
+			continue
+		}
+	}
+
+	// Update last used timestamp for returned parsers
+	for (const key of Object.keys(parsers)) {
+		const cached = loadedParsers.get(key)
+		if (cached) {
+			cached.lastUsed = Date.now()
+		}
 	}
 
 	return parsers
+}
+
+// Export cleanup function for testing and manual cleanup
+export function cleanupAllParsers() {
+	stopCleanupInterval()
+
+	for (const [key, value] of loadedParsers.entries()) {
+		try {
+			value.parser.delete()
+		} catch (error) {
+			console.warn(`Error cleaning up parser for ${key}: ${error}`)
+		}
+	}
+
+	loadedParsers.clear()
+	isParserInitialized = false
 }

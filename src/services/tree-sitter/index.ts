@@ -397,10 +397,33 @@ async function parseFile(
 
 	try {
 		// Parse the file content into an Abstract Syntax Tree (AST)
-		const tree = parser.parse(fileContent)
+		// Add timeout to prevent hanging on large or complex files
+		const parseTimeout = new Promise<any>((resolve) => {
+			setTimeout(() => {
+				console.warn(`Parsing timeout for ${filePath} - file may be too large or complex`)
+				resolve(null)
+			}, 10000) // 10 second timeout
+		})
+
+		const parsePromise = new Promise<any>((resolve) => {
+			try {
+				const tree = parser.parse(fileContent)
+				resolve(tree)
+			} catch (err) {
+				console.error(`Parser error for ${filePath}: ${err instanceof Error ? err.message : err}`)
+				resolve(null)
+			}
+		})
+
+		const tree = await Promise.race([parsePromise, parseTimeout])
+
+		if (!tree || !tree.rootNode) {
+			console.warn(`Failed to parse ${filePath} - skipping`)
+			return null
+		}
 
 		// Apply the query to the AST and get the captures
-		const captures = tree ? query.captures(tree.rootNode) : []
+		const captures = query.captures(tree.rootNode) || []
 
 		// Split the file content into individual lines
 		const lines = fileContent.split("\n")
@@ -408,7 +431,7 @@ async function parseFile(
 		// Process the captures
 		return processCaptures(captures, lines, extLang)
 	} catch (error) {
-		console.log(`Error parsing file: ${error}\n`)
+		console.error(`Error parsing file ${filePath}: ${error instanceof Error ? error.message : error}`)
 		// Return null on parsing error to avoid showing error messages in the output
 		return null
 	}
