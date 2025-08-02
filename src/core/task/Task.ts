@@ -949,6 +949,35 @@ export class Task extends EventEmitter<TaskEvents> {
 		this.isPaused = false
 		this.emit("taskUnpaused")
 
+		// Restore the mode that was active when this task was paused
+		const provider = this.providerRef.deref()
+		if (provider && this.pausedModeSlug) {
+			try {
+				const currentState = await provider.getState()
+				const currentMode = currentState?.mode ?? defaultModeSlug
+
+				if (currentMode !== this.pausedModeSlug) {
+					provider.log(
+						`[subtasks] task ${this.taskId}.${this.instanceId} restoring mode from '${currentMode}' to '${this.pausedModeSlug}'`,
+					)
+
+					await provider.handleModeSwitch(this.pausedModeSlug)
+
+					// Delay to allow mode change to take effect
+					await delay(500)
+
+					provider.log(
+						`[subtasks] task ${this.taskId}.${this.instanceId} successfully restored to '${this.pausedModeSlug}' mode`,
+					)
+				}
+			} catch (error) {
+				provider.log(
+					`[subtasks] task ${this.taskId}.${this.instanceId} failed to restore mode to '${this.pausedModeSlug}': ${error}`,
+				)
+				// Continue execution even if mode restoration fails
+			}
+		}
+
 		// Fake an answer from the subtask that it has completed running and
 		// this is the result of what it has done  add the message to the chat
 		// history and to the webview ui.
@@ -979,6 +1008,35 @@ export class Task extends EventEmitter<TaskEvents> {
 
 		if (lastRelevantMessageIndex !== -1) {
 			modifiedClineMessages.splice(lastRelevantMessageIndex + 1)
+		}
+
+		// Restore mode if this task was paused with a specific mode
+		const provider = this.providerRef.deref()
+		if (provider && this.pausedModeSlug && this.pausedModeSlug !== defaultModeSlug) {
+			try {
+				const currentState = await provider.getState()
+				const currentMode = currentState?.mode ?? defaultModeSlug
+
+				if (currentMode !== this.pausedModeSlug) {
+					provider.log(
+						`[subtasks] task ${this.taskId}.${this.instanceId} resuming from history - restoring mode from '${currentMode}' to '${this.pausedModeSlug}'`,
+					)
+
+					await provider.handleModeSwitch(this.pausedModeSlug)
+
+					// Delay to allow mode change to take effect
+					await delay(500)
+
+					provider.log(
+						`[subtasks] task ${this.taskId}.${this.instanceId} successfully restored to '${this.pausedModeSlug}' mode from history`,
+					)
+				}
+			} catch (error) {
+				provider.log(
+					`[subtasks] task ${this.taskId}.${this.instanceId} failed to restore mode to '${this.pausedModeSlug}' from history: ${error}`,
+				)
+				// Continue execution even if mode restoration fails
+			}
 		}
 
 		// since we don't use api_req_finished anymore, we need to check if the last api_req_started has a cost value, if it doesn't and no cancellation reason to present, then we remove it since it indicates an api request without any partial content streamed
@@ -1641,6 +1699,35 @@ export class Task extends EventEmitter<TaskEvents> {
 					await this.abortTask()
 
 					await abortStream(cancelReason, streamingFailedMessage)
+
+					// Enhanced error handling for sub-tasks: ensure parent task mode is restored
+					// when a sub-task is interrupted
+					if (this.parentTask && provider) {
+						try {
+							const parentPausedMode = this.parentTask.pausedModeSlug
+							if (parentPausedMode && parentPausedMode !== defaultModeSlug) {
+								const currentState = await provider.getState()
+								const currentMode = currentState?.mode ?? defaultModeSlug
+
+								if (currentMode !== parentPausedMode) {
+									provider.log(
+										`[subtasks] sub-task ${this.taskId}.${this.instanceId} interrupted - restoring parent mode from '${currentMode}' to '${parentPausedMode}'`,
+									)
+
+									await provider.handleModeSwitch(parentPausedMode)
+
+									provider.log(
+										`[subtasks] successfully restored parent mode to '${parentPausedMode}' after sub-task interruption`,
+									)
+								}
+							}
+						} catch (modeError) {
+							provider.log(
+								`[subtasks] failed to restore parent mode after sub-task interruption: ${modeError}`,
+							)
+							// Continue execution even if mode restoration fails
+						}
+					}
 
 					const history = await provider?.getTaskWithId(this.taskId)
 

@@ -315,8 +315,38 @@ export class ClineProvider
 	// this is used when a sub task is finished and the parent task needs to be resumed
 	async finishSubTask(lastMessage: string) {
 		console.log(`[subtasks] finishing subtask ${lastMessage}`)
+
+		// Get the parent task before removing the current one
+		const parentTask = this.clineStack.length > 1 ? this.clineStack[this.clineStack.length - 2] : undefined
+
 		// remove the last cline instance from the stack (this is the finished sub task)
 		await this.removeClineFromStack()
+
+		// Additional safety net: ensure mode is restored for the parent task
+		if (parentTask && parentTask.pausedModeSlug) {
+			try {
+				const currentState = await this.getState()
+				const currentMode = currentState?.mode ?? defaultModeSlug
+
+				if (currentMode !== parentTask.pausedModeSlug) {
+					this.log(
+						`[subtasks] finishSubTask: restoring mode from '${currentMode}' to '${parentTask.pausedModeSlug}' for parent task ${parentTask.taskId}`,
+					)
+
+					await this.handleModeSwitch(parentTask.pausedModeSlug)
+
+					this.log(
+						`[subtasks] finishSubTask: successfully restored mode to '${parentTask.pausedModeSlug}' for parent task ${parentTask.taskId}`,
+					)
+				}
+			} catch (error) {
+				this.log(
+					`[subtasks] finishSubTask: failed to restore mode to '${parentTask.pausedModeSlug}' for parent task ${parentTask.taskId}: ${error}`,
+				)
+				// Continue execution even if mode restoration fails
+			}
+		}
+
 		// resume the last cline instance in the stack (if it exists - this is the 'parent' calling task)
 		await this.getCurrentCline()?.resumePausedTask(lastMessage)
 	}
