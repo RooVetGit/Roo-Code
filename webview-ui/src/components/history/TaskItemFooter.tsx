@@ -5,14 +5,18 @@ import prettyBytes from "pretty-bytes"
 import { formatLargeNumber } from "@/utils/format"
 import { CopyButton } from "./CopyButton"
 import { ExportButton } from "./ExportButton"
+import { Button, StandardTooltip } from "@/components/ui"
+import { useAppTranslation } from "@/i18n/TranslationContext"
 
 export interface TaskItemFooterProps {
 	item: HistoryItem
 	variant: "compact" | "full"
 	isSelectionMode?: boolean
+	onResumeClick?: (e: React.MouseEvent) => void
 }
 
-const TaskItemFooter: React.FC<TaskItemFooterProps> = ({ item, variant, isSelectionMode = false }) => {
+const TaskItemFooter: React.FC<TaskItemFooterProps> = ({ item, variant, isSelectionMode = false, onResumeClick }) => {
+	const { t } = useAppTranslation()
 	return (
 		<div className="text-xs text-vscode-descriptionForeground flex justify-between items-center mt-1">
 			<div className="flex gap-2">
@@ -52,6 +56,17 @@ const TaskItemFooter: React.FC<TaskItemFooterProps> = ({ item, variant, isSelect
 			{/* Action Buttons for non-compact view */}
 			{!isSelectionMode && (
 				<div className="flex flex-row gap-0 items-center opacity-50 hover:opacity-100">
+					{onResumeClick && (
+						<StandardTooltip content={t("history:resumeTask")}>
+							<Button
+								variant="ghost"
+								size="icon"
+								className="group-hover:opacity-100 transition-opacity"
+								onClick={onResumeClick}>
+								<span className="codicon codicon-play scale-80" />
+							</Button>
+						</StandardTooltip>
+					)}
 					<CopyButton itemTask={item.task} />
 					{variant === "full" && <ExportButton itemId={item.id} />}
 				</div>

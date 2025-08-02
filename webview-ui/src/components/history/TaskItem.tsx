@@ -36,9 +36,13 @@ const TaskItem = ({
 	const handleClick = () => {
 		if (isSelectionMode && onToggleSelection) {
 			onToggleSelection(item.id, !isSelected)
-		} else {
-			vscode.postMessage({ type: "showTaskWithId", text: item.id })
 		}
+		// Removed the automatic showTaskWithId call
+	}
+
+	const handleResumeClick = (e: React.MouseEvent) => {
+		e.stopPropagation()
+		vscode.postMessage({ type: "showTaskWithId", text: item.id })
 	}
 
 	const isCompact = variant === "compact"
@@ -48,7 +52,8 @@ const TaskItem = ({
 			key={item.id}
 			data-testid={`task-item-${item.id}`}
 			className={cn(
-				"cursor-pointer group bg-vscode-editor-background rounded relative overflow-hidden hover:border-vscode-toolbar-hoverBackground/60",
+				"group bg-vscode-editor-background rounded relative overflow-hidden hover:border-vscode-toolbar-hoverBackground/60",
+				isSelectionMode ? "cursor-pointer" : "cursor-default",
 				className,
 			)}
 			onClick={handleClick}>
@@ -84,7 +89,12 @@ const TaskItem = ({
 					</div>
 
 					{/* Task Item Footer */}
-					<TaskItemFooter item={item} variant={variant} isSelectionMode={isSelectionMode} />
+					<TaskItemFooter
+						item={item}
+						variant={variant}
+						isSelectionMode={isSelectionMode}
+						onResumeClick={handleResumeClick}
+					/>
 
 					{/* Workspace info */}
 					{showWorkspace && item.workspace && (

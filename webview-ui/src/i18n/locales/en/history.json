@@ -13,6 +13,7 @@
 	"deleteTaskTitle": "Delete Task (Shift + Click to skip confirmation)",
 	"copyPrompt": "Copy Prompt",
 	"exportTask": "Export Task",
+	"resumeTask": "Resume Task",
 	"deleteTask": "Delete Task",
 	"deleteTaskMessage": "Are you sure you want to delete this task? This action cannot be undone.",
 	"cancel": "Cancel",
