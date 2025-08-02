@@ -281,8 +281,10 @@ function buildRecursiveArgs(dirPath: string): string[] {
 			continue
 		}
 
-		// For all other cases, exclude the directory pattern globally
-		args.push("-g", `!**/${dir}/**`)
+		// For all other cases, exclude directories with this name at any level
+		// Use !**/${dir}/ to match directories only (with trailing slash)
+		// This prevents excluding files when the parent path contains the directory name
+		args.push("-g", `!**/${dir}/`)
 	}
 
 	return args
@@ -310,9 +312,8 @@ function buildNonRecursiveArgs(): string[] {
 			// We'll let the directory scanning logic handle the visibility.
 			continue
 		} else {
-			// Direct children only
-			args.push("-g", `!${dir}`)
-			args.push("-g", `!${dir}/**`)
+			// Direct children only - exclude directories with this name
+			args.push("-g", `!${dir}/`)
 		}
 	}
 
