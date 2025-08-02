@@ -36,7 +36,7 @@ export const TaskActions = ({ item, buttonsDisabled }: TaskActionsProps) => {
 					onClick={(e) => copyWithFeedback(item.task, e)}
 				/>
 			)}
-			{!!item?.size && item.size > 0 && (
+			{item && (
 				<>
 					<div className="flex items-center">
 						<IconButton
@@ -53,7 +53,11 @@ export const TaskActions = ({ item, buttonsDisabled }: TaskActionsProps) => {
 								}
 							}}
 						/>
-						<span className="ml-1 text-xs text-vscode-foreground opacity-85">{prettyBytes(item.size)}</span>
+						{!!item?.size && item.size > 0 && (
+							<span className="ml-1 text-xs text-vscode-foreground opacity-85">
+								{prettyBytes(item.size)}
+							</span>
+						)}
 					</div>
 					{deleteTaskId && (
 						<DeleteTaskDialog
