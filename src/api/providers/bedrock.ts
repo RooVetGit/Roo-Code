@@ -7,6 +7,11 @@ import {
 	Message,
 	SystemContentBlock,
 } from "@aws-sdk/client-bedrock-runtime"
+// Note: @aws-sdk/client-bedrock is not available, so we'll focus on manual configuration
+// import {
+// 	BedrockClient,
+// 	GetInferenceProfileCommand,
+// } from "@aws-sdk/client-bedrock"
 import { fromIni } from "@aws-sdk/credential-providers"
 import { Anthropic } from "@anthropic-ai/sdk"
 
@@ -164,6 +169,7 @@ export type UsageType = {
 export class AwsBedrockHandler extends BaseProvider implements SingleCompletionHandler {
 	protected options: ProviderSettings
 	private client: BedrockRuntimeClient
+	// private bedrockClient: BedrockClient
 	private arnInfo: any
 
 	constructor(options: ProviderSettings) {
@@ -171,12 +177,13 @@ export class AwsBedrockHandler extends BaseProvider implements SingleCompletionH
 		this.options = options
 		let region = this.options.awsRegion
 
-		// process the various user input options, be opinionated about the intent of the options
-		// and determine the model to use during inference and for cost calculations
-		// There are variations on ARN strings that can be entered making the conditional logic
-		// more involved than the non-ARN branch of logic
+		if (!this.options.modelTemperature) {
+			this.options.modelTemperature = BEDROCK_DEFAULT_TEMPERATURE
+		}
+
+		// Initialize ARN info first to determine the correct region
 		if (this.options.awsCustomArn) {
-			this.arnInfo = this.parseArn(this.options.awsCustomArn, region)
+			this.arnInfo = this.parseArn(this.options.awsCustomArn, this.options.awsRegion)
 
 			if (!this.arnInfo.isValid) {
 				logger.error("Invalid ARN format", {
@@ -194,8 +201,6 @@ export class AwsBedrockHandler extends BaseProvider implements SingleCompletionH
 			if (this.arnInfo.region && this.arnInfo.region !== this.options.awsRegion) {
 				// Log  if there's a region mismatch between the ARN and the region selected by the user
 				// We will use the ARNs region, so execution can continue, but log an info statement.
-				// Log a warning if there's a region mismatch between the ARN and the region selected by the user
-				// We will use the ARNs region, so execution can continue, but log an info statement.
 				logger.info(this.arnInfo.errorMessage, {
 					ctx: "bedrock",
 					selectedRegion: this.options.awsRegion,
@@ -203,20 +208,15 @@ export class AwsBedrockHandler extends BaseProvider implements SingleCompletionH
 				})
 
 				this.options.awsRegion = this.arnInfo.region
+				region = this.arnInfo.region
 			}
 
 			this.options.apiModelId = this.arnInfo.modelId
 			if (this.arnInfo.awsUseCrossRegionInference) this.options.awsUseCrossRegionInference = true
 		}
 
-		if (!this.options.modelTemperature) {
-			this.options.modelTemperature = BEDROCK_DEFAULT_TEMPERATURE
-		}
-
-		this.costModelConfig = this.getModel()
-
 		const clientConfig: BedrockRuntimeClientConfig = {
-			region: this.options.awsRegion,
+			region: region,
 			// Add the endpoint configuration when specified and enabled
 			...(this.options.awsBedrockEndpoint &&
 				this.options.awsBedrockEndpointEnabled && { endpoint: this.options.awsBedrockEndpoint }),
@@ -242,6 +242,9 @@ export class AwsBedrockHandler extends BaseProvider implements SingleCompletionH
 		}
 
 		this.client = new BedrockRuntimeClient(clientConfig)
+		// this.bedrockClient = new BedrockClient(clientConfig)
+
+		this.costModelConfig = this.getModel()
 	}
 
 	// Helper to guess model info from custom modelId string if not in bedrockModels
@@ -441,7 +444,7 @@ export class AwsBedrockHandler extends BaseProvider implements SingleCompletionH
 						//so that pricing, context window, caching etc have values that can be used
 						//However, we want to keep the id of the model to be the ID for the router for
 						//subsequent requests so they are sent back through the router
-						let invokedArnInfo = this.parseArn(streamEvent.trace.promptRouter.invokedModelId)
+						let invokedArnInfo = await this.parseArnAsync(streamEvent.trace.promptRouter.invokedModelId)
 						let invokedModel = this.getModelById(invokedArnInfo.modelId as string, invokedArnInfo.modelType)
 						if (invokedModel) {
 							invokedModel.id = modelConfig.id
@@ -718,13 +721,29 @@ export class AwsBedrockHandler extends BaseProvider implements SingleCompletionH
 		}
 
 		// Convert model info to expected format for cache strategy
-		const cacheModelInfo: CacheModelInfo = {
-			maxTokens: modelInfo?.maxTokens || 8192,
-			contextWindow: modelInfo?.contextWindow || 200_000,
-			supportsPromptCache: modelInfo?.supportsPromptCache || false,
-			maxCachePoints: modelInfo?.maxCachePoints || 0,
-			minTokensPerCachePoint: modelInfo?.minTokensPerCachePoint || 50,
-			cachableFields: modelInfo?.cachableFields || [],
+		let cacheModelInfo: CacheModelInfo
+
+		if (this.options.awsManualPromptCacheEnabled) {
+			// Use manual cache configuration for Application Inference Profiles
+			const manualConfig = this.getManualCacheConfig()
+			cacheModelInfo = {
+				maxTokens: modelInfo?.maxTokens || 8192,
+				contextWindow: modelInfo?.contextWindow || 200_000,
+				supportsPromptCache: true,
+				maxCachePoints: manualConfig.maxCachePoints,
+				minTokensPerCachePoint: manualConfig.minTokensPerCachePoint,
+				cachableFields: manualConfig.cachableFields,
+			}
+		} else {
+			// Use automatic model-based configuration
+			cacheModelInfo = {
+				maxTokens: modelInfo?.maxTokens || 8192,
+				contextWindow: modelInfo?.contextWindow || 200_000,
+				supportsPromptCache: modelInfo?.supportsPromptCache || false,
+				maxCachePoints: modelInfo?.maxCachePoints || 0,
+				minTokensPerCachePoint: modelInfo?.minTokensPerCachePoint || 50,
+				cachableFields: modelInfo?.cachableFields || [],
+			}
 		}
 
 		// Get previous cache point placements for this conversation if available
@@ -780,7 +799,23 @@ export class AwsBedrockHandler extends BaseProvider implements SingleCompletionH
 		info: { maxTokens: 0, contextWindow: 0, supportsPromptCache: false, supportsImages: false },
 	}
 
-	private parseArn(arn: string, region?: string) {
+	/**
+	 * Fetches the actual model ID from an Application Inference Profile ARN
+	 * Note: This would require @aws-sdk/client-bedrock which is not currently available.
+	 * For now, we rely on manual configuration for Application Inference Profiles.
+	 */
+	private async fetchInferenceProfileModelId(profileArn: string): Promise<string | null> {
+		logger.info("AWS Bedrock client not available for inference profile lookup, using manual configuration", {
+			ctx: "bedrock",
+			profileArn,
+		})
+		return null
+	}
+
+	/**
+	 * Synchronous ARN parsing without inference profile lookup
+	 */
+	private parseArnSync(arn: string, region?: string) {
 		/*
 		 * VIA Roo analysis: platform-independent Regex. It's designed to parse Amazon Bedrock ARNs and doesn't rely on any platform-specific features
 		 * like file path separators, line endings, or case sensitivity behaviors. The forward slashes in the regex are properly escaped and
@@ -852,6 +887,40 @@ export class AwsBedrockHandler extends BaseProvider implements SingleCompletionH
 			errorMessage: "Invalid ARN format. ARN should follow the Amazon Bedrock ARN pattern.",
 			crossRegionInference: false,
 		}
+	}
+
+	private parseArn(arn: string, region?: string) {
+		// For backward compatibility with tests, keep this synchronous
+		return this.parseArnSync(arn, region)
+	}
+
+	private async parseArnAsync(arn: string, region?: string) {
+		// Start with synchronous parsing
+		const result = this.parseArnSync(arn, region)
+
+		if (!result.isValid) {
+			return result
+		}
+
+		// For inference profiles, try to fetch the actual model ID
+		if (result.modelType === "inference-profile") {
+			const actualModelId = await this.fetchInferenceProfileModelId(arn)
+			if (actualModelId) {
+				result.modelId = actualModelId
+				logger.info("Successfully resolved inference profile to model ID", {
+					ctx: "bedrock",
+					profileArn: arn,
+					resolvedModelId: actualModelId,
+				})
+			} else {
+				logger.info("Could not resolve inference profile model ID, manual configuration recommended", {
+					ctx: "bedrock",
+					profileArn: arn,
+				})
+			}
+		}
+
+		return result
 	}
 
 	//This strips any region prefix that used on cross-region model inference ARNs
@@ -985,6 +1054,11 @@ export class AwsBedrockHandler extends BaseProvider implements SingleCompletionH
 	private previousCachePointPlacements: { [conversationId: string]: any[] } = {}
 
 	private supportsAwsPromptCache(modelConfig: { id: BedrockModelId | string; info: ModelInfo }): boolean | undefined {
+		// Check if manual prompt caching is enabled for Application Inference Profiles
+		if (this.options.awsManualPromptCacheEnabled) {
+			return true
+		}
+
 		// Check if the model supports prompt cache
 		// The cachableFields property is not part of the ModelInfo type in schemas
 		// but it's used in the bedrockModels object in shared/api.ts
@@ -994,6 +1068,23 @@ export class AwsBedrockHandler extends BaseProvider implements SingleCompletionH
 			(modelConfig?.info as any)?.cachableFields &&
 			(modelConfig?.info as any)?.cachableFields?.length > 0
 		)
+	}
+
+	/**
+	 * Get cache configuration for manual prompt caching
+	 */
+	private getManualCacheConfig(): {
+		maxCachePoints: number
+		minTokensPerCachePoint: number
+		cachableFields: ("system" | "messages" | "tools")[]
+	} {
+		return {
+			maxCachePoints: this.options.awsManualMaxCachePoints || 1,
+			minTokensPerCachePoint: this.options.awsManualMinTokensPerCachePoint || 1024,
+			cachableFields: (this.options.awsManualCachableFields && this.options.awsManualCachableFields.length > 0
+				? this.options.awsManualCachableFields
+				: ["system"]) as ("system" | "messages" | "tools")[],
+		}
 	}
 
 	/**

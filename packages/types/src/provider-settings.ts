@@ -123,6 +123,11 @@ const bedrockSchema = apiModelIdProviderModelSchema.extend({
 	awsModelContextWindow: z.number().optional(),
 	awsBedrockEndpointEnabled: z.boolean().optional(),
 	awsBedrockEndpoint: z.string().optional(),
+	// Manual prompt caching configuration for Application Inference Profiles
+	awsManualPromptCacheEnabled: z.boolean().optional(),
+	awsManualMaxCachePoints: z.number().min(1).max(4).optional(),
+	awsManualMinTokensPerCachePoint: z.number().min(1).optional(),
+	awsManualCachableFields: z.array(z.enum(["system", "messages", "tools"])).optional(),
 })
 
 const vertexSchema = apiModelIdProviderModelSchema.extend({

@@ -159,6 +159,79 @@ export const Bedrock = ({ apiConfiguration, setApiConfigurationField, selectedMo
 					</div>
 				</>
 			)}
+
+			{/* Manual prompt caching configuration for Application Inference Profiles */}
+			<Checkbox
+				checked={apiConfiguration?.awsManualPromptCacheEnabled || false}
+				onChange={handleInputChange("awsManualPromptCacheEnabled", noTransform)}>
+				<div className="flex items-center gap-1">
+					<span>Manual Prompt Caching Configuration</span>
+					<StandardTooltip content="Enable manual prompt caching settings for Application Inference Profiles where automatic detection may not work">
+						<i
+							className="codicon codicon-info text-vscode-descriptionForeground"
+							style={{ fontSize: "12px" }}
+						/>
+					</StandardTooltip>
+				</div>
+			</Checkbox>
+
+			{apiConfiguration?.awsManualPromptCacheEnabled && (
+				<div className="ml-6 space-y-3">
+					<div className="text-sm text-vscode-descriptionForeground">
+						Configure prompt caching settings manually for Application Inference Profiles
+					</div>
+
+					<div className="grid grid-cols-2 gap-3">
+						<VSCodeTextField
+							value={apiConfiguration?.awsManualMaxCachePoints?.toString() || "1"}
+							onInput={(e) => {
+								const value = parseInt((e.target as HTMLInputElement).value) || 1
+								setApiConfigurationField("awsManualMaxCachePoints", Math.min(Math.max(value, 1), 4))
+							}}
+							placeholder="1"
+							className="w-full">
+							<label className="block font-medium mb-1">Max Cache Points (1-4)</label>
+						</VSCodeTextField>
+
+						<VSCodeTextField
+							value={apiConfiguration?.awsManualMinTokensPerCachePoint?.toString() || "1024"}
+							onInput={(e) => {
+								const value = parseInt((e.target as HTMLInputElement).value) || 1024
+								setApiConfigurationField("awsManualMinTokensPerCachePoint", Math.max(value, 1))
+							}}
+							placeholder="1024"
+							className="w-full">
+							<label className="block font-medium mb-1">Min Tokens Per Cache Point</label>
+						</VSCodeTextField>
+					</div>
+
+					<div>
+						<label className="block font-medium mb-1">Cacheable Fields</label>
+						<div className="flex gap-3">
+							{["system", "messages", "tools"].map((field) => (
+								<Checkbox
+									key={field}
+									checked={
+										apiConfiguration?.awsManualCachableFields?.includes(field as any) ||
+										field === "system"
+									}
+									onChange={(isChecked) => {
+										const currentFields = apiConfiguration?.awsManualCachableFields || ["system"]
+										const newFields = isChecked
+											? [...currentFields.filter((f) => f !== field), field]
+											: currentFields.filter((f) => f !== field)
+										setApiConfigurationField(
+											"awsManualCachableFields",
+											newFields.length > 0 ? newFields : ["system"],
+										)
+									}}>
+									{field.charAt(0).toUpperCase() + field.slice(1)}
+								</Checkbox>
+							))}
+						</div>
+					</div>
+				</div>
+			)}
 			<Checkbox
 				checked={awsEndpointSelected}
 				onChange={(isChecked) => {
