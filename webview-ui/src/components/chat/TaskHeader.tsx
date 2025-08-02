@@ -15,6 +15,7 @@ import { useExtensionState } from "@src/context/ExtensionStateContext"
 import { useSelectedModel } from "@/components/ui/hooks/useSelectedModel"
 
 import Thumbnails from "../common/Thumbnails"
+import ModeBadge from "../common/ModeBadge"
 
 import { TaskActions } from "./TaskActions"
 import { ShareButton } from "./ShareButton"
@@ -91,10 +92,13 @@ const TaskHeader = ({
 							<span className={`codicon codicon-chevron-${isTaskExpanded ? "down" : "right"}`}></span>
 						</div>
 						<div className="ml-1.5 whitespace-nowrap overflow-hidden text-ellipsis grow min-w-0">
-							<span className="font-bold">
-								{t("chat:task.title")}
-								{!isTaskExpanded && ":"}
-							</span>
+							<div className="flex items-center gap-2">
+								<span className="font-bold">
+									{t("chat:task.title")}
+									{!isTaskExpanded && ":"}
+								</span>
+								{currentTaskItem?.mode && <ModeBadge modeSlug={currentTaskItem.mode} />}
+							</div>
 							{!isTaskExpanded && (
 								<span className="ml-1">
 									<Mention text={task.text} />
