@@ -40,6 +40,9 @@ import {
 	sambaNovaDefaultModelId,
 	doubaoModels,
 	doubaoDefaultModelId,
+	poeModels,
+	poeDefaultModelId,
+	poeDefaultModelInfo,
 } from "@roo-code/types"
 
 import type { ModelRecord, RouterModels } from "@roo/api"
@@ -251,11 +254,16 @@ function getSelectedModel({
 		case "cerebras": {
 			const id = apiConfiguration.apiModelId ?? cerebrasDefaultModelId
 			const info = cerebrasModels[id as keyof typeof cerebrasModels]
-      return { id, info }
+			return { id, info }
 		}
 		case "sambanova": {
 			const id = apiConfiguration.apiModelId ?? sambaNovaDefaultModelId
 			const info = sambaNovaModels[id as keyof typeof sambaNovaModels]
+			return { id, info }
+		}
+		case "poe": {
+			const id = apiConfiguration.apiModelId ?? poeDefaultModelId
+			const info = poeModels[id as keyof typeof poeModels] || poeDefaultModelInfo
 			return { id, info }
 		}
 		// case "anthropic":

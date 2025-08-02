@@ -36,6 +36,7 @@ export const providerNames = [
 	"huggingface",
 	"cerebras",
 	"sambanova",
+	"poe",
 ] as const
 
 export const providerNamesSchema = z.enum(providerNames)
@@ -257,6 +258,11 @@ const sambaNovaSchema = apiModelIdProviderModelSchema.extend({
 	sambaNovaApiKey: z.string().optional(),
 })
 
+const poeSchema = apiModelIdProviderModelSchema.extend({
+	poeApiKey: z.string().optional(),
+	poeBaseUrl: z.string().optional(),
+})
+
 const defaultSchema = z.object({
 	apiProvider: z.undefined(),
 })
@@ -290,6 +296,7 @@ export const providerSettingsSchemaDiscriminated = z.discriminatedUnion("apiProv
 	litellmSchema.merge(z.object({ apiProvider: z.literal("litellm") })),
 	cerebrasSchema.merge(z.object({ apiProvider: z.literal("cerebras") })),
 	sambaNovaSchema.merge(z.object({ apiProvider: z.literal("sambanova") })),
+	poeSchema.merge(z.object({ apiProvider: z.literal("poe") })),
 	defaultSchema,
 ])
 
@@ -323,6 +330,7 @@ export const providerSettingsSchema = z.object({
 	...litellmSchema.shape,
 	...cerebrasSchema.shape,
 	...sambaNovaSchema.shape,
+	...poeSchema.shape,
 	...codebaseIndexProviderSchema.shape,
 })
 
