@@ -10,6 +10,7 @@ import { convertToOpenAiMessages } from "../transform/openai-format"
 import type { SingleCompletionHandler, ApiHandlerCreateMessageMetadata } from "../index"
 import { DEFAULT_HEADERS } from "./constants"
 import { BaseProvider } from "./base-provider"
+import { withTimeout, DEFAULT_REQUEST_TIMEOUT } from "./utils/timeout-wrapper"
 
 type BaseOpenAiCompatibleProviderOptions<ModelName extends string> = ApiHandlerOptions & {
 	providerName: string
@@ -83,7 +84,11 @@ export abstract class BaseOpenAiCompatibleProvider<ModelName extends string>
 			stream_options: { include_usage: true },
 		}
 
-		const stream = await this.client.chat.completions.create(params)
+		const baseStream = await this.client.chat.completions.create(params)
+
+		// Wrap the stream with timeout if configured
+		const timeout = this.options.openAiRequestTimeout || DEFAULT_REQUEST_TIMEOUT
+		const stream = this.options.openAiRequestTimeout ? withTimeout(baseStream, timeout) : baseStream
 
 		for await (const chunk of stream) {
 			const delta = chunk.choices[0]?.delta

@@ -23,6 +23,7 @@ import { getModelParams } from "../transform/model-params"
 import { DEFAULT_HEADERS } from "./constants"
 import { BaseProvider } from "./base-provider"
 import type { SingleCompletionHandler, ApiHandlerCreateMessageMetadata } from "../index"
+import { withTimeout, DEFAULT_REQUEST_TIMEOUT } from "./utils/timeout-wrapper"
 
 // TODO: Rename this to OpenAICompatibleHandler. Also, I think the
 // `OpenAINativeHandler` can subclass from this, since it's obviously
@@ -161,10 +162,14 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 			// Add max_tokens if needed
 			this.addMaxTokensIfNeeded(requestOptions, modelInfo)
 
-			const stream = await this.client.chat.completions.create(
+			const baseStream = await this.client.chat.completions.create(
 				requestOptions,
 				isAzureAiInference ? { path: OPENAI_AZURE_AI_INFERENCE_PATH } : {},
 			)
+
+			// Wrap the stream with timeout if configured
+			const timeout = this.options.openAiRequestTimeout || DEFAULT_REQUEST_TIMEOUT
+			const stream = this.options.openAiRequestTimeout ? withTimeout(baseStream, timeout) : baseStream
 
 			const matcher = new XmlMatcher(
 				"think",
@@ -314,10 +319,14 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 			// This allows O3 models to limit response length when includeMaxTokens is enabled
 			this.addMaxTokensIfNeeded(requestOptions, modelInfo)
 
-			const stream = await this.client.chat.completions.create(
+			const baseStream = await this.client.chat.completions.create(
 				requestOptions,
 				methodIsAzureAiInference ? { path: OPENAI_AZURE_AI_INFERENCE_PATH } : {},
 			)
+
+			// Wrap the stream with timeout if configured
+			const timeout = this.options.openAiRequestTimeout || DEFAULT_REQUEST_TIMEOUT
+			const stream = this.options.openAiRequestTimeout ? withTimeout(baseStream, timeout) : baseStream
 
 			yield* this.handleStreamResponse(stream)
 		} else {
