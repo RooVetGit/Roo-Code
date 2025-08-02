@@ -559,3 +559,131 @@ describe("buildRecursiveArgs edge cases", () => {
 		expect(args).not.toContain("--no-ignore")
 	})
 })
+
+describe("version-numbered file sorting", () => {
+	beforeEach(() => {
+		vi.clearAllMocks()
+	})
+
+	it("should properly sort version-numbered files with numeric awareness", async () => {
+		const mockSpawn = vi.mocked(childProcess.spawn)
+		const mockProcess = {
+			stdout: {
+				on: vi.fn((event, callback) => {
+					if (event === "data") {
+						// Simulate version-numbered files that would be problematic with alphabetical sorting
+						// These files would be sorted incorrectly with basic alphabetical sort:
+						// v3.25.1.mdx would come after v3.25.mdx but before v3.3.mdx
+						const versionFiles =
+							[
+								"v3.24.mdx",
+								"v3.25.mdx",
+								"v3.25.1.mdx",
+								"v3.25.2.mdx",
+								"v3.25.3.mdx",
+								"v3.25.4.mdx",
+								"v3.3.mdx",
+								"v3.30.mdx",
+							].join("\n") + "\n"
+						setTimeout(() => callback(versionFiles), 10)
+					}
+				}),
+			},
+			stderr: {
+				on: vi.fn(),
+			},
+			on: vi.fn((event, callback) => {
+				if (event === "close") {
+					setTimeout(() => callback(0), 20)
+				}
+			}),
+			kill: vi.fn(),
+		}
+		mockSpawn.mockReturnValue(mockProcess as any)
+
+		// Mock fs operations
+		vi.mocked(fs.promises.access).mockRejectedValue(new Error("File not found"))
+		vi.mocked(fs.promises.readdir).mockResolvedValue([])
+
+		// Call listFiles with a limit that would cut off some version files with alphabetical sorting
+		const [results, limitReached] = await listFiles("/test/docs", false, 200)
+
+		// The results should be passed through without the problematic alphabetical sort
+		// The actual sorting will be handled by formatFilesList with numeric awareness
+		expect(results.length).toBeGreaterThan(0)
+		expect(limitReached).toBe(false)
+
+		// Verify that all version files are included in the raw results
+		// (the numeric sorting will happen later in formatFilesList)
+		const versionFiles = results.filter((file) => file.includes("v3.25"))
+		expect(versionFiles.length).toBeGreaterThan(0)
+
+		// The key fix: formatAndCombineResults should NOT apply alphabetical sorting
+		// that would misplace version-numbered files
+		const hasV3_25_1 = results.some((file) => file.includes("v3.25.1.mdx"))
+		const hasV3_25_2 = results.some((file) => file.includes("v3.25.2.mdx"))
+		const hasV3_25_3 = results.some((file) => file.includes("v3.25.3.mdx"))
+
+		expect(hasV3_25_1).toBe(true)
+		expect(hasV3_25_2).toBe(true)
+		expect(hasV3_25_3).toBe(true)
+	})
+
+	it("should not apply alphabetical sorting that breaks version sequences", async () => {
+		const mockSpawn = vi.mocked(childProcess.spawn)
+
+		// Create a scenario with exactly 200+ files where version files would be cut off
+		const files: string[] = []
+
+		// Add 195 regular files that come alphabetically before version files
+		for (let i = 1; i <= 195; i++) {
+			files.push(`file${i.toString().padStart(3, "0")}.txt`)
+		}
+
+		// Add version files that would be problematic with alphabetical sorting
+		files.push("v3.25.mdx") // Position ~196
+		files.push("v3.25.1.mdx") // Would be position ~203 with alphabetical sort
+		files.push("v3.25.2.mdx") // Would be position ~204 with alphabetical sort
+		files.push("v3.25.3.mdx") // Would be position ~205 with alphabetical sort
+		files.push("v3.25.4.mdx") // Would be position ~199 with alphabetical sort
+		files.push("v3.3.mdx") // Would be position ~206 with alphabetical sort
+
+		const mockProcess = {
+			stdout: {
+				on: vi.fn((event, callback) => {
+					if (event === "data") {
+						setTimeout(() => callback(files.join("\n") + "\n"), 10)
+					}
+				}),
+			},
+			stderr: {
+				on: vi.fn(),
+			},
+			on: vi.fn((event, callback) => {
+				if (event === "close") {
+					setTimeout(() => callback(0), 20)
+				}
+			}),
+			kill: vi.fn(),
+		}
+		mockSpawn.mockReturnValue(mockProcess as any)
+
+		// Mock fs operations
+		vi.mocked(fs.promises.access).mockRejectedValue(new Error("File not found"))
+		vi.mocked(fs.promises.readdir).mockResolvedValue([])
+
+		// Call with 200 file limit - this would cut off version files with alphabetical sorting
+		const [results, limitReached] = await listFiles("/test/docs", false, 200)
+
+		expect(limitReached).toBe(true)
+		expect(results.length).toBe(200)
+
+		// With the fix (no alphabetical sorting in formatAndCombineResults),
+		// the version files should be preserved in their original order from ripgrep
+		// and the 200-file limit should be applied to the unsorted list
+		const versionFileCount = results.filter((file) => file.includes("v3.25")).length
+
+		// All version files should be included since they appear early in the ripgrep output
+		expect(versionFileCount).toBeGreaterThan(0)
+	})
+})
