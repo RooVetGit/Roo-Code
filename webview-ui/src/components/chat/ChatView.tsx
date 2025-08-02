@@ -723,20 +723,16 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 				case "use_mcp_server":
 				case "resume_task":
 				case "mistake_limit_reached":
-					// Only send text/images if they exist
-					if (trimmedInput || (images && images.length > 0)) {
-						vscode.postMessage({
-							type: "askResponse",
-							askResponse: "yesButtonClicked",
-							text: trimmedInput,
-							images: images,
-						})
-						// Clear input state after sending
-						setInputValue("")
-						setSelectedImages([])
-					} else {
-						vscode.postMessage({ type: "askResponse", askResponse: "yesButtonClicked" })
-					}
+					// Always send the message with text/images if they exist
+					vscode.postMessage({
+						type: "askResponse",
+						askResponse: "yesButtonClicked",
+						text: trimmedInput || undefined,
+						images: images && images.length > 0 ? images : undefined,
+					})
+					// Clear input state after sending
+					setInputValue("")
+					setSelectedImages([])
 					break
 				case "completion_result":
 				case "resume_completed_task":
