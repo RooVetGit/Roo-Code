@@ -460,10 +460,24 @@ const ModesView = ({ onDone }: ModesViewProps) => {
 				setIsImporting(false)
 				setShowImportDialog(false)
 
-				if (!message.success) {
+				// Extract data from message payload
+				const { success, error } = message
+				const importedModes = message.payload?.importedModes
+
+				if (success && importedModes && importedModes.length > 0) {
+					// Find the imported mode configuration
+					const importedModeSlug = importedModes[0]
+					const importedMode =
+						findModeBySlug(importedModeSlug, customModes) || modes.find((m) => m.slug === importedModeSlug)
+
+					if (importedMode) {
+						// Switch to the imported mode
+						handleModeSwitch(importedMode)
+					}
+				} else if (!success) {
 					// Only log error if it's not a cancellation
-					if (message.error !== "cancelled") {
-						console.error("Failed to import mode:", message.error)
+					if (error !== "cancelled") {
+						console.error("Failed to import mode:", error)
 					}
 				}
 			} else if (message.type === "checkRulesDirectoryResult") {
@@ -487,7 +501,8 @@ const ModesView = ({ onDone }: ModesViewProps) => {
 
 		window.addEventListener("message", handler)
 		return () => window.removeEventListener("message", handler)
-	}, []) // Empty dependency array - only register once
+		// Re-register handler when dependencies change to ensure it has access to latest values
+	}, [customModes, findModeBySlug, handleModeSwitch, modes])
 
 	const handleAgentReset = (
 		modeSlug: string,
