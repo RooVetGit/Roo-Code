@@ -50,7 +50,7 @@
 		"invalidEmbedderType": "設定的嵌入器類型無效：{{embedderProvider}}",
 		"vectorDimensionNotDeterminedOpenAiCompatible": "無法確定提供商 '{{provider}}' 的模型 '{{modelId}}' 的向量維度。請確保在 OpenAI 相容提供商設定中正確設定了「嵌入維度」。",
 		"vectorDimensionNotDetermined": "無法確定提供商 '{{provider}}' 的模型 '{{modelId}}' 的向量維度。請檢查模型設定檔或設定。",
-		"qdrantUrlMissing": "建立向量儲存缺少 Qdrant URL",
+		"vectorUrlMissing": "缺少用於建立向量儲存的 URL",
 		"codeIndexingNotConfigured": "無法建立服務：程式碼索引未正確設定"
 	},
 	"orchestrator": {

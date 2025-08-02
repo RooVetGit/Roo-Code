@@ -34,6 +34,8 @@ export const codebaseIndexConfigSchema = z.object({
 	// OpenAI Compatible specific fields
 	codebaseIndexOpenAiCompatibleBaseUrl: z.string().optional(),
 	codebaseIndexOpenAiCompatibleModelDimension: z.number().optional(),
+	codebaseIndexValkeyUrl: z.string().optional(),
+	searchProvider: z.string().optional(),
 })
 
 export type CodebaseIndexConfig = z.infer<typeof codebaseIndexConfigSchema>

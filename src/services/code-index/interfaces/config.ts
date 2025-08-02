@@ -16,6 +16,8 @@ export interface CodeIndexConfig {
 	mistralOptions?: { apiKey: string }
 	qdrantUrl?: string
 	qdrantApiKey?: string
+	valkeyUrl?: string
+	searchProvider?: string
 	searchMinScore?: number
 	searchMaxResults?: number
 }
@@ -37,4 +39,6 @@ export type PreviousConfigSnapshot = {
 	mistralApiKey?: string
 	qdrantUrl?: string
 	qdrantApiKey?: string
+	valkeyUrl?: string
+	searchProvider?: string
 }

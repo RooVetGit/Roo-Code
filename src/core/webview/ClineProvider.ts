@@ -1721,6 +1721,7 @@ export class ClineProvider
 			codebaseIndexConfig: {
 				codebaseIndexEnabled: codebaseIndexConfig?.codebaseIndexEnabled ?? true,
 				codebaseIndexQdrantUrl: codebaseIndexConfig?.codebaseIndexQdrantUrl ?? "http://localhost:6333",
+				codebaseIndexValkeyUrl: codebaseIndexConfig?.codebaseIndexValkeyUrl ?? "http://localhost:6379",
 				codebaseIndexEmbedderProvider: codebaseIndexConfig?.codebaseIndexEmbedderProvider ?? "openai",
 				codebaseIndexEmbedderBaseUrl: codebaseIndexConfig?.codebaseIndexEmbedderBaseUrl ?? "",
 				codebaseIndexEmbedderModelId: codebaseIndexConfig?.codebaseIndexEmbedderModelId ?? "",
@@ -1728,6 +1729,7 @@ export class ClineProvider
 				codebaseIndexOpenAiCompatibleBaseUrl: codebaseIndexConfig?.codebaseIndexOpenAiCompatibleBaseUrl,
 				codebaseIndexSearchMaxResults: codebaseIndexConfig?.codebaseIndexSearchMaxResults,
 				codebaseIndexSearchMinScore: codebaseIndexConfig?.codebaseIndexSearchMinScore,
+				searchProvider: codebaseIndexConfig?.searchProvider,
 			},
 			mdmCompliant: this.checkMdmCompliance(),
 			profileThresholds: profileThresholds ?? {},
@@ -1908,6 +1910,8 @@ export class ClineProvider
 				codebaseIndexEnabled: stateValues.codebaseIndexConfig?.codebaseIndexEnabled ?? true,
 				codebaseIndexQdrantUrl:
 					stateValues.codebaseIndexConfig?.codebaseIndexQdrantUrl ?? "http://localhost:6333",
+				codebaseIndexValkeyUrl:
+					stateValues.codebaseIndexConfig?.codebaseIndexValkeyUrl ?? "http://localhost:6379",
 				codebaseIndexEmbedderProvider:
 					stateValues.codebaseIndexConfig?.codebaseIndexEmbedderProvider ?? "openai",
 				codebaseIndexEmbedderBaseUrl: stateValues.codebaseIndexConfig?.codebaseIndexEmbedderBaseUrl ?? "",
@@ -1918,6 +1922,7 @@ export class ClineProvider
 					stateValues.codebaseIndexConfig?.codebaseIndexOpenAiCompatibleBaseUrl,
 				codebaseIndexSearchMaxResults: stateValues.codebaseIndexConfig?.codebaseIndexSearchMaxResults,
 				codebaseIndexSearchMinScore: stateValues.codebaseIndexConfig?.codebaseIndexSearchMinScore,
+				searchProvider: stateValues.codebaseIndexConfig?.searchProvider,
 			},
 			profileThresholds: stateValues.profileThresholds ?? {},
 			// Add diagnostic message settings
