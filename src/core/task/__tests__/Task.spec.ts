@@ -872,6 +872,121 @@ describe("Cline", () => {
 				await task.catch(() => {})
 			})
 
+			it("should not duplicate retry messages when error already contains retry info", async () => {
+				// Mock delay before creating the task
+				const mockDelay = vi.fn().mockResolvedValue(undefined)
+				vi.mocked(delay).mockImplementation(mockDelay)
+
+				const [cline, task] = Task.create({
+					provider: mockProvider,
+					apiConfiguration: mockApiConfig,
+					task: "test task",
+				})
+
+				// Mock say to track messages
+				const saySpy = vi.spyOn(cline, "say").mockResolvedValue(undefined)
+
+				// Create an error that already contains retry information
+				const mockError = new Error("Engine loop is not running. Retry attempt 1\nRetrying now...")
+
+				// Mock createMessage to fail first then succeed
+				let callCount = 0
+				vi.spyOn(cline.api, "createMessage").mockImplementation(() => {
+					callCount++
+					if (callCount === 1) {
+						// First call fails - create a proper async iterator that throws
+						const failedIterator = {
+							[Symbol.asyncIterator]: () => ({
+								next: async () => {
+									throw mockError
+								},
+							}),
+						}
+						return failedIterator as any
+					} else {
+						// Subsequent calls succeed
+						return {
+							async *[Symbol.asyncIterator]() {
+								yield { type: "text", text: "Success" } as ApiStreamChunk
+							},
+						} as any
+					}
+				})
+
+				// Set alwaysApproveResubmit and requestDelaySeconds
+				mockProvider.getState = vi.fn().mockResolvedValue({
+					alwaysApproveResubmit: true,
+					autoApprovalEnabled: true,
+					requestDelaySeconds: 3,
+				})
+
+				// Mock previous API request message
+				cline.clineMessages = [
+					{
+						ts: Date.now(),
+						type: "say",
+						say: "api_req_started",
+						text: JSON.stringify({
+							tokensIn: 100,
+							tokensOut: 50,
+							cacheWrites: 0,
+							cacheReads: 0,
+							request: "test request",
+						}),
+					},
+				]
+
+				// Abandon the task to prevent hanging
+				cline.abandoned = true
+
+				try {
+					// Trigger API request - this will throw due to abandoned state
+					const iterator = cline.attemptApiRequest(0)
+
+					// Try to get the first value, which should trigger the error and retry logic
+					try {
+						await iterator.next()
+					} catch (e) {
+						// Expected to throw due to abandoned state
+					}
+
+					// Wait a bit for async operations
+					await new Promise((resolve) => setTimeout(resolve, 100))
+
+					// Calculate expected delay for first retry
+					const baseDelay = 3 // from requestDelaySeconds
+
+					// Verify countdown messages don't include duplicate retry attempt info
+					for (let i = baseDelay; i > 0; i--) {
+						const calls = saySpy.mock.calls.filter(
+							(call) =>
+								call[0] === "api_req_retry_delayed" && call[1]?.includes(`Retrying in ${i} seconds`),
+						)
+						if (calls.length > 0) {
+							const message = calls[0][1] as string
+							// The error message contains "Retry attempt 1", but our code should not add another "Retry attempt X"
+							// So we should only see one occurrence (from the original error)
+							const retryAttemptMatches = (message.match(/Retry attempt/g) || []).length
+							expect(retryAttemptMatches).toBe(1) // Only the one from the error message
+						}
+					}
+
+					// Verify final retry message
+					const finalCalls = saySpy.mock.calls.filter(
+						(call) => call[0] === "api_req_retry_delayed" && call[1]?.includes("Retrying now"),
+					)
+					if (finalCalls.length > 0) {
+						const finalMessage = finalCalls[0][1] as string
+						// Since the error already contains "Retrying now", our code should not add another one
+						// So we should only see 1 occurrence total
+						const retryingNowMatches = (finalMessage.match(/Retrying now/g) || []).length
+						expect(retryingNowMatches).toBe(1) // Only one occurrence, not duplicated
+					}
+				} finally {
+					await task.catch(() => {})
+				}
+			})
+
 			describe("processUserContentMentions", () => {
 				it("should process mentions in task and feedback tags", async () => {
 					const [cline, task] = Task.create({

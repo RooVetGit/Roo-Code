@@ -2010,6 +2010,10 @@ export class Task extends EventEmitter<TaskEvents> {
 					errorMsg = "Unknown error"
 				}
 
+				// Check if the error message already contains retry-related information
+				// This prevents duplicate retry messages when the API itself returns retry information
+				const containsRetryInfo = /retry|retrying|attempt/i.test(errorMsg)
+
 				const baseDelay = requestDelaySeconds || 5
 				let exponentialDelay = Math.min(
 					Math.ceil(baseDelay * Math.pow(2, retryAttempt)),
@@ -2034,21 +2038,21 @@ export class Task extends EventEmitter<TaskEvents> {
 
 				// Show countdown timer with exponential backoff
 				for (let i = finalDelay; i > 0; i--) {
-					await this.say(
-						"api_req_retry_delayed",
-						`${errorMsg}\n\nRetry attempt ${retryAttempt + 1}\nRetrying in ${i} seconds...`,
-						undefined,
-						true,
-					)
+					// If the error already contains retry info, don't add our own retry message
+					const retryMessage = containsRetryInfo
+						? `${errorMsg}\n\nRetrying in ${i} seconds...`
+						: `${errorMsg}\n\nRetry attempt ${retryAttempt + 1}\nRetrying in ${i} seconds...`
+
+					await this.say("api_req_retry_delayed", retryMessage, undefined, true)
 					await delay(1000)
 				}
 
-				await this.say(
-					"api_req_retry_delayed",
-					`${errorMsg}\n\nRetry attempt ${retryAttempt + 1}\nRetrying now...`,
-					undefined,
-					false,
-				)
+				// Final retry message
+				const finalRetryMessage = containsRetryInfo
+					? `${errorMsg}\n\nRetrying now...`
+					: `${errorMsg}\n\nRetry attempt ${retryAttempt + 1}\nRetrying now...`
+
+				await this.say("api_req_retry_delayed", finalRetryMessage, undefined, false)
 
 				// Delegate generator output from the recursive call with
 				// incremented retry count.
