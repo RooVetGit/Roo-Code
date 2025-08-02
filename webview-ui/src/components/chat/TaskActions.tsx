@@ -1,5 +1,4 @@
 import { useState } from "react"
-import prettyBytes from "pretty-bytes"
 import { useTranslation } from "react-i18next"
 
 import type { HistoryItem } from "@roo-code/types"
@@ -22,48 +21,54 @@ export const TaskActions = ({ item, buttonsDisabled }: TaskActionsProps) => {
 	const { copyWithFeedback, showCopyFeedback } = useCopyToClipboard()
 
 	return (
-		<div className="flex flex-row gap-1">
-			<ShareButton item={item} disabled={false} />
-			<IconButton
-				iconClass="codicon-desktop-download"
-				title={t("chat:task.export")}
-				onClick={() => vscode.postMessage({ type: "exportCurrentTask" })}
-			/>
-			{item?.task && (
-				<IconButton
-					iconClass={showCopyFeedback ? "codicon-check" : "codicon-copy"}
-					title={t("history:copyPrompt")}
-					onClick={(e) => copyWithFeedback(item.task, e)}
-				/>
-			)}
-			{!!item?.size && item.size > 0 && (
-				<>
-					<div className="flex items-center">
-						<IconButton
-							iconClass="codicon-trash"
-							title={t("chat:task.delete")}
-							disabled={buttonsDisabled}
-							onClick={(e) => {
-								e.stopPropagation()
+		<div className="flex flex-row justify-between items-center">
+			{/* Share button with label on the left */}
+			<div className="flex items-center">
+				<ShareButton item={item} disabled={false} showLabel={true} />
+			</div>
 
-								if (e.shiftKey) {
-									vscode.postMessage({ type: "deleteTaskWithId", text: item.id })
-								} else {
-									setDeleteTaskId(item.id)
-								}
-							}}
-						/>
-						<span className="ml-1 text-xs text-vscode-foreground opacity-85">{prettyBytes(item.size)}</span>
-					</div>
-					{deleteTaskId && (
-						<DeleteTaskDialog
-							taskId={deleteTaskId}
-							onOpenChange={(open) => !open && setDeleteTaskId(null)}
-							open
-						/>
-					)}
-				</>
-			)}
+			{/* Other action buttons on the right */}
+			<div className="flex flex-row gap-1">
+				<IconButton
+					iconClass="codicon-desktop-download"
+					title={t("chat:task.export")}
+					onClick={() => vscode.postMessage({ type: "exportCurrentTask" })}
+				/>
+				{item?.task && (
+					<IconButton
+						iconClass={showCopyFeedback ? "codicon-check" : "codicon-copy"}
+						title={t("history:copyPrompt")}
+						onClick={(e) => copyWithFeedback(item.task, e)}
+					/>
+				)}
+				{!!item?.size && item.size > 0 && (
+					<>
+						<div className="flex items-center">
+							<IconButton
+								iconClass="codicon-trash"
+								title={t("chat:task.delete")}
+								disabled={buttonsDisabled}
+								onClick={(e) => {
+									e.stopPropagation()
+
+									if (e.shiftKey) {
+										vscode.postMessage({ type: "deleteTaskWithId", text: item.id })
+									} else {
+										setDeleteTaskId(item.id)
+									}
+								}}
+							/>
+						</div>
+						{deleteTaskId && (
+							<DeleteTaskDialog
+								taskId={deleteTaskId}
+								onOpenChange={(open) => !open && setDeleteTaskId(null)}
+								open
+							/>
+						)}
+					</>
+				)}
+			</div>
 		</div>
 	)
 }
