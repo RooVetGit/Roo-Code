@@ -183,6 +183,8 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 		includeDiagnosticMessages,
 		maxDiagnosticMessages,
 		includeTaskHistoryInEnhance,
+		memoryStorageEnabled,
+		memoryStorageAutoApprove,
 	} = cachedState
 
 	const apiConfiguration = useMemo(() => cachedState.apiConfiguration ?? {}, [cachedState.apiConfiguration])
@@ -342,6 +344,8 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 			vscode.postMessage({ type: "updateCondensingPrompt", text: customCondensingPrompt || "" })
 			vscode.postMessage({ type: "updateSupportPrompt", values: customSupportPrompts || {} })
 			vscode.postMessage({ type: "includeTaskHistoryInEnhance", bool: includeTaskHistoryInEnhance ?? false })
+			vscode.postMessage({ type: "memoryStorageEnabled", bool: memoryStorageEnabled })
+			vscode.postMessage({ type: "memoryStorageAutoApprove", bool: memoryStorageAutoApprove })
 			vscode.postMessage({ type: "upsertApiConfiguration", text: currentApiConfigName, apiConfiguration })
 			vscode.postMessage({ type: "telemetrySetting", text: telemetrySetting })
 			vscode.postMessage({ type: "profileThresholds", values: profileThresholds })
@@ -682,6 +686,8 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 							includeDiagnosticMessages={includeDiagnosticMessages}
 							maxDiagnosticMessages={maxDiagnosticMessages}
 							writeDelayMs={writeDelayMs}
+							memoryStorageEnabled={memoryStorageEnabled}
+							memoryStorageAutoApprove={memoryStorageAutoApprove}
 							setCachedStateField={setCachedStateField}
 						/>
 					)}

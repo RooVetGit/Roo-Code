@@ -270,6 +270,8 @@ export type ExtensionState = Pick<
 	| "profileThresholds"
 	| "includeDiagnosticMessages"
 	| "maxDiagnosticMessages"
+	| "memoryStorageEnabled"
+	| "memoryStorageAutoApprove"
 > & {
 	version: string
 	clineMessages: ClineMessage[]

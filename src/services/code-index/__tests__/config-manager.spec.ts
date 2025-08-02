@@ -1292,14 +1292,17 @@ describe("CodeIndexConfigManager", () => {
 				isConfigured: true,
 				embedderProvider: "openai",
 				modelId: "text-embedding-3-large",
+				modelDimension: undefined,
 				openAiOptions: { openAiNativeApiKey: "test-openai-key" },
 				ollamaOptions: { ollamaBaseUrl: undefined },
 				geminiOptions: undefined,
+				mistralOptions: undefined,
 				openAiCompatibleOptions: undefined,
 				qdrantUrl: "http://qdrant.local",
 				qdrantApiKey: "test-qdrant-key",
 				searchMinScore: 0.4,
 				searchMaxResults: 50,
+				memoryStorageEnabled: false,
 			})
 		})
 

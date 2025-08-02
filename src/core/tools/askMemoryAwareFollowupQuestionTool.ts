@@ -7,7 +7,7 @@ import { CodeIndexServiceFactory } from "../../services/code-index/service-facto
 import { MemoryStorageManager } from "../../services/memory-storage/MemoryStorageManager"
 import { CacheManager } from "../../services/code-index/cache-manager"
 
-export async function askFollowupQuestionTool(
+export async function askMemoryAwareFollowupQuestionTool(
 	cline: Task,
 	block: ToolUse,
 	askApproval: AskApproval,
@@ -25,8 +25,10 @@ export async function askFollowupQuestionTool(
 		} else {
 			if (!question) {
 				cline.consecutiveMistakeCount++
-				cline.recordToolError("ask_followup_question")
-				pushToolResult(await cline.sayAndCreateMissingParamError("ask_followup_question", "question"))
+				cline.recordToolError("ask_memory_aware_followup_question")
+				pushToolResult(
+					await cline.sayAndCreateMissingParamError("ask_memory_aware_followup_question", "question"),
+				)
 				return
 			}
 
@@ -51,7 +53,7 @@ export async function askFollowupQuestionTool(
 					}
 				} catch (error) {
 					cline.consecutiveMistakeCount++
-					cline.recordToolError("ask_followup_question")
+					cline.recordToolError("ask_memory_aware_followup_question")
 					await cline.say("error", `Failed to parse operations: ${error.message}`)
 					pushToolResult(formatResponse.toolError("Invalid operations xml format"))
 					return
@@ -79,19 +81,13 @@ export async function askFollowupQuestionTool(
 				follow_up_json.suggest = normalizedSuggest
 			}
 
-			cline.consecutiveMistakeCount = 0
-			const { text, images } = await cline.ask("followup", JSON.stringify(follow_up_json), false)
-			await cline.say("user_feedback", text ?? "", images)
-			pushToolResult(formatResponse.toolResult(`<answer>\n${text}\n</answer>`, images))
-
-			// Store memory if enabled
+			// Get relevant memories before asking the question
+			let memoryContext = ""
 			try {
 				const provider = cline.providerRef.deref()
-				if (provider && text) {
-					// Get the code index manager from the provider
+				if (provider) {
 					const codeIndexManager = provider.codeIndexManager
 					if (codeIndexManager) {
-						// Create config manager and service factory
 						const configManager = new CodeIndexConfigManager(provider.contextProxy)
 						const cacheManager = new CacheManager(provider.context, cline.workspacePath)
 						const serviceFactory = new CodeIndexServiceFactory(
@@ -100,14 +96,66 @@ export async function askFollowupQuestionTool(
 							cacheManager,
 						)
 
-						// Get or create the memory storage manager
 						const memoryManager = MemoryStorageManager.getInstance(
 							configManager,
 							serviceFactory,
 							cline.workspacePath,
 						)
 
-						// Store the memory if enabled
+						if (memoryManager.isEnabled()) {
+							const memoryService = await memoryManager.getMemoryStorageService()
+							if (memoryService) {
+								// Search for relevant memories
+								const relevantMemories = await memoryService.searchMemories(question, 5)
+
+								// Format memories for context
+								if (relevantMemories.length > 0) {
+									memoryContext = "\n\nBased on previous interactions:\n"
+									relevantMemories.forEach((memory, index) => {
+										memoryContext += `${index + 1}. Q: ${memory.question}\n   A: ${memory.answer}\n`
+									})
+								}
+							}
+						}
+					}
+				}
+			} catch (error) {
+				console.error("Failed to retrieve memories:", error)
+				// Continue without memory context
+			}
+
+			// Add memory context to the question
+			const questionWithContext = question + memoryContext
+
+			cline.consecutiveMistakeCount = 0
+			const { text, images } = await cline.ask(
+				"followup",
+				JSON.stringify({ ...follow_up_json, question: questionWithContext }),
+				false,
+			)
+			await cline.say("user_feedback", text ?? "", images)
+			pushToolResult(formatResponse.toolResult(`<answer>\n${text}\n</answer>`, images))
+
+			// Store memory if enabled (same as askFollowupQuestionTool)
+			try {
+				const provider = cline.providerRef.deref()
+				if (provider && text) {
+					const codeIndexManager = provider.codeIndexManager
+					if (codeIndexManager) {
+						const configManager = new CodeIndexConfigManager(provider.contextProxy)
+						const cacheManager = new CacheManager(provider.context, cline.workspacePath)
+						const serviceFactory = new CodeIndexServiceFactory(
+							configManager,
+							cline.workspacePath,
+							cacheManager,
+						)
+
+						const memoryManager = MemoryStorageManager.getInstance(
+							configManager,
+							serviceFactory,
+							cline.workspacePath,
+						)
+
 						if (memoryManager.isEnabled()) {
 							const memoryService = await memoryManager.getMemoryStorageService()
 							if (memoryService) {
@@ -123,14 +171,13 @@ export async function askFollowupQuestionTool(
 					}
 				}
 			} catch (error) {
-				// Log error but don't fail the tool
 				console.error("Failed to store memory:", error)
 			}
 
 			return
 		}
 	} catch (error) {
-		await handleError("asking question", error)
+		await handleError("asking memory-aware question", error)
 		return
 	}
 }

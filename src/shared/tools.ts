@@ -65,6 +65,7 @@ export const toolParamNames = [
 	"query",
 	"args",
 	"todos",
+	"limit",
 ] as const
 
 export type ToolParamName = (typeof toolParamNames)[number]
@@ -143,6 +144,16 @@ export interface AskFollowupQuestionToolUse extends ToolUse {
 	params: Partial<Pick<Record<ToolParamName, string>, "question" | "follow_up">>
 }
 
+export interface AskMemoryAwareFollowupQuestionToolUse extends ToolUse {
+	name: "ask_memory_aware_followup_question"
+	params: Partial<Pick<Record<ToolParamName, string>, "question" | "follow_up">>
+}
+
+export interface SearchMemoriesToolUse extends ToolUse {
+	name: "search_memories"
+	params: Partial<Pick<Record<ToolParamName, string>, "query" | "limit">>
+}
+
 export interface AttemptCompletionToolUse extends ToolUse {
 	name: "attempt_completion"
 	params: Partial<Pick<Record<ToolParamName, string>, "result">>
@@ -183,6 +194,8 @@ export const TOOL_DISPLAY_NAMES: Record<ToolName, string> = {
 	use_mcp_tool: "use mcp tools",
 	access_mcp_resource: "access mcp resources",
 	ask_followup_question: "ask questions",
+	ask_memory_aware_followup_question: "ask memory-aware questions",
+	search_memories: "search memories",
 	attempt_completion: "complete tasks",
 	switch_mode: "switch modes",
 	new_task: "create new task",
@@ -225,6 +238,8 @@ export const TOOL_GROUPS: Record<ToolGroup, ToolGroupConfig> = {
 // Tools that are always available to all modes.
 export const ALWAYS_AVAILABLE_TOOLS: ToolName[] = [
 	"ask_followup_question",
+	"ask_memory_aware_followup_question",
+	"search_memories",
 	"attempt_completion",
 	"switch_mode",
 	"new_task",

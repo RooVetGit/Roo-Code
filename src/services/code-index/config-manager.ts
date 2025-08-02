@@ -23,6 +23,7 @@ export class CodeIndexConfigManager {
 	private qdrantApiKey?: string
 	private searchMinScore?: number
 	private searchMaxResults?: number
+	private memoryStorageEnabled: boolean = false
 
 	constructor(private readonly contextProxy: ContextProxy) {
 		// Initialize with current configuration to avoid false restart triggers
@@ -50,6 +51,7 @@ export class CodeIndexConfigManager {
 			codebaseIndexEmbedderModelId: "",
 			codebaseIndexSearchMinScore: undefined,
 			codebaseIndexSearchMaxResults: undefined,
+			memoryStorageEnabled: false,
 		}
 
 		const {
@@ -60,6 +62,7 @@ export class CodeIndexConfigManager {
 			codebaseIndexEmbedderModelId,
 			codebaseIndexSearchMinScore,
 			codebaseIndexSearchMaxResults,
+			memoryStorageEnabled,
 		} = codebaseIndexConfig
 
 		const openAiKey = this.contextProxy?.getSecret("codeIndexOpenAiKey") ?? ""
@@ -76,6 +79,7 @@ export class CodeIndexConfigManager {
 		this.qdrantApiKey = qdrantApiKey ?? ""
 		this.searchMinScore = codebaseIndexSearchMinScore
 		this.searchMaxResults = codebaseIndexSearchMaxResults
+		this.memoryStorageEnabled = memoryStorageEnabled ?? false
 
 		// Validate and set model dimension
 		const rawDimension = codebaseIndexConfig.codebaseIndexEmbedderModelDimension
@@ -379,6 +383,7 @@ export class CodeIndexConfigManager {
 			qdrantApiKey: this.qdrantApiKey,
 			searchMinScore: this.currentSearchMinScore,
 			searchMaxResults: this.currentSearchMaxResults,
+			memoryStorageEnabled: this.memoryStorageEnabled,
 		}
 	}
 
@@ -459,5 +464,12 @@ export class CodeIndexConfigManager {
 	 */
 	public get currentSearchMaxResults(): number {
 		return this.searchMaxResults ?? DEFAULT_MAX_SEARCH_RESULTS
+	}
+
+	/**
+	 * Gets whether memory storage is enabled for follow-up questions
+	 */
+	public get isMemoryStorageEnabled(): boolean {
+		return this.memoryStorageEnabled
 	}
 }

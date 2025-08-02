@@ -6,6 +6,7 @@ import { IVectorStore } from "../interfaces/vector-store"
 import { Payload, VectorStoreSearchResult } from "../interfaces"
 import { DEFAULT_MAX_SEARCH_RESULTS, DEFAULT_SEARCH_MIN_SCORE } from "../constants"
 import { t } from "../../../i18n"
+import { QdrantCollectionType } from "../interfaces/collection-types"
 
 /**
  * Qdrant implementation of the vector store interface
@@ -17,13 +18,23 @@ export class QdrantVectorStore implements IVectorStore {
 	private client: QdrantClient
 	private readonly collectionName: string
 	private readonly qdrantUrl: string = "http://localhost:6333"
+	private readonly collectionType: QdrantCollectionType
 
 	/**
 	 * Creates a new Qdrant vector store
 	 * @param workspacePath Path to the workspace
 	 * @param url Optional URL to the Qdrant server
+	 * @param vectorSize Size of the vectors
+	 * @param apiKey Optional API key for authentication
+	 * @param collectionType Type of collection (defaults to CODEBASE)
 	 */
-	constructor(workspacePath: string, url: string, vectorSize: number, apiKey?: string) {
+	constructor(
+		workspacePath: string,
+		url: string,
+		vectorSize: number,
+		apiKey?: string,
+		collectionType: QdrantCollectionType = QdrantCollectionType.CODEBASE,
+	) {
 		// Parse the URL to determine the appropriate QdrantClient configuration
 		const parsedUrl = this.parseQdrantUrl(url)
 
@@ -75,10 +86,11 @@ export class QdrantVectorStore implements IVectorStore {
 			})
 		}
 
-		// Generate collection name from workspace path
+		// Generate collection name from workspace path and collection type
 		const hash = createHash("sha256").update(workspacePath).digest("hex")
 		this.vectorSize = vectorSize
-		this.collectionName = `ws-${hash.substring(0, 16)}`
+		this.collectionType = collectionType
+		this.collectionName = `${collectionType}-${hash.substring(0, 16)}`
 	}
 
 	/**

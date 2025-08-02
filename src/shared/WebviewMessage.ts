@@ -142,6 +142,8 @@ export interface WebviewMessage {
 		| "systemPrompt"
 		| "enhancementApiConfigId"
 		| "includeTaskHistoryInEnhance"
+		| "memoryStorageEnabled"
+		| "memoryStorageAutoApprove"
 		| "updateExperimental"
 		| "autoApprovalEnabled"
 		| "updateCustomMode"

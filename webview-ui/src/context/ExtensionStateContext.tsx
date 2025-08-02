@@ -147,6 +147,10 @@ export interface ExtensionStateContextType extends ExtensionState {
 	setMaxDiagnosticMessages: (value: number) => void
 	includeTaskHistoryInEnhance?: boolean
 	setIncludeTaskHistoryInEnhance: (value: boolean) => void
+	memoryStorageEnabled?: boolean
+	setMemoryStorageEnabled: (value: boolean) => void
+	memoryStorageAutoApprove?: boolean
+	setMemoryStorageAutoApprove: (value: boolean) => void
 }
 
 export const ExtensionStateContext = createContext<ExtensionStateContextType | undefined>(undefined)
@@ -247,6 +251,8 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 		alwaysAllowUpdateTodoList: true,
 		includeDiagnosticMessages: true,
 		maxDiagnosticMessages: 50,
+		memoryStorageEnabled: false,
+		memoryStorageAutoApprove: false,
 	})
 
 	const [didHydrateState, setDidHydrateState] = useState(false)
@@ -266,6 +272,8 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 		global: {},
 	})
 	const [includeTaskHistoryInEnhance, setIncludeTaskHistoryInEnhance] = useState(false)
+	const [memoryStorageEnabled, setMemoryStorageEnabled] = useState(false)
+	const [memoryStorageAutoApprove, setMemoryStorageAutoApprove] = useState(false)
 
 	const setListApiConfigMeta = useCallback(
 		(value: ProviderSettingsEntry[]) => setState((prevState) => ({ ...prevState, listApiConfigMeta: value })),
@@ -302,6 +310,14 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 					// Update includeTaskHistoryInEnhance if present in state message
 					if ((newState as any).includeTaskHistoryInEnhance !== undefined) {
 						setIncludeTaskHistoryInEnhance((newState as any).includeTaskHistoryInEnhance)
+					}
+					// Update memoryStorageEnabled if present in state message
+					if ((newState as any).memoryStorageEnabled !== undefined) {
+						setMemoryStorageEnabled((newState as any).memoryStorageEnabled)
+					}
+					// Update memoryStorageAutoApprove if present in state message
+					if ((newState as any).memoryStorageAutoApprove !== undefined) {
+						setMemoryStorageAutoApprove((newState as any).memoryStorageAutoApprove)
 					}
 					// Handle marketplace data if present in state message
 					if (newState.marketplaceItems !== undefined) {
@@ -517,6 +533,10 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 		},
 		includeTaskHistoryInEnhance,
 		setIncludeTaskHistoryInEnhance,
+		memoryStorageEnabled,
+		setMemoryStorageEnabled,
+		memoryStorageAutoApprove,
+		setMemoryStorageAutoApprove,
 	}
 
 	return <ExtensionStateContext.Provider value={contextValue}>{children}</ExtensionStateContext.Provider>

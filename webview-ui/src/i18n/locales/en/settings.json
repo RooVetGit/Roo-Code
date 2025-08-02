@@ -559,6 +559,17 @@
 			"profileDescription": "Custom threshold for this profile only (overrides global default)",
 			"inheritDescription": "This profile inherits the global default threshold ({{threshold}}%)",
 			"usesGlobal": "(uses global {{threshold}}%)"
+		},
+		"memoryStorage": {
+			"title": "Memory Storage",
+			"enable": {
+				"label": "Enable memory storage",
+				"description": "When enabled, Roo will remember your answers to follow-up questions and use them to provide more personalized suggestions in the future."
+			},
+			"autoApprove": {
+				"label": "Auto-approve memory storage",
+				"description": "When enabled, Roo will automatically store question-answer pairs without asking for confirmation each time."
+			}
 		}
 	},
 	"terminal": {

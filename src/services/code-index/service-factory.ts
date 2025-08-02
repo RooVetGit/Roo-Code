@@ -6,6 +6,7 @@ import { GeminiEmbedder } from "./embedders/gemini"
 import { MistralEmbedder } from "./embedders/mistral"
 import { EmbedderProvider, getDefaultModelId, getModelDimension } from "../../shared/embeddingModels"
 import { QdrantVectorStore } from "./vector-store/qdrant-client"
+import { QdrantCollectionType } from "./interfaces/collection-types"
 import { codeParser, DirectoryScanner, FileWatcher } from "./processors"
 import { ICodeParser, IEmbedder, IFileWatcher, IVectorStore } from "./interfaces"
 import { CodeIndexConfigManager } from "./config-manager"
@@ -103,8 +104,9 @@ export class CodeIndexServiceFactory {
 
 	/**
 	 * Creates a vector store instance using the current configuration.
+	 * @param collectionType Type of collection to create (defaults to CODEBASE)
 	 */
-	public createVectorStore(): IVectorStore {
+	public createVectorStore(collectionType: QdrantCollectionType = QdrantCollectionType.CODEBASE): IVectorStore {
 		const config = this.configManager.getConfig()
 
 		const provider = config.embedderProvider as EmbedderProvider
@@ -136,8 +138,14 @@ export class CodeIndexServiceFactory {
 			throw new Error(t("embeddings:serviceFactory.qdrantUrlMissing"))
 		}
 
-		// Assuming constructor is updated: new QdrantVectorStore(workspacePath, url, vectorSize, apiKey?)
-		return new QdrantVectorStore(this.workspacePath, config.qdrantUrl, vectorSize, config.qdrantApiKey)
+		// Create vector store with specified collection type
+		return new QdrantVectorStore(
+			this.workspacePath,
+			config.qdrantUrl,
+			vectorSize,
+			config.qdrantApiKey,
+			collectionType,
+		)
 	}
 
 	/**

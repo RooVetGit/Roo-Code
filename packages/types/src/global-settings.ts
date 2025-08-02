@@ -62,6 +62,10 @@ export const globalSettingsSchema = z.object({
 	alwaysAllowFollowupQuestions: z.boolean().optional(),
 	followupAutoApproveTimeoutMs: z.number().optional(),
 	alwaysAllowUpdateTodoList: z.boolean().optional(),
+
+	// Memory storage settings
+	memoryStorageEnabled: z.boolean().optional(),
+	memoryStorageAutoApprove: z.boolean().optional(),
 	allowedCommands: z.array(z.string()).optional(),
 	deniedCommands: z.array(z.string()).optional(),
 	commandExecutionTimeout: z.number().optional(),
@@ -240,6 +244,8 @@ export const EVALS_SETTINGS: RooCodeSettings = {
 	alwaysAllowFollowupQuestions: true,
 	alwaysAllowUpdateTodoList: true,
 	followupAutoApproveTimeoutMs: 0,
+	memoryStorageEnabled: false,
+	memoryStorageAutoApprove: false,
 	allowedCommands: ["*"],
 	commandExecutionTimeout: 20,
 	commandTimeoutAllowlist: [],

@@ -1319,6 +1319,14 @@ export const webviewMessageHandler = async (
 			await updateGlobalState("includeTaskHistoryInEnhance", message.bool ?? false)
 			await provider.postStateToWebview()
 			break
+		case "memoryStorageEnabled":
+			await updateGlobalState("memoryStorageEnabled", message.bool ?? false)
+			await provider.postStateToWebview()
+			break
+		case "memoryStorageAutoApprove":
+			await updateGlobalState("memoryStorageAutoApprove", message.bool ?? false)
+			await provider.postStateToWebview()
+			break
 		case "condensingApiConfigId":
 			await updateGlobalState("condensingApiConfigId", message.text)
 			await provider.postStateToWebview()

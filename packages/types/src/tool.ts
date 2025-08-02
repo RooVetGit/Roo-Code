@@ -28,6 +28,8 @@ export const toolNames = [
 	"use_mcp_tool",
 	"access_mcp_resource",
 	"ask_followup_question",
+	"ask_memory_aware_followup_question",
+	"search_memories",
 	"attempt_completion",
 	"switch_mode",
 	"new_task",

@@ -21,6 +21,8 @@ import { executeCommandTool } from "../tools/executeCommandTool"
 import { useMcpToolTool } from "../tools/useMcpToolTool"
 import { accessMcpResourceTool } from "../tools/accessMcpResourceTool"
 import { askFollowupQuestionTool } from "../tools/askFollowupQuestionTool"
+import { askMemoryAwareFollowupQuestionTool } from "../tools/askMemoryAwareFollowupQuestionTool"
+import { searchMemoriesTool } from "../tools/searchMemoriesTool"
 import { switchModeTool } from "../tools/switchModeTool"
 import { attemptCompletionTool } from "../tools/attemptCompletionTool"
 import { newTaskTool } from "../tools/newTaskTool"
@@ -151,6 +153,10 @@ export async function presentAssistantMessage(cline: Task) {
 			break
 		}
 		case "tool_use":
+			// Get customModes early for use in toolDescription
+			const stateForDescription = await cline.providerRef.deref()?.getState()
+			const customModesForDescription = stateForDescription?.customModes ?? []
+
 			const toolDescription = (): string => {
 				switch (block.name) {
 					case "execute_command":
@@ -200,6 +206,10 @@ export async function presentAssistantMessage(cline: Task) {
 						return `[${block.name} for '${block.params.server_name}']`
 					case "ask_followup_question":
 						return `[${block.name} for '${block.params.question}']`
+					case "ask_memory_aware_followup_question":
+						return `[${block.name} for '${block.params.question}']`
+					case "search_memories":
+						return `[${block.name} for '${block.params.query}']`
 					case "attempt_completion":
 						return `[${block.name}]`
 					case "switch_mode":
@@ -211,7 +221,7 @@ export async function presentAssistantMessage(cline: Task) {
 					case "new_task": {
 						const mode = block.params.mode ?? defaultModeSlug
 						const message = block.params.message ?? "(no message)"
-						const modeName = getModeBySlug(mode, customModes)?.name ?? mode
+						const modeName = getModeBySlug(mode, customModesForDescription)?.name ?? mode
 						return `[${block.name} in ${modeName} mode: '${message}']`
 					}
 				}
@@ -503,6 +513,19 @@ export async function presentAssistantMessage(cline: Task) {
 						pushToolResult,
 						removeClosingTag,
 					)
+					break
+				case "ask_memory_aware_followup_question":
+					await askMemoryAwareFollowupQuestionTool(
+						cline,
+						block,
+						askApproval,
+						handleError,
+						pushToolResult,
+						removeClosingTag,
+					)
+					break
+				case "search_memories":
+					await searchMemoriesTool(cline, block, askApproval, handleError, pushToolResult, removeClosingTag)
 					break
 				case "switch_mode":
 					await switchModeTool(cline, block, askApproval, handleError, pushToolResult, removeClosingTag)

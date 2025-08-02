@@ -2,7 +2,7 @@ import { HTMLAttributes } from "react"
 import React from "react"
 import { useAppTranslation } from "@/i18n/TranslationContext"
 import { VSCodeCheckbox } from "@vscode/webview-ui-toolkit/react"
-import { Database, FoldVertical } from "lucide-react"
+import { Database, FoldVertical, Brain } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { Input, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Slider, Button } from "@/components/ui"
@@ -27,6 +27,8 @@ type ContextManagementSettingsProps = HTMLAttributes<HTMLDivElement> & {
 	includeDiagnosticMessages?: boolean
 	maxDiagnosticMessages?: number
 	writeDelayMs: number
+	memoryStorageEnabled?: boolean
+	memoryStorageAutoApprove?: boolean
 	setCachedStateField: SetCachedStateField<
 		| "autoCondenseContext"
 		| "autoCondenseContextPercent"
@@ -41,6 +43,8 @@ type ContextManagementSettingsProps = HTMLAttributes<HTMLDivElement> & {
 		| "includeDiagnosticMessages"
 		| "maxDiagnosticMessages"
 		| "writeDelayMs"
+		| "memoryStorageEnabled"
+		| "memoryStorageAutoApprove"
 	>
 }
 
@@ -60,6 +64,8 @@ export const ContextManagementSettings = ({
 	includeDiagnosticMessages,
 	maxDiagnosticMessages,
 	writeDelayMs,
+	memoryStorageEnabled,
+	memoryStorageAutoApprove,
 	className,
 	...props
 }: ContextManagementSettingsProps) => {
@@ -434,6 +440,36 @@ export const ContextManagementSettings = ({
 										})
 									: t("settings:contextManagement.condensingThreshold.profileDescription")}
 							</div>
+						</div>
+					</div>
+				)}
+			</Section>
+			<Section className="pt-2">
+				<div className="flex items-center gap-4 font-bold mb-3">
+					<Brain size={16} />
+					<div>{t("settings:contextManagement.memoryStorage.title")}</div>
+				</div>
+				<VSCodeCheckbox
+					checked={memoryStorageEnabled}
+					onChange={(e: any) => setCachedStateField("memoryStorageEnabled", e.target.checked)}
+					data-testid="memory-storage-enabled-checkbox">
+					<span className="font-medium">{t("settings:contextManagement.memoryStorage.enable.label")}</span>
+				</VSCodeCheckbox>
+				<div className="text-vscode-descriptionForeground text-sm mt-1 mb-3">
+					{t("settings:contextManagement.memoryStorage.enable.description")}
+				</div>
+				{memoryStorageEnabled && (
+					<div className="flex flex-col gap-3 pl-3 border-l-2 border-vscode-button-background">
+						<VSCodeCheckbox
+							checked={memoryStorageAutoApprove}
+							onChange={(e: any) => setCachedStateField("memoryStorageAutoApprove", e.target.checked)}
+							data-testid="memory-storage-auto-approve-checkbox">
+							<span className="font-medium">
+								{t("settings:contextManagement.memoryStorage.autoApprove.label")}
+							</span>
+						</VSCodeCheckbox>
+						<div className="text-vscode-descriptionForeground text-sm mt-1">
+							{t("settings:contextManagement.memoryStorage.autoApprove.description")}
 						</div>
 					</div>
 				)}

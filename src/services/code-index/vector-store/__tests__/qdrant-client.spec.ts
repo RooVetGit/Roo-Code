@@ -4,6 +4,7 @@ import { createHash } from "crypto"
 import { QdrantVectorStore } from "../qdrant-client"
 import { getWorkspacePath } from "../../../../utils/path"
 import { DEFAULT_MAX_SEARCH_RESULTS, DEFAULT_SEARCH_MIN_SCORE } from "../../constants"
+import { QdrantCollectionType } from "../../interfaces/collection-types"
 
 // Mocks
 vitest.mock("@qdrant/js-client-rest")
@@ -48,7 +49,7 @@ describe("QdrantVectorStore", () => {
 	const mockApiKey = "test-api-key"
 	const mockVectorSize = 1536
 	const mockHashedPath = "a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6" // Needs to be long enough
-	const expectedCollectionName = `ws-${mockHashedPath.substring(0, 16)}`
+	const expectedCollectionName = `codebase-${mockHashedPath.substring(0, 16)}`
 
 	beforeEach(() => {
 		vitest.clearAllMocks()
@@ -84,7 +85,23 @@ describe("QdrantVectorStore", () => {
 		// Access private member for testing constructor logic (not ideal, but necessary here)
 		expect((vectorStore as any).collectionName).toBe(expectedCollectionName)
 		expect((vectorStore as any).vectorSize).toBe(mockVectorSize)
+		expect((vectorStore as any).collectionType).toBe(QdrantCollectionType.CODEBASE)
 	})
+
+	it("should correctly initialize with MEMORY collection type", () => {
+		const memoryVectorStore = new QdrantVectorStore(
+			mockWorkspacePath,
+			mockQdrantUrl,
+			mockVectorSize,
+			mockApiKey,
+			QdrantCollectionType.MEMORY,
+		)
+
+		const expectedMemoryCollectionName = `memory-${mockHashedPath.substring(0, 16)}`
+		expect((memoryVectorStore as any).collectionName).toBe(expectedMemoryCollectionName)
+		expect((memoryVectorStore as any).collectionType).toBe(QdrantCollectionType.MEMORY)
+	})
+
 	it("should handle constructor with default URL when none provided", () => {
 		const vectorStoreWithDefaults = new QdrantVectorStore(mockWorkspacePath, undefined as any, mockVectorSize)
 
