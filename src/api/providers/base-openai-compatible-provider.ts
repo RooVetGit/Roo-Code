@@ -10,6 +10,7 @@ import { convertToOpenAiMessages } from "../transform/openai-format"
 import type { SingleCompletionHandler, ApiHandlerCreateMessageMetadata } from "../index"
 import { DEFAULT_HEADERS } from "./constants"
 import { BaseProvider } from "./base-provider"
+import { createCustomFetch, DEFAULT_OPENAI_REQUEST_TIMEOUT } from "./utils/custom-fetch"
 
 type BaseOpenAiCompatibleProviderOptions<ModelName extends string> = ApiHandlerOptions & {
 	providerName: string
@@ -55,10 +56,14 @@ export abstract class BaseOpenAiCompatibleProvider<ModelName extends string>
 			throw new Error("API key is required")
 		}
 
+		// Create custom fetch with timeout if configured
+		const customFetch = createCustomFetch(this.options.openAiRequestTimeout || DEFAULT_OPENAI_REQUEST_TIMEOUT)
+
 		this.client = new OpenAI({
 			baseURL,
 			apiKey: this.options.apiKey,
 			defaultHeaders: DEFAULT_HEADERS,
+			fetch: customFetch,
 		})
 	}
 

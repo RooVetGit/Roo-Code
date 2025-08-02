@@ -476,6 +476,7 @@
 		"tmp": "^0.2.3",
 		"tree-sitter-wasms": "^0.1.12",
 		"turndown": "^7.2.0",
+		"undici": "^5.29.0",
 		"uuid": "^11.1.0",
 		"vscode-material-icons": "^0.1.1",
 		"web-tree-sitter": "^0.25.6",

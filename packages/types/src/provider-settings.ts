@@ -144,6 +144,7 @@ const openAiSchema = baseProviderSettingsSchema.extend({
 	openAiStreamingEnabled: z.boolean().optional(),
 	openAiHostHeader: z.string().optional(), // Keep temporarily for backward compatibility during migration.
 	openAiHeaders: z.record(z.string(), z.string()).optional(),
+	openAiRequestTimeout: z.number().optional(), // Timeout in milliseconds for OpenAI API requests
 })
 
 const ollamaSchema = baseProviderSettingsSchema.extend({

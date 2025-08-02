@@ -685,7 +685,7 @@ importers:
         version: 12.0.0
       openai:
         specifier: ^5.0.0
-        version: 5.5.1(ws@8.18.2)(zod@3.25.61)
+        version: 5.5.1(ws@8.18.3)(zod@3.25.61)
       os-name:
         specifier: ^6.0.0
         version: 6.1.0
@@ -758,6 +758,9 @@ importers:
       turndown:
         specifier: ^7.2.0
         version: 7.2.0
+      undici:
+        specifier: '>=5.29.0'
+        version: 6.21.3
       uuid:
         specifier: ^11.1.0
         version: 11.1.0
@@ -17520,9 +17523,9 @@ snapshots:
       is-inside-container: 1.0.0
       is-wsl: 3.1.0
 
-  openai@5.5.1(ws@8.18.2)(zod@3.25.61):
+  openai@5.5.1(ws@8.18.3)(zod@3.25.61):
     optionalDependencies:
-      ws: 8.18.2
+      ws: 8.18.3
       zod: 3.25.61
 
   option@0.2.4: {}

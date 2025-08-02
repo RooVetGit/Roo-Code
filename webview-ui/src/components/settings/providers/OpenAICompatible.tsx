@@ -177,6 +177,23 @@ export const OpenAICompatible = ({
 					{t("settings:includeMaxOutputTokensDescription")}
 				</div>
 			</div>
+			<div>
+				<VSCodeTextField
+					value={apiConfiguration?.openAiRequestTimeout?.toString() || ""}
+					type="text"
+					onInput={handleInputChange("openAiRequestTimeout", (e) => {
+						const value = (e.target as HTMLInputElement).value
+						const parsed = parseInt(value)
+						return isNaN(parsed) || parsed === 0 ? undefined : parsed
+					})}
+					placeholder="1800000"
+					className="w-full">
+					<label className="block font-medium mb-1">{t("settings:providers.requestTimeout")}</label>
+				</VSCodeTextField>
+				<div className="text-sm text-vscode-descriptionForeground">
+					{t("settings:providers.requestTimeoutDescription")}
+				</div>
+			</div>
 			<Checkbox
 				checked={apiConfiguration?.openAiUseAzure ?? false}
 				onChange={handleInputChange("openAiUseAzure", noTransform)}>

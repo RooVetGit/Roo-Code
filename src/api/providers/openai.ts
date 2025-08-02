@@ -23,6 +23,7 @@ import { getModelParams } from "../transform/model-params"
 import { DEFAULT_HEADERS } from "./constants"
 import { BaseProvider } from "./base-provider"
 import type { SingleCompletionHandler, ApiHandlerCreateMessageMetadata } from "../index"
+import { createCustomFetch, DEFAULT_OPENAI_REQUEST_TIMEOUT } from "./utils/custom-fetch"
 
 // TODO: Rename this to OpenAICompatibleHandler. Also, I think the
 // `OpenAINativeHandler` can subclass from this, since it's obviously
@@ -46,6 +47,9 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 			...(this.options.openAiHeaders || {}),
 		}
 
+		// Create custom fetch with timeout if configured
+		const customFetch = createCustomFetch(this.options.openAiRequestTimeout || DEFAULT_OPENAI_REQUEST_TIMEOUT)
+
 		if (isAzureAiInference) {
 			// Azure AI Inference Service (e.g., for DeepSeek) uses a different path structure
 			this.client = new OpenAI({
@@ -53,6 +57,7 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 				apiKey,
 				defaultHeaders: headers,
 				defaultQuery: { "api-version": this.options.azureApiVersion || "2024-05-01-preview" },
+				fetch: customFetch,
 			})
 		} else if (isAzureOpenAi) {
 			// Azure API shape slightly differs from the core API shape:
@@ -62,12 +67,14 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 				apiKey,
 				apiVersion: this.options.azureApiVersion || azureOpenAiDefaultApiVersion,
 				defaultHeaders: headers,
+				fetch: customFetch,
 			})
 		} else {
 			this.client = new OpenAI({
 				baseURL,
 				apiKey,
 				defaultHeaders: headers,
+				fetch: customFetch,
 			})
 		}
 	}
