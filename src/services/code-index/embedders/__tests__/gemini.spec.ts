@@ -104,7 +104,7 @@ describe("GeminiEmbedder", () => {
 				const result = await embedder.createEmbeddings(texts)
 
 				// Assert
-				expect(mockCreateEmbeddings).toHaveBeenCalledWith(texts, "gemini-embedding-001")
+				expect(mockCreateEmbeddings).toHaveBeenCalledWith(texts, "gemini-embedding-001", undefined)
 				expect(result).toEqual(mockResponse)
 			})
 
@@ -124,7 +124,7 @@ describe("GeminiEmbedder", () => {
 				const result = await embedder.createEmbeddings(texts, "gemini-embedding-001")
 
 				// Assert
-				expect(mockCreateEmbeddings).toHaveBeenCalledWith(texts, "gemini-embedding-001")
+				expect(mockCreateEmbeddings).toHaveBeenCalledWith(texts, "gemini-embedding-001", undefined)
 				expect(result).toEqual(mockResponse)
 			})
 
@@ -188,6 +188,42 @@ describe("GeminiEmbedder", () => {
 
 			// Act & Assert
 			await expect(embedder.validateConfiguration()).rejects.toThrow("Validation failed")
+		})
+	})
+
+	describe("createEmbeddings", () => {
+		let mockCreateEmbeddings: any
+
+		beforeEach(() => {
+			mockCreateEmbeddings = vitest.fn()
+			MockedOpenAICompatibleEmbedder.prototype.createEmbeddings = mockCreateEmbeddings
+			embedder = new GeminiEmbedder("test-api-key")
+		})
+
+		it("should use default model when none is provided", async () => {
+			// Arrange
+			const texts = ["text1", "text2"]
+			mockCreateEmbeddings.mockResolvedValue({ embeddings: [], usage: { promptTokens: 0, totalTokens: 0 } })
+
+			// Act
+			await embedder.createEmbeddings(texts)
+
+			// Assert
+			expect(mockCreateEmbeddings).toHaveBeenCalledWith(texts, "gemini-embedding-001", undefined)
+		})
+
+		it("should pass model and dimension to the OpenAICompatibleEmbedder", async () => {
+			// Arrange
+			const texts = ["text1", "text2"]
+			const model = "custom-model"
+			const options = { dimension: 1536 }
+			mockCreateEmbeddings.mockResolvedValue({ embeddings: [], usage: { promptTokens: 0, totalTokens: 0 } })
+
+			// Act
+			await embedder.createEmbeddings(texts, model, options)
+
+			// Assert
+			expect(mockCreateEmbeddings).toHaveBeenCalledWith(texts, model, options)
 		})
 	})
 })
