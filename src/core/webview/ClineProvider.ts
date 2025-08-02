@@ -27,6 +27,7 @@ import {
 	requestyDefaultModelId,
 	openRouterDefaultModelId,
 	glamaDefaultModelId,
+	litellmDefaultModelId,
 	ORGANIZATION_ALLOW_ALL,
 	DEFAULT_TERMINAL_OUTPUT_CHARACTER_LIMIT,
 	DEFAULT_WRITE_DELAY_MS,
@@ -1234,6 +1235,38 @@ export class ClineProvider
 		}
 
 		await this.upsertProviderProfile(currentApiConfigName, newConfiguration)
+	}
+
+	// LiteLLM
+	async handleLiteLLMCallback(oauthResponse: {
+		accessToken: string
+		tokenType: string
+		expiresIn: number
+		scope?: string
+	}) {
+		let { apiConfiguration, currentApiConfigName } = await this.getState()
+
+		// Store the OAuth response metadata
+		const { accessToken, tokenType, expiresIn, scope } = oauthResponse
+		const expiresAt = new Date(Date.now() + expiresIn * 1000).toISOString()
+
+		this.log(
+			`LiteLLM OAuth success: ${tokenType} token expires in ${expiresIn}s (${expiresAt})${scope ? ` with scope: ${scope}` : ""}`,
+		)
+
+		const newConfiguration: ProviderSettings = {
+			...apiConfiguration,
+			apiProvider: "litellm",
+			litellmApiKey: accessToken,
+			litellmModelId: apiConfiguration?.litellmModelId || litellmDefaultModelId,
+		}
+		await this.upsertProviderProfile(currentApiConfigName, newConfiguration)
+
+		// Notify webview of the configuration update
+		await this.postStateToWebview()
+
+		// Show success message to user
+		vscode.window.showInformationMessage("Successfully authenticated with LiteLLM via SSO!")
 	}
 
 	// Glama
