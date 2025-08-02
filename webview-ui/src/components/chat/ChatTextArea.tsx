@@ -20,6 +20,8 @@ import {
 } from "@src/utils/context-mentions"
 import { convertToMentionPath } from "@/utils/path-mentions"
 import { StandardTooltip } from "@/components/ui"
+import { telemetryClient } from "@/utils/TelemetryClient"
+import { TelemetryEventName } from "@roo-code/types"
 
 import Thumbnails from "../common/Thumbnails"
 import ModeSelector from "./ModeSelector"
@@ -294,6 +296,12 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 				}
 
 				if (type === ContextMenuOptionType.Mode && value) {
+					// Track telemetry for mode selection from context menu
+					telemetryClient.capture(TelemetryEventName.SLASH_COMMAND_USED, {
+						commandType: "mode",
+						commandName: value,
+					})
+
 					// Handle mode selection.
 					setMode(value)
 					setInputValue("")
@@ -303,6 +311,12 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 				}
 
 				if (type === ContextMenuOptionType.Command && value) {
+					// Track telemetry for slash command usage from context menu
+					telemetryClient.capture(TelemetryEventName.SLASH_COMMAND_USED, {
+						commandType: "custom",
+						commandName: value,
+					})
+
 					// Handle command selection.
 					setSelectedMenuIndex(-1)
 					setInputValue("")
