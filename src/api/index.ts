@@ -125,7 +125,6 @@ export function buildApiHandler(configuration: ProviderSettings): ApiHandler {
 		case "sambanova":
 			return new SambaNovaHandler(options)
 		default:
-			apiProvider satisfies "gemini-cli" | undefined
 			return new AnthropicHandler(options)
 	}
 }
