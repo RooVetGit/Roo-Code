@@ -1,12 +1,12 @@
-// npx vitest run src/__tests__/AuthService.spec.ts
+// npx vitest run src/__tests__/auth/WebAuthService.spec.ts
 
-import { vi, Mock, beforeEach, afterEach, describe, it, expect } from "vitest"
+import { type Mock } from "vitest"
 import crypto from "crypto"
 import * as vscode from "vscode"
 
 import { WebAuthService } from "../../auth/WebAuthService"
 import { RefreshTimer } from "../../RefreshTimer"
-import * as Config from "../../Config"
+import * as Config from "../../config"
 import * as utils from "../../utils"
 
 // Mock external dependencies
