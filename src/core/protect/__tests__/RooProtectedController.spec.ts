@@ -80,6 +80,19 @@ describe("RooProtectedController", () => {
 			expect(controller.isWriteProtected(".roo\\config.json")).toBe(true)
 			expect(controller.isWriteProtected(".roo/config.json")).toBe(true)
 		})
+
+		it("should handle paths outside the cwd gracefully", () => {
+			// Paths that go outside the cwd should not be protected
+			expect(controller.isWriteProtected("../../.roo/rules")).toBe(false)
+			expect(controller.isWriteProtected("../../../.rooignore")).toBe(false)
+			expect(controller.isWriteProtected("../.roo/config.json")).toBe(false)
+		})
+
+		it("should not throw error for paths outside cwd", () => {
+			// This should not throw an error
+			expect(() => controller.isWriteProtected("../../.roo/rules")).not.toThrow()
+			expect(() => controller.isWriteProtected("../outside/path/.rooignore")).not.toThrow()
+		})
 	})
 
 	describe("getProtectedFiles", () => {
