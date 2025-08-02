@@ -528,6 +528,25 @@ describe("QdrantVectorStore", () => {
 				vectors: {
 					size: mockVectorSize,
 					distance: "Cosine", // Assuming 'Cosine' is the DISTANCE_METRIC
+					on_disk: true, // Default memory optimization
+				},
+				hnsw_config: {
+					m: 16,
+					ef_construct: 100,
+					full_scan_threshold: 10000,
+					max_indexing_threads: 0,
+					on_disk: true,
+					payload_m: null,
+				},
+				optimizers_config: {
+					deleted_threshold: 0.2,
+					vacuum_min_vector_number: 1000,
+					default_segment_number: 2,
+					max_segment_size: null,
+					memmap_threshold: 50000,
+					indexing_threshold: 20000,
+					flush_interval_sec: 5,
+					max_optimization_threads: 0,
 				},
 			})
 			expect(mockQdrantClientInstance.deleteCollection).not.toHaveBeenCalled()
@@ -606,6 +625,25 @@ describe("QdrantVectorStore", () => {
 				vectors: {
 					size: mockVectorSize, // Should use the new, correct vector size
 					distance: "Cosine",
+					on_disk: true, // Default memory optimization
+				},
+				hnsw_config: {
+					m: 16,
+					ef_construct: 100,
+					full_scan_threshold: 10000,
+					max_indexing_threads: 0,
+					on_disk: true,
+					payload_m: null,
+				},
+				optimizers_config: {
+					deleted_threshold: 0.2,
+					vacuum_min_vector_number: 1000,
+					default_segment_number: 2,
+					max_segment_size: null,
+					memmap_threshold: 50000,
+					indexing_threshold: 20000,
+					flush_interval_sec: 5,
+					max_optimization_threads: 0,
 				},
 			})
 
@@ -899,6 +937,25 @@ describe("QdrantVectorStore", () => {
 				vectors: {
 					size: newVectorSize, // Should create with new 768 dimensions
 					distance: "Cosine",
+					on_disk: true, // Default memory optimization
+				},
+				hnsw_config: {
+					m: 16,
+					ef_construct: 100,
+					full_scan_threshold: 10000,
+					max_indexing_threads: 0,
+					on_disk: true,
+					payload_m: null,
+				},
+				optimizers_config: {
+					deleted_threshold: 0.2,
+					vacuum_min_vector_number: 1000,
+					default_segment_number: 2,
+					max_segment_size: null,
+					memmap_threshold: 50000,
+					indexing_threshold: 20000,
+					flush_interval_sec: 5,
+					max_optimization_threads: 0,
 				},
 			})
 			expect(mockQdrantClientInstance.createPayloadIndex).toHaveBeenCalledTimes(5)
@@ -1244,8 +1301,13 @@ describe("QdrantVectorStore", () => {
 				score_threshold: DEFAULT_SEARCH_MIN_SCORE,
 				limit: DEFAULT_MAX_SEARCH_RESULTS,
 				params: {
-					hnsw_ef: 128,
+					hnsw_ef: 128, // Default memory optimized value
 					exact: false,
+					quantization: {
+						ignore: false,
+						rescore: true,
+						oversampling: 2.0,
+					},
 				},
 				with_payload: {
 					include: ["filePath", "codeChunk", "startLine", "endLine", "pathSegments"],
@@ -1295,8 +1357,13 @@ describe("QdrantVectorStore", () => {
 				score_threshold: DEFAULT_SEARCH_MIN_SCORE,
 				limit: DEFAULT_MAX_SEARCH_RESULTS,
 				params: {
-					hnsw_ef: 128,
+					hnsw_ef: 128, // Default memory optimized value
 					exact: false,
+					quantization: {
+						ignore: false,
+						rescore: true,
+						oversampling: 2.0,
+					},
 				},
 				with_payload: {
 					include: ["filePath", "codeChunk", "startLine", "endLine", "pathSegments"],
@@ -1321,8 +1388,13 @@ describe("QdrantVectorStore", () => {
 				score_threshold: customMinScore,
 				limit: DEFAULT_MAX_SEARCH_RESULTS,
 				params: {
-					hnsw_ef: 128,
+					hnsw_ef: 128, // Default memory optimized value
 					exact: false,
+					quantization: {
+						ignore: false,
+						rescore: true,
+						oversampling: 2.0,
+					},
 				},
 				with_payload: {
 					include: ["filePath", "codeChunk", "startLine", "endLine", "pathSegments"],
@@ -1345,8 +1417,13 @@ describe("QdrantVectorStore", () => {
 				score_threshold: DEFAULT_SEARCH_MIN_SCORE,
 				limit: customMaxResults,
 				params: {
-					hnsw_ef: 128,
+					hnsw_ef: 128, // Default memory optimized value
 					exact: false,
+					quantization: {
+						ignore: false,
+						rescore: true,
+						oversampling: 2.0,
+					},
 				},
 				with_payload: {
 					include: ["filePath", "codeChunk", "startLine", "endLine", "pathSegments"],
@@ -1492,8 +1569,13 @@ describe("QdrantVectorStore", () => {
 				score_threshold: DEFAULT_SEARCH_MIN_SCORE,
 				limit: DEFAULT_MAX_SEARCH_RESULTS,
 				params: {
-					hnsw_ef: 128,
+					hnsw_ef: 128, // Default memory optimized value
 					exact: false,
+					quantization: {
+						ignore: false,
+						rescore: true,
+						oversampling: 2.0,
+					},
 				},
 				with_payload: {
 					include: ["filePath", "codeChunk", "startLine", "endLine", "pathSegments"],

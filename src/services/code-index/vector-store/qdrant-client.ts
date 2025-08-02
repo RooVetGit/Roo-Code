@@ -6,6 +6,12 @@ import { IVectorStore } from "../interfaces/vector-store"
 import { Payload, VectorStoreSearchResult } from "../interfaces"
 import { DEFAULT_MAX_SEARCH_RESULTS, DEFAULT_SEARCH_MIN_SCORE } from "../constants"
 import { t } from "../../../i18n"
+import {
+	QDRANT_MEMORY_OPTIMIZATION_DEFAULTS,
+	QDRANT_HNSW_CONFIG_DEFAULTS,
+	QDRANT_OPTIMIZER_CONFIG_DEFAULTS,
+	QDRANT_QUANTIZATION_CONFIG_DEFAULTS,
+} from "@roo-code/types"
 
 /**
  * Qdrant implementation of the vector store interface
@@ -22,6 +28,8 @@ export class QdrantVectorStore implements IVectorStore {
 	 * Creates a new Qdrant vector store
 	 * @param workspacePath Path to the workspace
 	 * @param url Optional URL to the Qdrant server
+	 * @param vectorSize Size of the vectors
+	 * @param apiKey Optional API key for authentication
 	 */
 	constructor(workspacePath: string, url: string, vectorSize: number, apiKey?: string) {
 		// Parse the URL to determine the appropriate QdrantClient configuration
@@ -155,6 +163,27 @@ export class QdrantVectorStore implements IVectorStore {
 					vectors: {
 						size: this.vectorSize,
 						distance: this.DISTANCE_METRIC,
+						on_disk: QDRANT_MEMORY_OPTIMIZATION_DEFAULTS.USE_ON_DISK_STORAGE,
+					},
+					// Configure HNSW index for memory efficiency
+					hnsw_config: {
+						m: QDRANT_HNSW_CONFIG_DEFAULTS.M,
+						ef_construct: QDRANT_HNSW_CONFIG_DEFAULTS.EF_CONSTRUCT,
+						full_scan_threshold: QDRANT_HNSW_CONFIG_DEFAULTS.FULL_SCAN_THRESHOLD,
+						max_indexing_threads: QDRANT_HNSW_CONFIG_DEFAULTS.MAX_INDEXING_THREADS,
+						on_disk: QDRANT_MEMORY_OPTIMIZATION_DEFAULTS.USE_ON_DISK_STORAGE,
+						payload_m: QDRANT_HNSW_CONFIG_DEFAULTS.PAYLOAD_M,
+					},
+					// Enable memory-mapped storage for better memory management
+					optimizers_config: {
+						deleted_threshold: QDRANT_OPTIMIZER_CONFIG_DEFAULTS.DELETED_THRESHOLD,
+						vacuum_min_vector_number: QDRANT_OPTIMIZER_CONFIG_DEFAULTS.VACUUM_MIN_VECTOR_NUMBER,
+						default_segment_number: QDRANT_OPTIMIZER_CONFIG_DEFAULTS.DEFAULT_SEGMENT_NUMBER,
+						max_segment_size: QDRANT_OPTIMIZER_CONFIG_DEFAULTS.MAX_SEGMENT_SIZE,
+						memmap_threshold: QDRANT_MEMORY_OPTIMIZATION_DEFAULTS.MEMORY_MAP_THRESHOLD,
+						indexing_threshold: QDRANT_OPTIMIZER_CONFIG_DEFAULTS.INDEXING_THRESHOLD,
+						flush_interval_sec: QDRANT_OPTIMIZER_CONFIG_DEFAULTS.FLUSH_INTERVAL_SEC,
+						max_optimization_threads: QDRANT_OPTIMIZER_CONFIG_DEFAULTS.MAX_OPTIMIZATION_THREADS,
 					},
 				})
 				created = true
@@ -244,6 +273,27 @@ export class QdrantVectorStore implements IVectorStore {
 				vectors: {
 					size: this.vectorSize,
 					distance: this.DISTANCE_METRIC,
+					on_disk: QDRANT_MEMORY_OPTIMIZATION_DEFAULTS.USE_ON_DISK_STORAGE,
+				},
+				// Configure HNSW index for memory efficiency
+				hnsw_config: {
+					m: QDRANT_HNSW_CONFIG_DEFAULTS.M,
+					ef_construct: QDRANT_HNSW_CONFIG_DEFAULTS.EF_CONSTRUCT,
+					full_scan_threshold: QDRANT_HNSW_CONFIG_DEFAULTS.FULL_SCAN_THRESHOLD,
+					max_indexing_threads: QDRANT_HNSW_CONFIG_DEFAULTS.MAX_INDEXING_THREADS,
+					on_disk: QDRANT_MEMORY_OPTIMIZATION_DEFAULTS.USE_ON_DISK_STORAGE,
+					payload_m: QDRANT_HNSW_CONFIG_DEFAULTS.PAYLOAD_M,
+				},
+				// Enable memory-mapped storage for better memory management
+				optimizers_config: {
+					deleted_threshold: QDRANT_OPTIMIZER_CONFIG_DEFAULTS.DELETED_THRESHOLD,
+					vacuum_min_vector_number: QDRANT_OPTIMIZER_CONFIG_DEFAULTS.VACUUM_MIN_VECTOR_NUMBER,
+					default_segment_number: QDRANT_OPTIMIZER_CONFIG_DEFAULTS.DEFAULT_SEGMENT_NUMBER,
+					max_segment_size: QDRANT_OPTIMIZER_CONFIG_DEFAULTS.MAX_SEGMENT_SIZE,
+					memmap_threshold: QDRANT_MEMORY_OPTIMIZATION_DEFAULTS.MEMORY_MAP_THRESHOLD,
+					indexing_threshold: QDRANT_OPTIMIZER_CONFIG_DEFAULTS.INDEXING_THRESHOLD,
+					flush_interval_sec: QDRANT_OPTIMIZER_CONFIG_DEFAULTS.FLUSH_INTERVAL_SEC,
+					max_optimization_threads: QDRANT_OPTIMIZER_CONFIG_DEFAULTS.MAX_OPTIMIZATION_THREADS,
 				},
 			})
 			console.log(`[QdrantVectorStore] Successfully created new collection ${this.collectionName}`)
@@ -391,8 +441,13 @@ export class QdrantVectorStore implements IVectorStore {
 				score_threshold: minScore ?? DEFAULT_SEARCH_MIN_SCORE,
 				limit: maxResults ?? DEFAULT_MAX_SEARCH_RESULTS,
 				params: {
-					hnsw_ef: 128,
+					hnsw_ef: QDRANT_MEMORY_OPTIMIZATION_DEFAULTS.HNSW_EF_SEARCH,
 					exact: false,
+					quantization: {
+						ignore: QDRANT_QUANTIZATION_CONFIG_DEFAULTS.IGNORE,
+						rescore: QDRANT_QUANTIZATION_CONFIG_DEFAULTS.RESCORE,
+						oversampling: QDRANT_QUANTIZATION_CONFIG_DEFAULTS.OVERSAMPLING,
+					},
 				},
 				with_payload: {
 					include: ["filePath", "codeChunk", "startLine", "endLine", "pathSegments"],
