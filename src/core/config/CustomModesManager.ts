@@ -41,6 +41,7 @@ interface ExportResult {
 interface ImportResult {
 	success: boolean
 	error?: string
+	importedModes?: string[] // Slugs of successfully imported modes
 }
 
 export class CustomModesManager {
@@ -786,7 +787,7 @@ export class CustomModesManager {
 								// This excludes the rules-{slug} folder from the path
 								const relativePath = path.relative(modeRulesDir, filePath)
 								// Normalize path to use forward slashes for cross-platform compatibility
-								const normalizedRelativePath = relativePath.replace(/\\/g, '/')
+								const normalizedRelativePath = relativePath.replace(/\\/g, "/")
 								rulesFiles.push({ relativePath: normalizedRelativePath, content: content.trim() })
 							}
 						}
@@ -949,6 +950,9 @@ export class CustomModesManager {
 				}
 			}
 
+			// Track successfully imported mode slugs
+			const importedModes: string[] = []
+
 			// Process each mode in the import
 			for (const importMode of importData.customModes) {
 				const { rulesFiles, ...modeConfig } = importMode
@@ -980,12 +984,16 @@ export class CustomModesManager {
 
 				// Import rules files (this also handles cleanup of existing rules folders)
 				await this.importRulesFiles(importMode, rulesFiles || [], source)
+
+				// Record the imported mode slug
+				importedModes.push(importMode.slug)
 			}
 
 			// Refresh the modes after import
 			await this.refreshMergedState()
 
-			return { success: true }
+			// Return success with imported mode slugs
+			return { success: true, importedModes }
 		} catch (error) {
 			const errorMessage = error instanceof Error ? error.message : String(error)
 			logger.error("Failed to import mode with rules", { error: errorMessage })
