@@ -108,6 +108,16 @@ export type TaskEvents = {
 	taskCompleted: [taskId: string, tokenUsage: TokenUsage, toolUsage: ToolUsage]
 	taskTokenUsageUpdated: [taskId: string, tokenUsage: TokenUsage]
 	taskToolFailed: [taskId: string, tool: ToolName, error: string]
+	taskCommandExecuted: [
+		taskId: string,
+		details: {
+			command: string
+			exitCode: number | undefined
+			output: string
+			succeeded: boolean
+			failureReason?: string
+		},
+	]
 }
 
 export type TaskEventHandlers = {

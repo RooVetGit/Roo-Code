@@ -274,6 +274,15 @@ export async function executeCommand(
 				await task.say("error", t("common:errors:command_timeout", { seconds: commandExecutionTimeoutSeconds }))
 				task.terminalProcess = undefined
 
+				// Emit taskCommandExecuted event for timeout
+				task.emit("taskCommandExecuted", task.taskId, {
+					command,
+					exitCode: undefined,
+					output: accumulatedOutput, // Use accumulatedOutput instead of result
+					succeeded: false,
+					failureReason: `Command timed out after ${commandExecutionTimeoutSeconds}s`,
+				})
+
 				return [
 					false,
 					`The command was terminated after exceeding a user-configured ${commandExecutionTimeoutSeconds}s timeout. Do not try to re-run the command.`,
@@ -311,6 +320,15 @@ export async function executeCommand(
 		const { text, images } = message
 		await task.say("user_feedback", text, images)
 
+		// Emit taskCommandExecuted event for running command with user feedback
+		task.emit("taskCommandExecuted", task.taskId, {
+			command,
+			exitCode: undefined,
+			output: accumulatedOutput, // Use accumulatedOutput instead of result
+			succeeded: false,
+			failureReason: "Command is still running (user provided feedback)",
+		})
+
 		return [
 			true,
 			formatResponse.toolResult(
@@ -325,6 +343,7 @@ export async function executeCommand(
 		]
 	} else if (completed || exitDetails) {
 		let exitStatus: string = ""
+		let exitCode: number | undefined = exitDetails?.exitCode
 
 		if (exitDetails !== undefined) {
 			if (exitDetails.signalName) {
@@ -349,6 +368,16 @@ export async function executeCommand(
 		}
 
 		let workingDirInfo = ` within working directory '${terminal.getCurrentWorkingDirectory().toPosix()}'`
+
+		// Emit taskCommandExecuted event
+		const succeeded = exitCode === 0
+		task.emit("taskCommandExecuted", task.taskId, {
+			command,
+			exitCode,
+			output: result,
+			succeeded,
+			failureReason: succeeded ? undefined : exitStatus,
+		})
 
 		return [false, `Command executed in terminal ${workingDirInfo}. ${exitStatus}\nOutput:\n${result}`]
 	} else {

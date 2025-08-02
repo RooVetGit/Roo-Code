@@ -46,6 +46,7 @@ describe("Command Execution Timeout Integration", () => {
 		// Mock task
 		mockTask = {
 			cwd: "/test/directory",
+			taskId: "test-task-123",
 			terminalProcess: undefined,
 			providerRef: {
 				deref: vitest.fn().mockResolvedValue({
@@ -53,6 +54,7 @@ describe("Command Execution Timeout Integration", () => {
 				}),
 			},
 			say: vitest.fn().mockResolvedValue(undefined),
+			emit: vitest.fn(),
 		}
 
 		// Mock terminal process
@@ -231,6 +233,7 @@ describe("Command Execution Timeout Integration", () => {
 			// Mock task with additional properties needed by executeCommandTool
 			mockTask = {
 				cwd: "/test/directory",
+				taskId: "test-task-123",
 				terminalProcess: undefined,
 				providerRef: {
 					deref: vitest.fn().mockResolvedValue({
@@ -251,6 +254,7 @@ describe("Command Execution Timeout Integration", () => {
 				lastMessageTs: Date.now(),
 				ask: vitest.fn(),
 				didRejectTool: false,
+				emit: vitest.fn(),
 			}
 		})
 
