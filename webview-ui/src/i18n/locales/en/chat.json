@@ -378,5 +378,13 @@
 	"queuedMessages": {
 		"title": "Queued Messages:",
 		"clickToEdit": "Click to edit message"
+	},
+	"hierarchicalMemory": {
+		"title": "Hierarchical Memory Files",
+		"description": "{{count}} memory file(s) loaded from parent directories",
+		"noMemories": "No hierarchical memory files are currently loaded",
+		"loadedFiles": "Loaded Files",
+		"copyContent": "Copy content to clipboard",
+		"viewMemory": "View loaded memory files"
 	}
 }

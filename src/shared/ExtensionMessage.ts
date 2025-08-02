@@ -120,6 +120,7 @@ export interface ExtensionMessage {
 		| "showEditMessageDialog"
 		| "commands"
 		| "insertTextIntoTextarea"
+		| "hierarchicalMemoryLoaded"
 	text?: string
 	payload?: any // Add a generic payload for now, can refine later
 	action?:
@@ -194,6 +195,7 @@ export interface ExtensionMessage {
 	messageTs?: number
 	context?: string
 	commands?: Command[]
+	files?: Array<{ path: string; content: string }> // For hierarchicalMemoryLoaded
 }
 
 export type ExtensionState = Pick<
@@ -270,6 +272,8 @@ export type ExtensionState = Pick<
 	| "profileThresholds"
 	| "includeDiagnosticMessages"
 	| "maxDiagnosticMessages"
+	| "enableHierarchicalMemory"
+	| "hierarchicalMemoryFileNames"
 > & {
 	version: string
 	clineMessages: ClineMessage[]

@@ -93,6 +93,7 @@ import { getMessagesSinceLastSummary, summarizeConversation } from "../condense"
 import { maybeRemoveImageBlocks } from "../../api/transform/image-cleaning"
 import { restoreTodoListForTask } from "../tools/updateTodoListTool"
 import { AutoApprovalHandler } from "./AutoApprovalHandler"
+import { HierarchicalMemoryManager } from "../memory/HierarchicalMemoryManager"
 
 const MAX_EXPONENTIAL_BACKOFF_SECONDS = 600 // 10 minutes
 
@@ -141,6 +142,7 @@ export class Task extends EventEmitter<TaskEvents> {
 	readonly parentTask: Task | undefined = undefined
 	readonly taskNumber: number
 	readonly workspacePath: string
+	memoryManager?: HierarchicalMemoryManager
 
 	/**
 	 * The mode associated with this task. Persisted across sessions
@@ -352,6 +354,11 @@ export class Task extends EventEmitter<TaskEvents> {
 		}
 
 		this.toolRepetitionDetector = new ToolRepetitionDetector(this.consecutiveMistakeLimit)
+
+		// Initialize memory manager asynchronously
+		this.initializeMemoryManager().catch((error) => {
+			console.error("Failed to initialize HierarchicalMemoryManager:", error)
+		})
 
 		onCreated?.(this)
 
@@ -2134,5 +2141,36 @@ export class Task extends EventEmitter<TaskEvents> {
 
 	public get cwd() {
 		return this.workspacePath
+	}
+
+	private async initializeMemoryManager() {
+		const state = await this.providerRef.deref()?.getState()
+		const { enableHierarchicalMemory, hierarchicalMemoryFileNames } = state ?? {}
+
+		this.memoryManager = new HierarchicalMemoryManager(
+			enableHierarchicalMemory ?? false,
+			hierarchicalMemoryFileNames ?? [],
+		)
+	}
+
+	public async injectHierarchicalMemory(messages: ApiMessage[]) {
+		if (messages.length === 0) return
+
+		// Add messages to conversation history
+		for (const message of messages) {
+			await this.addToApiConversationHistory(message)
+		}
+
+		// Notify UI about loaded memories
+		const provider = this.providerRef.deref()
+		if (provider) {
+			await provider.postMessageToWebview({
+				type: "hierarchicalMemoryLoaded",
+				files: messages.map((msg) => ({
+					path: msg.content.toString().match(/--- Memory from (.+) ---/)?.[1] || "",
+					content: msg.content.toString().replace(/--- Memory from .+ ---\n/, ""),
+				})),
+			})
+		}
 	}
 }

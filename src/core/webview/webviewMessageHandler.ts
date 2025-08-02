@@ -2568,5 +2568,18 @@ export const webviewMessageHandler = async (
 			}
 			break
 		}
+		case "enableHierarchicalMemory":
+			await updateGlobalState("enableHierarchicalMemory", message.bool ?? false)
+			await provider.postStateToWebview()
+			break
+		case "hierarchicalMemoryFileNames":
+			// Ensure we have an array of strings
+			let fileNames: string[] = ["Roorules.md"] // default
+			if (Array.isArray(message.values)) {
+				fileNames = message.values.filter((v): v is string => typeof v === "string")
+			}
+			await updateGlobalState("hierarchicalMemoryFileNames", fileNames)
+			await provider.postStateToWebview()
+			break
 	}
 }

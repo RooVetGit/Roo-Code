@@ -331,6 +331,14 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 			vscode.postMessage({ type: "maxConcurrentFileReads", value: cachedState.maxConcurrentFileReads ?? 5 })
 			vscode.postMessage({ type: "includeDiagnosticMessages", bool: includeDiagnosticMessages })
 			vscode.postMessage({ type: "maxDiagnosticMessages", value: maxDiagnosticMessages ?? 50 })
+			vscode.postMessage({
+				type: "enableHierarchicalMemory",
+				bool: cachedState.enableHierarchicalMemory ?? false,
+			})
+			vscode.postMessage({
+				type: "hierarchicalMemoryFileNames",
+				values: cachedState.hierarchicalMemoryFileNames ?? ["Roorules.md"],
+			})
 			vscode.postMessage({ type: "currentApiConfigName", text: currentApiConfigName })
 			vscode.postMessage({ type: "updateExperimental", values: experiments })
 			vscode.postMessage({ type: "alwaysAllowModeSwitch", bool: alwaysAllowModeSwitch })
@@ -682,6 +690,8 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 							includeDiagnosticMessages={includeDiagnosticMessages}
 							maxDiagnosticMessages={maxDiagnosticMessages}
 							writeDelayMs={writeDelayMs}
+							enableHierarchicalMemory={cachedState.enableHierarchicalMemory}
+							hierarchicalMemoryFileNames={cachedState.hierarchicalMemoryFileNames}
 							setCachedStateField={setCachedStateField}
 						/>
 					)}

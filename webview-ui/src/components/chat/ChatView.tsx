@@ -179,6 +179,7 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 	const [showCheckpointWarning, setShowCheckpointWarning] = useState<boolean>(false)
 	const [isCondensing, setIsCondensing] = useState<boolean>(false)
 	const [showAnnouncementModal, setShowAnnouncementModal] = useState(false)
+	const [hierarchicalMemories, setHierarchicalMemories] = useState<Array<{ path: string; content: string }>>([])
 	const everVisibleMessagesTsRef = useRef<LRUCache<number, boolean>>(
 		new LRUCache({
 			max: 250,
@@ -450,6 +451,8 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 		setMessageQueue([])
 		// Clear retry counts
 		retryCountRef.current.clear()
+		// Clear hierarchical memories for new task
+		setHierarchicalMemories([])
 	}, [task?.ts])
 
 	useEffect(() => {
@@ -864,6 +867,11 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 							setSendingDisabled(false)
 						}
 						setIsCondensing(false)
+					}
+					break
+				case "hierarchicalMemoryLoaded":
+					if (message.files) {
+						setHierarchicalMemories(message.files)
 					}
 					break
 			}
@@ -1767,6 +1775,7 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 						handleCondenseContext={handleCondenseContext}
 						onClose={handleTaskCloseButtonClick}
 						todos={latestTodos}
+						hierarchicalMemories={hierarchicalMemories}
 					/>
 
 					{hasSystemPromptOverride && (

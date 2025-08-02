@@ -27,6 +27,8 @@ type ContextManagementSettingsProps = HTMLAttributes<HTMLDivElement> & {
 	includeDiagnosticMessages?: boolean
 	maxDiagnosticMessages?: number
 	writeDelayMs: number
+	enableHierarchicalMemory?: boolean
+	hierarchicalMemoryFileNames?: string[]
 	setCachedStateField: SetCachedStateField<
 		| "autoCondenseContext"
 		| "autoCondenseContextPercent"
@@ -41,6 +43,8 @@ type ContextManagementSettingsProps = HTMLAttributes<HTMLDivElement> & {
 		| "includeDiagnosticMessages"
 		| "maxDiagnosticMessages"
 		| "writeDelayMs"
+		| "enableHierarchicalMemory"
+		| "hierarchicalMemoryFileNames"
 	>
 }
 
@@ -60,6 +64,8 @@ export const ContextManagementSettings = ({
 	includeDiagnosticMessages,
 	maxDiagnosticMessages,
 	writeDelayMs,
+	enableHierarchicalMemory,
+	hierarchicalMemoryFileNames = [],
 	className,
 	...props
 }: ContextManagementSettingsProps) => {
@@ -356,6 +362,45 @@ export const ContextManagementSettings = ({
 						{t("settings:contextManagement.diagnostics.delayAfterWrite.description")}
 					</div>
 				</div>
+
+				<div>
+					<VSCodeCheckbox
+						checked={enableHierarchicalMemory}
+						onChange={(e: any) => setCachedStateField("enableHierarchicalMemory", e.target.checked)}
+						data-testid="enable-hierarchical-memory-checkbox">
+						<label className="block font-medium mb-1">
+							{t("settings:contextManagement.hierarchicalMemory.enable.label")}
+						</label>
+					</VSCodeCheckbox>
+					<div className="text-vscode-descriptionForeground text-sm mt-1 mb-3">
+						{t("settings:contextManagement.hierarchicalMemory.enable.description")}
+					</div>
+				</div>
+
+				{enableHierarchicalMemory && (
+					<div>
+						<span className="block font-medium mb-1">
+							{t("settings:contextManagement.hierarchicalMemory.fileNames.label")}
+						</span>
+						<Input
+							type="text"
+							className="w-full bg-vscode-input-background text-vscode-input-foreground border border-vscode-input-border px-2 py-1 rounded"
+							value={hierarchicalMemoryFileNames.join(", ")}
+							onChange={(e) => {
+								const names = e.target.value
+									.split(",")
+									.map((name) => name.trim())
+									.filter((name) => name.length > 0)
+								setCachedStateField("hierarchicalMemoryFileNames", names)
+							}}
+							placeholder="Roorules.md, CLAUDE.md"
+							data-testid="hierarchical-memory-file-names-input"
+						/>
+						<div className="text-vscode-descriptionForeground text-sm mt-1">
+							{t("settings:contextManagement.hierarchicalMemory.fileNames.description")}
+						</div>
+					</div>
+				)}
 			</Section>
 			<Section className="pt-2">
 				<VSCodeCheckbox

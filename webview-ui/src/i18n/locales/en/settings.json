@@ -559,6 +559,17 @@
 			"profileDescription": "Custom threshold for this profile only (overrides global default)",
 			"inheritDescription": "This profile inherits the global default threshold ({{threshold}}%)",
 			"usesGlobal": "(uses global {{threshold}}%)"
+		},
+		"hierarchicalMemory": {
+			"enable": {
+				"label": "Enable hierarchical memory",
+				"description": "When enabled, Roo will automatically load memory files (e.g., Roorules.md) from parent directories when reading files, providing additional context without manual inclusion."
+			},
+			"fileNames": {
+				"label": "Memory file names",
+				"description": "Comma-separated list of file names to search for in parent directories. These files will be automatically included as context when reading files.",
+				"placeholder": "e.g., Roorules.md, CLAUDE.md, .context.md"
+			}
 		}
 	},
 	"terminal": {

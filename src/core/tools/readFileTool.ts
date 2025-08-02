@@ -442,6 +442,18 @@ export async function readFileTool(
 			maxTotalImageSize = DEFAULT_MAX_TOTAL_IMAGE_SIZE_MB,
 		} = state ?? {}
 
+		// Load hierarchical memory for approved files
+		if (cline.memoryManager) {
+			const approvedFiles = fileResults.filter((result) => result.status === "approved")
+			for (const fileResult of approvedFiles) {
+				const fullPath = path.resolve(cline.cwd, fileResult.path)
+				const memoryMessages = await cline.memoryManager.loadFor(fullPath, cline.cwd)
+				if (memoryMessages.length > 0) {
+					await cline.injectHierarchicalMemory(memoryMessages)
+				}
+			}
+		}
+
 		// Then process only approved files
 		for (const fileResult of fileResults) {
 			// Skip files that weren't approved

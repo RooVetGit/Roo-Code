@@ -1611,6 +1611,8 @@ export class ClineProvider
 			includeDiagnosticMessages,
 			maxDiagnosticMessages,
 			includeTaskHistoryInEnhance,
+			enableHierarchicalMemory,
+			hierarchicalMemoryFileNames,
 		} = await this.getState()
 
 		const telemetryKey = process.env.POSTHOG_API_KEY
@@ -1738,6 +1740,8 @@ export class ClineProvider
 			includeDiagnosticMessages: includeDiagnosticMessages ?? true,
 			maxDiagnosticMessages: maxDiagnosticMessages ?? 50,
 			includeTaskHistoryInEnhance: includeTaskHistoryInEnhance ?? false,
+			enableHierarchicalMemory: enableHierarchicalMemory ?? false,
+			hierarchicalMemoryFileNames: hierarchicalMemoryFileNames ?? [],
 		}
 	}
 
@@ -1925,6 +1929,9 @@ export class ClineProvider
 			maxDiagnosticMessages: stateValues.maxDiagnosticMessages ?? 50,
 			// Add includeTaskHistoryInEnhance setting
 			includeTaskHistoryInEnhance: stateValues.includeTaskHistoryInEnhance ?? false,
+			// Add hierarchical memory settings
+			enableHierarchicalMemory: stateValues.enableHierarchicalMemory ?? false,
+			hierarchicalMemoryFileNames: stateValues.hierarchicalMemoryFileNames ?? [],
 		}
 	}
 

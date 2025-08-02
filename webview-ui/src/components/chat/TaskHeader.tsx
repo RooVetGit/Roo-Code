@@ -34,6 +34,7 @@ export interface TaskHeaderProps {
 	handleCondenseContext: (taskId: string) => void
 	onClose: () => void
 	todos?: any[]
+	hierarchicalMemories?: Array<{ path: string; content: string }>
 }
 
 const TaskHeader = ({
@@ -48,6 +49,7 @@ const TaskHeader = ({
 	handleCondenseContext,
 	onClose,
 	todos,
+	hierarchicalMemories,
 }: TaskHeaderProps) => {
 	const { t } = useTranslation()
 	const { apiConfiguration, currentTaskItem } = useExtensionState()
@@ -185,7 +187,13 @@ const TaskHeader = ({
 										</span>
 									)}
 								</div>
-								{!totalCost && <TaskActions item={currentTaskItem} buttonsDisabled={buttonsDisabled} />}
+								{!totalCost && (
+									<TaskActions
+										item={currentTaskItem}
+										buttonsDisabled={buttonsDisabled}
+										hierarchicalMemories={hierarchicalMemories}
+									/>
+								)}
 							</div>
 
 							{((typeof cacheReads === "number" && cacheReads > 0) ||
@@ -213,7 +221,11 @@ const TaskHeader = ({
 										<span className="font-bold">{t("chat:task.apiCost")}</span>
 										<span>${totalCost?.toFixed(2)}</span>
 									</div>
-									<TaskActions item={currentTaskItem} buttonsDisabled={buttonsDisabled} />
+									<TaskActions
+										item={currentTaskItem}
+										buttonsDisabled={buttonsDisabled}
+										hierarchicalMemories={hierarchicalMemories}
+									/>
 								</div>
 							)}
 						</div>
