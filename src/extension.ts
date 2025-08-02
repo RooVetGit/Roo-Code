@@ -85,6 +85,19 @@ export async function activate(context: vscode.ExtensionContext) {
 	// Add to subscriptions for proper cleanup on deactivate
 	context.subscriptions.push(cloudService)
 
+	// Process any queued events from previous sessions
+	try {
+		const processedCount = await cloudService.processQueuedEvents()
+		if (processedCount > 0) {
+			outputChannel.appendLine(`[Telemetry] Processed ${processedCount} queued events from previous session`)
+		}
+	} catch (error) {
+		console.error("Failed to process queued events:", error)
+		outputChannel.appendLine(
+			`[Telemetry] Failed to process queued events: ${error instanceof Error ? error.message : String(error)}`,
+		)
+	}
+
 	// Initialize MDM service
 	const mdmService = await MdmService.createInstance(cloudLogger)
 

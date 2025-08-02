@@ -53,6 +53,10 @@ export const commandIds = [
 	"focusInput",
 	"acceptInput",
 	"focusPanel",
+
+	"telemetryQueueStatus",
+	"telemetryQueueProcess",
+	"telemetryQueueClear",
 ] as const
 
 export type CommandId = (typeof commandIds)[number]

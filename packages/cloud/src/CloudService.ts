@@ -18,6 +18,7 @@ import type { SettingsService } from "./SettingsService"
 import { CloudSettingsService } from "./CloudSettingsService"
 import { StaticSettingsService } from "./StaticSettingsService"
 import { TelemetryClient } from "./TelemetryClient"
+import { QueuedTelemetryClient, type MultiInstanceConfig, type QueueStatus } from "./queue"
 import { ShareService, TaskNotFoundError } from "./ShareService"
 
 type AuthStateChangedPayload = CloudServiceEvents["auth-state-changed"][0]
@@ -34,6 +35,7 @@ export class CloudService extends EventEmitter<CloudServiceEvents> implements vs
 	private settingsListener: (data: SettingsPayload) => void
 	private settingsService: SettingsService | null = null
 	private telemetryClient: TelemetryClient | null = null
+	private queuedTelemetryClient: QueuedTelemetryClient | null = null
 	private shareService: ShareService | null = null
 	private isInitialized = false
 	private log: (...args: unknown[]) => void
@@ -88,12 +90,34 @@ export class CloudService extends EventEmitter<CloudServiceEvents> implements vs
 			}
 
 			this.telemetryClient = new TelemetryClient(this.authService, this.settingsService)
+
+			// Configure multi-instance behavior
+			const multiInstanceConfig: MultiInstanceConfig = {
+				enabled: true,
+				lockDurationMs: 30000, // 30 seconds
+				lockCheckIntervalMs: 5000, // 5 seconds
+				lockAcquireTimeoutMs: 10000, // 10 seconds
+				mode: "compete", // All instances compete for the lock
+			}
+
+			// Check for environment variable overrides
+			const multiInstanceMode = process.env.ROO_CODE_MULTI_INSTANCE_MODE
+			if (multiInstanceMode === "leader" || multiInstanceMode === "disabled") {
+				multiInstanceConfig.mode = multiInstanceMode
+			}
+
+			this.queuedTelemetryClient = new QueuedTelemetryClient(
+				this.telemetryClient,
+				this.context,
+				false, // debug
+				multiInstanceConfig,
+			)
 			this.shareService = new ShareService(this.authService, this.settingsService, this.log)
 
 			try {
-				TelemetryService.instance.register(this.telemetryClient)
+				TelemetryService.instance.register(this.queuedTelemetryClient)
 			} catch (error) {
-				this.log("[CloudService] Failed to register TelemetryClient:", error)
+				this.log("[CloudService] Failed to register QueuedTelemetryClient:", error)
 			}
 
 			this.isInitialized = true
@@ -191,9 +215,9 @@ export class CloudService extends EventEmitter<CloudServiceEvents> implements vs
 
 	// TelemetryClient
 
-	public captureEvent(event: TelemetryEvent): void {
+	public async captureEvent(event: TelemetryEvent): Promise<void> {
 		this.ensureInitialized()
-		this.telemetryClient!.capture(event)
+		await this.queuedTelemetryClient!.capture(event)
 	}
 
 	// ShareService
@@ -224,7 +248,7 @@ export class CloudService extends EventEmitter<CloudServiceEvents> implements vs
 
 	// Lifecycle
 
-	public dispose(): void {
+	public async dispose(): Promise<void> {
 		if (this.authService) {
 			this.authService.off("auth-state-changed", this.authStateListener)
 			this.authService.off("user-info", this.authUserInfoListener)
@@ -234,6 +258,9 @@ export class CloudService extends EventEmitter<CloudServiceEvents> implements vs
 				this.settingsService.off("settings-updated", this.settingsListener)
 			}
 			this.settingsService.dispose()
+		}
+		if (this.queuedTelemetryClient) {
+			await this.queuedTelemetryClient.shutdown()
 		}
 
 		this.isInitialized = false
@@ -279,5 +306,65 @@ export class CloudService extends EventEmitter<CloudServiceEvents> implements vs
 
 	static isEnabled(): boolean {
 		return !!this._instance?.isAuthenticated()
+	}
+
+	// Getters for queue integration
+	public getAuthService(): AuthService {
+		this.ensureInitialized()
+		return this.authService!
+	}
+
+	public getSettingsService(): SettingsService {
+		this.ensureInitialized()
+		return this.settingsService!
+	}
+
+	public getTelemetryClient(): TelemetryClient {
+		this.ensureInitialized()
+		return this.telemetryClient!
+	}
+
+	public getQueuedTelemetryClient(): QueuedTelemetryClient {
+		this.ensureInitialized()
+		return this.queuedTelemetryClient!
+	}
+
+	/**
+	 * Process any queued telemetry events
+	 * Returns the number of events successfully processed
+	 */
+	public async processQueuedEvents(): Promise<number> {
+		this.ensureInitialized()
+		return this.queuedTelemetryClient!.processQueue()
+	}
+
+	/**
+	 * Get queue status including multi-instance information
+	 */
+	public async getQueueStatus(): Promise<
+		QueueStatus & {
+			instanceInfo?: {
+				instanceId: string
+				hostname: string
+				multiInstanceEnabled: boolean
+				multiInstanceMode: string
+			}
+		}
+	> {
+		this.ensureInitialized()
+		return this.queuedTelemetryClient!.getQueueStatus()
+	}
+
+	/**
+	 * Get multi-instance lock statistics
+	 */
+	public async getLockStats(): Promise<{
+		hasLock: boolean
+		lockHolder?: string
+		lockAge?: number
+		isExpired?: boolean
+	}> {
+		this.ensureInitialized()
+		return this.queuedTelemetryClient!.getLockStats()
 	}
 }

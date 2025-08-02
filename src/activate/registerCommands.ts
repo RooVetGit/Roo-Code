@@ -3,6 +3,7 @@ import delay from "delay"
 
 import type { CommandId } from "@roo-code/types"
 import { TelemetryService } from "@roo-code/telemetry"
+import { CloudService, QueuedTelemetryClient } from "@roo-code/cloud"
 
 import { Package } from "../shared/package"
 import { getCommand } from "../utils/commands"
@@ -217,6 +218,68 @@ const getCommandsMap = ({ context, outputChannel, provider }: RegisterCommandOpt
 		}
 
 		visibleProvider.postMessageToWebview({ type: "acceptInput" })
+	},
+	telemetryQueueStatus: async () => {
+		const cloudService = CloudService.hasInstance() ? CloudService.instance : null
+		if (!cloudService) {
+			vscode.window.showWarningMessage("Cloud service not initialized")
+			return
+		}
+
+		// Get queue status
+		const clients = (TelemetryService.instance as any).clients || []
+		const queuedClient = clients.find((c: any) => c instanceof QueuedTelemetryClient) as
+			| QueuedTelemetryClient
+			| undefined
+
+		if (!queuedClient) {
+			vscode.window.showWarningMessage("Telemetry queue not initialized")
+			return
+		}
+
+		const status = await queuedClient.getQueueStatus()
+
+		vscode.window.showInformationMessage(
+			`Telemetry Queue: ${status.count} events, ` +
+				`${status.failedEventCount} failed, ` +
+				`${(status.sizeInBytes / 1024).toFixed(2)}KB`,
+		)
+	},
+	telemetryQueueProcess: async () => {
+		const clients = (TelemetryService.instance as any).clients || []
+		const queuedClient = clients.find((c: any) => c instanceof QueuedTelemetryClient) as
+			| QueuedTelemetryClient
+			| undefined
+
+		if (!queuedClient) {
+			vscode.window.showWarningMessage("Telemetry queue not initialized")
+			return
+		}
+
+		const processed = await queuedClient.processQueue()
+		vscode.window.showInformationMessage(`Processed ${processed} telemetry events`)
+	},
+	telemetryQueueClear: async () => {
+		const clients = (TelemetryService.instance as any).clients || []
+		const queuedClient = clients.find((c: any) => c instanceof QueuedTelemetryClient) as
+			| QueuedTelemetryClient
+			| undefined
+
+		if (!queuedClient) {
+			vscode.window.showWarningMessage("Telemetry queue not initialized")
+			return
+		}
+
+		const answer = await vscode.window.showWarningMessage(
+			"Are you sure you want to clear all queued telemetry events?",
+			"Yes",
+			"No",
+		)
+
+		if (answer === "Yes") {
+			await queuedClient.clearQueue()
+			vscode.window.showInformationMessage("Telemetry queue cleared")
+		}
 	},
 })
 
