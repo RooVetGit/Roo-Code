@@ -21,7 +21,21 @@ vi.mock("@/context/ExtensionStateContext", () => ({
 
 vi.mock("@/i18n/TranslationContext", () => ({
 	useAppTranslation: () => ({
-		t: (key: string) => key,
+		t: (key: string) => {
+			const translations: Record<string, string> = {
+				"chat:modeSelector.global": "Global",
+				"chat:modeSelector.project": "Project",
+				"chat:modeSelector.globalShort": "G",
+				"chat:modeSelector.projectShort": "P",
+				"chat:modeSelector.description": "Select a mode to change how the assistant responds.",
+				"chat:modeSelector.searchPlaceholder": "Search modes...",
+				"chat:modeSelector.noResults": "No modes found",
+				"chat:modeSelector.marketplace": "Browse Marketplace",
+				"chat:modeSelector.settings": "Mode Settings",
+				"chat:modeSelector.title": "Modes",
+			}
+			return translations[key] || key
+		},
 	}),
 }))
 
@@ -93,7 +107,7 @@ describe("ModeSelector", () => {
 		expect(screen.getByTestId("mode-search-input")).toBeInTheDocument()
 
 		// Info icon should be visible
-		expect(screen.getByText("chat:modeSelector.title")).toBeInTheDocument()
+		expect(screen.getByText("Modes")).toBeInTheDocument()
 		const infoIcon = document.querySelector(".codicon-info")
 		expect(infoIcon).toBeInTheDocument()
 	})
@@ -117,7 +131,7 @@ describe("ModeSelector", () => {
 		expect(screen.queryByTestId("mode-search-input")).not.toBeInTheDocument()
 
 		// Info blurb should be visible
-		expect(screen.getByText(/chat:modeSelector.description/)).toBeInTheDocument()
+		expect(screen.getByText(/Select a mode to change how the assistant responds./)).toBeInTheDocument()
 
 		// Info icon should NOT be visible
 		const infoIcon = document.querySelector(".codicon-info")
@@ -169,7 +183,7 @@ describe("ModeSelector", () => {
 		expect(screen.queryByTestId("mode-search-input")).not.toBeInTheDocument()
 
 		// Info blurb should be visible instead
-		expect(screen.getByText(/chat:modeSelector.description/)).toBeInTheDocument()
+		expect(screen.getByText(/Select a mode to change how the assistant responds./)).toBeInTheDocument()
 
 		// Info icon should NOT be visible
 		const infoIcon = document.querySelector(".codicon-info")
@@ -198,5 +212,130 @@ describe("ModeSelector", () => {
 		// Info icon should be visible
 		const infoIcon = document.querySelector(".codicon-info")
 		expect(infoIcon).toBeInTheDocument()
+	})
+
+	test("shows source indicator for custom modes", () => {
+		const customModesWithSource: ModeConfig[] = [
+			{
+				slug: "custom-global",
+				name: "Custom Global Mode",
+				roleDefinition: "Role",
+				groups: ["read"] as ModeConfig["groups"],
+				source: "global",
+			},
+			{
+				slug: "custom-project",
+				name: "Custom Project Mode",
+				roleDefinition: "Role",
+				groups: ["read"] as ModeConfig["groups"],
+				source: "project",
+			},
+		]
+
+		// Set up mock to return custom modes
+		mockModes = [
+			...customModesWithSource,
+			{
+				slug: "code",
+				name: "Code",
+				roleDefinition: "Role",
+				groups: ["read"] as ModeConfig["groups"],
+			},
+		]
+
+		render(
+			<ModeSelector
+				value={"custom-global" as Mode}
+				onChange={vi.fn()}
+				modeShortcutText="Ctrl+M"
+				customModes={customModesWithSource}
+			/>,
+		)
+
+		// Check selected mode shows full indicator
+		const trigger = screen.getByTestId("mode-selector-trigger")
+		expect(trigger).toHaveTextContent("Custom Global Mode")
+		expect(trigger).toHaveTextContent("(Global)")
+
+		// Open dropdown
+		fireEvent.click(trigger)
+
+		// Check dropdown shows short indicators
+		const items = screen.getAllByTestId("mode-selector-item")
+		const globalItem = items.find((item) => item.textContent?.includes("Custom Global Mode"))
+		const projectItem = items.find((item) => item.textContent?.includes("Custom Project Mode"))
+
+		expect(globalItem).toHaveTextContent("(G)")
+		expect(projectItem).toHaveTextContent("(P)")
+	})
+
+	test("shows no indicator for built-in modes", () => {
+		// Set up mock to return only built-in modes
+		mockModes = [
+			{
+				slug: "code",
+				name: "Code",
+				roleDefinition: "Role",
+				groups: ["read"] as ModeConfig["groups"],
+			},
+			{
+				slug: "architect",
+				name: "Architect",
+				roleDefinition: "Role",
+				groups: ["read"] as ModeConfig["groups"],
+			},
+		]
+
+		render(<ModeSelector value={"code" as Mode} onChange={vi.fn()} modeShortcutText="Ctrl+M" />)
+
+		const trigger = screen.getByTestId("mode-selector-trigger")
+		expect(trigger).toHaveTextContent("Code")
+		expect(trigger).not.toHaveTextContent("(")
+
+		// Open dropdown
+		fireEvent.click(trigger)
+
+		// Check that no items have indicators
+		const items = screen.getAllByTestId("mode-selector-item")
+		items.forEach((item) => {
+			expect(item).not.toHaveTextContent("(Global")
+			expect(item).not.toHaveTextContent("(Project")
+		})
+	})
+
+	test("defaults to global for custom modes without source", () => {
+		const customModesNoSource: ModeConfig[] = [
+			{
+				slug: "custom-old",
+				name: "Old Custom Mode",
+				roleDefinition: "Role",
+				groups: ["read"] as ModeConfig["groups"],
+				// No source field
+			},
+		]
+
+		// Set up mock to include the custom mode
+		mockModes = [
+			...customModesNoSource,
+			{
+				slug: "code",
+				name: "Code",
+				roleDefinition: "Role",
+				groups: ["read"] as ModeConfig["groups"],
+			},
+		]
+
+		render(
+			<ModeSelector
+				value={"custom-old" as Mode}
+				onChange={vi.fn()}
+				modeShortcutText="Ctrl+M"
+				customModes={customModesNoSource}
+			/>,
+		)
+
+		const trigger = screen.getByTestId("mode-selector-trigger")
+		expect(trigger).toHaveTextContent("Old Custom Mode")
+		expect(trigger).toHaveTextContent("(Global)")
 	})
 })

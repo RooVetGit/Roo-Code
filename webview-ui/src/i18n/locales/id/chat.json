@@ -124,7 +124,11 @@
 		"settings": "Pengaturan Mode",
 		"description": "Persona khusus yang menyesuaikan perilaku Roo.",
 		"searchPlaceholder": "Cari mode...",
-		"noResults": "Tidak ada hasil yang ditemukan"
+		"noResults": "Tidak ada hasil yang ditemukan",
+		"global": "Global",
+		"project": "Proyek",
+		"globalShort": "G",
+		"projectShort": "P"
 	},
 	"addImages": "Tambahkan gambar ke pesan",
 	"sendMessage": "Kirim pesan",
