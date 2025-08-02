@@ -87,7 +87,7 @@ export class CloudService extends EventEmitter<CloudServiceEvents> implements vs
 				this.settingsService = cloudSettingsService
 			}
 
-			this.telemetryClient = new TelemetryClient(this.authService, this.settingsService)
+			this.telemetryClient = new TelemetryClient(this.context, this.authService, this.settingsService)
 			this.shareService = new ShareService(this.authService, this.settingsService, this.log)
 
 			try {

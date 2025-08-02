@@ -1,3 +1,4 @@
+import * as vscode from "vscode"
 import {
 	TelemetryEventName,
 	type TelemetryEvent,
@@ -9,9 +10,13 @@ import { BaseTelemetryClient } from "@roo-code/telemetry"
 import { getRooCodeApiUrl } from "./Config"
 import type { AuthService } from "./auth"
 import type { SettingsService } from "./SettingsService"
+import { TelemetryQueue } from "./TelemetryQueue"
 
 export class TelemetryClient extends BaseTelemetryClient {
+	private queue: TelemetryQueue
+
 	constructor(
+		private context: vscode.ExtensionContext,
 		private authService: AuthService,
 		private settingsService: SettingsService,
 		debug = false,
@@ -23,18 +28,19 @@ export class TelemetryClient extends BaseTelemetryClient {
 			},
 			debug,
 		)
+		this.queue = new TelemetryQueue(context, debug)
 	}
 
-	private async fetch(path: string, options: RequestInit) {
+	private async fetch(path: string, options: RequestInit): Promise<Response | undefined> {
 		if (!this.authService.isAuthenticated()) {
-			return
+			return undefined
 		}
 
 		const token = this.authService.getSessionToken()
 
 		if (!token) {
 			console.error(`[TelemetryClient#fetch] Unauthorized: No session token available.`)
-			return
+			return undefined
 		}
 
 		const response = await fetch(`${getRooCodeApiUrl()}/api/${path}`, {
@@ -47,6 +53,8 @@ export class TelemetryClient extends BaseTelemetryClient {
 				`[TelemetryClient#fetch] ${options.method} ${path} -> ${response.status} ${response.statusText}`,
 			)
 		}
+
+		return response
 	}
 
 	public override async capture(event: TelemetryEvent) {
@@ -77,10 +85,80 @@ export class TelemetryClient extends BaseTelemetryClient {
 			return
 		}
 
+		// Add event to queue
+		await this.queue.enqueue(result.data)
+
+		// Process queue asynchronously if not already processing
+		if (!this.queue.isProcessingQueue()) {
+			// Don't await - let it process in the background
+			this.processQueue().catch((error) => {
+				if (this.debug) {
+					console.error(`[TelemetryClient#capture] Error processing queue:`, error)
+				}
+			})
+		}
+	}
+
+	/**
+	 * Processes the telemetry queue, sending events to the cloud service
+	 */
+	private async processQueue(): Promise<void> {
+		if (!this.authService.isAuthenticated()) {
+			if (this.debug) {
+				console.info("[TelemetryClient#processQueue] Skipping: Not authenticated")
+			}
+			return
+		}
+
+		this.queue.setProcessingState(true)
+
 		try {
-			await this.fetch(`events`, { method: "POST", body: JSON.stringify(result.data) })
-		} catch (error) {
-			console.error(`[TelemetryClient#capture] Error sending telemetry event: ${error}`)
+			while (true) {
+				const queuedEvent = await this.queue.peek()
+				if (!queuedEvent) {
+					break // Queue is empty
+				}
+
+				try {
+					// Attempt to send the event
+					const response = await this.fetch(`events`, {
+						method: "POST",
+						body: JSON.stringify(queuedEvent.event),
+					})
+
+					// Check if response indicates success (fetch doesn't throw on HTTP errors)
+					if (response === undefined || (response && response.ok !== false)) {
+						// Success - remove from queue
+						await this.queue.dequeue(queuedEvent.id)
+
+						if (this.debug) {
+							console.info(`[TelemetryClient#processQueue] Successfully sent event ${queuedEvent.id}`)
+						}
+					} else {
+						// HTTP error - mark as failed
+						await this.queue.markFailed(queuedEvent.id)
+
+						if (this.debug) {
+							console.error(`[TelemetryClient#processQueue] HTTP error for event ${queuedEvent.id}`)
+						}
+
+						// Stop processing on error to avoid rapid retry loops
+						break
+					}
+				} catch (error) {
+					// Network or other error - mark as failed and move to end of queue
+					await this.queue.markFailed(queuedEvent.id)
+
+					if (this.debug) {
+						console.error(`[TelemetryClient#processQueue] Failed to send event ${queuedEvent.id}:`, error)
+					}
+
+					// Stop processing on error to avoid rapid retry loops
+					break
+				}
+			}
+		} finally {
+			this.queue.setProcessingState(false)
 		}
 	}
 
