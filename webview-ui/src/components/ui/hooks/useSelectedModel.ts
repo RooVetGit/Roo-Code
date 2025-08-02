@@ -40,6 +40,8 @@ import {
 	sambaNovaDefaultModelId,
 	doubaoModels,
 	doubaoDefaultModelId,
+	mapLegacyGeminiModel,
+	mapLegacyVertexModel,
 } from "@roo-code/types"
 
 import type { ModelRecord, RouterModels } from "@roo/api"
@@ -179,12 +181,14 @@ function getSelectedModel({
 			return { id, info }
 		}
 		case "vertex": {
-			const id = apiConfiguration.apiModelId ?? vertexDefaultModelId
+			const rawId = apiConfiguration.apiModelId ?? vertexDefaultModelId
+			const id = mapLegacyVertexModel(rawId)
 			const info = vertexModels[id as keyof typeof vertexModels]
 			return { id, info }
 		}
 		case "gemini": {
-			const id = apiConfiguration.apiModelId ?? geminiDefaultModelId
+			const rawId = apiConfiguration.apiModelId ?? geminiDefaultModelId
+			const id = mapLegacyGeminiModel(rawId)
 			const info = geminiModels[id as keyof typeof geminiModels]
 			return { id, info }
 		}
