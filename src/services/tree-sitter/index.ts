@@ -409,6 +409,10 @@ async function parseFile(
 		return processCaptures(captures, lines, extLang)
 	} catch (error) {
 		console.log(`Error parsing file: ${error}\n`)
+		// Special handling for Swift files - log more details
+		if (extLang === "swift") {
+			console.error(`Swift parsing error for file ${filePath}: ${error instanceof Error ? error.message : error}`)
+		}
 		// Return null on parsing error to avoid showing error messages in the output
 		return null
 	}

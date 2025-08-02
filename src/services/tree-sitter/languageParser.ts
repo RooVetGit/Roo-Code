@@ -150,8 +150,14 @@ export async function loadRequiredLanguageParsers(filesToParse: string[], source
 				query = new Query(language, phpQuery)
 				break
 			case "swift":
-				language = await loadLanguage("swift", sourceDirectory)
-				query = new Query(language, swiftQuery)
+				try {
+					language = await loadLanguage("swift", sourceDirectory)
+					query = new Query(language, swiftQuery)
+				} catch (error) {
+					console.error(`Failed to load Swift parser: ${error instanceof Error ? error.message : error}`)
+					// Skip this file if Swift parser fails to load
+					continue
+				}
 				break
 			case "kt":
 			case "kts":

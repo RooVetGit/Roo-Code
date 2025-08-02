@@ -149,11 +149,32 @@ export class CodeParser implements ICodeParser {
 			return []
 		}
 
-		const tree = language.parser.parse(content)
+		let tree
+		let captures: any[] = []
 
-		// We don't need to get the query string from languageQueries since it's already loaded
-		// in the language object
-		const captures = tree ? language.query.captures(tree.rootNode) : []
+		try {
+			tree = language.parser.parse(content)
+			// We don't need to get the query string from languageQueries since it's already loaded
+			// in the language object
+			captures = tree ? language.query.captures(tree.rootNode) : []
+		} catch (error) {
+			console.error(`Error parsing ${ext} file ${filePath}:`, error)
+			TelemetryService.instance.captureEvent(TelemetryEventName.CODE_INDEX_ERROR, {
+				error: sanitizeErrorMessage(error instanceof Error ? error.message : String(error)),
+				stack: error instanceof Error ? sanitizeErrorMessage(error.stack || "") : undefined,
+				location: "parseContent:parseTree",
+				fileExtension: ext,
+				filePath: sanitizeErrorMessage(filePath),
+			})
+
+			// For Swift files specifically, fall back to basic chunking if parsing fails
+			if (ext === "swift" && content.length >= MIN_BLOCK_CHARS) {
+				console.warn(`Falling back to basic chunking for Swift file: ${filePath}`)
+				return this._performFallbackChunking(filePath, content, fileHash, seenSegmentHashes)
+			}
+
+			return []
+		}
 
 		// Check if captures are empty
 		if (captures.length === 0) {

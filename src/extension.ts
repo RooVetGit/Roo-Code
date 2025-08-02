@@ -111,6 +111,15 @@ export async function activate(context: vscode.ExtensionContext) {
 		outputChannel.appendLine(
 			`[CodeIndexManager] Error during background CodeIndexManager configuration/indexing: ${error.message || error}`,
 		)
+		// Log additional details for Swift-related errors
+		if (error instanceof Error && error.message.includes("swift")) {
+			outputChannel.appendLine(
+				`[CodeIndexManager] Swift-related error detected. This may be due to Swift parser initialization issues.`,
+			)
+			outputChannel.appendLine(`[CodeIndexManager] Stack trace: ${error.stack}`)
+		}
+		// Don't let code indexing errors crash the entire extension
+		console.error("CodeIndexManager initialization error:", error)
 	}
 
 	const provider = new ClineProvider(context, outputChannel, "sidebar", contextProxy, codeIndexManager, mdmService)
