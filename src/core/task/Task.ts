@@ -544,7 +544,12 @@ export class Task extends EventEmitter<TaskEvents> {
 	private async addToClineMessages(message: ClineMessage) {
 		this.clineMessages.push(message)
 		const provider = this.providerRef.deref()
-		await provider?.postStateToWebview()
+
+		// Use incremental update instead of posting full state for better performance
+		await provider?.postIncrementalUpdateToWebview({
+			newMessages: [message],
+		})
+
 		this.emit("message", { action: "created", message })
 		await this.saveClineMessages()
 
@@ -566,7 +571,12 @@ export class Task extends EventEmitter<TaskEvents> {
 
 	private async updateClineMessage(message: ClineMessage) {
 		const provider = this.providerRef.deref()
-		await provider?.postMessageToWebview({ type: "messageUpdated", clineMessage: message })
+
+		// Use incremental update for message updates as well
+		await provider?.postIncrementalUpdateToWebview({
+			updatedMessages: [message],
+		})
+
 		this.emit("message", { action: "updated", message })
 
 		const shouldCaptureMessage = message.partial !== true && CloudService.isEnabled()
@@ -598,7 +608,13 @@ export class Task extends EventEmitter<TaskEvents> {
 
 			this.emit("taskTokenUsageUpdated", this.taskId, tokenUsage)
 
-			await this.providerRef.deref()?.updateTaskHistory(historyItem)
+			const provider = this.providerRef.deref()
+			await provider?.updateTaskHistory(historyItem)
+
+			// Send incremental update for task history
+			await provider?.postIncrementalUpdateToWebview({
+				taskHistoryUpdate: historyItem,
+			})
 		} catch (error) {
 			console.error("Failed to save Roo messages:", error)
 		}
@@ -926,6 +942,7 @@ export class Task extends EventEmitter<TaskEvents> {
 		// messages from previous session).
 		this.clineMessages = []
 		this.apiConversationHistory = []
+		// Use full state update for initial task start
 		await this.providerRef.deref()?.postStateToWebview()
 
 		await this.say("text", task, images)

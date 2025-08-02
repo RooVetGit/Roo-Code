@@ -312,6 +312,48 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 					}
 					break
 				}
+				case "incrementalStateUpdate": {
+					const update = message.incrementalUpdate!
+					setState((prevState) => {
+						const newClineMessages = [...prevState.clineMessages]
+
+						// Add new messages
+						if (update.newMessages) {
+							newClineMessages.push(...update.newMessages)
+						}
+
+						// Update existing messages
+						if (update.updatedMessages) {
+							for (const updatedMessage of update.updatedMessages) {
+								const index = findLastIndex(newClineMessages, (msg) => msg.ts === updatedMessage.ts)
+								if (index !== -1) {
+									newClineMessages[index] = updatedMessage
+								}
+							}
+						}
+
+						// Update task history if provided
+						let newTaskHistory = prevState.taskHistory
+						if (update.taskHistoryUpdate) {
+							const historyIndex = newTaskHistory.findIndex(
+								(item) => item.id === update.taskHistoryUpdate!.id,
+							)
+							if (historyIndex !== -1) {
+								newTaskHistory = [...newTaskHistory]
+								newTaskHistory[historyIndex] = update.taskHistoryUpdate
+							} else {
+								newTaskHistory = [...newTaskHistory, update.taskHistoryUpdate]
+							}
+						}
+
+						return {
+							...prevState,
+							clineMessages: newClineMessages,
+							taskHistory: newTaskHistory,
+						}
+					})
+					break
+				}
 				case "theme": {
 					if (message.text) {
 						setTheme(convertTextMateToHljs(JSON.parse(message.text)))

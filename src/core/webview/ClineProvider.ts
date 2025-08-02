@@ -1417,6 +1417,22 @@ export class ClineProvider
 	}
 
 	/**
+	 * Posts incremental updates to the webview instead of the full state.
+	 * This significantly improves performance for long conversations by only
+	 * sending new or updated messages instead of the entire conversation history.
+	 */
+	async postIncrementalUpdateToWebview(options: {
+		newMessages?: import("@roo-code/types").ClineMessage[]
+		updatedMessages?: import("@roo-code/types").ClineMessage[]
+		taskHistoryUpdate?: import("@roo-code/types").HistoryItem
+	}) {
+		await this.postMessageToWebview({
+			type: "incrementalStateUpdate",
+			incrementalUpdate: options,
+		})
+	}
+
+	/**
 	 * Fetches marketplace data on demand to avoid blocking main state updates
 	 */
 	async fetchMarketplaceData() {

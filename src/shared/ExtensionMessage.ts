@@ -62,6 +62,7 @@ export interface ExtensionMessage {
 	type:
 		| "action"
 		| "state"
+		| "incrementalStateUpdate"
 		| "selectedImages"
 		| "theme"
 		| "workspaceUpdated"
@@ -135,6 +136,11 @@ export interface ExtensionMessage {
 		| "switchTab"
 	invoke?: "newChat" | "sendMessage" | "primaryButtonClick" | "secondaryButtonClick" | "setChatBoxMessage"
 	state?: ExtensionState
+	incrementalUpdate?: {
+		newMessages?: ClineMessage[]
+		updatedMessages?: ClineMessage[]
+		taskHistoryUpdate?: HistoryItem
+	}
 	images?: string[]
 	filePaths?: string[]
 	openedTabs?: Array<{
