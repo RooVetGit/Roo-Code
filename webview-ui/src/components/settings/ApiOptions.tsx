@@ -101,6 +101,7 @@ export interface ApiOptionsProps {
 	fromWelcomeView?: boolean
 	errorMessage: string | undefined
 	setErrorMessage: React.Dispatch<React.SetStateAction<string | undefined>>
+	env?: Record<string, string | undefined>
 }
 
 const ApiOptions = ({
@@ -110,6 +111,7 @@ const ApiOptions = ({
 	fromWelcomeView,
 	errorMessage,
 	setErrorMessage,
+	env: _env = {}
 }: ApiOptionsProps) => {
 	const { t } = useAppTranslation()
 	const { organizationAllowList } = useExtensionState()
@@ -429,7 +431,7 @@ const ApiOptions = ({
 			)}
 
 			{selectedProvider === "anthropic" && (
-				<Anthropic apiConfiguration={apiConfiguration} setApiConfigurationField={setApiConfigurationField} />
+				<Anthropic apiConfiguration={apiConfiguration} setApiConfigurationField={setApiConfigurationField}/>
 			)}
 
 			{selectedProvider === "claude-code" && (

@@ -434,7 +434,8 @@
 			"placeholder": "Predefinito: claude",
 			"maxTokensLabel": "Token di output massimi",
 			"maxTokensDescription": "Numero massimo di token di output per le risposte di Claude Code. Il valore predefinito è 8000."
-		}
+		},
+		"apiKeyUseEnvVar": "Usa chiave API dalla variabile d'ambiente {{name}}"
 	},
 	"browser": {
 		"enable": {
