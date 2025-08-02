@@ -46,6 +46,7 @@ import { CommandExecutionError } from "./CommandExecutionError"
 import { AutoApprovedRequestLimitWarning } from "./AutoApprovedRequestLimitWarning"
 import { CondenseContextErrorRow, CondensingContextRow, ContextCondenseRow } from "./ContextCondenseRow"
 import CodebaseSearchResultsDisplay from "./CodebaseSearchResultsDisplay"
+import { FileNotFoundError } from "./FileNotFoundError"
 
 interface ChatRowProps {
 	message: ClineMessage
@@ -1053,6 +1054,18 @@ export const ChatRowContent = ({
 				case "api_req_finished":
 					return null // we should never see this message type
 				case "text":
+					// Check if this is a file not found error from read_file tool
+					if (message.text && message.text.includes("<files>") && message.text.includes("<error>")) {
+						// Parse the XML to extract file path and error message
+						const fileMatch = message.text.match(
+							/<file><path>([^<]+)<\/path><error>([^<]+)<\/error><\/file>/,
+						)
+						if (fileMatch && fileMatch[2].includes("File not found:")) {
+							const filePath = fileMatch[1]
+							return <FileNotFoundError filePath={filePath} />
+						}
+					}
+
 					return (
 						<div>
 							<Markdown markdown={message.text} partial={message.partial} />
