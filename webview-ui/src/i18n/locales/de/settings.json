@@ -686,6 +686,10 @@
 		"PREVENT_FOCUS_DISRUPTION": {
 			"name": "Hintergrundbearbeitung",
 			"description": "Verhindert Editor-Fokus-Störungen wenn aktiviert. Dateibearbeitungen erfolgen im Hintergrund ohne Öffnung von Diff-Ansichten oder Fokus-Diebstahl. Du kannst ungestört weiterarbeiten, während Roo Änderungen vornimmt. Dateien können ohne Fokus geöffnet werden, um Diagnosen zu erfassen oder vollständig geschlossen bleiben."
+		},
+		"PREVENT_TERMINAL_DISRUPTION": {
+			"name": "Hintergrund-Terminal-Ausführung",
+			"description": "Verhindert Terminal-Fokus-Störungen wenn aktiviert. Befehle werden im Hintergrund ausgeführt ohne automatisches Wechseln zu Ausgabe-Terminals. Du kannst in deinem aktuellen Terminal weiterarbeiten während Roo Befehle ausführt und behältst die Kontrolle über deinen Terminal-Kontext und wann du Befehlsausgaben anzeigen möchtest."
 		}
 	},
 	"promptCaching": {

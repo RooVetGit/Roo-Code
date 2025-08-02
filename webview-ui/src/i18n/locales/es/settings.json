@@ -686,6 +686,10 @@
 		"PREVENT_FOCUS_DISRUPTION": {
 			"name": "Edición en segundo plano",
 			"description": "Previene la interrupción del foco del editor cuando está habilitado. Las ediciones de archivos ocurren en segundo plano sin abrir vistas de diferencias o robar el foco. Puedes continuar trabajando sin interrupciones mientras Roo realiza cambios. Los archivos pueden abrirse sin foco para capturar diagnósticos o mantenerse completamente cerrados."
+		},
+		"PREVENT_TERMINAL_DISRUPTION": {
+			"name": "Ejecución de terminal en segundo plano",
+			"description": "Previene la interrupción del foco del terminal cuando está habilitado. Los comandos se ejecutan en segundo plano sin cambiar automáticamente a terminales de salida. Puedes continuar trabajando en tu terminal actual mientras Roo ejecuta comandos, manteniendo tu contexto de terminal y controlando manualmente cuándo ver las salidas de comandos."
 		}
 	},
 	"promptCaching": {

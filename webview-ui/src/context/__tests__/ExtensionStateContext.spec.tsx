@@ -229,6 +229,7 @@ describe("mergeExtensionState", () => {
 				concurrentFileReads: true,
 				multiFileApplyDiff: true,
 				preventFocusDisruption: false,
+				preventTerminalDisruption: false,
 			} as Record<ExperimentId, boolean>,
 		}
 
@@ -246,6 +247,7 @@ describe("mergeExtensionState", () => {
 			concurrentFileReads: true,
 			multiFileApplyDiff: true,
 			preventFocusDisruption: false,
+			preventTerminalDisruption: false,
 		})
 	})
 })
