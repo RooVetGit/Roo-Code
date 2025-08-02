@@ -250,7 +250,8 @@
 			"hint": "En son modelleri görmek için lütfen ayarları yeniden açın.",
 			"loading": "Model listesi yenileniyor...",
 			"success": "Model listesi başarıyla yenilendi!",
-			"error": "Model listesi yenilenemedi. Lütfen tekrar deneyin."
+			"error": "Model listesi yenilenemedi. Lütfen tekrar deneyin.",
+			"missingConfig": "Missing configuration. Please provide API key and base URL."
 		},
 		"getRequestyApiKey": "Requesty API Anahtarı Al",
 		"openRouterTransformsText": "İstem ve mesaj zincirlerini bağlam boyutuna sıkıştır (<a>OpenRouter Dönüşümleri</a>)",
@@ -694,7 +695,7 @@
 		"description": "İşaretlendiğinde, Roo bu model için prompt önbelleğini kullanmayacaktır."
 	},
 	"temperature": {
-		"useCustom": "Özel sıcaklık kullan",
+		"useCustom": "Use custom temperature",
 		"description": "Model yanıtlarındaki rastgeleliği kontrol eder.",
 		"rangeDescription": "Daha yüksek değerler çıktıyı daha rastgele yapar, daha düşük değerler daha deterministik hale getirir."
 	},

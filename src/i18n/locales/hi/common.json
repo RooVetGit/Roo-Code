@@ -99,7 +99,9 @@
 			"genericError": "Cerebras API त्रुटि ({{status}}): {{message}}",
 			"noResponseBody": "Cerebras API त्रुटि: कोई प्रतिक्रिया मुख्य भाग नहीं",
 			"completionError": "Cerebras पूर्णता त्रुटि: {{error}}"
-		}
+		},
+		"invalid_line_limit": "Invalid line limit",
+		"invalid_character_limit": "Invalid character limit"
 	},
 	"warnings": {
 		"no_terminal_content": "कोई टर्मिनल सामग्री चयनित नहीं",

@@ -254,7 +254,8 @@
 			"hint": "Silakan buka kembali pengaturan untuk melihat model terbaru.",
 			"loading": "Merefresh daftar model...",
 			"success": "Daftar model berhasil direfresh!",
-			"error": "Gagal merefresh daftar model. Silakan coba lagi."
+			"error": "Gagal merefresh daftar model. Silakan coba lagi.",
+			"missingConfig": "Missing configuration. Please provide API key and base URL."
 		},
 		"getRequestyApiKey": "Dapatkan Requesty API Key",
 		"openRouterTransformsText": "Kompres prompt dan rantai pesan ke ukuran konteks (<a>OpenRouter Transforms</a>)",
@@ -723,7 +724,7 @@
 		"description": "Ketika dicentang, Roo tidak akan menggunakan prompt caching untuk model ini."
 	},
 	"temperature": {
-		"useCustom": "Gunakan temperature kustom",
+		"useCustom": "Use custom temperature",
 		"description": "Mengontrol keacakan dalam respons model.",
 		"rangeDescription": "Nilai yang lebih tinggi membuat output lebih acak, nilai yang lebih rendah membuatnya lebih deterministik."
 	},

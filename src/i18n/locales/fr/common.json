@@ -99,7 +99,9 @@
 			"genericError": "Erreur de l'API Cerebras ({{status}}) : {{message}}",
 			"noResponseBody": "Erreur de l'API Cerebras : Aucun corps de réponse",
 			"completionError": "Erreur d'achèvement de Cerebras : {{error}}"
-		}
+		},
+		"invalid_line_limit": "Invalid line limit",
+		"invalid_character_limit": "Invalid character limit"
 	},
 	"warnings": {
 		"no_terminal_content": "Aucun contenu de terminal sélectionné",

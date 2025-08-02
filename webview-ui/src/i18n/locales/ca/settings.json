@@ -250,7 +250,8 @@
 			"hint": "Si us plau, torneu a obrir la configuració per veure els models més recents.",
 			"loading": "Actualitzant la llista de models...",
 			"success": "Llista de models actualitzada correctament!",
-			"error": "No s'ha pogut actualitzar la llista de models. Si us plau, torneu-ho a provar."
+			"error": "No s'ha pogut actualitzar la llista de models. Si us plau, torneu-ho a provar.",
+			"missingConfig": "Missing configuration. Please provide API key and base URL."
 		},
 		"getRequestyApiKey": "Obtenir clau API de Requesty",
 		"openRouterTransformsText": "Comprimir prompts i cadenes de missatges a la mida del context (<a>Transformacions d'OpenRouter</a>)",
@@ -693,7 +694,7 @@
 		"description": "Quan està marcat, Roo no utilitzarà la memòria cau de prompts per a aquest model."
 	},
 	"temperature": {
-		"useCustom": "Utilitzar temperatura personalitzada",
+		"useCustom": "Use custom temperature",
 		"description": "Controla l'aleatorietat en les respostes del model.",
 		"rangeDescription": "Valors més alts fan que la sortida sigui més aleatòria, valors més baixos la fan més determinista."
 	},

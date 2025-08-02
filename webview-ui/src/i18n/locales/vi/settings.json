@@ -250,7 +250,8 @@
 			"hint": "Vui lòng mở lại cài đặt để xem các mô hình mới nhất.",
 			"loading": "Đang làm mới danh sách mô hình...",
 			"success": "Danh sách mô hình đã được làm mới thành công!",
-			"error": "Không thể làm mới danh sách mô hình. Vui lòng thử lại."
+			"error": "Không thể làm mới danh sách mô hình. Vui lòng thử lại.",
+			"missingConfig": "Missing configuration. Please provide API key and base URL."
 		},
 		"getRequestyApiKey": "Lấy khóa API Requesty",
 		"openRouterTransformsText": "Nén lời nhắc và chuỗi tin nhắn theo kích thước ngữ cảnh (<a>OpenRouter Transforms</a>)",
@@ -694,7 +695,7 @@
 		"description": "Khi được chọn, Roo sẽ không sử dụng bộ nhớ đệm prompt cho mô hình này."
 	},
 	"temperature": {
-		"useCustom": "Sử dụng nhiệt độ tùy chỉnh",
+		"useCustom": "Use custom temperature",
 		"description": "Kiểm soát tính ngẫu nhiên trong phản hồi của mô hình.",
 		"rangeDescription": "Giá trị cao hơn làm cho đầu ra ngẫu nhiên hơn, giá trị thấp hơn làm cho nó xác định hơn."
 	},

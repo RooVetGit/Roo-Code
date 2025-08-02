@@ -99,7 +99,9 @@
 			"genericError": "Cerebras API 오류 ({{status}}): {{message}}",
 			"noResponseBody": "Cerebras API 오류: 응답 본문 없음",
 			"completionError": "Cerebras 완료 오류: {{error}}"
-		}
+		},
+		"invalid_line_limit": "Invalid line limit",
+		"invalid_character_limit": "Invalid character limit"
 	},
 	"warnings": {
 		"no_terminal_content": "선택된 터미널 내용이 없습니다",

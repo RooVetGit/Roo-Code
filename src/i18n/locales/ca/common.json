@@ -103,7 +103,9 @@
 			"noResponseBody": "Error de l'API de Cerebras: No hi ha cos de resposta",
 			"completionError": "Error de finalització de Cerebras: {{error}}"
 		},
-		"mode_import_failed": "Ha fallat la importació del mode: {{error}}"
+		"mode_import_failed": "Ha fallat la importació del mode: {{error}}",
+		"invalid_line_limit": "Invalid line limit",
+		"invalid_character_limit": "Invalid character limit"
 	},
 	"warnings": {
 		"no_terminal_content": "No s'ha seleccionat contingut de terminal",

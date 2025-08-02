@@ -250,7 +250,8 @@
 			"hint": "Riapri le impostazioni per vedere i modelli più recenti.",
 			"loading": "Aggiornamento dell'elenco dei modelli...",
 			"success": "Elenco dei modelli aggiornato con successo!",
-			"error": "Impossibile aggiornare l'elenco dei modelli. Riprova."
+			"error": "Impossibile aggiornare l'elenco dei modelli. Riprova.",
+			"missingConfig": "Missing configuration. Please provide API key and base URL."
 		},
 		"getRequestyApiKey": "Ottieni chiave API Requesty",
 		"openRouterTransformsText": "Comprimi prompt e catene di messaggi alla dimensione del contesto (<a>Trasformazioni OpenRouter</a>)",
@@ -694,7 +695,7 @@
 		"description": "Quando selezionato, Roo non utilizzerà la cache dei prompt per questo modello."
 	},
 	"temperature": {
-		"useCustom": "Usa temperatura personalizzata",
+		"useCustom": "Use custom temperature",
 		"description": "Controlla la casualità nelle risposte del modello.",
 		"rangeDescription": "Valori più alti rendono l'output più casuale, valori più bassi lo rendono più deterministico."
 	},

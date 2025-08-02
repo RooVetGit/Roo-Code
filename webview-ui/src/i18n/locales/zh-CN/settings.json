@@ -250,7 +250,8 @@
 			"hint": "请重新打开设置以查看最新模型。",
 			"loading": "正在刷新模型列表...",
 			"success": "模型列表刷新成功！",
-			"error": "刷新模型列表失败。请重试。"
+			"error": "刷新模型列表失败。请重试。",
+			"missingConfig": "Missing configuration. Please provide API key and base URL."
 		},
 		"getRequestyApiKey": "获取 Requesty API 密钥",
 		"openRouterTransformsText": "自动压缩提示词和消息链到上下文长度限制内 (<a>OpenRouter转换</a>)",
@@ -694,7 +695,7 @@
 		"description": "选中后，Roo 将不会为此模型使用提示词缓存。"
 	},
 	"temperature": {
-		"useCustom": "使用自定义温度",
+		"useCustom": "Use custom temperature",
 		"description": "控制模型响应的随机性",
 		"rangeDescription": "值越高回答越多样，值越低越保守"
 	},

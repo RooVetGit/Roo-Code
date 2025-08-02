@@ -99,7 +99,9 @@
 			"genericError": "Cerebras API-fout ({{status}}): {{message}}",
 			"noResponseBody": "Cerebras API-fout: Geen responslichaam",
 			"completionError": "Cerebras-voltooiingsfout: {{error}}"
-		}
+		},
+		"invalid_line_limit": "Invalid line limit",
+		"invalid_character_limit": "Invalid character limit"
 	},
 	"warnings": {
 		"no_terminal_content": "Geen terminalinhoud geselecteerd",

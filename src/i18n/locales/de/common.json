@@ -99,7 +99,9 @@
 			"genericError": "Cerebras API-Fehler ({{status}}): {{message}}",
 			"noResponseBody": "Cerebras API-Fehler: Kein Antworttext vorhanden",
 			"completionError": "Cerebras-Vervollständigungsfehler: {{error}}"
-		}
+		},
+		"invalid_line_limit": "Invalid line limit",
+		"invalid_character_limit": "Invalid character limit"
 	},
 	"warnings": {
 		"no_terminal_content": "Kein Terminal-Inhalt ausgewählt",

@@ -249,7 +249,8 @@
 			"hint": "Please reopen the settings to see the latest models.",
 			"loading": "Refreshing models list...",
 			"success": "Models list refreshed successfully!",
-			"error": "Failed to refresh models list. Please try again."
+			"error": "Failed to refresh models list. Please try again.",
+			"missingConfig": "Missing configuration. Please provide API key and base URL."
 		},
 		"getRequestyApiKey": "Get Requesty API Key",
 		"openRouterTransformsText": "Compress prompts and message chains to the context size (<a>OpenRouter Transforms</a>)",

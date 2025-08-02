@@ -67,5 +67,6 @@
 		"editMessage": "Edit Message",
 		"editWarning": "Editing this message will delete all subsequent messages in the conversation. Do you want to proceed?",
 		"proceed": "Proceed"
-	}
+	},
+	"tokens": "tokens"
 }

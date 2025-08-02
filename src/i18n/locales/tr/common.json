@@ -99,7 +99,9 @@
 			"genericError": "Cerebras API Hatası ({{status}}): {{message}}",
 			"noResponseBody": "Cerebras API Hatası: Yanıt gövdesi yok",
 			"completionError": "Cerebras tamamlama hatası: {{error}}"
-		}
+		},
+		"invalid_line_limit": "Invalid line limit",
+		"invalid_character_limit": "Invalid character limit"
 	},
 	"warnings": {
 		"no_terminal_content": "Seçili terminal içeriği yok",

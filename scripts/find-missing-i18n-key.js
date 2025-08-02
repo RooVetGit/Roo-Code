@@ -89,23 +89,76 @@ function getValueByPath(obj, path) {
 
 // Check if the key exists in all language files, return a list of missing language files
 function checkKeyInLocales(key, localeDirs, localesDir) {
-	const [file, ...pathParts] = key.split(":")
-	const jsonPath = pathParts.join(".")
-
 	const missingLocales = []
 
-	localeDirs.forEach((locale) => {
-		const filePath = path.join(localesDir, locale, `${file}.json`)
-		if (!fs.existsSync(filePath)) {
-			missingLocales.push(`${locale}/${file}.json`)
-			return
-		}
+	// Check if key contains a colon (file:path format)
+	if (key.includes(":")) {
+		const colonIndex = key.indexOf(":")
+		const file = key.substring(0, colonIndex)
+		const jsonPath = key.substring(colonIndex + 1)
 
-		const json = JSON.parse(fs.readFileSync(filePath, "utf8"))
-		if (getValueByPath(json, jsonPath) === undefined) {
-			missingLocales.push(`${locale}/${file}.json`)
-		}
-	})
+		localeDirs.forEach((locale) => {
+			const filePath = path.join(localesDir, locale, `${file}.json`)
+			if (!fs.existsSync(filePath)) {
+				missingLocales.push(`${locale}/${file}.json`)
+				return
+			}
+
+			try {
+				const json = JSON.parse(fs.readFileSync(filePath, "utf8"))
+				let found = false
+
+				// Check for exact key
+				if (getValueByPath(json, jsonPath) !== undefined) {
+					found = true
+				}
+
+				// Check for pluralization patterns (_one, _other, _zero, _few, _many)
+				if (!found) {
+					const pluralSuffixes = ["_one", "_other", "_zero", "_few", "_many"]
+					for (const suffix of pluralSuffixes) {
+						if (getValueByPath(json, jsonPath + suffix) !== undefined) {
+							found = true
+							break
+						}
+					}
+				}
+
+				if (!found) {
+					missingLocales.push(`${locale}/${file}.json`)
+				}
+			} catch (e) {
+				// If we can't parse the file, consider the key missing
+				missingLocales.push(`${locale}/${file}.json`)
+			}
+		})
+	} else {
+		// Key doesn't contain colon, search in all JSON files
+		localeDirs.forEach((locale) => {
+			const localeDir = path.join(localesDir, locale)
+			let found = false
+
+			// Get all JSON files in the locale directory
+			const jsonFiles = fs.readdirSync(localeDir).filter((file) => file.endsWith(".json"))
+
+			for (const jsonFile of jsonFiles) {
+				const filePath = path.join(localeDir, jsonFile)
+				try {
+					const json = JSON.parse(fs.readFileSync(filePath, "utf8"))
+					if (getValueByPath(json, key) !== undefined) {
+						found = true
+						break
+					}
+				} catch (e) {
+					// Skip files that can't be parsed
+				}
+			}
+
+			if (!found) {
+				missingLocales.push(`${locale}/${key}`)
+			}
+		})
+	}
 
 	return missingLocales
 }
@@ -121,8 +174,9 @@ function findMissingI18nKeys() {
 			const filePath = path.join(dir, file)
 			const stat = fs.statSync(filePath)
 
-			// Exclude test files and __mocks__ directory
-			if (filePath.includes(".test.") || filePath.includes("__mocks__")) continue
+			// Exclude test files, __mocks__ directory, and node_modules
+			if (filePath.includes(".test.") || filePath.includes("__mocks__") || filePath.includes("node_modules"))
+				continue
 
 			if (stat.isDirectory()) {
 				walk(filePath, baseDir, localeDirs, localesDir) // Recursively traverse subdirectories

@@ -26,6 +26,8 @@
 		"error_saving_image": "Error saving image: {{errorMessage}}",
 		"could_not_open_file": "Could not open file: {{errorMessage}}",
 		"could_not_open_file_generic": "Could not open file!",
+		"invalid_line_limit": "Terminal output line limit must be a positive number",
+		"invalid_character_limit": "Terminal output character limit must be a positive number",
 		"checkpoint_timeout": "Timed out when attempting to restore checkpoint.",
 		"checkpoint_failed": "Failed to restore checkpoint.",
 		"git_not_installed": "Git is required for the checkpoints feature. Please install Git to enable checkpoints.",

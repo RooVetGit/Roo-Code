@@ -250,7 +250,8 @@
 			"hint": "最新のモデルを表示するには設定を再度開いてください。",
 			"loading": "モデルリストを更新中...",
 			"success": "モデルリストが正常に更新されました！",
-			"error": "モデルリストの更新に失敗しました。もう一度お試しください。"
+			"error": "モデルリストの更新に失敗しました。もう一度お試しください。",
+			"missingConfig": "Missing configuration. Please provide API key and base URL."
 		},
 		"getRequestyApiKey": "Requesty APIキーを取得",
 		"openRouterTransformsText": "プロンプトとメッセージチェーンをコンテキストサイズに圧縮 (<a>OpenRouter Transforms</a>)",
@@ -694,7 +695,7 @@
 		"description": "チェックすると、Rooはこのモデルに対してプロンプトキャッシュを使用しません。"
 	},
 	"temperature": {
-		"useCustom": "カスタム温度を使用",
+		"useCustom": "Use custom temperature",
 		"description": "モデルの応答のランダム性を制御します。",
 		"rangeDescription": "高い値は出力をよりランダムに、低い値はより決定論的にします。"
 	},

@@ -250,7 +250,8 @@
 			"hint": "Veuillez rouvrir les paramètres pour voir les modèles les plus récents.",
 			"loading": "Actualisation de la liste des modèles...",
 			"success": "Liste des modèles actualisée avec succès !",
-			"error": "Échec de l'actualisation de la liste des modèles. Veuillez réessayer."
+			"error": "Échec de l'actualisation de la liste des modèles. Veuillez réessayer.",
+			"missingConfig": "Missing configuration. Please provide API key and base URL."
 		},
 		"getRequestyApiKey": "Obtenir la clé API Requesty",
 		"openRouterTransformsText": "Compresser les prompts et chaînes de messages à la taille du contexte (<a>Transformations OpenRouter</a>)",
@@ -693,7 +694,7 @@
 		"description": "Lorsque cette option est cochée, Roo n'utilisera pas la mise en cache des prompts pour ce modèle."
 	},
 	"temperature": {
-		"useCustom": "Utiliser une température personnalisée",
+		"useCustom": "Use custom temperature",
 		"description": "Contrôle l'aléatoire dans les réponses du modèle.",
 		"rangeDescription": "Des valeurs plus élevées rendent la sortie plus aléatoire, des valeurs plus basses la rendent plus déterministe."
 	},

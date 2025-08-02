@@ -99,7 +99,9 @@
 			"noResponseBody": "Cerebras API 錯誤：無回應主體",
 			"completionError": "Cerebras 完成錯誤：{{error}}"
 		},
-		"mode_import_failed": "匯入模式失敗：{{error}}"
+		"mode_import_failed": "匯入模式失敗：{{error}}",
+		"invalid_line_limit": "Invalid line limit",
+		"invalid_character_limit": "Invalid character limit"
 	},
 	"warnings": {
 		"no_terminal_content": "沒有選擇終端機內容",

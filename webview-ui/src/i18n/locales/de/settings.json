@@ -252,7 +252,8 @@
 			"hint": "Bitte öffne die Einstellungen erneut, um die neuesten Modelle zu sehen.",
 			"loading": "Modellliste wird aktualisiert...",
 			"success": "Modellliste erfolgreich aktualisiert!",
-			"error": "Fehler beim Aktualisieren der Modellliste. Bitte versuche es erneut."
+			"error": "Fehler beim Aktualisieren der Modellliste. Bitte versuche es erneut.",
+			"missingConfig": "Missing configuration. Please provide API key and base URL."
 		},
 		"getRequestyApiKey": "Requesty API-Schlüssel erhalten",
 		"openRouterTransformsText": "Prompts und Nachrichtenketten auf Kontextgröße komprimieren (<a>OpenRouter Transformationen</a>)",
@@ -693,7 +694,7 @@
 		"description": "Wenn aktiviert, wird Roo für dieses Modell kein Prompt-Caching verwenden."
 	},
 	"temperature": {
-		"useCustom": "Benutzerdefinierte Temperatur verwenden",
+		"useCustom": "Use custom temperature",
 		"description": "Steuert die Zufälligkeit der Modellantworten.",
 		"rangeDescription": "Höhere Werte machen die Ausgabe zufälliger, niedrigere Werte machen sie deterministischer."
 	},

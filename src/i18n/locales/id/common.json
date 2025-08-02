@@ -99,7 +99,9 @@
 			"genericError": "Kesalahan API Cerebras ({{status}}): {{message}}",
 			"noResponseBody": "Kesalahan API Cerebras: Tidak ada isi respons",
 			"completionError": "Kesalahan penyelesaian Cerebras: {{error}}"
-		}
+		},
+		"invalid_line_limit": "Invalid line limit",
+		"invalid_character_limit": "Invalid character limit"
 	},
 	"warnings": {
 		"no_terminal_content": "Tidak ada konten terminal yang dipilih",

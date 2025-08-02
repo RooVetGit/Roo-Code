@@ -104,7 +104,9 @@
 			"genericError": "Cerebras API 错误 ({{status}})：{{message}}",
 			"noResponseBody": "Cerebras API 错误：无响应主体",
 			"completionError": "Cerebras 完成错误：{{error}}"
-		}
+		},
+		"invalid_line_limit": "Invalid line limit",
+		"invalid_character_limit": "Invalid character limit"
 	},
 	"warnings": {
 		"no_terminal_content": "没有选择终端内容",

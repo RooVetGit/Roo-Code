@@ -61,5 +61,8 @@
 		"failedDuringInitialScan": "Falhou durante a varredura inicial: {{errorMessage}}",
 		"unknownError": "Erro desconhecido",
 		"indexingRequiresWorkspace": "A indexação requer uma pasta de workspace aberta"
+	},
+	"openai": {
+		"invalidResponseFormat": "Invalid response format from OpenAI API"
 	}
 }

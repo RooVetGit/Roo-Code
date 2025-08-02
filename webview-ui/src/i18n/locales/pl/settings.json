@@ -250,7 +250,8 @@
 			"hint": "Proszę ponownie otworzyć ustawienia, aby zobaczyć najnowsze modele.",
 			"loading": "Odświeżanie listy modeli...",
 			"success": "Lista modeli została pomyślnie odświeżona!",
-			"error": "Nie udało się odświeżyć listy modeli. Spróbuj ponownie."
+			"error": "Nie udało się odświeżyć listy modeli. Spróbuj ponownie.",
+			"missingConfig": "Missing configuration. Please provide API key and base URL."
 		},
 		"getRequestyApiKey": "Uzyskaj klucz API Requesty",
 		"openRouterTransformsText": "Kompresuj podpowiedzi i łańcuchy wiadomości do rozmiaru kontekstu (<a>Transformacje OpenRouter</a>)",
@@ -694,7 +695,7 @@
 		"description": "Po zaznaczeniu, Roo nie będzie używać buforowania promptów dla tego modelu."
 	},
 	"temperature": {
-		"useCustom": "Użyj niestandardowej temperatury",
+		"useCustom": "Use custom temperature",
 		"description": "Kontroluje losowość w odpowiedziach modelu.",
 		"rangeDescription": "Wyższe wartości sprawiają, że wyjście jest bardziej losowe, niższe wartości czynią je bardziej deterministycznym."
 	},

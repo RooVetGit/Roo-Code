@@ -67,5 +67,6 @@
 		"editMessage": "Edytuj Wiadomość",
 		"editWarning": "Edycja tej wiadomości spowoduje usunięcie wszystkich kolejnych wiadomości w rozmowie. Czy chcesz kontynuować?",
 		"proceed": "Kontynuuj"
-	}
+	},
+	"tokens": "tokens"
 }

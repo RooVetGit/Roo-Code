@@ -99,7 +99,9 @@
 			"genericError": "Ошибка Cerebras API ({{status}}): {{message}}",
 			"noResponseBody": "Ошибка Cerebras API: Нет тела ответа",
 			"completionError": "Ошибка завершения Cerebras: {{error}}"
-		}
+		},
+		"invalid_line_limit": "Invalid line limit",
+		"invalid_character_limit": "Invalid character limit"
 	},
 	"warnings": {
 		"no_terminal_content": "Не выбрано содержимое терминала",

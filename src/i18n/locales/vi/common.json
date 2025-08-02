@@ -99,7 +99,9 @@
 			"genericError": "Lỗi API Cerebras ({{status}}): {{message}}",
 			"noResponseBody": "Lỗi API Cerebras: Không có nội dung phản hồi",
 			"completionError": "Lỗi hoàn thành Cerebras: {{error}}"
-		}
+		},
+		"invalid_line_limit": "Invalid line limit",
+		"invalid_character_limit": "Invalid character limit"
 	},
 	"warnings": {
 		"no_terminal_content": "Không có nội dung terminal được chọn",
