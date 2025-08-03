@@ -100,26 +100,46 @@ export class UrlContentFetcher {
 			const errorMessage = serializedError.message || String(error)
 			const errorName = serializedError.name
 
-			// Only retry for timeout or network-related errors
-			const shouldRetry =
-				errorMessage.includes("timeout") ||
-				errorMessage.includes("net::") ||
-				errorMessage.includes("NetworkError") ||
-				errorMessage.includes("ERR_") ||
-				errorName === "TimeoutError"
-
-			if (shouldRetry) {
-				// If networkidle2 fails due to timeout/network issues, try with just domcontentloaded as fallback
-				console.warn(
-					`Failed to load ${url} with networkidle2, retrying with domcontentloaded only: ${errorMessage}`,
-				)
-				await this.page.goto(url, {
-					timeout: URL_FETCH_FALLBACK_TIMEOUT,
-					waitUntil: ["domcontentloaded"],
-				})
+			// Special handling for ERR_ABORTED
+			if (errorMessage.includes("net::ERR_ABORTED")) {
+				console.error(`Navigation to ${url} was aborted: ${errorMessage}`)
+				// For ERR_ABORTED, we'll try a more aggressive retry with just domcontentloaded
+				// and a shorter timeout to quickly determine if the page is accessible
+				try {
+					await this.page.goto(url, {
+						timeout: 10000, // 10 seconds for quick check
+						waitUntil: ["domcontentloaded"],
+					})
+				} catch (retryError) {
+					// If retry also fails, throw a more descriptive error
+					const retrySerializedError = serializeError(retryError)
+					const retryErrorMessage = retrySerializedError.message || String(retryError)
+					throw new Error(
+						`Failed to fetch URL content: ${retryErrorMessage}. The request was aborted, which may indicate the URL is inaccessible or blocked.`,
+					)
+				}
 			} else {
-				// For other errors, throw them as-is
-				throw error
+				// Only retry for timeout or network-related errors
+				const shouldRetry =
+					errorMessage.includes("timeout") ||
+					errorMessage.includes("net::") ||
+					errorMessage.includes("NetworkError") ||
+					errorMessage.includes("ERR_") ||
+					errorName === "TimeoutError"
+
+				if (shouldRetry) {
+					// If networkidle2 fails due to timeout/network issues, try with just domcontentloaded as fallback
+					console.warn(
+						`Failed to load ${url} with networkidle2, retrying with domcontentloaded only: ${errorMessage}`,
+					)
+					await this.page.goto(url, {
+						timeout: URL_FETCH_FALLBACK_TIMEOUT,
+						waitUntil: ["domcontentloaded"],
+					})
+				} else {
+					// For other errors, throw them as-is
+					throw error
+				}
 			}
 		}
 
