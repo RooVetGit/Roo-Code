@@ -126,7 +126,8 @@
 			"invalidRerankerUrl": "Please enter a valid URL for the reranker service",
 			"rerankerUrlRequired": "Reranker URL is required when using local provider",
 			"rerankerApiKeyRequired": "API key is required for this reranker provider",
-			"rerankerModelRequired": "Reranker model is required"
+			"rerankerModelRequired": "Reranker model is required",
+			"rerankerUrlMustBeHttps": "Reranker URL must use HTTPS for secure API key transmission (exception: localhost)"
 		},
 		"rerankerConfigLabel": "Search Enhancement (Reranking)",
 		"newFeatureBadge": "New",

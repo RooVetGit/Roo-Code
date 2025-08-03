@@ -62,6 +62,43 @@ describe("LocalReranker", () => {
 			expect(() => new LocalReranker(invalidConfig)).toThrow("Local reranker requires an API key")
 		})
 
+		it("should throw error when non-localhost URL uses HTTP", () => {
+			const insecureConfig = { ...mockConfig, url: "http://example.com" }
+
+			expect(() => new LocalReranker(insecureConfig)).toThrow(
+				"Reranker URL must use HTTPS for secure API key transmission (exception: localhost)",
+			)
+		})
+
+		it("should allow HTTP for localhost URLs", () => {
+			const mockAxiosCreate = vi.fn().mockReturnValue({})
+			;(axios.create as any) = mockAxiosCreate
+
+			const localhostConfigs = [
+				{ ...mockConfig, url: "http://localhost:8080" },
+				{ ...mockConfig, url: "http://127.0.0.1:8080" },
+				{ ...mockConfig, url: "http://[::1]:8080" },
+			]
+
+			localhostConfigs.forEach((config) => {
+				expect(() => new LocalReranker(config)).not.toThrow()
+			})
+		})
+
+		it("should allow HTTPS for any URL", () => {
+			const mockAxiosCreate = vi.fn().mockReturnValue({})
+			;(axios.create as any) = mockAxiosCreate
+
+			const httpsConfig = { ...mockConfig, url: "https://api.example.com" }
+
+			expect(() => new LocalReranker(httpsConfig)).not.toThrow()
+			expect(mockAxiosCreate).toHaveBeenCalledWith(
+				expect.objectContaining({
+					baseURL: "https://api.example.com",
+				}),
+			)
+		})
+
 		it("should remove trailing slash from url", () => {
 			const mockAxiosCreate = vi.fn().mockReturnValue({})
 			;(axios.create as any) = mockAxiosCreate

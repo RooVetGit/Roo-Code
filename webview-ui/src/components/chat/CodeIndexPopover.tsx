@@ -110,7 +110,25 @@ const createValidationSchema = (
 					codebaseIndexRerankerUrl: z
 						.string()
 						.min(1, t("settings:codeIndex.validation.rerankerUrlRequired"))
-						.url(t("settings:codeIndex.validation.invalidRerankerUrl")),
+						.url(t("settings:codeIndex.validation.invalidRerankerUrl"))
+						.refine((url) => {
+							try {
+								const parsedUrl = new URL(url)
+								const isLocalhost =
+									parsedUrl.hostname === "localhost" ||
+									parsedUrl.hostname === "127.0.0.1" ||
+									parsedUrl.hostname === "[::1]" || // IPv6 localhost with brackets
+									parsedUrl.hostname === "::1" // IPv6 localhost without brackets
+
+								// Require HTTPS for non-localhost URLs
+								if (!isLocalhost && parsedUrl.protocol !== "https:") {
+									return false
+								}
+								return true
+							} catch {
+								return false
+							}
+						}, t("settings:codeIndex.validation.rerankerUrlMustBeHttps")),
 					codebaseIndexRerankerModel: z
 						.string()
 						.min(1, t("settings:codeIndex.validation.rerankerModelRequired")),
@@ -255,7 +273,8 @@ export const CodeIndexPopover: React.FC<CodeIndexPopoverProps> = ({
 				codebaseIndexSearchMinScore:
 					codebaseIndexConfig.codebaseIndexSearchMinScore ?? CODEBASE_INDEX_DEFAULTS.DEFAULT_SEARCH_MIN_SCORE,
 				codebaseIndexRerankerEnabled: codebaseIndexConfig.codebaseIndexRerankerEnabled ?? false,
-				codebaseIndexRerankerProvider: codebaseIndexConfig.codebaseIndexRerankerProvider === "local" ? "local" as const : undefined,
+				codebaseIndexRerankerProvider:
+					codebaseIndexConfig.codebaseIndexRerankerProvider === "local" ? ("local" as const) : undefined,
 				codebaseIndexRerankerUrl: codebaseIndexConfig.codebaseIndexRerankerUrl || "",
 				codebaseIndexRerankerModel: codebaseIndexConfig.codebaseIndexRerankerModel || "ms-marco-MiniLM-L-6-v2",
 				codebaseIndexRerankerTopN: codebaseIndexConfig.codebaseIndexRerankerTopN ?? 100,
