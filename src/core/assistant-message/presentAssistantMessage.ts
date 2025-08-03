@@ -414,7 +414,6 @@ export async function presentAssistantMessage(cline: Task) {
 					await writeToFileTool(cline, block, askApproval, handleError, pushToolResult, removeClosingTag)
 					break
 				case "update_todo_list":
-					await checkpointSaveAndMark(cline)
 					await updateTodoListTool(cline, block, askApproval, handleError, pushToolResult, removeClosingTag)
 					break
 				case "apply_diff": {
