@@ -22,8 +22,6 @@ export const CheckpointMenu = ({ ts, commitHash, currentHash, checkpoint }: Chec
 	const portalContainer = useRooPortal("roo-portal")
 
 	const isCurrent = currentHash === commitHash
-	const isFirst = checkpoint.isFirst
-	const isDiffAvailable = !isFirst
 
 	const previousCommitHash = checkpoint?.from
 
@@ -46,13 +44,11 @@ export const CheckpointMenu = ({ ts, commitHash, currentHash, checkpoint }: Chec
 
 	return (
 		<div className="flex flex-row gap-1">
-			{isDiffAvailable && (
-				<StandardTooltip content={t("chat:checkpoint.menu.viewDiff")}>
-					<Button variant="ghost" size="icon" onClick={onCheckpointDiff}>
-						<span className="codicon codicon-diff-single" />
-					</Button>
-				</StandardTooltip>
-			)}
+			<StandardTooltip content={t("chat:checkpoint.menu.viewDiff")}>
+				<Button variant="ghost" size="icon" onClick={onCheckpointDiff}>
+					<span className="codicon codicon-diff-single" />
+				</Button>
+			</StandardTooltip>
 			<Popover
 				open={isOpen}
 				onOpenChange={(open) => {

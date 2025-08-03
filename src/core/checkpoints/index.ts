@@ -126,22 +126,7 @@ async function checkGitInstallation(
 		// Git is installed, proceed with initialization
 		service.on("initialize", () => {
 			log("[Task#getCheckpointService] service initialized")
-
-			try {
-				const isCheckpointNeeded =
-					typeof cline.clineMessages.find(({ say }) => say === "checkpoint_saved") === "undefined"
-
-				cline.checkpointServiceInitializing = false
-
-				if (isCheckpointNeeded) {
-					log("[Task#getCheckpointService] no checkpoints found, saving initial checkpoint")
-					checkpointSave(cline)
-				}
-			} catch (err) {
-				log("[Task#getCheckpointService] caught error in on('initialize'), disabling checkpoints")
-				cline.enableCheckpoints = false
-				cline.checkpointService = undefined
-			}
+			cline.checkpointServiceInitializing = false
 		})
 
 		service.on("checkpoint", ({ isFirst, fromHash: from, toHash: to }) => {
