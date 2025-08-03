@@ -81,14 +81,19 @@ export async function getCheckpointService(
 
 		const service = RepoPerTaskCheckpointService.create(options)
 		cline.checkpointServiceInitializing = true
-		cline.checkpointService = service
 
 		// Check if Git is installed before initializing the service
-		// Note: This is intentionally fire-and-forget to match the original IIFE pattern
-		// The service is returned immediately while Git check happens asynchronously
-		await checkGitInstallation(cline, service, log, provider)
-
-		return service
+		// Only assign the service after successful initialization
+		try {
+			await checkGitInstallation(cline, service, log, provider)
+			cline.checkpointService = service
+			return service
+		} catch (err) {
+			// Clean up on failure
+			cline.checkpointServiceInitializing = false
+			cline.enableCheckpoints = false
+			throw err
+		}
 	} catch (err) {
 		log(`[Task#getCheckpointService] ${err.message}`)
 		cline.enableCheckpoints = false
