@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest"
+import * as path from "path"
 import { CodeIndexSearchService } from "../../../services/code-index/search-service"
 import { CodeIndexConfigManager } from "../../../services/code-index/config-manager"
 import { CodeIndexStateManager } from "../../../services/code-index/state-manager"
@@ -298,7 +299,12 @@ describe("CodeIndexSearchService - Reranking Integration", () => {
 
 			await searchService.searchIndex("test query", directoryPrefix)
 
-			expect(mockVectorStore.search).toHaveBeenCalledWith(expect.any(Array), directoryPrefix, 0.3, 100)
+			expect(mockVectorStore.search).toHaveBeenCalledWith(
+				expect.any(Array),
+				path.normalize(directoryPrefix), // normalized to OS-specific format
+				0.3,
+				100,
+			)
 		})
 	})
 

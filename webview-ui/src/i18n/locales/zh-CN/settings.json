@@ -236,7 +236,8 @@
 		},
 		"maxLimits": {
 			"description": "在请求批准继续之前，自动发出请求，最多不超过这些限制。"
-		}
+		},
+		"enabled": "Auto-Approve Enabled"
 	},
 	"providers": {
 		"providerDocumentation": "{{provider}} 文档",

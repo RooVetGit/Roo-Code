@@ -236,7 +236,8 @@
 		},
 		"maxLimits": {
 			"description": "Автоматически выполнять запросы до указанных лимитов, прежде чем запрашивать разрешение на продолжение."
-		}
+		},
+		"enabled": "Auto-Approve Enabled"
 	},
 	"providers": {
 		"providerDocumentation": "Документация {{provider}}",

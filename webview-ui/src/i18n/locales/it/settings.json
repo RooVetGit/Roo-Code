@@ -236,7 +236,8 @@
 		},
 		"maxLimits": {
 			"description": "Esegui automaticamente richieste fino a questi limiti prima di chiedere l'approvazione per continuare."
-		}
+		},
+		"enabled": "Auto-Approve Enabled"
 	},
 	"providers": {
 		"providerDocumentation": "Documentazione {{provider}}",

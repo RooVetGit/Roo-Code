@@ -236,7 +236,8 @@
 		},
 		"maxLimits": {
 			"description": "これらの上限まで自動的にリクエストを行い、その後継続の承認を求めます。"
-		}
+		},
+		"enabled": "Auto-Approve Enabled"
 	},
 	"providers": {
 		"providerDocumentation": "{{provider}}のドキュメント",

@@ -67,5 +67,7 @@
 		"editMessage": "संदेश संपादित करें",
 		"editWarning": "इस संदेश को संपादित करने से बातचीत के सभी बाद के संदेश हट जाएंगे। क्या आप जारी रखना चाहते हैं?",
 		"proceed": "जारी रखें"
-	}
+	},
+	"comingSoon": "Coming Soon",
+	"optional": "optional"
 }

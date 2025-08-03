@@ -1,6 +1,7 @@
 // npx vitest services/code-index/__tests__/search-service.spec.ts
 
 import { describe, it, expect, beforeEach, vi, Mock } from "vitest"
+import * as path from "path"
 import { CodeIndexSearchService } from "../search-service"
 import { CodeIndexConfigManager } from "../config-manager"
 import { CodeIndexStateManager } from "../state-manager"
@@ -235,7 +236,7 @@ describe("CodeIndexSearchService", () => {
 			// Verify vector store search was called with normalized prefix
 			expect(mockVectorStore.search).toHaveBeenCalledWith(
 				testEmbedding,
-				"src/auth", // normalized
+				path.normalize("src/auth"), // normalized to OS-specific format
 				0.5,
 				20,
 			)

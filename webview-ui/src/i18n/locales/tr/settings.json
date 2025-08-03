@@ -236,7 +236,8 @@
 		},
 		"maxLimits": {
 			"description": "Bu sınırlara ulaşana kadar otomatik olarak istekleri yap, sonrasında devam etmek için onay iste."
-		}
+		},
+		"enabled": "Auto-Approve Enabled"
 	},
 	"providers": {
 		"providerDocumentation": "{{provider}} Dokümantasyonu",

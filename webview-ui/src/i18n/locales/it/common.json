@@ -67,5 +67,7 @@
 		"editMessage": "Modifica Messaggio",
 		"editWarning": "Modificando questo messaggio verranno eliminati tutti i messaggi successivi nella conversazione. Vuoi procedere?",
 		"proceed": "Procedi"
-	}
+	},
+	"comingSoon": "Coming Soon",
+	"optional": "optional"
 }

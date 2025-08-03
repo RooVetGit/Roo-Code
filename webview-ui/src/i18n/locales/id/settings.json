@@ -240,7 +240,8 @@
 		},
 		"maxLimits": {
 			"description": "Secara otomatis membuat permintaan hingga batas ini sebelum meminta persetujuan untuk melanjutkan."
-		}
+		},
+		"enabled": "Auto-Approve Enabled"
 	},
 	"providers": {
 		"providerDocumentation": "Dokumentasi {{provider}}",
