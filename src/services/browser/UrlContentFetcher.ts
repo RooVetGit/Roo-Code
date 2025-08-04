@@ -58,6 +58,7 @@ export class UrlContentFetcher {
 				"--no-first-run",
 				"--disable-gpu",
 				"--disable-features=VizDisplayCompositor",
+				"--no-sandbox",
 			],
 			executablePath: stats.executablePath,
 		})
