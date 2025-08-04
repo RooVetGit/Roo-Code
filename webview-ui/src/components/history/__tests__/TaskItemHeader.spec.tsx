@@ -20,16 +20,21 @@ const mockItem = {
 }
 
 describe("TaskItemHeader", () => {
-	it("renders date information", () => {
+	it("shows delete button when not in selection mode and onDelete is provided", () => {
 		render(<TaskItemHeader item={mockItem} isSelectionMode={false} onDelete={vi.fn()} />)
 
-		// TaskItemHeader shows the formatted date, not the task text
-		expect(screen.getByText(/\w+ \d{1,2}, \d{1,2}:\d{2} \w{2}/)).toBeInTheDocument() // Date format like "JUNE 14, 10:15 AM"
+		expect(screen.getByTestId("delete-task-button")).toBeInTheDocument()
 	})
 
-	it("shows delete button when not in selection mode", () => {
-		render(<TaskItemHeader item={mockItem} isSelectionMode={false} onDelete={vi.fn()} />)
+	it("does not show delete button in selection mode", () => {
+		render(<TaskItemHeader item={mockItem} isSelectionMode={true} onDelete={vi.fn()} />)
 
-		expect(screen.getByRole("button")).toBeInTheDocument()
+		expect(screen.queryByTestId("delete-task-button")).not.toBeInTheDocument()
+	})
+
+	it("does not show delete button when onDelete is not provided", () => {
+		render(<TaskItemHeader item={mockItem} isSelectionMode={false} />)
+
+		expect(screen.queryByTestId("delete-task-button")).not.toBeInTheDocument()
 	})
 })

@@ -48,7 +48,7 @@ const TaskItem = ({
 			key={item.id}
 			data-testid={`task-item-${item.id}`}
 			className={cn(
-				"cursor-pointer group bg-vscode-editor-background rounded relative overflow-hidden hover:border-vscode-toolbar-hoverBackground/60",
+				"cursor-pointer group bg-vscode-editor-background rounded relative overflow-hidden border border-transparent hover:bg-vscode-list-hoverBackground transition-colors",
 				className,
 			)}
 			onClick={handleClick}>
@@ -72,12 +72,14 @@ const TaskItem = ({
 					{/* Header with metadata */}
 					<TaskItemHeader item={item} isSelectionMode={isSelectionMode} onDelete={onDelete} />
 
-					{/* Task content */}
+					{/* Task content - always show up to 3 lines */}
 					<div
-						className={cn("overflow-hidden whitespace-pre-wrap text-vscode-foreground text-ellipsis", {
-							"text-base line-clamp-3": !isCompact,
-							"line-clamp-2": isCompact,
-						})}
+						className={cn(
+							"overflow-hidden whitespace-pre-wrap text-vscode-foreground text-ellipsis line-clamp-3",
+							{
+								"text-base": !isCompact,
+							},
+						)}
 						data-testid="task-content"
 						{...(item.highlight ? { dangerouslySetInnerHTML: { __html: item.highlight } } : {})}>
 						{item.highlight ? undefined : item.task}

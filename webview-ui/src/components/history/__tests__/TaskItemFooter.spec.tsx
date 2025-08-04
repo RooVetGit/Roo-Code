@@ -20,12 +20,11 @@ const mockItem = {
 }
 
 describe("TaskItemFooter", () => {
-	it("renders token information", () => {
+	it("renders time ago information", () => {
 		render(<TaskItemFooter item={mockItem} variant="full" />)
 
-		// Check for token counts using testids since the text is split across elements
-		expect(screen.getByTestId("tokens-in-footer-compact")).toBeInTheDocument()
-		expect(screen.getByTestId("tokens-out-footer-compact")).toBeInTheDocument()
+		// Should show time ago format
+		expect(screen.getByText(/ago/)).toBeInTheDocument()
 	})
 
 	it("renders cost information", () => {
@@ -43,31 +42,19 @@ describe("TaskItemFooter", () => {
 		expect(screen.getByTestId("export")).toBeInTheDocument()
 	})
 
-	it("renders cache information when present", () => {
-		const mockItemWithCache = {
-			...mockItem,
-			cacheReads: 5,
-			cacheWrites: 3,
-		}
+	it("hides export button in compact variant", () => {
+		render(<TaskItemFooter item={mockItem} variant="compact" />)
 
-		render(<TaskItemFooter item={mockItemWithCache} variant="full" />)
-
-		// Check for cache display using testid
-		expect(screen.getByTestId("cache-compact")).toBeInTheDocument()
-		expect(screen.getByText("3")).toBeInTheDocument() // cache writes
-		expect(screen.getByText("5")).toBeInTheDocument() // cache reads
+		// Should show copy button but not export button
+		expect(screen.getByTestId("copy-prompt-button")).toBeInTheDocument()
+		expect(screen.queryByTestId("export")).not.toBeInTheDocument()
 	})
 
-	it("does not render cache information when not present", () => {
-		const mockItemWithoutCache = {
-			...mockItem,
-			cacheReads: 0,
-			cacheWrites: 0,
-		}
+	it("hides action buttons in selection mode", () => {
+		render(<TaskItemFooter item={mockItem} variant="full" isSelectionMode={true} />)
 
-		render(<TaskItemFooter item={mockItemWithoutCache} variant="full" />)
-
-		// Cache section should not be present
-		expect(screen.queryByTestId("cache-compact")).not.toBeInTheDocument()
+		// Should not show any action buttons
+		expect(screen.queryByTestId("copy-prompt-button")).not.toBeInTheDocument()
+		expect(screen.queryByTestId("export")).not.toBeInTheDocument()
 	})
 })

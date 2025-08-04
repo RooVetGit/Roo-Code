@@ -74,16 +74,10 @@ describe("TaskItem", () => {
 		expect(screen.getByTestId("export")).toBeInTheDocument()
 	})
 
-	it("displays cache information when present", () => {
-		const mockTaskWithCache = {
-			...mockTask,
-			cacheReads: 10,
-			cacheWrites: 5,
-		}
-
+	it("displays time ago information", () => {
 		render(
 			<TaskItem
-				item={mockTaskWithCache}
+				item={mockTask}
 				variant="full"
 				isSelected={false}
 				onToggleSelection={vi.fn()}
@@ -91,22 +85,14 @@ describe("TaskItem", () => {
 			/>,
 		)
 
-		// Should display cache information in the footer
-		expect(screen.getByTestId("cache-compact")).toBeInTheDocument()
-		expect(screen.getByText("5")).toBeInTheDocument() // cache writes
-		expect(screen.getByText("10")).toBeInTheDocument() // cache reads
+		// Should display time ago format
+		expect(screen.getByText(/ago/)).toBeInTheDocument()
 	})
 
-	it("does not display cache information when not present", () => {
-		const mockTaskWithoutCache = {
-			...mockTask,
-			cacheReads: 0,
-			cacheWrites: 0,
-		}
-
+	it("applies hover effect class", () => {
 		render(
 			<TaskItem
-				item={mockTaskWithoutCache}
+				item={mockTask}
 				variant="full"
 				isSelected={false}
 				onToggleSelection={vi.fn()}
@@ -114,7 +100,7 @@ describe("TaskItem", () => {
 			/>,
 		)
 
-		// Cache section should not be present
-		expect(screen.queryByTestId("cache-compact")).not.toBeInTheDocument()
+		const taskItem = screen.getByTestId("task-item-1")
+		expect(taskItem).toHaveClass("hover:bg-vscode-list-hoverBackground")
 	})
 })

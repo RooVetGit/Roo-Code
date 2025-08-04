@@ -1,4 +1,5 @@
 import i18next from "i18next"
+import { formatDistanceToNow } from "date-fns"
 
 export function formatLargeNumber(num: number): string {
 	if (num >= 1e9) {
@@ -32,4 +33,8 @@ export const formatDate = (timestamp: number) => {
 	}
 
 	return dateStr.toUpperCase()
+}
+
+export const formatTimeAgo = (timestamp: number) => {
+	return formatDistanceToNow(new Date(timestamp), { addSuffix: true })
 }
