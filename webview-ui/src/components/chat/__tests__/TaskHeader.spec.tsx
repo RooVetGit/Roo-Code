@@ -33,15 +33,25 @@ vi.mock("@vscode/webview-ui-toolkit/react", () => ({
 }))
 
 // Mock the ExtensionStateContext
+const mockCurrentTaskItem = vi.hoisted(() => ({
+	value: { id: "test-task-id", mode: "code" } as any,
+}))
+
 vi.mock("@src/context/ExtensionStateContext", () => ({
 	useExtensionState: () => ({
 		apiConfiguration: {
 			apiProvider: "anthropic",
-			apiKey: "test-api-key", // Add relevant fields
-			apiModelId: "claude-3-opus-20240229", // Add relevant fields
-		} as ProviderSettings, // Optional: Add type assertion if ProviderSettings is imported
-		currentTaskItem: { id: "test-task-id" },
+			apiKey: "test-api-key",
+			apiModelId: "claude-3-opus-20240229",
+		} as ProviderSettings,
+		currentTaskItem: mockCurrentTaskItem.value,
+		customModes: [],
 	}),
+}))
+
+// Mock ModeBadge component
+vi.mock("@/components/common/ModeBadge", () => ({
+	ModeBadge: ({ modeSlug }: { modeSlug: string }) => <div data-testid="mode-badge">{modeSlug}</div>,
 }))
 
 describe("TaskHeader", () => {
@@ -121,5 +131,26 @@ describe("TaskHeader", () => {
 		expect(condenseButton).toBeDisabled()
 		fireEvent.click(condenseButton!)
 		expect(handleCondenseContext).not.toHaveBeenCalled()
+	})
+
+	it("should display mode badge when currentTaskItem has mode", () => {
+		renderTaskHeader()
+		expect(screen.getByTestId("mode-badge")).toBeInTheDocument()
+		expect(screen.getByText("code")).toBeInTheDocument()
+	})
+
+	it("should not display mode badge when currentTaskItem has no mode", () => {
+		// Override the mock for this test
+		const originalTaskItem = mockCurrentTaskItem.value
+		mockCurrentTaskItem.value = {
+			id: "test-task-id",
+			// No mode property
+		}
+
+		renderTaskHeader()
+		expect(screen.queryByTestId("mode-badge")).not.toBeInTheDocument()
+
+		// Restore original mock
+		mockCurrentTaskItem.value = originalTaskItem
 	})
 })
