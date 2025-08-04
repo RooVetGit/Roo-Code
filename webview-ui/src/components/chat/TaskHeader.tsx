@@ -101,10 +101,10 @@ const TaskHeader = ({
 				<div className="flex justify-between items-center gap-0">
 					<div className="flex items-center select-none grow min-w-0">
 						<div className="whitespace-nowrap overflow-hidden text-ellipsis grow min-w-0">
-							{isTaskExpanded && <span className="font-bold">Task Details</span>}
+							{isTaskExpanded && <span className="font-bold">{t("chat:task.title")}</span>}
 							{!isTaskExpanded && (
 								<div>
-									<span className="font-bold mr-1">Task</span>
+									<span className="font-bold mr-1">{t("chat:task.title")}</span>
 									<Mention text={task.text} />
 								</div>
 							)}
