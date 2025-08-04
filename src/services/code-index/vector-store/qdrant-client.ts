@@ -156,6 +156,13 @@ export class QdrantVectorStore implements IVectorStore {
 						size: this.vectorSize,
 						distance: this.DISTANCE_METRIC,
 					},
+					// TODO	binary
+					quantization_config: {
+						binary: {
+							encoding: "two_bits",
+							always_ram: false,
+						},
+					},
 				})
 				created = true
 			} else {
