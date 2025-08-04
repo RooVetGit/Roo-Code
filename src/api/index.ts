@@ -128,7 +128,6 @@ export function buildApiHandler(configuration: ProviderSettings): ApiHandler {
 		case "zai":
 			return new ZAiHandler(options)
 		default:
-			apiProvider satisfies "gemini-cli" | undefined
 			return new AnthropicHandler(options)
 	}
 }
