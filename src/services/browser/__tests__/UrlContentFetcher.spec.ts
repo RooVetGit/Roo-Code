@@ -298,10 +298,36 @@ describe("UrlContentFetcher", () => {
 			mockPage.goto.mockRejectedValueOnce(abortedError).mockRejectedValueOnce(retryError)
 
 			await expect(urlContentFetcher.urlToMarkdown("https://example.com")).rejects.toThrow(
-				"Failed to fetch URL content: net::ERR_CONNECTION_REFUSED. The request was aborted, which may indicate the URL is inaccessible or blocked.",
+				"Failed to fetch URL content: net::ERR_CONNECTION_REFUSED - net::ERR_CONNECTION_REFUSED. The request was aborted, which may indicate the URL is inaccessible or blocked.",
 			)
 
 			expect(mockPage.goto).toHaveBeenCalledTimes(2)
+		})
+
+		it("should succeed when ERR_ABORTED retry is successful", async () => {
+			const abortedError = new Error("net::ERR_ABORTED at https://example.com")
+			// First call fails with ERR_ABORTED, second call (retry) succeeds
+			mockPage.goto.mockRejectedValueOnce(abortedError).mockResolvedValueOnce(undefined)
+
+			const result = await urlContentFetcher.urlToMarkdown("https://example.com")
+
+			// Should have called goto twice
+			expect(mockPage.goto).toHaveBeenCalledTimes(2)
+
+			// First call with full wait conditions
+			expect(mockPage.goto).toHaveBeenNthCalledWith(1, "https://example.com", {
+				timeout: 30000,
+				waitUntil: ["domcontentloaded", "networkidle2"],
+			})
+
+			// Second call (retry) with reduced timeout and simpler wait condition
+			expect(mockPage.goto).toHaveBeenNthCalledWith(2, "https://example.com", {
+				timeout: 10000,
+				waitUntil: ["domcontentloaded"],
+			})
+
+			// Should return the markdown content successfully
+			expect(result).toBe("# Test content")
 		})
 	})
 

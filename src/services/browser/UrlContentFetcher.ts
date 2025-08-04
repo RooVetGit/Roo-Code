@@ -12,6 +12,7 @@ import { serializeError } from "serialize-error"
 // Timeout constants
 const URL_FETCH_TIMEOUT = 30_000 // 30 seconds
 const URL_FETCH_FALLBACK_TIMEOUT = 20_000 // 20 seconds for fallback
+const URL_FETCH_ABORTED_RETRY_TIMEOUT = 10_000 // 10 seconds for ERR_ABORTED retry
 
 interface PCRStats {
 	puppeteer: { launch: typeof launch }
@@ -79,6 +80,20 @@ export class UrlContentFetcher {
 		this.page = undefined
 	}
 
+	/**
+	 * Helper method to retry navigation with different parameters
+	 */
+	private async retryNavigation(
+		url: string,
+		timeout: number,
+		waitUntil: ("load" | "domcontentloaded" | "networkidle0" | "networkidle2")[],
+	): Promise<void> {
+		if (!this.page) {
+			throw new Error("Page not initialized")
+		}
+		await this.page.goto(url, { timeout, waitUntil })
+	}
+
 	// must make sure to call launchBrowser before and closeBrowser after using this
 	async urlToMarkdown(url: string): Promise<string> {
 		if (!this.browser || !this.page) {
@@ -90,10 +105,7 @@ export class UrlContentFetcher {
 		this should be sufficient for most doc sites
 		*/
 		try {
-			await this.page.goto(url, {
-				timeout: URL_FETCH_TIMEOUT,
-				waitUntil: ["domcontentloaded", "networkidle2"],
-			})
+			await this.retryNavigation(url, URL_FETCH_TIMEOUT, ["domcontentloaded", "networkidle2"])
 		} catch (error) {
 			// Use serialize-error to safely extract error information
 			const serializedError = serializeError(error)
@@ -102,20 +114,22 @@ export class UrlContentFetcher {
 
 			// Special handling for ERR_ABORTED
 			if (errorMessage.includes("net::ERR_ABORTED")) {
-				console.error(`Navigation to ${url} was aborted: ${errorMessage}`)
+				console.warn(`Navigation to ${url} was aborted: ${errorMessage}`)
 				// For ERR_ABORTED, we'll try a more aggressive retry with just domcontentloaded
 				// and a shorter timeout to quickly determine if the page is accessible
 				try {
-					await this.page.goto(url, {
-						timeout: 10000, // 10 seconds for quick check
-						waitUntil: ["domcontentloaded"],
-					})
+					await this.retryNavigation(url, URL_FETCH_ABORTED_RETRY_TIMEOUT, ["domcontentloaded"])
 				} catch (retryError) {
-					// If retry also fails, throw a more descriptive error
+					// If retry also fails, throw a more descriptive error while preserving the specific error type
 					const retrySerializedError = serializeError(retryError)
 					const retryErrorMessage = retrySerializedError.message || String(retryError)
+
+					// Extract the specific error type (e.g., ERR_CONNECTION_REFUSED, ERR_TIMEOUT)
+					const errorTypeMatch = retryErrorMessage.match(/net::ERR_\w+|ERR_\w+/)
+					const errorType = errorTypeMatch ? errorTypeMatch[0] : "Unknown error"
+
 					throw new Error(
-						`Failed to fetch URL content: ${retryErrorMessage}. The request was aborted, which may indicate the URL is inaccessible or blocked.`,
+						`Failed to fetch URL content: ${errorType} - ${retryErrorMessage}. The request was aborted, which may indicate the URL is inaccessible or blocked.`,
 					)
 				}
 			} else {
@@ -132,10 +146,7 @@ export class UrlContentFetcher {
 					console.warn(
 						`Failed to load ${url} with networkidle2, retrying with domcontentloaded only: ${errorMessage}`,
 					)
-					await this.page.goto(url, {
-						timeout: URL_FETCH_FALLBACK_TIMEOUT,
-						waitUntil: ["domcontentloaded"],
-					})
+					await this.retryNavigation(url, URL_FETCH_FALLBACK_TIMEOUT, ["domcontentloaded"])
 				} else {
 					// For other errors, throw them as-is
 					throw error
