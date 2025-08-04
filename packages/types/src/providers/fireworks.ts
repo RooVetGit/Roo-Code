@@ -56,6 +56,6 @@ export const fireworksModels = {
 		inputPrice: 0.9,
 		outputPrice: 0.9,
 		description:
-			"A a strong Mixture-of-Experts (MoE) language model with 671B total parameters with 37B activated for each token from Deepseek. Note that fine-tuning for this model is only available through contacting fireworks at https://fireworks.ai/company/contact-us.",
+			"A strong Mixture-of-Experts (MoE) language model with 671B total parameters with 37B activated for each token from Deepseek. Note that fine-tuning for this model is only available through contacting fireworks at https://fireworks.ai/company/contact-us.",
 	},
 } as const satisfies Record<string, ModelInfo>
