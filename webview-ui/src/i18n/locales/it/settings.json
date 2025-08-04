@@ -127,6 +127,7 @@
 	},
 	"autoApprove": {
 		"description": "Permetti a Roo di eseguire automaticamente operazioni senza richiedere approvazione. Abilita queste impostazioni solo se ti fidi completamente dell'IA e comprendi i rischi di sicurezza associati.",
+		"enabled": "Auto-approvazione abilitata",
 		"toggleAriaLabel": "Attiva/disattiva approvazione automatica",
 		"disabledAriaLabel": "Approvazione automatica disabilitata - seleziona prima le opzioni",
 		"readOnly": {
@@ -256,6 +257,8 @@
 		"anthropicApiKey": "Chiave API Anthropic",
 		"getAnthropicApiKey": "Ottieni chiave API Anthropic",
 		"anthropicUseAuthToken": "Passa la chiave API Anthropic come header di autorizzazione invece di X-Api-Key",
+		"cerebrasApiKey": "Chiave API Cerebras",
+		"getCerebrasApiKey": "Ottieni chiave API Cerebras",
 		"chutesApiKey": "Chiave API Chutes",
 		"getChutesApiKey": "Ottieni chiave API Chutes",
 		"deepSeekApiKey": "Chiave API DeepSeek",
@@ -265,6 +268,10 @@
 		"moonshotApiKey": "Chiave API Moonshot",
 		"getMoonshotApiKey": "Ottieni chiave API Moonshot",
 		"moonshotBaseUrl": "Punto di ingresso Moonshot",
+		"zaiApiKey": "Chiave API Z AI",
+		"getZaiApiKey": "Ottieni chiave API Z AI",
+		"zaiEntrypoint": "Punto di ingresso Z AI",
+		"zaiEntrypointDescription": "Si prega di selezionare il punto di ingresso API appropriato in base alla propria posizione. Se ti trovi in Cina, scegli open.bigmodel.cn. Altrimenti, scegli api.z.ai.",
 		"geminiApiKey": "Chiave API Gemini",
 		"getGroqApiKey": "Ottieni chiave API Groq",
 		"groqApiKey": "Chiave API Groq",
@@ -684,6 +691,10 @@
 		"PREVENT_FOCUS_DISRUPTION": {
 			"name": "Modifica in background",
 			"description": "Previene l'interruzione del focus dell'editor quando abilitato. Le modifiche ai file avvengono in background senza aprire viste di differenze o rubare il focus. Puoi continuare a lavorare senza interruzioni mentre Roo effettua modifiche. I file possono essere aperti senza focus per catturare diagnostiche o rimanere completamente chiusi."
+		},
+		"ASSISTANT_MESSAGE_PARSER": {
+			"name": "Usa il nuovo parser dei messaggi",
+			"description": "Abilita il parser di messaggi in streaming sperimentale che migliora nettamente le risposte lunghe elaborando i messaggi in modo più efficiente."
 		}
 	},
 	"promptCaching": {

@@ -3,6 +3,7 @@ import {
 	type ModelInfo,
 	anthropicModels,
 	bedrockModels,
+	cerebrasModels,
 	claudeCodeModels,
 	deepSeekModels,
 	moonshotModels,
@@ -15,12 +16,14 @@ import {
 	chutesModels,
 	sambaNovaModels,
 	doubaoModels,
+	internationalZAiModels,
 } from "@roo-code/types"
 
 export const MODELS_BY_PROVIDER: Partial<Record<ProviderName, Record<string, ModelInfo>>> = {
 	anthropic: anthropicModels,
 	"claude-code": claudeCodeModels,
 	bedrock: bedrockModels,
+	cerebras: cerebrasModels,
 	deepseek: deepSeekModels,
 	doubao: doubaoModels,
 	moonshot: moonshotModels,
@@ -32,12 +35,14 @@ export const MODELS_BY_PROVIDER: Partial<Record<ProviderName, Record<string, Mod
 	groq: groqModels,
 	chutes: chutesModels,
 	sambanova: sambaNovaModels,
+	zai: internationalZAiModels,
 }
 
 export const PROVIDERS = [
 	{ value: "openrouter", label: "OpenRouter" },
 	{ value: "anthropic", label: "Anthropic" },
 	{ value: "claude-code", label: "Claude Code" },
+	{ value: "cerebras", label: "Cerebras" },
 	{ value: "gemini", label: "Google Gemini" },
 	{ value: "doubao", label: "Doubao" },
 	{ value: "deepseek", label: "DeepSeek" },
@@ -60,4 +65,5 @@ export const PROVIDERS = [
 	{ value: "chutes", label: "Chutes AI" },
 	{ value: "litellm", label: "LiteLLM" },
 	{ value: "sambanova", label: "SambaNova" },
+	{ value: "zai", label: "Z AI" },
 ].sort((a, b) => a.label.localeCompare(b.label))

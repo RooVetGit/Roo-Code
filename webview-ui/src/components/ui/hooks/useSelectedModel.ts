@@ -6,6 +6,8 @@ import {
 	anthropicModels,
 	bedrockDefaultModelId,
 	bedrockModels,
+	cerebrasDefaultModelId,
+	cerebrasModels,
 	deepSeekDefaultModelId,
 	deepSeekModels,
 	moonshotDefaultModelId,
@@ -38,6 +40,10 @@ import {
 	sambaNovaDefaultModelId,
 	doubaoModels,
 	doubaoDefaultModelId,
+	internationalZAiDefaultModelId,
+	mainlandZAiDefaultModelId,
+	internationalZAiModels,
+	mainlandZAiModels,
 } from "@roo-code/types"
 
 import type { ModelRecord, RouterModels } from "@roo/api"
@@ -201,6 +207,14 @@ function getSelectedModel({
 			const info = moonshotModels[id as keyof typeof moonshotModels]
 			return { id, info }
 		}
+		case "zai": {
+			const isChina = apiConfiguration.zaiApiLine === "china"
+			const models = isChina ? mainlandZAiModels : internationalZAiModels
+			const defaultModelId = isChina ? mainlandZAiDefaultModelId : internationalZAiDefaultModelId
+			const id = apiConfiguration.apiModelId ?? defaultModelId
+			const info = models[id as keyof typeof models]
+			return { id, info }
+		}
 		case "openai-native": {
 			const id = apiConfiguration.apiModelId ?? openAiNativeDefaultModelId
 			const info = openAiNativeModels[id as keyof typeof openAiNativeModels]
@@ -245,6 +259,11 @@ function getSelectedModel({
 			const id = apiConfiguration.apiModelId ?? claudeCodeDefaultModelId
 			const info = claudeCodeModels[id as keyof typeof claudeCodeModels]
 			return { id, info: { ...openAiModelInfoSaneDefaults, ...info } }
+		}
+		case "cerebras": {
+			const id = apiConfiguration.apiModelId ?? cerebrasDefaultModelId
+			const info = cerebrasModels[id as keyof typeof cerebrasModels]
+			return { id, info }
 		}
 		case "sambanova": {
 			const id = apiConfiguration.apiModelId ?? sambaNovaDefaultModelId

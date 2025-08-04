@@ -127,6 +127,7 @@
 	},
 	"autoApprove": {
 		"description": "Permitir que Roo realice operaciones automáticamente sin requerir aprobación. Habilite esta configuración solo si confía plenamente en la IA y comprende los riesgos de seguridad asociados.",
+		"enabled": "Auto-aprobación habilitada",
 		"toggleAriaLabel": "Alternar aprobación automática",
 		"disabledAriaLabel": "Aprobación automática desactivada: seleccione primero las opciones",
 		"readOnly": {
@@ -256,6 +257,8 @@
 		"anthropicApiKey": "Clave API de Anthropic",
 		"getAnthropicApiKey": "Obtener clave API de Anthropic",
 		"anthropicUseAuthToken": "Pasar la clave API de Anthropic como encabezado de autorización en lugar de X-Api-Key",
+		"cerebrasApiKey": "Clave API de Cerebras",
+		"getCerebrasApiKey": "Obtener clave API de Cerebras",
 		"chutesApiKey": "Clave API de Chutes",
 		"getChutesApiKey": "Obtener clave API de Chutes",
 		"deepSeekApiKey": "Clave API de DeepSeek",
@@ -265,6 +268,10 @@
 		"moonshotApiKey": "Clave API de Moonshot",
 		"getMoonshotApiKey": "Obtener clave API de Moonshot",
 		"moonshotBaseUrl": "Punto de entrada de Moonshot",
+		"zaiApiKey": "Clave API de Z AI",
+		"getZaiApiKey": "Obtener clave API de Z AI",
+		"zaiEntrypoint": "Punto de entrada de Z AI",
+		"zaiEntrypointDescription": "Por favor, seleccione el punto de entrada de API apropiado según su ubicación. Si está en China, elija open.bigmodel.cn. De lo contrario, elija api.z.ai.",
 		"geminiApiKey": "Clave API de Gemini",
 		"getGroqApiKey": "Obtener clave API de Groq",
 		"groqApiKey": "Clave API de Groq",
@@ -683,6 +690,10 @@
 		"PREVENT_FOCUS_DISRUPTION": {
 			"name": "Edición en segundo plano",
 			"description": "Previene la interrupción del foco del editor cuando está habilitado. Las ediciones de archivos ocurren en segundo plano sin abrir vistas de diferencias o robar el foco. Puedes continuar trabajando sin interrupciones mientras Roo realiza cambios. Los archivos pueden abrirse sin foco para capturar diagnósticos o mantenerse completamente cerrados."
+		},
+		"ASSISTANT_MESSAGE_PARSER": {
+			"name": "Usar el nuevo analizador de mensajes",
+			"description": "Activa el analizador de mensajes en streaming experimental que mejora el rendimiento en respuestas largas procesando los mensajes de forma más eficiente."
 		}
 	},
 	"promptCaching": {
