@@ -376,7 +376,7 @@ export class QdrantVectorStore implements IVectorStore {
 
 			if (directoryPrefix) {
 				// Check if the path represents current directory
-				const normalizedPrefix = directoryPrefix.toPosix()
+				const normalizedPrefix = path.posix.normalize(directoryPrefix.replace(/\\/g, "/"))
 				if (normalizedPrefix === "." || normalizedPrefix === "" || normalizedPrefix === "./") {
 					// Don't create a filter - search entire workspace
 					filter = undefined

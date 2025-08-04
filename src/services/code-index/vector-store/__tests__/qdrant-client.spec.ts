@@ -24,6 +24,18 @@ vitest.mock("../../../../i18n", () => ({
 vitest.mock("path", () => ({
 	...vitest.importActual("path"),
 	sep: "/",
+	posix: {
+		normalize: (p: string) => {
+			// Simple implementation of posix.normalize for testing
+			// Remove redundant slashes and handle . and .. segments
+			return (
+				p
+					.split("/")
+					.filter((segment) => segment !== "" && segment !== ".")
+					.join("/") || "."
+			)
+		},
+	},
 }))
 
 const mockQdrantClientInstance = {
