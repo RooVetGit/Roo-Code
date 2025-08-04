@@ -669,6 +669,38 @@ describe("SYSTEM_PROMPT", () => {
 		expect(prompt).toContain("## update_todo_list")
 	})
 
+	it("should return only roleDefinition and customInstructions for onlychat mode", async () => {
+		const onlyChatMode: ModeConfig = {
+			slug: "onlychat",
+			name: "Only Chat",
+			roleDefinition: "You are a chat-only assistant.",
+			customInstructions: "Only chat instructions.",
+			groups: ["read"] as const,
+		}
+		const customModes = [onlyChatMode]
+		const prompt = await SYSTEM_PROMPT(
+			mockContext,
+			"/test/path",
+			false, // supportsComputerUse
+			undefined, // mcpHub
+			undefined, // diffStrategy
+			undefined, // browserViewportSize
+			"onlychat", // mode
+			undefined, // customModePrompts
+			customModes, // customModes
+			undefined, // globalCustomInstructions
+			true, // diffEnabled
+			undefined, // experiments
+			false, // enableMcpServerCreation
+			undefined, // language
+			undefined, // rooIgnoreInstructions
+			undefined, // partialReadsEnabled
+		)
+		expect(prompt).toContain("You are a chat-only assistant.")
+		expect(prompt).toContain("Only chat instructions.")
+		expect(prompt).not.toContain("apply_diff")
+	})
+
 	afterAll(() => {
 		vi.restoreAllMocks()
 	})
