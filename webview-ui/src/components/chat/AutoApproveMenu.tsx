@@ -1,11 +1,14 @@
-import { useCallback, useMemo, useState } from "react"
+import { memo, useCallback, useMemo, useState } from "react"
 import { Trans } from "react-i18next"
-import { VSCodeCheckbox, VSCodeLink, VSCodeTextField } from "@vscode/webview-ui-toolkit/react"
+import { VSCodeCheckbox, VSCodeLink } from "@vscode/webview-ui-toolkit/react"
 
 import { vscode } from "@src/utils/vscode"
 import { useExtensionState } from "@src/context/ExtensionStateContext"
 import { useAppTranslation } from "@src/i18n/TranslationContext"
 import { AutoApproveToggle, AutoApproveSetting, autoApproveSettingsConfig } from "../settings/AutoApproveToggle"
+import { StandardTooltip } from "@src/components/ui"
+import { useAutoApprovalState } from "@src/hooks/useAutoApprovalState"
+import { useAutoApprovalToggles } from "@src/hooks/useAutoApprovalToggles"
 
 interface AutoApproveMenuProps {
 	style?: React.CSSProperties
@@ -17,17 +20,7 @@ const AutoApproveMenu = ({ style }: AutoApproveMenuProps) => {
 	const {
 		autoApprovalEnabled,
 		setAutoApprovalEnabled,
-		alwaysAllowReadOnly,
-		alwaysAllowWrite,
-		alwaysAllowExecute,
-		alwaysAllowBrowser,
-		alwaysAllowMcp,
-		alwaysAllowModeSwitch,
-		alwaysAllowSubtasks,
 		alwaysApproveResubmit,
-		alwaysAllowFollowupQuestions,
-		alwaysAllowUpdateTodoList,
-		allowedMaxRequests,
 		setAlwaysAllowReadOnly,
 		setAlwaysAllowWrite,
 		setAlwaysAllowExecute,
@@ -38,15 +31,28 @@ const AutoApproveMenu = ({ style }: AutoApproveMenuProps) => {
 		setAlwaysApproveResubmit,
 		setAlwaysAllowFollowupQuestions,
 		setAlwaysAllowUpdateTodoList,
-		setAllowedMaxRequests,
 	} = useExtensionState()
 
 	const { t } = useAppTranslation()
+
+	const baseToggles = useAutoApprovalToggles()
+
+	// AutoApproveMenu needs alwaysApproveResubmit in addition to the base toggles
+	const toggles = useMemo(
+		() => ({
+			...baseToggles,
+			alwaysApproveResubmit: alwaysApproveResubmit,
+		}),
+		[baseToggles, alwaysApproveResubmit],
+	)
+
+	const { hasEnabledOptions, effectiveAutoApprovalEnabled } = useAutoApprovalState(toggles, autoApprovalEnabled)
 
 	const onAutoApproveToggle = useCallback(
 		(key: AutoApproveSetting, value: boolean) => {
 			vscode.postMessage({ type: key, bool: value })
 
+			// Update the specific toggle state
 			switch (key) {
 				case "alwaysAllowReadOnly":
 					setAlwaysAllowReadOnly(value)
@@ -79,8 +85,30 @@ const AutoApproveMenu = ({ style }: AutoApproveMenuProps) => {
 					setAlwaysAllowUpdateTodoList(value)
 					break
 			}
+
+			// Check if we need to update the master auto-approval state
+			// Create a new toggles state with the updated value
+			const updatedToggles = {
+				...toggles,
+				[key]: value,
+			}
+
+			const willHaveEnabledOptions = Object.values(updatedToggles).some((v) => !!v)
+
+			// If enabling the first option, enable master auto-approval
+			if (value && !hasEnabledOptions && willHaveEnabledOptions) {
+				setAutoApprovalEnabled(true)
+				vscode.postMessage({ type: "autoApprovalEnabled", bool: true })
+			}
+			// If disabling the last option, disable master auto-approval
+			else if (!value && hasEnabledOptions && !willHaveEnabledOptions) {
+				setAutoApprovalEnabled(false)
+				vscode.postMessage({ type: "autoApprovalEnabled", bool: false })
+			}
 		},
 		[
+			toggles,
+			hasEnabledOptions,
 			setAlwaysAllowReadOnly,
 			setAlwaysAllowWrite,
 			setAlwaysAllowExecute,
@@ -91,42 +119,26 @@ const AutoApproveMenu = ({ style }: AutoApproveMenuProps) => {
 			setAlwaysApproveResubmit,
 			setAlwaysAllowFollowupQuestions,
 			setAlwaysAllowUpdateTodoList,
+			setAutoApprovalEnabled,
 		],
 	)
 
-	const toggleExpanded = useCallback(() => setIsExpanded((prev) => !prev), [])
-
-	const toggles = useMemo(
-		() => ({
-			alwaysAllowReadOnly: alwaysAllowReadOnly,
-			alwaysAllowWrite: alwaysAllowWrite,
-			alwaysAllowExecute: alwaysAllowExecute,
-			alwaysAllowBrowser: alwaysAllowBrowser,
-			alwaysAllowMcp: alwaysAllowMcp,
-			alwaysAllowModeSwitch: alwaysAllowModeSwitch,
-			alwaysAllowSubtasks: alwaysAllowSubtasks,
-			alwaysApproveResubmit: alwaysApproveResubmit,
-			alwaysAllowFollowupQuestions: alwaysAllowFollowupQuestions,
-			alwaysAllowUpdateTodoList: alwaysAllowUpdateTodoList,
-		}),
-		[
-			alwaysAllowReadOnly,
-			alwaysAllowWrite,
-			alwaysAllowExecute,
-			alwaysAllowBrowser,
-			alwaysAllowMcp,
-			alwaysAllowModeSwitch,
-			alwaysAllowSubtasks,
-			alwaysApproveResubmit,
-			alwaysAllowFollowupQuestions,
-			alwaysAllowUpdateTodoList,
-		],
-	)
+	const toggleExpanded = useCallback(() => {
+		setIsExpanded((prev) => !prev)
+	}, [])
 
 	const enabledActionsList = Object.entries(toggles)
 		.filter(([_key, value]) => !!value)
 		.map(([key]) => t(autoApproveSettingsConfig[key as AutoApproveSetting].labelKey))
 		.join(", ")
+
+	// Update displayed text logic
+	const displayText = useMemo(() => {
+		if (!effectiveAutoApprovalEnabled || !hasEnabledOptions) {
+			return t("chat:autoApprove.none")
+		}
+		return enabledActionsList || t("chat:autoApprove.none")
+	}, [effectiveAutoApprovalEnabled, hasEnabledOptions, enabledActionsList, t])
 
 	const handleOpenSettings = useCallback(
 		() =>
@@ -155,14 +167,26 @@ const AutoApproveMenu = ({ style }: AutoApproveMenuProps) => {
 				}}
 				onClick={toggleExpanded}>
 				<div onClick={(e) => e.stopPropagation()}>
-					<VSCodeCheckbox
-						checked={autoApprovalEnabled ?? false}
-						onChange={() => {
-							const newValue = !(autoApprovalEnabled ?? false)
-							setAutoApprovalEnabled(newValue)
-							vscode.postMessage({ type: "autoApprovalEnabled", bool: newValue })
-						}}
-					/>
+					<StandardTooltip
+						content={!hasEnabledOptions ? t("chat:autoApprove.selectOptionsFirst") : undefined}>
+						<VSCodeCheckbox
+							checked={effectiveAutoApprovalEnabled}
+							disabled={!hasEnabledOptions}
+							aria-label={
+								hasEnabledOptions
+									? t("chat:autoApprove.toggleAriaLabel")
+									: t("chat:autoApprove.disabledAriaLabel")
+							}
+							onChange={() => {
+								if (hasEnabledOptions) {
+									const newValue = !(autoApprovalEnabled ?? false)
+									setAutoApprovalEnabled(newValue)
+									vscode.postMessage({ type: "autoApprovalEnabled", bool: newValue })
+								}
+								// If no options enabled, do nothing
+							}}
+						/>
+					</StandardTooltip>
 				</div>
 				<div
 					style={{
@@ -188,7 +212,7 @@ const AutoApproveMenu = ({ style }: AutoApproveMenuProps) => {
 							flex: 1,
 							minWidth: 0,
 						}}>
-						{enabledActionsList || t("chat:autoApprove.none")}
+						{displayText}
 					</span>
 					<span
 						className={`codicon codicon-chevron-${isExpanded ? "down" : "right"}`}
@@ -216,47 +240,10 @@ const AutoApproveMenu = ({ style }: AutoApproveMenuProps) => {
 					</div>
 
 					<AutoApproveToggle {...toggles} onToggle={onAutoApproveToggle} />
-
-					{/* Auto-approve API request count limit input row inspired by Cline */}
-					<div
-						style={{
-							display: "flex",
-							alignItems: "center",
-							gap: "8px",
-							marginTop: "10px",
-							marginBottom: "8px",
-							color: "var(--vscode-descriptionForeground)",
-						}}>
-						<span style={{ flexShrink: 1, minWidth: 0 }}>
-							<Trans i18nKey="settings:autoApprove.apiRequestLimit.title" />:
-						</span>
-						<VSCodeTextField
-							placeholder={t("settings:autoApprove.apiRequestLimit.unlimited")}
-							value={(allowedMaxRequests ?? Infinity) === Infinity ? "" : allowedMaxRequests?.toString()}
-							onInput={(e) => {
-								const input = e.target as HTMLInputElement
-								// Remove any non-numeric characters
-								input.value = input.value.replace(/[^0-9]/g, "")
-								const value = parseInt(input.value)
-								const parsedValue = !isNaN(value) && value > 0 ? value : undefined
-								setAllowedMaxRequests(parsedValue)
-								vscode.postMessage({ type: "allowedMaxRequests", value: parsedValue })
-							}}
-							style={{ flex: 1 }}
-						/>
-					</div>
-					<div
-						style={{
-							color: "var(--vscode-descriptionForeground)",
-							fontSize: "12px",
-							marginBottom: "10px",
-						}}>
-						<Trans i18nKey="settings:autoApprove.apiRequestLimit.description" />
-					</div>
 				</div>
 			)}
 		</div>
 	)
 }
 
-export default AutoApproveMenu
+export default memo(AutoApproveMenu)

@@ -45,6 +45,26 @@ export const clineAskSchema = z.enum(clineAsks)
 export type ClineAsk = z.infer<typeof clineAskSchema>
 
 /**
+ * BlockingAsk
+ */
+
+export const blockingAsks: ClineAsk[] = [
+	"api_req_failed",
+	"mistake_limit_reached",
+	"completion_result",
+	"resume_task",
+	"resume_completed_task",
+	"command_output",
+	"auto_approval_max_req_reached",
+] as const
+
+export type BlockingAsk = (typeof blockingAsks)[number]
+
+export function isBlockingAsk(ask: ClineAsk): ask is BlockingAsk {
+	return blockingAsks.includes(ask)
+}
+
+/**
  * ClineSay
  */
 
@@ -174,3 +194,19 @@ export const tokenUsageSchema = z.object({
 })
 
 export type TokenUsage = z.infer<typeof tokenUsageSchema>
+
+/**
+ * QueuedMessage
+ */
+
+/**
+ * Represents a message that is queued to be sent when sending is enabled
+ */
+export interface QueuedMessage {
+	/** Unique identifier for the queued message */
+	id: string
+	/** The text content of the message */
+	text: string
+	/** Array of image data URLs attached to the message */
+	images: string[]
+}

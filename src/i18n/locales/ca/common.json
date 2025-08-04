@@ -21,12 +21,7 @@
 	"confirmation": {
 		"reset_state": "Estàs segur que vols restablir tots els estats i emmagatzematge secret a l'extensió? Això no es pot desfer.",
 		"delete_config_profile": "Estàs segur que vols eliminar aquest perfil de configuració?",
-		"delete_custom_mode_with_rules": "Esteu segur que voleu suprimir aquest mode {scope}?\n\nAixò també suprimirà la carpeta de regles associada a:\n{rulesFolderPath}",
-		"delete_message": "Què vols eliminar?",
-		"edit_warning": "Editar aquest missatge eliminarà tots els missatges posteriors de la conversa. Vols continuar?",
-		"delete_just_this_message": "Només aquest missatge",
-		"delete_this_and_subsequent": "Aquest i tots els missatges posteriors",
-		"proceed": "Continuar"
+		"delete_custom_mode_with_rules": "Esteu segur que voleu suprimir aquest mode {scope}?\n\nAixò també suprimirà la carpeta de regles associada a:\n{rulesFolderPath}"
 	},
 	"errors": {
 		"invalid_data_uri": "Format d'URI de dades no vàlid",
@@ -37,6 +32,7 @@
 		"could_not_open_file_generic": "No s'ha pogut obrir el fitxer!",
 		"checkpoint_timeout": "S'ha esgotat el temps en intentar restaurar el punt de control.",
 		"checkpoint_failed": "Ha fallat la restauració del punt de control.",
+		"git_not_installed": "Git és necessari per a la funció de punts de control. Si us plau, instal·la Git per activar els punts de control.",
 		"no_workspace": "Si us plau, obre primer una carpeta de projecte",
 		"update_support_prompt": "Ha fallat l'actualització del missatge de suport",
 		"reset_support_prompt": "Ha fallat el restabliment del missatge de suport",
@@ -78,12 +74,34 @@
 		"share_not_enabled": "La compartició de tasques no està habilitada per a aquesta organització.",
 		"share_task_not_found": "Tasca no trobada o accés denegat.",
 		"delete_rules_folder_failed": "Error en eliminar la carpeta de regles: {{rulesFolderPath}}. Error: {{error}}",
+		"command_not_found": "Ordre '{{name}}' no trobada",
+		"open_command_file": "Error en obrir el fitxer d'ordres",
+		"delete_command": "Error en eliminar l'ordre",
+		"no_workspace_for_project_command": "No s'ha trobat cap carpeta d'espai de treball per a l'ordre del projecte",
+		"command_already_exists": "L'ordre \"{{commandName}}\" ja existeix",
+		"create_command_failed": "Error en crear l'ordre",
+		"command_template_content": "---\ndescription: \"Breu descripció del que fa aquesta ordre\"\n---\n\nAquesta és una nova ordre slash. Edita aquest fitxer per personalitzar el comportament de l'ordre.",
 		"claudeCode": {
 			"processExited": "El procés Claude Code ha sortit amb codi {{exitCode}}.",
 			"errorOutput": "Sortida d'error: {{output}}",
 			"processExitedWithError": "El procés Claude Code ha sortit amb codi {{exitCode}}. Sortida d'error: {{output}}",
 			"stoppedWithReason": "Claude Code s'ha aturat per la raó: {{reason}}",
-			"apiKeyModelPlanMismatch": "Les claus API i els plans de subscripció permeten models diferents. Assegura't que el model seleccionat estigui inclòs al teu pla."
+			"apiKeyModelPlanMismatch": "Les claus API i els plans de subscripció permeten models diferents. Assegura't que el model seleccionat estigui inclòs al teu pla.",
+			"notFound": "No s'ha trobat l'executable Claude Code '{{claudePath}}'.\n\nInstal·la Claude Code CLI:\n1. Visita {{installationUrl}} per descarregar Claude Code\n2. Segueix les instruccions d'instal·lació per al teu sistema operatiu\n3. Assegura't que la comanda 'claude' estigui disponible al teu PATH\n4. Alternativament, configura una ruta personalitzada a la configuració de Roo sota 'Ruta de Claude Code'\n\nError original: {{originalError}}"
+		},
+		"gemini": {
+			"generate_stream": "Error del flux de context de generació de Gemini: {{error}}",
+			"generate_complete_prompt": "Error de finalització de Gemini: {{error}}",
+			"sources": "Fonts:"
+		},
+		"cerebras": {
+			"authenticationFailed": "Ha fallat l'autenticació de l'API de Cerebras. Comproveu que la vostra clau d'API sigui vàlida i no hagi caducat.",
+			"accessForbidden": "Accés denegat a l'API de Cerebras. La vostra clau d'API pot no tenir accés al model o funcionalitat sol·licitats.",
+			"rateLimitExceeded": "S'ha superat el límit de velocitat de l'API de Cerebras. Espereu abans de fer una altra sol·licitud.",
+			"serverError": "Error del servidor de l'API de Cerebras ({{status}}). Torneu-ho a provar més tard.",
+			"genericError": "Error de l'API de Cerebras ({{status}}): {{message}}",
+			"noResponseBody": "Error de l'API de Cerebras: No hi ha cos de resposta",
+			"completionError": "Error de finalització de Cerebras: {{error}}"
 		},
 		"mode_import_failed": "Ha fallat la importació del mode: {{error}}"
 	},
@@ -116,7 +134,8 @@
 	},
 	"buttons": {
 		"save": "Desar",
-		"edit": "Editar"
+		"edit": "Editar",
+		"learn_more": "Més informació"
 	},
 	"tasks": {
 		"canceled": "Error de tasca: Ha estat aturada i cancel·lada per l'usuari.",
@@ -150,11 +169,17 @@
 			"deleteFailed": "Error en eliminar el mode personalitzat: {{error}}",
 			"resetFailed": "Error en restablir els modes personalitzats: {{error}}",
 			"modeNotFound": "Error d'escriptura: Mode no trobat",
-			"noWorkspaceForProject": "No s'ha trobat cap carpeta d'espai de treball per al mode específic del projecte"
+			"noWorkspaceForProject": "No s'ha trobat cap carpeta d'espai de treball per al mode específic del projecte",
+			"rulesCleanupFailed": "El mode s'ha suprimit correctament, però no s'ha pogut suprimir la carpeta de regles a {{rulesFolderPath}}. És possible que l'hagis de suprimir manualment."
 		},
 		"scope": {
 			"project": "projecte",
 			"global": "global"
+		}
+	},
+	"marketplace": {
+		"mode": {
+			"rulesCleanupFailed": "El mode s'ha eliminat correctament, però no s'ha pogut eliminar la carpeta de regles a {{rulesFolderPath}}. És possible que l'hagis d'eliminar manualment."
 		}
 	},
 	"mdm": {
@@ -170,6 +195,11 @@
 			"description": "Esteu segur que voleu suprimir aquest mode {{scope}}? Això també suprimirà la carpeta de regles associada a: {{rulesFolderPath}}",
 			"descriptionNoRules": "Esteu segur que voleu suprimir aquest mode personalitzat?",
 			"confirm": "Suprimeix"
+		}
+	},
+	"commands": {
+		"preventCompletionWithOpenTodos": {
+			"description": "Evitar la finalització de tasques quan hi ha todos incomplets a la llista de todos"
 		}
 	}
 }

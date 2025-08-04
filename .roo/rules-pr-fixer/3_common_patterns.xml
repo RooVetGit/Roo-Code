@@ -27,32 +27,26 @@
   <pattern name="detecting_conflicts">
     <usage>Commands to detect merge conflicts.</usage>
     <template>
-      <comment>Fetch latest main branch</comment>
-      <command tool="git">git fetch origin main</command>
-      <comment>Check if rebase would create conflicts</comment>
-      <command tool="git">git rebase --dry-run origin/main</command>
+      <comment>Check PR mergeable status</comment>
+      <command tool="gh">gh pr view <pr_number> --json mergeable,mergeStateStatus</command>
+      <comment>If mergeable is false or mergeStateStatus is CONFLICTING, delegate to merge-resolver</comment>
     </template>
   </pattern>
   
-  <pattern name="non_interactive_rebase">
-    <usage>Rebase operations using GIT_EDITOR to prevent interactive prompts.</usage>
+  <pattern name="delegating_conflict_resolution">
+    <usage>Delegate merge conflict resolution to the merge-resolver mode.</usage>
     <template>
-      <command tool="git">git checkout <pr_branch></command>
-      <command tool="git">GIT_EDITOR=true git rebase main</command>
-      <comment>If conflicts occur, resolve them manually then use 'git rebase --continue'</comment>
-      <command tool="git">git push --force-with-lease <remote> <pr_branch></command>
+      <comment>When conflicts are detected, create a new task for merge-resolver</comment>
+      <command tool="new_task"><![CDATA[
+<new_task>
+<mode>merge-resolver</mode>
+<message>#<pr_number></message>
+</new_task>
+      ]]></command>
+      <comment>Wait for merge-resolver to complete before continuing with other fixes</comment>
     </template>
   </pattern>
   
-  <pattern name="conflict_status_check">
-    <usage>Check current conflict status without interactive input.</usage>
-    <template>
-      <command tool="git">git status --porcelain</command>
-      <command tool="git">git diff --name-only --diff-filter=U</command>
-      <comment>List files with unresolved conflicts</comment>
-      <command tool="git">git ls-files --unmerged</command>
-    </template>
-  </pattern>
   <pattern name="checking_out_pr">
     <usage>Check out a pull request branch locally.</usage>
     <template>
@@ -101,10 +95,42 @@
   </pattern>
 
   <pattern name="automated_commit_operations">
-    <usage>Commit operations that work in automated environments.</usage>
+    <usage>Commit operations that work in automated environments while respecting .gitignore.</usage>
     <template>
-      <command tool="git">git add .</command>
+      <comment>Review what files have been modified</comment>
+      <command tool="git">git status --porcelain</command>
+      <comment>Add only tracked files that were modified (respects .gitignore)</comment>
+      <command tool="git">git add -u</command>
+      <comment>If you need to add specific new files, list them explicitly</comment>
+      <command tool="git">git add <specific_file_path></command>
       <command tool="git">git commit -m "<commit_message>"</command>
+    </template>
+  </pattern>
+  <pattern name="safe_file_staging">
+    <usage>Safely stage files for commit while avoiding temporary files and respecting .gitignore.</usage>
+    <template>
+      <comment>First, check what files are currently modified or untracked</comment>
+      <command tool="git">git status --porcelain</command>
+      <comment>Review the output to identify files that should NOT be committed:</comment>
+      <comment>- Files starting with . (hidden files like .DS_Store, .swp)</comment>
+      <comment>- Build artifacts (dist/, build/, *.pyc, *.o)</comment>
+      <comment>- IDE files (.idea/, .vscode/, *.iml)</comment>
+      <comment>- Temporary files (*.tmp, *.temp, *~)</comment>
+      
+      <comment>Option 1: Stage only modified tracked files (safest)</comment>
+      <command tool="git">git add -u</command>
+      
+      <comment>Option 2: Stage specific files by path</comment>
+      <command tool="git">git add src/file1.ts src/file2.ts</command>
+      
+      <comment>Option 3: Use pathspec to add files matching a pattern</comment>
+      <command tool="git">git add '*.ts' '*.tsx' --</command>
+      
+      <comment>Option 4: Interactive staging to review each change</comment>
+      <command tool="git">git add -p</command>
+      
+      <comment>Always verify what's staged before committing</comment>
+      <command tool="git">git diff --cached --name-only</command>
     </template>
   </pattern>
 </common_patterns>

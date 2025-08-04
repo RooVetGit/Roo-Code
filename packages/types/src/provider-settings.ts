@@ -22,7 +22,9 @@ export const providerNames = [
 	"gemini-cli",
 	"openai-native",
 	"mistral",
+	"moonshot",
 	"deepseek",
+	"doubao",
 	"unbound",
 	"requesty",
 	"human-relay",
@@ -31,6 +33,9 @@ export const providerNames = [
 	"groq",
 	"chutes",
 	"litellm",
+	"huggingface",
+	"cerebras",
+	"sambanova",
 ] as const
 
 export const providerNamesSchema = z.enum(providerNames)
@@ -61,6 +66,7 @@ export const DEFAULT_CONSECUTIVE_MISTAKE_LIMIT = 3
 const baseProviderSettingsSchema = z.object({
 	includeMaxTokens: z.boolean().optional(),
 	diffEnabled: z.boolean().optional(),
+	todoListEnabled: z.boolean().optional(),
 	fuzzyMatchThreshold: z.number().optional(),
 	modelTemperature: z.number().nullish(),
 	rateLimitSeconds: z.number().optional(),
@@ -111,6 +117,8 @@ const bedrockSchema = apiModelIdProviderModelSchema.extend({
 	awsUsePromptCache: z.boolean().optional(),
 	awsProfile: z.string().optional(),
 	awsUseProfile: z.boolean().optional(),
+	awsApiKey: z.string().optional(),
+	awsUseApiKey: z.boolean().optional(),
 	awsCustomArn: z.string().optional(),
 	awsModelContextWindow: z.number().optional(),
 	awsBedrockEndpointEnabled: z.boolean().optional(),
@@ -164,6 +172,8 @@ const lmStudioSchema = baseProviderSettingsSchema.extend({
 const geminiSchema = apiModelIdProviderModelSchema.extend({
 	geminiApiKey: z.string().optional(),
 	googleGeminiBaseUrl: z.string().optional(),
+	enableUrlContext: z.boolean().optional(),
+	enableGrounding: z.boolean().optional(),
 })
 
 const geminiCliSchema = apiModelIdProviderModelSchema.extend({
@@ -184,6 +194,18 @@ const mistralSchema = apiModelIdProviderModelSchema.extend({
 const deepSeekSchema = apiModelIdProviderModelSchema.extend({
 	deepSeekBaseUrl: z.string().optional(),
 	deepSeekApiKey: z.string().optional(),
+})
+
+const doubaoSchema = apiModelIdProviderModelSchema.extend({
+	doubaoBaseUrl: z.string().optional(),
+	doubaoApiKey: z.string().optional(),
+})
+
+const moonshotSchema = apiModelIdProviderModelSchema.extend({
+	moonshotBaseUrl: z
+		.union([z.literal("https://api.moonshot.ai/v1"), z.literal("https://api.moonshot.cn/v1")])
+		.optional(),
+	moonshotApiKey: z.string().optional(),
 })
 
 const unboundSchema = baseProviderSettingsSchema.extend({
@@ -210,6 +232,12 @@ const groqSchema = apiModelIdProviderModelSchema.extend({
 	groqApiKey: z.string().optional(),
 })
 
+const huggingFaceSchema = baseProviderSettingsSchema.extend({
+	huggingFaceApiKey: z.string().optional(),
+	huggingFaceModelId: z.string().optional(),
+	huggingFaceInferenceProvider: z.string().optional(),
+})
+
 const chutesSchema = apiModelIdProviderModelSchema.extend({
 	chutesApiKey: z.string().optional(),
 })
@@ -218,6 +246,15 @@ const litellmSchema = baseProviderSettingsSchema.extend({
 	litellmBaseUrl: z.string().optional(),
 	litellmApiKey: z.string().optional(),
 	litellmModelId: z.string().optional(),
+	litellmUsePromptCache: z.boolean().optional(),
+})
+
+const cerebrasSchema = apiModelIdProviderModelSchema.extend({
+	cerebrasApiKey: z.string().optional(),
+})
+
+const sambaNovaSchema = apiModelIdProviderModelSchema.extend({
+	sambaNovaApiKey: z.string().optional(),
 })
 
 const defaultSchema = z.object({
@@ -240,14 +277,19 @@ export const providerSettingsSchemaDiscriminated = z.discriminatedUnion("apiProv
 	openAiNativeSchema.merge(z.object({ apiProvider: z.literal("openai-native") })),
 	mistralSchema.merge(z.object({ apiProvider: z.literal("mistral") })),
 	deepSeekSchema.merge(z.object({ apiProvider: z.literal("deepseek") })),
+	doubaoSchema.merge(z.object({ apiProvider: z.literal("doubao") })),
+	moonshotSchema.merge(z.object({ apiProvider: z.literal("moonshot") })),
 	unboundSchema.merge(z.object({ apiProvider: z.literal("unbound") })),
 	requestySchema.merge(z.object({ apiProvider: z.literal("requesty") })),
 	humanRelaySchema.merge(z.object({ apiProvider: z.literal("human-relay") })),
 	fakeAiSchema.merge(z.object({ apiProvider: z.literal("fake-ai") })),
 	xaiSchema.merge(z.object({ apiProvider: z.literal("xai") })),
 	groqSchema.merge(z.object({ apiProvider: z.literal("groq") })),
+	huggingFaceSchema.merge(z.object({ apiProvider: z.literal("huggingface") })),
 	chutesSchema.merge(z.object({ apiProvider: z.literal("chutes") })),
 	litellmSchema.merge(z.object({ apiProvider: z.literal("litellm") })),
+	cerebrasSchema.merge(z.object({ apiProvider: z.literal("cerebras") })),
+	sambaNovaSchema.merge(z.object({ apiProvider: z.literal("sambanova") })),
 	defaultSchema,
 ])
 
@@ -268,18 +310,30 @@ export const providerSettingsSchema = z.object({
 	...openAiNativeSchema.shape,
 	...mistralSchema.shape,
 	...deepSeekSchema.shape,
+	...doubaoSchema.shape,
+	...moonshotSchema.shape,
 	...unboundSchema.shape,
 	...requestySchema.shape,
 	...humanRelaySchema.shape,
 	...fakeAiSchema.shape,
 	...xaiSchema.shape,
 	...groqSchema.shape,
+	...huggingFaceSchema.shape,
 	...chutesSchema.shape,
 	...litellmSchema.shape,
+	...cerebrasSchema.shape,
+	...sambaNovaSchema.shape,
 	...codebaseIndexProviderSchema.shape,
 })
 
 export type ProviderSettings = z.infer<typeof providerSettingsSchema>
+
+export const providerSettingsWithIdSchema = providerSettingsSchema.extend({ id: z.string().optional() })
+export const discriminatedProviderSettingsWithIdSchema = providerSettingsSchemaDiscriminated.and(
+	z.object({ id: z.string().optional() }),
+)
+export type ProviderSettingsWithId = z.infer<typeof providerSettingsWithIdSchema>
+
 export const PROVIDER_SETTINGS_KEYS = providerSettingsSchema.keyof().options
 
 export const MODEL_ID_KEYS: Partial<keyof ProviderSettings>[] = [
@@ -293,6 +347,7 @@ export const MODEL_ID_KEYS: Partial<keyof ProviderSettings>[] = [
 	"unboundModelId",
 	"requestyModelId",
 	"litellmModelId",
+	"huggingFaceModelId",
 ]
 
 export const getModelId = (settings: ProviderSettings): string | undefined => {
@@ -301,9 +356,20 @@ export const getModelId = (settings: ProviderSettings): string | undefined => {
 }
 
 // Providers that use Anthropic-style API protocol
-export const ANTHROPIC_STYLE_PROVIDERS: ProviderName[] = ["anthropic", "claude-code"]
+export const ANTHROPIC_STYLE_PROVIDERS: ProviderName[] = ["anthropic", "claude-code", "bedrock"]
 
-// Helper function to determine API protocol for a provider
-export const getApiProtocol = (provider: ProviderName | undefined): "anthropic" | "openai" => {
-	return provider && ANTHROPIC_STYLE_PROVIDERS.includes(provider) ? "anthropic" : "openai"
+// Helper function to determine API protocol for a provider and model
+export const getApiProtocol = (provider: ProviderName | undefined, modelId?: string): "anthropic" | "openai" => {
+	// First check if the provider is an Anthropic-style provider
+	if (provider && ANTHROPIC_STYLE_PROVIDERS.includes(provider)) {
+		return "anthropic"
+	}
+
+	// For vertex provider, check if the model ID contains "claude" (case-insensitive)
+	if (provider && provider === "vertex" && modelId && modelId.toLowerCase().includes("claude")) {
+		return "anthropic"
+	}
+
+	// Default to OpenAI protocol
+	return "openai"
 }

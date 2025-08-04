@@ -6,6 +6,8 @@ import { TelemetryService } from "@roo-code/telemetry"
 import { Task } from "../task/Task"
 
 import { getWorkspacePath } from "../../utils/path"
+import { checkGitInstalled } from "../../utils/git"
+import { t } from "../../i18n"
 
 import { ClineApiReqInfo } from "../../shared/ExtensionMessage"
 import { getApiMetrics } from "../../shared/getApiMetrics"
@@ -14,18 +16,29 @@ import { DIFF_VIEW_URI_SCHEME } from "../../integrations/editor/DiffViewProvider
 
 import { CheckpointServiceOptions, RepoPerTaskCheckpointService } from "../../services/checkpoints"
 
-export function getCheckpointService(cline: Task) {
+export async function getCheckpointService(
+	cline: Task,
+	{ interval = 250, timeout = 15_000 }: { interval?: number; timeout?: number } = {},
+) {
 	if (!cline.enableCheckpoints) {
 		return undefined
 	}
 
 	if (cline.checkpointService) {
-		return cline.checkpointService
-	}
-
-	if (cline.checkpointServiceInitializing) {
-		console.log("[Task#getCheckpointService] checkpoint service is still initializing")
-		return undefined
+		if (cline.checkpointServiceInitializing) {
+			console.log("[Task#getCheckpointService] checkpoint service is still initializing")
+			const service = cline.checkpointService
+			await pWaitFor(
+				() => {
+					console.log("[Task#getCheckpointService] waiting for service to initialize")
+					return service.isInitialized
+				},
+				{ interval, timeout },
+			)
+			return service.isInitialized ? cline.checkpointService : undefined
+		} else {
+			return cline.checkpointService
+		}
 	}
 
 	const provider = cline.providerRef.deref()
@@ -67,35 +80,66 @@ export function getCheckpointService(cline: Task) {
 		}
 
 		const service = RepoPerTaskCheckpointService.create(options)
-
 		cline.checkpointServiceInitializing = true
 
+		// Check if Git is installed before initializing the service
+		// Only assign the service after successful initialization
+		try {
+			await checkGitInstallation(cline, service, log, provider)
+			cline.checkpointService = service
+			return service
+		} catch (err) {
+			// Clean up on failure
+			cline.checkpointServiceInitializing = false
+			cline.enableCheckpoints = false
+			throw err
+		}
+	} catch (err) {
+		log(`[Task#getCheckpointService] ${err.message}`)
+		cline.enableCheckpoints = false
+		return undefined
+	}
+}
+
+async function checkGitInstallation(
+	cline: Task,
+	service: RepoPerTaskCheckpointService,
+	log: (message: string) => void,
+	provider: any,
+) {
+	try {
+		const gitInstalled = await checkGitInstalled()
+
+		if (!gitInstalled) {
+			log("[Task#getCheckpointService] Git is not installed, disabling checkpoints")
+			cline.enableCheckpoints = false
+			cline.checkpointServiceInitializing = false
+
+			// Show user-friendly notification
+			const selection = await vscode.window.showWarningMessage(
+				t("common:errors.git_not_installed"),
+				t("common:buttons.learn_more"),
+			)
+
+			if (selection === t("common:buttons.learn_more")) {
+				await vscode.env.openExternal(vscode.Uri.parse("https://git-scm.com/downloads"))
+			}
+
+			return
+		}
+
+		// Git is installed, proceed with initialization
 		service.on("initialize", () => {
 			log("[Task#getCheckpointService] service initialized")
-
-			try {
-				const isCheckpointNeeded =
-					typeof cline.clineMessages.find(({ say }) => say === "checkpoint_saved") === "undefined"
-
-				cline.checkpointService = service
-				cline.checkpointServiceInitializing = false
-
-				if (isCheckpointNeeded) {
-					log("[Task#getCheckpointService] no checkpoints found, saving initial checkpoint")
-					checkpointSave(cline)
-				}
-			} catch (err) {
-				log("[Task#getCheckpointService] caught error in on('initialize'), disabling checkpoints")
-				cline.enableCheckpoints = false
-			}
+			cline.checkpointServiceInitializing = false
 		})
 
-		service.on("checkpoint", ({ isFirst, fromHash: from, toHash: to }) => {
+		service.on("checkpoint", ({ fromHash: from, toHash: to }) => {
 			try {
 				provider?.postMessageToWebview({ type: "currentCheckpointUpdated", text: to })
 
 				cline
-					.say("checkpoint_saved", to, undefined, undefined, { isFirst, from, to }, undefined, {
+					.say("checkpoint_saved", to, undefined, undefined, { from, to }, undefined, {
 						isNonInteractive: true,
 					})
 					.catch((err) => {
@@ -110,47 +154,22 @@ export function getCheckpointService(cline: Task) {
 		})
 
 		log("[Task#getCheckpointService] initializing shadow git")
-
-		service.initShadowGit().catch((err) => {
+		try {
+			await service.initShadowGit()
+		} catch (err) {
 			log(`[Task#getCheckpointService] initShadowGit -> ${err.message}`)
 			cline.enableCheckpoints = false
-		})
-
-		return service
+		}
 	} catch (err) {
-		log(`[Task#getCheckpointService] ${err.message}`)
+		log(`[Task#getCheckpointService] Unexpected error during Git check: ${err.message}`)
+		console.error("Git check error:", err)
 		cline.enableCheckpoints = false
-		return undefined
-	}
-}
-
-async function getInitializedCheckpointService(
-	cline: Task,
-	{ interval = 250, timeout = 15_000 }: { interval?: number; timeout?: number } = {},
-) {
-	const service = getCheckpointService(cline)
-
-	if (!service || service.isInitialized) {
-		return service
-	}
-
-	try {
-		await pWaitFor(
-			() => {
-				console.log("[Task#getCheckpointService] waiting for service to initialize")
-				return service.isInitialized
-			},
-			{ interval, timeout },
-		)
-
-		return service
-	} catch (err) {
-		return undefined
+		cline.checkpointServiceInitializing = false
 	}
 }
 
 export async function checkpointSave(cline: Task, force = false) {
-	const service = getCheckpointService(cline)
+	const service = await getCheckpointService(cline)
 
 	if (!service) {
 		return
@@ -179,7 +198,7 @@ export type CheckpointRestoreOptions = {
 }
 
 export async function checkpointRestore(cline: Task, { ts, commitHash, mode }: CheckpointRestoreOptions) {
-	const service = await getInitializedCheckpointService(cline)
+	const service = await getCheckpointService(cline)
 
 	if (!service) {
 		return
@@ -247,7 +266,7 @@ export type CheckpointDiffOptions = {
 }
 
 export async function checkpointDiff(cline: Task, { ts, previousCommitHash, commitHash, mode }: CheckpointDiffOptions) {
-	const service = await getInitializedCheckpointService(cline)
+	const service = await getCheckpointService(cline)
 
 	if (!service) {
 		return
@@ -255,17 +274,19 @@ export async function checkpointDiff(cline: Task, { ts, previousCommitHash, comm
 
 	TelemetryService.instance.captureCheckpointDiffed(cline.taskId)
 
-	if (!previousCommitHash && mode === "checkpoint") {
-		const previousCheckpoint = cline.clineMessages
-			.filter(({ say }) => say === "checkpoint_saved")
-			.sort((a, b) => b.ts - a.ts)
-			.find((message) => message.ts < ts)
+	let prevHash = commitHash
+	let nextHash: string | undefined
 
-		previousCommitHash = previousCheckpoint?.text
+	const checkpoints = typeof service.getCheckpoints === "function" ? service.getCheckpoints() : []
+	const idx = checkpoints.indexOf(commitHash)
+	if (idx !== -1 && idx < checkpoints.length - 1) {
+		nextHash = checkpoints[idx + 1]
+	} else {
+		nextHash = undefined
 	}
 
 	try {
-		const changes = await service.getDiff({ from: previousCommitHash, to: commitHash })
+		const changes = await service.getDiff({ from: prevHash, to: nextHash })
 
 		if (!changes?.length) {
 			vscode.window.showInformationMessage("No changes found.")

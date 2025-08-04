@@ -102,6 +102,19 @@ function validateModelsAndKeysProvided(apiConfiguration: ProviderSettings): stri
 				return i18next.t("settings:validation.modelSelector")
 			}
 			break
+		case "huggingface":
+			if (!apiConfiguration.huggingFaceApiKey) {
+				return i18next.t("settings:validation.apiKey")
+			}
+			if (!apiConfiguration.huggingFaceModelId) {
+				return i18next.t("settings:validation.modelId")
+			}
+			break
+		case "cerebras":
+			if (!apiConfiguration.cerebrasApiKey) {
+				return i18next.t("settings:validation.apiKey")
+			}
+			break
 	}
 
 	return undefined
@@ -166,6 +179,8 @@ function getModelIdForProvider(apiConfiguration: ProviderSettings, provider: str
 		case "vscode-lm":
 			// vsCodeLmModelSelector is an object, not a string
 			return apiConfiguration.vsCodeLmModelSelector?.id
+		case "huggingface":
+			return apiConfiguration.huggingFaceModelId
 		default:
 			return apiConfiguration.apiModelId
 	}

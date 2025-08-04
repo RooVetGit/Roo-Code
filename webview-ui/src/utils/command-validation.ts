@@ -36,18 +36,18 @@ type ShellToken = string | { op: string } | { command: string }
  *
  * ## Command Processing Pipeline:
  *
- * 1. **Subshell Detection**: Commands containing $() or `` are blocked if denylist exists
- * 2. **Command Parsing**: Split chained commands (&&, ||, ;, |) into individual commands
- * 3. **Pattern Matching**: For each command, find longest matching prefixes in both lists
- * 4. **Decision Logic**: Apply longest prefix match rule to determine approval/denial
- * 5. **Aggregation**: Combine decisions (any denial blocks the entire command chain)
+ * 1. **Subshell Detection**: Commands containing dangerous patterns like $(), ``, or (cmd1; cmd2) are flagged as security risks
+ * 2. **Command Parsing**: Split chained commands (&&, ||, ;, |, &) into individual commands for separate validation
+ * 3. **Pattern Matching**: For each individual command, find the longest matching prefix in both allowlist and denylist
+ * 4. **Decision Logic**: Apply longest prefix match rule - more specific (longer) matches take precedence
+ * 5. **Aggregation**: Combine individual decisions - if any command is denied, the entire chain is denied
  *
  * ## Security Considerations:
  *
- * - **Subshell Protection**: Prevents command injection via $(command) or `command`
- * - **Chain Analysis**: Each command in a chain (cmd1 && cmd2) is validated separately
- * - **Case Insensitive**: All matching is case-insensitive for consistency
- * - **Whitespace Handling**: Commands are trimmed and normalized before matching
+ * - **Subshell Protection**: Detects and blocks command injection attempts via command substitution, process substitution, and subshell grouping
+ * - **Chain Analysis**: Each command in a chain (cmd1 && cmd2) is validated separately to prevent bypassing via chaining
+ * - **Case Insensitive**: All pattern matching is case-insensitive for consistent behavior across different input styles
+ * - **Whitespace Handling**: Commands are trimmed and normalized before matching to prevent whitespace-based bypasses
  *
  * ## Configuration Merging:
  *
@@ -59,16 +59,129 @@ type ShellToken = string | { op: string } | { command: string }
  */
 
 /**
+ * Detect subshell usage and command substitution patterns that could be security risks.
+ *
+ * Subshells allow executing commands in isolated environments and can be used to bypass
+ * command validation by hiding dangerous commands inside substitution patterns.
+ *
+ * Detected patterns:
+ * - $() - command substitution: executes command and substitutes output
+ * - `` - backticks (legacy command substitution): same as $() but older syntax
+ * - <() - process substitution (input): creates temporary file descriptor for command output
+ * - >() - process substitution (output): creates temporary file descriptor for command input
+ * - $(()) - arithmetic expansion: evaluates mathematical expressions (can contain commands)
+ * - $[] - arithmetic expansion (alternative syntax): same as $(()) but older syntax
+ * - (cmd1; cmd2) - subshell grouping: executes multiple commands in isolated subshell
+ *
+ * @param source - The command string to analyze for subshell patterns
+ * @returns true if any subshell patterns are detected, false otherwise
+ *
+ * @example
+ * ```typescript
+ * // Command substitution - executes 'date' and substitutes its output
+ * containsSubshell("echo $(date)")     // true
+ *
+ * // Backtick substitution - legacy syntax for command substitution
+ * containsSubshell("echo `date`")      // true
+ *
+ * // Process substitution - creates file descriptor for command output
+ * containsSubshell("diff <(sort f1)")  // true
+ *
+ * // Arithmetic expansion - can contain command execution
+ * containsSubshell("echo $((1+2))")    // true
+ * containsSubshell("echo $[1+2]")      // true
+ *
+ * // Subshell grouping - executes commands in isolated environment
+ * containsSubshell("(ls; rm file)")    // true
+ * containsSubshell("(cd /tmp && rm -rf *)")  // true
+ *
+ * // Safe patterns that should NOT be flagged
+ * containsSubshell("func(arg1, arg2)") // false - function call, not subshell
+ * containsSubshell("echo hello")       // false - no subshell patterns
+ * containsSubshell("(simple text)")    // false - no shell operators in parentheses
+ * ```
+ */
+export function containsSubshell(source: string): boolean {
+	// Check for command substitution, process substitution, and arithmetic expansion patterns
+	// These patterns allow executing commands and substituting their output, which can bypass validation
+	const commandSubstitutionPatterns = /(\$\()|`|(<\(|>\()|(\$\(\()|(\$\[)/.test(source)
+
+	// Check for subshell grouping: parentheses containing shell command operators
+	// Pattern explanation: \( = literal opening paren, [^)]* = any chars except closing paren,
+	// [;&|]+ = one or more shell operators (semicolon, ampersand, pipe), [^)]* = any chars except closing paren, \) = literal closing paren
+	// This detects dangerous patterns like: (cmd1; cmd2), (cmd1 && cmd2), (cmd1 || cmd2), (cmd1 | cmd2), (cmd1 & cmd2)
+	// But avoids false positives like function calls: func(arg1, arg2) - no shell operators inside
+	const subshellGroupingPattern = /\([^)]*[;&|]+[^)]*\)/.test(source)
+
+	// Return true if any subshell pattern is detected
+	return commandSubstitutionPatterns || subshellGroupingPattern
+}
+
+/**
  * Split a command string into individual sub-commands by
- * chaining operators (&&, ||, ;, or |).
+ * chaining operators (&&, ||, ;, |, or &) and newlines.
  *
  * Uses shell-quote to properly handle:
  * - Quoted strings (preserves quotes)
- * - Subshell commands ($(cmd) or `cmd`)
+ * - Subshell commands ($(cmd), `cmd`, <(cmd), >(cmd))
  * - PowerShell redirections (2>&1)
- * - Chain operators (&&, ||, ;, |)
+ * - Chain operators (&&, ||, ;, |, &)
+ * - Newlines as command separators
  */
 export function parseCommand(command: string): string[] {
+	if (!command?.trim()) return []
+
+	// Split by newlines first (handle different line ending formats)
+	// This regex splits on \r\n (Windows), \n (Unix), or \r (old Mac)
+	const lines = command.split(/\r\n|\r|\n/)
+	const allCommands: string[] = []
+
+	for (const line of lines) {
+		// Skip empty lines
+		if (!line.trim()) continue
+
+		// Process each line through the existing parsing logic
+		const lineCommands = parseCommandLine(line)
+		allCommands.push(...lineCommands)
+	}
+
+	return allCommands
+}
+
+/**
+ * Helper function to restore placeholders in a command string
+ */
+function restorePlaceholders(
+	command: string,
+	quotes: string[],
+	redirections: string[],
+	arrayIndexing: string[],
+	arithmeticExpressions: string[],
+	parameterExpansions: string[],
+	variables: string[],
+	subshells: string[],
+): string {
+	let result = command
+	// Restore quotes
+	result = result.replace(/__QUOTE_(\d+)__/g, (_, i) => quotes[parseInt(i)])
+	// Restore redirections
+	result = result.replace(/__REDIR_(\d+)__/g, (_, i) => redirections[parseInt(i)])
+	// Restore array indexing expressions
+	result = result.replace(/__ARRAY_(\d+)__/g, (_, i) => arrayIndexing[parseInt(i)])
+	// Restore arithmetic expressions
+	result = result.replace(/__ARITH_(\d+)__/g, (_, i) => arithmeticExpressions[parseInt(i)])
+	// Restore parameter expansions
+	result = result.replace(/__PARAM_(\d+)__/g, (_, i) => parameterExpansions[parseInt(i)])
+	// Restore variable references
+	result = result.replace(/__VAR_(\d+)__/g, (_, i) => variables[parseInt(i)])
+	result = result.replace(/__SUBSH_(\d+)__/g, (_, i) => subshells[parseInt(i)])
+	return result
+}
+
+/**
+ * Parse a single line of commands (internal helper function)
+ */
+function parseCommandLine(command: string): string[] {
 	if (!command?.trim()) return []
 
 	// Storage for replaced content
@@ -76,6 +189,9 @@ export function parseCommand(command: string): string[] {
 	const subshells: string[] = []
 	const quotes: string[] = []
 	const arrayIndexing: string[] = []
+	const arithmeticExpressions: string[] = []
+	const variables: string[] = []
+	const parameterExpansions: string[] = []
 
 	// First handle PowerShell redirections by temporarily replacing them
 	let processedCommand = command.replace(/\d*>&\d*/g, (match) => {
@@ -83,13 +199,46 @@ export function parseCommand(command: string): string[] {
 		return `__REDIR_${redirections.length - 1}__`
 	})
 
-	// Handle array indexing expressions: ${array[...]} pattern and partial expressions
-	processedCommand = processedCommand.replace(/\$\{[^}]*\[[^\]]*(\]([^}]*\})?)?/g, (match) => {
-		arrayIndexing.push(match)
-		return `__ARRAY_${arrayIndexing.length - 1}__`
+	// Handle arithmetic expressions: $((...)) pattern
+	// Match the entire arithmetic expression including nested parentheses
+	processedCommand = processedCommand.replace(/\$\(\([^)]*(?:\)[^)]*)*\)\)/g, (match) => {
+		arithmeticExpressions.push(match)
+		return `__ARITH_${arithmeticExpressions.length - 1}__`
 	})
 
-	// Then handle subshell commands
+	// Handle $[...] arithmetic expressions (alternative syntax)
+	processedCommand = processedCommand.replace(/\$\[[^\]]*\]/g, (match) => {
+		arithmeticExpressions.push(match)
+		return `__ARITH_${arithmeticExpressions.length - 1}__`
+	})
+
+	// Handle parameter expansions: ${...} patterns (including array indexing)
+	// This covers ${var}, ${var:-default}, ${var:+alt}, ${#var}, ${var%pattern}, etc.
+	processedCommand = processedCommand.replace(/\$\{[^}]+\}/g, (match) => {
+		parameterExpansions.push(match)
+		return `__PARAM_${parameterExpansions.length - 1}__`
+	})
+
+	// Handle process substitutions: <(...) and >(...)
+	processedCommand = processedCommand.replace(/[<>]\(([^)]+)\)/g, (_, inner) => {
+		subshells.push(inner.trim())
+		return `__SUBSH_${subshells.length - 1}__`
+	})
+
+	// Handle simple variable references: $varname pattern
+	// This prevents shell-quote from splitting $count into separate tokens
+	processedCommand = processedCommand.replace(/\$[a-zA-Z_][a-zA-Z0-9_]*/g, (match) => {
+		variables.push(match)
+		return `__VAR_${variables.length - 1}__`
+	})
+
+	// Handle special bash variables: $?, $!, $#, $$, $@, $*, $-, $0-$9
+	processedCommand = processedCommand.replace(/\$[?!#$@*\-0-9]/g, (match) => {
+		variables.push(match)
+		return `__VAR_${variables.length - 1}__`
+	})
+
+	// Then handle subshell commands $() and back-ticks
 	processedCommand = processedCommand
 		.replace(/\$\((.*?)\)/g, (_, inner) => {
 			subshells.push(inner.trim())
@@ -106,20 +255,47 @@ export function parseCommand(command: string): string[] {
 		return `__QUOTE_${quotes.length - 1}__`
 	})
 
-	const tokens = parse(processedCommand) as ShellToken[]
+	let tokens: ShellToken[]
+	try {
+		tokens = parse(processedCommand) as ShellToken[]
+	} catch (error: any) {
+		// If shell-quote fails to parse, fall back to simple splitting
+		console.warn("shell-quote parse error:", error.message, "for command:", processedCommand)
+
+		// Simple fallback: split by common operators
+		const fallbackCommands = processedCommand
+			.split(/(?:&&|\|\||;|\||&)/)
+			.map((cmd) => cmd.trim())
+			.filter((cmd) => cmd.length > 0)
+
+		// Restore all placeholders for each command
+		return fallbackCommands.map((cmd) =>
+			restorePlaceholders(
+				cmd,
+				quotes,
+				redirections,
+				arrayIndexing,
+				arithmeticExpressions,
+				parameterExpansions,
+				variables,
+				subshells,
+			),
+		)
+	}
+
 	const commands: string[] = []
 	let currentCommand: string[] = []
 
 	for (const token of tokens) {
 		if (typeof token === "object" && "op" in token) {
 			// Chain operator - split command
-			if (["&&", "||", ";", "|"].includes(token.op)) {
+			if (["&&", "||", ";", "|", "&"].includes(token.op)) {
 				if (currentCommand.length > 0) {
 					commands.push(currentCommand.join(" "))
 					currentCommand = []
 				}
 			} else {
-				// Other operators (>, &) are part of the command
+				// Other operators (>) are part of the command
 				currentCommand.push(token.op)
 			}
 		} else if (typeof token === "string") {
@@ -143,16 +319,18 @@ export function parseCommand(command: string): string[] {
 	}
 
 	// Restore quotes and redirections
-	return commands.map((cmd) => {
-		let result = cmd
-		// Restore quotes
-		result = result.replace(/__QUOTE_(\d+)__/g, (_, i) => quotes[parseInt(i)])
-		// Restore redirections
-		result = result.replace(/__REDIR_(\d+)__/g, (_, i) => redirections[parseInt(i)])
-		// Restore array indexing expressions
-		result = result.replace(/__ARRAY_(\d+)__/g, (_, i) => arrayIndexing[parseInt(i)])
-		return result
-	})
+	return commands.map((cmd) =>
+		restorePlaceholders(
+			cmd,
+			quotes,
+			redirections,
+			arrayIndexing,
+			arithmeticExpressions,
+			parameterExpansions,
+			variables,
+			subshells,
+		),
+	)
 }
 
 /**
@@ -280,56 +458,6 @@ export function isAutoDeniedSingleCommand(
 }
 
 /**
- * Check if a command string should be auto-approved.
- * Only blocks subshell attempts if there's a denylist configured.
- * Requires all sub-commands to be auto-approved.
- */
-export function isAutoApprovedCommand(command: string, allowedCommands: string[], deniedCommands?: string[]): boolean {
-	if (!command?.trim()) return true
-
-	// Only block subshell execution attempts if there's a denylist configured
-	if ((command.includes("$(") || command.includes("`")) && deniedCommands?.length) {
-		return false
-	}
-
-	// Parse into sub-commands (split by &&, ||, ;, |)
-	const subCommands = parseCommand(command)
-
-	// Ensure every sub-command is auto-approved
-	return subCommands.every((cmd) => {
-		// Remove simple PowerShell-like redirections (e.g. 2>&1) before checking
-		const cmdWithoutRedirection = cmd.replace(/\d*>&\d*/, "").trim()
-
-		return isAutoApprovedSingleCommand(cmdWithoutRedirection, allowedCommands, deniedCommands)
-	})
-}
-
-/**
- * Check if a command string should be auto-denied.
- * Only blocks subshell attempts if there's a denylist configured.
- * Auto-denies if any sub-command is auto-denied.
- */
-export function isAutoDeniedCommand(command: string, allowedCommands: string[], deniedCommands?: string[]): boolean {
-	if (!command?.trim()) return false
-
-	// Only block subshell execution attempts if there's a denylist configured
-	if ((command.includes("$(") || command.includes("`")) && deniedCommands?.length) {
-		return true
-	}
-
-	// Parse into sub-commands (split by &&, ||, ;, |)
-	const subCommands = parseCommand(command)
-
-	// Auto-deny if any sub-command is auto-denied
-	return subCommands.some((cmd) => {
-		// Remove simple PowerShell-like redirections (e.g. 2>&1) before checking
-		const cmdWithoutRedirection = cmd.replace(/\d*>&\d*/, "").trim()
-
-		return isAutoDeniedSingleCommand(cmdWithoutRedirection, allowedCommands, deniedCommands)
-	})
-}
-
-/**
  * Command approval decision types
  */
 export type CommandDecision = "auto_approve" | "auto_deny" | "ask_user"
@@ -344,7 +472,7 @@ export type CommandDecision = "auto_approve" | "auto_deny" | "ask_user"
  *
  * **Decision Logic:**
  * 1. **Subshell Protection**: If subshells ($() or ``) are present and denylist exists → auto-deny
- * 2. **Command Parsing**: Split command chains (&&, ||, ;, |) into individual commands
+ * 2. **Command Parsing**: Split command chains (&&, ||, ;, |, &) into individual commands
  * 3. **Individual Validation**: For each sub-command, apply longest prefix match rule
  * 4. **Aggregation**: Combine decisions using "any denial blocks all" principle
  *
@@ -383,11 +511,6 @@ export function getCommandDecision(
 	deniedCommands?: string[],
 ): CommandDecision {
 	if (!command?.trim()) return "auto_approve"
-
-	// Only block subshell execution attempts if there's a denylist configured
-	if ((command.includes("$(") || command.includes("`")) && deniedCommands?.length) {
-		return "auto_deny"
-	}
 
 	// Parse into sub-commands (split by &&, ||, ;, |)
 	const subCommands = parseCommand(command)
@@ -561,7 +684,7 @@ export class CommandValidator {
 		hasSubshells: boolean
 	} {
 		const subCommands = parseCommand(command)
-		const hasSubshells = command.includes("$(") || command.includes("`")
+		const hasSubshells = containsSubshell(command)
 
 		const allowedMatches = subCommands.map((cmd) => ({
 			command: cmd,

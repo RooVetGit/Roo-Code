@@ -17,12 +17,7 @@
 	"confirmation": {
 		"reset_state": "您确定要重置扩展中的所有状态和密钥存储吗？此操作无法撤消。",
 		"delete_config_profile": "您确定要删除此配置文件吗？",
-		"delete_custom_mode_with_rules": "您确定要删除此 {scope} 模式吗？\n\n这也将删除位于以下位置的关联规则文件夹：\n{rulesFolderPath}",
-		"delete_message": "您想删除什么？",
-		"edit_warning": "编辑此消息将删除对话中的所有后续消息。您要继续吗？",
-		"delete_just_this_message": "仅此消息",
-		"delete_this_and_subsequent": "此消息及所有后续消息",
-		"proceed": "继续"
+		"delete_custom_mode_with_rules": "您确定要删除此 {scope} 模式吗？\n\n这也将删除位于以下位置的关联规则文件夹：\n{rulesFolderPath}"
 	},
 	"errors": {
 		"invalid_mcp_config": "项目MCP配置格式无效",
@@ -38,6 +33,7 @@
 		"could_not_open_file_generic": "无法打开文件！",
 		"checkpoint_timeout": "尝试恢复检查点时超时。",
 		"checkpoint_failed": "恢复检查点失败。",
+		"git_not_installed": "存档点功能需要 Git。请安装 Git 以启用存档点。",
 		"no_workspace": "请先打开项目文件夹",
 		"update_support_prompt": "更新支持消息失败",
 		"reset_support_prompt": "重置支持消息失败",
@@ -80,12 +76,34 @@
 		"share_task_not_found": "未找到任务或访问被拒绝。",
 		"mode_import_failed": "导入模式失败：{{error}}",
 		"delete_rules_folder_failed": "删除规则文件夹失败：{{rulesFolderPath}}。错误：{{error}}",
+		"command_not_found": "未找到命令 '{{name}}'",
+		"open_command_file": "打开命令文件失败",
+		"delete_command": "删除命令失败",
+		"no_workspace_for_project_command": "未找到项目命令的工作区文件夹",
+		"command_already_exists": "命令 \"{{commandName}}\" 已存在",
+		"create_command_failed": "创建命令失败",
+		"command_template_content": "---\ndescription: \"此命令功能的简要描述\"\n---\n\n这是一个新的斜杠命令。编辑此文件以自定义命令行为。",
 		"claudeCode": {
 			"processExited": "Claude Code 进程退出，退出码：{{exitCode}}。",
 			"errorOutput": "错误输出：{{output}}",
 			"processExitedWithError": "Claude Code 进程退出，退出码：{{exitCode}}。错误输出：{{output}}",
 			"stoppedWithReason": "Claude Code 停止，原因：{{reason}}",
-			"apiKeyModelPlanMismatch": "API 密钥和订阅计划支持不同的模型。请确保所选模型包含在您的计划中。"
+			"apiKeyModelPlanMismatch": "API keys and subscription plans allow different models. Make sure the selected model is included in your plan.",
+			"notFound": "Claude Code executable '{{claudePath}}' not found.\n\nPlease install Claude Code CLI:\n1. Visit {{installationUrl}} to download Claude Code\n2. Follow the installation instructions for your operating system\n3. Ensure the 'claude' command is available in your PATH\n4. Alternatively, configure a custom path in Roo settings under 'Claude Code Path'\n\nOriginal error: {{originalError}}"
+		},
+		"gemini": {
+			"generate_stream": "Gemini 生成上下文流错误：{{error}}",
+			"generate_complete_prompt": "Gemini 完成错误：{{error}}",
+			"sources": "来源："
+		},
+		"cerebras": {
+			"authenticationFailed": "Cerebras API 身份验证失败。请检查你的 API 密钥是否有效且未过期。",
+			"accessForbidden": "Cerebras API 访问被禁止。你的 API 密钥可能无法访问请求的模型或功能。",
+			"rateLimitExceeded": "Cerebras API 速率限制已超出。请稍等后再发起另一个请求。",
+			"serverError": "Cerebras API 服务器错误 ({{status}})。请稍后重试。",
+			"genericError": "Cerebras API 错误 ({{status}})：{{message}}",
+			"noResponseBody": "Cerebras API 错误：无响应主体",
+			"completionError": "Cerebras 完成错误：{{error}}"
 		}
 	},
 	"warnings": {
@@ -117,7 +135,8 @@
 	},
 	"buttons": {
 		"save": "保存",
-		"edit": "编辑"
+		"edit": "编辑",
+		"learn_more": "了解更多"
 	},
 	"tasks": {
 		"canceled": "任务错误：它已被用户停止并取消。",
@@ -155,11 +174,17 @@
 			"deleteFailed": "删除自定义模式失败：{{error}}",
 			"resetFailed": "重置自定义模式失败：{{error}}",
 			"modeNotFound": "写入错误：未找到模式",
-			"noWorkspaceForProject": "未找到项目特定模式的工作区文件夹"
+			"noWorkspaceForProject": "未找到项目特定模式的工作区文件夹",
+			"rulesCleanupFailed": "模式删除成功，但无法删除位于 {{rulesFolderPath}} 的规则文件夹。您可能需要手动删除。"
 		},
 		"scope": {
 			"project": "项目",
 			"global": "全局"
+		}
+	},
+	"marketplace": {
+		"mode": {
+			"rulesCleanupFailed": "模式已成功移除，但无法删除位于 {{rulesFolderPath}} 的规则文件夹。您可能需要手动删除。"
 		}
 	},
 	"mdm": {
@@ -175,6 +200,11 @@
 			"description": "您确定要删除此 {{scope}} 模式吗？这也将删除位于 {{rulesFolderPath}} 的关联规则文件夹",
 			"descriptionNoRules": "您确定要删除此自定义模式吗？",
 			"confirm": "删除"
+		}
+	},
+	"commands": {
+		"preventCompletionWithOpenTodos": {
+			"description": "当待办事项列表中有未完成的待办事项时阻止任务完成"
 		}
 	}
 }

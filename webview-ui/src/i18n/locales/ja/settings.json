@@ -47,6 +47,9 @@
 		"geminiProvider": "Gemini",
 		"geminiApiKeyLabel": "APIキー：",
 		"geminiApiKeyPlaceholder": "Gemini APIキーを入力してください",
+		"mistralProvider": "Mistral",
+		"mistralApiKeyLabel": "APIキー:",
+		"mistralApiKeyPlaceholder": "Mistral APIキーを入力してください",
 		"openaiCompatibleProvider": "OpenAI互換",
 		"openAiKeyLabel": "OpenAI APIキー",
 		"openAiKeyPlaceholder": "OpenAI APIキーを入力してください",
@@ -109,6 +112,7 @@
 			"modelIdRequired": "モデルIDが必要です",
 			"modelDimensionRequired": "モデルの次元が必要です",
 			"geminiApiKeyRequired": "Gemini APIキーが必要です",
+			"mistralApiKeyRequired": "Mistral APIキーが必要です",
 			"ollamaBaseUrlRequired": "OllamaのベースURLが必要です",
 			"baseUrlRequired": "ベースURLが必要です",
 			"modelDimensionMinValue": "モデルの次元は0より大きくなければなりません"
@@ -123,6 +127,9 @@
 	},
 	"autoApprove": {
 		"description": "Rooが承認なしで自動的に操作を実行できるようにします。AIを完全に信頼し、関連するセキュリティリスクを理解している場合にのみ、これらの設定を有効にしてください。",
+		"enabled": "自動承認が有効",
+		"toggleAriaLabel": "自動承認の切り替え",
+		"disabledAriaLabel": "自動承認が無効です - 最初にオプションを選択してください",
 		"readOnly": {
 			"label": "読み取り",
 			"description": "有効にすると、Rooは承認ボタンをクリックすることなく、自動的にディレクトリの内容を表示してファイルを読み取ります。",
@@ -190,6 +197,14 @@
 			"title": "最大リクエスト数",
 			"description": "タスクを続行するための承認を求める前に、自動的にこの数のAPIリクエストを行います。",
 			"unlimited": "無制限"
+		},
+		"selectOptionsFirst": "自動承認を有効にするには、以下のオプションを少なくとも1つ選択してください",
+		"apiCostLimit": {
+			"unlimited": "無制限",
+			"title": "最大料金"
+		},
+		"maxLimits": {
+			"description": "これらの上限まで自動的にリクエストを行い、その後継続の承認を求めます。"
 		}
 	},
 	"providers": {
@@ -242,13 +257,35 @@
 		"anthropicApiKey": "Anthropic APIキー",
 		"getAnthropicApiKey": "Anthropic APIキーを取得",
 		"anthropicUseAuthToken": "Anthropic APIキーをX-Api-Keyの代わりにAuthorizationヘッダーとして渡す",
+		"cerebrasApiKey": "Cerebras APIキー",
+		"getCerebrasApiKey": "Cerebras APIキーを取得",
 		"chutesApiKey": "Chutes APIキー",
 		"getChutesApiKey": "Chutes APIキーを取得",
 		"deepSeekApiKey": "DeepSeek APIキー",
 		"getDeepSeekApiKey": "DeepSeek APIキーを取得",
+		"doubaoApiKey": "Doubao APIキー",
+		"getDoubaoApiKey": "Doubao APIキーを取得",
+		"moonshotApiKey": "Moonshot APIキー",
+		"getMoonshotApiKey": "Moonshot APIキーを取得",
+		"moonshotBaseUrl": "Moonshot エントリーポイント",
 		"geminiApiKey": "Gemini APIキー",
 		"getGroqApiKey": "Groq APIキーを取得",
 		"groqApiKey": "Groq APIキー",
+		"getSambaNovaApiKey": "SambaNova APIキーを取得",
+		"sambaNovaApiKey": "SambaNova APIキー",
+		"getHuggingFaceApiKey": "Hugging Face APIキーを取得",
+		"huggingFaceApiKey": "Hugging Face APIキー",
+		"huggingFaceModelId": "モデルID",
+		"huggingFaceLoading": "読み込み中...",
+		"huggingFaceModelsCount": "({{count}}個のモデル)",
+		"huggingFaceSelectModel": "モデルを選択...",
+		"huggingFaceSearchModels": "モデルを検索...",
+		"huggingFaceNoModelsFound": "モデルが見つかりません",
+		"huggingFaceProvider": "プロバイダー",
+		"huggingFaceProviderAuto": "自動",
+		"huggingFaceSelectProvider": "プロバイダーを選択...",
+		"huggingFaceSearchProviders": "プロバイダーを検索...",
+		"huggingFaceNoProvidersFound": "プロバイダーが見つかりません",
 		"getGeminiApiKey": "Gemini APIキーを取得",
 		"openAiApiKey": "OpenAI APIキー",
 		"apiKey": "APIキー",
@@ -264,6 +301,7 @@
 		"litellmBaseUrl": "LiteLLM ベースURL",
 		"awsCredentials": "AWS認証情報",
 		"awsProfile": "AWSプロファイル",
+		"awsApiKey": "Amazon Bedrock APIキー",
 		"awsProfileName": "AWSプロファイル名",
 		"awsAccessKey": "AWSアクセスキー",
 		"awsSecretKey": "AWSシークレットキー",
@@ -280,6 +318,16 @@
 		"cacheUsageNote": "注意：キャッシュの使用が表示されない場合は、別のモデルを選択してから希望のモデルを再度選択してみてください。",
 		"vscodeLmModel": "言語モデル",
 		"vscodeLmWarning": "注意：これは非常に実験的な統合であり、プロバイダーのサポートは異なります。モデルがサポートされていないというエラーが表示された場合、それはプロバイダー側の問題です。",
+		"geminiParameters": {
+			"urlContext": {
+				"title": "URLコンテキストを有効にする",
+				"description": "応答を生成する際に、追加のコンテキストとしてGeminiがURLにアクセスして処理できるようにします。Webコンテンツの分析を必要とするタスクに役立ちます。"
+			},
+			"groundingSearch": {
+				"title": "Google検索でのグラウンディングを有効にする",
+				"description": "GeminiがGoogleを検索して最新情報を取得し、リアルタイムデータに基づいて応答をグラウンディングできるようにします。最新情報が必要なクエリに便利です。"
+			}
+		},
 		"googleCloudSetup": {
 			"title": "Google Cloud Vertex AIを使用するには：",
 			"step1": "1. Google Cloudアカウントを作成し、Vertex AI APIを有効にして、希望するClaudeモデルを有効にします。",
@@ -478,6 +526,23 @@
 			"label": "同時ファイル読み取り制限",
 			"description": "read_file ツールが同時に処理できるファイルの最大数。値を高くすると複数の小さなファイルの読み取りが速くなる可能性がありますが、メモリ使用量が増加します。"
 		},
+		"diagnostics": {
+			"includeMessages": {
+				"label": "診断を自動的にコンテキストに含める",
+				"description": "有効にすると、編集されたファイルからの診断メッセージ（エラー）が自動的にコンテキストに含まれます。@problemsを使用して、いつでも手動ですべてのワークスペース診断を含めることができます。"
+			},
+			"maxMessages": {
+				"label": "最大診断メッセージ数",
+				"description": "ファイルごとに含める診断メッセージの最大数。この制限は、自動インクルード（チェックボックスが有効な場合）と手動の@problemsメンションの両方に適用されます。値を高くするとより多くのコンテキストが提供されますが、トークンの使用量が増加します。",
+				"resetTooltip": "デフォルト値（50）にリセット",
+				"unlimited": "無制限の診断メッセージ",
+				"unlimitedLabel": "無制限"
+			},
+			"delayAfterWrite": {
+				"label": "書き込み後に診断が潜在的な問題を検出できるように遅延させる",
+				"description": "ファイルの書き込み後に処理を続行するまでの待機時間。これにより、診断ツールが変更を処理して問題を検出できます。"
+			}
+		},
 		"condensingThreshold": {
 			"label": "圧縮トリガーしきい値",
 			"selectProfile": "プロファイルのしきい値を設定",
@@ -486,6 +551,16 @@
 			"profileDescription": "このプロファイルのみのカスタムしきい値（グローバルデフォルトを上書き）",
 			"inheritDescription": "このプロファイルはグローバルデフォルトしきい値を継承します（{{threshold}}%）",
 			"usesGlobal": "（グローバル {{threshold}}% を使用）"
+		},
+		"maxImageFileSize": {
+			"label": "最大画像ファイルサイズ",
+			"mb": "MB",
+			"description": "read fileツールで処理できる画像ファイルの最大サイズ（MB単位）。"
+		},
+		"maxTotalImageSize": {
+			"label": "最大合計画像サイズ",
+			"mb": "MB",
+			"description": "単一のread_file操作で処理されるすべての画像の累積サイズ制限（MB単位）。複数の画像を読み取る際、各画像のサイズが合計に加算されます。別の画像を含めるとこの制限を超える場合、その画像はスキップされます。"
 		}
 	},
 	"terminal": {
@@ -500,6 +575,10 @@
 		"outputLineLimit": {
 			"label": "ターミナル出力制限",
 			"description": "コマンド実行時にターミナル出力に含める最大行数。超過すると中央から行が削除され、tokenを節約します。 <0>詳細情報</0>"
+		},
+		"outputCharacterLimit": {
+			"label": "ターミナルの文字数制限",
+			"description": "コマンド実行時にターミナル出力に含める最大文字数。この制限は、非常に長い行によるメモリ問題を回避するため、行数制限よりも優先されます。超過した場合、出力は切り捨てられます。<0>詳細</0>"
 		},
 		"shellIntegrationTimeout": {
 			"label": "ターミナルシェル統合タイムアウト",
@@ -566,6 +645,10 @@
 				"label": "マッチ精度",
 				"description": "このスライダーは、diffを適用する際にコードセクションがどれだけ正確に一致する必要があるかを制御します。低い値はより柔軟なマッチングを可能にしますが、誤った置換のリスクが高まります。100%未満の値は細心の注意を払って使用してください。"
 			}
+		},
+		"todoList": {
+			"label": "ToDoリストツールを有効にする",
+			"description": "有効にすると、Rooはタスクの進捗を追跡するためのToDoリストを作成・管理できます。これにより、複雑なタスクを管理しやすいステップに整理できます。"
 		}
 	},
 	"experimental": {
@@ -600,6 +683,10 @@
 		"MULTI_FILE_APPLY_DIFF": {
 			"name": "同時ファイル編集を有効にする",
 			"description": "有効にすると、Rooは単一のリクエストで複数のファイルを編集できます。無効にすると、Rooはファイルを一つずつ編集する必要があります。これを無効にすることで、能力の低いモデルで作業する場合や、ファイル変更をより細かく制御したい場合に役立ちます。"
+		},
+		"PREVENT_FOCUS_DISRUPTION": {
+			"name": "バックグラウンド編集",
+			"description": "有効にすると、エディターのフォーカス中断を防ぎます。ファイル編集は差分ビューを開いたりフォーカスを奪ったりすることなく、バックグラウンドで行われます。Rooが変更を行っている間も中断されることなく作業を続けることができます。ファイルは診断をキャプチャするためにフォーカスなしで開くか、完全に閉じたままにできます。"
 		}
 	},
 	"promptCaching": {
@@ -707,5 +794,8 @@
 		"useCustomArn": "カスタム ARN を使用..."
 	},
 	"includeMaxOutputTokens": "最大出力トークンを含める",
-	"includeMaxOutputTokensDescription": "APIリクエストで最大出力トークンパラメータを送信します。一部のプロバイダーはこれをサポートしていない場合があります。"
+	"includeMaxOutputTokensDescription": "APIリクエストで最大出力トークンパラメータを送信します。一部のプロバイダーはこれをサポートしていない場合があります。",
+	"limitMaxTokensDescription": "レスポンスの最大トークン数を制限する",
+	"maxOutputTokensLabel": "最大出力トークン",
+	"maxTokensGenerateDescription": "レスポンスで生成する最大トークン数"
 }

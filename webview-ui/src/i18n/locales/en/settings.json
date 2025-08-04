@@ -52,6 +52,9 @@
 		"geminiProvider": "Gemini",
 		"geminiApiKeyLabel": "API Key:",
 		"geminiApiKeyPlaceholder": "Enter your Gemini API key",
+		"mistralProvider": "Mistral",
+		"mistralApiKeyLabel": "API Key:",
+		"mistralApiKeyPlaceholder": "Enter your Mistral API key",
 		"openaiCompatibleProvider": "OpenAI Compatible",
 		"openAiKeyLabel": "OpenAI API Key",
 		"openAiKeyPlaceholder": "Enter your OpenAI API key",
@@ -116,6 +119,7 @@
 			"modelIdRequired": "Model ID is required",
 			"modelDimensionRequired": "Model dimension is required",
 			"geminiApiKeyRequired": "Gemini API key is required",
+			"mistralApiKeyRequired": "Mistral API key is required",
 			"ollamaBaseUrlRequired": "Ollama base URL is required",
 			"baseUrlRequired": "Base URL is required",
 			"modelDimensionMinValue": "Model dimension must be greater than 0"
@@ -123,6 +127,7 @@
 	},
 	"autoApprove": {
 		"description": "Allow Roo to automatically perform operations without requiring approval. Enable these settings only if you fully trust the AI and understand the associated security risks.",
+		"enabled": "Auto-Approve Enabled",
 		"readOnly": {
 			"label": "Read",
 			"description": "When enabled, Roo will automatically view directory contents and read files without requiring you to click the Approve button.",
@@ -187,10 +192,19 @@
 			"description": "Automatically update the to-do list without requiring approval"
 		},
 		"apiRequestLimit": {
-			"title": "Max Requests",
-			"description": "Automatically make this many API requests before asking for approval to continue with the task.",
+			"title": "Max Count",
 			"unlimited": "Unlimited"
-		}
+		},
+		"apiCostLimit": {
+			"title": "Max Cost",
+			"unlimited": "Unlimited"
+		},
+		"maxLimits": {
+			"description": "Automatically make requests up to these limits before asking for approval to continue."
+		},
+		"toggleAriaLabel": "Toggle auto-approval",
+		"disabledAriaLabel": "Auto-approval disabled - select options first",
+		"selectOptionsFirst": "Select at least one option below to enable auto-approval"
 	},
 	"providers": {
 		"providerDocumentation": "{{provider}} documentation",
@@ -242,13 +256,35 @@
 		"anthropicApiKey": "Anthropic API Key",
 		"getAnthropicApiKey": "Get Anthropic API Key",
 		"anthropicUseAuthToken": "Pass Anthropic API Key as Authorization header instead of X-Api-Key",
+		"cerebrasApiKey": "Cerebras API Key",
+		"getCerebrasApiKey": "Get Cerebras API Key",
 		"chutesApiKey": "Chutes API Key",
 		"getChutesApiKey": "Get Chutes API Key",
 		"deepSeekApiKey": "DeepSeek API Key",
 		"getDeepSeekApiKey": "Get DeepSeek API Key",
+		"doubaoApiKey": "Doubao API Key",
+		"getDoubaoApiKey": "Get Doubao API Key",
+		"moonshotApiKey": "Moonshot API Key",
+		"getMoonshotApiKey": "Get Moonshot API Key",
+		"moonshotBaseUrl": "Moonshot Entrypoint",
 		"geminiApiKey": "Gemini API Key",
 		"getGroqApiKey": "Get Groq API Key",
 		"groqApiKey": "Groq API Key",
+		"getSambaNovaApiKey": "Get SambaNova API Key",
+		"sambaNovaApiKey": "SambaNova API Key",
+		"getHuggingFaceApiKey": "Get Hugging Face API Key",
+		"huggingFaceApiKey": "Hugging Face API Key",
+		"huggingFaceModelId": "Model ID",
+		"huggingFaceLoading": "Loading...",
+		"huggingFaceModelsCount": "({{count}} models)",
+		"huggingFaceSelectModel": "Select a model...",
+		"huggingFaceSearchModels": "Search models...",
+		"huggingFaceNoModelsFound": "No models found",
+		"huggingFaceProvider": "Provider",
+		"huggingFaceProviderAuto": "Auto",
+		"huggingFaceSelectProvider": "Select a provider...",
+		"huggingFaceSearchProviders": "Search providers...",
+		"huggingFaceNoProvidersFound": "No providers found",
 		"getGeminiApiKey": "Get Gemini API Key",
 		"openAiApiKey": "OpenAI API Key",
 		"apiKey": "API Key",
@@ -264,6 +300,7 @@
 		"litellmBaseUrl": "LiteLLM Base URL",
 		"awsCredentials": "AWS Credentials",
 		"awsProfile": "AWS Profile",
+		"awsApiKey": "Amazon Bedrock API Key",
 		"awsProfileName": "AWS Profile Name",
 		"awsAccessKey": "AWS Access Key",
 		"awsSecretKey": "AWS Secret Key",
@@ -280,6 +317,16 @@
 		"cacheUsageNote": "Note: If you don't see cache usage, try selecting a different model and then selecting your desired model again.",
 		"vscodeLmModel": "Language Model",
 		"vscodeLmWarning": "Note: This is a very experimental integration and provider support will vary. If you get an error about a model not being supported, that's an issue on the provider's end.",
+		"geminiParameters": {
+			"urlContext": {
+				"title": "Enable URL context",
+				"description": "Lets Gemini read linked pages to extract, compare, and synthesize their content into informed responses."
+			},
+			"groundingSearch": {
+				"title": "Enable Grounding with Google search",
+				"description": "Connects Gemini to real‑time web data for accurate, up‑to‑date answers with verifiable citations."
+			}
+		},
 		"googleCloudSetup": {
 			"title": "To use Google Cloud Vertex AI, you need to:",
 			"step1": "1. Create a Google Cloud account, enable the Vertex AI API & enable the desired Claude models.",
@@ -478,6 +525,32 @@
 			"lines": "lines",
 			"always_full_read": "Always read entire file"
 		},
+		"maxImageFileSize": {
+			"label": "Max image file size",
+			"mb": "MB",
+			"description": "Maximum size (in MB) for image files that can be processed by the read file tool."
+		},
+		"maxTotalImageSize": {
+			"label": "Max total image size",
+			"mb": "MB",
+			"description": "Maximum cumulative size limit (in MB) for all images processed in a single read_file operation. When reading multiple images, each image's size is added to the total. If including another image would exceed this limit, it will be skipped."
+		},
+		"diagnostics": {
+			"includeMessages": {
+				"label": "Automatically include diagnostics in context",
+				"description": "When enabled, diagnostic messages (errors) from edited files will be automatically included in the context. You can always manually include all workspace diagnostics using @problems."
+			},
+			"maxMessages": {
+				"label": "Maximum diagnostic messages",
+				"description": "Limits the number of diagnostic messages (errors, warnings) included in the context. When set, only this many diagnostics will be shown, prioritizing errors over warnings. Set to 0 for unlimited diagnostics.",
+				"resetTooltip": "Reset to default value (50)",
+				"unlimitedLabel": "Unlimited"
+			},
+			"delayAfterWrite": {
+				"label": "Delay after writes to allow diagnostics to detect potential problems",
+				"description": "Time to wait after file writes before proceeding, allowing diagnostic tools to process changes and detect issues."
+			}
+		},
 		"condensingThreshold": {
 			"label": "Condensing Trigger Threshold",
 			"selectProfile": "Configure threshold for profile",
@@ -500,6 +573,10 @@
 		"outputLineLimit": {
 			"label": "Terminal output limit",
 			"description": "Maximum number of lines to include in terminal output when executing commands. When exceeded lines will be removed from the middle, saving tokens. <0>Learn more</0>"
+		},
+		"outputCharacterLimit": {
+			"label": "Terminal character limit",
+			"description": "Maximum number of characters to include in terminal output when executing commands. This limit takes precedence over the line limit to prevent memory issues from extremely long lines. When exceeded, output will be truncated. <0>Learn more</0>"
 		},
 		"shellIntegrationTimeout": {
 			"label": "Terminal shell integration timeout",
@@ -566,6 +643,10 @@
 				"label": "Match precision",
 				"description": "This slider controls how precisely code sections must match when applying diffs. Lower values allow more flexible matching but increase the risk of incorrect replacements. Use values below 100% with extreme caution."
 			}
+		},
+		"todoList": {
+			"label": "Enable todo list tool",
+			"description": "When enabled, Roo can create and manage todo lists to track task progress. This helps organize complex tasks into manageable steps."
 		}
 	},
 	"experimental": {
@@ -600,6 +681,10 @@
 		"MULTI_FILE_APPLY_DIFF": {
 			"name": "Enable concurrent file edits",
 			"description": "When enabled, Roo can edit multiple files in a single request. When disabled, Roo must edit files one at a time. Disabling this can help when working with less capable models or when you want more control over file modifications."
+		},
+		"PREVENT_FOCUS_DISRUPTION": {
+			"name": "Background editing",
+			"description": "Prevent editor focus disruption when enabled. File edits happen in the background without opening diff views or stealing focus. You can continue working uninterrupted while Roo makes changes. Files can be opened without focus to capture diagnostics or kept closed entirely."
 		}
 	},
 	"promptCaching": {
@@ -707,5 +792,8 @@
 		"useCustomArn": "Use custom ARN..."
 	},
 	"includeMaxOutputTokens": "Include max output tokens",
-	"includeMaxOutputTokensDescription": "Send max output tokens parameter in API requests. Some providers may not support this."
+	"includeMaxOutputTokensDescription": "Send max output tokens parameter in API requests. Some providers may not support this.",
+	"limitMaxTokensDescription": "Limit the maximum number of tokens in the response",
+	"maxOutputTokensLabel": "Max output tokens",
+	"maxTokensGenerateDescription": "Maximum tokens to generate in response"
 }

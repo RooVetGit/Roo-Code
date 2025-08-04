@@ -28,9 +28,13 @@ const mockClineProvider = {
 			globalStorageUri: { fsPath: "/mock/global/storage" },
 		},
 		setValue: vi.fn(),
+		getValue: vi.fn(),
 	},
 	log: vi.fn(),
 	postStateToWebview: vi.fn(),
+	getCurrentCline: vi.fn(),
+	getTaskWithId: vi.fn(),
+	initClineWithHistoryItem: vi.fn(),
 } as unknown as ClineProvider
 
 import { t } from "../../../i18n"
@@ -89,6 +93,48 @@ import type { ModeConfig } from "@roo-code/types"
 vi.mock("../../../utils/fs")
 vi.mock("../../../utils/path")
 vi.mock("../../../utils/globalContext")
+
+describe("webviewMessageHandler - requestLmStudioModels", () => {
+	beforeEach(() => {
+		vi.clearAllMocks()
+		mockClineProvider.getState = vi.fn().mockResolvedValue({
+			apiConfiguration: {
+				lmStudioModelId: "model-1",
+				lmStudioBaseUrl: "http://localhost:1234",
+			},
+		})
+	})
+
+	it("successfully fetches models from LMStudio", async () => {
+		const mockModels: ModelRecord = {
+			"model-1": {
+				maxTokens: 4096,
+				contextWindow: 8192,
+				supportsPromptCache: false,
+				description: "Test model 1",
+			},
+			"model-2": {
+				maxTokens: 8192,
+				contextWindow: 16384,
+				supportsPromptCache: false,
+				description: "Test model 2",
+			},
+		}
+
+		mockGetModels.mockResolvedValue(mockModels)
+
+		await webviewMessageHandler(mockClineProvider, {
+			type: "requestLmStudioModels",
+		})
+
+		expect(mockGetModels).toHaveBeenCalledWith({ provider: "lmstudio", baseUrl: "http://localhost:1234" })
+
+		expect(mockClineProvider.postMessageToWebview).toHaveBeenCalledWith({
+			type: "lmStudioModels",
+			lmStudioModels: mockModels,
+		})
+	})
+})
 
 describe("webviewMessageHandler - requestRouterModels", () => {
 	beforeEach(() => {
@@ -480,5 +526,53 @@ describe("webviewMessageHandler - deleteCustomMode", () => {
 		)
 		// No error response is sent anymore - we just continue with deletion
 		expect(mockClineProvider.postMessageToWebview).not.toHaveBeenCalled()
+	})
+})
+
+describe("webviewMessageHandler - message dialog preferences", () => {
+	beforeEach(() => {
+		vi.clearAllMocks()
+		// Mock a current Cline instance
+		vi.mocked(mockClineProvider.getCurrentCline).mockReturnValue({
+			taskId: "test-task-id",
+			apiConversationHistory: [],
+			clineMessages: [],
+		} as any)
+		// Reset getValue mock
+		vi.mocked(mockClineProvider.contextProxy.getValue).mockReturnValue(false)
+	})
+
+	describe("deleteMessage", () => {
+		it("should always show dialog for delete confirmation", async () => {
+			vi.mocked(mockClineProvider.getCurrentCline).mockReturnValue({} as any) // Mock current cline exists
+
+			await webviewMessageHandler(mockClineProvider, {
+				type: "deleteMessage",
+				value: 123456789, // Changed from messageTs to value
+			})
+
+			expect(mockClineProvider.postMessageToWebview).toHaveBeenCalledWith({
+				type: "showDeleteMessageDialog",
+				messageTs: 123456789,
+			})
+		})
+	})
+
+	describe("submitEditedMessage", () => {
+		it("should always show dialog for edit confirmation", async () => {
+			vi.mocked(mockClineProvider.getCurrentCline).mockReturnValue({} as any) // Mock current cline exists
+
+			await webviewMessageHandler(mockClineProvider, {
+				type: "submitEditedMessage",
+				value: 123456789, // messageTs as number
+				editedMessageContent: "edited content", // text content in editedMessageContent field
+			})
+
+			expect(mockClineProvider.postMessageToWebview).toHaveBeenCalledWith({
+				type: "showEditMessageDialog",
+				messageTs: 123456789,
+				text: "edited content",
+			})
+		})
 	})
 })

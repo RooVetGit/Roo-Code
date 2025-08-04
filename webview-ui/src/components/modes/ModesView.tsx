@@ -48,6 +48,7 @@ import {
 	StandardTooltip,
 } from "@src/components/ui"
 import { DeleteModeDialog } from "@src/components/modes/DeleteModeDialog"
+import { useEscapeKey } from "@src/hooks/useEscapeKey"
 
 // Get all available groups that should show in prompts view
 const availableGroups = (Object.keys(TOOL_GROUPS) as ToolGroup[]).filter((group) => !TOOL_GROUPS[group].alwaysAvailable)
@@ -109,6 +110,10 @@ const ModesView = ({ onDone }: ModesViewProps) => {
 	const [open, setOpen] = useState(false)
 	const [searchValue, setSearchValue] = useState("")
 	const searchInputRef = useRef<HTMLInputElement>(null)
+
+	// Local state for mode name input to allow visual emptying
+	const [localModeName, setLocalModeName] = useState<string>("")
+	const [currentEditingModeSlug, setCurrentEditingModeSlug] = useState<string | null>(null)
 
 	// Direct update functions
 	const updateAgentPrompt = useCallback(
@@ -190,6 +195,9 @@ const ModesView = ({ onDone }: ModesViewProps) => {
 		}
 	}, [])
 
+	// Use the shared ESC key handler hook
+	useEscapeKey(open, () => setOpen(false))
+
 	// Handler for clearing search input
 	const onClearSearch = useCallback(() => {
 		setSearchValue("")
@@ -217,6 +225,14 @@ const ModesView = ({ onDone }: ModesViewProps) => {
 			checkRulesDirectory(currentMode.slug)
 		}
 	}, [getCurrentMode, checkRulesDirectory, hasRulesToExport])
+
+	// Reset local name state when mode changes
+	useEffect(() => {
+		if (currentEditingModeSlug && currentEditingModeSlug !== visualMode) {
+			setCurrentEditingModeSlug(null)
+			setLocalModeName("")
+		}
+	}, [visualMode, currentEditingModeSlug])
 
 	// Helper function to safely access mode properties
 	const getModeProperty = <T extends keyof ModeConfig>(
@@ -725,19 +741,36 @@ const ModesView = ({ onDone }: ModesViewProps) => {
 								<div className="flex gap-2">
 									<Input
 										type="text"
-										value={getModeProperty(findModeBySlug(visualMode, customModes), "name") ?? ""}
-										onChange={(e) => {
+										value={
+											currentEditingModeSlug === visualMode
+												? localModeName
+												: (getModeProperty(findModeBySlug(visualMode, customModes), "name") ??
+													"")
+										}
+										onFocus={() => {
 											const customMode = findModeBySlug(visualMode, customModes)
 											if (customMode) {
-												const newName = e.target.value.trim()
-												// Allow users to type freely, including emptying the field
-												// The backend validation will handle empty names and show errors
+												setCurrentEditingModeSlug(visualMode)
+												setLocalModeName(customMode.name)
+											}
+										}}
+										onChange={(e) => {
+											const newName = e.target.value
+											// Allow users to type freely, including emptying the field
+											// The backend validation will handle empty names and show errors
+											setLocalModeName(newName)
+										}}
+										onBlur={() => {
+											const customMode = findModeBySlug(visualMode, customModes)
+											if (customMode) {
 												updateCustomMode(visualMode, {
 													...customMode,
-													name: newName,
+													name: localModeName.trim(),
 													source: customMode.source || "global",
 												})
 											}
+											// Clear the editing state
+											setCurrentEditingModeSlug(null)
 										}}
 										className="w-full"
 									/>
