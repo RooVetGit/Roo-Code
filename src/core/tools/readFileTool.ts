@@ -626,7 +626,7 @@ export async function readFileTool(
 					updateFileResult(relPath, {
 						status: "error",
 						error: "File not found",
-						xmlContent: `<file><path>${relPath}</path><error>File not found: The requested file does not exist in the current workspace.</error></file>`,
+						xmlContent: "", // Empty to prevent duplicate error display
 					})
 				} else {
 					updateFileResult(relPath, {
@@ -731,7 +731,7 @@ export async function readFileTool(
 				updateFileResult(relPath, {
 					status: "error",
 					error: "File not found",
-					xmlContent: `<file><path>${relPath}</path><error>File not found: The requested file does not exist in the current workspace.</error></file>`,
+					xmlContent: "", // Empty to prevent duplicate error display
 				})
 			}
 		} else {
