@@ -1992,6 +1992,8 @@ export const webviewMessageHandler = async (
 					codebaseIndexEnabled: settings.codebaseIndexEnabled,
 					codebaseIndexQdrantUrl: settings.codebaseIndexQdrantUrl,
 					codebaseIndexValkeyUrl: settings.codebaseIndexValkeyUrl,
+					codebaseIndexValkeyUsername: settings.codebaseIndexValkeyUsername,
+					codebaseIndexValkeyPassword: settings.codebaseIndexValkeyPassword,
 					codebaseIndexEmbedderProvider: settings.codebaseIndexEmbedderProvider,
 					codebaseIndexEmbedderBaseUrl: settings.codebaseIndexEmbedderBaseUrl,
 					codebaseIndexEmbedderModelId: settings.codebaseIndexEmbedderModelId,

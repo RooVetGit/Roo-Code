@@ -35,6 +35,8 @@ export const codebaseIndexConfigSchema = z.object({
 	codebaseIndexOpenAiCompatibleBaseUrl: z.string().optional(),
 	codebaseIndexOpenAiCompatibleModelDimension: z.number().optional(),
 	codebaseIndexValkeyUrl: z.string().optional(),
+	codebaseIndexValkeyUsername: z.string().optional(),
+	codebaseIndexValkeyPassword: z.string().optional(),
 	searchProvider: z.string().optional(),
 })
 

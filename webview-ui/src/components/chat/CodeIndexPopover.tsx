@@ -73,11 +73,13 @@ interface LocalCodeIndexSettings {
 	codebaseIndexOpenAiCompatibleApiKey?: string
 	codebaseIndexGeminiApiKey?: string
 	codebaseIndexMistralApiKey?: string
+	codebaseIndexValkeyUsername?: string
+	codebaseIndexValkeyPassword?: string
 	searchProvider?: string
 }
 
 // Validation schema for codebase index settings
-const createValidationSchema = (provider: EmbedderProvider, t: any) => {
+const createValidationSchema = (provider: EmbedderProvider, searchProvider: SearchProvider, t: any) => {
 	const baseSchema = z.object({
 		codebaseIndexEnabled: z.boolean(),
 		codebaseIndexQdrantUrl: z
@@ -91,6 +93,14 @@ const createValidationSchema = (provider: EmbedderProvider, t: any) => {
 			.min(1, t("settings:codeIndex.valkeyUrlRequired"))
 			.url(t("settings:codeIndex.invalidValkeyUrl"))
 			.optional(),
+		codebaseIndexValkeyUsername:
+			searchProvider === "valkey"
+				? z.string().min(1, t("settings:codeIndex.valkeyUsernameRequired"))
+				: z.string().optional(),
+		codebaseIndexValkeyPassword:
+			searchProvider === "valkey"
+				? z.string().min(1, t("settings:codeIndex.valkeyPasswordRequired"))
+				: z.string().optional(),
 		searchProvider: z.string().optional(),
 	})
 
@@ -184,6 +194,8 @@ export const CodeIndexPopover: React.FC<CodeIndexPopoverProps> = ({
 		codebaseIndexOpenAiCompatibleApiKey: "",
 		codebaseIndexGeminiApiKey: "",
 		codebaseIndexMistralApiKey: "",
+		codebaseIndexValkeyUsername: "",
+		codebaseIndexValkeyPassword: "",
 		searchProvider: "",
 	})
 
@@ -220,6 +232,8 @@ export const CodeIndexPopover: React.FC<CodeIndexPopoverProps> = ({
 				codebaseIndexOpenAiCompatibleApiKey: "",
 				codebaseIndexGeminiApiKey: "",
 				codebaseIndexMistralApiKey: "",
+				codebaseIndexValkeyUsername: "",
+				codebaseIndexValkeyPassword: "",
 				searchProvider: codebaseIndexConfig.searchProvider,
 			}
 			setInitialSettings(settings)
@@ -315,6 +329,9 @@ export const CodeIndexPopover: React.FC<CodeIndexPopoverProps> = ({
 					if (!prev.codebaseIndexMistralApiKey || prev.codebaseIndexMistralApiKey === SECRET_PLACEHOLDER) {
 						updated.codebaseIndexMistralApiKey = secretStatus.hasMistralApiKey ? SECRET_PLACEHOLDER : ""
 					}
+					if (!prev.codebaseIndexValkeyPassword || prev.codebaseIndexValkeyPassword === SECRET_PLACEHOLDER) {
+						updated.codebaseIndexValkeyPassword = secretStatus.hasValkeyPassword ? SECRET_PLACEHOLDER : ""
+					}
 
 					return updated
 				}
@@ -379,7 +396,11 @@ export const CodeIndexPopover: React.FC<CodeIndexPopoverProps> = ({
 
 	// Validation function
 	const validateSettings = (): boolean => {
-		const schema = createValidationSchema(currentSettings.codebaseIndexEmbedderProvider, t)
+		const schema = createValidationSchema(
+			currentSettings.codebaseIndexEmbedderProvider,
+			currentSettings.searchProvider as SearchProvider,
+			t,
+		)
 
 		// Prepare data for validation
 		const dataToValidate: any = {}
@@ -391,7 +412,8 @@ export const CodeIndexPopover: React.FC<CodeIndexPopoverProps> = ({
 					key === "codeIndexOpenAiKey" ||
 					key === "codebaseIndexOpenAiCompatibleApiKey" ||
 					key === "codebaseIndexGeminiApiKey" ||
-					key === "codebaseIndexMistralApiKey"
+					key === "codebaseIndexMistralApiKey" ||
+					key === "codebaseIndexValkeyPassword"
 				) {
 					dataToValidate[key] = "placeholder-valid"
 				}
@@ -1126,6 +1148,47 @@ export const CodeIndexPopover: React.FC<CodeIndexPopoverProps> = ({
 												{formErrors.codebaseIndexValkeyUrl && (
 													<p className="text-xs text-vscode-errorForeground mt-1 mb-0">
 														{formErrors.codebaseIndexValkeyUrl}
+													</p>
+												)}
+											</div>
+											<div className="space-y-2">
+												<label className="text-sm font-medium">
+													{t("settings:codeIndex.valkeyUsernameLabel")}
+												</label>
+												<VSCodeTextField
+													value={currentSettings.codebaseIndexValkeyUsername || ""}
+													onInput={(e: any) =>
+														updateSetting("codebaseIndexValkeyUsername", e.target.value)
+													}
+													placeholder={t("settings:codeIndex.valkeyUsernamePlaceholder")}
+													className={cn("w-full", {
+														"border-red-500": formErrors.codebaseIndexValkeyUsername,
+													})}
+												/>
+												{formErrors.codebaseIndexValkeyUsername && (
+													<p className="text-xs text-vscode-errorForeground mt-1 mb-0">
+														{formErrors.codebaseIndexValkeyUsername}
+													</p>
+												)}
+											</div>
+											<div className="space-y-2">
+												<label className="text-sm font-medium">
+													{t("settings:codeIndex.valkeyPasswordLabel")}
+												</label>
+												<VSCodeTextField
+													type="password"
+													value={currentSettings.codebaseIndexValkeyPassword || ""}
+													onInput={(e: any) =>
+														updateSetting("codebaseIndexValkeyPassword", e.target.value)
+													}
+													placeholder={t("settings:codeIndex.valkeyPasswordPlaceholder")}
+													className={cn("w-full", {
+														"border-red-500": formErrors.codebaseIndexValkeyPassword,
+													})}
+												/>
+												{formErrors.codebaseIndexValkeyPassword && (
+													<p className="text-xs text-vscode-errorForeground mt-1 mb-0">
+														{formErrors.codebaseIndexValkeyPassword}
 													</p>
 												)}
 											</div>

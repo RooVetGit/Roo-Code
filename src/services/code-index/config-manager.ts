@@ -23,6 +23,8 @@ export class CodeIndexConfigManager {
 	private qdrantApiKey?: string
 	private searchProvider?: string
 	private valkeyUrl?: string = "http://localhost:6379"
+	private valkeyUsername?: string
+	private valkeyPassword?: string
 	private searchMinScore?: number
 	private searchMaxResults?: number
 
@@ -408,6 +410,8 @@ export class CodeIndexConfigManager {
 			qdrantApiKey: this.qdrantApiKey,
 			searchProvider: this.searchProvider,
 			valkeyUrl: this.valkeyUrl,
+			valkeyUsername: this.valkeyUsername,
+			valkeyPassword: this.valkeyPassword,
 			searchMinScore: this.currentSearchMinScore,
 			searchMaxResults: this.currentSearchMaxResults,
 		}
