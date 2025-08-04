@@ -49,7 +49,7 @@ export class ValkeySearchVectorStore implements IVectorStore {
 				console.error("[ValkeySearch] Connection error:", err)
 				this.isInitializing = false
 				throw new Error(
-					t("embeddings:vectorStore.valkeyConnectionFailed", {
+					t("embeddings:vectorStore.vectorError", {
 						valkeyUrl: this.valkeyUrl,
 						errorMessage: err,
 					}),
@@ -126,7 +126,7 @@ export class ValkeySearchVectorStore implements IVectorStore {
 			await this.client?.sendCommand(new Command("FT.DROPINDEX", [this.indexName, "DD"]))
 		} catch (error) {
 			if (!(error instanceof Error && error.message.includes("Unknown index name"))) {
-				throw new Error(t("embeddings:vectorStore.indexDropFailed"), { cause: error })
+				throw new Error(error.message, { cause: error })
 			}
 		}
 
@@ -135,7 +135,7 @@ export class ValkeySearchVectorStore implements IVectorStore {
 			await this._createPayloadIndexes()
 			return true
 		} catch (error) {
-			throw new Error(t("embeddings:vectorStore.indexCreationFailed"), { cause: error })
+			throw new Error(error.message, { cause: error })
 		}
 	}
 
