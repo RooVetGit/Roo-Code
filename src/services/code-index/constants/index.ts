@@ -4,7 +4,11 @@ import { CODEBASE_INDEX_DEFAULTS } from "@roo-code/types"
 export const MAX_BLOCK_CHARS = 1000
 export const MIN_BLOCK_CHARS = 50
 export const MIN_CHUNK_REMAINDER_CHARS = 200 // Minimum characters for the *next* chunk after a split
+<<<<<<< HEAD
 export const MAX_CHARS_TOLERANCE_FACTOR = 1.08 // 15% tolerance for max chars
+=======
+export const MAX_CHARS_TOLERANCE_FACTOR = 1.08 // 8% 15 tolerance for max chars
+>>>>>>> quant
 /**Search */
 export const DEFAULT_SEARCH_MIN_SCORE = CODEBASE_INDEX_DEFAULTS.DEFAULT_SEARCH_MIN_SCORE
 export const DEFAULT_MAX_SEARCH_RESULTS = CODEBASE_INDEX_DEFAULTS.DEFAULT_SEARCH_RESULTS
@@ -16,8 +20,13 @@ export const MAX_FILE_SIZE_BYTES = 1 * 1024 * 1024 // 1MB
 /**Directory Scanner */
 export const MAX_LIST_FILES_LIMIT_CODE_INDEX = 10_000
 export const BATCH_SEGMENT_THRESHOLD = 8 // 60 Number of code segments to batch for embeddings/upserts
+<<<<<<< HEAD
 export const MAX_BATCH_RETRIES = 3
 export const INITIAL_RETRY_DELAY_MS = 500
+=======
+export const MAX_BATCH_RETRIES = 5
+export const INITIAL_RETRY_DELAY_MS = 600
+>>>>>>> quant
 export const PARSING_CONCURRENCY = 10
 export const MAX_PENDING_BATCHES = 20 // Maximum number of batches to accumulate before waiting
 
