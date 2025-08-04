@@ -67,5 +67,7 @@
 		"editMessage": "Chỉnh Sửa Tin Nhắn",
 		"editWarning": "Chỉnh sửa tin nhắn này sẽ xóa tất cả các tin nhắn tiếp theo trong cuộc trò chuyện. Bạn có muốn tiếp tục không?",
 		"proceed": "Tiếp Tục"
-	}
+	},
+	"comingSoon": "Coming Soon",
+	"optional": "optional"
 }

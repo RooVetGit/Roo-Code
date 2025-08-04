@@ -115,7 +115,11 @@
 			"mistralApiKeyRequired": "Cần có khóa API của Mistral",
 			"ollamaBaseUrlRequired": "Yêu cầu URL cơ sở Ollama",
 			"baseUrlRequired": "Yêu cầu URL cơ sở",
-			"modelDimensionMinValue": "Kích thước mô hình phải lớn hơn 0"
+			"modelDimensionMinValue": "Kích thước mô hình phải lớn hơn 0",
+			"invalidRerankerUrl": "Please enter a valid URL for the reranker service",
+			"rerankerUrlRequired": "Reranker URL is required when using local provider",
+			"rerankerApiKeyRequired": "API key is required for this reranker provider",
+			"rerankerModelRequired": "Reranker model is required"
 		},
 		"advancedConfigLabel": "Cấu hình nâng cao",
 		"searchMinScoreLabel": "Ngưỡng điểm tìm kiếm",
@@ -123,11 +127,38 @@
 		"searchMinScoreResetTooltip": "Đặt lại về giá trị mặc định (0.4)",
 		"searchMaxResultsLabel": "Số Kết Quả Tìm Kiếm Tối Đa",
 		"searchMaxResultsDescription": "Số lượng kết quả tìm kiếm tối đa được trả về khi truy vấn chỉ mục cơ sở mã. Giá trị cao hơn cung cấp nhiều ngữ cảnh hơn nhưng có thể bao gồm các kết quả ít liên quan hơn.",
-		"resetToDefault": "Đặt lại về mặc định"
+		"resetToDefault": "Đặt lại về mặc định",
+		"rerankerConfigLabel": "Search Enhancement (Reranking)",
+		"newFeatureBadge": "New",
+		"enableRerankerLabel": "Enable reranking",
+		"enableRerankerDescription": "Use AI models to re-score search results for better relevance",
+		"rerankerProviderLabel": "Reranker Provider",
+		"rerankerProviders": {
+			"local": "Local (Self-hosted)",
+			"cohere": "Cohere",
+			"openai": "OpenAI",
+			"custom": "Custom"
+		},
+		"rerankerUrlLabel": "Reranker Service URL",
+		"rerankerModelLabel": "Reranker Model",
+		"rerankerModelDescription": "Specify the reranker model to use. Leave empty to use the default model for your provider.",
+		"rerankerModelHelperText": "Common models: ms-marco-MiniLM-L-6-v2, ms-marco-TinyBERT-L-2-v2, cross-encoder/ms-marco-electra-base",
+		"rerankerRecommended": "Recommended",
+		"rerankerFaster": "Faster",
+		"rerankerMoreAccurate": "More Accurate",
+		"rerankerApiKeyLabel": "API Key",
+		"rerankerApiKeyPlaceholder": "Enter API key for reranker service",
+		"rerankerProviderComingSoon": "This reranker provider is coming soon. Please use the local provider for now.",
+		"advancedRerankerSettings": "Advanced Settings",
+		"rerankerTopNLabel": "Candidates to rerank",
+		"rerankerTopNDescription": "Number of initial search results to send for reranking (higher = more accurate but slower)",
+		"rerankerTopKLabel": "Results to return",
+		"rerankerTopKDescription": "Number of final reranked results to return",
+		"rerankerTimeoutLabel": "Timeout",
+		"rerankerTimeoutDescription": "Maximum time to wait for reranking response"
 	},
 	"autoApprove": {
 		"description": "Cho phép Roo tự động thực hiện các hoạt động mà không cần phê duyệt. Chỉ bật những cài đặt này nếu bạn hoàn toàn tin tưởng AI và hiểu rõ các rủi ro bảo mật liên quan.",
-		"enabled": "Phê duyệt tự động đã bật",
 		"toggleAriaLabel": "Chuyển đổi tự động phê duyệt",
 		"disabledAriaLabel": "Tự động phê duyệt bị vô hiệu hóa - hãy chọn các tùy chọn trước",
 		"readOnly": {
@@ -205,7 +236,8 @@
 		},
 		"maxLimits": {
 			"description": "Tự động thực hiện các yêu cầu lên đến các giới hạn này trước khi xin phê duyệt để tiếp tục."
-		}
+		},
+		"enabled": "Auto-Approve Enabled"
 	},
 	"providers": {
 		"providerDocumentation": "Tài liệu {{provider}}",

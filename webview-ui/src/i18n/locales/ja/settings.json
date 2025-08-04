@@ -115,7 +115,11 @@
 			"mistralApiKeyRequired": "Mistral APIキーが必要です",
 			"ollamaBaseUrlRequired": "OllamaのベースURLが必要です",
 			"baseUrlRequired": "ベースURLが必要です",
-			"modelDimensionMinValue": "モデルの次元は0より大きくなければなりません"
+			"modelDimensionMinValue": "モデルの次元は0より大きくなければなりません",
+			"invalidRerankerUrl": "Please enter a valid URL for the reranker service",
+			"rerankerUrlRequired": "Reranker URL is required when using local provider",
+			"rerankerApiKeyRequired": "API key is required for this reranker provider",
+			"rerankerModelRequired": "Reranker model is required"
 		},
 		"advancedConfigLabel": "詳細設定",
 		"searchMinScoreLabel": "検索スコアのしきい値",
@@ -123,11 +127,38 @@
 		"searchMinScoreResetTooltip": "デフォルト値（0.4）にリセット",
 		"searchMaxResultsLabel": "最大検索結果数",
 		"searchMaxResultsDescription": "コードベースインデックスをクエリする際に返される検索結果の最大数。値を高くするとより多くのコンテキストが提供されますが、関連性の低い結果が含まれる可能性があります。",
-		"resetToDefault": "デフォルトにリセット"
+		"resetToDefault": "デフォルトにリセット",
+		"rerankerConfigLabel": "Search Enhancement (Reranking)",
+		"newFeatureBadge": "New",
+		"enableRerankerLabel": "Enable reranking",
+		"enableRerankerDescription": "Use AI models to re-score search results for better relevance",
+		"rerankerProviderLabel": "Reranker Provider",
+		"rerankerProviders": {
+			"local": "Local (Self-hosted)",
+			"cohere": "Cohere",
+			"openai": "OpenAI",
+			"custom": "Custom"
+		},
+		"rerankerUrlLabel": "Reranker Service URL",
+		"rerankerModelLabel": "Reranker Model",
+		"rerankerModelDescription": "Specify the reranker model to use. Leave empty to use the default model for your provider.",
+		"rerankerModelHelperText": "Common models: ms-marco-MiniLM-L-6-v2, ms-marco-TinyBERT-L-2-v2, cross-encoder/ms-marco-electra-base",
+		"rerankerRecommended": "Recommended",
+		"rerankerFaster": "Faster",
+		"rerankerMoreAccurate": "More Accurate",
+		"rerankerApiKeyLabel": "API Key",
+		"rerankerApiKeyPlaceholder": "Enter API key for reranker service",
+		"rerankerProviderComingSoon": "This reranker provider is coming soon. Please use the local provider for now.",
+		"advancedRerankerSettings": "Advanced Settings",
+		"rerankerTopNLabel": "Candidates to rerank",
+		"rerankerTopNDescription": "Number of initial search results to send for reranking (higher = more accurate but slower)",
+		"rerankerTopKLabel": "Results to return",
+		"rerankerTopKDescription": "Number of final reranked results to return",
+		"rerankerTimeoutLabel": "Timeout",
+		"rerankerTimeoutDescription": "Maximum time to wait for reranking response"
 	},
 	"autoApprove": {
 		"description": "Rooが承認なしで自動的に操作を実行できるようにします。AIを完全に信頼し、関連するセキュリティリスクを理解している場合にのみ、これらの設定を有効にしてください。",
-		"enabled": "自動承認が有効",
 		"toggleAriaLabel": "自動承認の切り替え",
 		"disabledAriaLabel": "自動承認が無効です - 最初にオプションを選択してください",
 		"readOnly": {
@@ -205,7 +236,8 @@
 		},
 		"maxLimits": {
 			"description": "これらの上限まで自動的にリクエストを行い、その後継続の承認を求めます。"
-		}
+		},
+		"enabled": "Auto-Approve Enabled"
 	},
 	"providers": {
 		"providerDocumentation": "{{provider}}のドキュメント",

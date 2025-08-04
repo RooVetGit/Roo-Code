@@ -67,5 +67,7 @@
 		"editMessage": "Bericht Bewerken",
 		"editWarning": "Het bewerken van dit bericht zal alle volgende berichten in het gesprek verwijderen. Wil je doorgaan?",
 		"proceed": "Doorgaan"
-	}
+	},
+	"comingSoon": "Coming Soon",
+	"optional": "optional"
 }

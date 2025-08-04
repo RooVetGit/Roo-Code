@@ -1748,6 +1748,14 @@ export class ClineProvider
 				codebaseIndexOpenAiCompatibleBaseUrl: codebaseIndexConfig?.codebaseIndexOpenAiCompatibleBaseUrl,
 				codebaseIndexSearchMaxResults: codebaseIndexConfig?.codebaseIndexSearchMaxResults,
 				codebaseIndexSearchMinScore: codebaseIndexConfig?.codebaseIndexSearchMinScore,
+				// Reranker settings
+				codebaseIndexRerankerEnabled: codebaseIndexConfig?.codebaseIndexRerankerEnabled ?? false,
+				codebaseIndexRerankerProvider: codebaseIndexConfig?.codebaseIndexRerankerProvider ?? "local",
+				codebaseIndexRerankerUrl: codebaseIndexConfig?.codebaseIndexRerankerUrl ?? "http://localhost:8003",
+				codebaseIndexRerankerModel: codebaseIndexConfig?.codebaseIndexRerankerModel ?? "Qwen/Qwen3-Reranker-8B",
+				codebaseIndexRerankerTopN: codebaseIndexConfig?.codebaseIndexRerankerTopN ?? 100,
+				codebaseIndexRerankerTopK: codebaseIndexConfig?.codebaseIndexRerankerTopK ?? 20,
+				codebaseIndexRerankerTimeout: codebaseIndexConfig?.codebaseIndexRerankerTimeout ?? 10000,
 			},
 			mdmCompliant: this.checkMdmCompliance(),
 			profileThresholds: profileThresholds ?? {},
@@ -1938,6 +1946,17 @@ export class ClineProvider
 					stateValues.codebaseIndexConfig?.codebaseIndexOpenAiCompatibleBaseUrl,
 				codebaseIndexSearchMaxResults: stateValues.codebaseIndexConfig?.codebaseIndexSearchMaxResults,
 				codebaseIndexSearchMinScore: stateValues.codebaseIndexConfig?.codebaseIndexSearchMinScore,
+				// Reranker settings
+				codebaseIndexRerankerEnabled: stateValues.codebaseIndexConfig?.codebaseIndexRerankerEnabled ?? false,
+				codebaseIndexRerankerProvider:
+					stateValues.codebaseIndexConfig?.codebaseIndexRerankerProvider ?? "local",
+				codebaseIndexRerankerUrl:
+					stateValues.codebaseIndexConfig?.codebaseIndexRerankerUrl ?? "http://localhost:8003",
+				codebaseIndexRerankerModel:
+					stateValues.codebaseIndexConfig?.codebaseIndexRerankerModel ?? "Qwen/Qwen3-Reranker-8B",
+				codebaseIndexRerankerTopN: stateValues.codebaseIndexConfig?.codebaseIndexRerankerTopN ?? 100,
+				codebaseIndexRerankerTopK: stateValues.codebaseIndexConfig?.codebaseIndexRerankerTopK ?? 20,
+				codebaseIndexRerankerTimeout: stateValues.codebaseIndexConfig?.codebaseIndexRerankerTimeout ?? 10000,
 			},
 			profileThresholds: stateValues.profileThresholds ?? {},
 			// Add diagnostic message settings

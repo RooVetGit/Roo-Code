@@ -67,5 +67,7 @@
 		"editMessage": "メッセージを編集",
 		"editWarning": "このメッセージを編集すると、会話内の後続のメッセージもすべて削除されます。続行しますか？",
 		"proceed": "続行"
-	}
+	},
+	"comingSoon": "Coming Soon",
+	"optional": "optional"
 }

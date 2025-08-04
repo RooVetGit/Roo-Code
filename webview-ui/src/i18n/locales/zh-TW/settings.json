@@ -115,7 +115,12 @@
 			"mistralApiKeyRequired": "需要 Mistral API 金鑰",
 			"ollamaBaseUrlRequired": "需要 Ollama 基礎 URL",
 			"baseUrlRequired": "需要基礎 URL",
-			"modelDimensionMinValue": "模型維度必須大於 0"
+			"modelDimensionMinValue": "模型維度必須大於 0",
+			"invalidRerankerUrl": "請輸入有效的重排序服務 URL",
+			"rerankerUrlRequired": "使用本地提供商時需要重排序服務 URL",
+			"rerankerApiKeyRequired": "此重排序提供商需要 API 金鑰",
+			"rerankerModelRequired": "需要重排序模型",
+			"rerankerUrlMustBeHttps": "重排序服務 URL 必須使用 HTTPS 以確保 API 金鑰傳輸安全（本地主機除外）"
 		},
 		"advancedConfigLabel": "進階設定",
 		"searchMinScoreLabel": "搜尋分數閾值",
@@ -123,11 +128,38 @@
 		"searchMinScoreResetTooltip": "重設為預設值 (0.4)",
 		"searchMaxResultsLabel": "最大搜尋結果數",
 		"searchMaxResultsDescription": "查詢程式碼庫索引時傳回的最大搜尋結果數。較高的值提供更多上下文，但可能包含相關性較低的結果。",
-		"resetToDefault": "重設為預設值"
+		"resetToDefault": "重設為預設值",
+		"rerankerConfigLabel": "搜尋增強（重排序）",
+		"newFeatureBadge": "新功能",
+		"enableRerankerLabel": "啟用重排序",
+		"enableRerankerDescription": "使用 AI 模型重新評分搜尋結果以獲得更好的相關性",
+		"rerankerProviderLabel": "重排序提供商",
+		"rerankerProviders": {
+			"local": "本地（自託管）",
+			"cohere": "Cohere",
+			"openai": "OpenAI",
+			"custom": "自訂"
+		},
+		"rerankerUrlLabel": "重排序服務 URL",
+		"rerankerModelLabel": "重排序模型",
+		"rerankerModelDescription": "指定要使用的重排序模型。留空將使用提供商的預設模型。",
+		"rerankerModelHelperText": "常用模型：ms-marco-MiniLM-L-6-v2, ms-marco-TinyBERT-L-2-v2, cross-encoder/ms-marco-electra-base",
+		"rerankerRecommended": "推薦",
+		"rerankerFaster": "更快",
+		"rerankerMoreAccurate": "更準確",
+		"rerankerApiKeyLabel": "API 金鑰",
+		"rerankerApiKeyPlaceholder": "輸入重排序服務的 API 金鑰",
+		"rerankerProviderComingSoon": "此重排序提供商即將推出。目前請使用本地提供商。",
+		"advancedRerankerSettings": "進階設定",
+		"rerankerTopNLabel": "重排序候選數",
+		"rerankerTopNDescription": "傳送進行重排序的初始搜尋結果數（更高 = 更準確但更慢）",
+		"rerankerTopKLabel": "傳回結果數",
+		"rerankerTopKDescription": "傳回的最終重排序結果數",
+		"rerankerTimeoutLabel": "逾時",
+		"rerankerTimeoutDescription": "等待重排序回應的最長時間"
 	},
 	"autoApprove": {
 		"description": "允許 Roo 無需核准即執行操作。僅在您完全信任 AI 並了解相關安全風險時啟用這些設定。",
-		"enabled": "自動核准已啟用",
 		"toggleAriaLabel": "切換自動核准",
 		"disabledAriaLabel": "自動核准已停用 - 請先選取選項",
 		"readOnly": {
@@ -205,7 +237,8 @@
 		},
 		"maxLimits": {
 			"description": "在请求获得继续操作的批准前，自动发送请求直至达到这些限制。"
-		}
+		},
+		"enabled": "Auto-Approve Enabled"
 	},
 	"providers": {
 		"providerDocumentation": "{{provider}} 文件",

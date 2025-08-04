@@ -1,5 +1,6 @@
 import { ApiHandlerOptions } from "../../../shared/api" // Adjust path if needed
 import { EmbedderProvider } from "./manager"
+import { RerankerConfig } from "./reranker"
 
 /**
  * Configuration state for the code indexing feature
@@ -18,6 +19,7 @@ export interface CodeIndexConfig {
 	qdrantApiKey?: string
 	searchMinScore?: number
 	searchMaxResults?: number
+	rerankerConfig?: RerankerConfig
 }
 
 /**
@@ -37,4 +39,9 @@ export type PreviousConfigSnapshot = {
 	mistralApiKey?: string
 	qdrantUrl?: string
 	qdrantApiKey?: string
+	rerankerEnabled?: boolean
+	rerankerProvider?: string
+	rerankerUrl?: string
+	rerankerModel?: string
+	rerankerApiKey?: string
 }

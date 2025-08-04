@@ -1,0 +1,65 @@
+version: '3.8'
+
+services:
+  reranker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: code-reranker
+    ports:
+      - "8080:8080"
+    environment:
+      # Model configuration
+      - MODEL_NAME=cross-encoder/ms-marco-MiniLM-L-6-v2
+      - MODEL_CACHE_DIR=/app/.cache/models
+      
+      # API configuration
+      - API_HOST=0.0.0.0
+      - API_PORT=8080
+      - API_WORKERS=1
+      
+      # Performance configuration
+      - REQUEST_TIMEOUT=30
+      - BATCH_SIZE=32
+      
+      # Logging
+      - LOG_LEVEL=INFO
+      
+      # CORS configuration
+      - CORS_ORIGINS=http://localhost:*,http://127.0.0.1:*
+      
+      # Device configuration (set to true to force CPU usage)
+      - FORCE_CPU=false
+      
+      # Model warmup
+      - WARMUP_ON_START=true
+      
+    volumes:
+      # Mount model cache to persist downloaded models
+      - model-cache:/app/.cache/models
+      
+      # For development: mount source code
+      - ./app.py:/app/app.py:ro
+      - ./models:/app/models:ro
+      - ./config.py:/app/config.py:ro
+      
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+      
+    restart: unless-stopped
+    
+    # Resource limits
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+        reservations:
+          memory: 1G
+
+volumes:
+  model-cache:
+    driver: local

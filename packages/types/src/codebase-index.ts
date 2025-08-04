@@ -34,6 +34,14 @@ export const codebaseIndexConfigSchema = z.object({
 	// OpenAI Compatible specific fields
 	codebaseIndexOpenAiCompatibleBaseUrl: z.string().optional(),
 	codebaseIndexOpenAiCompatibleModelDimension: z.number().optional(),
+	// Reranker configuration
+	codebaseIndexRerankerEnabled: z.boolean().optional(),
+	codebaseIndexRerankerProvider: z.enum(["local", "cohere", "openai", "custom"]).optional(),
+	codebaseIndexRerankerUrl: z.string().optional(),
+	codebaseIndexRerankerModel: z.string().optional(),
+	codebaseIndexRerankerTopN: z.number().min(10).max(500).optional(),
+	codebaseIndexRerankerTopK: z.number().min(5).max(100).optional(),
+	codebaseIndexRerankerTimeout: z.number().min(1000).max(30000).optional(),
 })
 
 export type CodebaseIndexConfig = z.infer<typeof codebaseIndexConfigSchema>
@@ -64,6 +72,7 @@ export const codebaseIndexProviderSchema = z.object({
 	codebaseIndexOpenAiCompatibleModelDimension: z.number().optional(),
 	codebaseIndexGeminiApiKey: z.string().optional(),
 	codebaseIndexMistralApiKey: z.string().optional(),
+	codebaseIndexRerankerApiKey: z.string().optional(),
 })
 
 export type CodebaseIndexProvider = z.infer<typeof codebaseIndexProviderSchema>

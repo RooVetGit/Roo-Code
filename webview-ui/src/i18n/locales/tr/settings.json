@@ -115,7 +115,11 @@
 			"mistralApiKeyRequired": "Mistral API anahtarı gereklidir",
 			"ollamaBaseUrlRequired": "Ollama temel URL'si gereklidir",
 			"baseUrlRequired": "Temel URL'si gereklidir",
-			"modelDimensionMinValue": "Model boyutu 0'dan büyük olmalıdır"
+			"modelDimensionMinValue": "Model boyutu 0'dan büyük olmalıdır",
+			"invalidRerankerUrl": "Please enter a valid URL for the reranker service",
+			"rerankerUrlRequired": "Reranker URL is required when using local provider",
+			"rerankerApiKeyRequired": "API key is required for this reranker provider",
+			"rerankerModelRequired": "Reranker model is required"
 		},
 		"advancedConfigLabel": "Gelişmiş Yapılandırma",
 		"searchMinScoreLabel": "Arama Skoru Eşiği",
@@ -123,11 +127,38 @@
 		"searchMinScoreResetTooltip": "Varsayılan değere sıfırla (0.4)",
 		"searchMaxResultsLabel": "Maksimum Arama Sonuçları",
 		"searchMaxResultsDescription": "Kod tabanı dizinini sorgularken döndürülecek maksimum arama sonucu sayısı. Daha yüksek değerler daha fazla bağlam sağlar ancak daha az alakalı sonuçlar içerebilir.",
-		"resetToDefault": "Varsayılana sıfırla"
+		"resetToDefault": "Varsayılana sıfırla",
+		"rerankerConfigLabel": "Search Enhancement (Reranking)",
+		"newFeatureBadge": "New",
+		"enableRerankerLabel": "Enable reranking",
+		"enableRerankerDescription": "Use AI models to re-score search results for better relevance",
+		"rerankerProviderLabel": "Reranker Provider",
+		"rerankerProviders": {
+			"local": "Local (Self-hosted)",
+			"cohere": "Cohere",
+			"openai": "OpenAI",
+			"custom": "Custom"
+		},
+		"rerankerUrlLabel": "Reranker Service URL",
+		"rerankerModelLabel": "Reranker Model",
+		"rerankerModelDescription": "Specify the reranker model to use. Leave empty to use the default model for your provider.",
+		"rerankerModelHelperText": "Common models: ms-marco-MiniLM-L-6-v2, ms-marco-TinyBERT-L-2-v2, cross-encoder/ms-marco-electra-base",
+		"rerankerRecommended": "Recommended",
+		"rerankerFaster": "Faster",
+		"rerankerMoreAccurate": "More Accurate",
+		"rerankerApiKeyLabel": "API Key",
+		"rerankerApiKeyPlaceholder": "Enter API key for reranker service",
+		"rerankerProviderComingSoon": "This reranker provider is coming soon. Please use the local provider for now.",
+		"advancedRerankerSettings": "Advanced Settings",
+		"rerankerTopNLabel": "Candidates to rerank",
+		"rerankerTopNDescription": "Number of initial search results to send for reranking (higher = more accurate but slower)",
+		"rerankerTopKLabel": "Results to return",
+		"rerankerTopKDescription": "Number of final reranked results to return",
+		"rerankerTimeoutLabel": "Timeout",
+		"rerankerTimeoutDescription": "Maximum time to wait for reranking response"
 	},
 	"autoApprove": {
 		"description": "Roo'nun onay gerektirmeden otomatik olarak işlemler gerçekleştirmesine izin verin. Bu ayarları yalnızca yapay zekaya tamamen güveniyorsanız ve ilgili güvenlik risklerini anlıyorsanız etkinleştirin.",
-		"enabled": "Oto-onay etkinleştirildi",
 		"toggleAriaLabel": "Otomatik onayı değiştir",
 		"disabledAriaLabel": "Otomatik onay devre dışı - önce seçenekleri belirleyin",
 		"readOnly": {
@@ -205,7 +236,8 @@
 		},
 		"maxLimits": {
 			"description": "Bu sınırlara ulaşana kadar otomatik olarak istekleri yap, sonrasında devam etmek için onay iste."
-		}
+		},
+		"enabled": "Auto-Approve Enabled"
 	},
 	"providers": {
 		"providerDocumentation": "{{provider}} Dokümantasyonu",

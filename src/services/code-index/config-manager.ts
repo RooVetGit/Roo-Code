@@ -2,6 +2,7 @@ import { ApiHandlerOptions } from "../../shared/api"
 import { ContextProxy } from "../../core/config/ContextProxy"
 import { EmbedderProvider } from "./interfaces/manager"
 import { CodeIndexConfig, PreviousConfigSnapshot } from "./interfaces/config"
+import { RerankerConfig, RerankerProvider } from "./interfaces/reranker"
 import { DEFAULT_SEARCH_MIN_SCORE, DEFAULT_MAX_SEARCH_RESULTS } from "./constants"
 import { getDefaultModelId, getModelDimension, getModelScoreThreshold } from "../../shared/embeddingModels"
 
@@ -23,6 +24,16 @@ export class CodeIndexConfigManager {
 	private qdrantApiKey?: string
 	private searchMinScore?: number
 	private searchMaxResults?: number
+
+	// Reranker configuration
+	private rerankerEnabled: boolean = false
+	private rerankerProvider: RerankerProvider = "local"
+	private rerankerUrl?: string
+	private rerankerModel?: string
+	private rerankerTimeout: number = 10000
+	private rerankerApiKey?: string
+	private _rerankerTopN: number = 100
+	private _rerankerTopK: number = 20
 
 	constructor(private readonly contextProxy: ContextProxy) {
 		// Initialize with current configuration to avoid false restart triggers
@@ -50,6 +61,14 @@ export class CodeIndexConfigManager {
 			codebaseIndexEmbedderModelId: "",
 			codebaseIndexSearchMinScore: undefined,
 			codebaseIndexSearchMaxResults: undefined,
+			// Reranker defaults
+			codebaseIndexRerankerEnabled: false,
+			codebaseIndexRerankerProvider: "local",
+			codebaseIndexRerankerUrl: "http://localhost:8003",
+			codebaseIndexRerankerModel: "Qwen/Qwen3-Reranker-8B",
+			codebaseIndexRerankerTopN: 100,
+			codebaseIndexRerankerTopK: 20,
+			codebaseIndexRerankerTimeout: 10000,
 		}
 
 		const {
@@ -60,6 +79,14 @@ export class CodeIndexConfigManager {
 			codebaseIndexEmbedderModelId,
 			codebaseIndexSearchMinScore,
 			codebaseIndexSearchMaxResults,
+			// Reranker settings
+			codebaseIndexRerankerEnabled,
+			codebaseIndexRerankerProvider,
+			codebaseIndexRerankerUrl,
+			codebaseIndexRerankerModel,
+			codebaseIndexRerankerTopN,
+			codebaseIndexRerankerTopK,
+			codebaseIndexRerankerTimeout,
 		} = codebaseIndexConfig
 
 		const openAiKey = this.contextProxy?.getSecret("codeIndexOpenAiKey") ?? ""
@@ -69,6 +96,7 @@ export class CodeIndexConfigManager {
 		const openAiCompatibleApiKey = this.contextProxy?.getSecret("codebaseIndexOpenAiCompatibleApiKey") ?? ""
 		const geminiApiKey = this.contextProxy?.getSecret("codebaseIndexGeminiApiKey") ?? ""
 		const mistralApiKey = this.contextProxy?.getSecret("codebaseIndexMistralApiKey") ?? ""
+		const rerankerApiKey = this.contextProxy?.getSecret("codebaseIndexRerankerApiKey") ?? ""
 
 		// Update instance variables with configuration
 		this.codebaseIndexEnabled = codebaseIndexEnabled ?? true
@@ -76,6 +104,18 @@ export class CodeIndexConfigManager {
 		this.qdrantApiKey = qdrantApiKey ?? ""
 		this.searchMinScore = codebaseIndexSearchMinScore
 		this.searchMaxResults = codebaseIndexSearchMaxResults
+
+		// Load reranker configuration
+		this.rerankerEnabled = codebaseIndexRerankerEnabled ?? false
+		this.rerankerProvider = codebaseIndexRerankerProvider ?? "local"
+		// Only apply defaults if the value is null or missing from config (not undefined)
+		this.rerankerUrl = codebaseIndexRerankerUrl !== undefined ? codebaseIndexRerankerUrl : "http://localhost:8003"
+		this.rerankerModel =
+			codebaseIndexRerankerModel !== undefined ? codebaseIndexRerankerModel : "Qwen/Qwen3-Reranker-8B"
+		this._rerankerTopN = codebaseIndexRerankerTopN ?? 100
+		this._rerankerTopK = codebaseIndexRerankerTopK ?? 20
+		this.rerankerTimeout = codebaseIndexRerankerTimeout ?? 10000
+		this.rerankerApiKey = rerankerApiKey
 
 		// Validate and set model dimension
 		const rawDimension = codebaseIndexConfig.codebaseIndexEmbedderModelDimension
@@ -162,6 +202,11 @@ export class CodeIndexConfigManager {
 			mistralApiKey: this.mistralOptions?.apiKey ?? "",
 			qdrantUrl: this.qdrantUrl ?? "",
 			qdrantApiKey: this.qdrantApiKey ?? "",
+			rerankerEnabled: this.rerankerEnabled,
+			rerankerProvider: this.rerankerProvider,
+			rerankerUrl: this.rerankerUrl,
+			rerankerModel: this.rerankerModel,
+			rerankerApiKey: this.rerankerApiKey,
 		}
 
 		// Refresh secrets from VSCode storage to ensure we have the latest values
@@ -257,6 +302,11 @@ export class CodeIndexConfigManager {
 		const prevMistralApiKey = prev?.mistralApiKey ?? ""
 		const prevQdrantUrl = prev?.qdrantUrl ?? ""
 		const prevQdrantApiKey = prev?.qdrantApiKey ?? ""
+		const prevRerankerEnabled = prev?.rerankerEnabled ?? false
+		const prevRerankerProvider = prev?.rerankerProvider ?? "local"
+		const prevRerankerUrl = prev?.rerankerUrl ?? ""
+		const prevRerankerModel = prev?.rerankerModel ?? ""
+		const prevRerankerApiKey = prev?.rerankerApiKey ?? ""
 
 		// 1. Transition from disabled/unconfigured to enabled/configured
 		if ((!prevEnabled || !prevConfigured) && this.codebaseIndexEnabled && nowConfigured) {
@@ -294,12 +344,37 @@ export class CodeIndexConfigManager {
 		const currentMistralApiKey = this.mistralOptions?.apiKey ?? ""
 		const currentQdrantUrl = this.qdrantUrl ?? ""
 		const currentQdrantApiKey = this.qdrantApiKey ?? ""
+		const currentRerankerEnabled = this.rerankerEnabled
+		const currentRerankerProvider = this.rerankerProvider
+		const currentRerankerUrl = this.rerankerUrl
+		const currentRerankerModel = this.rerankerModel
+		const currentRerankerApiKey = this.rerankerApiKey
 
 		if (prevOpenAiKey !== currentOpenAiKey) {
 			return true
 		}
 
 		if (prevOllamaBaseUrl !== currentOllamaBaseUrl) {
+			return true
+		}
+
+		if (prevRerankerEnabled !== currentRerankerEnabled) {
+			return true
+		}
+
+		if (prevRerankerProvider !== currentRerankerProvider) {
+			return true
+		}
+
+		if (prevRerankerUrl !== currentRerankerUrl) {
+			return true
+		}
+
+		if (prevRerankerModel !== currentRerankerModel) {
+			return true
+		}
+
+		if (prevRerankerApiKey !== currentRerankerApiKey) {
 			return true
 		}
 
@@ -324,6 +399,26 @@ export class CodeIndexConfigManager {
 		}
 
 		if (prevQdrantUrl !== currentQdrantUrl || prevQdrantApiKey !== currentQdrantApiKey) {
+			return true
+		}
+
+		if (prevRerankerEnabled !== currentRerankerEnabled) {
+			return true
+		}
+
+		if (prevRerankerProvider !== currentRerankerProvider) {
+			return true
+		}
+
+		if (prevRerankerUrl !== currentRerankerUrl) {
+			return true
+		}
+
+		if (prevRerankerModel !== currentRerankerModel) {
+			return true
+		}
+
+		if (prevRerankerApiKey !== currentRerankerApiKey) {
 			return true
 		}
 
@@ -379,6 +474,7 @@ export class CodeIndexConfigManager {
 			qdrantApiKey: this.qdrantApiKey,
 			searchMinScore: this.currentSearchMinScore,
 			searchMaxResults: this.currentSearchMaxResults,
+			rerankerConfig: this.getRerankerConfig(),
 		}
 	}
 
@@ -459,5 +555,42 @@ export class CodeIndexConfigManager {
 	 */
 	public get currentSearchMaxResults(): number {
 		return this.searchMaxResults ?? DEFAULT_MAX_SEARCH_RESULTS
+	}
+
+	/**
+	 * Gets whether the reranker is enabled
+	 */
+	public get isRerankerEnabled(): boolean {
+		return this.rerankerEnabled && this.isFeatureEnabled
+	}
+
+	/**
+	 * Gets the complete reranker configuration
+	 */
+	public getRerankerConfig(): RerankerConfig {
+		return {
+			enabled: this.rerankerEnabled,
+			provider: this.rerankerProvider,
+			url: this.rerankerUrl,
+			apiKey: this.rerankerApiKey,
+			model: this.rerankerModel,
+			topN: this._rerankerTopN,
+			topK: this._rerankerTopK,
+			timeout: this.rerankerTimeout,
+		}
+	}
+
+	/**
+	 * Gets the reranker topN value (number of candidates to send for reranking)
+	 */
+	public get rerankerTopN(): number {
+		return this._rerankerTopN
+	}
+
+	/**
+	 * Gets the reranker topK value (number of final results to return)
+	 */
+	public get rerankerTopK(): number {
+		return this._rerankerTopK
 	}
 }

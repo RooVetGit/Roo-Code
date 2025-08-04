@@ -67,5 +67,7 @@
 		"editMessage": "Editar missatge",
 		"editWarning": "Editar aquest missatge eliminarà tots els missatges posteriors de la conversa. Vols continuar?",
 		"proceed": "Continuar"
-	}
+	},
+	"comingSoon": "Coming Soon",
+	"optional": "optional"
 }

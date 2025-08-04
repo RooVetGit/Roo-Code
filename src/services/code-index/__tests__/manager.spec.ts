@@ -140,6 +140,7 @@ describe("CodeIndexManager - handleSettingsChange regression", () => {
 					},
 				}),
 				validateEmbedder: vi.fn().mockResolvedValue({ valid: true }),
+				createReranker: vi.fn().mockResolvedValue(null),
 			}
 			MockedCodeIndexServiceFactory.mockImplementation(() => mockServiceFactoryInstance as any)
 
@@ -214,6 +215,7 @@ describe("CodeIndexManager - handleSettingsChange regression", () => {
 					},
 				}),
 				validateEmbedder: vi.fn().mockResolvedValue({ valid: true }),
+				createReranker: vi.fn().mockResolvedValue(null),
 			}
 			MockedCodeIndexServiceFactory.mockImplementation(() => mockServiceFactoryInstance as any)
 
@@ -267,6 +269,7 @@ describe("CodeIndexManager - handleSettingsChange regression", () => {
 					scanner: mockScanner,
 					fileWatcher: mockFileWatcher,
 				}),
+				createReranker: vi.fn().mockResolvedValue(undefined),
 				validateEmbedder: vi.fn(),
 			}
 

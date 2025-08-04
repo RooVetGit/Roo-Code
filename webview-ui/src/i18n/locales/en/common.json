@@ -48,6 +48,8 @@
 			"copyError": "Error copying image"
 		}
 	},
+	"comingSoon": "Coming Soon",
+	"optional": "optional",
 	"file": {
 		"errors": {
 			"invalidDataUri": "Invalid data URI format",

@@ -97,6 +97,15 @@ Roo Code comes with powerful [tools](https://docs.roocode.com/basic-usage/how-to
 
 MCP extends Roo Code's capabilities by allowing you to add unlimited custom tools. Integrate with external APIs, connect to databases, or create specialized development tools - MCP provides the framework to expand Roo Code's functionality to meet your specific needs.
 
+### Search Enhancement
+
+Roo Code now supports **semantic search reranking** to improve code search results:
+
+- **What is reranking:** Reranking uses advanced AI models to reorganize search results based on semantic relevance, ensuring the most contextually appropriate code appears first. This dramatically improves the accuracy of code discovery across your project.
+- **How to enable it:** Enable reranking through the Roo Code settings by configuring a reranking provider. Once enabled, all codebase searches will automatically benefit from improved result ordering.
+- **Supported providers:** Currently supports local (self-hosted) reranking models for privacy and offline use.
+- **Setup instructions:** For detailed setup and configuration instructions, see the [reranker service documentation](reranker-service/README.md).
+
 ### Customization
 
 Make Roo Code work your way with:

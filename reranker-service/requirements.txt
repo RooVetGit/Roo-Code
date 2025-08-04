@@ -1,0 +1,26 @@
+# Core FastAPI dependencies
+fastapi==0.109.0
+uvicorn[standard]==0.27.0
+pydantic==2.5.3
+python-multipart==0.0.6
+
+# ML/Reranking dependencies
+sentence-transformers==2.2.2
+torch==2.1.2
+transformers==4.36.2
+
+# Additional dependencies
+numpy==1.24.3
+scipy==1.11.4
+scikit-learn==1.3.2
+
+# Async support
+aiofiles==23.2.1
+
+# Monitoring and logging
+python-json-logger==2.0.7
+
+# Development dependencies (optional)
+pytest==7.4.4
+pytest-asyncio==0.23.3
+httpx==0.26.0

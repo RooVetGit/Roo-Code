@@ -67,5 +67,7 @@
 		"editMessage": "Nachricht bearbeiten",
 		"editWarning": "Das Bearbeiten dieser Nachricht wird alle nachfolgenden Nachrichten in der Unterhaltung löschen. Möchtest du fortfahren?",
 		"proceed": "Fortfahren"
-	}
+	},
+	"comingSoon": "Coming Soon",
+	"optional": "optional"
 }

@@ -7,13 +7,15 @@ import { MistralEmbedder } from "./embedders/mistral"
 import { EmbedderProvider, getDefaultModelId, getModelDimension } from "../../shared/embeddingModels"
 import { QdrantVectorStore } from "./vector-store/qdrant-client"
 import { codeParser, DirectoryScanner, FileWatcher } from "./processors"
-import { ICodeParser, IEmbedder, IFileWatcher, IVectorStore } from "./interfaces"
+import { ICodeParser, IEmbedder, IFileWatcher, IVectorStore, IReranker } from "./interfaces"
 import { CodeIndexConfigManager } from "./config-manager"
 import { CacheManager } from "./cache-manager"
 import { Ignore } from "ignore"
 import { t } from "../../i18n"
 import { TelemetryService } from "@roo-code/telemetry"
 import { TelemetryEventName } from "@roo-code/types"
+import { RerankerFactory } from "./rerankers/factory"
+import { LogFunction } from "../../utils/outputChannelLogger"
 
 /**
  * Factory class responsible for creating and configuring code indexing service dependencies.
@@ -23,6 +25,7 @@ export class CodeIndexServiceFactory {
 		private readonly configManager: CodeIndexConfigManager,
 		private readonly workspacePath: string,
 		private readonly cacheManager: CacheManager,
+		private readonly logger: LogFunction = (...args: unknown[]) => console.log(...args),
 	) {}
 
 	/**
@@ -138,6 +141,41 @@ export class CodeIndexServiceFactory {
 
 		// Assuming constructor is updated: new QdrantVectorStore(workspacePath, url, vectorSize, apiKey?)
 		return new QdrantVectorStore(this.workspacePath, config.qdrantUrl, vectorSize, config.qdrantApiKey)
+	}
+
+	/**
+	 * Creates a reranker instance based on the current configuration.
+	 * @returns Promise resolving to IReranker instance or undefined if disabled/invalid
+	 */
+	public async createReranker(): Promise<IReranker | undefined> {
+		try {
+			const rerankerConfig = this.configManager.getRerankerConfig()
+
+			if (!rerankerConfig.enabled) {
+				this.logger("Reranker is disabled in configuration")
+				return undefined
+			}
+
+			const reranker = await RerankerFactory.create(rerankerConfig)
+
+			if (reranker) {
+				this.logger(`Successfully created ${rerankerConfig.provider} reranker`)
+			} else {
+				this.logger("Failed to create reranker instance")
+			}
+
+			return reranker
+		} catch (error) {
+			// Capture telemetry for the error
+			TelemetryService.instance.captureEvent(TelemetryEventName.CODE_INDEX_ERROR, {
+				error: error instanceof Error ? error.message : String(error),
+				stack: error instanceof Error ? error.stack : undefined,
+				location: "createReranker",
+			})
+
+			this.logger("Error creating reranker:", error)
+			return undefined
+		}
 	}
 
 	/**

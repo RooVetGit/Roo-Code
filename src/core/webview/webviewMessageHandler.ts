@@ -2016,6 +2016,14 @@ export const webviewMessageHandler = async (
 					codebaseIndexOpenAiCompatibleBaseUrl: settings.codebaseIndexOpenAiCompatibleBaseUrl,
 					codebaseIndexSearchMaxResults: settings.codebaseIndexSearchMaxResults,
 					codebaseIndexSearchMinScore: settings.codebaseIndexSearchMinScore,
+					// Reranker settings
+					codebaseIndexRerankerEnabled: settings.codebaseIndexRerankerEnabled,
+					codebaseIndexRerankerProvider: settings.codebaseIndexRerankerProvider,
+					codebaseIndexRerankerUrl: settings.codebaseIndexRerankerUrl,
+					codebaseIndexRerankerModel: settings.codebaseIndexRerankerModel,
+					codebaseIndexRerankerTopN: settings.codebaseIndexRerankerTopN,
+					codebaseIndexRerankerTopK: settings.codebaseIndexRerankerTopK,
+					codebaseIndexRerankerTimeout: settings.codebaseIndexRerankerTimeout,
 				}
 
 				// Save global state first
@@ -2044,6 +2052,12 @@ export const webviewMessageHandler = async (
 					await provider.contextProxy.storeSecret(
 						"codebaseIndexMistralApiKey",
 						settings.codebaseIndexMistralApiKey,
+					)
+				}
+				if (settings.codebaseIndexRerankerApiKey !== undefined) {
+					await provider.contextProxy.storeSecret(
+						"codebaseIndexRerankerApiKey",
+						settings.codebaseIndexRerankerApiKey,
 					)
 				}
 
@@ -2167,6 +2181,7 @@ export const webviewMessageHandler = async (
 			))
 			const hasGeminiApiKey = !!(await provider.context.secrets.get("codebaseIndexGeminiApiKey"))
 			const hasMistralApiKey = !!(await provider.context.secrets.get("codebaseIndexMistralApiKey"))
+			const hasRerankerApiKey = !!(await provider.context.secrets.get("codebaseIndexRerankerApiKey"))
 
 			provider.postMessageToWebview({
 				type: "codeIndexSecretStatus",
@@ -2176,6 +2191,7 @@ export const webviewMessageHandler = async (
 					hasOpenAiCompatibleApiKey,
 					hasGeminiApiKey,
 					hasMistralApiKey,
+					hasRerankerApiKey,
 				},
 			})
 			break

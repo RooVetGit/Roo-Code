@@ -1292,14 +1292,26 @@ describe("CodeIndexConfigManager", () => {
 				isConfigured: true,
 				embedderProvider: "openai",
 				modelId: "text-embedding-3-large",
+				modelDimension: undefined,
 				openAiOptions: { openAiNativeApiKey: "test-openai-key" },
 				ollamaOptions: { ollamaBaseUrl: undefined },
-				geminiOptions: undefined,
 				openAiCompatibleOptions: undefined,
+				geminiOptions: undefined,
+				mistralOptions: undefined,
 				qdrantUrl: "http://qdrant.local",
 				qdrantApiKey: "test-qdrant-key",
 				searchMinScore: 0.4,
 				searchMaxResults: 50,
+				rerankerConfig: {
+					enabled: false,
+					provider: "local",
+					url: "http://localhost:8003",
+					apiKey: "",
+					model: "Qwen/Qwen3-Reranker-8B",
+					topN: 100,
+					topK: 20,
+					timeout: 10000,
+				},
 			})
 		})
 
@@ -1808,6 +1820,574 @@ describe("CodeIndexConfigManager", () => {
 
 				// Should return undefined since custom dimension is invalid
 				expect(configManager.currentModelDimension).toBe(undefined)
+			})
+		})
+
+		describe("currentSearchMinScore", () => {
+			beforeEach(() => {
+				vi.clearAllMocks()
+			})
+
+			it("should return user-configured score when set", async () => {
+				mockContextProxy.getGlobalState.mockReturnValue({
+					codebaseIndexEnabled: true,
+					codebaseIndexEmbedderProvider: "openai",
+					codebaseIndexSearchMinScore: 0.7,
+					codebaseIndexQdrantUrl: "http://localhost:6333",
+				})
+				mockContextProxy.getSecret.mockImplementation((key: string) => {
+					if (key === "codeIndexOpenAiKey") return "test-key"
+					return undefined
+				})
+
+				configManager = new CodeIndexConfigManager(mockContextProxy)
+				await configManager.loadConfiguration()
+
+				expect(configManager.currentSearchMinScore).toBe(0.7)
+			})
+
+			it("should return model-specific threshold when user score not set", async () => {
+				// Mock getModelScoreThreshold to return a model-specific threshold
+				mockedGetModelScoreThreshold.mockReturnValue(0.6)
+
+				mockContextProxy.getGlobalState.mockReturnValue({
+					codebaseIndexEnabled: true,
+					codebaseIndexEmbedderProvider: "openai",
+					codebaseIndexEmbedderModelId: "text-embedding-3-small",
+					// No searchMinScore set
+					codebaseIndexQdrantUrl: "http://localhost:6333",
+				})
+				mockContextProxy.getSecret.mockImplementation((key: string) => {
+					if (key === "codeIndexOpenAiKey") return "test-key"
+					return undefined
+				})
+
+				configManager = new CodeIndexConfigManager(mockContextProxy)
+				await configManager.loadConfiguration()
+
+				expect(configManager.currentSearchMinScore).toBe(0.6)
+				expect(mockedGetModelScoreThreshold).toHaveBeenCalledWith("openai", "text-embedding-3-small")
+			})
+
+			it("should return default score when neither user nor model threshold is available", async () => {
+				// Mock getModelScoreThreshold to return undefined
+				mockedGetModelScoreThreshold.mockReturnValue(undefined)
+
+				mockContextProxy.getGlobalState.mockReturnValue({
+					codebaseIndexEnabled: true,
+					codebaseIndexEmbedderProvider: "openai",
+					// No searchMinScore set
+					codebaseIndexQdrantUrl: "http://localhost:6333",
+				})
+				mockContextProxy.getSecret.mockImplementation((key: string) => {
+					if (key === "codeIndexOpenAiKey") return "test-key"
+					return undefined
+				})
+
+				configManager = new CodeIndexConfigManager(mockContextProxy)
+				await configManager.loadConfiguration()
+
+				// Should return DEFAULT_SEARCH_MIN_SCORE (0.4)
+				expect(configManager.currentSearchMinScore).toBe(0.4)
+			})
+		})
+
+		describe("currentSearchMaxResults", () => {
+			it("should return user-configured max results when set", async () => {
+				mockContextProxy.getGlobalState.mockReturnValue({
+					codebaseIndexEnabled: true,
+					codebaseIndexEmbedderProvider: "openai",
+					codebaseIndexSearchMaxResults: 50,
+					codebaseIndexQdrantUrl: "http://localhost:6333",
+				})
+				mockContextProxy.getSecret.mockImplementation((key: string) => {
+					if (key === "codeIndexOpenAiKey") return "test-key"
+					return undefined
+				})
+
+				configManager = new CodeIndexConfigManager(mockContextProxy)
+				await configManager.loadConfiguration()
+
+				expect(configManager.currentSearchMaxResults).toBe(50)
+			})
+
+			it("should return default max results when not configured", async () => {
+				mockContextProxy.getGlobalState.mockReturnValue({
+					codebaseIndexEnabled: true,
+					codebaseIndexEmbedderProvider: "openai",
+					// No searchMaxResults set
+					codebaseIndexQdrantUrl: "http://localhost:6333",
+				})
+				mockContextProxy.getSecret.mockImplementation((key: string) => {
+					if (key === "codeIndexOpenAiKey") return "test-key"
+					return undefined
+				})
+
+				configManager = new CodeIndexConfigManager(mockContextProxy)
+				await configManager.loadConfiguration()
+
+				// Should return DEFAULT_MAX_SEARCH_RESULTS (50)
+				expect(configManager.currentSearchMaxResults).toBe(50)
+			})
+		})
+	})
+
+	describe("Reranker Configuration", () => {
+		describe("isRerankerEnabled", () => {
+			it("should return true when reranker is enabled and feature is enabled", () => {
+				mockContextProxy.getGlobalState.mockReturnValue({
+					codebaseIndexEnabled: true,
+					codebaseIndexRerankerEnabled: true,
+					codebaseIndexEmbedderProvider: "openai",
+					codebaseIndexQdrantUrl: "http://localhost:6333",
+				})
+				mockContextProxy.getSecret.mockImplementation((key: string) => {
+					if (key === "codeIndexOpenAiKey") return "test-key"
+					return undefined
+				})
+
+				configManager = new CodeIndexConfigManager(mockContextProxy)
+				expect(configManager.isRerankerEnabled).toBe(true)
+			})
+
+			it("should return false when reranker is disabled", () => {
+				mockContextProxy.getGlobalState.mockReturnValue({
+					codebaseIndexEnabled: true,
+					codebaseIndexRerankerEnabled: false,
+					codebaseIndexEmbedderProvider: "openai",
+					codebaseIndexQdrantUrl: "http://localhost:6333",
+				})
+				mockContextProxy.getSecret.mockImplementation((key: string) => {
+					if (key === "codeIndexOpenAiKey") return "test-key"
+					return undefined
+				})
+
+				configManager = new CodeIndexConfigManager(mockContextProxy)
+				expect(configManager.isRerankerEnabled).toBe(false)
+			})
+
+			it("should return false when main feature is disabled even if reranker is enabled", () => {
+				mockContextProxy.getGlobalState.mockReturnValue({
+					codebaseIndexEnabled: false,
+					codebaseIndexRerankerEnabled: true,
+					codebaseIndexEmbedderProvider: "openai",
+					codebaseIndexQdrantUrl: "http://localhost:6333",
+				})
+				mockContextProxy.getSecret.mockImplementation((key: string) => {
+					if (key === "codeIndexOpenAiKey") return "test-key"
+					return undefined
+				})
+
+				configManager = new CodeIndexConfigManager(mockContextProxy)
+				expect(configManager.isRerankerEnabled).toBe(false)
+			})
+		})
+
+		describe("getRerankerConfig", () => {
+			it("should return complete reranker configuration with custom values", () => {
+				mockContextProxy.getGlobalState.mockReturnValue({
+					codebaseIndexEnabled: true,
+					codebaseIndexRerankerEnabled: true,
+					codebaseIndexRerankerProvider: "remote",
+					codebaseIndexRerankerUrl: "https://api.reranker.com",
+					codebaseIndexRerankerModel: "custom-reranker-model",
+					codebaseIndexRerankerTopN: 150,
+					codebaseIndexRerankerTopK: 30,
+					codebaseIndexRerankerTimeout: 15000,
+					codebaseIndexEmbedderProvider: "openai",
+					codebaseIndexQdrantUrl: "http://localhost:6333",
+				})
+				mockContextProxy.getSecret.mockImplementation((key: string) => {
+					if (key === "codeIndexOpenAiKey") return "test-key"
+					if (key === "codebaseIndexRerankerApiKey") return "reranker-api-key"
+					return undefined
+				})
+
+				configManager = new CodeIndexConfigManager(mockContextProxy)
+				const rerankerConfig = configManager.getRerankerConfig()
+
+				expect(rerankerConfig).toEqual({
+					enabled: true,
+					provider: "remote",
+					url: "https://api.reranker.com",
+					apiKey: "reranker-api-key",
+					model: "custom-reranker-model",
+					topN: 150,
+					topK: 30,
+					timeout: 15000,
+				})
+			})
+
+			it("should return default reranker configuration when not configured", () => {
+				mockContextProxy.getGlobalState.mockReturnValue({
+					codebaseIndexEnabled: true,
+					// No reranker settings provided
+					codebaseIndexEmbedderProvider: "openai",
+					codebaseIndexQdrantUrl: "http://localhost:6333",
+				})
+				mockContextProxy.getSecret.mockImplementation((key: string) => {
+					if (key === "codeIndexOpenAiKey") return "test-key"
+					return undefined
+				})
+
+				configManager = new CodeIndexConfigManager(mockContextProxy)
+				const rerankerConfig = configManager.getRerankerConfig()
+
+				expect(rerankerConfig).toEqual({
+					enabled: false,
+					provider: "local",
+					url: "http://localhost:8003",
+					apiKey: "",
+					model: "Qwen/Qwen3-Reranker-8B",
+					topN: 100,
+					topK: 20,
+					timeout: 10000,
+				})
+			})
+		})
+
+		describe("rerankerTopN and rerankerTopK getters", () => {
+			it("should return custom topN and topK values", () => {
+				mockContextProxy.getGlobalState.mockReturnValue({
+					codebaseIndexEnabled: true,
+					codebaseIndexRerankerEnabled: true,
+					codebaseIndexRerankerTopN: 200,
+					codebaseIndexRerankerTopK: 40,
+					codebaseIndexEmbedderProvider: "openai",
+					codebaseIndexQdrantUrl: "http://localhost:6333",
+				})
+				mockContextProxy.getSecret.mockImplementation((key: string) => {
+					if (key === "codeIndexOpenAiKey") return "test-key"
+					return undefined
+				})
+
+				configManager = new CodeIndexConfigManager(mockContextProxy)
+
+				expect(configManager.rerankerTopN).toBe(200)
+				expect(configManager.rerankerTopK).toBe(40)
+			})
+
+			it("should return default topN and topK values when not configured", () => {
+				mockContextProxy.getGlobalState.mockReturnValue({
+					codebaseIndexEnabled: true,
+					// No topN/topK configured
+					codebaseIndexEmbedderProvider: "openai",
+					codebaseIndexQdrantUrl: "http://localhost:6333",
+				})
+				mockContextProxy.getSecret.mockImplementation((key: string) => {
+					if (key === "codeIndexOpenAiKey") return "test-key"
+					return undefined
+				})
+
+				configManager = new CodeIndexConfigManager(mockContextProxy)
+
+				expect(configManager.rerankerTopN).toBe(100)
+				expect(configManager.rerankerTopK).toBe(20)
+			})
+		})
+
+		describe("Reranker configuration loading", () => {
+			it("should load reranker configuration from globalState with all fields", async () => {
+				const mockGlobalState = {
+					codebaseIndexEnabled: true,
+					codebaseIndexQdrantUrl: "http://qdrant.local",
+					codebaseIndexEmbedderProvider: "openai",
+					codebaseIndexRerankerEnabled: true,
+					codebaseIndexRerankerProvider: "remote",
+					codebaseIndexRerankerUrl: "https://reranker.example.com",
+					codebaseIndexRerankerModel: "advanced-reranker",
+					codebaseIndexRerankerTopN: 250,
+					codebaseIndexRerankerTopK: 50,
+					codebaseIndexRerankerTimeout: 20000,
+				}
+				mockContextProxy.getGlobalState.mockReturnValue(mockGlobalState)
+
+				setupSecretMocks({
+					codeIndexOpenAiKey: "test-openai-key",
+					codeIndexQdrantApiKey: "test-qdrant-key",
+					codebaseIndexRerankerApiKey: "test-reranker-key",
+				})
+
+				const result = await configManager.loadConfiguration()
+				const rerankerConfig = configManager.getRerankerConfig()
+
+				expect(rerankerConfig).toEqual({
+					enabled: true,
+					provider: "remote",
+					url: "https://reranker.example.com",
+					apiKey: "test-reranker-key",
+					model: "advanced-reranker",
+					topN: 250,
+					topK: 50,
+					timeout: 20000,
+				})
+			})
+
+			it("should use default values for missing reranker fields", async () => {
+				const mockGlobalState = {
+					codebaseIndexEnabled: true,
+					codebaseIndexQdrantUrl: "http://qdrant.local",
+					codebaseIndexEmbedderProvider: "openai",
+					codebaseIndexRerankerEnabled: true,
+					// Missing other reranker fields
+				}
+				mockContextProxy.getGlobalState.mockReturnValue(mockGlobalState)
+
+				setupSecretMocks({
+					codeIndexOpenAiKey: "test-openai-key",
+				})
+
+				const result = await configManager.loadConfiguration()
+				const rerankerConfig = configManager.getRerankerConfig()
+
+				expect(rerankerConfig).toEqual({
+					enabled: true,
+					provider: "local",
+					url: "http://localhost:8003",
+					apiKey: "",
+					model: "Qwen/Qwen3-Reranker-8B",
+					topN: 100,
+					topK: 20,
+					timeout: 10000,
+				})
+			})
+		})
+
+		describe("Reranker state change detection", () => {
+			it("should require restart when reranker is enabled", async () => {
+				// Initial state: reranker disabled
+				mockContextProxy.getGlobalState.mockReturnValue({
+					codebaseIndexEnabled: true,
+					codebaseIndexRerankerEnabled: false,
+					codebaseIndexEmbedderProvider: "openai",
+					codebaseIndexQdrantUrl: "http://localhost:6333",
+				})
+				mockContextProxy.getSecret.mockImplementation((key: string) => {
+					if (key === "codeIndexOpenAiKey") return "test-key"
+					return undefined
+				})
+				configManager = new CodeIndexConfigManager(mockContextProxy)
+
+				// Get initial state
+				const { configSnapshot: previousSnapshot } = await configManager.loadConfiguration()
+
+				// Enable reranker
+				mockContextProxy.getGlobalState.mockReturnValue({
+					codebaseIndexEnabled: true,
+					codebaseIndexRerankerEnabled: true,
+					codebaseIndexEmbedderProvider: "openai",
+					codebaseIndexQdrantUrl: "http://localhost:6333",
+				})
+
+				const { requiresRestart } = await configManager.loadConfiguration()
+				expect(requiresRestart).toBe(true)
+			})
+
+			it("should require restart when reranker provider changes", async () => {
+				// Initial state: local reranker
+				mockContextProxy.getGlobalState.mockReturnValue({
+					codebaseIndexEnabled: true,
+					codebaseIndexRerankerEnabled: true,
+					codebaseIndexRerankerProvider: "local",
+					codebaseIndexEmbedderProvider: "openai",
+					codebaseIndexQdrantUrl: "http://localhost:6333",
+				})
+				mockContextProxy.getSecret.mockImplementation((key: string) => {
+					if (key === "codeIndexOpenAiKey") return "test-key"
+					return undefined
+				})
+				configManager = new CodeIndexConfigManager(mockContextProxy)
+
+				const { configSnapshot: previousSnapshot } = await configManager.loadConfiguration()
+
+				// Change to remote provider
+				mockContextProxy.getGlobalState.mockReturnValue({
+					codebaseIndexEnabled: true,
+					codebaseIndexRerankerEnabled: true,
+					codebaseIndexRerankerProvider: "remote",
+					codebaseIndexEmbedderProvider: "openai",
+					codebaseIndexQdrantUrl: "http://localhost:6333",
+				})
+
+				const { requiresRestart } = await configManager.loadConfiguration()
+				expect(requiresRestart).toBe(true)
+			})
+
+			it("should require restart when reranker URL changes", async () => {
+				// Initial state
+				mockContextProxy.getGlobalState.mockReturnValue({
+					codebaseIndexEnabled: true,
+					codebaseIndexRerankerEnabled: true,
+					codebaseIndexRerankerUrl: "http://localhost:8003",
+					codebaseIndexEmbedderProvider: "openai",
+					codebaseIndexQdrantUrl: "http://localhost:6333",
+				})
+				mockContextProxy.getSecret.mockImplementation((key: string) => {
+					if (key === "codeIndexOpenAiKey") return "test-key"
+					return undefined
+				})
+				configManager = new CodeIndexConfigManager(mockContextProxy)
+
+				const { configSnapshot: previousSnapshot } = await configManager.loadConfiguration()
+
+				// Change URL
+				mockContextProxy.getGlobalState.mockReturnValue({
+					codebaseIndexEnabled: true,
+					codebaseIndexRerankerEnabled: true,
+					codebaseIndexRerankerUrl: "https://new-reranker.com",
+					codebaseIndexEmbedderProvider: "openai",
+					codebaseIndexQdrantUrl: "http://localhost:6333",
+				})
+
+				const { requiresRestart } = await configManager.loadConfiguration()
+				expect(requiresRestart).toBe(true)
+			})
+
+			it("should require restart when reranker model changes", async () => {
+				// Initial state
+				mockContextProxy.getGlobalState.mockReturnValue({
+					codebaseIndexEnabled: true,
+					codebaseIndexRerankerEnabled: true,
+					codebaseIndexRerankerModel: "model-v1",
+					codebaseIndexEmbedderProvider: "openai",
+					codebaseIndexQdrantUrl: "http://localhost:6333",
+				})
+				mockContextProxy.getSecret.mockImplementation((key: string) => {
+					if (key === "codeIndexOpenAiKey") return "test-key"
+					return undefined
+				})
+				configManager = new CodeIndexConfigManager(mockContextProxy)
+
+				const { configSnapshot: previousSnapshot } = await configManager.loadConfiguration()
+
+				// Change model
+				mockContextProxy.getGlobalState.mockReturnValue({
+					codebaseIndexEnabled: true,
+					codebaseIndexRerankerEnabled: true,
+					codebaseIndexRerankerModel: "model-v2",
+					codebaseIndexEmbedderProvider: "openai",
+					codebaseIndexQdrantUrl: "http://localhost:6333",
+				})
+
+				const { requiresRestart } = await configManager.loadConfiguration()
+				expect(requiresRestart).toBe(true)
+			})
+
+			it("should require restart when reranker API key changes", async () => {
+				// Initial state
+				mockContextProxy.getGlobalState.mockReturnValue({
+					codebaseIndexEnabled: true,
+					codebaseIndexRerankerEnabled: true,
+					codebaseIndexEmbedderProvider: "openai",
+					codebaseIndexQdrantUrl: "http://localhost:6333",
+				})
+				setupSecretMocks({
+					codeIndexOpenAiKey: "test-key",
+					codebaseIndexRerankerApiKey: "old-api-key",
+				})
+				configManager = new CodeIndexConfigManager(mockContextProxy)
+
+				const { configSnapshot: previousSnapshot } = await configManager.loadConfiguration()
+
+				// Change API key
+				setupSecretMocks({
+					codeIndexOpenAiKey: "test-key",
+					codebaseIndexRerankerApiKey: "new-api-key",
+				})
+
+				const { requiresRestart } = await configManager.loadConfiguration()
+				expect(requiresRestart).toBe(true)
+			})
+
+			it("should not require restart when only reranker topN/topK changes", async () => {
+				// Initial state
+				mockContextProxy.getGlobalState.mockReturnValue({
+					codebaseIndexEnabled: true,
+					codebaseIndexRerankerEnabled: true,
+					codebaseIndexRerankerTopN: 100,
+					codebaseIndexRerankerTopK: 20,
+					codebaseIndexEmbedderProvider: "openai",
+					codebaseIndexQdrantUrl: "http://localhost:6333",
+				})
+				mockContextProxy.getSecret.mockImplementation((key: string) => {
+					if (key === "codeIndexOpenAiKey") return "test-key"
+					return undefined
+				})
+				configManager = new CodeIndexConfigManager(mockContextProxy)
+
+				const { configSnapshot: previousSnapshot } = await configManager.loadConfiguration()
+
+				// Change only topN and topK
+				mockContextProxy.getGlobalState.mockReturnValue({
+					codebaseIndexEnabled: true,
+					codebaseIndexRerankerEnabled: true,
+					codebaseIndexRerankerTopN: 150,
+					codebaseIndexRerankerTopK: 30,
+					codebaseIndexEmbedderProvider: "openai",
+					codebaseIndexQdrantUrl: "http://localhost:6333",
+				})
+
+				const { requiresRestart } = await configManager.loadConfiguration()
+				expect(requiresRestart).toBe(false)
+			})
+		})
+
+		describe("Reranker and feature integration", () => {
+			it("should include reranker config in getConfig() output", () => {
+				mockContextProxy.getGlobalState.mockReturnValue({
+					codebaseIndexEnabled: true,
+					codebaseIndexRerankerEnabled: true,
+					codebaseIndexRerankerProvider: "local",
+					codebaseIndexRerankerUrl: "http://localhost:8003",
+					codebaseIndexRerankerModel: "test-model",
+					codebaseIndexRerankerTopN: 80,
+					codebaseIndexRerankerTopK: 15,
+					codebaseIndexRerankerTimeout: 5000,
+					codebaseIndexEmbedderProvider: "openai",
+					codebaseIndexQdrantUrl: "http://localhost:6333",
+				})
+				mockContextProxy.getSecret.mockImplementation((key: string) => {
+					if (key === "codeIndexOpenAiKey") return "test-key"
+					if (key === "codebaseIndexRerankerApiKey") return "reranker-key"
+					return undefined
+				})
+
+				configManager = new CodeIndexConfigManager(mockContextProxy)
+				const config = configManager.getConfig()
+
+				expect(config.rerankerConfig).toBeDefined()
+				expect(config.rerankerConfig).toEqual({
+					enabled: true,
+					provider: "local",
+					url: "http://localhost:8003",
+					apiKey: "reranker-key",
+					model: "test-model",
+					topN: 80,
+					topK: 15,
+					timeout: 5000,
+				})
+			})
+
+			it("should disable reranker when main feature is disabled", () => {
+				mockContextProxy.getGlobalState.mockReturnValue({
+					codebaseIndexEnabled: false, // Main feature disabled
+					codebaseIndexRerankerEnabled: true, // Reranker enabled
+					codebaseIndexEmbedderProvider: "openai",
+					codebaseIndexQdrantUrl: "http://localhost:6333",
+				})
+				mockContextProxy.getSecret.mockImplementation((key: string) => {
+					if (key === "codeIndexOpenAiKey") return "test-key"
+					return undefined
+				})
+
+				configManager = new CodeIndexConfigManager(mockContextProxy)
+
+				// isRerankerEnabled should be false
+				expect(configManager.isRerankerEnabled).toBe(false)
+
+				// But the config should still show the actual state
+				const rerankerConfig = configManager.getRerankerConfig()
+				expect(rerankerConfig.enabled).toBe(true) // Actual config state
 			})
 		})
 	})

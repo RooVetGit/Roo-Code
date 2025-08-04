@@ -67,5 +67,7 @@
 		"editMessage": "Mesajı Düzenle",
 		"editWarning": "Bu mesajı düzenlemek, konuşmadaki sonraki tüm mesajları da silecektir. Devam etmek istiyor musun?",
 		"proceed": "Devam Et"
-	}
+	},
+	"comingSoon": "Coming Soon",
+	"optional": "optional"
 }

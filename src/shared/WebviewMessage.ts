@@ -265,12 +265,22 @@ export interface WebviewMessage {
 		codebaseIndexSearchMaxResults?: number
 		codebaseIndexSearchMinScore?: number
 
+		// Reranker settings
+		codebaseIndexRerankerEnabled?: boolean
+		codebaseIndexRerankerProvider?: "local" | "cohere" | "openai" | "custom"
+		codebaseIndexRerankerUrl?: string
+		codebaseIndexRerankerModel?: string
+		codebaseIndexRerankerTopN?: number
+		codebaseIndexRerankerTopK?: number
+		codebaseIndexRerankerTimeout?: number
+
 		// Secret settings
 		codeIndexOpenAiKey?: string
 		codeIndexQdrantApiKey?: string
 		codebaseIndexOpenAiCompatibleApiKey?: string
 		codebaseIndexGeminiApiKey?: string
 		codebaseIndexMistralApiKey?: string
+		codebaseIndexRerankerApiKey?: string
 	}
 }
 

@@ -15,10 +15,12 @@ import path from "path"
 import { t } from "../../i18n"
 import { TelemetryService } from "@roo-code/telemetry"
 import { TelemetryEventName } from "@roo-code/types"
+import { LogFunction } from "../../utils/outputChannelLogger"
 
 export class CodeIndexManager {
 	// --- Singleton Implementation ---
 	private static instances = new Map<string, CodeIndexManager>() // Map workspace path to instance
+	private static loggerFunction: LogFunction | undefined
 
 	// Specialized class instances
 	private _configManager: CodeIndexConfigManager | undefined
@@ -53,14 +55,20 @@ export class CodeIndexManager {
 		CodeIndexManager.instances.clear()
 	}
 
+	public static setLogger(logger: LogFunction): void {
+		CodeIndexManager.loggerFunction = logger
+	}
+
 	private readonly workspacePath: string
 	private readonly context: vscode.ExtensionContext
+	private readonly logger: LogFunction
 
 	// Private constructor for singleton pattern
 	private constructor(workspacePath: string, context: vscode.ExtensionContext) {
 		this.workspacePath = workspacePath
 		this.context = context
 		this._stateManager = new CodeIndexStateManager()
+		this.logger = CodeIndexManager.loggerFunction || ((...args: unknown[]) => console.log(...args))
 	}
 
 	// --- Public API ---
@@ -234,6 +242,7 @@ export class CodeIndexManager {
 			this._configManager!,
 			this.workspacePath,
 			this._cacheManager!,
+			this.logger,
 		)
 
 		const ignoreInstance = ignore()
@@ -274,6 +283,14 @@ export class CodeIndexManager {
 			throw new Error(errorMessage)
 		}
 
+		// Create reranker instance if enabled
+		const reranker = await this._serviceFactory.createReranker()
+		if (reranker) {
+			this.logger("[CodeIndexManager] Reranker successfully created")
+		} else if (this._configManager!.isRerankerEnabled) {
+			this.logger("[CodeIndexManager] Reranker is enabled but failed to create instance")
+		}
+
 		// (Re)Initialize orchestrator
 		this._orchestrator = new CodeIndexOrchestrator(
 			this._configManager!,
@@ -285,12 +302,14 @@ export class CodeIndexManager {
 			fileWatcher,
 		)
 
-		// (Re)Initialize search service
+		// (Re)Initialize search service with optional reranker
 		this._searchService = new CodeIndexSearchService(
 			this._configManager!,
 			this._stateManager,
 			embedder,
 			vectorStore,
+			reranker, // Pass the reranker instance (may be undefined)
+			this.logger,
 		)
 
 		// Clear any error state after successful recreation
