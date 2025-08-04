@@ -1,7 +1,7 @@
 import { memo, useRef, useState } from "react"
 import { useWindowSize } from "react-use"
 import { useTranslation } from "react-i18next"
-import { CloudUpload, CloudDownload, FoldVertical, ChevronUp } from "lucide-react"
+import { FoldVertical, ChevronUp, ChevronDown } from "lucide-react"
 import prettyBytes from "pretty-bytes"
 
 import type { ClineMessage } from "@roo-code/types"
@@ -75,10 +75,9 @@ const TaskHeader = ({
 		<div className="pt-2 pb-0 px-3">
 			<div
 				className={cn(
-					"p-2.5 flex flex-col gap-1.5 relative z-1 cursor-pointer",
+					"px-2.5 pt-2.5 pb-2 flex flex-col gap-1.5 relative z-1 cursor-pointer",
 					"bg-vscode-input-background hover:bg-vscode-input-background/90",
 					"text-vscode-foreground/80 hover:text-vscode-foreground",
-					"transition-colors duration-150",
 					hasTodos ? "rounded-t-xs border-b-0" : "rounded-xs",
 				)}
 				onClick={(e) => {
@@ -109,29 +108,65 @@ const TaskHeader = ({
 							{isTaskExpanded && <span className="font-bold">Task Details</span>}
 							{!isTaskExpanded && <Mention text={task.text} />}
 						</div>
-						{isTaskExpanded && (
-							<div className="flex items-center shrink-0 ml-2" onClick={(e) => e.stopPropagation()}>
-								<StandardTooltip content={t("chat:task.collapse")}>
-									<button
-										onClick={() => setIsTaskExpanded(false)}
-										className="shrink-0 min-h-[20px] min-w-[20px] p-[2px] cursor-pointer opacity-85 hover:opacity-100 bg-transparent border-none rounded-md">
-										<ChevronUp size={16} />
-									</button>
-								</StandardTooltip>
-							</div>
-						)}
-					</div>
-					{!isTaskExpanded && (
-						<div className="share-button" onClick={(e) => e.stopPropagation()}>
-							<ShareButton item={currentTaskItem} disabled={buttonsDisabled} />
+						<div className="flex items-center shrink-0 ml-2" onClick={(e) => e.stopPropagation()}>
+							<StandardTooltip content={isTaskExpanded ? t("chat:task.collapse") : t("chat:task.expand")}>
+								<button
+									onClick={() => setIsTaskExpanded(!isTaskExpanded)}
+									className="shrink-0 min-h-[20px] min-w-[20px] p-[2px] cursor-pointer opacity-85 hover:opacity-100 bg-transparent border-none rounded-md">
+									{isTaskExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+								</button>
+							</StandardTooltip>
 						</div>
-					)}
+					</div>
 				</div>
 				{!isTaskExpanded && contextWindow > 0 && (
 					<div className="flex items-center gap-2 text-sm" onClick={(e) => e.stopPropagation()}>
-						<span>
-							{formatLargeNumber(contextTokens || 0)} / {formatLargeNumber(contextWindow)}
-						</span>
+						<div className="share-button -ml-1.5" onClick={(e) => e.stopPropagation()}>
+							<ShareButton item={currentTaskItem} disabled={buttonsDisabled} />
+						</div>
+						<StandardTooltip
+							content={
+								<div className="space-y-1">
+									<div>
+										{t("chat:tokenProgress.tokensUsed", {
+											used: formatLargeNumber(contextTokens || 0),
+											total: formatLargeNumber(contextWindow),
+										})}
+									</div>
+									{(() => {
+										const maxTokens = model
+											? getModelMaxOutputTokens({ modelId, model, settings: apiConfiguration })
+											: 0
+										const reservedForOutput = maxTokens || 0
+										const availableSpace = contextWindow - (contextTokens || 0) - reservedForOutput
+
+										return (
+											<>
+												{reservedForOutput > 0 && (
+													<div>
+														{t("chat:tokenProgress.reservedForResponse", {
+															amount: formatLargeNumber(reservedForOutput),
+														})}
+													</div>
+												)}
+												{availableSpace > 0 && (
+													<div>
+														{t("chat:tokenProgress.availableSpace", {
+															amount: formatLargeNumber(availableSpace),
+														})}
+													</div>
+												)}
+											</>
+										)
+									})()}
+								</div>
+							}
+							side="top"
+							sideOffset={8}>
+							<span className="mx-1">
+								{formatLargeNumber(contextTokens || 0)} / {formatLargeNumber(contextWindow)}
+							</span>
+						</StandardTooltip>
 						{!!totalCost && <span>${totalCost.toFixed(2)}</span>}
 					</div>
 				)}
@@ -143,7 +178,7 @@ const TaskHeader = ({
 							className="-mt-0.5 text-vscode-font-size overflow-y-auto break-words break-anywhere relative">
 							<div
 								ref={textRef}
-								className="overflow-auto max-h-80 whitespace-pre-wrap break-words break-anywhere"
+								className="overflow-auto max-h-80 whitespace-pre-wrap break-words break-anywhere cursor-text"
 								style={{
 									display: "-webkit-box",
 									WebkitLineClamp: "unset",
@@ -160,13 +195,13 @@ const TaskHeader = ({
 									{contextWindow > 0 && (
 										<tr>
 											<th
-												className="font-bold text-left align-top w-1 whitespace-nowrap pl-1 pr-2 h-[24px]"
+												className="font-bold text-left align-top w-1 whitespace-nowrap pl-1 pr-3 h-[24px]"
 												data-testid="context-window-label">
 												{t("chat:task.contextWindow")}
 											</th>
 											<td className="align-top">
 												<div
-													className={`max-w-64 flex ${windowWidth < 400 ? "flex-col" : "flex-row"} gap-1 h-auto`}>
+													className={`max-w-64 -mt-0.5 flex ${windowWidth < 400 ? "flex-col" : "flex-row"} gap-1`}>
 													<ContextWindowProgress
 														contextWindow={contextWindow}
 														contextTokens={contextTokens || 0}
@@ -187,7 +222,7 @@ const TaskHeader = ({
 									)}
 
 									<tr>
-										<th className="font-bold text-left align-top w-1 whitespace-nowrap pl-1 pr-2  h-[24px]">
+										<th className="font-bold text-left align-top w-1 whitespace-nowrap pl-1 pr-3 h-[24px]">
 											{t("chat:task.tokens")}
 										</th>
 										<td className="align-top">
@@ -205,22 +240,16 @@ const TaskHeader = ({
 									{((typeof cacheReads === "number" && cacheReads > 0) ||
 										(typeof cacheWrites === "number" && cacheWrites > 0)) && (
 										<tr>
-											<th className="font-bold text-left align-top w-1 whitespace-nowrap pl-1 pr-2  h-[24px]">
+											<th className="font-bold text-left align-top w-1 whitespace-nowrap pl-1 pr-3 h-[24px]">
 												{t("chat:task.cache")}
 											</th>
 											<td className="align-top">
 												<div className="flex items-center gap-1 flex-wrap">
 													{typeof cacheWrites === "number" && cacheWrites > 0 && (
-														<span className="flex items-center gap-1">
-															<CloudUpload size={14} />
-															{formatLargeNumber(cacheWrites)}
-														</span>
+														<span>↑ {formatLargeNumber(cacheWrites)}</span>
 													)}
 													{typeof cacheReads === "number" && cacheReads > 0 && (
-														<span className="flex items-center gap-1">
-															<CloudDownload size={14} />
-															{formatLargeNumber(cacheReads)}
-														</span>
+														<span>↓ {formatLargeNumber(cacheReads)}</span>
 													)}
 												</div>
 											</td>
@@ -229,7 +258,7 @@ const TaskHeader = ({
 
 									{!!totalCost && (
 										<tr>
-											<th className="font-bold text-left align-top w-1 whitespace-nowrap pl-1 pr-2  h-[24px]">
+											<th className="font-bold text-left align-top w-1 whitespace-nowrap pl-1 pr-3 h-[24px]">
 												{t("chat:task.apiCost")}
 											</th>
 											<td className="align-top">
@@ -242,7 +271,7 @@ const TaskHeader = ({
 									{((typeof cacheReads === "number" && cacheReads > 0) ||
 										(typeof cacheWrites === "number" && cacheWrites > 0)) && (
 										<tr>
-											<th className="font-bold text-left align-top w-1 whitespace-nowrap pl-1 pr-2  h-[24px]">
+											<th className="font-bold text-left align-top w-1 whitespace-nowrap pl-1 pr-3 h-[24px]">
 												{t("chat:task.cache")}
 											</th>
 											<td className="align-top">

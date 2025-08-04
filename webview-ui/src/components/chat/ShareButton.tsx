@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react"
 import { useTranslation } from "react-i18next"
-import { Share } from "lucide-react"
+import { SquareArrowOutUpRightIcon } from "lucide-react"
 
 import type { HistoryItem, ShareVisibility } from "@roo-code/types"
 import { TelemetryEventName } from "@roo-code/types"
@@ -165,7 +165,7 @@ export const ShareButton = ({ item, disabled = false, showLabel = false }: Share
 										: "h-7 w-7 p-1.5 hover:bg-vscode-toolbar-hoverBackground"
 								}
 								onClick={handleShareButtonClick}>
-								<Share size={16} />
+								<SquareArrowOutUpRightIcon />
 								{showLabel && <span className="ml-0">{t("chat:task.share")}</span>}
 							</Button>
 						</PopoverTrigger>
@@ -233,8 +233,8 @@ export const ShareButton = ({ item, disabled = false, showLabel = false }: Share
 								: "h-7 w-7 p-1.5 hover:bg-vscode-toolbar-hoverBackground"
 						}
 						onClick={handleShareButtonClick}>
-						<Share size={16} />
-						{showLabel && <span className="ml-1.5">{t("chat:task.share")}</span>}
+						<SquareArrowOutUpRightIcon />
+						{showLabel && <span className="ml-1">{t("chat:task.share")}</span>}
 					</Button>
 				</StandardTooltip>
 			)}
