@@ -127,6 +127,7 @@
 	},
 	"autoApprove": {
 		"description": "Rooが承認なしで自動的に操作を実行できるようにします。AIを完全に信頼し、関連するセキュリティリスクを理解している場合にのみ、これらの設定を有効にしてください。",
+		"enabled": "自動承認が有効",
 		"toggleAriaLabel": "自動承認の切り替え",
 		"disabledAriaLabel": "自動承認が無効です - 最初にオプションを選択してください",
 		"readOnly": {
@@ -267,6 +268,10 @@
 		"moonshotApiKey": "Moonshot APIキー",
 		"getMoonshotApiKey": "Moonshot APIキーを取得",
 		"moonshotBaseUrl": "Moonshot エントリーポイント",
+		"zaiApiKey": "Z AI APIキー",
+		"getZaiApiKey": "Z AI APIキーを取得",
+		"zaiEntrypoint": "Z AI エントリーポイント",
+		"zaiEntrypointDescription": "お住まいの地域に応じて適切な API エントリーポイントを選択してください。中国にお住まいの場合は open.bigmodel.cn を選択してください。それ以外の場合は api.z.ai を選択してください。",
 		"geminiApiKey": "Gemini APIキー",
 		"getGroqApiKey": "Groq APIキーを取得",
 		"groqApiKey": "Groq APIキー",
@@ -686,6 +691,10 @@
 		"PREVENT_FOCUS_DISRUPTION": {
 			"name": "バックグラウンド編集",
 			"description": "有効にすると、エディターのフォーカス中断を防ぎます。ファイル編集は差分ビューを開いたりフォーカスを奪ったりすることなく、バックグラウンドで行われます。Rooが変更を行っている間も中断されることなく作業を続けることができます。ファイルは診断をキャプチャするためにフォーカスなしで開くか、完全に閉じたままにできます。"
+		},
+		"ASSISTANT_MESSAGE_PARSER": {
+			"name": "新しいメッセージパーサーを使う",
+			"description": "実験的なストリーミングメッセージパーサーを有効にします。長い回答をより効率的に処理し、遅延を減らします。"
 		}
 	},
 	"promptCaching": {

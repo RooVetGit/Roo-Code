@@ -127,6 +127,7 @@
 	},
 	"autoApprove": {
 		"description": "Sta Roo toe om automatisch handelingen uit te voeren zonder goedkeuring. Schakel deze instellingen alleen in als je de AI volledig vertrouwt en de bijbehorende beveiligingsrisico's begrijpt.",
+		"enabled": "Auto-goedkeuren ingeschakeld",
 		"toggleAriaLabel": "Automatisch goedkeuren in-/uitschakelen",
 		"disabledAriaLabel": "Automatisch goedkeuren uitgeschakeld - selecteer eerst opties",
 		"readOnly": {
@@ -267,6 +268,10 @@
 		"moonshotApiKey": "Moonshot API-sleutel",
 		"getMoonshotApiKey": "Moonshot API-sleutel ophalen",
 		"moonshotBaseUrl": "Moonshot-ingangspunt",
+		"zaiApiKey": "Z AI API-sleutel",
+		"getZaiApiKey": "Z AI API-sleutel ophalen",
+		"zaiEntrypoint": "Z AI-ingangspunt",
+		"zaiEntrypointDescription": "Selecteer het juiste API-ingangspunt op basis van uw locatie. Als u zich in China bevindt, kies dan open.bigmodel.cn. Anders kiest u api.z.ai.",
 		"geminiApiKey": "Gemini API-sleutel",
 		"getGroqApiKey": "Groq API-sleutel ophalen",
 		"groqApiKey": "Groq API-sleutel",
@@ -686,6 +691,10 @@
 		"PREVENT_FOCUS_DISRUPTION": {
 			"name": "Achtergrondbewerking",
 			"description": "Voorkomt editor focus verstoring wanneer ingeschakeld. Bestandsbewerkingen gebeuren op de achtergrond zonder diff-weergaven te openen of focus te stelen. Je kunt ononderbroken doorwerken terwijl Roo wijzigingen aanbrengt. Bestanden kunnen zonder focus worden geopend om diagnostiek vast te leggen of volledig gesloten blijven."
+		},
+		"ASSISTANT_MESSAGE_PARSER": {
+			"name": "Nieuwe berichtparser gebruiken",
+			"description": "Schakel de experimentele streaming-berichtparser in die lange antwoorden sneller maakt door berichten efficiënter te verwerken."
 		}
 	},
 	"promptCaching": {

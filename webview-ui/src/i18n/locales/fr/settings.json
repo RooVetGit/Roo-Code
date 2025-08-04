@@ -127,6 +127,7 @@
 	},
 	"autoApprove": {
 		"description": "Permettre à Roo d'effectuer automatiquement des opérations sans requérir d'approbation. Activez ces paramètres uniquement si vous faites entièrement confiance à l'IA et que vous comprenez les risques de sécurité associés.",
+		"enabled": "Auto-approbation activée",
 		"toggleAriaLabel": "Activer/désactiver l'approbation automatique",
 		"disabledAriaLabel": "Approbation automatique désactivée - sélectionnez d'abord les options",
 		"selectOptionsFirst": "Sélectionnez au moins une option ci-dessous pour activer l'approbation automatique",
@@ -267,6 +268,10 @@
 		"moonshotApiKey": "Clé API Moonshot",
 		"getMoonshotApiKey": "Obtenir la clé API Moonshot",
 		"moonshotBaseUrl": "Point d'entrée Moonshot",
+		"zaiApiKey": "Clé API Z AI",
+		"getZaiApiKey": "Obtenir la clé API Z AI",
+		"zaiEntrypoint": "Point d'entrée Z AI",
+		"zaiEntrypointDescription": "Veuillez sélectionner le point d'entrée API approprié en fonction de votre emplacement. Si vous êtes en Chine, choisissez open.bigmodel.cn. Sinon, choisissez api.z.ai.",
 		"geminiApiKey": "Clé API Gemini",
 		"getGroqApiKey": "Obtenir la clé API Groq",
 		"groqApiKey": "Clé API Groq",
@@ -685,6 +690,10 @@
 		"PREVENT_FOCUS_DISRUPTION": {
 			"name": "Édition en arrière-plan",
 			"description": "Empêche la perturbation du focus de l'éditeur lorsqu'activé. Les modifications de fichiers se font en arrière-plan sans ouvrir de vues de différences ou voler le focus. Vous pouvez continuer à travailler sans interruption pendant que Roo effectue des changements. Les fichiers peuvent être ouverts sans focus pour capturer les diagnostics ou rester complètement fermés."
+		},
+		"ASSISTANT_MESSAGE_PARSER": {
+			"name": "Utiliser le nouveau parseur de messages",
+			"description": "Active le parseur de messages en streaming expérimental qui accélère nettement les longues réponses en traitant les messages plus efficacement."
 		}
 	},
 	"promptCaching": {

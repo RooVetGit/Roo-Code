@@ -127,6 +127,7 @@
 	},
 	"autoApprove": {
 		"description": "Roo'nun onay gerektirmeden otomatik olarak işlemler gerçekleştirmesine izin verin. Bu ayarları yalnızca yapay zekaya tamamen güveniyorsanız ve ilgili güvenlik risklerini anlıyorsanız etkinleştirin.",
+		"enabled": "Oto-onay etkinleştirildi",
 		"toggleAriaLabel": "Otomatik onayı değiştir",
 		"disabledAriaLabel": "Otomatik onay devre dışı - önce seçenekleri belirleyin",
 		"readOnly": {
@@ -267,6 +268,10 @@
 		"moonshotApiKey": "Moonshot API Anahtarı",
 		"getMoonshotApiKey": "Moonshot API Anahtarı Al",
 		"moonshotBaseUrl": "Moonshot Giriş Noktası",
+		"zaiApiKey": "Z AI API Anahtarı",
+		"getZaiApiKey": "Z AI API Anahtarı Al",
+		"zaiEntrypoint": "Z AI Giriş Noktası",
+		"zaiEntrypointDescription": "Konumunuza göre uygun API giriş noktasını seçin. Çin'de iseniz open.bigmodel.cn'yi seçin. Aksi takdirde api.z.ai'yi seçin.",
 		"geminiApiKey": "Gemini API Anahtarı",
 		"getGroqApiKey": "Groq API Anahtarı Al",
 		"groqApiKey": "Groq API Anahtarı",
@@ -686,6 +691,10 @@
 		"PREVENT_FOCUS_DISRUPTION": {
 			"name": "Arka plan düzenleme",
 			"description": "Etkinleştirildiğinde editör odak kesintisini önler. Dosya düzenlemeleri diff görünümlerini açmadan veya odağı çalmadan arka planda gerçekleşir. Roo değişiklikler yaparken kesintisiz çalışmaya devam edebilirsiniz. Dosyalar tanılamayı yakalamak için odaksız açılabilir veya tamamen kapalı kalabilir."
+		},
+		"ASSISTANT_MESSAGE_PARSER": {
+			"name": "Yeni mesaj ayrıştırıcıyı kullan",
+			"description": "Uzun yanıtları daha verimli işleyerek hızlandıran deneysel akış mesaj ayrıştırıcısını etkinleştir."
 		}
 	},
 	"promptCaching": {

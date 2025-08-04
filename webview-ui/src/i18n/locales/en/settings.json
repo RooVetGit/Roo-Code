@@ -127,6 +127,7 @@
 	},
 	"autoApprove": {
 		"description": "Allow Roo to automatically perform operations without requiring approval. Enable these settings only if you fully trust the AI and understand the associated security risks.",
+		"enabled": "Auto-Approve Enabled",
 		"readOnly": {
 			"label": "Read",
 			"description": "When enabled, Roo will automatically view directory contents and read files without requiring you to click the Approve button.",
@@ -266,6 +267,10 @@
 		"moonshotApiKey": "Moonshot API Key",
 		"getMoonshotApiKey": "Get Moonshot API Key",
 		"moonshotBaseUrl": "Moonshot Entrypoint",
+		"zaiApiKey": "Z AI API Key",
+		"getZaiApiKey": "Get Z AI API Key",
+		"zaiEntrypoint": "Z AI Entrypoint",
+		"zaiEntrypointDescription": "Please select the appropriate API entrypoint based on your location. If you are in China, choose open.bigmodel.cn. Otherwise, choose api.z.ai.",
 		"geminiApiKey": "Gemini API Key",
 		"getGroqApiKey": "Get Groq API Key",
 		"groqApiKey": "Groq API Key",
@@ -681,9 +686,13 @@
 			"name": "Enable concurrent file edits",
 			"description": "When enabled, Roo can edit multiple files in a single request. When disabled, Roo must edit files one at a time. Disabling this can help when working with less capable models or when you want more control over file modifications."
 		},
-		"PREVENT_FOCUS_DISRUPTION": {
+"PREVENT_FOCUS_DISRUPTION": {
 			"name": "Background editing",
 			"description": "Prevent editor focus disruption when enabled. File edits happen in the background without opening diff views or stealing focus. You can continue working uninterrupted while Roo makes changes. Files can be opened without focus to capture diagnostics or kept closed entirely."
+		},
+		"ASSISTANT_MESSAGE_PARSER": {
+			"name": "Use new message parser",
+			"description": "Enable the experimental streaming message parser that provides significant performance improvements for long assistant responses by processing messages more efficiently."
 		}
 	},
 	"promptCaching": {

@@ -127,6 +127,7 @@
 	},
 	"autoApprove": {
 		"description": "Permet que Roo realitzi operacions automàticament sense requerir aprovació. Activeu aquesta configuració només si confieu plenament en la IA i enteneu els riscos de seguretat associats.",
+		"enabled": "Auto-aprovació activada",
 		"toggleAriaLabel": "Commuta l'aprovació automàtica",
 		"disabledAriaLabel": "Aprovació automàtica desactivada: seleccioneu primer les opcions",
 		"readOnly": {
@@ -267,6 +268,10 @@
 		"moonshotApiKey": "Clau API de Moonshot",
 		"getMoonshotApiKey": "Obtenir clau API de Moonshot",
 		"moonshotBaseUrl": "Punt d'entrada de Moonshot",
+		"zaiApiKey": "Clau API de Z AI",
+		"getZaiApiKey": "Obtenir clau API de Z AI",
+		"zaiEntrypoint": "Punt d'entrada de Z AI",
+		"zaiEntrypointDescription": "Si us plau, seleccioneu el punt d'entrada de l'API apropiat segons la vostra ubicació. Si sou a la Xina, trieu open.bigmodel.cn. Altrament, trieu api.z.ai.",
 		"geminiApiKey": "Clau API de Gemini",
 		"getGroqApiKey": "Obtenir clau API de Groq",
 		"groqApiKey": "Clau API de Groq",
@@ -685,6 +690,10 @@
 		"PREVENT_FOCUS_DISRUPTION": {
 			"name": "Edició en segon pla",
 			"description": "Quan s'activa, evita la interrupció del focus de l'editor. Les edicions de fitxers es produeixen en segon pla sense obrir la vista diff o robar el focus. Pots continuar treballant sense interrupcions mentre Roo fa canvis. Els fitxers poden obrir-se sense focus per capturar diagnòstics o romandre completament tancats."
+		},
+		"ASSISTANT_MESSAGE_PARSER": {
+			"name": "Utilitza el nou analitzador de missatges",
+			"description": "Activa l'analitzador de missatges en streaming experimental que millora el rendiment en respostes llargues processant els missatges de manera més eficient."
 		}
 	},
 	"promptCaching": {
