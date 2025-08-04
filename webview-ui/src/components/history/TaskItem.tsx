@@ -5,7 +5,6 @@ import { vscode } from "@/utils/vscode"
 import { cn } from "@/lib/utils"
 import { Checkbox } from "@/components/ui/checkbox"
 
-import TaskItemHeader from "./TaskItemHeader"
 import TaskItemFooter from "./TaskItemFooter"
 
 interface DisplayHistoryItem extends HistoryItem {
@@ -52,7 +51,7 @@ const TaskItem = ({
 				className,
 			)}
 			onClick={handleClick}>
-			<div className="flex gap-2 p-3">
+			<div className={(!isCompact && isSelectionMode ? "pl-3 pb-3" : "pl-4") + " flex gap-3 px-3 pt-3 pb-1"}>
 				{/* Selection checkbox - only in full variant */}
 				{!isCompact && isSelectionMode && (
 					<div
@@ -69,26 +68,25 @@ const TaskItem = ({
 				)}
 
 				<div className="flex-1 min-w-0">
-					{/* Header with metadata */}
-					<TaskItemHeader item={item} isSelectionMode={isSelectionMode} onDelete={onDelete} />
-
-					{/* Task content - always show up to 3 lines */}
 					<div
 						className={cn(
-							"overflow-hidden whitespace-pre-wrap text-vscode-foreground text-ellipsis line-clamp-3",
+							"overflow-hidden whitespace-pre-wrap text-vscode-foreground text-ellipsis line-clamp-2",
 							{
 								"text-base": !isCompact,
 							},
+							!isCompact && isSelectionMode ? "mb-1" : "",
 						)}
 						data-testid="task-content"
 						{...(item.highlight ? { dangerouslySetInnerHTML: { __html: item.highlight } } : {})}>
 						{item.highlight ? undefined : item.task}
 					</div>
+					<TaskItemFooter
+						item={item}
+						variant={variant}
+						isSelectionMode={isSelectionMode}
+						onDelete={onDelete}
+					/>
 
-					{/* Task Item Footer */}
-					<TaskItemFooter item={item} variant={variant} isSelectionMode={isSelectionMode} />
-
-					{/* Workspace info */}
 					{showWorkspace && item.workspace && (
 						<div className="flex flex-row gap-1 text-vscode-descriptionForeground text-xs mt-1">
 							<span className="codicon codicon-folder scale-80" />

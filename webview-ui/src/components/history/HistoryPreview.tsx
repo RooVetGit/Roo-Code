@@ -18,7 +18,7 @@ const HistoryPreview = () => {
 		<div className="flex flex-col gap-3">
 			{tasks.length !== 0 && (
 				<>
-					{tasks.slice(0, 5).map((item) => (
+					{tasks.slice(0, 3).map((item) => (
 						<TaskItem key={item.id} item={item} variant="compact" />
 					))}
 					<button

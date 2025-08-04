@@ -56,5 +56,24 @@ describe("TaskItemFooter", () => {
 		// Should not show any action buttons
 		expect(screen.queryByTestId("copy-prompt-button")).not.toBeInTheDocument()
 		expect(screen.queryByTestId("export")).not.toBeInTheDocument()
+		expect(screen.queryByTestId("delete-task-button")).not.toBeInTheDocument()
+	})
+
+	it("shows delete button when not in selection mode and onDelete is provided", () => {
+		render(<TaskItemFooter item={mockItem} variant="full" isSelectionMode={false} onDelete={vi.fn()} />)
+
+		expect(screen.getByTestId("delete-task-button")).toBeInTheDocument()
+	})
+
+	it("does not show delete button in selection mode", () => {
+		render(<TaskItemFooter item={mockItem} variant="full" isSelectionMode={true} onDelete={vi.fn()} />)
+
+		expect(screen.queryByTestId("delete-task-button")).not.toBeInTheDocument()
+	})
+
+	it("does not show delete button when onDelete is not provided", () => {
+		render(<TaskItemFooter item={mockItem} variant="full" isSelectionMode={false} />)
+
+		expect(screen.queryByTestId("delete-task-button")).not.toBeInTheDocument()
 	})
 })

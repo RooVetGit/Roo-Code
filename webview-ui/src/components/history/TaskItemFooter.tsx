@@ -3,20 +3,25 @@ import type { HistoryItem } from "@roo-code/types"
 import { formatTimeAgo } from "@/utils/format"
 import { CopyButton } from "./CopyButton"
 import { ExportButton } from "./ExportButton"
+import { DeleteButton } from "./DeleteButton"
+import { StandardTooltip } from "../ui/standard-tooltip"
 
 export interface TaskItemFooterProps {
 	item: HistoryItem
 	variant: "compact" | "full"
 	isSelectionMode?: boolean
+	onDelete?: (taskId: string) => void
 }
 
-const TaskItemFooter: React.FC<TaskItemFooterProps> = ({ item, variant, isSelectionMode = false }) => {
+const TaskItemFooter: React.FC<TaskItemFooterProps> = ({ item, variant, isSelectionMode = false, onDelete }) => {
 	return (
-		<div className="text-xs text-vscode-descriptionForeground flex justify-between items-center mt-1">
-			<div className="flex gap-3 items-center">
+		<div className="text-xs text-vscode-descriptionForeground flex justify-between items-center">
+			<div className="flex gap-2 items-center text-vscode-descriptionForeground/60">
 				{/* Datetime with time-ago format */}
-				<span className="text-vscode-descriptionForeground">{formatTimeAgo(item.ts)}</span>
-
+				<StandardTooltip content={new Date(item.ts).toLocaleString()}>
+					<span className="capitalize">{formatTimeAgo(item.ts)}</span>
+				</StandardTooltip>
+				<span>·</span>
 				{/* Cost */}
 				{!!item.totalCost && (
 					<span className="flex items-center" data-testid="cost-footer-compact">
@@ -27,9 +32,10 @@ const TaskItemFooter: React.FC<TaskItemFooterProps> = ({ item, variant, isSelect
 
 			{/* Action Buttons for non-compact view */}
 			{!isSelectionMode && (
-				<div className="flex flex-row gap-0 items-center opacity-50 hover:opacity-100">
+				<div className="flex flex-row gap-0 items-center text-vscode-descriptionForeground/60 hover:text-vscode-descriptionForeground">
 					<CopyButton itemTask={item.task} />
 					{variant === "full" && <ExportButton itemId={item.id} />}
+					{onDelete && <DeleteButton itemId={item.id} onDelete={onDelete} />}
 				</div>
 			)}
 		</div>
