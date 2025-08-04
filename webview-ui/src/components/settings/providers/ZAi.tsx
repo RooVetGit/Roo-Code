@@ -31,7 +31,7 @@ export const ZAi = ({ apiConfiguration, setApiConfigurationField }: ZAiProps) =>
 	return (
 		<>
 			<div>
-				<label className="block font-medium mb-1">Z AI Entrypoint</label>
+				<label className="block font-medium mb-1">{t("settings:providers.zaiEntrypoint")}</label>
 				<VSCodeDropdown
 					value={apiConfiguration.zaiApiLine || "international"}
 					onChange={handleInputChange("zaiApiLine")}
@@ -44,8 +44,7 @@ export const ZAi = ({ apiConfiguration, setApiConfigurationField }: ZAiProps) =>
 					</VSCodeOption>
 				</VSCodeDropdown>
 				<div className="text-xs text-vscode-descriptionForeground mt-1">
-					Please select the appropriate API entrypoint based on your location. If you are in China, choose
-					open.bigmodel.cn. Otherwise, choose api.z.ai.
+					{t("settings:providers.zaiEntrypointDescription")}
 				</div>
 			</div>
 			<div>
@@ -55,7 +54,7 @@ export const ZAi = ({ apiConfiguration, setApiConfigurationField }: ZAiProps) =>
 					onInput={handleInputChange("zaiApiKey")}
 					placeholder={t("settings:placeholders.apiKey")}
 					className="w-full">
-					<label className="block font-medium mb-1">Z AI API Key</label>
+					<label className="block font-medium mb-1">{t("settings:providers.zaiApiKey")}</label>
 				</VSCodeTextField>
 				<div className="text-sm text-vscode-descriptionForeground">
 					{t("settings:providers.apiKeyStorageNotice")}
@@ -68,7 +67,7 @@ export const ZAi = ({ apiConfiguration, setApiConfigurationField }: ZAiProps) =>
 								: "https://z.ai/manage-apikey/apikey-list"
 						}
 						appearance="secondary">
-						Get Z AI API Key
+						{t("settings:providers.getZaiApiKey")}
 					</VSCodeButtonLink>
 				)}
 			</div>
