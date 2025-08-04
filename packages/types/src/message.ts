@@ -134,6 +134,7 @@ export function isInteractiveAsk(ask: ClineAsk): ask is InteractiveAsk {
  * - `checkpoint_saved`: Indicates a checkpoint has been saved
  * - `rooignore_error`: Error related to .rooignore file processing
  * - `diff_error`: Error occurred while applying a diff/patch
+ * - `file_not_found_error`: Error when attempting to read a file that doesn't exist
  * - `condense_context`: Context condensation/summarization has started
  * - `condense_context_error`: Error occurred during context condensation
  * - `codebase_search_result`: Results from searching the codebase
@@ -160,6 +161,7 @@ export const clineSays = [
 	"checkpoint_saved",
 	"rooignore_error",
 	"diff_error",
+	"file_not_found_error",
 	"condense_context",
 	"condense_context_error",
 	"codebase_search_result",

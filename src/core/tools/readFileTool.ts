@@ -611,18 +611,30 @@ export async function readFileTool(
 				})
 			} catch (error) {
 				let errorMsg = error instanceof Error ? error.message : String(error)
-				let userFriendlyError = errorMsg
 
 				// Check if this is a file not found error
 				if (error instanceof Error && "code" in error && error.code === "ENOENT") {
-					userFriendlyError = `File not found: The requested file does not exist in the current workspace.`
-				}
+					// Emit a proper typed message for file not found errors
+					await cline.say(
+						"file_not_found_error",
+						JSON.stringify({
+							filePath: relPath,
+							error: "The requested file does not exist in the current workspace.",
+						}),
+					)
 
-				updateFileResult(relPath, {
-					status: "error",
-					error: userFriendlyError,
-					xmlContent: `<file><path>${relPath}</path><error>${userFriendlyError}</error></file>`,
-				})
+					updateFileResult(relPath, {
+						status: "error",
+						error: "File not found",
+						xmlContent: `<file><path>${relPath}</path><error>File not found: The requested file does not exist in the current workspace.</error></file>`,
+					})
+				} else {
+					updateFileResult(relPath, {
+						status: "error",
+						error: errorMsg,
+						xmlContent: `<file><path>${relPath}</path><error>${errorMsg}</error></file>`,
+					})
+				}
 				await handleError(`reading file ${relPath}`, error instanceof Error ? error : new Error(errorMsg))
 			}
 		}
@@ -702,20 +714,35 @@ export async function readFileTool(
 		// Handle all errors using per-file format for consistency
 		const relPath = fileEntries[0]?.path || "unknown"
 		let errorMsg = error instanceof Error ? error.message : String(error)
-		let userFriendlyError = errorMsg
 
 		// Check if this is a file not found error
 		if (error instanceof Error && "code" in error && error.code === "ENOENT") {
-			userFriendlyError = `File not found: The requested file does not exist in the current workspace.`
-		}
+			// Emit a proper typed message for file not found errors
+			await cline.say(
+				"file_not_found_error",
+				JSON.stringify({
+					filePath: relPath,
+					error: "The requested file does not exist in the current workspace.",
+				}),
+			)
 
-		// If we have file results, update the first one with the error
-		if (fileResults.length > 0) {
-			updateFileResult(relPath, {
-				status: "error",
-				error: userFriendlyError,
-				xmlContent: `<file><path>${relPath}</path><error>${userFriendlyError}</error></file>`,
-			})
+			// If we have file results, update the first one with the error
+			if (fileResults.length > 0) {
+				updateFileResult(relPath, {
+					status: "error",
+					error: "File not found",
+					xmlContent: `<file><path>${relPath}</path><error>File not found: The requested file does not exist in the current workspace.</error></file>`,
+				})
+			}
+		} else {
+			// If we have file results, update the first one with the error
+			if (fileResults.length > 0) {
+				updateFileResult(relPath, {
+					status: "error",
+					error: errorMsg,
+					xmlContent: `<file><path>${relPath}</path><error>${errorMsg}</error></file>`,
+				})
+			}
 		}
 
 		await handleError(`reading file ${relPath}`, error instanceof Error ? error : new Error(errorMsg))

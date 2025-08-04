@@ -1054,23 +1054,14 @@ export const ChatRowContent = ({
 				case "api_req_finished":
 					return null // we should never see this message type
 				case "text":
-					// Check if this is a file not found error from read_file tool
-					if (message.text && message.text.includes("<files>") && message.text.includes("<error>")) {
-						// Parse the XML to extract file path and error message
-						const fileMatch = message.text.match(
-							/<file><path>([^<]+)<\/path><error>([^<]+)<\/error><\/file>/,
-						)
-						if (fileMatch && fileMatch[2].includes("File not found:")) {
-							const filePath = fileMatch[1]
-							return <FileNotFoundError filePath={filePath} />
-						}
-					}
-
 					return (
 						<div>
 							<Markdown markdown={message.text} partial={message.partial} />
 						</div>
 					)
+				case "file_not_found_error":
+					const errorData = safeJsonParse<{ filePath: string; error: string }>(message.text || "{}")
+					return <FileNotFoundError filePath={errorData?.filePath || ""} />
 				case "user_feedback":
 					return (
 						<div className="bg-vscode-editor-background border rounded-xs p-1 overflow-hidden whitespace-pre-wrap">
