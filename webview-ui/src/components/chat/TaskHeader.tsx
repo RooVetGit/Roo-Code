@@ -1,5 +1,4 @@
 import { memo, useRef, useState } from "react"
-import { useWindowSize } from "react-use"
 import { useTranslation } from "react-i18next"
 import { FoldVertical, ChevronUp, ChevronDown } from "lucide-react"
 import prettyBytes from "pretty-bytes"
@@ -17,7 +16,6 @@ import { useSelectedModel } from "@/components/ui/hooks/useSelectedModel"
 import Thumbnails from "../common/Thumbnails"
 
 import { TaskActions } from "./TaskActions"
-import { ShareButton } from "./ShareButton"
 import { ContextWindowProgress } from "./ContextWindowProgress"
 import { Mention } from "./Mention"
 import { TodoListDisplay } from "./TodoListDisplay"
@@ -55,8 +53,6 @@ const TaskHeader = ({
 	const textContainerRef = useRef<HTMLDivElement>(null)
 	const textRef = useRef<HTMLDivElement>(null)
 	const contextWindow = model?.contextWindow || 1
-
-	const { width: windowWidth } = useWindowSize()
 
 	const condenseButton = (
 		<StandardTooltip content={t("chat:task.condenseContext")}>
@@ -106,7 +102,12 @@ const TaskHeader = ({
 					<div className="flex items-center select-none grow min-w-0">
 						<div className="whitespace-nowrap overflow-hidden text-ellipsis grow min-w-0">
 							{isTaskExpanded && <span className="font-bold">Task Details</span>}
-							{!isTaskExpanded && <Mention text={task.text} />}
+							{!isTaskExpanded && (
+								<div>
+									<span className="font-bold mr-1">Task</span>
+									<Mention text={task.text} />
+								</div>
+							)}
 						</div>
 						<div className="flex items-center shrink-0 ml-2" onClick={(e) => e.stopPropagation()}>
 							<StandardTooltip content={isTaskExpanded ? t("chat:task.collapse") : t("chat:task.expand")}>
@@ -121,9 +122,6 @@ const TaskHeader = ({
 				</div>
 				{!isTaskExpanded && contextWindow > 0 && (
 					<div className="flex items-center gap-2 text-sm" onClick={(e) => e.stopPropagation()}>
-						<div className="share-button -ml-1.5" onClick={(e) => e.stopPropagation()}>
-							<ShareButton item={currentTaskItem} disabled={buttonsDisabled} />
-						</div>
 						<StandardTooltip
 							content={
 								<div className="space-y-1">
@@ -163,7 +161,7 @@ const TaskHeader = ({
 							}
 							side="top"
 							sideOffset={8}>
-							<span className="mx-1">
+							<span className="mr-1">
 								{formatLargeNumber(contextTokens || 0)} / {formatLargeNumber(contextWindow)}
 							</span>
 						</StandardTooltip>
@@ -175,7 +173,7 @@ const TaskHeader = ({
 					<>
 						<div
 							ref={textContainerRef}
-							className="-mt-0.5 text-vscode-font-size overflow-y-auto break-words break-anywhere relative">
+							className="text-vscode-font-size overflow-y-auto break-words break-anywhere relative">
 							<div
 								ref={textRef}
 								className="overflow-auto max-h-80 whitespace-pre-wrap break-words break-anywhere cursor-text"
@@ -200,8 +198,7 @@ const TaskHeader = ({
 												{t("chat:task.contextWindow")}
 											</th>
 											<td className="align-top">
-												<div
-													className={`max-w-64 -mt-0.5 flex ${windowWidth < 400 ? "flex-col" : "flex-row"} gap-1`}>
+												<div className={`max-w-80 -mt-0.5 flex flex-nowrap gap-1`}>
 													<ContextWindowProgress
 														contextWindow={contextWindow}
 														contextTokens={contextTokens || 0}

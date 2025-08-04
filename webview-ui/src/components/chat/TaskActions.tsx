@@ -21,54 +21,47 @@ export const TaskActions = ({ item, buttonsDisabled }: TaskActionsProps) => {
 	const { copyWithFeedback, showCopyFeedback } = useCopyToClipboard()
 
 	return (
-		<div className="flex flex-row justify-between items-center">
-			{/* Share button with label on the left */}
-			<div className="flex items-center">
-				<ShareButton item={item} disabled={false} showLabel={true} />
-			</div>
-
-			{/* Other action buttons on the right */}
-			<div className="flex flex-row gap-1">
+		<div className="flex flex-row items-center">
+			<IconButton
+				iconClass="codicon-desktop-download"
+				title={t("chat:task.export")}
+				onClick={() => vscode.postMessage({ type: "exportCurrentTask" })}
+			/>
+			{item?.task && (
 				<IconButton
-					iconClass="codicon-desktop-download"
-					title={t("chat:task.export")}
-					onClick={() => vscode.postMessage({ type: "exportCurrentTask" })}
+					iconClass={showCopyFeedback ? "codicon-check" : "codicon-copy"}
+					title={t("history:copyPrompt")}
+					onClick={(e) => copyWithFeedback(item.task, e)}
 				/>
-				{item?.task && (
-					<IconButton
-						iconClass={showCopyFeedback ? "codicon-check" : "codicon-copy"}
-						title={t("history:copyPrompt")}
-						onClick={(e) => copyWithFeedback(item.task, e)}
-					/>
-				)}
-				{!!item?.size && item.size > 0 && (
-					<>
-						<div className="flex items-center">
-							<IconButton
-								iconClass="codicon-trash"
-								title={t("chat:task.delete")}
-								disabled={buttonsDisabled}
-								onClick={(e) => {
-									e.stopPropagation()
+			)}
+			{!!item?.size && item.size > 0 && (
+				<>
+					<div className="flex items-center">
+						<IconButton
+							iconClass="codicon-trash"
+							title={t("chat:task.delete")}
+							disabled={buttonsDisabled}
+							onClick={(e) => {
+								e.stopPropagation()
 
-									if (e.shiftKey) {
-										vscode.postMessage({ type: "deleteTaskWithId", text: item.id })
-									} else {
-										setDeleteTaskId(item.id)
-									}
-								}}
-							/>
-						</div>
-						{deleteTaskId && (
-							<DeleteTaskDialog
-								taskId={deleteTaskId}
-								onOpenChange={(open) => !open && setDeleteTaskId(null)}
-								open
-							/>
-						)}
-					</>
-				)}
-			</div>
+								if (e.shiftKey) {
+									vscode.postMessage({ type: "deleteTaskWithId", text: item.id })
+								} else {
+									setDeleteTaskId(item.id)
+								}
+							}}
+						/>
+					</div>
+					{deleteTaskId && (
+						<DeleteTaskDialog
+							taskId={deleteTaskId}
+							onOpenChange={(open) => !open && setDeleteTaskId(null)}
+							open
+						/>
+					)}
+				</>
+			)}
+			<ShareButton item={item} disabled={false} showLabel={false} />
 		</div>
 	)
 }
