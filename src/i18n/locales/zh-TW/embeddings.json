@@ -23,6 +23,8 @@
 		"failedToProcessBatchWithError": "嘗試 {{maxRetries}} 次後批次處理失敗：{{errorMessage}}"
 	},
 	"vectorStore": {
+		"vectorError": "錯誤: {{errorMessage}}",
+		"valkeyConnectionFailed": "無法連線到 Valkey Search。請確保 Valkey 正在運行且可透過 {{valkeyUrl}} 存取。錯誤: {{errorMessage}}",
 		"qdrantConnectionFailed": "連接 Qdrant 向量資料庫失敗。請確保 Qdrant 正在執行並可在 {{qdrantUrl}} 存取。錯誤：{{errorMessage}}",
 		"vectorDimensionMismatch": "無法更新新模型的向量索引。請嘗試清除索引並重新開始。詳細資訊: {{errorMessage}}"
 	},

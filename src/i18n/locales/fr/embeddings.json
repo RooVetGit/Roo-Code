@@ -23,6 +23,8 @@
 		"failedToProcessBatchWithError": "Échec du traitement du lot après {{maxRetries}} tentatives : {{errorMessage}}"
 	},
 	"vectorStore": {
+		"vectorError": "Erreur : {{errorMessage}}",
+		"valkeyConnectionFailed": "Échec de la connexion à Valkey Search. Vérifiez que Valkey est démarré et accessible à l'adresse {{valkeyUrl}}. Erreur : {{errorMessage}}",
 		"qdrantConnectionFailed": "Échec de la connexion à la base de données vectorielle Qdrant. Veuillez vous assurer que Qdrant fonctionne et est accessible à {{qdrantUrl}}. Erreur : {{errorMessage}}",
 		"vectorDimensionMismatch": "Échec de la mise à jour de l'index vectoriel pour le nouveau modèle. Veuillez essayer de vider l'index et de recommencer. Détails : {{errorMessage}}"
 	},

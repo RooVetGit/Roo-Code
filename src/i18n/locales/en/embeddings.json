@@ -23,6 +23,8 @@
 		"failedToProcessBatchWithError": "Failed to process batch after {{maxRetries}} attempts: {{errorMessage}}"
 	},
 	"vectorStore": {
+		"vectorError": "Error: {{errorMessage}}",
+		"valkeyConnectionFailed": "Failed to connect to Valkey Search. Ensure Valkey is running and accessible at {{valkeyUrl}}. Error: {{errorMessage}}",
 		"qdrantConnectionFailed": "Failed to connect to Qdrant vector database. Please ensure Qdrant is running and accessible at {{qdrantUrl}}. Error: {{errorMessage}}",
 		"vectorDimensionMismatch": "Failed to update vector index for new model. Please try clearing the index and starting again. Details: {{errorMessage}}"
 	},

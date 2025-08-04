@@ -3,6 +3,7 @@ import { createHash } from "crypto"
 import * as path from "path"
 import { IVectorStore, VectorStoreSearchResult } from "../interfaces"
 import { DEFAULT_MAX_SEARCH_RESULTS } from "../constants"
+import { t } from "../../../i18n"
 
 export class ValkeySearchVectorStore implements IVectorStore {
 	private readonly vectorSize: number
@@ -28,45 +29,61 @@ export class ValkeySearchVectorStore implements IVectorStore {
 		return url.trim()
 	}
 
-	private initializeClient = async () => {
+	private async initializeClient(): Promise<void> {
 		if (this.isInitializing || (this.client && this.client.status === "ready")) {
 			return
 		}
 
 		this.isInitializing = true
 
-		return new Promise<void>((resolve, reject) => {
-			try {
-				const { hostname, port, password, username } = this.parseConnectionOptions()
-				this.client = new Valkey({
-					host: hostname,
-					port,
-					password,
-					username,
-				})
+		try {
+			const { hostname, port, password, username } = this.parseConnectionOptions()
+			this.client = new Valkey({
+				host: hostname,
+				port,
+				password,
+				username,
+			})
 
-				this.client.on("error", (err: Error) => {
-					this.destroy()
-					this.isInitializing = false
-					reject(new Error("Valkey connection error", err))
-				})
-
-				this.client.on("ready", () => {
-					this.isInitializing = false
-					resolve()
-				})
-
-				this.client.on("end", () => {
-					this.destroy()
-					reject(new Error("Valkey connection closed"))
-				})
-
-				this.client.connect().catch(reject)
-			} catch (error) {
+			this.client.on("error", (err: Error) => {
+				console.error("[ValkeySearch] Connection error:", err)
 				this.isInitializing = false
-				reject(new Error("Valkey initialization failed", error))
+				throw new Error(
+					t("embeddings:vectorStore.valkeyConnectionFailed", {
+						valkeyUrl: this.valkeyUrl,
+						errorMessage: err,
+					}),
+					{ cause: err },
+				)
+			})
+
+			this.client.on("ready", () => {
+				this.isInitializing = false
+				console.log("[ValkeySearch] Connection established")
+			})
+
+			this.client.on("end", () => {
+				console.log("[ValkeySearch] Connection closed")
+				this.destroy()
+			})
+
+			await this.client.connect()
+		} catch (error) {
+			this.isInitializing = false
+			if (error instanceof Error) {
+				if (error.cause) {
+					throw error
+				}
+				throw new Error(
+					t("embeddings:vectorStore.valkeyConnectionFailed", {
+						valkeyUrl: this.valkeyUrl,
+						errorMessage: error,
+					}),
+					{ cause: error },
+				)
 			}
-		})
+			throw error
+		}
 	}
 
 	private parseConnectionOptions() {
@@ -109,10 +126,20 @@ export class ValkeySearchVectorStore implements IVectorStore {
 			await this.client?.sendCommand(new Command("FT.DROPINDEX", [this.indexName, "DD"]))
 		} catch (error) {
 			if (!(error instanceof Error && error.message.includes("Unknown index name"))) {
-				throw error
+				throw new Error(t("embeddings:vectorStore.indexDropFailed"), { cause: error })
 			}
 		}
 
+		try {
+			await this._createIndex()
+			await this._createPayloadIndexes()
+			return true
+		} catch (error) {
+			throw new Error(t("embeddings:vectorStore.indexCreationFailed"), { cause: error })
+		}
+	}
+
+	private async _createIndex(): Promise<void> {
 		await this.client?.sendCommand(
 			new Command("FT.CREATE", [
 				this.indexName,
@@ -133,8 +160,6 @@ export class ValkeySearchVectorStore implements IVectorStore {
 				this.DISTANCE_METRIC,
 			]),
 		)
-		await this._createPayloadIndexes()
-		return true
 	}
 
 	async upsertPoints(

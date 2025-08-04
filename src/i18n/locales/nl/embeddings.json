@@ -23,6 +23,8 @@
 		"failedToProcessBatchWithError": "Verwerken van batch mislukt na {{maxRetries}} pogingen: {{errorMessage}}"
 	},
 	"vectorStore": {
+		"vectorError": "Fout: {{errorMessage}}",
+		"valkeyConnectionFailed": "Verbinding met Valkey Search mislukt. Zorg ervoor dat Valkey wordt uitgevoerd en bereikbaar is op {{valkeyUrl}}. Fout: {{errorMessage}}",
 		"qdrantConnectionFailed": "Kan geen verbinding maken met Qdrant vectordatabase. Zorg ervoor dat Qdrant draait en toegankelijk is op {{qdrantUrl}}. Fout: {{errorMessage}}",
 		"vectorDimensionMismatch": "Kan de vectorindex voor het nieuwe model niet bijwerken. Probeer de index te wissen en opnieuw te beginnen. Details: {{errorMessage}}"
 	},
