@@ -189,12 +189,27 @@ export class CodeIndexManager {
 	/**
 	 * Recovers from error state by clearing the error and resetting internal state.
 	 * This allows the manager to be re-initialized after a recoverable error.
+	 *
+	 * This method clears all service instances (configManager, serviceFactory, orchestrator, searchService)
+	 * to force a complete re-initialization on the next operation. This ensures a clean slate
+	 * after recovering from errors such as network failures or configuration issues.
+	 *
+	 * @remarks
+	 * - Safe to call even when not in error state (idempotent)
+	 * - Does not restart indexing automatically - call initialize() after recovery
+	 * - Service instances will be recreated on next initialize() call
 	 */
 	public async recoverFromError(): Promise<void> {
-		// Clear error state
-		this._stateManager.setSystemState("Standby", "")
+		try {
+			// Clear error state
+			this._stateManager.setSystemState("Standby", "")
+		} catch (error) {
+			// Log error but continue with recovery - clearing service instances is more important
+			console.error("Failed to clear error state during recovery:", error)
+		}
 
 		// Force re-initialization by clearing service instances
+		// This ensures a clean slate even if state update failed
 		this._configManager = undefined
 		this._serviceFactory = undefined
 		this._orchestrator = undefined

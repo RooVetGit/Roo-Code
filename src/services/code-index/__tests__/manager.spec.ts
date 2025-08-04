@@ -505,5 +505,64 @@ describe("CodeIndexManager - handleSettingsChange regression", () => {
 			expect(mockServiceFactoryInstance.createServices).toHaveBeenCalled()
 			expect(mockServiceFactoryInstance.validateEmbedder).toHaveBeenCalled()
 		})
+
+		it("should be safe to call when not in error state (idempotent)", async () => {
+			// Setup manager in non-error state
+			mockStateManager.getCurrentStatus.mockReturnValue({
+				systemStatus: "Standby",
+				message: "",
+				processedItems: 0,
+				totalItems: 0,
+				currentItemUnit: "items",
+			})
+
+			// Verify initial state is not error
+			const initialStatus = manager.getCurrentStatus()
+			expect(initialStatus.systemStatus).not.toBe("Error")
+
+			// Act - call recoverFromError when not in error state
+			await expect(manager.recoverFromError()).resolves.not.toThrow()
+
+			// Assert - should still clear state and service instances
+			expect(mockStateManager.setSystemState).toHaveBeenCalledWith("Standby", "")
+			expect((manager as any)._configManager).toBeUndefined()
+			expect((manager as any)._serviceFactory).toBeUndefined()
+			expect((manager as any)._orchestrator).toBeUndefined()
+			expect((manager as any)._searchService).toBeUndefined()
+		})
+
+		it("should continue recovery even if setSystemState throws", async () => {
+			// Setup state manager to throw on setSystemState
+			mockStateManager.setSystemState.mockImplementation(() => {
+				throw new Error("State update failed")
+			})
+
+			// Setup manager with service instances
+			;(manager as any)._configManager = mockConfigManager
+			;(manager as any)._serviceFactory = {}
+			;(manager as any)._orchestrator = { stopWatcher: vi.fn() }
+			;(manager as any)._searchService = {}
+
+			// Spy on console.error
+			const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {})
+
+			// Act - should not throw despite setSystemState error
+			await expect(manager.recoverFromError()).resolves.not.toThrow()
+
+			// Assert - error should be logged
+			expect(consoleErrorSpy).toHaveBeenCalledWith(
+				"Failed to clear error state during recovery:",
+				expect.any(Error),
+			)
+
+			// Assert - service instances should still be cleared
+			expect((manager as any)._configManager).toBeUndefined()
+			expect((manager as any)._serviceFactory).toBeUndefined()
+			expect((manager as any)._orchestrator).toBeUndefined()
+			expect((manager as any)._searchService).toBeUndefined()
+
+			// Cleanup
+			consoleErrorSpy.mockRestore()
+		})
 	})
 })
