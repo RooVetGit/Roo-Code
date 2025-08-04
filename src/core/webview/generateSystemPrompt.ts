@@ -5,8 +5,7 @@ import { buildApiHandler } from "../../api"
 import { experiments as experimentsModule, EXPERIMENT_IDS } from "../../shared/experiments"
 
 import { SYSTEM_PROMPT } from "../prompts/system"
-import { MultiSearchReplaceDiffStrategy } from "../diff/strategies/multi-search-replace"
-import { MultiFileSearchReplaceDiffStrategy } from "../diff/strategies/multi-file-search-replace"
+import { createDiffStrategy } from "../diff/diff-strategy-factory"
 
 import { ClineProvider } from "./ClineProvider"
 
@@ -33,9 +32,21 @@ export const generateSystemPrompt = async (provider: ClineProvider, message: Web
 		EXPERIMENT_IDS.MULTI_FILE_APPLY_DIFF,
 	)
 
-	const diffStrategy = isMultiFileApplyDiffEnabled
-		? new MultiFileSearchReplaceDiffStrategy(fuzzyMatchThreshold)
-		: new MultiSearchReplaceDiffStrategy(fuzzyMatchThreshold)
+	// Get the model ID from the API configuration
+	let modelId = "unknown"
+	try {
+		const tempApiHandler = buildApiHandler(apiConfiguration)
+		modelId = tempApiHandler.getModel().id
+	} catch (error) {
+		console.error("Error getting model ID for diff strategy:", error)
+	}
+
+	// Create the appropriate diff strategy based on the model
+	const diffStrategy = createDiffStrategy({
+		modelId,
+		fuzzyMatchThreshold,
+		useMultiFile: isMultiFileApplyDiffEnabled,
+	})
 
 	const cwd = provider.cwd
 

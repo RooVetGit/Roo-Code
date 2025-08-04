@@ -80,8 +80,7 @@ import { RooProtectedController } from "../protect/RooProtectedController"
 import { type AssistantMessageContent, parseAssistantMessage, presentAssistantMessage } from "../assistant-message"
 import { truncateConversationIfNeeded } from "../sliding-window"
 import { ClineProvider } from "../webview/ClineProvider"
-import { MultiSearchReplaceDiffStrategy } from "../diff/strategies/multi-search-replace"
-import { MultiFileSearchReplaceDiffStrategy } from "../diff/strategies/multi-file-search-replace"
+import { createDiffStrategy } from "../diff/diff-strategy-factory"
 import { readApiMessages, saveApiMessages, readTaskMessages, saveTaskMessages, taskMetadata } from "../task-persistence"
 import { getEnvironmentDetails } from "../environment/getEnvironmentDetails"
 import {
@@ -324,8 +323,8 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 
 		// Only set up diff strategy if diff is enabled.
 		if (this.diffEnabled) {
-			// Default to old strategy, will be updated if experiment is enabled.
-			this.diffStrategy = new MultiSearchReplaceDiffStrategy(this.fuzzyMatchThreshold)
+			// Get the model ID from the API configuration
+			const modelId = this.api.getModel().id
 
 			// Check experiment asynchronously and update strategy if needed.
 			provider.getState().then((state) => {
@@ -334,9 +333,12 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 					EXPERIMENT_IDS.MULTI_FILE_APPLY_DIFF,
 				)
 
-				if (isMultiFileApplyDiffEnabled) {
-					this.diffStrategy = new MultiFileSearchReplaceDiffStrategy(this.fuzzyMatchThreshold)
-				}
+				// Create the appropriate diff strategy based on the model
+				this.diffStrategy = createDiffStrategy({
+					modelId,
+					fuzzyMatchThreshold: this.fuzzyMatchThreshold,
+					useMultiFile: isMultiFileApplyDiffEnabled,
+				})
 			})
 		}
 
