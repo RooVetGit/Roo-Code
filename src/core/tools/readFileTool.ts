@@ -613,7 +613,14 @@ export async function readFileTool(
 				let errorMsg = error instanceof Error ? error.message : String(error)
 
 				// Check if this is a file not found error
-				if (error instanceof Error && "code" in error && error.code === "ENOENT") {
+				const isFileNotFound =
+					error instanceof Error &&
+					(("code" in error && error.code === "ENOENT") ||
+						errorMsg.includes("ENOENT") ||
+						errorMsg.includes("no such file or directory") ||
+						errorMsg.includes("File not found"))
+
+				if (isFileNotFound) {
 					// Emit a proper typed message for file not found errors
 					await cline.say(
 						"file_not_found_error",
@@ -716,7 +723,14 @@ export async function readFileTool(
 		let errorMsg = error instanceof Error ? error.message : String(error)
 
 		// Check if this is a file not found error
-		if (error instanceof Error && "code" in error && error.code === "ENOENT") {
+		const isFileNotFound =
+			error instanceof Error &&
+			(("code" in error && error.code === "ENOENT") ||
+				errorMsg.includes("ENOENT") ||
+				errorMsg.includes("no such file or directory") ||
+				errorMsg.includes("File not found"))
+
+		if (isFileNotFound) {
 			// Emit a proper typed message for file not found errors
 			await cline.say(
 				"file_not_found_error",
