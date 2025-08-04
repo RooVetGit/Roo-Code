@@ -21,22 +21,14 @@ vitest.mock("../../../../i18n", () => ({
 		return key // Just return the key for other cases
 	},
 }))
-vitest.mock("path", () => ({
-	...vitest.importActual("path"),
-	sep: "/",
-	posix: {
-		normalize: (p: string) => {
-			// Simple implementation of posix.normalize for testing
-			// Remove redundant slashes and handle . and .. segments
-			return (
-				p
-					.split("/")
-					.filter((segment) => segment !== "" && segment !== ".")
-					.join("/") || "."
-			)
-		},
-	},
-}))
+vitest.mock("path", async () => {
+	const actual = await vitest.importActual("path")
+	return {
+		...actual,
+		sep: "/",
+		posix: actual.posix,
+	}
+})
 
 const mockQdrantClientInstance = {
 	getCollection: vitest.fn(),
