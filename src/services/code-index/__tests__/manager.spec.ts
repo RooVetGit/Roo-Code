@@ -370,4 +370,140 @@ describe("CodeIndexManager - handleSettingsChange regression", () => {
 			expect(mockServiceFactoryInstance.validateEmbedder).not.toHaveBeenCalled()
 		})
 	})
+
+	describe("recoverFromError", () => {
+		let mockConfigManager: any
+		let mockCacheManager: any
+		let mockStateManager: any
+
+		beforeEach(() => {
+			// Mock config manager
+			mockConfigManager = {
+				loadConfiguration: vi.fn().mockResolvedValue({ requiresRestart: false }),
+				isFeatureConfigured: true,
+				isFeatureEnabled: true,
+				getConfig: vi.fn().mockReturnValue({
+					isConfigured: true,
+					embedderProvider: "openai",
+					modelId: "text-embedding-3-small",
+					openAiOptions: { openAiNativeApiKey: "test-key" },
+					qdrantUrl: "http://localhost:6333",
+					qdrantApiKey: "test-key",
+					searchMinScore: 0.4,
+				}),
+			}
+			;(manager as any)._configManager = mockConfigManager
+
+			// Mock cache manager
+			mockCacheManager = {
+				initialize: vi.fn(),
+				clearCacheFile: vi.fn(),
+			}
+			;(manager as any)._cacheManager = mockCacheManager
+
+			// Mock state manager
+			mockStateManager = (manager as any)._stateManager
+			mockStateManager.setSystemState = vi.fn()
+			mockStateManager.getCurrentStatus = vi.fn().mockReturnValue({
+				systemStatus: "Error",
+				message: "Failed during initial scan: fetch failed",
+				processedItems: 0,
+				totalItems: 0,
+				currentItemUnit: "items",
+			})
+
+			// Mock orchestrator and search service to simulate initialized state
+			;(manager as any)._orchestrator = { stopWatcher: vi.fn(), state: "Error" }
+			;(manager as any)._searchService = {}
+			;(manager as any)._serviceFactory = {}
+		})
+
+		it("should clear error state when recoverFromError is called", async () => {
+			// Act
+			await manager.recoverFromError()
+
+			// Assert
+			expect(mockStateManager.setSystemState).toHaveBeenCalledWith("Standby", "")
+		})
+
+		it("should reset internal service instances", async () => {
+			// Verify initial state
+			expect((manager as any)._configManager).toBeDefined()
+			expect((manager as any)._serviceFactory).toBeDefined()
+			expect((manager as any)._orchestrator).toBeDefined()
+			expect((manager as any)._searchService).toBeDefined()
+
+			// Act
+			await manager.recoverFromError()
+
+			// Assert - all service instances should be undefined
+			expect((manager as any)._configManager).toBeUndefined()
+			expect((manager as any)._serviceFactory).toBeUndefined()
+			expect((manager as any)._orchestrator).toBeUndefined()
+			expect((manager as any)._searchService).toBeUndefined()
+		})
+
+		it("should make manager report as not initialized after recovery", async () => {
+			// Verify initial state
+			expect(manager.isInitialized).toBe(true)
+
+			// Act
+			await manager.recoverFromError()
+
+			// Assert
+			expect(manager.isInitialized).toBe(false)
+		})
+
+		it("should allow re-initialization after recovery", async () => {
+			// Setup mock for re-initialization
+			const mockServiceFactoryInstance = {
+				createServices: vi.fn().mockReturnValue({
+					embedder: { embedderInfo: { name: "openai" } },
+					vectorStore: {},
+					scanner: {},
+					fileWatcher: {
+						onDidStartBatchProcessing: vi.fn(),
+						onBatchProgressUpdate: vi.fn(),
+						watch: vi.fn(),
+						stopWatcher: vi.fn(),
+						dispose: vi.fn(),
+					},
+				}),
+				validateEmbedder: vi.fn().mockResolvedValue({ valid: true }),
+			}
+			MockedCodeIndexServiceFactory.mockImplementation(() => mockServiceFactoryInstance as any)
+
+			// Act - recover from error
+			await manager.recoverFromError()
+
+			// Verify manager is not initialized
+			expect(manager.isInitialized).toBe(false)
+
+			// Mock context proxy for initialization
+			const mockContextProxy = {
+				getValue: vi.fn(),
+				setValue: vi.fn(),
+				storeSecret: vi.fn(),
+				getSecret: vi.fn(),
+				refreshSecrets: vi.fn().mockResolvedValue(undefined),
+				getGlobalState: vi.fn().mockReturnValue({
+					codebaseIndexEnabled: true,
+					codebaseIndexQdrantUrl: "http://localhost:6333",
+					codebaseIndexEmbedderProvider: "openai",
+					codebaseIndexEmbedderModelId: "text-embedding-3-small",
+					codebaseIndexEmbedderModelDimension: 1536,
+					codebaseIndexSearchMaxResults: 10,
+					codebaseIndexSearchMinScore: 0.4,
+				}),
+			}
+
+			// Re-initialize
+			await manager.initialize(mockContextProxy as any)
+
+			// Assert - manager should be initialized again
+			expect(manager.isInitialized).toBe(true)
+			expect(mockServiceFactoryInstance.createServices).toHaveBeenCalled()
+			expect(mockServiceFactoryInstance.validateEmbedder).toHaveBeenCalled()
+		})
+	})
 })

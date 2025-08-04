@@ -2213,6 +2213,12 @@ export const webviewMessageHandler = async (
 					return
 				}
 				if (manager.isFeatureEnabled && manager.isFeatureConfigured) {
+					// Check if in error state and recover
+					const currentStatus = manager.getCurrentStatus()
+					if (currentStatus.systemStatus === "Error") {
+						await manager.recoverFromError()
+					}
+
 					if (!manager.isInitialized) {
 						await manager.initialize(provider.contextProxy)
 					}

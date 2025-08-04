@@ -187,6 +187,21 @@ export class CodeIndexManager {
 	}
 
 	/**
+	 * Recovers from error state by clearing the error and resetting internal state.
+	 * This allows the manager to be re-initialized after a recoverable error.
+	 */
+	public async recoverFromError(): Promise<void> {
+		// Clear error state
+		this._stateManager.setSystemState("Standby", "")
+
+		// Force re-initialization by clearing service instances
+		this._configManager = undefined
+		this._serviceFactory = undefined
+		this._orchestrator = undefined
+		this._searchService = undefined
+	}
+
+	/**
 	 * Cleans up the manager instance.
 	 */
 	public dispose(): void {
