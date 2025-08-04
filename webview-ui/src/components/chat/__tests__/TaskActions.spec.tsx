@@ -89,15 +89,17 @@ describe("TaskActions", () => {
 		it("renders share button when item has id", () => {
 			render(<TaskActions item={mockItem} buttonsDisabled={false} />)
 
-			// ShareButton now uses lucide Share icon and shows label text
-			expect(screen.getByText("Share task")).toBeInTheDocument()
+			// ShareButton now uses data-testid for reliable testing
+			const shareButton = screen.getByTestId("share-button")
+			expect(shareButton).toBeInTheDocument()
 		})
 
 		it("does not render share button when item has no id", () => {
 			render(<TaskActions item={undefined} buttonsDisabled={false} />)
 
 			// ShareButton returns null when no item ID
-			expect(screen.queryByText("Share task")).not.toBeInTheDocument()
+			const shareButton = screen.queryByTestId("share-button")
+			expect(shareButton).toBeNull()
 		})
 
 		it("renders share button even when not authenticated", () => {
@@ -109,7 +111,8 @@ describe("TaskActions", () => {
 			render(<TaskActions item={mockItem} buttonsDisabled={false} />)
 
 			// ShareButton should still render when not authenticated
-			expect(screen.getByText("Share task")).toBeInTheDocument()
+			const shareButton = screen.getByTestId("share-button")
+			expect(shareButton).toBeInTheDocument()
 		})
 	})
 
@@ -117,8 +120,8 @@ describe("TaskActions", () => {
 		it("shows organization and public share options when authenticated and sharing enabled", () => {
 			render(<TaskActions item={mockItem} buttonsDisabled={false} />)
 
-			// Find share button by text and click it
-			const shareButton = screen.getByText("Share task")
+			// Find share button by its test ID and click it
+			const shareButton = screen.getByTestId("share-button")
 			fireEvent.click(shareButton)
 
 			expect(screen.getByText("Share with Organization")).toBeInTheDocument()
@@ -128,8 +131,8 @@ describe("TaskActions", () => {
 		it("sends shareCurrentTask message when organization option is selected", () => {
 			render(<TaskActions item={mockItem} buttonsDisabled={false} />)
 
-			// Find share button by text and click it
-			const shareButton = screen.getByText("Share task")
+			// Find share button by its test ID and click it
+			const shareButton = screen.getByTestId("share-button")
 			fireEvent.click(shareButton)
 
 			const orgOption = screen.getByText("Share with Organization")
@@ -144,8 +147,8 @@ describe("TaskActions", () => {
 		it("sends shareCurrentTask message when public option is selected", () => {
 			render(<TaskActions item={mockItem} buttonsDisabled={false} />)
 
-			// Find share button by text and click it
-			const shareButton = screen.getByText("Share task")
+			// Find share button by its test ID and click it
+			const shareButton = screen.getByTestId("share-button")
 			fireEvent.click(shareButton)
 
 			const publicOption = screen.getByText("Share Publicly")
@@ -168,8 +171,8 @@ describe("TaskActions", () => {
 
 			render(<TaskActions item={mockItem} buttonsDisabled={false} />)
 
-			// Find share button by text and click it
-			const shareButton = screen.getByText("Share task")
+			// Find share button by its test ID and click it
+			const shareButton = screen.getByTestId("share-button")
 			fireEvent.click(shareButton)
 
 			expect(screen.queryByText("Share with Organization")).not.toBeInTheDocument()
@@ -188,8 +191,8 @@ describe("TaskActions", () => {
 		it("shows connect to cloud option when not authenticated", () => {
 			render(<TaskActions item={mockItem} buttonsDisabled={false} />)
 
-			// Find share button by text and click it
-			const shareButton = screen.getByText("Share task")
+			// Find share button by its test ID and click it
+			const shareButton = screen.getByTestId("share-button")
 			fireEvent.click(shareButton)
 
 			expect(screen.getByText("Connect to Roo Code Cloud")).toBeInTheDocument()
@@ -200,8 +203,8 @@ describe("TaskActions", () => {
 		it("does not show organization and public options when not authenticated", () => {
 			render(<TaskActions item={mockItem} buttonsDisabled={false} />)
 
-			// Find share button by text and click it
-			const shareButton = screen.getByText("Share task")
+			// Find share button by its test ID and click it
+			const shareButton = screen.getByTestId("share-button")
 			fireEvent.click(shareButton)
 
 			expect(screen.queryByText("Share with Organization")).not.toBeInTheDocument()
@@ -211,8 +214,8 @@ describe("TaskActions", () => {
 		it("sends rooCloudSignIn message when connect to cloud is selected", () => {
 			render(<TaskActions item={mockItem} buttonsDisabled={false} />)
 
-			// Find share button by text and click it
-			const shareButton = screen.getByText("Share task")
+			// Find share button by its test ID and click it
+			const shareButton = screen.getByTestId("share-button")
 			fireEvent.click(shareButton)
 
 			const connectOption = screen.getByText("Connect")
@@ -233,8 +236,8 @@ describe("TaskActions", () => {
 
 			render(<TaskActions item={mockItem} buttonsDisabled={false} />)
 
-			// Find share button by text
-			const shareButton = screen.getByText("Share task").closest("button")
+			// Find share button by its test ID
+			const shareButton = screen.getByTestId("share-button")
 			expect(shareButton).toBeInTheDocument()
 			expect(shareButton).toBeDisabled()
 
@@ -282,7 +285,7 @@ describe("TaskActions", () => {
 			const { rerender } = render(<TaskActions item={mockItem} buttonsDisabled={false} />)
 
 			// Click share button to open connect modal
-			const shareButton = screen.getByText("Share task")
+			const shareButton = screen.getByTestId("share-button")
 			fireEvent.click(shareButton)
 
 			// Click connect button to initiate authentication
@@ -350,8 +353,8 @@ describe("TaskActions", () => {
 		it("keeps share, export, and copy buttons enabled but disables delete button when buttonsDisabled is true", () => {
 			render(<TaskActions item={mockItem} buttonsDisabled={true} />)
 
-			// Find buttons by their labels/icons
-			const shareButton = screen.getByText("Share task").closest("button")
+			// Find buttons by their labels/test IDs
+			const shareButton = screen.getByTestId("share-button")
 			const exportButton = screen.getByLabelText("Export task history")
 			const copyButton = screen.getByLabelText("history:copyPrompt")
 			const deleteButton = screen.getByLabelText("Delete Task (Shift + Click to skip confirmation)")
@@ -368,7 +371,7 @@ describe("TaskActions", () => {
 			// Test with buttonsDisabled = false
 			const { rerender } = render(<TaskActions item={mockItem} buttonsDisabled={false} />)
 
-			let shareButton = screen.getByText("Share task").closest("button")
+			let shareButton = screen.getByTestId("share-button")
 			let exportButton = screen.getByLabelText("Export task history")
 			let copyButton = screen.getByLabelText("history:copyPrompt")
 			let deleteButton = screen.getByLabelText("Delete Task (Shift + Click to skip confirmation)")
@@ -381,7 +384,7 @@ describe("TaskActions", () => {
 			// Test with buttonsDisabled = true
 			rerender(<TaskActions item={mockItem} buttonsDisabled={true} />)
 
-			shareButton = screen.getByText("Share task").closest("button")
+			shareButton = screen.getByTestId("share-button")
 			exportButton = screen.getByLabelText("Export task history")
 			copyButton = screen.getByLabelText("history:copyPrompt")
 			deleteButton = screen.getByLabelText("Delete Task (Shift + Click to skip confirmation)")

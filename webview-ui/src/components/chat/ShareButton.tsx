@@ -164,7 +164,8 @@ export const ShareButton = ({ item, disabled = false, showLabel = false }: Share
 										? "h-7 px-2 hover:bg-vscode-toolbar-hoverBackground"
 										: "h-7 w-7 p-1.5 hover:bg-vscode-toolbar-hoverBackground"
 								}
-								onClick={handleShareButtonClick}>
+								onClick={handleShareButtonClick}
+								data-testid="share-button">
 								<SquareArrowOutUpRightIcon />
 								{showLabel && <span className="ml-0">{t("chat:task.share")}</span>}
 							</Button>
@@ -232,7 +233,8 @@ export const ShareButton = ({ item, disabled = false, showLabel = false }: Share
 								? "h-7 px-2 hover:bg-vscode-toolbar-hoverBackground"
 								: "h-7 w-7 p-1.5 hover:bg-vscode-toolbar-hoverBackground"
 						}
-						onClick={handleShareButtonClick}>
+						onClick={handleShareButtonClick}
+						data-testid="share-button">
 						<SquareArrowOutUpRightIcon />
 						{showLabel && <span className="ml-1">{t("chat:task.share")}</span>}
 					</Button>
