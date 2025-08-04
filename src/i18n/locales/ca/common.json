@@ -107,7 +107,8 @@
 		"roo": {
 			"authenticationRequired": "El proveïdor Roo requereix autenticació al núvol. Si us plau, inicieu sessió a Roo Code Cloud."
 		},
-		"mode_import_failed": "Ha fallat la importació del mode: {{error}}"
+		"mode_import_failed": "Ha fallat la importació del mode: {{error}}",
+		"task_corrupt_deleted": "La tasca seleccionada no s'ha pogut carregar i s'ha eliminat de l'historial. Això sol passar quan els fitxers de la tasca estan corruptes o falten."
 	},
 	"warnings": {
 		"no_terminal_content": "No s'ha seleccionat contingut de terminal",

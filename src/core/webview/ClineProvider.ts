@@ -1464,8 +1464,19 @@ export class ClineProvider
 	async showTaskWithId(id: string) {
 		if (id !== this.getCurrentTask()?.taskId) {
 			// Non-current task.
-			const { historyItem } = await this.getTaskWithId(id)
-			await this.createTaskWithHistoryItem(historyItem) // Clears existing task.
+			try {
+				const { historyItem } = await this.getTaskWithId(id)
+				await this.createTaskWithHistoryItem(historyItem) // Clears existing task.
+			} catch (error) {
+				// Log the error for debugging purposes
+				this.log(`Failed to load task ${id}: ${error instanceof Error ? error.message : String(error)}`)
+
+				// Task not found or corrupt - it has already been deleted from state by getTaskWithId
+				vscode.window.showErrorMessage(t("common:errors.task_corrupt_deleted"))
+				// Refresh the webview to update the task list
+				await this.postStateToWebview()
+				return
+			}
 		}
 
 		await this.postMessageToWebview({ type: "action", action: "chatButtonClicked" })
