@@ -132,7 +132,7 @@ describe("FireworksHandler", () => {
 				inputPrice: 0.22,
 				outputPrice: 0.88,
 				description:
-					"Latest Qwen3 thinking model, competitive against the best close source models in Jul 2025.",
+					"Latest Qwen3 thinking model, competitive against the best closed source models in Jul 2025.",
 			}),
 		)
 	})
