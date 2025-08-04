@@ -263,6 +263,8 @@
 		"getChutesApiKey": "Chutes API-sleutel ophalen",
 		"fireworksApiKey": "Fireworks API-sleutel",
 		"getFireworksApiKey": "Fireworks API-sleutel ophalen",
+		"ioIntelligenceApiKey": "IO Intelligence API-sleutel",
+		"getIoIntelligenceApiKey": "IO Intelligence API-sleutel ophalen",
 		"deepSeekApiKey": "DeepSeek API-sleutel",
 		"getDeepSeekApiKey": "DeepSeek API-sleutel ophalen",
 		"doubaoApiKey": "Doubao API-sleutel",
