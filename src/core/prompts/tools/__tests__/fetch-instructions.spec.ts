@@ -40,4 +40,14 @@ describe("getFetchInstructionsDescription", () => {
 		expect(description).toContain("<fetch_instructions>")
 		expect(description).toContain("</fetch_instructions>")
 	})
+
+	it("should handle null value consistently (treat as default/undefined)", () => {
+		const description = getFetchInstructionsDescription(null as any)
+
+		// Should behave the same as undefined (default to true)
+		expect(description).toContain("create_mcp_server")
+		expect(description).toContain("create_mode")
+		expect(description).toContain("Example: Requesting instructions to create an MCP Server")
+		expect(description).toContain("<task>create_mcp_server</task>")
+	})
 })
