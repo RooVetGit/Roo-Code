@@ -124,8 +124,8 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 	readonly taskId: string
 	readonly instanceId: string
 
-	readonly rootTask: Task | undefined = undefined
-	readonly parentTask: Task | undefined = undefined
+	readonly rootTask: Task | undefined
+	readonly parentTask: Task | undefined
 	readonly taskNumber: number
 	readonly workspacePath: string
 
