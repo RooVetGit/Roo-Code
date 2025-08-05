@@ -1,4 +1,4 @@
-import { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from "react"
+import React, { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from "react"
 import { useDeepCompareEffect, useEvent, useMount } from "react-use"
 import debounce from "debounce"
 import { Virtuoso, type VirtuosoHandle } from "react-virtuoso"
@@ -459,8 +459,9 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 	}, [isHidden])
 
 	useEffect(() => {
+		const cache = everVisibleMessagesTsRef.current
 		return () => {
-			everVisibleMessagesTsRef.current.clear()
+			cache.clear()
 		}
 	}, [])
 
@@ -468,16 +469,18 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 		const cleanupInterval = setInterval(() => {
 			const cache = everVisibleMessagesTsRef.current
 			const currentMessageIds = new Set(modifiedMessages.map((m: ClineMessage) => m.ts))
+			const viewportMessages = visibleMessages.slice(Math.max(0, visibleMessages.length - 100))
+			const viewportMessageIds = new Set(viewportMessages.map((m: ClineMessage) => m.ts))
 
-			cache.forEach((value: boolean, key: number) => {
-				if (!currentMessageIds.has(key)) {
+			cache.forEach((_value: boolean, key: number) => {
+				if (!currentMessageIds.has(key) && !viewportMessageIds.has(key)) {
 					cache.delete(key)
 				}
 			})
 		}, 60000)
 
 		return () => clearInterval(cleanupInterval)
-	}, [modifiedMessages])
+	}, [modifiedMessages, visibleMessages])
 
 	useEffect(() => {
 		const prev = prevExpandedRowsRef.current
@@ -966,6 +969,7 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 					const last1 = modifiedMessages.at(-1)
 					const last2 = modifiedMessages.at(-2)
 					if (last1?.ask === "resume_task" && last2 === message) {
+						return true
 					} else if (message !== last1) {
 						return false
 					}
@@ -1450,7 +1454,7 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 	)
 
 	const handleSuggestionClickInRow = useCallback(
-		(suggestion: SuggestionItem, event?: MouseEvent) => {
+		(suggestion: SuggestionItem, event?: React.MouseEvent) => {
 			// Mark that user has responded if this is a manual click (not auto-approval)
 			if (event) {
 				userRespondedRef.current = true
