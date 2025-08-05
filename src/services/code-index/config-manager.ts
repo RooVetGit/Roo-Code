@@ -50,6 +50,7 @@ export class CodeIndexConfigManager {
 			codebaseIndexEnabled: true,
 			codebaseIndexQdrantUrl: "http://localhost:6333",
 			codebaseIndexValkeyUrl: "http://localhost:6379",
+			codebaseIndexValkeyUsername: "",
 			codebaseIndexEmbedderProvider: "openai",
 			codebaseIndexEmbedderBaseUrl: "",
 			codebaseIndexEmbedderModelId: "",
@@ -61,6 +62,7 @@ export class CodeIndexConfigManager {
 			codebaseIndexEnabled,
 			codebaseIndexQdrantUrl,
 			codebaseIndexValkeyUrl,
+			codebaseIndexValkeyUsername,
 			codebaseIndexEmbedderProvider,
 			codebaseIndexEmbedderBaseUrl,
 			codebaseIndexEmbedderModelId,
@@ -71,6 +73,7 @@ export class CodeIndexConfigManager {
 
 		const openAiKey = this.contextProxy?.getSecret("codeIndexOpenAiKey") ?? ""
 		const qdrantApiKey = this.contextProxy?.getSecret("codeIndexQdrantApiKey") ?? ""
+		const valkeyPassword = this.contextProxy?.getSecret("codeIndexValkeyPassword") ?? ""
 		// Fix: Read OpenAI Compatible settings from the correct location within codebaseIndexConfig
 		const openAiCompatibleBaseUrl = codebaseIndexConfig.codebaseIndexOpenAiCompatibleBaseUrl ?? ""
 		const openAiCompatibleApiKey = this.contextProxy?.getSecret("codebaseIndexOpenAiCompatibleApiKey") ?? ""
@@ -82,6 +85,8 @@ export class CodeIndexConfigManager {
 		this.qdrantUrl = codebaseIndexQdrantUrl
 		this.qdrantApiKey = qdrantApiKey ?? ""
 		this.valkeyUrl = codebaseIndexValkeyUrl
+		this.valkeyPassword = valkeyPassword
+		this.valkeyUsername = codebaseIndexValkeyUsername
 		this.searchMinScore = codebaseIndexSearchMinScore
 		this.searchMaxResults = codebaseIndexSearchMaxResults
 		this.searchProvider = searchProvider
@@ -153,6 +158,8 @@ export class CodeIndexConfigManager {
 			qdrantUrl?: string
 			qdrantApiKey?: string
 			valkeyUrl?: string
+			valkeyPassword?: string
+			valkeyUsername?: string
 			searchProvider?: string
 			searchMinScore?: number
 		}
@@ -173,8 +180,10 @@ export class CodeIndexConfigManager {
 			mistralApiKey: this.mistralOptions?.apiKey ?? "",
 			qdrantUrl: this.qdrantUrl ?? "",
 			valkeyUrl: this.valkeyUrl ?? "",
+			valkeyUsername: this.valkeyUsername ?? "",
 			searchProvider: this.searchProvider ?? "",
 			qdrantApiKey: this.qdrantApiKey ?? "",
+			valkeyPassword: this.valkeyPassword ?? "",
 		}
 
 		// Refresh secrets from VSCode storage to ensure we have the latest values
@@ -200,6 +209,8 @@ export class CodeIndexConfigManager {
 				qdrantUrl: this.qdrantUrl,
 				qdrantApiKey: this.qdrantApiKey,
 				valkeyUrl: this.valkeyUrl,
+				valkeyPassword: this.valkeyPassword,
+				valkeyUsername: this.valkeyUsername,
 				searchProvider: this.searchProvider,
 				searchMinScore: this.currentSearchMinScore,
 			},
@@ -211,30 +222,26 @@ export class CodeIndexConfigManager {
 	 * Checks if the service is properly configured based on the embedder type.
 	 */
 	public isConfigured(): boolean {
+		const dbUrlPresent = this.qdrantUrl || this.valkeyUrl
 		if (this.embedderProvider === "openai") {
 			const openAiKey = this.openAiOptions?.openAiNativeApiKey
-			const qdrantUrl = this.qdrantUrl
-			return !!(openAiKey && qdrantUrl)
+			return !!(openAiKey && dbUrlPresent)
 		} else if (this.embedderProvider === "ollama") {
 			// Ollama model ID has a default, so only base URL is strictly required for config
 			const ollamaBaseUrl = this.ollamaOptions?.ollamaBaseUrl
-			const qdrantUrl = this.qdrantUrl
-			return !!(ollamaBaseUrl && qdrantUrl)
+			return !!(ollamaBaseUrl && dbUrlPresent)
 		} else if (this.embedderProvider === "openai-compatible") {
 			const baseUrl = this.openAiCompatibleOptions?.baseUrl
 			const apiKey = this.openAiCompatibleOptions?.apiKey
-			const qdrantUrl = this.qdrantUrl
-			const isConfigured = !!(baseUrl && apiKey && qdrantUrl)
+			const isConfigured = !!(baseUrl && apiKey && dbUrlPresent)
 			return isConfigured
 		} else if (this.embedderProvider === "gemini") {
 			const apiKey = this.geminiOptions?.apiKey
-			const qdrantUrl = this.qdrantUrl
-			const isConfigured = !!(apiKey && qdrantUrl)
+			const isConfigured = !!(apiKey && dbUrlPresent)
 			return isConfigured
 		} else if (this.embedderProvider === "mistral") {
 			const apiKey = this.mistralOptions?.apiKey
-			const qdrantUrl = this.qdrantUrl
-			const isConfigured = !!(apiKey && qdrantUrl)
+			const isConfigured = !!(apiKey && dbUrlPresent)
 			return isConfigured
 		}
 		return false // Should not happen if embedderProvider is always set correctly
@@ -274,6 +281,8 @@ export class CodeIndexConfigManager {
 		const prevValkeyUrl = prev?.valkeyUrl ?? ""
 		const prevSearchProvider = prev?.searchProvider ?? ""
 		const prevQdrantApiKey = prev?.qdrantApiKey ?? ""
+		const prevValkeyPassword = prev?.valkeyPassword ?? ""
+		const prevValkeyUsername = prev?.valkeyUsername ?? ""
 
 		// 1. Transition from disabled/unconfigured to enabled/configured
 		if ((!prevEnabled || !prevConfigured) && this.codebaseIndexEnabled && nowConfigured) {
@@ -313,6 +322,8 @@ export class CodeIndexConfigManager {
 		const currentValkeyUrl = this.valkeyUrl ?? ""
 		const currentSearchProvider = this.searchProvider ?? ""
 		const currentQdrantApiKey = this.qdrantApiKey ?? ""
+		const currentValkeyPassword = this.valkeyPassword ?? ""
+		const currentValkeyUsername = this.valkeyUsername ?? ""
 
 		if (prevOpenAiKey !== currentOpenAiKey) {
 			return true
@@ -351,6 +362,14 @@ export class CodeIndexConfigManager {
 		}
 
 		if (prevValkeyUrl !== currentValkeyUrl) {
+			return true
+		}
+
+		if (prevValkeyPassword !== currentValkeyPassword) {
+			return true
+		}
+
+		if (prevValkeyUsername !== currentValkeyUsername) {
 			return true
 		}
 

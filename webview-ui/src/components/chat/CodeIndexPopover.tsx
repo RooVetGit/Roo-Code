@@ -69,12 +69,12 @@ interface LocalCodeIndexSettings {
 	// Secret settings (start empty, will be loaded separately)
 	codeIndexOpenAiKey?: string
 	codeIndexQdrantApiKey?: string
+	codeIndexValkeyPassword?: string
 	codebaseIndexOpenAiCompatibleBaseUrl?: string
 	codebaseIndexOpenAiCompatibleApiKey?: string
 	codebaseIndexGeminiApiKey?: string
 	codebaseIndexMistralApiKey?: string
 	codebaseIndexValkeyUsername?: string
-	codebaseIndexValkeyPassword?: string
 	searchProvider?: string
 }
 
@@ -88,16 +88,12 @@ const createValidationSchema = (provider: EmbedderProvider, searchProvider: Sear
 			.url(t("settings:codeIndex.invalidQdrantUrl"))
 			.optional(),
 		codeIndexQdrantApiKey: z.string().optional(),
-		codebaseIndexValkeyUrl: z
-			.string()
-			.min(1, t("settings:codeIndex.valkeyUrlRequired"))
-			.url(t("settings:codeIndex.invalidValkeyUrl"))
-			.optional(),
+		codebaseIndexValkeyUrl: z.string().min(1, t("settings:codeIndex.valkeyUrlRequired")).optional(),
 		codebaseIndexValkeyUsername:
 			searchProvider === "valkey"
 				? z.string().min(1, t("settings:codeIndex.valkeyUsernameRequired"))
 				: z.string().optional(),
-		codebaseIndexValkeyPassword:
+		codeIndexValkeyPassword:
 			searchProvider === "valkey"
 				? z.string().min(1, t("settings:codeIndex.valkeyPasswordRequired"))
 				: z.string().optional(),
@@ -195,7 +191,7 @@ export const CodeIndexPopover: React.FC<CodeIndexPopoverProps> = ({
 		codebaseIndexGeminiApiKey: "",
 		codebaseIndexMistralApiKey: "",
 		codebaseIndexValkeyUsername: "",
-		codebaseIndexValkeyPassword: "",
+		codeIndexValkeyPassword: "",
 		searchProvider: "",
 	})
 
@@ -233,7 +229,7 @@ export const CodeIndexPopover: React.FC<CodeIndexPopoverProps> = ({
 				codebaseIndexGeminiApiKey: "",
 				codebaseIndexMistralApiKey: "",
 				codebaseIndexValkeyUsername: "",
-				codebaseIndexValkeyPassword: "",
+				codeIndexValkeyPassword: "",
 				searchProvider: codebaseIndexConfig.searchProvider,
 			}
 			setInitialSettings(settings)
@@ -329,8 +325,8 @@ export const CodeIndexPopover: React.FC<CodeIndexPopoverProps> = ({
 					if (!prev.codebaseIndexMistralApiKey || prev.codebaseIndexMistralApiKey === SECRET_PLACEHOLDER) {
 						updated.codebaseIndexMistralApiKey = secretStatus.hasMistralApiKey ? SECRET_PLACEHOLDER : ""
 					}
-					if (!prev.codebaseIndexValkeyPassword || prev.codebaseIndexValkeyPassword === SECRET_PLACEHOLDER) {
-						updated.codebaseIndexValkeyPassword = secretStatus.hasValkeyPassword ? SECRET_PLACEHOLDER : ""
+					if (!prev.codeIndexValkeyPassword || prev.codeIndexValkeyPassword === SECRET_PLACEHOLDER) {
+						updated.codeIndexValkeyPassword = secretStatus.hasValkeyPassword ? SECRET_PLACEHOLDER : ""
 					}
 
 					return updated
@@ -1177,18 +1173,18 @@ export const CodeIndexPopover: React.FC<CodeIndexPopoverProps> = ({
 												</label>
 												<VSCodeTextField
 													type="password"
-													value={currentSettings.codebaseIndexValkeyPassword || ""}
+													value={currentSettings.codeIndexValkeyPassword || ""}
 													onInput={(e: any) =>
-														updateSetting("codebaseIndexValkeyPassword", e.target.value)
+														updateSetting("codeIndexValkeyPassword", e.target.value)
 													}
 													placeholder={t("settings:codeIndex.valkeyPasswordPlaceholder")}
 													className={cn("w-full", {
-														"border-red-500": formErrors.codebaseIndexValkeyPassword,
+														"border-red-500": formErrors.codeIndexValkeyPassword,
 													})}
 												/>
-												{formErrors.codebaseIndexValkeyPassword && (
+												{formErrors.codeIndexValkeyPassword && (
 													<p className="text-xs text-vscode-errorForeground mt-1 mb-0">
-														{formErrors.codebaseIndexValkeyPassword}
+														{formErrors.codeIndexValkeyPassword}
 													</p>
 												)}
 											</div>
