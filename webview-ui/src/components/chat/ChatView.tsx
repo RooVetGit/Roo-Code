@@ -1,7 +1,7 @@
 import { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from "react"
 import { useDeepCompareEffect, useEvent, useMount } from "react-use"
 import debounce from "debounce"
-import { Virtuoso, type VirtuosoHandle } from "react-virtuoso"
+import { Virtuoso } from "react-virtuoso"
 import removeMd from "remove-markdown"
 import { VSCodeButton } from "@vscode/webview-ui-toolkit/react"
 import useSound from "use-sound"
@@ -57,6 +57,9 @@ import { CheckpointWarning } from "./CheckpointWarning"
 import QueuedMessages from "./QueuedMessages"
 import { getLatestTodo } from "@roo/todo"
 import { QueuedMessage } from "@roo-code/types"
+
+// Import the new virtualization utilities
+import { useOptimizedVirtualization } from "./virtualization"
 
 export interface ChatViewProps {
 	isHidden: boolean
@@ -167,13 +170,7 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 	const [primaryButtonText, setPrimaryButtonText] = useState<string | undefined>(undefined)
 	const [secondaryButtonText, setSecondaryButtonText] = useState<string | undefined>(undefined)
 	const [didClickCancel, setDidClickCancel] = useState(false)
-	const virtuosoRef = useRef<VirtuosoHandle>(null)
-	const [expandedRows, setExpandedRows] = useState<Record<number, boolean>>({})
-	const prevExpandedRowsRef = useRef<Record<number, boolean>>()
 	const scrollContainerRef = useRef<HTMLDivElement>(null)
-	const disableAutoScrollRef = useRef(false)
-	const [showScrollToBottom, setShowScrollToBottom] = useState(false)
-	const [isAtBottom, setIsAtBottom] = useState(false)
 	const lastTtsRef = useRef<string>("")
 	const [wasStreaming, setWasStreaming] = useState<boolean>(false)
 	const [showCheckpointWarning, setShowCheckpointWarning] = useState<boolean>(false)
@@ -188,6 +185,12 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 	const autoApproveTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 	const userRespondedRef = useRef<boolean>(false)
 	const [currentFollowUpTs, setCurrentFollowUpTs] = useState<number | null>(null)
+
+	// Map the optimized state to the existing state variables for backward compatibility
+	const [expandedRows, setExpandedRows] = useState<Record<number, boolean>>({})
+	const prevExpandedRowsRef = useRef<Record<number, boolean>>()
+	const disableAutoScrollRef = useRef(false)
+	const [showScrollToBottom, setShowScrollToBottom] = useState(false)
 
 	const clineAskRef = useRef(clineAsk)
 	useEffect(() => {
@@ -434,6 +437,7 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 	}, [messages.length])
 
 	useEffect(() => {
+		// Clear expanded rows for new task
 		setExpandedRows({})
 		everVisibleMessagesTsRef.current.clear() // Clear for new task
 		setCurrentFollowUpTs(null) // Clear follow-up answered state for new task
@@ -480,6 +484,7 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 		prevExpandedRowsRef.current = expandedRows // Store current state for next comparison
 	}, [expandedRows])
 
+	// Define isStreaming before using it in the virtualization hook
 	const isStreaming = useMemo(() => {
 		// Checking clineAsk isn't enough since messages effect may be called
 		// again for a tool for example, set clineAsk to its value, and if the
@@ -521,6 +526,102 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 		return false
 	}, [modifiedMessages, clineAsk, enableButtons, primaryButtonText])
 
+	// Use the optimized virtualization hook (after isStreaming is defined)
+	const {
+		virtuosoRef,
+		viewportConfig,
+		stateManager,
+		scrollManager,
+		performanceMonitor,
+		handleScroll: handleVirtuosoScroll,
+		handleRangeChange,
+		handleScrollStateChange,
+		scrollToBottom: optimizedScrollToBottom,
+		isAtBottom,
+		showScrollToBottom: shouldShowScrollButton,
+		visibleRange,
+	} = useOptimizedVirtualization({
+		messages: modifiedMessages,
+		isStreaming,
+		isHidden,
+		onPerformanceIssue: (metric, value) => {
+			console.warn(`[VIRTUALIZATION] ChatView performance issue: ${metric} = ${value}`)
+		},
+	})
+
+	console.log("[VIRTUALIZATION] Virtualization hook initialized:", {
+		messagesCount: modifiedMessages.length,
+		isStreaming,
+		isHidden,
+		viewportConfig,
+		timestamp: new Date().toISOString(),
+	})
+
+	// Sync expanded rows with state manager
+	useEffect(() => {
+		if (stateManager) {
+			const newExpandedRows: Record<number, boolean> = {}
+			modifiedMessages.forEach((msg) => {
+				if (stateManager.isExpanded(msg.ts)) {
+					newExpandedRows[msg.ts] = true
+				}
+			})
+			setExpandedRows(newExpandedRows)
+
+			console.log("[VIRTUALIZATION] Synced expanded rows with state manager:", {
+				expandedCount: Object.keys(newExpandedRows).length,
+				visibleRange,
+				timestamp: new Date().toISOString(),
+			})
+		}
+	}, [modifiedMessages, stateManager, visibleRange])
+
+	// Sync scroll button visibility
+	useEffect(() => {
+		setShowScrollToBottom(shouldShowScrollButton || (disableAutoScrollRef.current && !isAtBottom))
+	}, [shouldShowScrollButton, isAtBottom])
+
+	// Clear state manager for new task
+	useEffect(() => {
+		if (stateManager) {
+			stateManager.clear()
+		}
+		if (scrollManager) {
+			scrollManager.reset()
+		}
+	}, [task?.ts, stateManager, scrollManager])
+
+	// Handle performance monitoring
+	useEffect(() => {
+		if (performanceMonitor) {
+			if (isHidden) {
+				performanceMonitor.stopMonitoring()
+			} else {
+				performanceMonitor.startMonitoring()
+			}
+		}
+	}, [isHidden, performanceMonitor])
+
+	// Update scroll manager when user expands rows
+	useEffect(() => {
+		const prev = prevExpandedRowsRef.current
+		let wasAnyRowExpandedByUser = false
+		if (prev) {
+			// Check if any row transitioned from false/undefined to true
+			for (const [tsKey, isExpanded] of Object.entries(expandedRows)) {
+				const ts = Number(tsKey)
+				if (isExpanded && !(prev[ts] ?? false)) {
+					wasAnyRowExpandedByUser = true
+					break
+				}
+			}
+		}
+
+		if (wasAnyRowExpandedByUser && scrollManager) {
+			scrollManager.forceUserScrolling()
+		}
+	}, [expandedRows, scrollManager])
+
 	const markFollowUpAsAnswered = useCallback(() => {
 		const lastFollowUpMessage = messagesRef.current.findLast((msg) => msg.ask === "followup")
 		if (lastFollowUpMessage) {
@@ -548,6 +649,14 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 		// setSecondaryButtonText(undefined)
 		disableAutoScrollRef.current = false
 	}, [])
+
+	// Reset scroll manager state on chat reset
+	const handleChatResetWithManagers = useCallback(() => {
+		handleChatReset()
+		if (scrollManager) {
+			scrollManager.resetUserScrolling()
+		}
+	}, [handleChatReset, scrollManager])
 
 	/**
 	 * Handles sending messages to the extension
@@ -607,7 +716,7 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 						vscode.postMessage({ type: "askResponse", askResponse: "messageResponse", text, images })
 					}
 
-					handleChatReset()
+					handleChatResetWithManagers()
 				}
 			} catch (error) {
 				console.error("Error in handleSendMessage:", error)
@@ -619,7 +728,7 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 				// but for now we'll just log it
 			}
 		},
-		[handleChatReset, markFollowUpAsAnswered, sendingDisabled], // messagesRef and clineAskRef are stable
+		[handleChatResetWithManagers, markFollowUpAsAnswered, sendingDisabled], // messagesRef and clineAskRef are stable
 	)
 
 	useEffect(() => {
@@ -842,7 +951,7 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 				case "invoke":
 					switch (message.invoke!) {
 						case "newChat":
-							handleChatReset()
+							handleChatResetWithManagers()
 							break
 						case "sendMessage":
 							handleSendMessage(message.text ?? "", message.images ?? [])
@@ -877,7 +986,7 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 			sendingDisabled,
 			enableButtons,
 			currentTaskItem,
-			handleChatReset,
+			handleChatResetWithManagers,
 			handleSendMessage,
 			handleSetChatBoxMessage,
 			handlePrimaryButtonClick,
@@ -1306,14 +1415,20 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 		return result
 	}, [isCondensing, visibleMessages])
 
-	// scrolling
-
+	// scrolling - use the optimized versions
 	const scrollToBottomSmooth = useMemo(
 		() =>
-			debounce(() => virtuosoRef.current?.scrollTo({ top: Number.MAX_SAFE_INTEGER, behavior: "smooth" }), 10, {
-				immediate: true,
-			}),
-		[],
+			debounce(
+				() => {
+					console.log("[VIRTUALIZATION] Smooth scroll to bottom triggered")
+					optimizedScrollToBottom("smooth")
+				},
+				10,
+				{
+					immediate: true,
+				},
+			),
+		[optimizedScrollToBottom],
 	)
 
 	useEffect(() => {
@@ -1325,17 +1440,22 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 	}, [scrollToBottomSmooth])
 
 	const scrollToBottomAuto = useCallback(() => {
-		virtuosoRef.current?.scrollTo({
-			top: Number.MAX_SAFE_INTEGER,
-			behavior: "auto", // Instant causes crash.
-		})
-	}, [])
+		console.log("[VIRTUALIZATION] Auto scroll to bottom triggered")
+		optimizedScrollToBottom("auto")
+	}, [optimizedScrollToBottom])
 
 	const handleSetExpandedRow = useCallback(
 		(ts: number, expand?: boolean) => {
-			setExpandedRows((prev) => ({ ...prev, [ts]: expand === undefined ? !prev[ts] : expand }))
+			if (stateManager) {
+				const newExpanded = expand === undefined ? !stateManager.isExpanded(ts) : expand
+				stateManager.setState(ts, { isExpanded: newExpanded })
+				setExpandedRows((prev) => ({ ...prev, [ts]: newExpanded }))
+			} else {
+				// Fallback to local state if stateManager not ready
+				setExpandedRows((prev) => ({ ...prev, [ts]: expand === undefined ? !prev[ts] : expand }))
+			}
 		},
-		[setExpandedRows], // setExpandedRows is stable
+		[stateManager],
 	)
 
 	// Scroll when user toggles certain rows.
@@ -1363,7 +1483,12 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 
 	useEffect(() => {
 		let timer: NodeJS.Timeout | undefined
-		if (!disableAutoScrollRef.current) {
+		if (
+			!disableAutoScrollRef.current &&
+			scrollManager &&
+			stateManager &&
+			scrollManager.shouldAutoScroll(stateManager.hasExpandedMessages())
+		) {
 			timer = setTimeout(() => scrollToBottomSmooth(), 50)
 		}
 		return () => {
@@ -1371,18 +1496,24 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 				clearTimeout(timer)
 			}
 		}
-	}, [groupedMessages.length, scrollToBottomSmooth])
+	}, [groupedMessages.length, scrollToBottomSmooth, scrollManager, stateManager])
 
-	const handleWheel = useCallback((event: Event) => {
-		const wheelEvent = event as WheelEvent
+	const handleWheel = useCallback(
+		(event: Event) => {
+			const wheelEvent = event as WheelEvent
 
-		if (wheelEvent.deltaY && wheelEvent.deltaY < 0) {
-			if (scrollContainerRef.current?.contains(wheelEvent.target as Node)) {
-				// User scrolled up
-				disableAutoScrollRef.current = true
+			if (wheelEvent.deltaY && wheelEvent.deltaY < 0) {
+				if (scrollContainerRef.current?.contains(wheelEvent.target as Node)) {
+					// User scrolled up
+					disableAutoScrollRef.current = true
+					if (scrollManager) {
+						scrollManager.forceUserScrolling()
+					}
+				}
 			}
-		}
-	}, [])
+		},
+		[scrollManager],
+	)
 
 	useEvent("wheel", handleWheel, window, { passive: true }) // passive improves scrolling performance
 
@@ -1471,6 +1602,13 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 
 	const itemContent = useCallback(
 		(index: number, messageOrGroup: ClineMessage | ClineMessage[]) => {
+			console.log("[VIRTUALIZATION] Rendering item at index:", {
+				index,
+				isGroup: Array.isArray(messageOrGroup),
+				messageTs: Array.isArray(messageOrGroup) ? messageOrGroup[0]?.ts : messageOrGroup.ts,
+				timestamp: new Date().toISOString(),
+			})
+
 			// browser session group
 			if (Array.isArray(messageOrGroup)) {
 				return (
@@ -1844,16 +1982,36 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 							ref={virtuosoRef}
 							key={task.ts} // trick to make sure virtuoso re-renders when task changes, and we use initialTopMostItemIndex to start at the bottom
 							className="scrollable grow overflow-y-scroll mb-1"
-							// increasing top by 3_000 to prevent jumping around when user collapses a row
-							increaseViewportBy={{ top: 3_000, bottom: Number.MAX_SAFE_INTEGER }} // hack to make sure the last message is always rendered to get truly perfect scroll to bottom animation when new messages are added (Number.MAX_SAFE_INTEGER is safe for arithmetic operations, which is all virtuoso uses this value for in src/sizeRangeSystem.ts)
+							// Use dynamic viewport configuration based on device and state
+							increaseViewportBy={viewportConfig}
 							data={groupedMessages} // messages is the raw format returned by extension, modifiedMessages is the manipulated structure that combines certain messages of related type, and visibleMessages is the filtered structure that removes messages that should not be rendered
 							itemContent={itemContent}
-							atBottomStateChange={(isAtBottom) => {
-								setIsAtBottom(isAtBottom)
-								if (isAtBottom) {
-									disableAutoScrollRef.current = false
+							onScroll={(e) => {
+								const target = e.currentTarget as HTMLElement
+								const scrollState = {
+									scrollTop: target.scrollTop,
+									scrollHeight: target.scrollHeight,
+									viewportHeight: target.clientHeight,
 								}
-								setShowScrollToBottom(disableAutoScrollRef.current && !isAtBottom)
+
+								console.log("[VIRTUALIZATION] Virtuoso scroll event:", {
+									...scrollState,
+									distanceFromBottom:
+										scrollState.scrollHeight - scrollState.scrollTop - scrollState.viewportHeight,
+									timestamp: new Date().toISOString(),
+								})
+
+								handleVirtuosoScroll(target.scrollTop)
+								handleScrollStateChange(scrollState)
+							}}
+							rangeChanged={handleRangeChange}
+							atBottomStateChange={(atBottom) => {
+								if (atBottom) {
+									disableAutoScrollRef.current = false
+									if (scrollManager) {
+										scrollManager.resetUserScrolling()
+									}
+								}
 							}}
 							atBottomThreshold={10} // anything lower causes issues with followOutput
 							initialTopMostItemIndex={groupedMessages.length - 1}
