@@ -1547,7 +1547,9 @@ export class ClineProvider
 			codebaseIndexConfig: {
 				codebaseIndexEnabled: codebaseIndexConfig?.codebaseIndexEnabled ?? true,
 				codebaseIndexQdrantUrl: codebaseIndexConfig?.codebaseIndexQdrantUrl ?? "http://localhost:6333",
-				codebaseIndexValkeyUrl: codebaseIndexConfig?.codebaseIndexValkeyUrl ?? "http://localhost:6379",
+				codebaseIndexValkeyUrl: codebaseIndexConfig?.codebaseIndexValkeyUrl ?? "redis://localhost:6379",
+				codebaseIndexValkeyUsername: codebaseIndexConfig?.codebaseIndexValkeyUsername ?? "",
+				codebaseIndexValkeyPassword: codebaseIndexConfig?.codebaseIndexValkeyPassword ?? "",
 				codebaseIndexEmbedderProvider: codebaseIndexConfig?.codebaseIndexEmbedderProvider ?? "openai",
 				codebaseIndexEmbedderBaseUrl: codebaseIndexConfig?.codebaseIndexEmbedderBaseUrl ?? "",
 				codebaseIndexEmbedderModelId: codebaseIndexConfig?.codebaseIndexEmbedderModelId ?? "",
@@ -1720,6 +1722,8 @@ export class ClineProvider
 					stateValues.codebaseIndexConfig?.codebaseIndexQdrantUrl ?? "http://localhost:6333",
 				codebaseIndexValkeyUrl:
 					stateValues.codebaseIndexConfig?.codebaseIndexValkeyUrl ?? "http://localhost:6379",
+				codebaseIndexValkeyUsername: stateValues.codebaseIndexConfig?.codebaseIndexValkeyUsername ?? "",
+				codebaseIndexValkeyPassword: stateValues.codebaseIndexConfig?.codebaseIndexValkeyPassword ?? "",
 				codebaseIndexEmbedderProvider:
 					stateValues.codebaseIndexConfig?.codebaseIndexEmbedderProvider ?? "openai",
 				codebaseIndexEmbedderBaseUrl: stateValues.codebaseIndexConfig?.codebaseIndexEmbedderBaseUrl ?? "",

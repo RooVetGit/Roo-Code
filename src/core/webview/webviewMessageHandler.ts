@@ -1992,6 +1992,8 @@ export const webviewMessageHandler = async (
 					codebaseIndexEnabled: settings.codebaseIndexEnabled,
 					codebaseIndexQdrantUrl: settings.codebaseIndexQdrantUrl,
 					codebaseIndexValkeyUrl: settings.codebaseIndexValkeyUrl,
+					codebaseIndexValkeyUsername: settings.codebaseIndexValkeyUsername,
+					codebaseIndexValkeyPassword: settings.codeIndexValkeyPassword,
 					codebaseIndexEmbedderProvider: settings.codebaseIndexEmbedderProvider,
 					codebaseIndexEmbedderBaseUrl: settings.codebaseIndexEmbedderBaseUrl,
 					codebaseIndexEmbedderModelId: settings.codebaseIndexEmbedderModelId,
@@ -2011,6 +2013,9 @@ export const webviewMessageHandler = async (
 				}
 				if (settings.codeIndexQdrantApiKey !== undefined) {
 					await provider.contextProxy.storeSecret("codeIndexQdrantApiKey", settings.codeIndexQdrantApiKey)
+				}
+				if (settings.codeIndexValkeyPassword !== undefined) {
+					await provider.contextProxy.storeSecret("codeIndexValkeyPassword", settings.codeIndexValkeyPassword)
 				}
 				if (settings.codebaseIndexOpenAiCompatibleApiKey !== undefined) {
 					await provider.contextProxy.storeSecret(
@@ -2146,6 +2151,7 @@ export const webviewMessageHandler = async (
 			// Check if secrets are set using the VSCode context directly for async access
 			const hasOpenAiKey = !!(await provider.context.secrets.get("codeIndexOpenAiKey"))
 			const hasQdrantApiKey = !!(await provider.context.secrets.get("codeIndexQdrantApiKey"))
+			const hasValkeyPassword = !!(await provider.context.secrets.get("codeIndexValkeyPassword"))
 			const hasOpenAiCompatibleApiKey = !!(await provider.context.secrets.get(
 				"codebaseIndexOpenAiCompatibleApiKey",
 			))
@@ -2160,6 +2166,7 @@ export const webviewMessageHandler = async (
 					hasOpenAiCompatibleApiKey,
 					hasGeminiApiKey,
 					hasMistralApiKey,
+					hasValkeyPassword,
 				},
 			})
 			break

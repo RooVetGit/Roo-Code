@@ -138,7 +138,13 @@ export class CodeIndexServiceFactory {
 		if (searchProvider && searchProvider === "qdrant" && config.qdrantUrl) {
 			return new QdrantVectorStore(this.workspacePath, config.qdrantUrl, vectorSize, config.qdrantApiKey)
 		} else if (searchProvider === "valkey" && config.valkeyUrl) {
-			return new ValkeySearchVectorStore(this.workspacePath, config.valkeyUrl, vectorSize)
+			return new ValkeySearchVectorStore(
+				this.workspacePath,
+				config.valkeyUrl,
+				vectorSize,
+				config.valkeyUsername,
+				config.valkeyPassword,
+			)
 		}
 
 		throw new Error(t("embeddings:serviceFactory.vectorUrlMissing"))

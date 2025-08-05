@@ -77,6 +77,10 @@
 		"valkeyProvider": "Recherche Valkey",
 		"valkeyUrlLabel": "URL Valkey",
 		"valkeyUrlPlaceholder": "Entrez l'URL du serveur Valkey",
+		"valkeyUsernameLabel": "Nom d'utilisateur Valkey",
+		"valkeyUsernamePlaceholder": "Entrez le nom d'utilisateur Valkey (optionnel)",
+		"valkeyPasswordLabel": "Mot de passe Valkey",
+		"valkeyPasswordPlaceholder": "Entrez le mot de passe Valkey (optionnel)",
 		"qdrantKeyLabel": "Clé Qdrant :",
 		"qdrantApiKeyLabel": "Clé API Qdrant",
 		"qdrantApiKeyPlaceholder": "Entrez votre clé API Qdrant (optionnel)",
@@ -120,7 +124,11 @@
 			"mistralApiKeyRequired": "La clé API Mistral est requise",
 			"ollamaBaseUrlRequired": "L'URL de base Ollama est requise",
 			"baseUrlRequired": "L'URL de base est requise",
-			"modelDimensionMinValue": "La dimension du modèle doit être supérieure à 0"
+			"modelDimensionMinValue": "La dimension du modèle doit être supérieure à 0",
+			"valkeyUrlRequired": "L'URL Valkey est requise",
+			"invalidValkeyUrl": "URL Valkey invalide",
+			"valkeyUsernameRequired": "Le nom d'utilisateur Valkey est requis",
+			"valkeyPasswordRequired": "Le mot de passe Valkey est requis"
 		},
 		"advancedConfigLabel": "Configuration avancée",
 		"searchMinScoreLabel": "Seuil de score de recherche",

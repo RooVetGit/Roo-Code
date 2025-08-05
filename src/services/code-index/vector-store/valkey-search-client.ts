@@ -12,9 +12,13 @@ export class ValkeySearchVectorStore implements IVectorStore {
 	private isInitializing = false
 	private readonly indexName: string
 	private readonly valkeyUrl: string
+	private readonly valkeyUsername?: string
+	private readonly valkeyPassword?: string
 
-	constructor(workspacePath: string, url: string, vectorSize: number) {
+	constructor(workspacePath: string, url: string, vectorSize: number, username?: string, password?: string) {
 		this.valkeyUrl = this.parseValkeyUrl(url)
+		this.valkeyUsername = username
+		this.valkeyPassword = password
 		this.vectorSize = vectorSize
 
 		const hash = createHash("sha256").update(workspacePath).digest("hex")
@@ -64,8 +68,8 @@ export class ValkeySearchVectorStore implements IVectorStore {
 			this.client = new Valkey({
 				host: hostname,
 				port,
-				password,
-				username,
+				password: this.valkeyPassword || password,
+				username: this.valkeyUsername || username,
 			})
 
 			this.client.on("error", (err: Error) => {

@@ -77,6 +77,10 @@
 		"qdrantUrlLabel": "Qdrant URL",
 		"valkeyUrlLabel": "Valkey URL",
 		"valkeyUrlPlaceholder": "Enter Valkey server URL",
+		"valkeyUsernameLabel": "Valkey Username",
+		"valkeyUsernamePlaceholder": "Enter Valkey username (optional)",
+		"valkeyPasswordLabel": "Valkey Password",
+		"valkeyPasswordPlaceholder": "Enter Valkey password (optional)",
 		"qdrantKeyLabel": "Qdrant Key:",
 		"qdrantApiKeyLabel": "Qdrant API Key",
 		"qdrantApiKeyPlaceholder": "Enter your Qdrant API key (optional)",
@@ -127,7 +131,11 @@
 			"mistralApiKeyRequired": "Mistral API key is required",
 			"ollamaBaseUrlRequired": "Ollama base URL is required",
 			"baseUrlRequired": "Base URL is required",
-			"modelDimensionMinValue": "Model dimension must be greater than 0"
+			"modelDimensionMinValue": "Model dimension must be greater than 0",
+			"valkeyUrlRequired": "Valkey URL is required",
+			"invalidValkeyUrl": "Invalid Valkey URL",
+			"valkeyUsernameRequired": "Valkey username is required",
+			"valkeyPasswordRequired": "Valkey password is required"
 		}
 	},
 	"autoApprove": {
