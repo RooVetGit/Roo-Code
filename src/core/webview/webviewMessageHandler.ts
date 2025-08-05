@@ -2218,13 +2218,13 @@ export const webviewMessageHandler = async (
 					}
 
 					// startIndexing now handles error recovery internally
-					await manager.startIndexing()
+					manager.startIndexing()
 
 					// If startIndexing recovered from error, we need to reinitialize
 					if (!manager.isInitialized) {
 						await manager.initialize(provider.contextProxy)
 						// Try starting again after initialization
-						await manager.startIndexing()
+						manager.startIndexing()
 					}
 				}
 			} catch (error) {

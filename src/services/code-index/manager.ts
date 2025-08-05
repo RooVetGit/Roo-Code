@@ -168,6 +168,9 @@ export class CodeIndexManager {
 	/**
 	 * Initiates the indexing process (initial scan and starts watcher).
 	 * Automatically recovers from error state if needed before starting.
+	 *
+	 * @important This method should NEVER be awaited as it starts a long-running background process.
+	 * The indexing will continue asynchronously and progress will be reported through events.
 	 */
 	public async startIndexing(): Promise<void> {
 		if (!this.isFeatureEnabled) {
