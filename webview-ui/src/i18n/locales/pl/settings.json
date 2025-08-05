@@ -440,6 +440,15 @@
 			"placeholder": "Domyślnie: claude",
 			"maxTokensLabel": "Maksymalna liczba tokenów wyjściowych",
 			"maxTokensDescription": "Maksymalna liczba tokenów wyjściowych dla odpowiedzi Claude Code. Domyślnie 8000."
+		},
+		"maxOutputTokens": {
+			"label": "Maksymalne tokeny wyjściowe",
+			"description": "Maksymalna liczba tokenów do zarezerwowania dla wyjścia modelu. Domyślnie 8192.",
+			"validation": {
+				"tooHigh": "Wartość przekracza maksimum modelu {{max}} tokenów",
+				"tooLow": "Wartość musi wynosić co najmniej {{min}} tokenów"
+			},
+			"modelSupports": "Ten model obsługuje do {{max}} tokenów"
 		}
 	},
 	"browser": {
@@ -751,7 +760,6 @@
 		}
 	},
 	"thinkingBudget": {
-		"maxTokens": "Maksymalna liczba tokenów",
 		"maxThinkingTokens": "Maksymalna liczba tokenów myślenia"
 	},
 	"validation": {

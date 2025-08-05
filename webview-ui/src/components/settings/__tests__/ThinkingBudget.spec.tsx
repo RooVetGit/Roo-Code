@@ -57,10 +57,10 @@ describe("ThinkingBudget", () => {
 		expect(container.firstChild).toBeNull()
 	})
 
-	it("should render sliders when model supports thinking", () => {
+	it("should render slider when model supports thinking", () => {
 		render(<ThinkingBudget {...defaultProps} />)
 
-		expect(screen.getAllByTestId("slider")).toHaveLength(2)
+		expect(screen.getAllByTestId("slider")).toHaveLength(1)
 	})
 
 	it("should update modelMaxThinkingTokens", () => {
@@ -74,8 +74,8 @@ describe("ThinkingBudget", () => {
 			/>,
 		)
 
-		const sliders = screen.getAllByTestId("slider")
-		fireEvent.change(sliders[1], { target: { value: "5000" } })
+		const slider = screen.getByTestId("slider")
+		fireEvent.change(slider, { target: { value: "5000" } })
 
 		expect(setApiConfigurationField).toHaveBeenCalledWith("modelMaxThinkingTokens", 5000)
 	})
@@ -95,35 +95,39 @@ describe("ThinkingBudget", () => {
 		expect(setApiConfigurationField).toHaveBeenCalledWith("modelMaxThinkingTokens", 8000) // 80% of 10000
 	})
 
+	it("should allow max thinking tokens up to 80% of max output tokens", () => {
+		render(<ThinkingBudget {...defaultProps} apiConfiguration={{ modelMaxTokens: 5000 }} />)
+
+		const slider = screen.getByTestId("slider")
+		// Max should be 80% of 5000 = 4000
+		expect(slider.getAttribute("max")).toBe("4000")
+	})
+
 	it("should use default thinking tokens if not provided", () => {
 		render(<ThinkingBudget {...defaultProps} apiConfiguration={{ modelMaxTokens: 10000 }} />)
 
 		// Default is 80% of max tokens, capped at 8192
-		const sliders = screen.getAllByTestId("slider")
-		expect(sliders[1]).toHaveValue("8000") // 80% of 10000
+		const slider = screen.getByTestId("slider")
+		expect(slider).toHaveValue("8000") // 80% of 10000
 	})
 
 	it("should use min thinking tokens of 1024", () => {
-		render(<ThinkingBudget {...defaultProps} apiConfiguration={{ modelMaxTokens: 1000 }} />)
+		render(<ThinkingBudget {...defaultProps} apiConfiguration={{ modelMaxTokens: 3000 }} />)
 
-		const sliders = screen.getAllByTestId("slider")
-		expect(sliders[1].getAttribute("min")).toBe("1024")
+		const slider = screen.getByTestId("slider")
+		expect(slider.getAttribute("min")).toBe("1024")
 	})
 
-	it("should update max tokens when slider changes", () => {
-		const setApiConfigurationField = vi.fn()
-
+	it("should cap displayed value at 80% even if stored value is higher", () => {
 		render(
 			<ThinkingBudget
 				{...defaultProps}
-				apiConfiguration={{ modelMaxTokens: 10000 }}
-				setApiConfigurationField={setApiConfigurationField}
+				apiConfiguration={{ modelMaxTokens: 5000, modelMaxThinkingTokens: 8192 }}
 			/>,
 		)
 
-		const sliders = screen.getAllByTestId("slider")
-		fireEvent.change(sliders[0], { target: { value: "12000" } })
-
-		expect(setApiConfigurationField).toHaveBeenCalledWith("modelMaxTokens", 12000)
+		const slider = screen.getByTestId("slider")
+		// Value should be capped at 4000 (80% of 5000) even though stored value is 8192
+		expect(slider).toHaveValue("4000")
 	})
 })

@@ -440,6 +440,15 @@
 			"placeholder": "Standaard: claude",
 			"maxTokensLabel": "Max Output Tokens",
 			"maxTokensDescription": "Maximaal aantal output-tokens voor Claude Code-reacties. Standaard is 8000."
+		},
+		"maxOutputTokens": {
+			"label": "Maximale uitvoertokens",
+			"description": "Maximum aantal tokens om te reserveren voor modeluitvoer. Standaard is 8192.",
+			"validation": {
+				"tooHigh": "Waarde overschrijdt het maximum van het model van {{max}} tokens",
+				"tooLow": "Waarde moet minimaal {{min}} tokens zijn"
+			},
+			"modelSupports": "Dit model ondersteunt tot {{max}} tokens"
 		}
 	},
 	"browser": {
@@ -751,7 +760,6 @@
 		}
 	},
 	"thinkingBudget": {
-		"maxTokens": "Max tokens",
 		"maxThinkingTokens": "Max denk-tokens"
 	},
 	"validation": {

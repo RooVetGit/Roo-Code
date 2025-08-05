@@ -440,6 +440,15 @@
 			"placeholder": "डिफ़ॉल्ट: claude",
 			"maxTokensLabel": "अधिकतम आउटपुट टोकन",
 			"maxTokensDescription": "Claude Code प्रतिक्रियाओं के लिए आउटपुट टोकन की अधिकतम संख्या। डिफ़ॉल्ट 8000 है।"
+		},
+		"maxOutputTokens": {
+			"label": "अधिकतम आउटपुट टोकन",
+			"description": "मॉडल आउटपुट के लिए आरक्षित करने के लिए टोकन की अधिकतम संख्या। डिफ़ॉल्ट 8192 है।",
+			"validation": {
+				"tooHigh": "मान मॉडल के अधिकतम {{max}} टोकन से अधिक है",
+				"tooLow": "मान कम से कम {{min}} टोकन होना चाहिए"
+			},
+			"modelSupports": "यह मॉडल {{max}} टोकन तक का समर्थन करता है"
 		}
 	},
 	"browser": {
@@ -751,7 +760,6 @@
 		}
 	},
 	"thinkingBudget": {
-		"maxTokens": "अधिकतम tokens",
 		"maxThinkingTokens": "अधिकतम thinking tokens"
 	},
 	"validation": {

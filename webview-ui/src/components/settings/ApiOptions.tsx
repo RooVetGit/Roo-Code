@@ -96,6 +96,7 @@ import { TodoListSettingsControl } from "./TodoListSettingsControl"
 import { TemperatureControl } from "./TemperatureControl"
 import { RateLimitSecondsControl } from "./RateLimitSecondsControl"
 import { ConsecutiveMistakeLimitControl } from "./ConsecutiveMistakeLimitControl"
+import { MaxTokensSlider } from "./MaxTokensSlider"
 import { BedrockCustomArn } from "./providers/BedrockCustomArn"
 import { buildDocLink } from "@src/utils/docLinks"
 
@@ -637,6 +638,13 @@ const ApiOptions = ({
 							onChange={handleInputChange("modelTemperature", noTransform)}
 							maxValue={2}
 						/>
+						{selectedProvider !== "openai" && (
+							<MaxTokensSlider
+								value={apiConfiguration.modelMaxTokens}
+								onChange={(value) => setApiConfigurationField("modelMaxTokens", value)}
+								modelInfo={selectedModelInfo}
+							/>
+						)}
 						<RateLimitSecondsControl
 							value={apiConfiguration.rateLimitSeconds || 0}
 							onChange={(value) => setApiConfigurationField("rateLimitSeconds", value)}

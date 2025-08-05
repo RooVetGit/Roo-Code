@@ -93,9 +93,21 @@ vi.mock("@/components/ui", () => ({
 	Popover: ({ children, _open, _onOpenChange }: any) => <div className="popover-mock">{children}</div>,
 	PopoverContent: ({ children, _className }: any) => <div className="popover-content-mock">{children}</div>,
 	PopoverTrigger: ({ children, _asChild }: any) => <div className="popover-trigger-mock">{children}</div>,
-	Slider: ({ value, onChange }: any) => (
+	Slider: ({ value, onChange, onValueChange, min, max, step }: any) => (
 		<div data-testid="slider">
-			<input type="range" value={value || 0} onChange={(e) => onChange(parseFloat(e.target.value))} />
+			<input
+				type="range"
+				min={min}
+				max={max}
+				step={step}
+				value={value?.[0] || value || 0}
+				onChange={(e) => {
+					const val = parseFloat(e.target.value)
+					if (onChange) onChange(val)
+					if (onValueChange) onValueChange([val])
+				}}
+				data-testid="slider-input"
+			/>
 		</div>
 	),
 	SearchableSelect: ({ value, onValueChange, options, placeholder, "data-testid": dataTestId }: any) => (
@@ -123,6 +135,19 @@ vi.mock("@/components/ui", () => ({
 	),
 	CollapsibleContent: ({ children, className }: any) => (
 		<div className={`collapsible-content-mock ${className || ""}`}>{children}</div>
+	),
+	// Add Input component for other controls
+	Input: ({ id, type, value, onChange, min, max, className, ...props }: any) => (
+		<input
+			id={id}
+			type={type}
+			value={value}
+			onChange={onChange}
+			min={min}
+			max={max}
+			className={className}
+			{...props}
+		/>
 	),
 }))
 

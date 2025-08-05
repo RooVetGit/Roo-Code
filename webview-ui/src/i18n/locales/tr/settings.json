@@ -440,6 +440,15 @@
 			"placeholder": "Varsayılan: claude",
 			"maxTokensLabel": "Maksimum Çıktı Token sayısı",
 			"maxTokensDescription": "Claude Code yanıtları için maksimum çıktı token sayısı. Varsayılan 8000'dir."
+		},
+		"maxOutputTokens": {
+			"label": "Maksimum Çıktı Belirteci",
+			"description": "Model çıktısı için ayrılacak maksimum belirteç sayısı. Varsayılan 8192'dir.",
+			"validation": {
+				"tooHigh": "Değer, modelin maksimum {{max}} belirteçini aşıyor",
+				"tooLow": "Değer en az {{min}} belirteç olmalıdır"
+			},
+			"modelSupports": "Bu model {{max}} belirtece kadar destekler"
 		}
 	},
 	"browser": {
@@ -751,7 +760,6 @@
 		}
 	},
 	"thinkingBudget": {
-		"maxTokens": "Maksimum token",
 		"maxThinkingTokens": "Maksimum düşünme tokeni"
 	},
 	"validation": {

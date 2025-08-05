@@ -263,14 +263,14 @@ describe("OpenAiHandler", () => {
 			expect(callArgs.max_completion_tokens).toBeUndefined()
 		})
 
-		it("should use user-configured modelMaxTokens instead of model default maxTokens", async () => {
+		it("should use user-configured modelMaxTokens but cap it to model's max capability", async () => {
 			const optionsWithUserMaxTokens: ApiHandlerOptions = {
 				...mockOptions,
 				includeMaxTokens: true,
-				modelMaxTokens: 32000, // User-configured value
+				modelMaxTokens: 32000, // User tries to set higher than model supports
 				openAiCustomModelInfo: {
 					contextWindow: 128_000,
-					maxTokens: 4096, // Model's default value (should not be used)
+					maxTokens: 4096, // Model's actual max capability
 					supportsPromptCache: false,
 				},
 			}
@@ -279,10 +279,32 @@ describe("OpenAiHandler", () => {
 			// Consume the stream to trigger the API call
 			for await (const _chunk of stream) {
 			}
-			// Assert the mockCreate was called with user-configured modelMaxTokens (32000), not model default maxTokens (4096)
+			// Assert the mockCreate was called with the model's max capability (4096), not the user's request (32000)
 			expect(mockCreate).toHaveBeenCalled()
 			const callArgs = mockCreate.mock.calls[0][0]
-			expect(callArgs.max_completion_tokens).toBe(32000)
+			expect(callArgs.max_completion_tokens).toBe(4096)
+		})
+
+		it("should use user-configured modelMaxTokens when it's less than model's max", async () => {
+			const optionsWithLowerUserMaxTokens: ApiHandlerOptions = {
+				...mockOptions,
+				includeMaxTokens: true,
+				modelMaxTokens: 2000, // User sets lower than model's max
+				openAiCustomModelInfo: {
+					contextWindow: 128_000,
+					maxTokens: 4096, // Model's max capability
+					supportsPromptCache: false,
+				},
+			}
+			const handlerWithLowerMaxTokens = new OpenAiHandler(optionsWithLowerUserMaxTokens)
+			const stream = handlerWithLowerMaxTokens.createMessage(systemPrompt, messages)
+			// Consume the stream to trigger the API call
+			for await (const _chunk of stream) {
+			}
+			// Assert the mockCreate was called with user's setting (2000)
+			expect(mockCreate).toHaveBeenCalled()
+			const callArgs = mockCreate.mock.calls[0][0]
+			expect(callArgs.max_completion_tokens).toBe(2000)
 		})
 
 		it("should fallback to model default maxTokens when user modelMaxTokens is not set", async () => {

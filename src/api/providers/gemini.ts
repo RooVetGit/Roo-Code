@@ -82,7 +82,7 @@ export class GeminiHandler extends BaseProvider implements SingleCompletionHandl
 			systemInstruction,
 			httpOptions: this.options.googleGeminiBaseUrl ? { baseUrl: this.options.googleGeminiBaseUrl } : undefined,
 			thinkingConfig,
-			maxOutputTokens: this.options.modelMaxTokens ?? maxTokens ?? undefined,
+			maxOutputTokens: maxTokens ?? undefined,
 			temperature: this.options.modelTemperature ?? 0,
 			...(tools.length > 0 ? { tools } : {}),
 		}

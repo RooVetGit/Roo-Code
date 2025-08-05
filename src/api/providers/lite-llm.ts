@@ -5,7 +5,7 @@ import { litellmDefaultModelId, litellmDefaultModelInfo } from "@roo-code/types"
 
 import { calculateApiCostOpenAI } from "../../shared/cost"
 
-import { ApiHandlerOptions } from "../../shared/api"
+import { ApiHandlerOptions, getModelMaxOutputTokens } from "../../shared/api"
 
 import { ApiStream, ApiStreamUsageChunk } from "../transform/stream"
 import { convertToOpenAiMessages } from "../transform/openai-format"
@@ -104,8 +104,12 @@ export class LiteLLMHandler extends RouterProvider implements SingleCompletionHa
 			enhancedMessages = openAiMessages
 		}
 
-		// Required by some providers; others default to max tokens allowed
-		let maxTokens: number | undefined = info.maxTokens ?? undefined
+		// Use getModelMaxOutputTokens to respect user's custom max tokens setting
+		const maxTokens = getModelMaxOutputTokens({
+			modelId,
+			model: info,
+			settings: this.options as any,
+		})
 
 		const requestOptions: OpenAI.Chat.Completions.ChatCompletionCreateParamsStreaming = {
 			model: modelId,
@@ -189,7 +193,11 @@ export class LiteLLMHandler extends RouterProvider implements SingleCompletionHa
 				requestOptions.temperature = this.options.modelTemperature ?? 0
 			}
 
-			requestOptions.max_tokens = info.maxTokens
+			requestOptions.max_tokens = getModelMaxOutputTokens({
+				modelId,
+				model: info,
+				settings: this.options as any,
+			})
 
 			const response = await this.client.chat.completions.create(requestOptions)
 			return response.choices[0]?.message.content || ""

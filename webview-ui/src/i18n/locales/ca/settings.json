@@ -440,6 +440,15 @@
 			"placeholder": "Per defecte: claude",
 			"maxTokensLabel": "Tokens màxims de sortida",
 			"maxTokensDescription": "Nombre màxim de tokens de sortida per a les respostes de Claude Code. El valor per defecte és 8000."
+		},
+		"maxOutputTokens": {
+			"label": "Tokens màxims de sortida",
+			"description": "Nombre màxim de tokens a reservar per a la sortida del model. El valor predeterminat és 8192.",
+			"validation": {
+				"tooHigh": "El valor excedeix el màxim del model de {{max}} tokens",
+				"tooLow": "El valor ha de ser almenys {{min}} tokens"
+			},
+			"modelSupports": "Aquest model admet fins a {{max}} tokens"
 		}
 	},
 	"browser": {
@@ -750,7 +759,6 @@
 		}
 	},
 	"thinkingBudget": {
-		"maxTokens": "Tokens màxims",
 		"maxThinkingTokens": "Tokens de pensament màxims"
 	},
 	"validation": {
