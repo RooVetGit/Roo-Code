@@ -124,11 +124,7 @@
 			"mistralApiKeyRequired": "Mistral-API-Schlüssel ist erforderlich",
 			"ollamaBaseUrlRequired": "Ollama-Basis-URL ist erforderlich",
 			"baseUrlRequired": "Basis-URL ist erforderlich",
-			"modelDimensionMinValue": "Modellabmessung muss größer als 0 sein",
-			"valkeyUrlRequired": "Valkey-URL ist erforderlich",
-			"invalidValkeyUrl": "Ungültige Valkey-URL",
-			"valkeyUsernameRequired": "Valkey-Benutzername ist erforderlich",
-			"valkeyPasswordRequired": "Valkey-Passwort ist erforderlich"
+			"modelDimensionMinValue": "Modellabmessung muss größer als 0 sein"
 		},
 		"advancedConfigLabel": "Erweiterte Konfiguration",
 		"searchMinScoreLabel": "Suchergebnis-Schwellenwert",

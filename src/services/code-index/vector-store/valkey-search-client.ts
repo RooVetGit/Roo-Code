@@ -11,12 +11,21 @@ export class ValkeySearchVectorStore implements IVectorStore {
 	private client: Redis | null = null
 	private isInitializing = false
 	private readonly indexName: string
-	private readonly valkeyUrl: string
+	private readonly valkeyHostname: string
+	private readonly valkeyPort: number
 	private readonly valkeyUsername?: string
 	private readonly valkeyPassword?: string
 
-	constructor(workspacePath: string, url: string, vectorSize: number, username?: string, password?: string) {
-		this.valkeyUrl = this.parseValkeyUrl(url)
+	constructor(
+		workspacePath: string,
+		hostname: string,
+		port: number,
+		vectorSize: number,
+		username?: string,
+		password?: string,
+	) {
+		this.valkeyHostname = hostname
+		this.valkeyPort = port
 		this.valkeyUsername = username
 		this.valkeyPassword = password
 		this.vectorSize = vectorSize
@@ -24,36 +33,6 @@ export class ValkeySearchVectorStore implements IVectorStore {
 		const hash = createHash("sha256").update(workspacePath).digest("hex")
 		this.indexName = `ws-${hash.substring(0, 16)}`
 		this.initializeClient()
-	}
-
-	private parseValkeyUrl(url: string | undefined): string {
-		if (!url || url.trim() === "") {
-			return "http://localhost:6379"
-		}
-
-		const trimmedUrl = url.trim()
-
-		if (!trimmedUrl.startsWith("http://") && !trimmedUrl.startsWith("https://") && !trimmedUrl.includes("://")) {
-			return this.parseHostname(trimmedUrl)
-		}
-
-		try {
-			const parsedUrl = new URL(trimmedUrl)
-			return trimmedUrl
-		} catch {
-			// Failed to parse as URL - treat as hostname
-			return this.parseHostname(trimmedUrl)
-		}
-	}
-
-	private parseHostname(hostname: string): string {
-		if (hostname.includes(":")) {
-			// Has port - add http:// prefix if missing
-			return hostname.startsWith("http") ? hostname : `http://${hostname}`
-		} else {
-			// No port - add http:// prefix without port (let constructor handle port assignment)
-			return `http://${hostname}`
-		}
 	}
 
 	private async initializeClient(): Promise<void> {
@@ -64,21 +43,19 @@ export class ValkeySearchVectorStore implements IVectorStore {
 		this.isInitializing = true
 
 		try {
-			const { hostname, port, password, username } = this.parseConnectionOptions()
 			this.client = new Valkey({
-				host: hostname,
-				port,
-				password: this.valkeyPassword || password,
-				username: this.valkeyUsername || username,
+				host: this.valkeyHostname,
+				port: this.valkeyPort,
+				password: this.valkeyPassword,
+				username: this.valkeyUsername,
 			})
-
 			this.client.on("error", (err: Error) => {
 				console.error("[ValkeySearch] Connection error:", err)
 				this.isInitializing = false
 				throw new Error(
 					t("embeddings:vectorStore.vectorError", {
-						valkeyUrl: this.valkeyUrl,
-						errorMessage: err,
+						valkeyHostname: this.valkeyHostname,
+						valkeyPort: this.valkeyPort,
 					}),
 					{ cause: err },
 				)
@@ -103,23 +80,13 @@ export class ValkeySearchVectorStore implements IVectorStore {
 				}
 				throw new Error(
 					t("embeddings:vectorStore.valkeyConnectionFailed", {
-						valkeyUrl: this.valkeyUrl,
-						errorMessage: error,
+						valkeyHostname: this.valkeyHostname,
+						valkeyPort: this.valkeyPort,
 					}),
 					{ cause: error },
 				)
 			}
 			throw error
-		}
-	}
-
-	private parseConnectionOptions() {
-		const url = new URL(this.valkeyUrl)
-		return {
-			hostname: url.hostname,
-			port: Number(url.port) || 6379,
-			password: url.password || undefined,
-			username: url.username || undefined,
 		}
 	}
 

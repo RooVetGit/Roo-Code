@@ -22,7 +22,8 @@ export class CodeIndexConfigManager {
 	private qdrantUrl?: string = "http://localhost:6333"
 	private qdrantApiKey?: string
 	private searchProvider?: string
-	private valkeyUrl?: string = "http://localhost:6379"
+	private valkeyHostname?: string = "localhost"
+	private valkeyPort?: number = 6379
 	private valkeyUsername?: string
 	private valkeyPassword?: string
 	private searchMinScore?: number
@@ -49,7 +50,8 @@ export class CodeIndexConfigManager {
 		const codebaseIndexConfig = this.contextProxy?.getGlobalState("codebaseIndexConfig") ?? {
 			codebaseIndexEnabled: true,
 			codebaseIndexQdrantUrl: "http://localhost:6333",
-			codebaseIndexValkeyUrl: "http://localhost:6379",
+			codebaseIndexValkeyHostname: "localhost",
+			codebaseIndexValkeyPort: 6379,
 			codebaseIndexValkeyUsername: "",
 			codebaseIndexEmbedderProvider: "openai",
 			codebaseIndexEmbedderBaseUrl: "",
@@ -61,7 +63,8 @@ export class CodeIndexConfigManager {
 		const {
 			codebaseIndexEnabled,
 			codebaseIndexQdrantUrl,
-			codebaseIndexValkeyUrl,
+			codebaseIndexValkeyHostname,
+			codebaseIndexValkeyPort,
 			codebaseIndexValkeyUsername,
 			codebaseIndexEmbedderProvider,
 			codebaseIndexEmbedderBaseUrl,
@@ -84,7 +87,8 @@ export class CodeIndexConfigManager {
 		this.codebaseIndexEnabled = codebaseIndexEnabled ?? true
 		this.qdrantUrl = codebaseIndexQdrantUrl
 		this.qdrantApiKey = qdrantApiKey ?? ""
-		this.valkeyUrl = codebaseIndexValkeyUrl
+		this.valkeyHostname = codebaseIndexValkeyHostname ?? "localhost"
+		this.valkeyPort = codebaseIndexValkeyPort ?? 6379
 		this.valkeyPassword = valkeyPassword
 		this.valkeyUsername = codebaseIndexValkeyUsername
 		this.searchMinScore = codebaseIndexSearchMinScore
@@ -157,7 +161,8 @@ export class CodeIndexConfigManager {
 			mistralOptions?: { apiKey: string }
 			qdrantUrl?: string
 			qdrantApiKey?: string
-			valkeyUrl?: string
+			valkeyHostname?: string
+			valkeyPort?: number
 			valkeyPassword?: string
 			valkeyUsername?: string
 			searchProvider?: string
@@ -179,7 +184,8 @@ export class CodeIndexConfigManager {
 			geminiApiKey: this.geminiOptions?.apiKey ?? "",
 			mistralApiKey: this.mistralOptions?.apiKey ?? "",
 			qdrantUrl: this.qdrantUrl ?? "",
-			valkeyUrl: this.valkeyUrl ?? "",
+			valkeyHostname: this.valkeyHostname ?? "",
+			valkeyPort: this.valkeyPort ?? 6379,
 			valkeyUsername: this.valkeyUsername ?? "",
 			searchProvider: this.searchProvider ?? "",
 			qdrantApiKey: this.qdrantApiKey ?? "",
@@ -208,7 +214,8 @@ export class CodeIndexConfigManager {
 				mistralOptions: this.mistralOptions,
 				qdrantUrl: this.qdrantUrl,
 				qdrantApiKey: this.qdrantApiKey,
-				valkeyUrl: this.valkeyUrl,
+				valkeyHostname: this.valkeyHostname,
+				valkeyPort: this.valkeyPort,
 				valkeyPassword: this.valkeyPassword,
 				valkeyUsername: this.valkeyUsername,
 				searchProvider: this.searchProvider,
@@ -222,7 +229,7 @@ export class CodeIndexConfigManager {
 	 * Checks if the service is properly configured based on the embedder type.
 	 */
 	public isConfigured(): boolean {
-		const dbUrlPresent = this.qdrantUrl || this.valkeyUrl
+		const dbUrlPresent = this.qdrantUrl || this.valkeyHostname
 		if (this.embedderProvider === "openai") {
 			const openAiKey = this.openAiOptions?.openAiNativeApiKey
 			return !!(openAiKey && dbUrlPresent)
@@ -278,7 +285,8 @@ export class CodeIndexConfigManager {
 		const prevGeminiApiKey = prev?.geminiApiKey ?? ""
 		const prevMistralApiKey = prev?.mistralApiKey ?? ""
 		const prevQdrantUrl = prev?.qdrantUrl ?? ""
-		const prevValkeyUrl = prev?.valkeyUrl ?? ""
+		const prevValkeyHostname = prev?.valkeyHostname ?? ""
+		const prevValkeyPort = prev?.valkeyPort ?? 6379
 		const prevSearchProvider = prev?.searchProvider ?? ""
 		const prevQdrantApiKey = prev?.qdrantApiKey ?? ""
 		const prevValkeyPassword = prev?.valkeyPassword ?? ""
@@ -319,7 +327,8 @@ export class CodeIndexConfigManager {
 		const currentGeminiApiKey = this.geminiOptions?.apiKey ?? ""
 		const currentMistralApiKey = this.mistralOptions?.apiKey ?? ""
 		const currentQdrantUrl = this.qdrantUrl ?? ""
-		const currentValkeyUrl = this.valkeyUrl ?? ""
+		const currentValkeyHostname = this.valkeyHostname ?? ""
+		const currentValkeyPort = this.valkeyPort ?? 6379
 		const currentSearchProvider = this.searchProvider ?? ""
 		const currentQdrantApiKey = this.qdrantApiKey ?? ""
 		const currentValkeyPassword = this.valkeyPassword ?? ""
@@ -361,7 +370,7 @@ export class CodeIndexConfigManager {
 			return true
 		}
 
-		if (prevValkeyUrl !== currentValkeyUrl) {
+		if (prevValkeyHostname !== currentValkeyHostname || prevValkeyPort !== currentValkeyPort) {
 			return true
 		}
 
@@ -428,7 +437,8 @@ export class CodeIndexConfigManager {
 			qdrantUrl: this.qdrantUrl,
 			qdrantApiKey: this.qdrantApiKey,
 			searchProvider: this.searchProvider,
-			valkeyUrl: this.valkeyUrl,
+			valkeyHostname: this.valkeyHostname,
+			valkeyPort: this.valkeyPort,
 			valkeyUsername: this.valkeyUsername,
 			valkeyPassword: this.valkeyPassword,
 			searchMinScore: this.currentSearchMinScore,

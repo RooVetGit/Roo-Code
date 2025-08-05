@@ -131,11 +131,7 @@
 			"mistralApiKeyRequired": "Mistral API key is required",
 			"ollamaBaseUrlRequired": "Ollama base URL is required",
 			"baseUrlRequired": "Base URL is required",
-			"modelDimensionMinValue": "Model dimension must be greater than 0",
-			"valkeyUrlRequired": "Valkey URL is required",
-			"invalidValkeyUrl": "Invalid Valkey URL",
-			"valkeyUsernameRequired": "Valkey username is required",
-			"valkeyPasswordRequired": "Valkey password is required"
+			"modelDimensionMinValue": "Model dimension must be greater than 0"
 		}
 	},
 	"autoApprove": {

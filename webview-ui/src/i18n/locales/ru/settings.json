@@ -125,10 +125,8 @@
 			"ollamaBaseUrlRequired": "Требуется базовый URL Ollama",
 			"baseUrlRequired": "Требуется базовый URL",
 			"modelDimensionMinValue": "Размерность модели должна быть больше 0",
-			"valkeyUrlRequired": "Требуется URL Valkey",
-			"invalidValkeyUrl": "Неверный URL Valkey",
-			"valkeyUsernameRequired": "Требуется имя пользователя Valkey",
-			"valkeyPasswordRequired": "Требуется пароль Valkey"
+			"valkeyHostName": "",
+			"valkeyPort": ""
 		},
 		"advancedConfigLabel": "Расширенная конфигурация",
 		"searchMinScoreLabel": "Порог оценки поиска",

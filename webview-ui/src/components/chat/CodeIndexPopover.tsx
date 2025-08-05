@@ -44,8 +44,9 @@ import { CODEBASE_INDEX_DEFAULTS } from "@roo-code/types"
 
 // Default URLs for providers
 const DEFAULT_QDRANT_URL = "http://localhost:6333"
-const DEFAULT_VALKEY_URL = "http://localhost:6379"
 const DEFAULT_OLLAMA_URL = "http://localhost:11434"
+const DEFAULT_VALKEY_HOST_NAME = "localhost"
+const DEFAULT_VALKEY_PORT = 6379
 
 type SearchProvider = "qdrant" | "valkey" | ""
 
@@ -58,7 +59,8 @@ interface LocalCodeIndexSettings {
 	// Global state settings
 	codebaseIndexEnabled: boolean
 	codebaseIndexQdrantUrl: string
-	codebaseIndexValkeyUrl: string
+	codebaseIndexValkeyHostname: string
+	codebaseIndexValkeyPort: number
 	codebaseIndexEmbedderProvider: EmbedderProvider
 	codebaseIndexEmbedderBaseUrl?: string
 	codebaseIndexEmbedderModelId: string
@@ -88,15 +90,16 @@ const createValidationSchema = (provider: EmbedderProvider, searchProvider: Sear
 			.url(t("settings:codeIndex.invalidQdrantUrl"))
 			.optional(),
 		codeIndexQdrantApiKey: z.string().optional(),
-		codebaseIndexValkeyUrl: z.string().min(1, t("settings:codeIndex.valkeyUrlRequired")).optional(),
-		codebaseIndexValkeyUsername:
+		codebaseIndexValkeyHostname:
 			searchProvider === "valkey"
-				? z.string().min(1, t("settings:codeIndex.valkeyUsernameRequired"))
+				? z.string().min(1, t("settings:codeIndex.valkeyHostName"))
 				: z.string().optional(),
-		codeIndexValkeyPassword:
+		codebaseIndexValkeyPort:
 			searchProvider === "valkey"
-				? z.string().min(1, t("settings:codeIndex.valkeyPasswordRequired"))
-				: z.string().optional(),
+				? z.number().min(1, t("settings:codeIndex.valkeyPortRequired"))
+				: z.number().optional(),
+		codebaseIndexValkeyUsername: z.string().optional(),
+		codeIndexValkeyPassword: z.string().optional(),
 		searchProvider: z.string().optional(),
 	})
 
@@ -177,7 +180,8 @@ export const CodeIndexPopover: React.FC<CodeIndexPopoverProps> = ({
 	const getDefaultSettings = (): LocalCodeIndexSettings => ({
 		codebaseIndexEnabled: true,
 		codebaseIndexQdrantUrl: "",
-		codebaseIndexValkeyUrl: "",
+		codebaseIndexValkeyHostname: "",
+		codebaseIndexValkeyPort: 6379,
 		codebaseIndexEmbedderProvider: "openai",
 		codebaseIndexEmbedderBaseUrl: "",
 		codebaseIndexEmbedderModelId: "",
@@ -212,7 +216,8 @@ export const CodeIndexPopover: React.FC<CodeIndexPopoverProps> = ({
 			const settings = {
 				codebaseIndexEnabled: codebaseIndexConfig.codebaseIndexEnabled ?? true,
 				codebaseIndexQdrantUrl: codebaseIndexConfig.codebaseIndexQdrantUrl || "",
-				codebaseIndexValkeyUrl: codebaseIndexConfig.codebaseIndexValkeyUrl || "",
+				codebaseIndexValkeyHostname: codebaseIndexConfig.codebaseIndexValkeyHostname || "",
+				codebaseIndexValkeyPort: codebaseIndexConfig.codebaseIndexValkeyPort || 6379,
 				codebaseIndexEmbedderProvider: codebaseIndexConfig.codebaseIndexEmbedderProvider || "openai",
 				codebaseIndexEmbedderBaseUrl: codebaseIndexConfig.codebaseIndexEmbedderBaseUrl || "",
 				codebaseIndexEmbedderModelId: codebaseIndexConfig.codebaseIndexEmbedderModelId || "",
@@ -228,8 +233,8 @@ export const CodeIndexPopover: React.FC<CodeIndexPopoverProps> = ({
 				codebaseIndexOpenAiCompatibleApiKey: "",
 				codebaseIndexGeminiApiKey: "",
 				codebaseIndexMistralApiKey: "",
-				codebaseIndexValkeyUsername: "",
-				codeIndexValkeyPassword: "",
+				codebaseIndexValkeyUsername: codebaseIndexConfig.codebaseIndexValkeyUsername || "",
+				codeIndexValkeyPassword: codebaseIndexConfig.codebaseIndexValkeyPassword || "",
 				searchProvider: codebaseIndexConfig.searchProvider,
 			}
 			setInitialSettings(settings)
@@ -484,10 +489,25 @@ export const CodeIndexPopover: React.FC<CodeIndexPopoverProps> = ({
 
 		// Iterate through all current settings
 		for (const [key, value] of Object.entries(currentSettings)) {
-			// Skip placeholder values
-			if (value === SECRET_PLACEHOLDER) continue
-			// Include all other fields, including empty strings (which clear secrets)
-			settingsToSave[key] = value
+			// Skip placeholder values for required secret fields
+			if (
+				value === SECRET_PLACEHOLDER &&
+				key !== "codebaseIndexValkeyUsername" &&
+				key !== "codeIndexValkeyPassword"
+			) {
+				continue
+			}
+
+			// For optional Valkey credentials, send empty string to clear them
+			if (
+				(key === "codebaseIndexValkeyUsername" || key === "codeIndexValkeyPassword") &&
+				value === SECRET_PLACEHOLDER
+			) {
+				settingsToSave[key] = ""
+			} else {
+				// Include all other fields
+				settingsToSave[key] = value
+			}
 		}
 
 		// Always include codebaseIndexEnabled to ensure it's persisted
@@ -1125,25 +1145,55 @@ export const CodeIndexPopover: React.FC<CodeIndexPopoverProps> = ({
 												<label className="text-sm font-medium">
 													{t("settings:codeIndex.valkeyUrlLabel")}
 												</label>
-												<VSCodeTextField
-													value={currentSettings.codebaseIndexValkeyUrl || ""}
-													onInput={(e: any) =>
-														updateSetting("codebaseIndexValkeyUrl", e.target.value)
-													}
-													onBlur={(e: any) => {
-														if (!e.target.value.trim()) {
-															currentSettings.codebaseIndexValkeyUrl = DEFAULT_VALKEY_URL
-															updateSetting("codebaseIndexValkeyUrl", DEFAULT_VALKEY_URL)
+												<div className="grid grid-cols-2 gap-2">
+													<VSCodeTextField
+														value={currentSettings.codebaseIndexValkeyHostname || ""}
+														onInput={(e: any) =>
+															updateSetting("codebaseIndexValkeyHostname", e.target.value)
 														}
-													}}
-													placeholder={t("settings:codeIndex.valkeyUrlPlaceholder")}
-													className={cn("w-full", {
-														"border-red-500": formErrors.codebaseIndexValkeyUrl,
-													})}
-												/>
-												{formErrors.codebaseIndexValkeyUrl && (
+														onBlur={(e: any) => {
+															if (!e.target.value.trim()) {
+																currentSettings.codebaseIndexValkeyHostname =
+																	DEFAULT_VALKEY_HOST_NAME
+																updateSetting(
+																	"codebaseIndexValkeyHostname",
+																	DEFAULT_VALKEY_HOST_NAME,
+																)
+															}
+														}}
+														placeholder={t("settings:codeIndex.valkeyHostnamePlaceholder")}
+														className={cn("w-full", {
+															"border-red-500": formErrors.codebaseIndexValkeyHostname,
+														})}
+													/>
+													<VSCodeTextField
+														type="text"
+														value={
+															currentSettings.codebaseIndexValkeyPort?.toString() ||
+															`${DEFAULT_VALKEY_PORT}`
+														}
+														onInput={(e: any) => {
+															currentSettings.codebaseIndexValkeyPort =
+																DEFAULT_VALKEY_PORT
+															updateSetting(
+																"codebaseIndexValkeyPort",
+																parseInt(e.target.value) || DEFAULT_VALKEY_PORT,
+															)
+														}}
+														placeholder={t("settings:codeIndex.valkeyPortPlaceholder")}
+														className={cn("w-full", {
+															"border-red-500": formErrors.codebaseIndexValkeyPort,
+														})}
+													/>
+												</div>
+												{formErrors.codebaseIndexValkeyHostname && (
 													<p className="text-xs text-vscode-errorForeground mt-1 mb-0">
-														{formErrors.codebaseIndexValkeyUrl}
+														{formErrors.codebaseIndexValkeyHostname}
+													</p>
+												)}
+												{formErrors.codebaseIndexValkeyPort && (
+													<p className="text-xs text-vscode-errorForeground mt-1 mb-0">
+														{formErrors.codebaseIndexValkeyPort}
 													</p>
 												)}
 											</div>

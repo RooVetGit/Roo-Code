@@ -1547,7 +1547,8 @@ export class ClineProvider
 			codebaseIndexConfig: {
 				codebaseIndexEnabled: codebaseIndexConfig?.codebaseIndexEnabled ?? true,
 				codebaseIndexQdrantUrl: codebaseIndexConfig?.codebaseIndexQdrantUrl ?? "http://localhost:6333",
-				codebaseIndexValkeyUrl: codebaseIndexConfig?.codebaseIndexValkeyUrl ?? "redis://localhost:6379",
+				codebaseIndexValkeyHostname: codebaseIndexConfig?.codebaseIndexValkeyHostname ?? "localhost",
+				codebaseIndexValkeyPort: codebaseIndexConfig?.codebaseIndexValkeyPort ?? 6379,
 				codebaseIndexValkeyUsername: codebaseIndexConfig?.codebaseIndexValkeyUsername ?? "",
 				codebaseIndexValkeyPassword: codebaseIndexConfig?.codebaseIndexValkeyPassword ?? "",
 				codebaseIndexEmbedderProvider: codebaseIndexConfig?.codebaseIndexEmbedderProvider ?? "openai",
@@ -1720,8 +1721,9 @@ export class ClineProvider
 				codebaseIndexEnabled: stateValues.codebaseIndexConfig?.codebaseIndexEnabled ?? true,
 				codebaseIndexQdrantUrl:
 					stateValues.codebaseIndexConfig?.codebaseIndexQdrantUrl ?? "http://localhost:6333",
-				codebaseIndexValkeyUrl:
-					stateValues.codebaseIndexConfig?.codebaseIndexValkeyUrl ?? "http://localhost:6379",
+				codebaseIndexValkeyHostname:
+					stateValues.codebaseIndexConfig?.codebaseIndexValkeyHostname ?? "localhost",
+				codebaseIndexValkeyPort: stateValues.codebaseIndexConfig?.codebaseIndexValkeyPort ?? 6379,
 				codebaseIndexValkeyUsername: stateValues.codebaseIndexConfig?.codebaseIndexValkeyUsername ?? "",
 				codebaseIndexValkeyPassword: stateValues.codebaseIndexConfig?.codebaseIndexValkeyPassword ?? "",
 				codebaseIndexEmbedderProvider:

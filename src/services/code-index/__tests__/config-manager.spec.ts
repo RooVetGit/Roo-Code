@@ -112,7 +112,8 @@ describe("CodeIndexConfigManager", () => {
 				openAiOptions: { openAiNativeApiKey: "" },
 				ollamaOptions: { ollamaBaseUrl: "" },
 				qdrantUrl: "http://localhost:6333",
-				valkeyUrl: "http://localhost:6379",
+				valkeyHostname: "localhost",
+				valkeyPort: 6379,
 				qdrantApiKey: "",
 				searchMinScore: 0.4,
 			})
