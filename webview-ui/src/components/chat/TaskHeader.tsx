@@ -15,6 +15,7 @@ import { useExtensionState } from "@src/context/ExtensionStateContext"
 import { useSelectedModel } from "@/components/ui/hooks/useSelectedModel"
 
 import Thumbnails from "../common/Thumbnails"
+import { ModeBadge } from "../common/ModeBadge"
 
 import { TaskActions } from "./TaskActions"
 import { ShareButton } from "./ShareButton"
@@ -101,6 +102,11 @@ const TaskHeader = ({
 								</span>
 							)}
 						</div>
+						{currentTaskItem?.mode && (
+							<div className="ml-2 flex-shrink-0">
+								<ModeBadge modeSlug={currentTaskItem.mode} />
+							</div>
+						)}
 					</div>
 					<StandardTooltip content={t("chat:task.closeAndStart")}>
 						<Button variant="ghost" size="icon" onClick={onClose} className="shrink-0 w-5 h-5">
