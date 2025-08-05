@@ -465,22 +465,6 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 		}
 	}, [])
 
-	useEffect(() => {
-		const cleanupInterval = setInterval(() => {
-			const cache = everVisibleMessagesTsRef.current
-			const currentMessageIds = new Set(modifiedMessages.map((m: ClineMessage) => m.ts))
-			const viewportMessages = visibleMessages.slice(Math.max(0, visibleMessages.length - 100))
-			const viewportMessageIds = new Set(viewportMessages.map((m: ClineMessage) => m.ts))
-
-			cache.forEach((_value: boolean, key: number) => {
-				if (!currentMessageIds.has(key) && !viewportMessageIds.has(key)) {
-					cache.delete(key)
-				}
-			})
-		}, 60000)
-
-		return () => clearInterval(cleanupInterval)
-	}, [modifiedMessages, visibleMessages])
 
 	useEffect(() => {
 		const prev = prevExpandedRowsRef.current
@@ -915,16 +899,6 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 	// NOTE: the VSCode window needs to be focused for this to work.
 	useMount(() => textAreaRef.current?.focus())
 
-	useDebounceEffect(
-		() => {
-			if (!isHidden && !sendingDisabled && !enableButtons) {
-				textAreaRef.current?.focus()
-			}
-		},
-		50,
-		[isHidden, sendingDisabled, enableButtons],
-	)
-
 	const visibleMessages = useMemo(() => {
 		const currentMessageCount = modifiedMessages.length
 		const startIndex = Math.max(0, currentMessageCount - 500)
@@ -990,6 +964,33 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 
 		return newVisibleMessages
 	}, [modifiedMessages])
+	
+	useEffect(() => {
+		const cleanupInterval = setInterval(() => {
+			const cache = everVisibleMessagesTsRef.current
+			const currentMessageIds = new Set(modifiedMessages.map((m: ClineMessage) => m.ts))
+			const viewportMessages = visibleMessages.slice(Math.max(0, visibleMessages.length - 100))
+			const viewportMessageIds = new Set(viewportMessages.map((m: ClineMessage) => m.ts))
+	
+			cache.forEach((_value: boolean, key: number) => {
+				if (!currentMessageIds.has(key) && !viewportMessageIds.has(key)) {
+					cache.delete(key)
+				}
+			})
+		}, 60000)
+	
+		return () => clearInterval(cleanupInterval)
+	}, [modifiedMessages, visibleMessages])
+	
+	useDebounceEffect(
+		() => {
+			if (!isHidden && !sendingDisabled && !enableButtons) {
+				textAreaRef.current?.focus()
+			}
+		},
+		50,
+		[isHidden, sendingDisabled, enableButtons],
+	)
 
 	const isReadOnlyToolAction = useCallback((message: ClineMessage | undefined) => {
 		if (message?.type === "ask") {
