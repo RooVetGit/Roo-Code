@@ -24,8 +24,7 @@ export const ThinkingBudget = ({ apiConfiguration, setApiConfigurationField, mod
 	const { id: selectedModelId } = useSelectedModel(apiConfiguration)
 
 	// Check if this is a Gemini 2.5 Pro model
-	const isGemini25Pro =
-		selectedModelId && (selectedModelId.includes("gemini-2.5-pro") || selectedModelId.includes("gemini-25-pro"))
+	const isGemini25Pro = selectedModelId && selectedModelId.includes("gemini-2.5-pro")
 	const minThinkingTokens = isGemini25Pro ? GEMINI_25_PRO_MIN_THINKING_TOKENS : 1024
 
 	const isReasoningBudgetSupported = !!modelInfo && modelInfo.supportsReasoningBudget

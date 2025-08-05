@@ -92,7 +92,7 @@ export function getModelParams({
 
 	if (shouldUseReasoningBudget({ model, settings })) {
 		// Check if this is a Gemini 2.5 Pro model
-		const isGemini25Pro = modelId.includes("gemini-2.5-pro") || modelId.includes("gemini-25-pro")
+		const isGemini25Pro = modelId.includes("gemini-2.5-pro")
 
 		// If `customMaxThinkingTokens` is not specified use the default.
 		// For Gemini 2.5 Pro, default to 128 instead of 8192

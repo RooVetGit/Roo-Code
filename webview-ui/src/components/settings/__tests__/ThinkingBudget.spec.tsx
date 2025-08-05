@@ -146,22 +146,6 @@ describe("ThinkingBudget", () => {
 		expect(sliders[1].getAttribute("min")).toBe("128")
 	})
 
-	it("should use min thinking tokens of 128 for Gemini 25 Pro models (alternative naming)", () => {
-		render(
-			<ThinkingBudget
-				{...defaultProps}
-				apiConfiguration={{
-					modelMaxTokens: 10000,
-					apiProvider: "gemini",
-					apiModelId: "gemini-25-pro-latest",
-				}}
-			/>,
-		)
-
-		const sliders = screen.getAllByTestId("slider")
-		expect(sliders[1].getAttribute("min")).toBe("128")
-	})
-
 	it("should use step of 128 for Gemini 2.5 Pro models", () => {
 		render(
 			<ThinkingBudget
