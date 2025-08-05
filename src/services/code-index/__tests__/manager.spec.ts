@@ -1,27 +1,36 @@
 import { CodeIndexManager } from "../manager"
 import { CodeIndexServiceFactory } from "../service-factory"
 import type { MockedClass } from "vitest"
+import * as path from "path"
 
 // Mock vscode module
-vi.mock("vscode", () => ({
-	window: {
-		activeTextEditor: null,
-	},
-	workspace: {
-		workspaceFolders: [
-			{
-				uri: { fsPath: "/test/workspace" },
-				name: "test",
-				index: 0,
-			},
-		],
-	},
-}))
+vi.mock("vscode", () => {
+	const testPath = require("path")
+	const testWorkspacePath = testPath.join(testPath.sep, "test", "workspace")
+	return {
+		window: {
+			activeTextEditor: null,
+		},
+		workspace: {
+			workspaceFolders: [
+				{
+					uri: { fsPath: testWorkspacePath },
+					name: "test",
+					index: 0,
+				},
+			],
+		},
+	}
+})
 
 // Mock only the essential dependencies
-vi.mock("../../../utils/path", () => ({
-	getWorkspacePath: vi.fn(() => "/test/workspace"),
-}))
+vi.mock("../../../utils/path", () => {
+	const testPath = require("path")
+	const testWorkspacePath = testPath.join(testPath.sep, "test", "workspace")
+	return {
+		getWorkspacePath: vi.fn(() => testWorkspacePath),
+	}
+})
 
 vi.mock("../state-manager", () => ({
 	CodeIndexStateManager: vi.fn().mockImplementation(() => ({
@@ -48,6 +57,13 @@ describe("CodeIndexManager - handleSettingsChange regression", () => {
 	let mockContext: any
 	let manager: CodeIndexManager
 
+	// Define test paths for use in tests
+	const testWorkspacePath = path.join(path.sep, "test", "workspace")
+	const testExtensionPath = path.join(path.sep, "test", "extension")
+	const testStoragePath = path.join(path.sep, "test", "storage")
+	const testGlobalStoragePath = path.join(path.sep, "test", "global-storage")
+	const testLogPath = path.join(path.sep, "test", "log")
+
 	beforeEach(() => {
 		// Clear all instances before each test
 		CodeIndexManager.disposeAll()
@@ -57,14 +73,14 @@ describe("CodeIndexManager - handleSettingsChange regression", () => {
 			workspaceState: {} as any,
 			globalState: {} as any,
 			extensionUri: {} as any,
-			extensionPath: "/test/extension",
+			extensionPath: testExtensionPath,
 			asAbsolutePath: vi.fn(),
 			storageUri: {} as any,
-			storagePath: "/test/storage",
+			storagePath: testStoragePath,
 			globalStorageUri: {} as any,
-			globalStoragePath: "/test/global-storage",
+			globalStoragePath: testGlobalStoragePath,
 			logUri: {} as any,
-			logPath: "/test/log",
+			logPath: testLogPath,
 			extensionMode: 3, // vscode.ExtensionMode.Test
 			secrets: {} as any,
 			environmentVariableCollection: {} as any,
@@ -118,7 +134,7 @@ describe("CodeIndexManager - handleSettingsChange regression", () => {
 			// Mock service factory to handle _recreateServices call
 			const mockServiceFactoryInstance = {
 				configManager: mockConfigManager,
-				workspacePath: "/test/workspace",
+				workspacePath: testWorkspacePath,
 				cacheManager: mockCacheManager,
 				createEmbedder: vi.fn().mockReturnValue({ embedderInfo: { name: "openai" } }),
 				createVectorStore: vi.fn().mockReturnValue({}),
@@ -192,7 +208,7 @@ describe("CodeIndexManager - handleSettingsChange regression", () => {
 			// Mock service factory to handle _recreateServices call
 			const mockServiceFactoryInstance = {
 				configManager: mockConfigManager,
-				workspacePath: "/test/workspace",
+				workspacePath: testWorkspacePath,
 				cacheManager: mockCacheManager,
 				createEmbedder: vi.fn().mockReturnValue({ embedderInfo: { name: "openai" } }),
 				createVectorStore: vi.fn().mockReturnValue({}),
