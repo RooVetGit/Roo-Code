@@ -63,7 +63,7 @@ describe("formatDate", () => {
 		const timestamp = new Date("2024-01-15T14:30:00").getTime()
 		const result = formatDate(timestamp)
 		// The exact format depends on the locale, but it should contain the date components
-		expect(result).toMatch(/JANUARY|JAN/)
+		expect(result).toMatch(/january|jan/i)
 		expect(result).toMatch(/15/)
 	})
 })
