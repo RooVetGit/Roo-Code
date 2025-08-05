@@ -189,7 +189,9 @@
 		"wantsToInsertWithLineNumber": "Roo wants to insert content into this file at line {{lineNumber}}:",
 		"wantsToInsertAtEnd": "Roo wants to append content to the end of this file:",
 		"fileNotFound": "File Not Found",
-		"fileNotFoundMessage": "The requested file does not exist in the current workspace."
+		"filesNotFound": "Files Not Found",
+		"fileNotFoundMessage": "The requested file does not exist in the current workspace.",
+		"filesNotFoundMessage": "The requested files do not exist in the current workspace."
 	},
 	"directoryOperations": {
 		"wantsToViewTopLevel": "Roo wants to view the top level files in this directory:",

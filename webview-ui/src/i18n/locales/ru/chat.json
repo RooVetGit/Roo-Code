@@ -168,6 +168,10 @@
 		"wantsToInsert": "Roo хочет вставить содержимое в этот файл:",
 		"wantsToInsertWithLineNumber": "Roo хочет вставить содержимое в этот файл на строку {{lineNumber}}:",
 		"wantsToInsertAtEnd": "Roo хочет добавить содержимое в конец этого файла:",
+		"fileNotFound": "Файл не найден",
+		"filesNotFound": "Файлы не найдены",
+		"fileNotFoundMessage": "Запрошенный файл не существует в текущей рабочей области.",
+		"filesNotFoundMessage": "Запрошенные файлы не существуют в текущей рабочей области.",
 		"wantsToReadAndXMore": "Roo хочет прочитать этот файл и еще {{count}}:",
 		"wantsToReadMultiple": "Roo хочет прочитать несколько файлов:",
 		"wantsToApplyBatchChanges": "Roo хочет применить изменения к нескольким файлам:"

@@ -198,6 +198,9 @@ export async function readFileTool(
 		lineRanges: entry.lineRanges,
 	}))
 
+	// Track files that were not found
+	const notFoundFiles: string[] = []
+
 	// Function to update file result status
 	const updateFileResult = (path: string, updates: Partial<FileResult>) => {
 		const index = fileResults.findIndex((result) => result.path === path)
@@ -621,29 +624,36 @@ export async function readFileTool(
 						errorMsg.includes("File not found"))
 
 				if (isFileNotFound) {
-					// Emit a proper typed message for file not found errors
-					await cline.say(
-						"file_not_found_error",
-						JSON.stringify({
-							filePath: relPath,
-							error: "The requested file does not exist in the current workspace.",
-						}),
-					)
+					// Track the missing file
+					notFoundFiles.push(relPath)
 
 					updateFileResult(relPath, {
 						status: "error",
 						error: "File not found",
-						xmlContent: "", // Empty to prevent duplicate error display
+						xmlContent: `<file><path>${relPath}</path><error>File not found: The requested file does not exist in the current workspace.</error></file>`,
 					})
+					// Don't call handleError for file not found - we'll emit a unified message later
 				} else {
 					updateFileResult(relPath, {
 						status: "error",
 						error: errorMsg,
 						xmlContent: `<file><path>${relPath}</path><error>${errorMsg}</error></file>`,
 					})
+					// Only call handleError for non-file-not-found errors
+					await handleError(`reading file ${relPath}`, error instanceof Error ? error : new Error(errorMsg))
 				}
-				await handleError(`reading file ${relPath}`, error instanceof Error ? error : new Error(errorMsg))
 			}
+		}
+
+		// Emit a unified file not found error message if any files were not found
+		if (notFoundFiles.length > 0) {
+			await cline.say(
+				"file_not_found_error",
+				JSON.stringify({
+					filePaths: notFoundFiles,
+					error: "The requested files do not exist in the current workspace.",
+				}),
+			)
 		}
 
 		// Generate final XML result from all file results
@@ -731,23 +741,18 @@ export async function readFileTool(
 				errorMsg.includes("File not found"))
 
 		if (isFileNotFound) {
-			// Emit a proper typed message for file not found errors
-			await cline.say(
-				"file_not_found_error",
-				JSON.stringify({
-					filePath: relPath,
-					error: "The requested file does not exist in the current workspace.",
-				}),
-			)
+			// Track the missing file
+			notFoundFiles.push(relPath)
 
 			// If we have file results, update the first one with the error
 			if (fileResults.length > 0) {
 				updateFileResult(relPath, {
 					status: "error",
 					error: "File not found",
-					xmlContent: "", // Empty to prevent duplicate error display
+					xmlContent: `<file><path>${relPath}</path><error>File not found: The requested file does not exist in the current workspace.</error></file>`,
 				})
 			}
+			// Don't call handleError for file not found - we'll emit a unified message later
 		} else {
 			// If we have file results, update the first one with the error
 			if (fileResults.length > 0) {
@@ -757,9 +762,20 @@ export async function readFileTool(
 					xmlContent: `<file><path>${relPath}</path><error>${errorMsg}</error></file>`,
 				})
 			}
+			// Only call handleError for non-file-not-found errors
+			await handleError(`reading file ${relPath}`, error instanceof Error ? error : new Error(errorMsg))
 		}
 
-		await handleError(`reading file ${relPath}`, error instanceof Error ? error : new Error(errorMsg))
+		// Emit a unified file not found error message if any files were not found
+		if (notFoundFiles.length > 0) {
+			await cline.say(
+				"file_not_found_error",
+				JSON.stringify({
+					filePaths: notFoundFiles,
+					error: "The requested files do not exist in the current workspace.",
+				}),
+			)
+		}
 
 		// Generate final XML result from all file results
 		const xmlResults = fileResults.filter((result) => result.xmlContent).map((result) => result.xmlContent)

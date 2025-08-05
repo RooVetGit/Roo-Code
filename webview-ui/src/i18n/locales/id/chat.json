@@ -190,7 +190,11 @@
 		"didSearchReplace": "Roo melakukan pencarian dan penggantian pada file ini:",
 		"wantsToInsert": "Roo ingin menyisipkan konten ke file ini:",
 		"wantsToInsertWithLineNumber": "Roo ingin menyisipkan konten ke file ini di baris {{lineNumber}}:",
-		"wantsToInsertAtEnd": "Roo ingin menambahkan konten ke akhir file ini:"
+		"wantsToInsertAtEnd": "Roo ingin menambahkan konten ke akhir file ini:",
+		"fileNotFound": "File Tidak Ditemukan",
+		"filesNotFound": "File Tidak Ditemukan",
+		"fileNotFoundMessage": "File yang diminta tidak ada di ruang kerja saat ini.",
+		"filesNotFoundMessage": "File yang diminta tidak ada di ruang kerja saat ini."
 	},
 	"directoryOperations": {
 		"wantsToViewTopLevel": "Roo ingin melihat file tingkat atas di direktori ini:",

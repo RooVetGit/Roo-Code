@@ -173,6 +173,10 @@
 		"wantsToInsert": "Roo vuole inserire contenuto in questo file:",
 		"wantsToInsertWithLineNumber": "Roo vuole inserire contenuto in questo file alla riga {{lineNumber}}:",
 		"wantsToInsertAtEnd": "Roo vuole aggiungere contenuto alla fine di questo file:",
+		"fileNotFound": "File non trovato",
+		"filesNotFound": "File non trovati",
+		"fileNotFoundMessage": "Il file richiesto non esiste nell'area di lavoro corrente.",
+		"filesNotFoundMessage": "I file richiesti non esistono nell'area di lavoro corrente.",
 		"wantsToReadAndXMore": "Roo vuole leggere questo file e altri {{count}}:",
 		"wantsToReadMultiple": "Roo vuole leggere più file:",
 		"wantsToApplyBatchChanges": "Roo vuole applicare modifiche a più file:"

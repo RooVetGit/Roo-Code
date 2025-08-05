@@ -173,6 +173,10 @@
 		"wantsToInsert": "Roo chce wstawić zawartość do tego pliku:",
 		"wantsToInsertWithLineNumber": "Roo chce wstawić zawartość do tego pliku w linii {{lineNumber}}:",
 		"wantsToInsertAtEnd": "Roo chce dodać zawartość na końcu tego pliku:",
+		"fileNotFound": "Plik nie został znaleziony",
+		"filesNotFound": "Pliki nie zostały znalezione",
+		"fileNotFoundMessage": "Żądany plik nie istnieje w bieżącym obszarze roboczym.",
+		"filesNotFoundMessage": "Żądane pliki nie istnieją w bieżącym obszarze roboczym.",
 		"wantsToReadAndXMore": "Roo chce przeczytać ten plik i {{count}} więcej:",
 		"wantsToReadMultiple": "Roo chce odczytać wiele plików:",
 		"wantsToApplyBatchChanges": "Roo chce zastosować zmiany do wielu plików:"

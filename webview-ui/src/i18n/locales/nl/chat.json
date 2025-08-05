@@ -168,6 +168,10 @@
 		"wantsToInsert": "Roo wil inhoud invoegen in dit bestand:",
 		"wantsToInsertWithLineNumber": "Roo wil inhoud invoegen in dit bestand op regel {{lineNumber}}:",
 		"wantsToInsertAtEnd": "Roo wil inhoud toevoegen aan het einde van dit bestand:",
+		"fileNotFound": "Bestand niet gevonden",
+		"filesNotFound": "Bestanden niet gevonden",
+		"fileNotFoundMessage": "Het gevraagde bestand bestaat niet in de huidige werkruimte.",
+		"filesNotFoundMessage": "De gevraagde bestanden bestaan niet in de huidige werkruimte.",
 		"wantsToReadAndXMore": "Roo wil dit bestand en nog {{count}} andere lezen:",
 		"wantsToReadMultiple": "Roo wil meerdere bestanden lezen:",
 		"wantsToApplyBatchChanges": "Roo wil wijzigingen toepassen op meerdere bestanden:"

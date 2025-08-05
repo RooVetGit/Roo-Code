@@ -2,81 +2,69 @@ import React from "react"
 import { useTranslation } from "react-i18next"
 
 interface FileNotFoundErrorProps {
-	filePath: string
-	isExpanded?: boolean
-	onToggleExpand?: () => void
+	filePaths: string | string[]
 }
 
-export const FileNotFoundError: React.FC<FileNotFoundErrorProps> = ({
-	filePath,
-	isExpanded = false,
-	onToggleExpand,
-}) => {
+export const FileNotFoundError: React.FC<FileNotFoundErrorProps> = ({ filePaths }) => {
 	const { t } = useTranslation()
-
-	const headerStyle: React.CSSProperties = {
-		display: "flex",
-		alignItems: "center",
-		gap: "10px",
-		marginBottom: "10px",
-		wordBreak: "break-word",
-		cursor: onToggleExpand ? "pointer" : "default",
-		userSelect: "none",
-	}
-
-	const containerStyle: React.CSSProperties = {
-		backgroundColor: "var(--vscode-inputValidation-warningBackground)",
-		border: "1px solid var(--vscode-inputValidation-warningBorder)",
-		borderRadius: "4px",
-		padding: "12px",
-		marginTop: "8px",
-		marginBottom: "8px",
-	}
-
-	const iconStyle: React.CSSProperties = {
-		color: "var(--vscode-editorWarning-foreground)",
-		fontSize: "16px",
-		marginBottom: "-1.5px",
-	}
-
-	const titleStyle: React.CSSProperties = {
-		color: "var(--vscode-editorWarning-foreground)",
-		fontWeight: "bold",
-	}
-
-	const pathStyle: React.CSSProperties = {
-		fontFamily: "var(--vscode-editor-font-family)",
-		fontSize: "var(--vscode-editor-font-size)",
-		marginTop: "8px",
-		marginBottom: "4px",
-		wordBreak: "break-all",
-	}
-
-	const messageStyle: React.CSSProperties = {
-		color: "var(--vscode-foreground)",
-		opacity: 0.9,
-		fontSize: "var(--vscode-font-size)",
-	}
+	const paths = Array.isArray(filePaths) ? filePaths : [filePaths]
+	const isMultiple = paths.length > 1
 
 	return (
-		<div style={containerStyle}>
-			<div style={headerStyle} onClick={onToggleExpand}>
-				<span className="codicon codicon-warning" style={iconStyle} />
-				<span style={titleStyle}>{t("chat:fileOperations.fileNotFound")}</span>
-				{onToggleExpand && (
-					<div style={{ flexGrow: 1, display: "flex", justifyContent: "flex-end" }}>
-						<span className={`codicon codicon-chevron-${isExpanded ? "up" : "down"}`} />
-					</div>
-				)}
+		<div
+			style={{
+				marginTop: "8px",
+				marginBottom: "8px",
+			}}>
+			<div
+				style={{
+					display: "flex",
+					alignItems: "center",
+					gap: "10px",
+					marginBottom: "8px",
+					fontSize: "var(--vscode-font-size)",
+					color: "var(--vscode-editor-foreground)",
+				}}>
+				<span
+					className="codicon codicon-warning"
+					style={{
+						color: "var(--vscode-editorWarning-foreground)",
+						opacity: 0.8,
+						fontSize: 16,
+						marginBottom: "-1.5px",
+					}}
+				/>
+				<span style={{ fontWeight: "bold" }}>
+					{isMultiple ? t("chat:fileOperations.filesNotFound") : t("chat:fileOperations.fileNotFound")}
+				</span>
 			</div>
-			{(isExpanded || !onToggleExpand) && (
-				<>
-					<div style={pathStyle}>
-						<code>{filePath}</code>
+			<div
+				style={{
+					paddingLeft: "26px", // Align with text after icon (16px icon + 10px gap)
+				}}>
+				{paths.map((path, index) => (
+					<div
+						key={index}
+						style={{
+							fontFamily: "var(--vscode-editor-font-family)",
+							fontSize: "var(--vscode-editor-font-size)",
+							marginBottom: index === paths.length - 1 ? "8px" : "4px",
+							wordBreak: "break-all",
+							color: "var(--vscode-foreground)",
+						}}>
+						<code>{path}</code>
 					</div>
-					<div style={messageStyle}>{t("chat:fileOperations.fileNotFoundMessage")}</div>
-				</>
-			)}
+				))}
+				<div
+					style={{
+						color: "var(--vscode-descriptionForeground)",
+						fontSize: "var(--vscode-font-size)",
+					}}>
+					{isMultiple
+						? t("chat:fileOperations.filesNotFoundMessage")
+						: t("chat:fileOperations.fileNotFoundMessage")}
+				</div>
+			</div>
 		</div>
 	)
 }

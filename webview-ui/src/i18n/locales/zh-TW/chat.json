@@ -187,7 +187,11 @@
 		"didSearchReplace": "Roo 已在此檔案執行搜尋和取代：",
 		"wantsToInsert": "Roo 想要在此檔案中插入內容：",
 		"wantsToInsertWithLineNumber": "Roo 想要在此檔案第 {{lineNumber}} 行插入內容：",
-		"wantsToInsertAtEnd": "Roo 想要在此檔案尾端新增內容："
+		"wantsToInsertAtEnd": "Roo 想要在此檔案末尾新增內容：",
+		"fileNotFound": "找不到檔案",
+		"filesNotFound": "找不到檔案",
+		"fileNotFoundMessage": "請求的檔案在目前工作區中不存在。",
+		"filesNotFoundMessage": "請求的檔案在目前工作區中不存在。"
 	},
 	"directoryOperations": {
 		"wantsToViewTopLevel": "Roo 想要檢視此目錄中最上層的檔案：",
