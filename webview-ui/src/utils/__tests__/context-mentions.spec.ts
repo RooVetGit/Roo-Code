@@ -51,7 +51,7 @@ describe("insertMention", () => {
 	})
 
 	it("should handle slash command replacement", () => {
-		const result = insertMention("/mode some", 5, "code") // Simulating mode selection
+		const result = insertMention("/mode some", 5, "code", true) // Simulating mode selection
 		expect(result.newValue).toBe("code") // Should replace the whole text
 		expect(result.mentionIndex).toBe(0)
 	})
@@ -102,6 +102,48 @@ describe("insertMention", () => {
 		expect(result.newValue).toBe(`Simple @${simplePath} `)
 		expect(result.mentionIndex).toBe(7)
 		expect(result.newValue.includes("\\ ")).toBe(false)
+	})
+
+	// --- Tests for isSlashCommand parameter ---
+	describe("isSlashCommand parameter", () => {
+		it("should replace entire text when isSlashCommand is true", () => {
+			const result = insertMention("/cod", 4, "code", true)
+			expect(result.newValue).toBe("code")
+			expect(result.mentionIndex).toBe(0)
+		})
+
+		it("should replace entire text even when @ mentions exist and isSlashCommand is true", () => {
+			const result = insertMention("/code @some/file.ts", 5, "debug", true)
+			expect(result.newValue).toBe("debug")
+			expect(result.mentionIndex).toBe(0)
+		})
+
+		it("should insert @ mention correctly after slash command when isSlashCommand is false", () => {
+			const text = "/code @"
+			const position = 8 // cursor after @
+			const result = insertMention(text, position, "src/file.ts", false)
+
+			expect(result.newValue).toBe("/code @src/file.ts ")
+			expect(result.mentionIndex).toBe(6) // position of @
+		})
+
+		it("should not treat text starting with / as slash command when isSlashCommand is false", () => {
+			const text = "/some/path/file.ts @"
+			const position = 20
+			const result = insertMention(text, position, "another.ts", false)
+
+			expect(result.newValue).toBe("/some/path/file.ts @another.ts ")
+			expect(result.mentionIndex).toBe(19) // position of @
+		})
+
+		it("should work with default parameter (isSlashCommand = false)", () => {
+			const text = "/code @"
+			const position = 8
+			const result = insertMention(text, position, "src/file.ts") // No isSlashCommand parameter
+
+			expect(result.newValue).toBe("/code @src/file.ts ")
+			expect(result.mentionIndex).toBe(6)
+		})
 	})
 })
 
@@ -194,16 +236,8 @@ describe("getContextMenuOptions", () => {
 		{ path: "/Users/test/project/assets/", type: "folder", label: "assets/" },
 	]
 
-	// Mock translation function
-	const mockT = (key: string, options?: { name?: string }) => {
-		if (key === "chat:command.triggerDescription" && options?.name) {
-			return `Trigger command: ${options.name}`
-		}
-		return key
-	}
-
 	it("should return all option types for empty query", () => {
-		const result = getContextMenuOptions("", "", mockT, null, [])
+		const result = getContextMenuOptions("", null, [])
 		expect(result).toHaveLength(6)
 		expect(result.map((item) => item.type)).toEqual([
 			ContextMenuOptionType.Problems,
@@ -216,7 +250,7 @@ describe("getContextMenuOptions", () => {
 	})
 
 	it("should filter by selected type when query is empty", () => {
-		const result = getContextMenuOptions("", "", mockT, ContextMenuOptionType.File, mockQueryItems)
+		const result = getContextMenuOptions("", ContextMenuOptionType.File, mockQueryItems)
 		expect(result).toHaveLength(2)
 		expect(result.map((item) => item.type)).toContain(ContextMenuOptionType.File)
 		expect(result.map((item) => item.type)).toContain(ContextMenuOptionType.OpenedFile)
@@ -225,19 +259,19 @@ describe("getContextMenuOptions", () => {
 	})
 
 	it("should match git commands", () => {
-		const result = getContextMenuOptions("git", "git", mockT, null, mockQueryItems)
+		const result = getContextMenuOptions("git", null, mockQueryItems)
 		expect(result[0].type).toBe(ContextMenuOptionType.Git)
 		expect(result[0].label).toBe("Git Commits")
 	})
 
 	it("should match git commit hashes", () => {
-		const result = getContextMenuOptions("abc1234", "abc1234", mockT, null, mockQueryItems)
+		const result = getContextMenuOptions("abc1234", null, mockQueryItems)
 		expect(result[0].type).toBe(ContextMenuOptionType.Git)
 		expect(result[0].value).toBe("abc1234")
 	})
 
 	it("should return NoResults when no matches found", () => {
-		const result = getContextMenuOptions("nonexistent", "nonexistent", mockT, null, mockQueryItems)
+		const result = getContextMenuOptions("nonexistent", null, mockQueryItems)
 		expect(result).toHaveLength(1)
 		expect(result[0].type).toBe(ContextMenuOptionType.NoResults)
 	})
@@ -258,7 +292,7 @@ describe("getContextMenuOptions", () => {
 			},
 		]
 
-		const result = getContextMenuOptions("test", "test", mockT, null, testItems, mockDynamicSearchResults)
+		const result = getContextMenuOptions("test", null, testItems, mockDynamicSearchResults)
 
 		// Check if opened files and dynamic search results are included
 		expect(result.some((item) => item.type === ContextMenuOptionType.OpenedFile)).toBe(true)
@@ -267,7 +301,7 @@ describe("getContextMenuOptions", () => {
 
 	it("should maintain correct result ordering according to implementation", () => {
 		// Add multiple item types to test ordering
-		const result = getContextMenuOptions("t", "t", mockT, null, mockQueryItems, mockDynamicSearchResults)
+		const result = getContextMenuOptions("t", null, mockQueryItems, mockDynamicSearchResults)
 
 		// Find the different result types
 		const fileResults = result.filter(
@@ -298,7 +332,7 @@ describe("getContextMenuOptions", () => {
 	})
 
 	it("should include opened files when dynamic search results exist", () => {
-		const result = getContextMenuOptions("open", "open", mockT, null, mockQueryItems, mockDynamicSearchResults)
+		const result = getContextMenuOptions("open", null, mockQueryItems, mockDynamicSearchResults)
 
 		// Verify opened files are included
 		expect(result.some((item) => item.type === ContextMenuOptionType.OpenedFile)).toBe(true)
@@ -307,7 +341,7 @@ describe("getContextMenuOptions", () => {
 	})
 
 	it("should include git results when dynamic search results exist", () => {
-		const result = getContextMenuOptions("commit", "commit", mockT, null, mockQueryItems, mockDynamicSearchResults)
+		const result = getContextMenuOptions("commit", null, mockQueryItems, mockDynamicSearchResults)
 
 		// Verify git results are included
 		expect(result.some((item) => item.type === ContextMenuOptionType.Git)).toBe(true)
@@ -328,7 +362,7 @@ describe("getContextMenuOptions", () => {
 			},
 		]
 
-		const result = getContextMenuOptions("test", "test", mockT, null, mockQueryItems, duplicateSearchResults)
+		const result = getContextMenuOptions("test", null, mockQueryItems, duplicateSearchResults)
 
 		// Count occurrences of src/test.ts in results
 		const duplicateCount = result.filter(
@@ -347,8 +381,6 @@ describe("getContextMenuOptions", () => {
 		// Use a query that won't match anything
 		const result = getContextMenuOptions(
 			"nonexistentquery123456",
-			"nonexistentquery123456",
-			mockT,
 			null,
 			mockQueryItems,
 			[], // Empty dynamic search results
@@ -396,7 +428,7 @@ describe("getContextMenuOptions", () => {
 		]
 
 		// Get results for "test" query
-		const result = getContextMenuOptions(testQuery, testQuery, mockT, null, testItems, testSearchResults)
+		const result = getContextMenuOptions(testQuery, null, testItems, testSearchResults)
 
 		// Verify we have results
 		expect(result.length).toBeGreaterThan(0)
@@ -442,17 +474,18 @@ describe("getContextMenuOptions", () => {
 			},
 		]
 
-		const result = getContextMenuOptions("/co", "/co", mockT, null, [], [], mockModes)
+		const result = getContextMenuOptions("/co", null, [], [], mockModes)
 
-		// Verify mode results are returned
-		expect(result[0].type).toBe(ContextMenuOptionType.Mode)
-		expect(result[0].value).toBe("code")
+		// Should have section header first, then mode results
+		expect(result[0].type).toBe(ContextMenuOptionType.SectionHeader)
+		expect(result[1].type).toBe(ContextMenuOptionType.Mode)
+		expect(result[1].value).toBe("code")
 	})
 
 	it("should not process slash commands when query starts with slash but inputValue doesn't", () => {
 		// Use a completely non-matching query to ensure we get NoResults
 		// and provide empty query items to avoid any matches
-		const result = getContextMenuOptions("/nonexistentquery", "Hello /code", mockT, null, [], [])
+		const result = getContextMenuOptions("/nonexistentquery", null, [], [])
 
 		// Should not process as a mode command
 		expect(result[0].type).not.toBe(ContextMenuOptionType.Mode)
@@ -462,7 +495,7 @@ describe("getContextMenuOptions", () => {
 
 	// --- Tests for Escaped Spaces (Focus on how paths are presented) ---
 	it("should return search results with correct labels/descriptions (no escaping needed here)", () => {
-		const options = getContextMenuOptions("@search", "search", mockT, null, mockQueryItems, mockSearchResults)
+		const options = getContextMenuOptions("@search", null, mockQueryItems, mockSearchResults)
 		const fileResult = options.find((o) => o.label === "search result spaces.ts")
 		expect(fileResult).toBeDefined()
 		// Value should be the normalized path, description might be the same or label
@@ -475,7 +508,7 @@ describe("getContextMenuOptions", () => {
 	})
 
 	it("should return query items (like opened files) with correct labels/descriptions", () => {
-		const options = getContextMenuOptions("open", "@open", mockT, null, mockQueryItems, [])
+		const options = getContextMenuOptions("open", null, mockQueryItems, [])
 		const openedFile = options.find((o) => o.label === "open file.ts")
 		expect(openedFile).toBeDefined()
 		expect(openedFile?.value).toBe("src/open file.ts")
@@ -492,7 +525,7 @@ describe("getContextMenuOptions", () => {
 		]
 
 		// The formatting happens in getContextMenuOptions when converting search results to menu items
-		const formattedItems = getContextMenuOptions("spaces", "@spaces", mockT, null, [], searchResults)
+		const formattedItems = getContextMenuOptions("spaces", null, [], searchResults)
 
 		// Verify we get some results back that aren't "No Results"
 		expect(formattedItems.length).toBeGreaterThan(0)

@@ -4,11 +4,12 @@
 		"title": "Task",
 		"seeMore": "See more",
 		"seeLess": "See less",
-		"tokens": "Tokens:",
-		"cache": "Cache:",
-		"apiCost": "API Cost:",
+		"tokens": "Tokens",
+		"cache": "Cache",
+		"apiCost": "API Cost",
+		"size": "Size",
 		"condenseContext": "Intelligently condense context",
-		"contextWindow": "Context Length:",
+		"contextWindow": "Context Length",
 		"closeAndStart": "Close task and start a new one",
 		"export": "Export task history",
 		"share": "Share task",
@@ -128,7 +129,7 @@
 	"stopTts": "Stop text-to-speech",
 	"typeMessage": "Type a message...",
 	"typeTask": "Type your task here...",
-	"addContext": "@ to add context, / to switch modes",
+	"addContext": "@ to add context, / for commands",
 	"dragFiles": "hold shift to drag in files",
 	"dragFilesImages": "hold shift to drag in files/images",
 	"errorReadingFile": "Error reading file:",
@@ -145,7 +146,6 @@
 		"streamingFailed": "API Streaming Failed"
 	},
 	"checkpoint": {
-		"initial": "Initial Checkpoint",
 		"regular": "Checkpoint",
 		"initializingWarning": "Still initializing checkpoint... If this takes too long, you can disable checkpoints in <settingsLink>settings</settingsLink> and restart your task.",
 		"menu": {
@@ -274,9 +274,9 @@
 		"title": "🎉 Roo Code {{version}} Released",
 		"description": "Roo Code {{version}} brings powerful new features and significant improvements to enhance your development workflow.",
 		"whatsNew": "What's New",
-		"feature1": "<bold>Hugging Face Provider</bold>: Access tons of great open source models directly through the new Hugging Face provider with seamless integration and model selection.",
-		"feature2": "<bold>Inline Command Controls</bold>: New auto-approve and deny controls for command execution give you precise control over terminal operations with customizable permissions.",
-		"feature3": "<bold>AGENTS.md Rules Support</bold>: Adds support for a community standard AGENTS.md file in the root of the project.",
+		"feature1": "<bold>Message Queueing</bold>: Queue multiple messages while Roo is working, allowing you to continue planning your workflow without interruption.",
+		"feature2": "<bold>Custom Slash Commands</bold>: Create personalized slash commands for quick access to frequently used prompts and workflows, with full UI management.",
+		"feature3": "<bold>Enhanced Gemini Tools</bold>: New URL context and Google Search grounding capabilities provide Gemini models with real-time web information and enhanced research abilities.",
 		"hideButton": "Hide announcement",
 		"detailsDiscussLinks": "Get more details and discuss in <discordLink>Discord</discordLink> and <redditLink>Reddit</redditLink> 🚀"
 	},
@@ -332,6 +332,11 @@
 			"title": "Auto-Approved Request Limit Reached",
 			"description": "Roo has reached the auto-approved limit of {{count}} API request(s). Would you like to reset the count and proceed with the task?",
 			"button": "Reset and Continue"
+		},
+		"autoApprovedCostLimitReached": {
+			"title": "Auto-Approved Cost Limit Reached",
+			"description": "Roo has reached the auto-approved cost limit of ${{count}}. Would you like to reset the cost and proceed with the task?",
+			"button": "Reset and Continue"
 		}
 	},
 	"indexingStatus": {
@@ -351,6 +356,24 @@
 	},
 	"command": {
 		"triggerDescription": "Trigger the {{name}} command"
+	},
+	"slashCommands": {
+		"tooltip": "Manage slash commands",
+		"title": "Slash Commands",
+		"description": "Create custom slash commands for quick access to frequently used prompts and workflows. <DocsLink>Docs</DocsLink>",
+		"globalCommands": "Global Commands",
+		"workspaceCommands": "Workspace Commands",
+		"globalCommand": "Global command",
+		"editCommand": "Edit command",
+		"deleteCommand": "Delete command",
+		"newGlobalCommandPlaceholder": "New global command...",
+		"newWorkspaceCommandPlaceholder": "New workspace command...",
+		"deleteDialog": {
+			"title": "Delete Command",
+			"description": "Are you sure you want to delete the command \"{{name}}\"? This action cannot be undone.",
+			"cancel": "Cancel",
+			"confirm": "Delete"
+		}
 	},
 	"queuedMessages": {
 		"title": "Queued Messages:",

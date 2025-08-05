@@ -136,6 +136,7 @@
 	},
 	"autoApprove": {
 		"description": "Allow Roo to automatically perform operations without requiring approval. Enable these settings only if you fully trust the AI and understand the associated security risks.",
+		"enabled": "Auto-Approve Enabled",
 		"readOnly": {
 			"label": "Read",
 			"description": "When enabled, Roo will automatically view directory contents and read files without requiring you to click the Approve button.",
@@ -200,9 +201,15 @@
 			"description": "Automatically update the to-do list without requiring approval"
 		},
 		"apiRequestLimit": {
-			"title": "Max Requests",
-			"description": "Automatically make this many API requests before asking for approval to continue with the task.",
+			"title": "Max Count",
 			"unlimited": "Unlimited"
+		},
+		"apiCostLimit": {
+			"title": "Max Cost",
+			"unlimited": "Unlimited"
+		},
+		"maxLimits": {
+			"description": "Automatically make requests up to these limits before asking for approval to continue."
 		},
 		"toggleAriaLabel": "Toggle auto-approval",
 		"disabledAriaLabel": "Auto-approval disabled - select options first",
@@ -258,16 +265,28 @@
 		"anthropicApiKey": "Anthropic API Key",
 		"getAnthropicApiKey": "Get Anthropic API Key",
 		"anthropicUseAuthToken": "Pass Anthropic API Key as Authorization header instead of X-Api-Key",
+		"cerebrasApiKey": "Cerebras API Key",
+		"getCerebrasApiKey": "Get Cerebras API Key",
 		"chutesApiKey": "Chutes API Key",
 		"getChutesApiKey": "Get Chutes API Key",
+		"fireworksApiKey": "Fireworks API Key",
+		"getFireworksApiKey": "Get Fireworks API Key",
 		"deepSeekApiKey": "DeepSeek API Key",
 		"getDeepSeekApiKey": "Get DeepSeek API Key",
+		"doubaoApiKey": "Doubao API Key",
+		"getDoubaoApiKey": "Get Doubao API Key",
 		"moonshotApiKey": "Moonshot API Key",
 		"getMoonshotApiKey": "Get Moonshot API Key",
 		"moonshotBaseUrl": "Moonshot Entrypoint",
+		"zaiApiKey": "Z AI API Key",
+		"getZaiApiKey": "Get Z AI API Key",
+		"zaiEntrypoint": "Z AI Entrypoint",
+		"zaiEntrypointDescription": "Please select the appropriate API entrypoint based on your location. If you are in China, choose open.bigmodel.cn. Otherwise, choose api.z.ai.",
 		"geminiApiKey": "Gemini API Key",
 		"getGroqApiKey": "Get Groq API Key",
 		"groqApiKey": "Groq API Key",
+		"getSambaNovaApiKey": "Get SambaNova API Key",
+		"sambaNovaApiKey": "SambaNova API Key",
 		"getHuggingFaceApiKey": "Get Hugging Face API Key",
 		"huggingFaceApiKey": "Hugging Face API Key",
 		"huggingFaceModelId": "Model ID",
@@ -521,6 +540,16 @@
 			"lines": "lines",
 			"always_full_read": "Always read entire file"
 		},
+		"maxImageFileSize": {
+			"label": "Max image file size",
+			"mb": "MB",
+			"description": "Maximum size (in MB) for image files that can be processed by the read file tool."
+		},
+		"maxTotalImageSize": {
+			"label": "Max total image size",
+			"mb": "MB",
+			"description": "Maximum cumulative size limit (in MB) for all images processed in a single read_file operation. When reading multiple images, each image's size is added to the total. If including another image would exceed this limit, it will be skipped."
+		},
 		"diagnostics": {
 			"includeMessages": {
 				"label": "Automatically include diagnostics in context",
@@ -667,6 +696,14 @@
 		"MULTI_FILE_APPLY_DIFF": {
 			"name": "Enable concurrent file edits",
 			"description": "When enabled, Roo can edit multiple files in a single request. When disabled, Roo must edit files one at a time. Disabling this can help when working with less capable models or when you want more control over file modifications."
+		},
+		"PREVENT_FOCUS_DISRUPTION": {
+			"name": "Background editing",
+			"description": "Prevent editor focus disruption when enabled. File edits happen in the background without opening diff views or stealing focus. You can continue working uninterrupted while Roo makes changes. Files can be opened without focus to capture diagnostics or kept closed entirely."
+		},
+		"ASSISTANT_MESSAGE_PARSER": {
+			"name": "Use new message parser",
+			"description": "Enable the experimental streaming message parser that provides significant performance improvements for long assistant responses by processing messages more efficiently."
 		}
 	},
 	"promptCaching": {

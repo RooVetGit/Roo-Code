@@ -147,6 +147,7 @@ vi.mock("vscode", () => ({
 		showInformationMessage: vi.fn(),
 		showWarningMessage: vi.fn(),
 		showErrorMessage: vi.fn(),
+		onDidChangeActiveTextEditor: vi.fn(() => ({ dispose: vi.fn() })),
 	},
 	workspace: {
 		getConfiguration: vi.fn().mockReturnValue({
@@ -214,6 +215,7 @@ vi.mock("../../task/Task", () => ({
 				setParentTask: vi.fn(),
 				setRootTask: vi.fn(),
 				taskId: taskId || "test-task-id",
+				emit: vi.fn(),
 			}),
 		),
 }))
@@ -533,6 +535,8 @@ describe("ClineProvider", () => {
 			showRooIgnoredFiles: true,
 			renderContext: "sidebar",
 			maxReadFileLine: 500,
+			maxImageFileSize: 5,
+			maxTotalImageSize: 20,
 			cloudUserInfo: null,
 			organizationAllowList: ORGANIZATION_ALLOW_ALL,
 			autoCondenseContext: true,
@@ -1654,6 +1658,268 @@ describe("ClineProvider", () => {
 		})
 	})
 
+	describe("initClineWithHistoryItem mode validation", () => {
+		test("validates and falls back to default mode when restored mode no longer exists", async () => {
+			await provider.resolveWebviewView(mockWebviewView)
+
+			// Mock custom modes that don't include the saved mode
+			const mockCustomModesManager = {
+				getCustomModes: vi.fn().mockResolvedValue([
+					{
+						slug: "existing-mode",
+						name: "Existing Mode",
+						roleDefinition: "Test role",
+						groups: ["read"] as const,
+					},
+				]),
+				dispose: vi.fn(),
+			}
+			;(provider as any).customModesManager = mockCustomModesManager
+
+			// Mock getModeBySlug to return undefined for non-existent mode
+			const { getModeBySlug } = await import("../../../shared/modes")
+			vi.mocked(getModeBySlug)
+				.mockReturnValueOnce(undefined) // First call returns undefined (mode doesn't exist)
+				.mockReturnValue({
+					slug: "code",
+					name: "Code Mode",
+					roleDefinition: "You are a code assistant",
+					groups: ["read", "edit", "browser"],
+				}) // Subsequent calls return default mode
+
+			// Mock provider settings manager
+			;(provider as any).providerSettingsManager = {
+				getModeConfigId: vi.fn().mockResolvedValue(undefined),
+				listConfig: vi.fn().mockResolvedValue([]),
+			}
+
+			// Spy on log method to verify warning was logged
+			const logSpy = vi.spyOn(provider, "log")
+
+			// Create history item with non-existent mode
+			const historyItem = {
+				id: "test-id",
+				ts: Date.now(),
+				task: "Test task",
+				mode: "non-existent-mode", // This mode doesn't exist
+				number: 1,
+				tokensIn: 0,
+				tokensOut: 0,
+				totalCost: 0,
+			}
+
+			// Initialize with history item
+			await provider.initClineWithHistoryItem(historyItem)
+
+			// Verify mode validation occurred
+			expect(mockCustomModesManager.getCustomModes).toHaveBeenCalled()
+			expect(getModeBySlug).toHaveBeenCalledWith("non-existent-mode", expect.any(Array))
+
+			// Verify fallback to default mode
+			expect(mockContext.globalState.update).toHaveBeenCalledWith("mode", "code")
+			expect(logSpy).toHaveBeenCalledWith(
+				"Mode 'non-existent-mode' from history no longer exists. Falling back to default mode 'code'.",
+			)
+
+			// Verify history item was updated with default mode
+			expect(historyItem.mode).toBe("code")
+		})
+
+		test("preserves mode when it exists in custom modes", async () => {
+			await provider.resolveWebviewView(mockWebviewView)
+
+			// Mock custom modes that include the saved mode
+			const mockCustomModesManager = {
+				getCustomModes: vi.fn().mockResolvedValue([
+					{
+						slug: "custom-mode",
+						name: "Custom Mode",
+						roleDefinition: "Custom role",
+						groups: ["read", "edit"] as const,
+					},
+				]),
+				dispose: vi.fn(),
+			}
+			;(provider as any).customModesManager = mockCustomModesManager
+
+			// Mock getModeBySlug to return the custom mode
+			const { getModeBySlug } = await import("../../../shared/modes")
+			vi.mocked(getModeBySlug).mockReturnValue({
+				slug: "custom-mode",
+				name: "Custom Mode",
+				roleDefinition: "Custom role",
+				groups: ["read", "edit"],
+			})
+
+			// Mock provider settings manager
+			;(provider as any).providerSettingsManager = {
+				getModeConfigId: vi.fn().mockResolvedValue("config-id"),
+				listConfig: vi
+					.fn()
+					.mockResolvedValue([{ name: "test-config", id: "config-id", apiProvider: "anthropic" }]),
+				activateProfile: vi
+					.fn()
+					.mockResolvedValue({ name: "test-config", id: "config-id", apiProvider: "anthropic" }),
+			}
+
+			// Spy on log method to verify no warning was logged
+			const logSpy = vi.spyOn(provider, "log")
+
+			// Create history item with existing custom mode
+			const historyItem = {
+				id: "test-id",
+				ts: Date.now(),
+				task: "Test task",
+				mode: "custom-mode",
+				number: 1,
+				tokensIn: 0,
+				tokensOut: 0,
+				totalCost: 0,
+			}
+
+			// Initialize with history item
+			await provider.initClineWithHistoryItem(historyItem)
+
+			// Verify mode validation occurred
+			expect(mockCustomModesManager.getCustomModes).toHaveBeenCalled()
+			expect(getModeBySlug).toHaveBeenCalledWith("custom-mode", expect.any(Array))
+
+			// Verify mode was preserved
+			expect(mockContext.globalState.update).toHaveBeenCalledWith("mode", "custom-mode")
+			expect(logSpy).not.toHaveBeenCalledWith(expect.stringContaining("no longer exists"))
+
+			// Verify history item mode was not changed
+			expect(historyItem.mode).toBe("custom-mode")
+		})
+
+		test("preserves mode when it exists in built-in modes", async () => {
+			await provider.resolveWebviewView(mockWebviewView)
+
+			// Mock no custom modes
+			const mockCustomModesManager = {
+				getCustomModes: vi.fn().mockResolvedValue([]),
+				dispose: vi.fn(),
+			}
+			;(provider as any).customModesManager = mockCustomModesManager
+
+			// Mock getModeBySlug to return built-in architect mode
+			const { getModeBySlug } = await import("../../../shared/modes")
+			vi.mocked(getModeBySlug).mockReturnValue({
+				slug: "architect",
+				name: "Architect Mode",
+				roleDefinition: "You are an architect",
+				groups: ["read", "edit"],
+			})
+
+			// Mock provider settings manager
+			;(provider as any).providerSettingsManager = {
+				getModeConfigId: vi.fn().mockResolvedValue(undefined),
+				listConfig: vi.fn().mockResolvedValue([]),
+			}
+
+			// Create history item with built-in mode
+			const historyItem = {
+				id: "test-id",
+				ts: Date.now(),
+				task: "Test task",
+				mode: "architect",
+				number: 1,
+				tokensIn: 0,
+				tokensOut: 0,
+				totalCost: 0,
+			}
+
+			// Initialize with history item
+			await provider.initClineWithHistoryItem(historyItem)
+
+			// Verify mode was preserved
+			expect(mockContext.globalState.update).toHaveBeenCalledWith("mode", "architect")
+
+			// Verify history item mode was not changed
+			expect(historyItem.mode).toBe("architect")
+		})
+
+		test("handles history items without mode property", async () => {
+			await provider.resolveWebviewView(mockWebviewView)
+
+			// Mock provider settings manager
+			;(provider as any).providerSettingsManager = {
+				getModeConfigId: vi.fn().mockResolvedValue(undefined),
+				listConfig: vi.fn().mockResolvedValue([]),
+			}
+
+			// Create history item without mode
+			const historyItem = {
+				id: "test-id",
+				ts: Date.now(),
+				task: "Test task",
+				// No mode property
+				number: 1,
+				tokensIn: 0,
+				tokensOut: 0,
+				totalCost: 0,
+			}
+
+			// Initialize with history item
+			await provider.initClineWithHistoryItem(historyItem)
+
+			// Verify no mode validation occurred (mode update not called)
+			expect(mockContext.globalState.update).not.toHaveBeenCalledWith("mode", expect.any(String))
+		})
+
+		test("continues with task restoration even if mode config loading fails", async () => {
+			await provider.resolveWebviewView(mockWebviewView)
+
+			// Mock custom modes
+			const mockCustomModesManager = {
+				getCustomModes: vi.fn().mockResolvedValue([]),
+				dispose: vi.fn(),
+			}
+			;(provider as any).customModesManager = mockCustomModesManager
+
+			// Mock getModeBySlug to return built-in mode
+			const { getModeBySlug } = await import("../../../shared/modes")
+			vi.mocked(getModeBySlug).mockReturnValue({
+				slug: "code",
+				name: "Code Mode",
+				roleDefinition: "You are a code assistant",
+				groups: ["read", "edit", "browser"],
+			})
+
+			// Mock provider settings manager to throw error
+			;(provider as any).providerSettingsManager = {
+				getModeConfigId: vi.fn().mockResolvedValue("config-id"),
+				listConfig: vi
+					.fn()
+					.mockResolvedValue([{ name: "test-config", id: "config-id", apiProvider: "anthropic" }]),
+				activateProfile: vi.fn().mockRejectedValue(new Error("Failed to load config")),
+			}
+
+			// Spy on log method
+			const logSpy = vi.spyOn(provider, "log")
+
+			// Create history item
+			const historyItem = {
+				id: "test-id",
+				ts: Date.now(),
+				task: "Test task",
+				mode: "code",
+				number: 1,
+				tokensIn: 0,
+				tokensOut: 0,
+				totalCost: 0,
+			}
+
+			// Initialize with history item - should not throw
+			await expect(provider.initClineWithHistoryItem(historyItem)).resolves.not.toThrow()
+
+			// Verify error was logged but task restoration continued
+			expect(logSpy).toHaveBeenCalledWith(
+				expect.stringContaining("Failed to restore API configuration for mode 'code'"),
+			)
+		})
+	})
+
 	describe("updateCustomMode", () => {
 		test("updates both file and state when updating custom mode", async () => {
 			await provider.resolveWebviewView(mockWebviewView)
@@ -2574,6 +2840,33 @@ describe("ClineProvider - Router Models", () => {
 				ollama: {},
 				lmstudio: {},
 			},
+		})
+	})
+
+	test("handles requestLmStudioModels with proper response", async () => {
+		await provider.resolveWebviewView(mockWebviewView)
+		const messageHandler = (mockWebviewView.webview.onDidReceiveMessage as any).mock.calls[0][0]
+
+		vi.spyOn(provider, "getState").mockResolvedValue({
+			apiConfiguration: {
+				lmStudioModelId: "model-1",
+				lmStudioBaseUrl: "http://localhost:1234",
+			},
+		} as any)
+
+		const mockModels = {
+			"model-1": { maxTokens: 4096, contextWindow: 8192, description: "Test model", supportsPromptCache: false },
+		}
+		const { getModels } = await import("../../../api/providers/fetchers/modelCache")
+		vi.mocked(getModels).mockResolvedValue(mockModels)
+
+		await messageHandler({
+			type: "requestLmStudioModels",
+		})
+
+		expect(getModels).toHaveBeenCalledWith({
+			provider: "lmstudio",
+			baseUrl: "http://localhost:1234",
 		})
 	})
 })

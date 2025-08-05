@@ -132,6 +132,7 @@
 	},
 	"autoApprove": {
 		"description": "Roo가 승인 없이 자동으로 작업을 수행할 수 있도록 허용합니다. AI를 완전히 신뢰하고 관련 보안 위험을 이해하는 경우에만 이러한 설정을 활성화하세요.",
+		"enabled": "자동 승인 활성화됨",
 		"toggleAriaLabel": "자동 승인 전환",
 		"disabledAriaLabel": "자동 승인 비활성화됨 - 먼저 옵션을 선택하세요",
 		"readOnly": {
@@ -202,7 +203,14 @@
 			"description": "작업을 계속하기 위한 승인을 요청하기 전에 자동으로 이 수의 API 요청을 수행합니다.",
 			"unlimited": "무제한"
 		},
-		"selectOptionsFirst": "자동 승인을 활성화하려면 아래에서 하나 이상의 옵션을 선택하세요"
+		"selectOptionsFirst": "자동 승인을 활성화하려면 아래에서 하나 이상의 옵션을 선택하세요",
+		"apiCostLimit": {
+			"unlimited": "무제한",
+			"title": "최대 비용"
+		},
+		"maxLimits": {
+			"description": "이러한 한도까지 자동으로 요청을 수행한 후, 계속 진행하기 위한 승인을 요청합니다."
+		}
 	},
 	"providers": {
 		"providerDocumentation": "{{provider}} 문서",
@@ -254,16 +262,28 @@
 		"anthropicApiKey": "Anthropic API 키",
 		"getAnthropicApiKey": "Anthropic API 키 받기",
 		"anthropicUseAuthToken": "X-Api-Key 대신 Authorization 헤더로 Anthropic API 키 전달",
+		"cerebrasApiKey": "Cerebras API 키",
+		"getCerebrasApiKey": "Cerebras API 키 가져오기",
 		"chutesApiKey": "Chutes API 키",
 		"getChutesApiKey": "Chutes API 키 받기",
+		"fireworksApiKey": "Fireworks API 키",
+		"getFireworksApiKey": "Fireworks API 키 받기",
 		"deepSeekApiKey": "DeepSeek API 키",
 		"getDeepSeekApiKey": "DeepSeek API 키 받기",
+		"doubaoApiKey": "Doubao API 키",
+		"getDoubaoApiKey": "Doubao API 키 받기",
 		"moonshotApiKey": "Moonshot API 키",
 		"getMoonshotApiKey": "Moonshot API 키 받기",
 		"moonshotBaseUrl": "Moonshot 엔트리포인트",
+		"zaiApiKey": "Z AI API 키",
+		"getZaiApiKey": "Z AI API 키 받기",
+		"zaiEntrypoint": "Z AI 엔트리포인트",
+		"zaiEntrypointDescription": "위치에 따라 적절한 API 엔트리포인트를 선택하세요. 중국에 있다면 open.bigmodel.cn을 선택하세요. 그렇지 않으면 api.z.ai를 선택하세요.",
 		"geminiApiKey": "Gemini API 키",
 		"getGroqApiKey": "Groq API 키 받기",
 		"groqApiKey": "Groq API 키",
+		"getSambaNovaApiKey": "SambaNova API 키 받기",
+		"sambaNovaApiKey": "SambaNova API 키",
 		"getGeminiApiKey": "Gemini API 키 받기",
 		"getHuggingFaceApiKey": "Hugging Face API 키 받기",
 		"huggingFaceApiKey": "Hugging Face API 키",
@@ -319,7 +339,6 @@
 				"description": "Gemini가 최신 정보를 얻기 위해 Google을 검색하고 응답을 실시간 데이터에 근거하도록 합니다. 최신 정보가 필요한 쿼리에 유용합니다."
 			}
 		},
-
 		"googleCloudSetup": {
 			"title": "Google Cloud Vertex AI를 사용하려면:",
 			"step1": "1. Google Cloud 계정을 만들고, Vertex AI API를 활성화하고, 원하는 Claude 모델을 활성화하세요.",
@@ -543,6 +562,16 @@
 			"profileDescription": "이 프로필만을 위한 사용자 정의 임계값 (글로벌 기본값 재정의)",
 			"inheritDescription": "이 프로필은 글로벌 기본 임계값을 상속합니다 ({{threshold}}%)",
 			"usesGlobal": "(글로벌 {{threshold}}% 사용)"
+		},
+		"maxImageFileSize": {
+			"label": "최대 이미지 파일 크기",
+			"mb": "MB",
+			"description": "read file 도구로 처리할 수 있는 이미지 파일의 최대 크기(MB 단위)입니다."
+		},
+		"maxTotalImageSize": {
+			"label": "최대 총 이미지 크기",
+			"mb": "MB",
+			"description": "단일 read_file 작업에서 처리되는 모든 이미지의 최대 누적 크기 제한(MB 단위)입니다. 여러 이미지를 읽을 때 각 이미지의 크기가 총계에 추가됩니다. 다른 이미지를 포함하면 이 제한을 초과하는 경우 해당 이미지는 건너뜁니다."
 		}
 	},
 	"terminal": {
@@ -665,6 +694,14 @@
 		"MULTI_FILE_APPLY_DIFF": {
 			"name": "동시 파일 편집 활성화",
 			"description": "활성화하면 Roo가 단일 요청으로 여러 파일을 편집할 수 있습니다. 비활성화하면 Roo는 파일을 하나씩 편집해야 합니다. 이 기능을 비활성화하면 덜 강력한 모델로 작업하거나 파일 수정에 대한 더 많은 제어가 필요할 때 도움이 됩니다."
+		},
+		"PREVENT_FOCUS_DISRUPTION": {
+			"name": "백그라운드 편집",
+			"description": "활성화하면 편집기 포커스 방해를 방지합니다. 파일 편집이 diff 뷰를 열거나 포커스를 빼앗지 않고 백그라운드에서 수행됩니다. Roo가 변경사항을 적용하는 동안 방해받지 않고 계속 작업할 수 있습니다. 파일은 진단을 캡처하기 위해 포커스 없이 열거나 완전히 닫힌 상태로 유지할 수 있습니다."
+		},
+		"ASSISTANT_MESSAGE_PARSER": {
+			"name": "새 메시지 파서 사용",
+			"description": "실험적 스트리밍 메시지 파서를 활성화합니다. 긴 응답을 더 효율적으로 처리해 지연을 줄입니다."
 		}
 	},
 	"promptCaching": {

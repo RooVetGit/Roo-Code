@@ -22,12 +22,14 @@ import { changeLanguage, t } from "../../i18n"
 import { Package } from "../../shared/package"
 import { RouterName, toRouterName, ModelRecord } from "../../shared/api"
 import { supportPrompt } from "../../shared/support-prompt"
+import { MessageEnhancer } from "./messageEnhancer"
 
 import { checkoutDiffPayloadSchema, checkoutRestorePayloadSchema, WebviewMessage } from "../../shared/WebviewMessage"
 import { checkExistKey } from "../../shared/checkExistApiConfig"
 import { experimentDefault } from "../../shared/experiments"
 import { Terminal } from "../../integrations/terminal/Terminal"
 import { openFile } from "../../integrations/misc/open-file"
+import { CodeIndexManager } from "../../services/code-index/manager"
 import { openImage, saveImage } from "../../integrations/misc/image-handler"
 import { selectImages } from "../../integrations/misc/process-images"
 import { getTheme } from "../../integrations/theme/getTheme"
@@ -35,7 +37,6 @@ import { discoverChromeHostUrl, tryChromeHostUrl } from "../../services/browser/
 import { searchWorkspaceFiles } from "../../services/search/file-search"
 import { fileExistsAtPath } from "../../utils/fs"
 import { playTts, setTtsEnabled, setTtsSpeed, stopTts } from "../../utils/tts"
-import { singleCompletionHandler } from "../../utils/single-completion-handler"
 import { searchCommits } from "../../utils/git"
 import { exportSettings, importSettingsWithFeedback } from "../config/importExport"
 import { getOpenAiModels } from "../../api/providers/openai"
@@ -332,6 +333,10 @@ export const webviewMessageHandler = async (
 			await updateGlobalState("allowedMaxRequests", message.value)
 			await provider.postStateToWebview()
 			break
+		case "allowedMaxCost":
+			await updateGlobalState("allowedMaxCost", message.value)
+			await provider.postStateToWebview()
+			break
 		case "alwaysAllowSubtasks":
 			await updateGlobalState("alwaysAllowSubtasks", message.bool)
 			await provider.postStateToWebview()
@@ -584,7 +589,7 @@ export const webviewMessageHandler = async (
 					} else if (routerName === "lmstudio" && Object.keys(result.value.models).length > 0) {
 						provider.postMessageToWebview({
 							type: "lmStudioModels",
-							lmStudioModels: Object.keys(result.value.models),
+							lmStudioModels: result.value.models,
 						})
 					}
 				} else {
@@ -648,7 +653,7 @@ export const webviewMessageHandler = async (
 				if (Object.keys(lmStudioModels).length > 0) {
 					provider.postMessageToWebview({
 						type: "lmStudioModels",
-						lmStudioModels: Object.keys(lmStudioModels),
+						lmStudioModels: lmStudioModels,
 					})
 				}
 			} catch (error) {
@@ -900,6 +905,11 @@ export const webviewMessageHandler = async (
 			break
 		case "enableMcpServerCreation":
 			await updateGlobalState("enableMcpServerCreation", message.bool ?? true)
+			await provider.postStateToWebview()
+			break
+		case "remoteControlEnabled":
+			await updateGlobalState("remoteControlEnabled", message.bool ?? false)
+			await provider.handleRemoteControlToggle(message.bool ?? false)
 			await provider.postStateToWebview()
 			break
 		case "refreshAllMcpServers": {
@@ -1265,6 +1275,14 @@ export const webviewMessageHandler = async (
 			await updateGlobalState("maxReadFileLine", message.value)
 			await provider.postStateToWebview()
 			break
+		case "maxImageFileSize":
+			await updateGlobalState("maxImageFileSize", message.value)
+			await provider.postStateToWebview()
+			break
+		case "maxTotalImageSize":
+			await updateGlobalState("maxTotalImageSize", message.value)
+			await provider.postStateToWebview()
+			break
 		case "maxConcurrentFileReads":
 			const valueToSave = message.value // Capture the value intended for saving
 			await updateGlobalState("maxConcurrentFileReads", valueToSave)
@@ -1303,6 +1321,10 @@ export const webviewMessageHandler = async (
 			await updateGlobalState("enhancementApiConfigId", message.text)
 			await provider.postStateToWebview()
 			break
+		case "includeTaskHistoryInEnhance":
+			await updateGlobalState("includeTaskHistoryInEnhance", message.bool ?? false)
+			await provider.postStateToWebview()
+			break
 		case "condensingApiConfigId":
 			await updateGlobalState("condensingApiConfigId", message.text)
 			await provider.postStateToWebview()
@@ -1327,32 +1349,34 @@ export const webviewMessageHandler = async (
 		case "enhancePrompt":
 			if (message.text) {
 				try {
-					const { apiConfiguration, customSupportPrompts, listApiConfigMeta, enhancementApiConfigId } =
-						await provider.getState()
+					const state = await provider.getState()
+					const {
+						apiConfiguration,
+						customSupportPrompts,
+						listApiConfigMeta,
+						enhancementApiConfigId,
+						includeTaskHistoryInEnhance,
+					} = state
 
-					// Try to get enhancement config first, fall back to current config.
-					let configToUse: ProviderSettings = apiConfiguration
-
-					if (enhancementApiConfigId && !!listApiConfigMeta.find(({ id }) => id === enhancementApiConfigId)) {
-						const { name: _, ...providerSettings } = await provider.providerSettingsManager.getProfile({
-							id: enhancementApiConfigId,
-						})
-
-						if (providerSettings.apiProvider) {
-							configToUse = providerSettings
-						}
-					}
-
-					const enhancedPrompt = await singleCompletionHandler(
-						configToUse,
-						supportPrompt.create("ENHANCE", { userInput: message.text }, customSupportPrompts),
-					)
-
-					// Capture telemetry for prompt enhancement.
 					const currentCline = provider.getCurrentCline()
-					TelemetryService.instance.capturePromptEnhanced(currentCline?.taskId)
+					const result = await MessageEnhancer.enhanceMessage({
+						text: message.text,
+						apiConfiguration,
+						customSupportPrompts,
+						listApiConfigMeta,
+						enhancementApiConfigId,
+						includeTaskHistoryInEnhance,
+						currentClineMessages: currentCline?.clineMessages,
+						providerSettingsManager: provider.providerSettingsManager,
+					})
 
-					await provider.postMessageToWebview({ type: "enhancedPrompt", text: enhancedPrompt })
+					if (result.success && result.enhancedText) {
+						// Capture telemetry for prompt enhancement
+						MessageEnhancer.captureTelemetry(currentCline?.taskId, includeTaskHistoryInEnhance)
+						await provider.postMessageToWebview({ type: "enhancedPrompt", text: result.enhancedText })
+					} else {
+						throw new Error(result.error || "Unknown error")
+					}
 				} catch (error) {
 					provider.log(
 						`Error enhancing prompt: ${JSON.stringify(error, Object.getOwnPropertyNames(error), 2)}`,
@@ -2047,13 +2071,14 @@ export const webviewMessageHandler = async (
 				// Update webview state
 				await provider.postStateToWebview()
 
-				// Then handle validation and initialization
-				if (provider.codeIndexManager) {
+				// Then handle validation and initialization for the current workspace
+				const currentCodeIndexManager = provider.getCurrentWorkspaceCodeIndexManager()
+				if (currentCodeIndexManager) {
 					// If embedder provider changed, perform proactive validation
 					if (embedderProviderChanged) {
 						try {
 							// Force handleSettingsChange which will trigger validation
-							await provider.codeIndexManager.handleSettingsChange()
+							await currentCodeIndexManager.handleSettingsChange()
 						} catch (error) {
 							// Validation failed - the error state is already set by handleSettingsChange
 							provider.log(
@@ -2062,7 +2087,7 @@ export const webviewMessageHandler = async (
 							// Send validation error to webview
 							await provider.postMessageToWebview({
 								type: "indexingStatusUpdate",
-								values: provider.codeIndexManager.getCurrentStatus(),
+								values: currentCodeIndexManager.getCurrentStatus(),
 							})
 							// Exit early - don't try to start indexing with invalid configuration
 							break
@@ -2070,7 +2095,7 @@ export const webviewMessageHandler = async (
 					} else {
 						// No provider change, just handle settings normally
 						try {
-							await provider.codeIndexManager.handleSettingsChange()
+							await currentCodeIndexManager.handleSettingsChange()
 						} catch (error) {
 							// Log but don't fail - settings are saved
 							provider.log(
@@ -2083,10 +2108,10 @@ export const webviewMessageHandler = async (
 					await new Promise((resolve) => setTimeout(resolve, 200))
 
 					// Auto-start indexing if now enabled and configured
-					if (provider.codeIndexManager.isFeatureEnabled && provider.codeIndexManager.isFeatureConfigured) {
-						if (!provider.codeIndexManager.isInitialized) {
+					if (currentCodeIndexManager.isFeatureEnabled && currentCodeIndexManager.isFeatureConfigured) {
+						if (!currentCodeIndexManager.isInitialized) {
 							try {
-								await provider.codeIndexManager.initialize(provider.contextProxy)
+								await currentCodeIndexManager.initialize(provider.contextProxy)
 								provider.log(`Code index manager initialized after settings save`)
 							} catch (error) {
 								provider.log(
@@ -2095,7 +2120,7 @@ export const webviewMessageHandler = async (
 								// Send error status to webview
 								await provider.postMessageToWebview({
 									type: "indexingStatusUpdate",
-									values: provider.codeIndexManager.getCurrentStatus(),
+									values: currentCodeIndexManager.getCurrentStatus(),
 								})
 							}
 						}
@@ -2126,7 +2151,7 @@ export const webviewMessageHandler = async (
 		}
 
 		case "requestIndexingStatus": {
-			const manager = provider.codeIndexManager
+			const manager = provider.getCurrentWorkspaceCodeIndexManager()
 			if (!manager) {
 				// No workspace open - send error status
 				provider.postMessageToWebview({
@@ -2137,11 +2162,23 @@ export const webviewMessageHandler = async (
 						processedItems: 0,
 						totalItems: 0,
 						currentItemUnit: "items",
+						workerspacePath: undefined,
 					},
 				})
 				return
 			}
-			const status = manager.getCurrentStatus()
+
+			const status = manager
+				? manager.getCurrentStatus()
+				: {
+						systemStatus: "Standby",
+						message: "No workspace folder open",
+						processedItems: 0,
+						totalItems: 0,
+						currentItemUnit: "items",
+						workspacePath: undefined,
+					}
+
 			provider.postMessageToWebview({
 				type: "indexingStatusUpdate",
 				values: status,
@@ -2174,7 +2211,7 @@ export const webviewMessageHandler = async (
 		}
 		case "startIndexing": {
 			try {
-				const manager = provider.codeIndexManager
+				const manager = provider.getCurrentWorkspaceCodeIndexManager()
 				if (!manager) {
 					// No workspace open - send error status
 					provider.postMessageToWebview({
@@ -2204,7 +2241,7 @@ export const webviewMessageHandler = async (
 		}
 		case "clearIndexData": {
 			try {
-				const manager = provider.codeIndexManager
+				const manager = provider.getCurrentWorkspaceCodeIndexManager()
 				if (!manager) {
 					provider.log("Cannot clear index data: No workspace folder open")
 					provider.postMessageToWebview({
@@ -2375,6 +2412,9 @@ export const webviewMessageHandler = async (
 				const commandList = commands.map((command) => ({
 					name: command.name,
 					source: command.source,
+					filePath: command.filePath,
+					description: command.description,
+					argumentHint: command.argumentHint,
 				}))
 
 				await provider.postMessageToWebview({
@@ -2387,6 +2427,172 @@ export const webviewMessageHandler = async (
 				await provider.postMessageToWebview({
 					type: "commands",
 					commands: [],
+				})
+			}
+			break
+		}
+		case "openCommandFile": {
+			try {
+				if (message.text) {
+					const { getCommand } = await import("../../services/command/commands")
+					const command = await getCommand(provider.cwd || "", message.text)
+
+					if (command && command.filePath) {
+						openFile(command.filePath)
+					} else {
+						vscode.window.showErrorMessage(t("common:errors.command_not_found", { name: message.text }))
+					}
+				}
+			} catch (error) {
+				provider.log(
+					`Error opening command file: ${JSON.stringify(error, Object.getOwnPropertyNames(error), 2)}`,
+				)
+				vscode.window.showErrorMessage(t("common:errors.open_command_file"))
+			}
+			break
+		}
+		case "deleteCommand": {
+			try {
+				if (message.text && message.values?.source) {
+					const { getCommand } = await import("../../services/command/commands")
+					const command = await getCommand(provider.cwd || "", message.text)
+
+					if (command && command.filePath) {
+						// Delete the command file
+						await fs.unlink(command.filePath)
+						provider.log(`Deleted command file: ${command.filePath}`)
+					} else {
+						vscode.window.showErrorMessage(t("common:errors.command_not_found", { name: message.text }))
+					}
+				}
+			} catch (error) {
+				provider.log(`Error deleting command: ${JSON.stringify(error, Object.getOwnPropertyNames(error), 2)}`)
+				vscode.window.showErrorMessage(t("common:errors.delete_command"))
+			}
+			break
+		}
+		case "createCommand": {
+			try {
+				const source = message.values?.source as "global" | "project"
+				const fileName = message.text // Custom filename from user input
+
+				if (!source) {
+					provider.log("Missing source for createCommand")
+					break
+				}
+
+				// Determine the commands directory based on source
+				let commandsDir: string
+				if (source === "global") {
+					const globalConfigDir = path.join(os.homedir(), ".roo")
+					commandsDir = path.join(globalConfigDir, "commands")
+				} else {
+					// Project commands
+					const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath
+					if (!workspaceRoot) {
+						vscode.window.showErrorMessage(t("common:errors.no_workspace_for_project_command"))
+						break
+					}
+					commandsDir = path.join(workspaceRoot, ".roo", "commands")
+				}
+
+				// Ensure the commands directory exists
+				await fs.mkdir(commandsDir, { recursive: true })
+
+				// Use provided filename or generate a unique one
+				let commandName: string
+				if (fileName && fileName.trim()) {
+					let cleanFileName = fileName.trim()
+
+					// Strip leading slash if present
+					if (cleanFileName.startsWith("/")) {
+						cleanFileName = cleanFileName.substring(1)
+					}
+
+					// Remove .md extension if present BEFORE slugification
+					if (cleanFileName.toLowerCase().endsWith(".md")) {
+						cleanFileName = cleanFileName.slice(0, -3)
+					}
+
+					// Slugify the command name: lowercase, replace spaces with dashes, remove special characters
+					commandName = cleanFileName
+						.toLowerCase()
+						.replace(/\s+/g, "-") // Replace spaces with dashes
+						.replace(/[^a-z0-9-]/g, "") // Remove special characters except dashes
+						.replace(/-+/g, "-") // Replace multiple dashes with single dash
+						.replace(/^-|-$/g, "") // Remove leading/trailing dashes
+
+					// Ensure we have a valid command name
+					if (!commandName || commandName.length === 0) {
+						commandName = "new-command"
+					}
+				} else {
+					// Generate a unique command name
+					commandName = "new-command"
+					let counter = 1
+					let filePath = path.join(commandsDir, `${commandName}.md`)
+
+					while (
+						await fs
+							.access(filePath)
+							.then(() => true)
+							.catch(() => false)
+					) {
+						commandName = `new-command-${counter}`
+						filePath = path.join(commandsDir, `${commandName}.md`)
+						counter++
+					}
+				}
+
+				const filePath = path.join(commandsDir, `${commandName}.md`)
+
+				// Check if file already exists
+				if (
+					await fs
+						.access(filePath)
+						.then(() => true)
+						.catch(() => false)
+				) {
+					vscode.window.showErrorMessage(t("common:errors.command_already_exists", { commandName }))
+					break
+				}
+
+				// Create the command file with template content
+				const templateContent = t("common:errors.command_template_content")
+
+				await fs.writeFile(filePath, templateContent, "utf8")
+				provider.log(`Created new command file: ${filePath}`)
+
+				// Open the new file in the editor
+				openFile(filePath)
+
+				// Refresh commands list
+				const { getCommands } = await import("../../services/command/commands")
+				const commands = await getCommands(provider.cwd || "")
+				const commandList = commands.map((command) => ({
+					name: command.name,
+					source: command.source,
+					filePath: command.filePath,
+					description: command.description,
+				}))
+				await provider.postMessageToWebview({
+					type: "commands",
+					commands: commandList,
+				})
+			} catch (error) {
+				provider.log(`Error creating command: ${JSON.stringify(error, Object.getOwnPropertyNames(error), 2)}`)
+				vscode.window.showErrorMessage(t("common:errors.create_command_failed"))
+			}
+			break
+		}
+
+		case "insertTextIntoTextarea": {
+			const text = message.text
+			if (text) {
+				// Send message to insert text into the chat textarea
+				await provider.postMessageToWebview({
+					type: "insertTextIntoTextarea",
+					text: text,
 				})
 			}
 			break

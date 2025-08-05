@@ -11,6 +11,7 @@ import {
 	getSingleCommandDecision,
 	CommandValidator,
 	createCommandValidator,
+	containsSubshell,
 } from "../command-validation"
 
 describe("Command Validation", () => {
@@ -20,6 +21,14 @@ describe("Command Validation", () => {
 			expect(parseCommand("npm test || npm run build")).toEqual(["npm test", "npm run build"])
 			expect(parseCommand("npm test; npm run build")).toEqual(["npm test", "npm run build"])
 			expect(parseCommand("npm test | npm run build")).toEqual(["npm test", "npm run build"])
+			expect(parseCommand("npm test & npm run build")).toEqual(["npm test", "npm run build"])
+		})
+
+		it("handles & operator for background execution", () => {
+			expect(parseCommand("ls & whoami")).toEqual(["ls", "whoami"])
+			expect(parseCommand("ls & whoami & pwd")).toEqual(["ls", "whoami", "pwd"])
+			expect(parseCommand("ls && whoami & pwd || echo done")).toEqual(["ls", "whoami", "pwd", "echo done"])
+			expect(parseCommand("ls&whoami")).toEqual(["ls", "whoami"])
 		})
 
 		it("preserves quoted content", () => {
@@ -31,6 +40,67 @@ describe("Command Validation", () => {
 		it("handles subshell patterns", () => {
 			expect(parseCommand("npm test $(echo test)")).toEqual(["npm test", "echo test"])
 			expect(parseCommand("npm test `echo test`")).toEqual(["npm test", "echo test"])
+			expect(parseCommand("diff <(sort f1) <(sort f2)")).toEqual(["diff", "sort f1", "sort f2"])
+		})
+
+		it("detects additional subshell patterns", () => {
+			// Test $[] arithmetic expansion detection
+			expect(parseCommand("echo $[1 + 2]")).toEqual(["echo $[1 + 2]"])
+
+			// Verify containsSubshell detects all subshell patterns
+			expect(containsSubshell("echo $[1 + 2]")).toBe(true) // $[] arithmetic expansion
+			expect(containsSubshell("echo $((1 + 2))")).toBe(true) // $(()) arithmetic expansion
+			expect(containsSubshell("echo $(date)")).toBe(true) // $() command substitution
+			expect(containsSubshell("echo `date`")).toBe(true) // backtick substitution
+			expect(containsSubshell("diff <(sort f1) <(sort f2)")).toBe(true) // process substitution
+			expect(containsSubshell("echo hello")).toBe(false) // no subshells
+		})
+
+		it("detects subshell grouping patterns", () => {
+			// Basic subshell grouping with shell operators
+			expect(containsSubshell("(ls; rm file)")).toBe(true)
+			expect(containsSubshell("(cd /tmp && rm -rf *)")).toBe(true)
+			expect(containsSubshell("(command1 || command2)")).toBe(true)
+			expect(containsSubshell("(ls | grep test)")).toBe(true)
+			expect(containsSubshell("(sleep 10 & echo done)")).toBe(true)
+
+			// Nested subshells
+			expect(containsSubshell("(cd /tmp && (rm -rf * || echo failed))")).toBe(true)
+
+			// Multiple operators in subshell
+			expect(containsSubshell("(cmd1; cmd2 && cmd3 | cmd4)")).toBe(true)
+
+			// Subshell with spaces
+			expect(containsSubshell("( ls ; rm file )")).toBe(true)
+		})
+
+		it("does NOT detect legitimate parentheses usage", () => {
+			// Function calls should not be flagged as subshells
+			expect(containsSubshell("myfunction(arg1, arg2)")).toBe(false)
+			expect(containsSubshell("func( arg1, arg2 )")).toBe(false)
+
+			// Simple parentheses without operators
+			expect(containsSubshell("(simple text)")).toBe(false)
+
+			// Parentheses in strings
+			expect(containsSubshell('echo "this (has) parentheses"')).toBe(false)
+
+			// Empty parentheses
+			expect(containsSubshell("()")).toBe(false)
+		})
+
+		it("handles mixed subshell patterns", () => {
+			// Mixed subshell types
+			expect(containsSubshell("(echo $(date); rm file)")).toBe(true)
+
+			// Subshell with command substitution
+			expect(containsSubshell("(ls `pwd`; echo done)")).toBe(true)
+
+			// No subshells
+			expect(containsSubshell("echo hello world")).toBe(false)
+
+			// Empty string
+			expect(containsSubshell("")).toBe(false)
 		})
 
 		it("handles empty and whitespace input", () => {
@@ -629,7 +699,6 @@ echo "Successfully converted $count .jsx files to .tsx"`
 		})
 	})
 })
-
 describe("Unified Command Decision Functions", () => {
 	describe("getSingleCommandDecision", () => {
 		const allowedCommands = ["npm", "echo", "git"]
@@ -712,8 +781,8 @@ describe("Unified Command Decision Functions", () => {
 			expect(getCommandDecision("npm install && dangerous", allowedCommands, deniedCommands)).toBe("ask_user")
 		})
 
-		it("returns auto_deny for subshell commands only when they contain denied prefixes", () => {
-			// Subshells without denied prefixes should not be auto-denied
+		it("properly validates subshell commands by checking all parsed commands", () => {
+			// Subshells without denied prefixes should be auto-approved if all commands are allowed
 			expect(getCommandDecision("npm install $(echo test)", allowedCommands, deniedCommands)).toBe("auto_approve")
 			expect(getCommandDecision("npm install `echo test`", allowedCommands, deniedCommands)).toBe("auto_approve")
 
@@ -727,7 +796,7 @@ describe("Unified Command Decision Functions", () => {
 			expect(getCommandDecision("npm test $(echo hello)", allowedCommands, deniedCommands)).toBe("auto_deny")
 		})
 
-		it("allows subshell commands when no denylist is present", () => {
+		it("properly validates subshell commands when no denylist is present", () => {
 			expect(getCommandDecision("npm install $(echo test)", allowedCommands)).toBe("auto_approve")
 			expect(getCommandDecision("npm install `echo test`", allowedCommands)).toBe("auto_approve")
 		})
@@ -844,12 +913,12 @@ describe("Unified Command Decision Functions", () => {
 				it("detects subshells correctly", () => {
 					const details = validator.getValidationDetails("npm install $(echo test)")
 					expect(details.hasSubshells).toBe(true)
-					expect(details.decision).toBe("auto_approve") // not blocked since echo doesn't match denied prefixes
+					expect(details.decision).toBe("auto_approve") // all commands are allowed
 
 					// Test with denied prefix in subshell
 					const detailsWithDenied = validator.getValidationDetails("npm install $(npm test)")
 					expect(detailsWithDenied.hasSubshells).toBe(true)
-					expect(detailsWithDenied.decision).toBe("auto_deny") // blocked due to npm test in subshell
+					expect(detailsWithDenied.decision).toBe("auto_deny") // npm test is denied
 				})
 
 				it("handles complex command chains", () => {
@@ -955,9 +1024,9 @@ describe("Unified Command Decision Functions", () => {
 				// Multiple subshells, one with denied prefix
 				expect(validator.validateCommand("echo $(date) $(rm file)")).toBe("auto_deny")
 
-				// Nested subshells - inner commands are extracted and not in allowlist
+				// Nested subshells - validates individual parsed commands
 				expect(validator.validateCommand("echo $(echo $(date))")).toBe("ask_user")
-				expect(validator.validateCommand("echo $(echo $(rm file))")).toBe("auto_deny")
+				expect(validator.validateCommand("echo $(echo $(rm file))")).toBe("ask_user") // complex nested parsing with mixed validation results
 			})
 
 			it("handles complex commands with subshells", () => {

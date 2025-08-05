@@ -405,9 +405,13 @@ export class CustomModesManager {
 			// Validate the mode configuration before saving
 			const validationResult = modeConfigSchema.safeParse(config)
 			if (!validationResult.success) {
-				const errors = validationResult.error.errors.map((e) => e.message).join(", ")
-				logger.error(`Invalid mode configuration for ${slug}`, { errors: validationResult.error.errors })
-				throw new Error(`Invalid mode configuration: ${errors}`)
+				const errorMessages = validationResult.error.errors
+					.map((err) => `${err.path.join(".")}: ${err.message}`)
+					.join(", ")
+				const errorMessage = `Invalid mode configuration: ${errorMessages}`
+				logger.error("Mode validation failed", { slug, errors: validationResult.error.errors })
+				vscode.window.showErrorMessage(t("common:customModes.errors.updateFailed", { error: errorMessage }))
+				return
 			}
 
 			const isProjectMode = config.source === "project"
@@ -782,11 +786,12 @@ export class CustomModesManager {
 							const filePath = path.join(modeRulesDir, entry.name)
 							const content = await fs.readFile(filePath, "utf-8")
 							if (content.trim()) {
-								// Calculate relative path based on mode source
-								const relativePath = isGlobalMode
-									? path.relative(baseDir, filePath)
-									: path.relative(path.join(baseDir, ".roo"), filePath)
-								rulesFiles.push({ relativePath, content: content.trim() })
+								// Calculate relative path from within the rules directory
+								// This excludes the rules-{slug} folder from the path
+								const relativePath = path.relative(modeRulesDir, filePath)
+								// Normalize path to use forward slashes for cross-platform compatibility
+								const normalizedRelativePath = relativePath.replace(/\\/g, "/")
+								rulesFiles.push({ relativePath: normalizedRelativePath, content: content.trim() })
 							}
 						}
 					}
@@ -881,11 +886,21 @@ export class CustomModesManager {
 					continue // Skip this file but continue with others
 				}
 
-				const targetPath = path.join(baseDir, normalizedRelativePath)
-				const normalizedTargetPath = path.normalize(targetPath)
-				const expectedBasePath = path.normalize(baseDir)
+				// Check if path starts with a rules-* folder (old export format)
+				let cleanedRelativePath = normalizedRelativePath
+				const rulesMatch = normalizedRelativePath.match(/^rules-[^\/\\]+[\/\\]/)
+				if (rulesMatch) {
+					// Strip the entire rules-* folder reference for backwards compatibility
+					cleanedRelativePath = normalizedRelativePath.substring(rulesMatch[0].length)
+					logger.info(`Detected old export format, stripping ${rulesMatch[0]} from path`)
+				}
 
-				// Ensure the resolved path stays within the base directory
+				// Use the rules folder path instead of base directory
+				const targetPath = path.join(rulesFolderPath, cleanedRelativePath)
+				const normalizedTargetPath = path.normalize(targetPath)
+				const expectedBasePath = path.normalize(rulesFolderPath)
+
+				// Ensure the resolved path stays within the rules folder
 				if (!normalizedTargetPath.startsWith(expectedBasePath)) {
 					logger.error(`Path traversal attempt detected: ${ruleFile.relativePath}`)
 					continue // Skip this file but continue with others

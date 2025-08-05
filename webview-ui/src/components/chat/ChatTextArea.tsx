@@ -2,7 +2,7 @@ import React, { forwardRef, useCallback, useEffect, useLayoutEffect, useMemo, us
 import { useEvent } from "react-use"
 import DynamicTextArea from "react-textarea-autosize"
 
-import { mentionRegex, mentionRegexGlobal, unescapeSpaces } from "@roo/context-mentions"
+import { mentionRegex, mentionRegexGlobal, commandRegexGlobal, unescapeSpaces } from "@roo/context-mentions"
 import { WebviewMessage } from "@roo/WebviewMessage"
 import { Mode, getAllModes } from "@roo/modes"
 import { ExtensionMessage } from "@roo/ExtensionMessage"
@@ -28,6 +28,7 @@ import { MAX_IMAGES_PER_MESSAGE } from "./ChatView"
 import ContextMenu from "./ContextMenu"
 import { VolumeX, Image, WandSparkles, SendHorizontal } from "lucide-react"
 import { IndexingStatusBadge } from "./IndexingStatusBadge"
+import { SlashCommandsPopover } from "./SlashCommandsPopover"
 import { cn } from "@/lib/utils"
 import { usePromptHistory } from "./hooks/usePromptHistory"
 import { EditModeControls } from "./EditModeControls"
@@ -145,6 +146,36 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 					}
 
 					setIsEnhancingPrompt(false)
+				} else if (message.type === "insertTextIntoTextarea") {
+					if (message.text && textAreaRef.current) {
+						// Insert the command text at the current cursor position
+						const textarea = textAreaRef.current
+						const currentValue = inputValue
+						const cursorPos = textarea.selectionStart || 0
+
+						// Check if we need to add a space before the command
+						const textBefore = currentValue.slice(0, cursorPos)
+						const needsSpaceBefore = textBefore.length > 0 && !textBefore.endsWith(" ")
+						const prefix = needsSpaceBefore ? " " : ""
+
+						// Insert the text at cursor position
+						const newValue =
+							currentValue.slice(0, cursorPos) +
+							prefix +
+							message.text +
+							" " +
+							currentValue.slice(cursorPos)
+						setInputValue(newValue)
+
+						// Set cursor position after the inserted text
+						const newCursorPos = cursorPos + prefix.length + message.text.length + 1
+						setTimeout(() => {
+							if (textAreaRef.current) {
+								textAreaRef.current.focus()
+								textAreaRef.current.setSelectionRange(newCursorPos, newCursorPos)
+							}
+						}, 0)
+					}
 				} else if (message.type === "commitSearchResults") {
 					const commits = message.commits.map((commit: any) => ({
 						type: ContextMenuOptionType.Git,
@@ -165,7 +196,7 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 
 			window.addEventListener("message", messageHandler)
 			return () => window.removeEventListener("message", messageHandler)
-		}, [setInputValue, searchRequestId])
+		}, [setInputValue, searchRequestId, inputValue])
 
 		const [isDraggingOver, setIsDraggingOver] = useState(false)
 		const [textAreaBaseHeight, setTextAreaBaseHeight] = useState<number | undefined>(undefined)
@@ -325,10 +356,14 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 						insertValue = value ? `/${value}` : ""
 					}
 
+					// Determine if this is a slash command selection
+					const isSlashCommand = type === ContextMenuOptionType.Mode || type === ContextMenuOptionType.Command
+
 					const { newValue, mentionIndex } = insertMention(
 						textAreaRef.current.value,
 						cursorPosition,
 						insertValue,
+						isSlashCommand,
 					)
 
 					setInputValue(newValue)
@@ -364,8 +399,6 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 							const direction = event.key === "ArrowUp" ? -1 : 1
 							const options = getContextMenuOptions(
 								searchQuery,
-								inputValue,
-								t,
 								selectedType,
 								queryItems,
 								fileSearchResults,
@@ -380,7 +413,8 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 							const selectableOptions = options.filter(
 								(option) =>
 									option.type !== ContextMenuOptionType.URL &&
-									option.type !== ContextMenuOptionType.NoResults,
+									option.type !== ContextMenuOptionType.NoResults &&
+									option.type !== ContextMenuOptionType.SectionHeader,
 							)
 
 							if (selectableOptions.length === 0) return -1 // No selectable options
@@ -403,8 +437,6 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 						event.preventDefault()
 						const selectedOption = getContextMenuOptions(
 							searchQuery,
-							inputValue,
-							t,
 							selectedType,
 							queryItems,
 							fileSearchResults,
@@ -414,7 +446,8 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 						if (
 							selectedOption &&
 							selectedOption.type !== ContextMenuOptionType.URL &&
-							selectedOption.type !== ContextMenuOptionType.NoResults
+							selectedOption.type !== ContextMenuOptionType.NoResults &&
+							selectedOption.type !== ContextMenuOptionType.SectionHeader
 						) {
 							handleMentionSelect(selectedOption.type, selectedOption.value)
 						}
@@ -498,7 +531,6 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 				handleHistoryNavigation,
 				resetHistoryNavigation,
 				commands,
-				t,
 			],
 		)
 
@@ -527,11 +559,12 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 				setShowContextMenu(showMenu)
 
 				if (showMenu) {
-					if (newValue.startsWith("/")) {
+					if (newValue.startsWith("/") && !newValue.includes(" ")) {
 						// Handle slash command - request fresh commands
 						const query = newValue
 						setSearchQuery(query)
-						setSelectedMenuIndex(0)
+						// Set to first selectable item (skip section headers)
+						setSelectedMenuIndex(1) // Section header is at 0, first command is at 1
 						// Request commands fresh each time slash menu is shown
 						vscode.postMessage({ type: "requestCommands" })
 					} else {
@@ -681,14 +714,41 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 
 			const text = textAreaRef.current.value
 
-			highlightLayerRef.current.innerHTML = text
+			// Helper function to check if a command is valid
+			const isValidCommand = (commandName: string): boolean => {
+				return commands?.some((cmd) => cmd.name === commandName) || false
+			}
+
+			// Process the text to highlight mentions and valid commands
+			let processedText = text
 				.replace(/\n$/, "\n\n")
 				.replace(/[<>&]/g, (c) => ({ "<": "&lt;", ">": "&gt;", "&": "&amp;" })[c] || c)
 				.replace(mentionRegexGlobal, '<mark class="mention-context-textarea-highlight">$&</mark>')
 
+			// Custom replacement for commands - only highlight valid ones
+			processedText = processedText.replace(commandRegexGlobal, (match, commandName) => {
+				// Only highlight if the command exists in the valid commands list
+				if (isValidCommand(commandName)) {
+					// Check if the match starts with a space
+					const startsWithSpace = match.startsWith(" ")
+					const commandPart = `/${commandName}`
+
+					if (startsWithSpace) {
+						// Keep the space but only highlight the command part
+						return ` <mark class="mention-context-textarea-highlight">${commandPart}</mark>`
+					} else {
+						// Highlight the entire command (starts at beginning of line)
+						return `<mark class="mention-context-textarea-highlight">${commandPart}</mark>`
+					}
+				}
+				return match // Return unhighlighted if command is not valid
+			})
+
+			highlightLayerRef.current.innerHTML = processedText
+
 			highlightLayerRef.current.scrollTop = textAreaRef.current.scrollTop
 			highlightLayerRef.current.scrollLeft = textAreaRef.current.scrollLeft
-		}, [])
+		}, [commands])
 
 		useLayoutEffect(() => {
 			updateHighlights()
@@ -897,6 +957,7 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 							</button>
 						</StandardTooltip>
 					)}
+					<SlashCommandsPopover />
 					<IndexingStatusBadge />
 					<StandardTooltip content={t("chat:addImages")}>
 						<button
@@ -938,6 +999,7 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 				)}>
 				<div
 					ref={highlightLayerRef}
+					data-testid="highlight-layer"
 					className={cn(
 						"absolute",
 						"inset-0",
@@ -949,8 +1011,14 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 						"font-vscode-font-family",
 						"text-vscode-editor-font-size",
 						"leading-vscode-editor-line-height",
-						"py-2",
-						"px-[9px]",
+						isFocused
+							? "border border-vscode-focusBorder outline outline-vscode-focusBorder"
+							: isDraggingOver
+								? "border-2 border-dashed border-vscode-focusBorder"
+								: "border border-transparent",
+						isEditMode ? "pt-1.5 pb-10 px-2" : "py-1.5 px-2",
+						"px-[8px]",
+						"pr-9",
 						"z-10",
 						"forced-color-adjust-none",
 					)}
@@ -1071,10 +1139,10 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 
 				{!inputValue && !isEditMode && (
 					<div
-						className="absolute left-2 z-30 pr-9 flex items-center h-8"
+						className="absolute left-2 z-30 pr-9 flex items-center h-8 font-vscode-font-family text-vscode-editor-font-size leading-vscode-editor-line-height"
 						style={{
 							bottom: "0.25rem",
-							color: "var(--vscode-tab-inactiveForeground)",
+							color: "color-mix(in oklab, var(--vscode-input-foreground) 50%, transparent)",
 							userSelect: "none",
 							pointerEvents: "none",
 						}}>

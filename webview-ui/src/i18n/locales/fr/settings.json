@@ -136,6 +136,7 @@
 	},
 	"autoApprove": {
 		"description": "Permettre à Roo d'effectuer automatiquement des opérations sans requérir d'approbation. Activez ces paramètres uniquement si vous faites entièrement confiance à l'IA et que vous comprenez les risques de sécurité associés.",
+		"enabled": "Auto-approbation activée",
 		"toggleAriaLabel": "Activer/désactiver l'approbation automatique",
 		"disabledAriaLabel": "Approbation automatique désactivée - sélectionnez d'abord les options",
 		"selectOptionsFirst": "Sélectionnez au moins une option ci-dessous pour activer l'approbation automatique",
@@ -206,6 +207,13 @@
 			"title": "Requêtes maximales",
 			"description": "Effectuer automatiquement ce nombre de requêtes API avant de demander l'approbation pour continuer la tâche.",
 			"unlimited": "Illimité"
+		},
+		"apiCostLimit": {
+			"unlimited": "Illimité",
+			"title": "Coût maximum"
+		},
+		"maxLimits": {
+			"description": "Effectuer automatiquement des requêtes jusqu'à ces limites avant de demander une autorisation pour continuer."
 		}
 	},
 	"providers": {
@@ -258,16 +266,28 @@
 		"anthropicApiKey": "Clé API Anthropic",
 		"getAnthropicApiKey": "Obtenir la clé API Anthropic",
 		"anthropicUseAuthToken": "Passer la clé API Anthropic comme en-tête d'autorisation au lieu de X-Api-Key",
+		"cerebrasApiKey": "Clé API Cerebras",
+		"getCerebrasApiKey": "Obtenir la clé API Cerebras",
 		"chutesApiKey": "Clé API Chutes",
 		"getChutesApiKey": "Obtenir la clé API Chutes",
+		"fireworksApiKey": "Clé API Fireworks",
+		"getFireworksApiKey": "Obtenir la clé API Fireworks",
 		"deepSeekApiKey": "Clé API DeepSeek",
 		"getDeepSeekApiKey": "Obtenir la clé API DeepSeek",
+		"doubaoApiKey": "Clé API Doubao",
+		"getDoubaoApiKey": "Obtenir la clé API Doubao",
 		"moonshotApiKey": "Clé API Moonshot",
 		"getMoonshotApiKey": "Obtenir la clé API Moonshot",
 		"moonshotBaseUrl": "Point d'entrée Moonshot",
+		"zaiApiKey": "Clé API Z AI",
+		"getZaiApiKey": "Obtenir la clé API Z AI",
+		"zaiEntrypoint": "Point d'entrée Z AI",
+		"zaiEntrypointDescription": "Veuillez sélectionner le point d'entrée API approprié en fonction de votre emplacement. Si vous êtes en Chine, choisissez open.bigmodel.cn. Sinon, choisissez api.z.ai.",
 		"geminiApiKey": "Clé API Gemini",
 		"getGroqApiKey": "Obtenir la clé API Groq",
 		"groqApiKey": "Clé API Groq",
+		"getSambaNovaApiKey": "Obtenir la clé API SambaNova",
+		"sambaNovaApiKey": "Clé API SambaNova",
 		"getHuggingFaceApiKey": "Obtenir la clé API Hugging Face",
 		"huggingFaceApiKey": "Clé API Hugging Face",
 		"huggingFaceModelId": "ID du modèle",
@@ -323,7 +343,6 @@
 				"description": "Permet à Gemini d'effectuer des recherches sur Google pour obtenir des informations actuelles et fonder les réponses sur des données en temps réel. Utile pour les requêtes nécessitant des informations à jour."
 			}
 		},
-
 		"googleCloudSetup": {
 			"title": "Pour utiliser Google Cloud Vertex AI, vous devez :",
 			"step1": "1. Créer un compte Google Cloud, activer l'API Vertex AI et activer les modèles Claude souhaités.",
@@ -522,6 +541,16 @@
 			"label": "Limite de lectures simultanées",
 			"description": "Nombre maximum de fichiers que l'outil 'read_file' peut traiter simultanément. Des valeurs plus élevées peuvent accélérer la lecture de plusieurs petits fichiers mais augmentent l'utilisation de la mémoire."
 		},
+		"maxImageFileSize": {
+			"label": "Taille maximale des fichiers d'image",
+			"mb": "MB",
+			"description": "Taille maximale (en MB) pour les fichiers d'image qui peuvent être traités par l'outil de lecture de fichier."
+		},
+		"maxTotalImageSize": {
+			"label": "Taille totale maximale des images",
+			"mb": "MB",
+			"description": "Limite de taille cumulée maximale (en MB) pour toutes les images traitées dans une seule opération read_file. Lors de la lecture de plusieurs images, la taille de chaque image est ajoutée au total. Si l'inclusion d'une autre image dépasserait cette limite, elle sera ignorée."
+		},
 		"diagnostics": {
 			"includeMessages": {
 				"label": "Inclure automatiquement les diagnostics dans le contexte",
@@ -668,6 +697,14 @@
 		"MULTI_FILE_APPLY_DIFF": {
 			"name": "Activer les éditions de fichiers concurrentes",
 			"description": "Lorsque cette option est activée, Roo peut éditer plusieurs fichiers en une seule requête. Lorsqu'elle est désactivée, Roo doit éditer les fichiers un par un. Désactiver cette option peut aider lorsque tu travailles avec des modèles moins capables ou lorsque tu veux plus de contrôle sur les modifications de fichiers."
+		},
+		"PREVENT_FOCUS_DISRUPTION": {
+			"name": "Édition en arrière-plan",
+			"description": "Empêche la perturbation du focus de l'éditeur lorsqu'activé. Les modifications de fichiers se font en arrière-plan sans ouvrir de vues de différences ou voler le focus. Vous pouvez continuer à travailler sans interruption pendant que Roo effectue des changements. Les fichiers peuvent être ouverts sans focus pour capturer les diagnostics ou rester complètement fermés."
+		},
+		"ASSISTANT_MESSAGE_PARSER": {
+			"name": "Utiliser le nouveau parseur de messages",
+			"description": "Active le parseur de messages en streaming expérimental qui accélère nettement les longues réponses en traitant les messages plus efficacement."
 		}
 	},
 	"promptCaching": {
