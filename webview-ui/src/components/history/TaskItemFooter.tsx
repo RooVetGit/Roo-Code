@@ -19,7 +19,7 @@ const TaskItemFooter: React.FC<TaskItemFooterProps> = ({ item, variant, isSelect
 			<div className="flex gap-2 items-center text-vscode-descriptionForeground/60">
 				{/* Datetime with time-ago format */}
 				<StandardTooltip content={new Date(item.ts).toLocaleString()}>
-					<span className="capitalize">{formatTimeAgo(item.ts)}</span>
+					<span className="first-letter:uppercase">{formatTimeAgo(item.ts)}</span>
 				</StandardTooltip>
 				<span>·</span>
 				{/* Cost */}

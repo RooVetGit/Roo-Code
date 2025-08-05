@@ -17,21 +17,13 @@ export const formatDate = (timestamp: number) => {
 	const date = new Date(timestamp)
 	const locale = i18next.language || "en"
 
-	// Get date format style from translations or use default transformations
-	const dateStr = date.toLocaleString(locale, {
+	return date.toLocaleString(locale, {
 		month: "long",
 		day: "numeric",
 		hour: "numeric",
 		minute: "2-digit",
 		hour12: true,
 	})
-
-	// Apply transformations based on locale or use default
-	if (locale === "en") {
-		return dateStr.replace(", ", " ").replace(" at", ",").toUpperCase()
-	}
-
-	return dateStr.toUpperCase()
 }
 
 export const formatTimeAgo = (timestamp: number) => {
