@@ -517,8 +517,10 @@ ${errorDetails ? `\nTechnical details:\n${errorDetails}\n` : ""}
 					EXPERIMENT_IDS.PREVENT_FOCUS_DISRUPTION,
 				)
 
-				// For batch operations, we've already gotten approval
+				// Check if file is write-protected
 				const isWriteProtected = cline.rooProtectedController?.isWriteProtected(relPath) || false
+
+				// For batch operations, we've already gotten approval
 				const sharedMessageProps: ClineSayTool = {
 					tool: "appliedDiff",
 					path: getReadablePath(cline.cwd, relPath),
@@ -549,8 +551,8 @@ ${errorDetails ? `\nTechnical details:\n${errorDetails}\n` : ""}
 					// Set up diff view
 					cline.diffViewProvider.editType = "modify"
 
-					// Show diff view if focus disruption prevention is disabled
-					if (!isPreventFocusDisruptionEnabled) {
+					// Show diff view if focus disruption prevention is disabled OR if file is protected
+					if (!isPreventFocusDisruptionEnabled || isWriteProtected) {
 						await cline.diffViewProvider.open(relPath)
 						await cline.diffViewProvider.update(originalContent!, true)
 						cline.diffViewProvider.scrollToFirstDiff()
@@ -560,12 +562,11 @@ ${errorDetails ? `\nTechnical details:\n${errorDetails}\n` : ""}
 					}
 
 					// Ask for approval (same for both flows)
-					const isWriteProtected = cline.rooProtectedController?.isWriteProtected(relPath) || false
 					didApprove = await askApproval("tool", operationMessage, toolProgressStatus, isWriteProtected)
 
 					if (!didApprove) {
 						// Revert changes if diff view was shown
-						if (!isPreventFocusDisruptionEnabled) {
+						if (!isPreventFocusDisruptionEnabled || isWriteProtected) {
 							await cline.diffViewProvider.revertChanges()
 						}
 						results.push(`Changes to ${relPath} were not approved by user`)
@@ -573,8 +574,8 @@ ${errorDetails ? `\nTechnical details:\n${errorDetails}\n` : ""}
 					}
 
 					// Save the changes
-					if (isPreventFocusDisruptionEnabled) {
-						// Direct file write without diff view or opening the file
+					if (isPreventFocusDisruptionEnabled && !isWriteProtected) {
+						// Direct file write without diff view or opening the file (only for non-protected files)
 						await cline.diffViewProvider.saveDirectly(
 							relPath,
 							originalContent!,
@@ -588,8 +589,12 @@ ${errorDetails ? `\nTechnical details:\n${errorDetails}\n` : ""}
 					}
 				} else {
 					// Batch operations - already approved above
-					if (isPreventFocusDisruptionEnabled) {
-						// Direct file write without diff view or opening the file
+					// Check if any files in the batch are protected
+					const hasProtectedFiles = operationsToApprove.some(
+						(op) => cline.rooProtectedController?.isWriteProtected(op.path) || false,
+					)
+					if (isPreventFocusDisruptionEnabled && !hasProtectedFiles) {
+						// Direct file write without diff view or opening the file (only if no protected files)
 						cline.diffViewProvider.editType = "modify"
 						cline.diffViewProvider.originalContent = await fs.readFile(absolutePath, "utf-8")
 						await cline.diffViewProvider.saveDirectly(

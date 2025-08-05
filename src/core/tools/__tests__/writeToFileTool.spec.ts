@@ -92,6 +92,14 @@ vi.mock("../../ignore/RooIgnoreController", () => ({
 	},
 }))
 
+vi.mock("../../protect/RooProtectedController", () => ({
+	RooProtectedController: class {
+		isWriteProtected() {
+			return false
+		}
+	},
+}))
+
 describe("writeToFileTool", () => {
 	// Test data
 	const testFilePath = "test/file.txt"
@@ -142,6 +150,9 @@ describe("writeToFileTool", () => {
 		}
 		mockCline.rooIgnoreController = {
 			validateAccess: vi.fn().mockReturnValue(true),
+		}
+		mockCline.rooProtectedController = {
+			isWriteProtected: vi.fn().mockReturnValue(false),
 		}
 		mockCline.diffViewProvider = {
 			editType: undefined,
@@ -414,6 +425,117 @@ describe("writeToFileTool", () => {
 
 			expect(mockHandleError).toHaveBeenCalledWith("writing file", expect.any(Error))
 			expect(mockCline.diffViewProvider.reset).toHaveBeenCalled()
+		})
+	})
+
+	describe("protected files with background editing", () => {
+		beforeEach(() => {
+			// Enable background editing experiment
+			mockCline.providerRef.deref().getState.mockResolvedValue({
+				diagnosticsEnabled: true,
+				writeDelayMs: 1000,
+				experiments: {
+					preventFocusDisruption: true,
+				},
+			})
+		})
+
+		it("shows diff view for protected files even when background editing is enabled", async () => {
+			// Mark file as protected
+			mockCline.rooProtectedController.isWriteProtected.mockReturnValue(true)
+
+			await executeWriteFileTool({}, { fileExists: true })
+
+			// Should show diff view despite background editing being enabled
+			expect(mockCline.diffViewProvider.open).toHaveBeenCalledWith(testFilePath)
+			expect(mockCline.diffViewProvider.update).toHaveBeenCalledWith(testContent, true)
+			expect(mockCline.diffViewProvider.saveChanges).toHaveBeenCalled()
+			// Should NOT use saveDirectly
+			expect(mockCline.diffViewProvider.saveDirectly).toBeUndefined()
+		})
+
+		it("uses direct save for non-protected files when background editing is enabled", async () => {
+			// File is not protected
+			mockCline.rooProtectedController.isWriteProtected.mockReturnValue(false)
+
+			// Add saveDirectly mock
+			mockCline.diffViewProvider.saveDirectly = vi.fn().mockResolvedValue(undefined)
+
+			await executeWriteFileTool({}, { fileExists: false })
+
+			// Should NOT show diff view
+			expect(mockCline.diffViewProvider.open).not.toHaveBeenCalled()
+			expect(mockCline.diffViewProvider.update).not.toHaveBeenCalled()
+			// Should use saveDirectly instead
+			expect(mockCline.diffViewProvider.saveDirectly).toHaveBeenCalledWith(
+				testFilePath,
+				testContent,
+				false,
+				true,
+				1000,
+			)
+		})
+
+		it("passes isProtected flag to askApproval for protected files", async () => {
+			mockCline.rooProtectedController.isWriteProtected.mockReturnValue(true)
+
+			await executeWriteFileTool({})
+
+			// Check that askApproval was called with isWriteProtected = true
+			expect(mockAskApproval).toHaveBeenCalledWith(
+				"tool",
+				expect.any(String),
+				undefined,
+				true, // isWriteProtected
+			)
+		})
+
+		it("handles protected files correctly in partial blocks", async () => {
+			mockCline.rooProtectedController.isWriteProtected.mockReturnValue(true)
+
+			// When background editing is enabled, partial blocks don't call ask
+			await executeWriteFileTool({}, { isPartial: true })
+
+			// With background editing enabled, partial blocks skip the UI update
+			expect(mockCline.ask).not.toHaveBeenCalled()
+			expect(mockCline.diffViewProvider.open).not.toHaveBeenCalled()
+
+			// Now test with background editing disabled
+			mockCline.providerRef.deref().getState.mockResolvedValue({
+				diagnosticsEnabled: true,
+				writeDelayMs: 1000,
+				experiments: {
+					preventFocusDisruption: false,
+				},
+			})
+
+			await executeWriteFileTool({}, { isPartial: true })
+
+			// With background editing disabled, partial blocks should call ask
+			expect(mockCline.ask).toHaveBeenCalled()
+			expect(mockCline.diffViewProvider.open).toHaveBeenCalled()
+		})
+
+		it("respects protection status for .vscode files", async () => {
+			const vscodePath = ".vscode/settings.json"
+			mockCline.rooProtectedController.isWriteProtected.mockReturnValue(true)
+
+			await executeWriteFileTool({ path: vscodePath })
+
+			// Should show diff view for protected .vscode files
+			expect(mockCline.diffViewProvider.open).toHaveBeenCalledWith(vscodePath)
+			expect(mockCline.diffViewProvider.update).toHaveBeenCalled()
+		})
+
+		it("respects protection status for .roo files", async () => {
+			const rooPath = ".roo/config.json"
+			mockCline.rooProtectedController.isWriteProtected.mockReturnValue(true)
+
+			await executeWriteFileTool({ path: rooPath })
+
+			// Should show diff view for protected .roo files
+			expect(mockCline.diffViewProvider.open).toHaveBeenCalledWith(rooPath)
+			expect(mockCline.diffViewProvider.update).toHaveBeenCalled()
 		})
 	})
 })

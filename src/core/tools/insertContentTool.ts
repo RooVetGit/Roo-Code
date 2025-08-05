@@ -145,8 +145,8 @@ export async function insertContentTool(
 			isProtected: isWriteProtected,
 		} satisfies ClineSayTool)
 
-		// Show diff view if focus disruption prevention is disabled
-		if (!isPreventFocusDisruptionEnabled) {
+		// Show diff view if focus disruption prevention is disabled OR if file is protected
+		if (!isPreventFocusDisruptionEnabled || isWriteProtected) {
 			await cline.diffViewProvider.open(relPath)
 			await cline.diffViewProvider.update(updatedContent, true)
 			cline.diffViewProvider.scrollToFirstDiff()
@@ -159,7 +159,7 @@ export async function insertContentTool(
 
 		if (!didApprove) {
 			// Revert changes if diff view was shown
-			if (!isPreventFocusDisruptionEnabled) {
+			if (!isPreventFocusDisruptionEnabled || isWriteProtected) {
 				await cline.diffViewProvider.revertChanges()
 			}
 			pushToolResult("Changes were rejected by the user.")
@@ -168,8 +168,8 @@ export async function insertContentTool(
 		}
 
 		// Save the changes
-		if (isPreventFocusDisruptionEnabled) {
-			// Direct file write without diff view or opening the file
+		if (isPreventFocusDisruptionEnabled && !isWriteProtected) {
+			// Direct file write without diff view or opening the file (only for non-protected files)
 			await cline.diffViewProvider.saveDirectly(relPath, updatedContent, false, diagnosticsEnabled, writeDelayMs)
 		} else {
 			// Call saveChanges to update the DiffViewProvider properties

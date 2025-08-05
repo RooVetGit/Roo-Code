@@ -153,8 +153,9 @@ export async function applyDiffToolLegacy(
 			// Check if file is write-protected
 			const isWriteProtected = cline.rooProtectedController?.isWriteProtected(relPath) || false
 
-			if (isPreventFocusDisruptionEnabled) {
-				// Direct file write without diff view
+			// For protected files, always show diff view regardless of background editing setting
+			if (isPreventFocusDisruptionEnabled && !isWriteProtected) {
+				// Direct file write without diff view (only for non-protected files)
 				const completeMessage = JSON.stringify({
 					...sharedMessageProps,
 					diff: diffContent,

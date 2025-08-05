@@ -171,8 +171,9 @@ export async function writeToFileTool(
 				EXPERIMENT_IDS.PREVENT_FOCUS_DISRUPTION,
 			)
 
-			if (isPreventFocusDisruptionEnabled) {
-				// Direct file write without diff view
+			// For protected files, always show diff view regardless of background editing setting
+			if (isPreventFocusDisruptionEnabled && !isWriteProtected) {
+				// Direct file write without diff view (only for non-protected files)
 				// Check for code omissions before proceeding
 				if (detectCodeOmission(cline.diffViewProvider.originalContent || "", newContent, predictedLineCount)) {
 					if (cline.diffStrategy) {
