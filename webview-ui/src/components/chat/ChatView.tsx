@@ -465,7 +465,6 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 		}
 	}, [])
 
-
 	useEffect(() => {
 		const prev = prevExpandedRowsRef.current
 		let wasAnyRowExpandedByUser = false
@@ -964,24 +963,24 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 
 		return newVisibleMessages
 	}, [modifiedMessages])
-	
+
 	useEffect(() => {
 		const cleanupInterval = setInterval(() => {
 			const cache = everVisibleMessagesTsRef.current
 			const currentMessageIds = new Set(modifiedMessages.map((m: ClineMessage) => m.ts))
 			const viewportMessages = visibleMessages.slice(Math.max(0, visibleMessages.length - 100))
 			const viewportMessageIds = new Set(viewportMessages.map((m: ClineMessage) => m.ts))
-	
+
 			cache.forEach((_value: boolean, key: number) => {
 				if (!currentMessageIds.has(key) && !viewportMessageIds.has(key)) {
 					cache.delete(key)
 				}
 			})
 		}, 60000)
-	
+
 		return () => clearInterval(cleanupInterval)
 	}, [modifiedMessages, visibleMessages])
-	
+
 	useDebounceEffect(
 		() => {
 			if (!isHidden && !sendingDisabled && !enableButtons) {
@@ -1337,10 +1336,23 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 
 	const scrollToBottomSmooth = useMemo(
 		() =>
-			debounce(() => virtuosoRef.current?.scrollTo({ top: Number.MAX_SAFE_INTEGER, behavior: "smooth" }), 10, {
-				immediate: true,
-			}),
-		[],
+			debounce(
+				() => {
+					const lastIndex = groupedMessages.length - 1
+					if (lastIndex >= 0) {
+						virtuosoRef.current?.scrollToIndex({
+							index: lastIndex,
+							behavior: "smooth",
+							align: "end",
+						})
+					}
+				},
+				10,
+				{
+					immediate: true,
+				},
+			),
+		[groupedMessages.length],
 	)
 
 	useEffect(() => {
@@ -1352,11 +1364,15 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 	}, [scrollToBottomSmooth])
 
 	const scrollToBottomAuto = useCallback(() => {
-		virtuosoRef.current?.scrollTo({
-			top: Number.MAX_SAFE_INTEGER,
-			behavior: "auto", // Instant causes crash.
-		})
-	}, [])
+		const lastIndex = groupedMessages.length - 1
+		if (lastIndex >= 0) {
+			virtuosoRef.current?.scrollToIndex({
+				index: lastIndex,
+				behavior: "auto", // Instant causes crash.
+				align: "end",
+			})
+		}
+	}, [groupedMessages.length])
 
 	const handleSetExpandedRow = useCallback(
 		(ts: number, expand?: boolean) => {
