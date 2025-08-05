@@ -26,7 +26,30 @@ export class ValkeySearchVectorStore implements IVectorStore {
 		if (!url || url.trim() === "") {
 			return "http://localhost:6379"
 		}
-		return url.trim()
+
+		const trimmedUrl = url.trim()
+
+		if (!trimmedUrl.startsWith("http://") && !trimmedUrl.startsWith("https://") && !trimmedUrl.includes("://")) {
+			return this.parseHostname(trimmedUrl)
+		}
+
+		try {
+			const parsedUrl = new URL(trimmedUrl)
+			return trimmedUrl
+		} catch {
+			// Failed to parse as URL - treat as hostname
+			return this.parseHostname(trimmedUrl)
+		}
+	}
+
+	private parseHostname(hostname: string): string {
+		if (hostname.includes(":")) {
+			// Has port - add http:// prefix if missing
+			return hostname.startsWith("http") ? hostname : `http://${hostname}`
+		} else {
+			// No port - add http:// prefix without port (let constructor handle port assignment)
+			return `http://${hostname}`
+		}
 	}
 
 	private async initializeClient(): Promise<void> {
