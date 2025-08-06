@@ -5,6 +5,7 @@ import { type ProviderSettings, VERTEX_REGIONS } from "@roo-code/types"
 
 import { useAppTranslation } from "@src/i18n/TranslationContext"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@src/components/ui"
+import { ApiKeyInput } from "@src/components/common/ApiKeyInput"
 
 import { inputEventTransform } from "../transforms"
 
@@ -53,13 +54,12 @@ export const Vertex = ({ apiConfiguration, setApiConfigurationField }: VertexPro
 					</VSCodeLink>
 				</div>
 			</div>
-			<VSCodeTextField
+			<ApiKeyInput
 				value={apiConfiguration?.vertexJsonCredentials || ""}
 				onInput={handleInputChange("vertexJsonCredentials")}
 				placeholder={t("settings:placeholders.credentialsJson")}
-				className="w-full">
-				<label className="block font-medium mb-1">{t("settings:providers.googleCloudCredentials")}</label>
-			</VSCodeTextField>
+				label={t("settings:providers.googleCloudCredentials")}
+			/>
 			<VSCodeTextField
 				value={apiConfiguration?.vertexKeyFile || ""}
 				onInput={handleInputChange("vertexKeyFile")}
