@@ -125,12 +125,14 @@ export class ValkeySearchVectorStore implements IVectorStore {
 		} catch {}
 
 		try {
-			const vectorAttr = info?.attributes?.find((attr) => attr.attribute === "vector")
-			if (vectorAttr?.dimension === this.vectorSize) {
-				return false
-			}
+			if (info) {
+				const vectorAttr = info?.attributes?.find((attr) => attr.attribute === "vector")
+				if (vectorAttr?.dimension === this.vectorSize) {
+					return false
+				}
 
-			await this.deleteCollection()
+				await this.deleteCollection()
+			}
 		} catch (error) {
 			throw new Error(error.message, { cause: error })
 		}
