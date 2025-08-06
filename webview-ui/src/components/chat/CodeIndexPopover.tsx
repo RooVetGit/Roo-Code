@@ -1274,9 +1274,6 @@ export const CodeIndexPopover: React.FC<CodeIndexPopoverProps> = ({
 														}}>
 														<span className="font-medium">{t("settings:codeIndex.valkeyUseSslLabel")}</span>
 													</VSCodeCheckbox>
-													<StandardTooltip content={t("settings:codeIndex.valkeyUseSslDescription")}>
-														<span className="codicon codicon-info text-xs text-vscode-descriptionForeground cursor-help" />
-													</StandardTooltip>
 												</div>
 											</div>
 
@@ -1288,11 +1285,8 @@ export const CodeIndexPopover: React.FC<CodeIndexPopoverProps> = ({
 															onChange={(e: any) => {
 																updateSetting("codebaseIndexValkeyRejectUnauthorized", e.target.checked)
 															}}>
-															<span className="font-medium">{t("settings:codeIndex.valkeyUseSslLabel")}</span>
+															<span className="font-medium">{t("settings:codeIndex.valkeyRejectUnauthorizedLabel")}</span>
 														</VSCodeCheckbox>
-														<StandardTooltip content={t("settings:codeIndex.valkeyUseSslDescription")}>
-															<span className="codicon codicon-info text-xs text-vscode-descriptionForeground cursor-help" />
-														</StandardTooltip>
 													</div>
 												</div>
 											)}

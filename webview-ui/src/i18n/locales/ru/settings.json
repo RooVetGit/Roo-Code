@@ -73,6 +73,8 @@
 		"valkeyUsernamePlaceholder": "Введите имя пользователя Valkey (необязательно)",
 		"valkeyPasswordLabel": "Пароль Valkey",
 		"valkeyPasswordPlaceholder": "Введите пароль Valkey (необязательно)",
+		"valkeyUseSslLabel": "Использовать SSL",
+		"valkeyRejectUnauthorizedLabel": "Отклонять неавторизованные сертификаты",
 		"qdrantKeyLabel": "URL Qdrant",
 		"startIndexingButton": "Начать",
 		"clearIndexDataButton": "Очистить индекс",
