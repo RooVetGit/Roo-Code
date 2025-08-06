@@ -25,8 +25,14 @@ export async function applyDiffToolLegacy(
 	const relPath: string | undefined = block.params.path
 	let diffContent: string | undefined = block.params.diff
 
-	if (diffContent && !cline.api.getModel().id.includes("claude")) {
-		diffContent = unescapeHtmlEntities(diffContent)
+	// Apply HTML entity unescaping based on user setting
+	if (diffContent) {
+		const state = (await cline.providerRef.deref()?.getState()) ?? {}
+		const unescapeHtmlEntitiesInDiffs = (state as any).unescapeHtmlEntitiesInDiffs ?? false
+
+		if (unescapeHtmlEntitiesInDiffs && !cline.api.getModel().id.includes("claude")) {
+			diffContent = unescapeHtmlEntities(diffContent)
+		}
 	}
 
 	const sharedMessageProps: ClineSayTool = {
