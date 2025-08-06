@@ -15,12 +15,39 @@ vi.mock("vscode", () => ({
 				index: 0,
 			},
 		],
+		createFileSystemWatcher: vi.fn().mockReturnValue({
+			onDidCreate: vi.fn().mockReturnValue({ dispose: vi.fn() }),
+			onDidChange: vi.fn().mockReturnValue({ dispose: vi.fn() }),
+			onDidDelete: vi.fn().mockReturnValue({ dispose: vi.fn() }),
+			dispose: vi.fn(),
+		}),
 	},
+	RelativePattern: vi.fn().mockImplementation((base, pattern) => ({ base, pattern })),
 }))
 
 // Mock only the essential dependencies
 vi.mock("../../../utils/path", () => ({
 	getWorkspacePath: vi.fn(() => "/test/workspace"),
+}))
+
+// Mock fs/promises for RooIgnoreController
+vi.mock("fs/promises", () => ({
+	default: {
+		readFile: vi.fn().mockRejectedValue(new Error("File not found")), // Simulate no .gitignore/.rooignore
+	},
+}))
+
+// Mock file utils for RooIgnoreController
+vi.mock("../../../utils/fs", () => ({
+	fileExistsAtPath: vi.fn().mockResolvedValue(false), // Simulate no .rooignore file
+}))
+
+// Mock ignore module
+vi.mock("ignore", () => ({
+	default: vi.fn().mockReturnValue({
+		add: vi.fn(),
+		ignores: vi.fn().mockReturnValue(false),
+	}),
 }))
 
 vi.mock("../state-manager", () => ({
