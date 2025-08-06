@@ -264,4 +264,44 @@ describe("PromptsView", () => {
 		// Verify popover remains closed
 		expect(selectTrigger).toHaveAttribute("aria-expanded", "false")
 	})
+
+	it("should switch to imported mode on successful import", async () => {
+		const mockVscode = vscode as any
+		mockVscode.postMessage = vitest.fn()
+
+		// Render with custom modes
+		const customModes = [
+			{
+				slug: "new-mode",
+				name: "New Mode",
+				roleDefinition: "New mode role",
+				groups: ["read"],
+			},
+		]
+
+		const { rerender: _rerender } = renderPromptsView({
+			mode: "code",
+			customModes: customModes,
+		})
+
+		// Simulate import success message
+		await waitFor(() => {
+			window.postMessage(
+				{
+					type: "importModeResult",
+					success: true,
+					importedModes: ["new-mode"],
+				},
+				"*",
+			)
+		})
+
+		// Wait for the mode switch message to be sent
+		await waitFor(() => {
+			expect(mockVscode.postMessage).toHaveBeenCalledWith({
+				type: "mode",
+				text: "new-mode",
+			})
+		})
+	})
 })

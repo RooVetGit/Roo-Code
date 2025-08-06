@@ -43,9 +43,13 @@ vi.mock("vscode", () => ({
 	window: {
 		showInformationMessage: vi.fn(),
 		showErrorMessage: vi.fn(),
+		showOpenDialog: vi.fn(),
 	},
 	workspace: {
 		workspaceFolders: [{ uri: { fsPath: "/mock/workspace" } }],
+	},
+	Uri: {
+		file: vi.fn((path: string) => ({ fsPath: path })),
 	},
 }))
 
@@ -70,14 +74,17 @@ vi.mock("../../../i18n", () => ({
 vi.mock("fs/promises", () => {
 	const mockRm = vi.fn().mockResolvedValue(undefined)
 	const mockMkdir = vi.fn().mockResolvedValue(undefined)
+	const mockReadFile = vi.fn().mockResolvedValue("")
 
 	return {
 		default: {
 			rm: mockRm,
 			mkdir: mockMkdir,
+			readFile: mockReadFile,
 		},
 		rm: mockRm,
 		mkdir: mockMkdir,
+		readFile: mockReadFile,
 	}
 })
 
@@ -412,6 +419,167 @@ describe("webviewMessageHandler - requestRouterModels", () => {
 			provider: "litellm",
 			apiKey: "litellm-key", // From config
 			baseUrl: "http://localhost:4000", // From config
+		})
+	})
+})
+
+describe("webviewMessageHandler - importMode", () => {
+	beforeEach(() => {
+		vi.clearAllMocks()
+		// Add handleModeSwitch to the mock
+		mockClineProvider.handleModeSwitch = vi.fn()
+		// Cast to any to add mock methods
+		;(mockClineProvider.customModesManager as any).importModeWithRules = vi.fn()
+	})
+
+	it("should switch to imported mode after successful import", async () => {
+		const mockImportResult = {
+			success: true,
+			importedModes: ["imported-mode"],
+		}
+
+		vi.mocked(mockClineProvider.customModesManager.importModeWithRules).mockResolvedValue(mockImportResult)
+		// Mock getCustomModes to return the imported mode so validation passes
+		vi.mocked(mockClineProvider.customModesManager.getCustomModes).mockResolvedValue([
+			{
+				name: "Imported Mode",
+				slug: "imported-mode",
+				roleDefinition: "Test Role",
+				groups: [],
+				source: "project",
+			} as ModeConfig,
+		])
+
+		// Mock vscode.window.showOpenDialog
+		const vscode = await import("vscode")
+		vi.mocked(vscode.window.showOpenDialog).mockResolvedValue([{ fsPath: "/path/to/mode.yaml" }] as any)
+
+		// Mock fs.readFile
+		const fs = await import("fs/promises")
+		vi.mocked(fs.readFile).mockResolvedValue("yaml content")
+
+		await webviewMessageHandler(mockClineProvider, {
+			type: "importMode",
+			source: "project",
+		})
+
+		expect(mockClineProvider.handleModeSwitch).toHaveBeenCalledWith("imported-mode")
+		expect(mockClineProvider.postMessageToWebview).toHaveBeenCalledWith({
+			type: "importModeResult",
+			success: true,
+			importedModes: ["imported-mode"],
+		})
+	})
+
+	it("should not switch mode if import fails", async () => {
+		const mockImportResult = {
+			success: false,
+			error: "Import failed",
+		}
+
+		vi.mocked(mockClineProvider.customModesManager.importModeWithRules).mockResolvedValue(mockImportResult)
+
+		// Mock vscode.window.showOpenDialog
+		const vscode = await import("vscode")
+		vi.mocked(vscode.window.showOpenDialog).mockResolvedValue([{ fsPath: "/path/to/mode.yaml" }] as any)
+
+		// Mock fs.readFile
+		const fs = await import("fs/promises")
+		vi.mocked(fs.readFile).mockResolvedValue("yaml content")
+
+		await webviewMessageHandler(mockClineProvider, {
+			type: "importMode",
+			source: "project",
+		})
+
+		expect(mockClineProvider.handleModeSwitch).not.toHaveBeenCalled()
+		expect(mockClineProvider.postMessageToWebview).toHaveBeenCalledWith({
+			type: "importModeResult",
+			success: false,
+			error: "Import failed",
+		})
+	})
+
+	it("should switch to first mode when multiple modes are imported", async () => {
+		const mockImportResult = {
+			success: true,
+			importedModes: ["mode-one", "mode-two", "mode-three"],
+		}
+
+		vi.mocked(mockClineProvider.customModesManager.importModeWithRules).mockResolvedValue(mockImportResult)
+		// Mock getCustomModes to return the imported modes so validation passes
+		vi.mocked(mockClineProvider.customModesManager.getCustomModes).mockResolvedValue([
+			{
+				name: "Mode One",
+				slug: "mode-one",
+				roleDefinition: "Test Role",
+				groups: [],
+				source: "project",
+			} as ModeConfig,
+			{
+				name: "Mode Two",
+				slug: "mode-two",
+				roleDefinition: "Test Role",
+				groups: [],
+				source: "project",
+			} as ModeConfig,
+			{
+				name: "Mode Three",
+				slug: "mode-three",
+				roleDefinition: "Test Role",
+				groups: [],
+				source: "project",
+			} as ModeConfig,
+		])
+
+		// Mock vscode.window.showOpenDialog
+		const vscode = await import("vscode")
+		vi.mocked(vscode.window.showOpenDialog).mockResolvedValue([{ fsPath: "/path/to/modes.yaml" }] as any)
+
+		// Mock fs.readFile
+		const fs = await import("fs/promises")
+		vi.mocked(fs.readFile).mockResolvedValue("yaml content with multiple modes")
+
+		await webviewMessageHandler(mockClineProvider, {
+			type: "importMode",
+			source: "project",
+		})
+
+		// Should switch to the first mode only
+		expect(mockClineProvider.handleModeSwitch).toHaveBeenCalledWith("mode-one")
+		expect(mockClineProvider.handleModeSwitch).toHaveBeenCalledTimes(1)
+	})
+
+	it("should handle invalid mode slug gracefully", async () => {
+		const mockImportResult = {
+			success: true,
+			importedModes: ["invalid-mode-that-does-not-exist"],
+		}
+
+		vi.mocked(mockClineProvider.customModesManager.importModeWithRules).mockResolvedValue(mockImportResult)
+		vi.mocked(mockClineProvider.customModesManager.getCustomModes).mockResolvedValue([])
+
+		// Mock vscode.window.showOpenDialog
+		const vscode = await import("vscode")
+		vi.mocked(vscode.window.showOpenDialog).mockResolvedValue([{ fsPath: "/path/to/mode.yaml" }] as any)
+
+		// Mock fs.readFile
+		const fs = await import("fs/promises")
+		vi.mocked(fs.readFile).mockResolvedValue("yaml content")
+
+		await webviewMessageHandler(mockClineProvider, {
+			type: "importMode",
+			source: "project",
+		})
+
+		// Should not call handleModeSwitch with invalid mode
+		expect(mockClineProvider.handleModeSwitch).not.toHaveBeenCalled()
+
+		// Should still send success message
+		expect(mockClineProvider.postMessageToWebview).toHaveBeenCalledWith({
+			type: "importModeResult",
+			success: true,
+			importedModes: ["invalid-mode-that-does-not-exist"],
 		})
 	})
 })
