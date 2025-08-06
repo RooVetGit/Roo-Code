@@ -180,7 +180,9 @@
 		},
 		"scope": {
 			"project": "项目",
-			"global": "全局"
+			"global": "全局",
+			"projectShort": "P",
+			"globalShort": "G"
 		}
 	},
 	"marketplace": {
