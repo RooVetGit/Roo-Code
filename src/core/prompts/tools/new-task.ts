@@ -1,14 +1,16 @@
 import { ToolArgs } from "./types"
 
-export function getNewTaskDescription(_args: ToolArgs): string {
+export function getNewTaskDescription(args: ToolArgs): string {
+	const todosRequired = args.experiments?.newTaskRequireTodos === true
+	const todosStatus = todosRequired ? "(required)" : "(optional)"
+
 	return `## new_task
-Description: This will let you create a new task instance in the chosen mode using your provided message and optional initial todo list.
+Description: This will let you create a new task instance in the chosen mode using your provided message${todosRequired ? " and initial todo list" : " and optional initial todo list"}.
 
 Parameters:
 - mode: (required) The slug of the mode to start the new task in (e.g., "code", "debug", "architect").
 - message: (required) The initial user message or instructions for this new task.
-- todos: (optional by default, can be required via experimental setting) The initial todo list in markdown checklist format for the new task.
-	 Note: The 'todos' parameter can be configured to be required through the experimental setting 'newTaskRequireTodos'.
+- todos: ${todosStatus} The initial todo list in markdown checklist format for the new task.
 
 Usage:
 <new_task>
