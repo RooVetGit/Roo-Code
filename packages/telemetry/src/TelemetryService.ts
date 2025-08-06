@@ -227,6 +227,16 @@ export class TelemetryService {
 	}
 
 	/**
+	 * Captures a slash command usage event
+	 * @param taskId The task ID where the command was used
+	 * @param commandType The type of command (custom or mode_switch)
+	 * @param commandName The name of the command used
+	 */
+	public captureSlashCommandUsed(taskId: string, commandType: "custom" | "mode_switch", commandName: string): void {
+		this.captureEvent(TelemetryEventName.SLASH_COMMAND_USED, { taskId, commandType, commandName })
+	}
+
+	/**
 	 * Checks if telemetry is currently enabled
 	 * @returns Whether telemetry is enabled
 	 */
