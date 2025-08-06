@@ -127,18 +127,12 @@ const AutoApproveMenu = ({ style }: AutoApproveMenuProps) => {
 		setIsExpanded((prev) => !prev)
 	}, [])
 
-	const enabledActionsList = Object.entries(toggles)
-		.filter(([_key, value]) => !!value)
-		.map(([key]) => t(autoApproveSettingsConfig[key as AutoApproveSetting].labelKey))
-		.join(", ")
-
-	// Update displayed text logic
-	const displayText = useMemo(() => {
-		if (!effectiveAutoApprovalEnabled || !hasEnabledOptions) {
-			return t("chat:autoApprove.none")
-		}
-		return enabledActionsList || t("chat:autoApprove.none")
-	}, [effectiveAutoApprovalEnabled, hasEnabledOptions, enabledActionsList, t])
+	// Get enabled icons for display
+	const enabledIcons = useMemo(() => {
+		return Object.entries(toggles)
+			.filter(([_key, value]) => !!value)
+			.map(([key]) => autoApproveSettingsConfig[key as AutoApproveSetting].icon)
+	}, [toggles])
 
 	const handleOpenSettings = useCallback(
 		() =>
@@ -211,8 +205,31 @@ const AutoApproveMenu = ({ style }: AutoApproveMenuProps) => {
 							whiteSpace: "nowrap",
 							flex: 1,
 							minWidth: 0,
+							display: "flex",
+							alignItems: "center",
+							gap: "6px",
 						}}>
-						{displayText}
+						{!effectiveAutoApprovalEnabled || !hasEnabledOptions
+							? t("chat:autoApprove.none")
+							: enabledIcons.map((icon, index) => {
+									// Find the config for this icon to get the label
+									const config = Object.values(autoApproveSettingsConfig).find(
+										(cfg) => cfg.icon === icon,
+									)
+									const tooltipContent = config ? t(config.labelKey) : ""
+
+									return (
+										<StandardTooltip key={index} content={tooltipContent}>
+											<span
+												className={`codicon codicon-${icon}`}
+												style={{
+													fontSize: "14px",
+													flexShrink: 0,
+												}}
+											/>
+										</StandardTooltip>
+									)
+								})}
 					</span>
 					<span
 						className={`codicon codicon-chevron-${isExpanded ? "down" : "right"}`}

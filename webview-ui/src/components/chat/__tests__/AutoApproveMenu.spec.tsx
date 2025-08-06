@@ -2,6 +2,7 @@ import { render, fireEvent, screen, waitFor } from "@/utils/test-utils"
 import { useExtensionState } from "@src/context/ExtensionStateContext"
 import { vscode } from "@src/utils/vscode"
 import AutoApproveMenu from "../AutoApproveMenu"
+import userEvent from "@testing-library/user-event"
 
 // Mock vscode API
 vi.mock("@src/utils/vscode", () => ({
@@ -111,8 +112,9 @@ describe("AutoApproveMenu", () => {
 
 			render(<AutoApproveMenu />)
 
-			// Check that the text shows the enabled option
-			expect(screen.getByText("Read-only operations")).toBeInTheDocument()
+			// Check that the icon for read-only operations is shown
+			const container = screen.getByText("Auto-approve").parentElement?.parentElement
+			expect(container?.querySelector(".codicon-eye")).toBeInTheDocument()
 		})
 
 		it("should not allow toggling master checkbox when no options are selected", () => {
@@ -222,8 +224,42 @@ describe("AutoApproveMenu", () => {
 
 			render(<AutoApproveMenu />)
 
-			// Should show all enabled options in the summary
-			expect(screen.getByText("Read-only operations, Write operations, Execute operations")).toBeInTheDocument()
+			// Should show icons for all enabled options
+			const container = screen.getByText("Auto-approve").parentElement?.parentElement
+			expect(container?.querySelector(".codicon-eye")).toBeInTheDocument() // Read
+			expect(container?.querySelector(".codicon-edit")).toBeInTheDocument() // Write
+			expect(container?.querySelector(".codicon-terminal")).toBeInTheDocument() // Execute
+		})
+
+		it("should display tooltips on icons in collapsed view", async () => {
+			const user = userEvent.setup()
+
+			;(useExtensionState as ReturnType<typeof vi.fn>).mockReturnValue({
+				...defaultExtensionState,
+				autoApprovalEnabled: true,
+				alwaysAllowReadOnly: true,
+				alwaysAllowWrite: true,
+				alwaysAllowExecute: true,
+			})
+
+			render(<AutoApproveMenu />)
+
+			// Find the icons
+			const container = screen.getByText("Auto-approve").parentElement?.parentElement
+			const eyeIcon = container?.querySelector(".codicon-eye") as HTMLElement
+			const editIcon = container?.querySelector(".codicon-edit") as HTMLElement
+			const terminalIcon = container?.querySelector(".codicon-terminal") as HTMLElement
+
+			// Verify icons are present
+			expect(eyeIcon).toBeInTheDocument()
+			expect(editIcon).toBeInTheDocument()
+			expect(terminalIcon).toBeInTheDocument()
+
+			// Test read-only icon tooltip
+			await user.hover(eyeIcon)
+			await waitFor(() => {
+				expect(screen.getByRole("tooltip")).toHaveTextContent("Read-only operations")
+			})
 		})
 
 		it("should handle enabling first option when none selected", async () => {
