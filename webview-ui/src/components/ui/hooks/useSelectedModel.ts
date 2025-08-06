@@ -185,6 +185,18 @@ function getSelectedModel({
 			return { id, info }
 		}
 		case "vertex": {
+			// Check if a custom model is specified
+			const customModelId = apiConfiguration.vertexCustomModelId
+			if (customModelId && customModelId.trim()) {
+				// For custom models, use default model info as fallback
+				const defaultInfo = vertexModels[vertexDefaultModelId]
+				return {
+					id: customModelId.trim(),
+					info: defaultInfo,
+				}
+			}
+
+			// Use predefined models
 			const id = apiConfiguration.apiModelId ?? vertexDefaultModelId
 			const info = vertexModels[id as keyof typeof vertexModels]
 			return { id, info }

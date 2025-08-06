@@ -91,6 +91,16 @@ export const Vertex = ({ apiConfiguration, setApiConfigurationField }: VertexPro
 					</SelectContent>
 				</Select>
 			</div>
+			<VSCodeTextField
+				value={apiConfiguration?.vertexCustomModelId || ""}
+				onInput={handleInputChange("vertexCustomModelId")}
+				placeholder="claude-sonnet-4@20250514"
+				className="w-full">
+				<label className="block font-medium mb-1">{t("settings:providers.customModel")}</label>
+			</VSCodeTextField>
+			<div className="text-sm text-vscode-descriptionForeground">
+				{t("settings:providers.vertex.customModelDescription")}
+			</div>
 		</>
 	)
 }

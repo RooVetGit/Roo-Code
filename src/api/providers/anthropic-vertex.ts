@@ -163,6 +163,45 @@ export class AnthropicVertexHandler extends BaseProvider implements SingleComple
 	}
 
 	getModel() {
+		// Check if a custom model is specified
+		const customModelId = this.options.vertexCustomModelId
+		if (customModelId && customModelId.trim()) {
+			// For custom models, use default model info as fallback
+			const defaultInfo: ModelInfo = vertexModels[vertexDefaultModelId]
+			const trimmedId = customModelId.trim()
+
+			// Check if custom model has thinking suffix
+			const hasThinkingSuffix = trimmedId.endsWith(":thinking")
+			const actualModelId = hasThinkingSuffix ? trimmedId.replace(":thinking", "") : trimmedId
+
+			// For thinking models, create a model info that supports reasoning
+			let modelInfo: ModelInfo = defaultInfo
+			if (hasThinkingSuffix) {
+				modelInfo = {
+					...defaultInfo,
+					supportsReasoningBudget: true,
+					requiredReasoningBudget: true,
+					maxThinkingTokens: defaultInfo.maxThinkingTokens || 8192,
+				}
+			}
+
+			// Use the full model ID (with :thinking suffix) for getModelParams to get proper reasoning parameters
+			const modelIdForParams = hasThinkingSuffix ? trimmedId : actualModelId
+			const params = getModelParams({
+				format: "anthropic",
+				modelId: modelIdForParams,
+				model: modelInfo,
+				settings: this.options,
+			})
+
+			return {
+				id: actualModelId,
+				info: modelInfo,
+				...params,
+			}
+		}
+
+		// Use predefined models
 		const modelId = this.options.apiModelId
 		let id = modelId && modelId in vertexModels ? (modelId as VertexModelId) : vertexDefaultModelId
 		const info: ModelInfo = vertexModels[id]
