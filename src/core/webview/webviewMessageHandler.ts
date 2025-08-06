@@ -906,6 +906,7 @@ export const webviewMessageHandler = async (
 			await updateGlobalState("mcpEnabled", mcpEnabled)
 
 			// Only refresh MCP connections if the value actually changed
+			// This prevents expensive MCP server refresh operations when saving unrelated settings
 			if (currentMcpEnabled !== mcpEnabled) {
 				// Delegate MCP enable/disable logic to McpHub
 				const mcpHubInstance = provider.getMcpHub()
