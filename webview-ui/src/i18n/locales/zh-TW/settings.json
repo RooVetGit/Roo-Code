@@ -66,6 +66,7 @@
 		"qdrantUrlLabel": "Qdrant URL",
 		"qdrantKeyLabel": "Qdrant 金鑰：",
 		"startIndexingButton": "開始",
+		"resumeIndexingButton": "Resume",
 		"clearIndexDataButton": "清除索引",
 		"unsavedSettingsMessage": "請先儲存設定再開始索引程序。",
 		"clearDataDialog": {

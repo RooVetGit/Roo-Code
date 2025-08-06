@@ -1198,8 +1198,16 @@ export const CodeIndexPopover: React.FC<CodeIndexPopoverProps> = ({
 						<div className="flex items-center justify-between gap-2 pt-6">
 							<div className="flex gap-2">
 								{currentSettings.codebaseIndexEnabled &&
-									(indexingStatus.systemStatus === "Error" ||
-										indexingStatus.systemStatus === "Standby") && (
+									indexingStatus.systemStatus === "Error" && (
+										<VSCodeButton
+											onClick={() => vscode.postMessage({ type: "resumeIndexing" })}
+											disabled={saveStatus === "saving" || hasUnsavedChanges}>
+											{t("settings:codeIndex.resumeIndexingButton")}
+										</VSCodeButton>
+									)}
+
+								{currentSettings.codebaseIndexEnabled &&
+									indexingStatus.systemStatus === "Standby" && (
 										<VSCodeButton
 											onClick={() => vscode.postMessage({ type: "startIndexing" })}
 											disabled={saveStatus === "saving" || hasUnsavedChanges}>
