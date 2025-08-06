@@ -8,10 +8,46 @@ vi.mock("../../../shared/modes", () => ({
 	defaultModeSlug: "ask",
 }))
 
+vi.mock("../../../shared/experiments", () => ({
+	experiments: {
+		isEnabled: vi.fn(),
+	},
+	EXPERIMENT_IDS: {
+		NEW_TASK_REQUIRE_TODOS: "newTaskRequireTodos",
+	},
+}))
+
 vi.mock("../../prompts/responses", () => ({
 	formatResponse: {
 		toolError: vi.fn((msg: string) => `Tool Error: ${msg}`),
 	},
+}))
+
+vi.mock("../updateTodoListTool", () => ({
+	parseMarkdownChecklist: vi.fn((md: string) => {
+		// Simple mock implementation
+		const lines = md.split("\n").filter((line) => line.trim())
+		return lines.map((line, index) => {
+			let status = "pending"
+			let content = line
+
+			if (line.includes("[x]") || line.includes("[X]")) {
+				status = "completed"
+				content = line.replace(/^\[x\]\s*/i, "")
+			} else if (line.includes("[-]") || line.includes("[~]")) {
+				status = "in_progress"
+				content = line.replace(/^\[-\]\s*/, "").replace(/^\[~\]\s*/, "")
+			} else {
+				content = line.replace(/^\[\s*\]\s*/, "")
+			}
+
+			return {
+				id: `todo-${index}`,
+				content,
+				status,
+			}
+		})
+	}),
 }))
 
 // Define a minimal type for the resolved value
@@ -22,7 +58,9 @@ const mockAskApproval = vi.fn<AskApproval>()
 const mockHandleError = vi.fn<HandleError>()
 const mockPushToolResult = vi.fn()
 const mockRemoveClosingTag = vi.fn((_name: string, value: string | undefined) => value ?? "")
-const mockCreateTask = vi.fn<() => Promise<MockClineInstance>>().mockResolvedValue({ taskId: "mock-subtask-id" })
+const mockCreateTask = vi
+	.fn<(text?: string, images?: string[], parentTask?: any, options?: any) => Promise<MockClineInstance>>()
+	.mockResolvedValue({ taskId: "mock-subtask-id" })
 const mockEmit = vi.fn()
 const mockRecordToolError = vi.fn()
 const mockSayAndCreateMissingParamError = vi.fn()
@@ -49,6 +87,7 @@ const mockCline = {
 import { newTaskTool } from "../newTaskTool"
 import type { ToolUse } from "../../../shared/tools"
 import { getModeBySlug } from "../../../shared/modes"
+import { experiments } from "../../../shared/experiments"
 
 describe("newTaskTool", () => {
 	beforeEach(() => {
@@ -63,6 +102,8 @@ describe("newTaskTool", () => {
 		}) // Default valid mode
 		mockCline.consecutiveMistakeCount = 0
 		mockCline.isPaused = false
+		// Default: experimental setting is disabled
+		vi.mocked(experiments.isEnabled).mockReturnValue(false)
 	})
 
 	it("should correctly un-escape \\\\@ to \\@ in the message passed to the new task", async () => {
@@ -72,6 +113,7 @@ describe("newTaskTool", () => {
 			params: {
 				mode: "code",
 				message: "Review this: \\\\@file1.txt and also \\\\\\\\@file2.txt", // Input with \\@ and \\\\@
+				todos: "[ ] First task\n[ ] Second task",
 			},
 			partial: false,
 		}
@@ -93,6 +135,12 @@ describe("newTaskTool", () => {
 			"Review this: \\@file1.txt and also \\\\\\@file2.txt", // Unit Test Expectation: \\@ -> \@, \\\\@ -> \\\\@
 			undefined,
 			mockCline,
+			expect.objectContaining({
+				initialTodos: expect.arrayContaining([
+					expect.objectContaining({ content: "First task" }),
+					expect.objectContaining({ content: "Second task" }),
+				]),
+			}),
 		)
 
 		// Verify side effects
@@ -109,6 +157,7 @@ describe("newTaskTool", () => {
 			params: {
 				mode: "code",
 				message: "This is already unescaped: \\@file1.txt",
+				todos: "[ ] Test todo",
 			},
 			partial: false,
 		}
@@ -126,6 +175,9 @@ describe("newTaskTool", () => {
 			"This is already unescaped: \\@file1.txt", // Expected: \@ remains \@
 			undefined,
 			mockCline,
+			expect.objectContaining({
+				initialTodos: expect.any(Array),
+			}),
 		)
 	})
 
@@ -136,6 +188,7 @@ describe("newTaskTool", () => {
 			params: {
 				mode: "code",
 				message: "A normal mention @file1.txt",
+				todos: "[ ] Test todo",
 			},
 			partial: false,
 		}
@@ -153,6 +206,9 @@ describe("newTaskTool", () => {
 			"A normal mention @file1.txt", // Expected: @ remains @
 			undefined,
 			mockCline,
+			expect.objectContaining({
+				initialTodos: expect.any(Array),
+			}),
 		)
 	})
 
@@ -163,6 +219,7 @@ describe("newTaskTool", () => {
 			params: {
 				mode: "code",
 				message: "Mix: @file0.txt, \\@file1.txt, \\\\@file2.txt, \\\\\\\\@file3.txt",
+				todos: "[ ] Test todo",
 			},
 			partial: false,
 		}
@@ -180,8 +237,367 @@ describe("newTaskTool", () => {
 			"Mix: @file0.txt, \\@file1.txt, \\@file2.txt, \\\\\\@file3.txt", // Unit Test Expectation: @->@, \@->\@, \\@->\@, \\\\@->\\\\@
 			undefined,
 			mockCline,
+			expect.objectContaining({
+				initialTodos: expect.any(Array),
+			}),
 		)
 	})
 
-	// Add more tests for error handling (missing params, invalid mode, approval denied) if needed
+	it("should handle missing todos parameter gracefully (backward compatibility)", async () => {
+		const block: ToolUse = {
+			type: "tool_use",
+			name: "new_task",
+			params: {
+				mode: "code",
+				message: "Test message",
+				// todos missing - should work for backward compatibility
+			},
+			partial: false,
+		}
+
+		await newTaskTool(
+			mockCline as any,
+			block,
+			mockAskApproval,
+			mockHandleError,
+			mockPushToolResult,
+			mockRemoveClosingTag,
+		)
+
+		// Should NOT error when todos is missing
+		expect(mockSayAndCreateMissingParamError).not.toHaveBeenCalledWith("new_task", "todos")
+		expect(mockCline.consecutiveMistakeCount).toBe(0)
+		expect(mockCline.recordToolError).not.toHaveBeenCalledWith("new_task")
+
+		// Should create task with empty todos array
+		expect(mockCreateTask).toHaveBeenCalledWith(
+			"Test message",
+			undefined,
+			mockCline,
+			expect.objectContaining({
+				initialTodos: [],
+			}),
+		)
+
+		// Should complete successfully
+		expect(mockPushToolResult).toHaveBeenCalledWith(expect.stringContaining("Successfully created new task"))
+	})
+
+	it("should work with todos parameter when provided", async () => {
+		const block: ToolUse = {
+			type: "tool_use",
+			name: "new_task",
+			params: {
+				mode: "code",
+				message: "Test message with todos",
+				todos: "[ ] First task\n[ ] Second task",
+			},
+			partial: false,
+		}
+
+		await newTaskTool(
+			mockCline as any,
+			block,
+			mockAskApproval,
+			mockHandleError,
+			mockPushToolResult,
+			mockRemoveClosingTag,
+		)
+
+		// Should parse and include todos when provided
+		expect(mockCreateTask).toHaveBeenCalledWith(
+			"Test message with todos",
+			undefined,
+			mockCline,
+			expect.objectContaining({
+				initialTodos: expect.arrayContaining([
+					expect.objectContaining({ content: "First task" }),
+					expect.objectContaining({ content: "Second task" }),
+				]),
+			}),
+		)
+
+		expect(mockPushToolResult).toHaveBeenCalledWith(expect.stringContaining("Successfully created new task"))
+	})
+
+	it("should error when mode parameter is missing", async () => {
+		const block: ToolUse = {
+			type: "tool_use",
+			name: "new_task",
+			params: {
+				// mode missing
+				message: "Test message",
+				todos: "[ ] Test todo",
+			},
+			partial: false,
+		}
+
+		await newTaskTool(
+			mockCline as any,
+			block,
+			mockAskApproval,
+			mockHandleError,
+			mockPushToolResult,
+			mockRemoveClosingTag,
+		)
+
+		expect(mockSayAndCreateMissingParamError).toHaveBeenCalledWith("new_task", "mode")
+		expect(mockCline.consecutiveMistakeCount).toBe(1)
+		expect(mockCline.recordToolError).toHaveBeenCalledWith("new_task")
+	})
+
+	it("should error when message parameter is missing", async () => {
+		const block: ToolUse = {
+			type: "tool_use",
+			name: "new_task",
+			params: {
+				mode: "code",
+				// message missing
+				todos: "[ ] Test todo",
+			},
+			partial: false,
+		}
+
+		await newTaskTool(
+			mockCline as any,
+			block,
+			mockAskApproval,
+			mockHandleError,
+			mockPushToolResult,
+			mockRemoveClosingTag,
+		)
+
+		expect(mockSayAndCreateMissingParamError).toHaveBeenCalledWith("new_task", "message")
+		expect(mockCline.consecutiveMistakeCount).toBe(1)
+		expect(mockCline.recordToolError).toHaveBeenCalledWith("new_task")
+	})
+
+	it("should parse todos with different statuses correctly", async () => {
+		const block: ToolUse = {
+			type: "tool_use",
+			name: "new_task",
+			params: {
+				mode: "code",
+				message: "Test message",
+				todos: "[ ] Pending task\n[x] Completed task\n[-] In progress task",
+			},
+			partial: false,
+		}
+
+		await newTaskTool(
+			mockCline as any,
+			block,
+			mockAskApproval,
+			mockHandleError,
+			mockPushToolResult,
+			mockRemoveClosingTag,
+		)
+
+		expect(mockCreateTask).toHaveBeenCalledWith(
+			"Test message",
+			undefined,
+			mockCline,
+			expect.objectContaining({
+				initialTodos: expect.arrayContaining([
+					expect.objectContaining({ content: "Pending task", status: "pending" }),
+					expect.objectContaining({ content: "Completed task", status: "completed" }),
+					expect.objectContaining({ content: "In progress task", status: "in_progress" }),
+				]),
+			}),
+		)
+	})
+
+	describe("experimental setting: newTaskRequireTodos", () => {
+		it("should NOT require todos when experimental setting is disabled (default)", async () => {
+			// Ensure experimental setting is disabled
+			vi.mocked(experiments.isEnabled).mockReturnValue(false)
+
+			const block: ToolUse = {
+				type: "tool_use",
+				name: "new_task",
+				params: {
+					mode: "code",
+					message: "Test message",
+					// todos missing - should work when setting is disabled
+				},
+				partial: false,
+			}
+
+			await newTaskTool(
+				mockCline as any,
+				block,
+				mockAskApproval,
+				mockHandleError,
+				mockPushToolResult,
+				mockRemoveClosingTag,
+			)
+
+			// Should NOT error when todos is missing and setting is disabled
+			expect(mockSayAndCreateMissingParamError).not.toHaveBeenCalledWith("new_task", "todos")
+			expect(mockCline.consecutiveMistakeCount).toBe(0)
+			expect(mockCline.recordToolError).not.toHaveBeenCalledWith("new_task")
+
+			// Should create task with empty todos array
+			expect(mockCreateTask).toHaveBeenCalledWith(
+				"Test message",
+				undefined,
+				mockCline,
+				expect.objectContaining({
+					initialTodos: [],
+				}),
+			)
+
+			// Should complete successfully
+			expect(mockPushToolResult).toHaveBeenCalledWith(expect.stringContaining("Successfully created new task"))
+		})
+
+		it("should REQUIRE todos when experimental setting is enabled", async () => {
+			// Enable experimental setting
+			vi.mocked(experiments.isEnabled).mockReturnValue(true)
+
+			const block: ToolUse = {
+				type: "tool_use",
+				name: "new_task",
+				params: {
+					mode: "code",
+					message: "Test message",
+					// todos missing - should error when setting is enabled
+				},
+				partial: false,
+			}
+
+			await newTaskTool(
+				mockCline as any,
+				block,
+				mockAskApproval,
+				mockHandleError,
+				mockPushToolResult,
+				mockRemoveClosingTag,
+			)
+
+			// Should error when todos is missing and setting is enabled
+			expect(mockSayAndCreateMissingParamError).toHaveBeenCalledWith("new_task", "todos")
+			expect(mockCline.consecutiveMistakeCount).toBe(1)
+			expect(mockCline.recordToolError).toHaveBeenCalledWith("new_task")
+
+			// Should NOT create task
+			expect(mockCreateTask).not.toHaveBeenCalled()
+			expect(mockPushToolResult).not.toHaveBeenCalledWith(
+				expect.stringContaining("Successfully created new task"),
+			)
+		})
+
+		it("should work with todos when experimental setting is enabled", async () => {
+			// Enable experimental setting
+			vi.mocked(experiments.isEnabled).mockReturnValue(true)
+
+			const block: ToolUse = {
+				type: "tool_use",
+				name: "new_task",
+				params: {
+					mode: "code",
+					message: "Test message",
+					todos: "[ ] First task\n[ ] Second task",
+				},
+				partial: false,
+			}
+
+			await newTaskTool(
+				mockCline as any,
+				block,
+				mockAskApproval,
+				mockHandleError,
+				mockPushToolResult,
+				mockRemoveClosingTag,
+			)
+
+			// Should NOT error when todos is provided and setting is enabled
+			expect(mockSayAndCreateMissingParamError).not.toHaveBeenCalledWith("new_task", "todos")
+			expect(mockCline.consecutiveMistakeCount).toBe(0)
+
+			// Should create task with parsed todos
+			expect(mockCreateTask).toHaveBeenCalledWith(
+				"Test message",
+				undefined,
+				mockCline,
+				expect.objectContaining({
+					initialTodos: expect.arrayContaining([
+						expect.objectContaining({ content: "First task" }),
+						expect.objectContaining({ content: "Second task" }),
+					]),
+				}),
+			)
+
+			// Should complete successfully
+			expect(mockPushToolResult).toHaveBeenCalledWith(expect.stringContaining("Successfully created new task"))
+		})
+
+		it("should work with empty todos string when experimental setting is enabled", async () => {
+			// Enable experimental setting
+			vi.mocked(experiments.isEnabled).mockReturnValue(true)
+
+			const block: ToolUse = {
+				type: "tool_use",
+				name: "new_task",
+				params: {
+					mode: "code",
+					message: "Test message",
+					todos: "", // Empty string should be accepted
+				},
+				partial: false,
+			}
+
+			await newTaskTool(
+				mockCline as any,
+				block,
+				mockAskApproval,
+				mockHandleError,
+				mockPushToolResult,
+				mockRemoveClosingTag,
+			)
+
+			// Should NOT error when todos is empty string and setting is enabled
+			expect(mockSayAndCreateMissingParamError).not.toHaveBeenCalledWith("new_task", "todos")
+			expect(mockCline.consecutiveMistakeCount).toBe(0)
+
+			// Should create task with empty todos array
+			expect(mockCreateTask).toHaveBeenCalledWith(
+				"Test message",
+				undefined,
+				mockCline,
+				expect.objectContaining({
+					initialTodos: [],
+				}),
+			)
+
+			// Should complete successfully
+			expect(mockPushToolResult).toHaveBeenCalledWith(expect.stringContaining("Successfully created new task"))
+		})
+
+		it("should check experimental setting with correct experiment ID", async () => {
+			const block: ToolUse = {
+				type: "tool_use",
+				name: "new_task",
+				params: {
+					mode: "code",
+					message: "Test message",
+				},
+				partial: false,
+			}
+
+			await newTaskTool(
+				mockCline as any,
+				block,
+				mockAskApproval,
+				mockHandleError,
+				mockPushToolResult,
+				mockRemoveClosingTag,
+			)
+
+			// Verify that experiments.isEnabled was called with correct experiment ID
+			expect(experiments.isEnabled).toHaveBeenCalledWith(expect.any(Object), "newTaskRequireTodos")
+		})
+	})
+
+	// Add more tests for error handling (invalid mode, approval denied) if needed
 })

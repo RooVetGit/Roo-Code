@@ -30,6 +30,7 @@ describe("experiments", () => {
 				multiFileApplyDiff: false,
 				preventFocusDisruption: false,
 				assistantMessageParser: false,
+				newTaskRequireTodos: false,
 			}
 			expect(Experiments.isEnabled(experiments, EXPERIMENT_IDS.POWER_STEERING)).toBe(false)
 		})
@@ -40,6 +41,7 @@ describe("experiments", () => {
 				multiFileApplyDiff: false,
 				preventFocusDisruption: false,
 				assistantMessageParser: false,
+				newTaskRequireTodos: false,
 			}
 			expect(Experiments.isEnabled(experiments, EXPERIMENT_IDS.POWER_STEERING)).toBe(true)
 		})
@@ -50,6 +52,7 @@ describe("experiments", () => {
 				multiFileApplyDiff: false,
 				preventFocusDisruption: false,
 				assistantMessageParser: false,
+				newTaskRequireTodos: false,
 			}
 			expect(Experiments.isEnabled(experiments, EXPERIMENT_IDS.POWER_STEERING)).toBe(false)
 		})
