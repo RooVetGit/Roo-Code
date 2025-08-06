@@ -74,7 +74,6 @@
 		"valkeyPasswordLabel": "Mật khẩu Valkey",
 		"valkeyPasswordPlaceholder": "Nhập mật khẩu Valkey (tùy chọn)",
 		"valkeyUseSslLabel": "Sử dụng SSL",
-		"valkeyRejectUnauthorizedLabel": "Từ chối chứng chỉ không được ủy quyền",
 		"qdrantKeyLabel": "Khóa Qdrant:",
 		"startIndexingButton": "Bắt đầu",
 		"clearIndexDataButton": "Xóa chỉ mục",

@@ -274,7 +274,6 @@ export interface WebviewMessage {
 		codebaseIndexValkeyPort?: number
 		codebaseIndexValkeyUsername?: string
 		codebaseIndexValkeyUseSsl?: boolean
-		codebaseIndexValkeyRejectUnauthorized?: boolean
 		codebaseIndexOpenAiCompatibleApiKey?: string
 		codebaseIndexGeminiApiKey?: string
 		codebaseIndexMistralApiKey?: string

@@ -74,7 +74,6 @@
 		"valkeyPasswordLabel": "Valkey Şifresi",
 		"valkeyPasswordPlaceholder": "Valkey şifresini girin (isteğe bağlı)",
 		"valkeyUseSslLabel": "SSL Kullan",
-		"valkeyRejectUnauthorizedLabel": "Yetkisiz Sertifikaları Reddet",
 		"qdrantKeyLabel": "Qdrant Anahtarı:",
 		"startIndexingButton": "Başlat",
 		"clearIndexDataButton": "İndeks Temizle",

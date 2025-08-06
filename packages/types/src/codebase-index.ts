@@ -39,7 +39,6 @@ export const codebaseIndexConfigSchema = z.object({
 	codebaseIndexValkeyUsername: z.string().optional(),
 	codebaseIndexValkeyPassword: z.string().optional(),
 	codebaseIndexValkeyUseSsl: z.boolean().optional(),
-	codebaseIndexValkeyRejectUnauthorized: z.boolean().optional(),
 	searchProvider: z.string().optional(),
 })
 

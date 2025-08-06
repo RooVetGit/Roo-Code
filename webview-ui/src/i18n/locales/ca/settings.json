@@ -79,7 +79,6 @@
 		"valkeyPasswordLabel": "Contrasenya Valkey",
 		"valkeyPasswordPlaceholder": "Introdueix la contrasenya Valkey (opcional)",
 		"valkeyUseSslLabel": "Utilitza SSL",
-		"valkeyRejectUnauthorizedLabel": "Rebutja certificats no autoritzats",
 		"qdrantKeyLabel": "Clau de Qdrant:",
 		"startIndexingButton": "Iniciar",
 		"clearIndexDataButton": "Esborrar índex",

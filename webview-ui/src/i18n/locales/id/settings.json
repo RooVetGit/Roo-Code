@@ -74,7 +74,6 @@
 		"valkeyPasswordLabel": "Kata sandi Valkey",
 		"valkeyPasswordPlaceholder": "Masukkan kata sandi Valkey (opsional)",
 		"valkeyUseSslLabel": "Gunakan SSL",
-		"valkeyRejectUnauthorizedLabel": "Tolak Sertifikat Tidak Berwenang",
 		"qdrantKeyLabel": "Qdrant Key:",
 		"startIndexingButton": "Mulai",
 		"clearIndexDataButton": "Hapus Indeks",

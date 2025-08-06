@@ -74,7 +74,6 @@
 		"valkeyPasswordLabel": "Valkey wachtwoord",
 		"valkeyPasswordPlaceholder": "Voer Valkey wachtwoord in (optioneel)",
 		"valkeyUseSslLabel": "SSL gebruiken",
-		"valkeyRejectUnauthorizedLabel": "Niet-geautoriseerde certificaten weigeren",
 		"qdrantKeyLabel": "Qdrant-sleutel:",
 		"startIndexingButton": "Start",
 		"clearIndexDataButton": "Index wissen",

@@ -21,7 +21,6 @@ export interface CodeIndexConfig {
 	valkeyUsername?: string
 	valkeyPassword?: string
 	valkeyUseSsl?: boolean
-	valkeyRejectUnauthorized?: boolean
 	searchProvider?: string
 	searchMinScore?: number
 	searchMaxResults?: number
@@ -49,6 +48,5 @@ export type PreviousConfigSnapshot = {
 	valkeyUsername?: string
 	valkeyPassword?: string
 	valkeyUseSsl?: boolean
-	valkeyRejectUnauthorized?: boolean
 	searchProvider?: string
 }

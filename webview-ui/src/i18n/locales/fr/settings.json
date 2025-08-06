@@ -82,7 +82,6 @@
 		"valkeyPasswordLabel": "Mot de passe Valkey",
 		"valkeyPasswordPlaceholder": "Entrez le mot de passe Valkey (optionnel)",
 		"valkeyUseSslLabel": "Utiliser SSL",
-		"valkeyRejectUnauthorizedLabel": "Rejeter les certificats non autorisés",
 		"qdrantKeyLabel": "Clé Qdrant :",
 		"qdrantApiKeyLabel": "Clé API Qdrant",
 		"qdrantApiKeyPlaceholder": "Entrez votre clé API Qdrant (optionnel)",

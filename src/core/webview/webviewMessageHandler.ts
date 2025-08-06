@@ -2020,7 +2020,6 @@ export const webviewMessageHandler = async (
 					codebaseIndexValkeyUsername: settings.codebaseIndexValkeyUsername,
 					codebaseIndexValkeyPassword: settings.codeIndexValkeyPassword,
 					codebaseIndexValkeyUseSsl: settings.codebaseIndexValkeyUseSsl,
-					codebaseIndexValkeyRejectUnauthorized: settings.codebaseIndexValkeyRejectUnauthorized,
 					codebaseIndexEmbedderProvider: settings.codebaseIndexEmbedderProvider,
 					codebaseIndexEmbedderBaseUrl: settings.codebaseIndexEmbedderBaseUrl,
 					codebaseIndexEmbedderModelId: settings.codebaseIndexEmbedderModelId,

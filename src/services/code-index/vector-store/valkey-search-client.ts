@@ -16,7 +16,6 @@ export class ValkeySearchVectorStore implements IVectorStore {
 	private readonly valkeyUsername?: string
 	private readonly valkeyPassword?: string
 	private readonly useSsl: boolean
-	private readonly rejectUnauthorized: boolean
 
 	constructor(
 		workspacePath: string,
@@ -26,7 +25,6 @@ export class ValkeySearchVectorStore implements IVectorStore {
 		username?: string,
 		password?: string,
 		useSsl?: boolean,
-		rejectUnauthorized: boolean = true,
 	) {
 		this.valkeyHostname = hostname
 		this.valkeyPort = port
@@ -34,7 +32,6 @@ export class ValkeySearchVectorStore implements IVectorStore {
 		this.valkeyPassword = password
 		this.vectorSize = vectorSize
 		this.useSsl = useSsl || false
-		this.rejectUnauthorized = rejectUnauthorized
 
 		const hash = createHash("sha256").update(workspacePath).digest("hex")
 		this.indexName = `ws-${hash.substring(0, 16)}`
@@ -54,7 +51,7 @@ export class ValkeySearchVectorStore implements IVectorStore {
 				port: this.valkeyPort,
 				password: this.valkeyPassword,
 				username: this.valkeyUsername,
-				tls: this.useSsl ? { rejectUnauthorized: this.rejectUnauthorized } : undefined,
+				tls: this.useSsl ? {} : undefined,
 			})
 			this.client.on("error", (err: Error) => {
 				console.error("[ValkeySearch] Connection error:", err)

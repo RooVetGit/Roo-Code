@@ -1801,7 +1801,6 @@ export class ClineProvider
 				codebaseIndexValkeyUsername: codebaseIndexConfig?.codebaseIndexValkeyUsername ?? "",
 				codebaseIndexValkeyPassword: codebaseIndexConfig?.codebaseIndexValkeyPassword ?? "",
 				codebaseIndexValkeyUseSsl: codebaseIndexConfig?.codebaseIndexValkeyUseSsl ?? false,
-				codebaseIndexValkeyRejectUnauthorized: codebaseIndexConfig?.codebaseIndexValkeyRejectUnauthorized ?? true,
 				codebaseIndexEmbedderProvider: codebaseIndexConfig?.codebaseIndexEmbedderProvider ?? "openai",
 				codebaseIndexEmbedderBaseUrl: codebaseIndexConfig?.codebaseIndexEmbedderBaseUrl ?? "",
 				codebaseIndexEmbedderModelId: codebaseIndexConfig?.codebaseIndexEmbedderModelId ?? "",
@@ -1997,7 +1996,6 @@ export class ClineProvider
 				codebaseIndexValkeyUsername: stateValues.codebaseIndexConfig?.codebaseIndexValkeyUsername ?? "",
 				codebaseIndexValkeyPassword: stateValues.codebaseIndexConfig?.codebaseIndexValkeyPassword ?? "",
 				codebaseIndexValkeyUseSsl: stateValues.codebaseIndexConfig?.codebaseIndexValkeyUseSsl ?? false,
-				codebaseIndexValkeyRejectUnauthorized: stateValues.codebaseIndexConfig?.codebaseIndexValkeyRejectUnauthorized ?? true,
 				codebaseIndexEmbedderProvider:
 					stateValues.codebaseIndexConfig?.codebaseIndexEmbedderProvider ?? "openai",
 				codebaseIndexEmbedderBaseUrl: stateValues.codebaseIndexConfig?.codebaseIndexEmbedderBaseUrl ?? "",

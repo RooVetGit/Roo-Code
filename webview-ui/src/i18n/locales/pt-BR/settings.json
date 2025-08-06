@@ -74,7 +74,6 @@
 		"valkeyPasswordLabel": "Senha Valkey",
 		"valkeyPasswordPlaceholder": "Insira a senha Valkey (opcional)",
 		"valkeyUseSslLabel": "Usar SSL",
-		"valkeyRejectUnauthorizedLabel": "Rejeitar Certificados Não Autorizados",
 		"qdrantKeyLabel": "Chave Qdrant:",
 		"startIndexingButton": "Iniciar",
 		"clearIndexDataButton": "Limpar Índice",

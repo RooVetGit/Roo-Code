@@ -74,7 +74,6 @@
 		"valkeyPasswordLabel": "Valkey密碼",
 		"valkeyPasswordPlaceholder": "輸入Valkey密碼（可選）",
 		"valkeyUseSslLabel": "使用SSL",
-		"valkeyRejectUnauthorizedLabel": "拒絕未授權憑證",
 		"qdrantKeyLabel": "Qdrant 金鑰：",
 		"startIndexingButton": "開始",
 		"clearIndexDataButton": "清除索引",

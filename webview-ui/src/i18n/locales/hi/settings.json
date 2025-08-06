@@ -74,7 +74,6 @@
 		"valkeyPasswordLabel": "Valkey पासवर्ड",
 		"valkeyPasswordPlaceholder": "Valkey पासवर्ड दर्ज करें (वैकल्पिक)",
 		"valkeyUseSslLabel": "SSL का उपयोग करें",
-		"valkeyRejectUnauthorizedLabel": "अनधिकृत प्रमाणपत्रों को अस्वीकार करें",
 		"qdrantKeyLabel": "Qdrant कुंजी:",
 		"startIndexingButton": "शुरू करें",
 		"clearIndexDataButton": "इंडेक्स साफ़ करें",

@@ -82,7 +82,6 @@
 		"valkeyPasswordLabel": "Valkey密码",
 		"valkeyPasswordPlaceholder": "输入Valkey密码（可选）",
 		"valkeyUseSslLabel": "使用SSL",
-		"valkeyRejectUnauthorizedLabel": "拒绝未授权证书",
 		"qdrantKeyLabel": "Qdrant 密钥：",
 		"qdrantApiKeyLabel": "Qdrant API 密钥",
 		"qdrantApiKeyPlaceholder": "输入你的 Qdrant API 密钥（可选）",

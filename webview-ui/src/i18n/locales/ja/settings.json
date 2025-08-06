@@ -74,7 +74,6 @@
 		"valkeyPasswordLabel": "Valkeyパスワード",
 		"valkeyPasswordPlaceholder": "Valkeyパスワードを入力（オプション）",
 		"valkeyUseSslLabel": "SSLを使用",
-		"valkeyRejectUnauthorizedLabel": "認証されていない証明書を拒否",
 		"qdrantKeyLabel": "Qdrantキー：",
 		"startIndexingButton": "開始",
 		"clearIndexDataButton": "インデックスクリア",

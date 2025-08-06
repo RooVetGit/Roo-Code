@@ -79,7 +79,6 @@ interface LocalCodeIndexSettings {
 	codebaseIndexMistralApiKey?: string
 	codebaseIndexValkeyUsername?: string
 	codebaseIndexValkeyUseSsl?: boolean
-	codebaseIndexValkeyRejectUnauthorized?: boolean
 	searchProvider?: string
 }
 
@@ -104,7 +103,6 @@ const createValidationSchema = (provider: EmbedderProvider, searchProvider: Sear
 		codebaseIndexValkeyUsername: z.string().optional(),
 		codeIndexValkeyPassword: z.string().optional(),
 		codebaseIndexValkeyUseSsl: z.boolean().optional(),
-		codebaseIndexValkeyRejectUnauthorized: z.boolean().optional(),
 		searchProvider: z.string().optional(),
 	})
 
@@ -202,7 +200,6 @@ export const CodeIndexPopover: React.FC<CodeIndexPopoverProps> = ({
 		codebaseIndexValkeyUsername: "",
 		codeIndexValkeyPassword: "",
 		codebaseIndexValkeyUseSsl: false,
-		codebaseIndexValkeyRejectUnauthorized: true,
 		searchProvider: "",
 	})
 
@@ -243,7 +240,6 @@ export const CodeIndexPopover: React.FC<CodeIndexPopoverProps> = ({
 				codebaseIndexValkeyUsername: codebaseIndexConfig.codebaseIndexValkeyUsername || "",
 				codeIndexValkeyPassword: codebaseIndexConfig.codebaseIndexValkeyPassword || "",
 				codebaseIndexValkeyUseSsl: codebaseIndexConfig.codebaseIndexValkeyUseSsl || false,
-				codebaseIndexValkeyRejectUnauthorized: codebaseIndexConfig.codebaseIndexValkeyRejectUnauthorized || true,
 				searchProvider: codebaseIndexConfig.searchProvider,
 			}
 			setInitialSettings(settings)
@@ -1276,20 +1272,6 @@ export const CodeIndexPopover: React.FC<CodeIndexPopoverProps> = ({
 													</VSCodeCheckbox>
 												</div>
 											</div>
-
-											{currentSettings.codebaseIndexValkeyUseSsl && (
-												<div className="space-y-2">
-													<div className="flex items-center gap-2">
-														<VSCodeCheckbox
-															checked={currentSettings.codebaseIndexValkeyRejectUnauthorized}
-															onChange={(e: any) => {
-																updateSetting("codebaseIndexValkeyRejectUnauthorized", e.target.checked)
-															}}>
-															<span className="font-medium">{t("settings:codeIndex.valkeyRejectUnauthorizedLabel")}</span>
-														</VSCodeCheckbox>
-													</div>
-												</div>
-											)}
 										</>
 									)}
 								</div>

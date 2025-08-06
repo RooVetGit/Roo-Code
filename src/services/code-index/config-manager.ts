@@ -27,7 +27,6 @@ export class CodeIndexConfigManager {
 	private valkeyUsername?: string
 	private valkeyPassword?: string
 	private valkeyUseSsl?: boolean = false
-	private valkeyRejectUnauthorized?: boolean = true
 	private searchMinScore?: number
 	private searchMaxResults?: number
 
@@ -57,7 +56,6 @@ export class CodeIndexConfigManager {
 			codebaseIndexValkeyUsername: "",
 			codebaseIndexValkeyPassword: "",
 			codebaseIndexValkeyUseSsl: false,
-			codebaseIndexValkeyRejectUnauthorized: true,
 			codebaseIndexEmbedderProvider: "openai",
 			codebaseIndexEmbedderBaseUrl: "",
 			codebaseIndexEmbedderModelId: "",
@@ -73,7 +71,6 @@ export class CodeIndexConfigManager {
 			codebaseIndexValkeyUsername,
 			codebaseIndexValkeyPassword,
 			codebaseIndexValkeyUseSsl,
-			codebaseIndexValkeyRejectUnauthorized,
 			codebaseIndexEmbedderProvider,
 			codebaseIndexEmbedderBaseUrl,
 			codebaseIndexEmbedderModelId,
@@ -100,7 +97,6 @@ export class CodeIndexConfigManager {
 		this.valkeyPassword = valkeyPassword
 		this.valkeyUsername = codebaseIndexValkeyUsername
 		this.valkeyUseSsl = codebaseIndexValkeyUseSsl ?? false
-		this.valkeyRejectUnauthorized = codebaseIndexValkeyRejectUnauthorized ?? true
 		this.searchMinScore = codebaseIndexSearchMinScore
 		this.searchMaxResults = codebaseIndexSearchMaxResults
 		this.searchProvider = searchProvider
@@ -176,7 +172,6 @@ export class CodeIndexConfigManager {
 			valkeyPassword?: string
 			valkeyUsername?: string
 			valkeyUseSsl?: boolean
-			valkeyRejectUnauthorized?: boolean
 			searchProvider?: string
 			searchMinScore?: number
 		}
@@ -200,7 +195,6 @@ export class CodeIndexConfigManager {
 			valkeyPort: this.valkeyPort ?? 6379,
 			valkeyUsername: this.valkeyUsername ?? "",
 			valkeyUseSsl: this.valkeyUseSsl ?? false,
-			valkeyRejectUnauthorized: this.valkeyRejectUnauthorized ?? true,
 			searchProvider: this.searchProvider ?? "",
 			qdrantApiKey: this.qdrantApiKey ?? "",
 			valkeyPassword: this.valkeyPassword ?? "",
@@ -233,7 +227,6 @@ export class CodeIndexConfigManager {
 				valkeyPassword: this.valkeyPassword,
 				valkeyUsername: this.valkeyUsername,
 				valkeyUseSsl: this.valkeyUseSsl,
-				valkeyRejectUnauthorized: this.valkeyRejectUnauthorized,
 				searchProvider: this.searchProvider,
 				searchMinScore: this.currentSearchMinScore,
 			},
@@ -308,7 +301,6 @@ export class CodeIndexConfigManager {
 		const prevValkeyPassword = prev?.valkeyPassword ?? ""
 		const prevValkeyUsername = prev?.valkeyUsername ?? ""
 		const prevValkeyUseSsl = prev?.valkeyUseSsl ?? false
-		const prevValkeyRejectUnauthorized = prev?.valkeyRejectUnauthorized ?? true
 
 		// 1. Transition from disabled/unconfigured to enabled/configured
 		if ((!prevEnabled || !prevConfigured) && this.codebaseIndexEnabled && nowConfigured) {
@@ -352,7 +344,6 @@ export class CodeIndexConfigManager {
 		const currentValkeyPassword = this.valkeyPassword ?? ""
 		const currentValkeyUsername = this.valkeyUsername ?? ""
 		const currentValkeyUseSsl = this.valkeyUseSsl ?? false
-		const currentValkeyRejectUnauthorized = this.valkeyRejectUnauthorized ?? true
 
 		if (prevOpenAiKey !== currentOpenAiKey) {
 			return true
@@ -398,9 +389,6 @@ export class CodeIndexConfigManager {
 			return true
 		}
 
-		if (prevValkeyRejectUnauthorized !== currentValkeyRejectUnauthorized) {
-			return true
-		}
 		if (prevValkeyPassword !== currentValkeyPassword) {
 			return true
 		}
@@ -469,7 +457,6 @@ export class CodeIndexConfigManager {
 			valkeyUsername: this.valkeyUsername,
 			valkeyPassword: this.valkeyPassword,
 			valkeyUseSsl: this.valkeyUseSsl,
-			valkeyRejectUnauthorized: this.valkeyRejectUnauthorized,
 			searchMinScore: this.currentSearchMinScore,
 			searchMaxResults: this.currentSearchMaxResults,
 		}
