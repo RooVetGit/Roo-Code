@@ -1,8 +1,31 @@
 version: "1.0"
 
 commands:
-    - name: Pull latest changes
-      run: git pull
+    - name: Fetch and checkout PR branch
+      run: |
+        # Try to get PR info from various possible environment variables
+        if [ -n "$GITHUB_HEAD_REF" ]; then
+          echo "Checking out PR branch: $GITHUB_HEAD_REF"
+          git fetch origin "$GITHUB_HEAD_REF"
+          git checkout -B "$GITHUB_HEAD_REF" "origin/$GITHUB_HEAD_REF"
+        elif [ -n "$GITHUB_REF" ] && [[ "$GITHUB_REF" =~ ^refs/pull/([0-9]+)/ ]]; then
+          PR_NUMBER="${BASH_REMATCH[1]}"
+          echo "Fetching PR #$PR_NUMBER"
+          git fetch origin "pull/$PR_NUMBER/head:pr-$PR_NUMBER"
+          git checkout "pr-$PR_NUMBER"
+        elif [ -n "$GITHUB_EVENT_PATH" ] && [ -f "$GITHUB_EVENT_PATH" ]; then
+          # Try to extract PR number from GitHub event JSON
+          PR_NUMBER=$(jq -r '.pull_request.number // .number // empty' "$GITHUB_EVENT_PATH" 2>/dev/null)
+          if [ -n "$PR_NUMBER" ]; then
+            echo "Fetching PR #$PR_NUMBER from event data"
+            git fetch origin "pull/$PR_NUMBER/head:pr-$PR_NUMBER"
+            git checkout "pr-$PR_NUMBER"
+          else
+            echo "Could not determine PR number from event data"
+          fi
+        else
+          echo "No PR information found in environment, using current branch"
+        fi
       timeout: 60
       execution_phase: task_run
     - name: Install dependencies
