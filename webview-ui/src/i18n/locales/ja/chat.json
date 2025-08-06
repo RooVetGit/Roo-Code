@@ -4,10 +4,11 @@
 		"title": "タスク",
 		"seeMore": "もっと見る",
 		"seeLess": "表示を減らす",
-		"tokens": "トークン:",
-		"cache": "キャッシュ:",
-		"apiCost": "APIコスト:",
-		"contextWindow": "コンテキストウィンドウ:",
+		"tokens": "トークン",
+		"cache": "キャッシュ",
+		"apiCost": "APIコスト",
+		"size": "サイズ",
+		"contextWindow": "コンテキストウィンドウ",
 		"closeAndStart": "タスクを閉じて新しいタスクを開始",
 		"export": "タスク履歴をエクスポート",
 		"delete": "タスクを削除（Shift + クリックで確認をスキップ）",
@@ -139,7 +140,6 @@
 		"streamingFailed": "APIストリーミング失敗"
 	},
 	"checkpoint": {
-		"initial": "初期チェックポイント",
 		"regular": "チェックポイント",
 		"initializingWarning": "チェックポイントの初期化中... 時間がかかりすぎる場合は、<settingsLink>設定</settingsLink>でチェックポイントを無効にしてタスクを再開できます。",
 		"menu": {

@@ -16,7 +16,6 @@ import { Task, TaskOptions } from "../../task/Task"
 import { safeWriteJson } from "../../../utils/safeWriteJson"
 
 import { ClineProvider } from "../ClineProvider"
-import { AsyncInvokeOutputDataConfig } from "@aws-sdk/client-bedrock-runtime"
 
 // Mock setup must come before imports
 vi.mock("../../prompts/sections/custom-instructions")
@@ -148,6 +147,7 @@ vi.mock("vscode", () => ({
 		showInformationMessage: vi.fn(),
 		showWarningMessage: vi.fn(),
 		showErrorMessage: vi.fn(),
+		onDidChangeActiveTextEditor: vi.fn(() => ({ dispose: vi.fn() })),
 	},
 	workspace: {
 		getConfiguration: vi.fn().mockReturnValue({
@@ -215,6 +215,7 @@ vi.mock("../../task/Task", () => ({
 				setParentTask: vi.fn(),
 				setRootTask: vi.fn(),
 				taskId: taskId || "test-task-id",
+				emit: vi.fn(),
 			}),
 		),
 }))

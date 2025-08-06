@@ -4,10 +4,11 @@
 		"title": "Attività",
 		"seeMore": "Vedi altro",
 		"seeLess": "Vedi meno",
-		"tokens": "Tokens:",
-		"cache": "Cache:",
-		"apiCost": "Costo API:",
-		"contextWindow": "Lunghezza del contesto:",
+		"tokens": "Tokens",
+		"cache": "Cache",
+		"apiCost": "Costo API",
+		"size": "Dimensione",
+		"contextWindow": "Lunghezza del contesto",
 		"closeAndStart": "Chiudi attività e iniziane una nuova",
 		"export": "Esporta cronologia attività",
 		"delete": "Elimina attività (Shift + Clic per saltare la conferma)",
@@ -142,7 +143,6 @@
 		"streamingFailed": "Streaming API fallito"
 	},
 	"checkpoint": {
-		"initial": "Checkpoint iniziale",
 		"regular": "Checkpoint",
 		"initializingWarning": "Inizializzazione del checkpoint in corso... Se questa operazione richiede troppo tempo, puoi disattivare i checkpoint nelle <settingsLink>impostazioni</settingsLink> e riavviare l'attività.",
 		"menu": {

@@ -4,10 +4,11 @@
 		"title": "Taak",
 		"seeMore": "Meer weergeven",
 		"seeLess": "Minder weergeven",
-		"tokens": "Tokens:",
-		"cache": "Cache:",
-		"apiCost": "API-kosten:",
-		"contextWindow": "Contextlengte:",
+		"tokens": "Tokens",
+		"cache": "Cache",
+		"apiCost": "API-kosten",
+		"size": "Grootte",
+		"contextWindow": "Contextlengte",
 		"closeAndStart": "Taak sluiten en een nieuwe starten",
 		"export": "Taakgeschiedenis exporteren",
 		"delete": "Taak verwijderen (Shift + Klik om bevestiging over te slaan)",
@@ -134,7 +135,6 @@
 		"streamingFailed": "API-streaming mislukt"
 	},
 	"checkpoint": {
-		"initial": "Initiële checkpoint",
 		"regular": "Checkpoint",
 		"initializingWarning": "Checkpoint wordt nog steeds geïnitialiseerd... Als dit te lang duurt, kun je checkpoints uitschakelen in de <settingsLink>instellingen</settingsLink> en je taak opnieuw starten.",
 		"menu": {

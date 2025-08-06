@@ -261,6 +261,8 @@
 		"getCerebrasApiKey": "Получить Cerebras API-ключ",
 		"chutesApiKey": "Chutes API-ключ",
 		"getChutesApiKey": "Получить Chutes API-ключ",
+		"fireworksApiKey": "Fireworks API-ключ",
+		"getFireworksApiKey": "Получить Fireworks API-ключ",
 		"deepSeekApiKey": "DeepSeek API-ключ",
 		"getDeepSeekApiKey": "Получить DeepSeek API-ключ",
 		"doubaoApiKey": "Doubao API-ключ",
@@ -268,6 +270,10 @@
 		"moonshotApiKey": "Moonshot API-ключ",
 		"getMoonshotApiKey": "Получить Moonshot API-ключ",
 		"moonshotBaseUrl": "Точка входа Moonshot",
+		"zaiApiKey": "Z AI API-ключ",
+		"getZaiApiKey": "Получить Z AI API-ключ",
+		"zaiEntrypoint": "Точка входа Z AI",
+		"zaiEntrypointDescription": "Пожалуйста, выберите подходящую точку входа API в зависимости от вашего местоположения. Если вы находитесь в Китае, выберите open.bigmodel.cn. В противном случае выберите api.z.ai.",
 		"geminiApiKey": "Gemini API-ключ",
 		"getGroqApiKey": "Получить Groq API-ключ",
 		"groqApiKey": "Groq API-ключ",
@@ -687,6 +693,10 @@
 		"PREVENT_FOCUS_DISRUPTION": {
 			"name": "Фоновое редактирование",
 			"description": "Предотвращает нарушение фокуса редактора при включении. Редактирование файлов происходит в фоновом режиме без открытия представлений различий или кражи фокуса. Вы можете продолжать работать без перерывов, пока Roo вносит изменения. Файлы могут открываться без фокуса для захвата диагностики или оставаться полностью закрытыми."
+		},
+		"ASSISTANT_MESSAGE_PARSER": {
+			"name": "Использовать новый парсер сообщений",
+			"description": "Включите экспериментальный потоковый парсер сообщений, который ускоряет длинные ответы благодаря более эффективной обработке сообщений."
 		}
 	},
 	"promptCaching": {
