@@ -97,11 +97,9 @@ const getCommandsMap = ({ context, outputChannel, provider }: RegisterCommandOpt
 		await visibleProvider.removeClineFromStack()
 		await visibleProvider.postStateToWebview()
 		await visibleProvider.postMessageToWebview({ type: "action", action: "chatButtonClicked" })
-
-		// Focus the input after a short delay to ensure the view has switched
-		setTimeout(() => {
-			visibleProvider.postMessageToWebview({ type: "action", action: "focusInput" })
-		}, 100)
+		// Send focusInput action immediately after chatButtonClicked
+		// This ensures the focus happens after the view has switched
+		await visibleProvider.postMessageToWebview({ type: "action", action: "focusInput" })
 	},
 	mcpButtonClicked: () => {
 		const visibleProvider = getVisibleProviderOrLog(outputChannel)
