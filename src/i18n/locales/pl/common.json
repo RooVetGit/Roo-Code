@@ -100,7 +100,8 @@
 			"genericError": "Błąd API Cerebras ({{status}}): {{message}}",
 			"noResponseBody": "Błąd API Cerebras: Brak treści odpowiedzi",
 			"completionError": "Błąd uzupełniania Cerebras: {{error}}"
-		}
+		},
+		"task_corrupt_deleted": "The selected task could not be loaded and has been removed from history. This usually happens when the task files are corrupted or missing."
 	},
 	"warnings": {
 		"no_terminal_content": "Nie wybrano zawartości terminala",

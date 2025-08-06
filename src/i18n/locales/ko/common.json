@@ -100,7 +100,8 @@
 			"genericError": "Cerebras API 오류 ({{status}}): {{message}}",
 			"noResponseBody": "Cerebras API 오류: 응답 본문 없음",
 			"completionError": "Cerebras 완료 오류: {{error}}"
-		}
+		},
+		"task_corrupt_deleted": "The selected task could not be loaded and has been removed from history. This usually happens when the task files are corrupted or missing."
 	},
 	"warnings": {
 		"no_terminal_content": "선택된 터미널 내용이 없습니다",
