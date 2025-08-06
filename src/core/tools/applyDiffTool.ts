@@ -14,6 +14,22 @@ import { RecordSource } from "../context-tracking/FileContextTrackerTypes"
 import { unescapeHtmlEntities } from "../../utils/text-normalization"
 import { EXPERIMENT_IDS, experiments } from "../../shared/experiments"
 
+export function getApplyDiffDescription(blockName: string, blockParams: any): string {
+	// Check if diff content has only one SEARCH/REPLACE block
+	if (blockParams.diff) {
+		const searchCount = (blockParams.diff.match(/<<<<<<< SEARCH/g) || []).length
+		if (searchCount === 1) {
+			return `[${blockName} for '${blockParams.path || "file"}'. Using multiple SEARCH/REPLACE blocks in a single request is more efficient for the LLM. If you have multiple changes to make, include them all in one apply_diff call.]`
+		}
+	}
+
+	// Default description
+	if (blockParams.path) {
+		return `[${blockName} for '${blockParams.path}']`
+	}
+	return `[${blockName}]`
+}
+
 export async function applyDiffToolLegacy(
 	cline: Task,
 	block: ToolUse,
