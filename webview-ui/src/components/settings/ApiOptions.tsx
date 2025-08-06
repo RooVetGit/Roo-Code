@@ -94,11 +94,13 @@ import { ThinkingBudget } from "./ThinkingBudget"
 import { Verbosity } from "./Verbosity"
 import { DiffSettingsControl } from "./DiffSettingsControl"
 import { TodoListSettingsControl } from "./TodoListSettingsControl"
+import { ToolCallSettingsControl } from "./ToolCallSettingsControl"
 import { TemperatureControl } from "./TemperatureControl"
 import { RateLimitSecondsControl } from "./RateLimitSecondsControl"
 import { ConsecutiveMistakeLimitControl } from "./ConsecutiveMistakeLimitControl"
 import { BedrockCustomArn } from "./providers/BedrockCustomArn"
 import { buildDocLink } from "@src/utils/docLinks"
+import { supportToolCall } from "@roo/api"
 
 export interface ApiOptionsProps {
 	uriScheme: string | undefined
@@ -370,6 +372,9 @@ const ApiOptions = ({
 		}))
 	}, [organizationAllowList])
 
+	const enableToolCall = useMemo(() => {
+		return supportToolCall(selectedProvider)
+	}, [selectedProvider])
 	return (
 		<div className="flex flex-col gap-3">
 			<div className="flex flex-col gap-1 relative">
@@ -634,6 +639,12 @@ const ApiOptions = ({
 							todoListEnabled={apiConfiguration.todoListEnabled}
 							onChange={(field, value) => setApiConfigurationField(field, value)}
 						/>
+						{enableToolCall && (
+							<ToolCallSettingsControl
+								toolCallEnabled={apiConfiguration.toolCallEnabled}
+								onChange={(field, value) => setApiConfigurationField(field, value)}
+							/>
+						)}
 						<DiffSettingsControl
 							diffEnabled={apiConfiguration.diffEnabled}
 							fuzzyMatchThreshold={apiConfiguration.fuzzyMatchThreshold}

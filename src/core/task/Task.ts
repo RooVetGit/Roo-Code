@@ -36,6 +36,8 @@ import { CloudService } from "@roo-code/cloud"
 
 // api
 import { ApiHandler, ApiHandlerCreateMessageMetadata, buildApiHandler } from "../../api"
+import { getToolRegistry } from "../tools/schemas/tool-registry"
+import { getGroupName, getToolsForMode } from "../../shared/modes"
 import { ApiStream } from "../../api/transform/stream"
 
 // shared
@@ -46,10 +48,10 @@ import { t } from "../../i18n"
 import { ClineApiReqCancelReason, ClineApiReqInfo } from "../../shared/ExtensionMessage"
 import { getApiMetrics } from "../../shared/getApiMetrics"
 import { ClineAskResponse } from "../../shared/WebviewMessage"
-import { defaultModeSlug } from "../../shared/modes"
-import { DiffStrategy } from "../../shared/tools"
+import { defaultModeSlug, modes, getModeBySlug } from "../../shared/modes"
+import { DiffStrategy, ToolUse } from "../../shared/tools"
 import { EXPERIMENT_IDS, experiments } from "../../shared/experiments"
-import { getModelMaxOutputTokens } from "../../shared/api"
+import { getModelMaxOutputTokens, supportToolCall } from "../../shared/api"
 
 // services
 import { UrlContentFetcher } from "../../services/browser/UrlContentFetcher"
@@ -99,6 +101,8 @@ import { getMessagesSinceLastSummary, summarizeConversation } from "../condense"
 import { maybeRemoveImageBlocks } from "../../api/transform/image-cleaning"
 import { restoreTodoListForTask } from "../tools/updateTodoListTool"
 import { AutoApprovalHandler } from "./AutoApprovalHandler"
+import { handleOpenaiToolCall } from "./tool-call-helper"
+import { ToolArgs } from "../prompts/tools/types"
 
 const MAX_EXPONENTIAL_BACKOFF_SECONDS = 600 // 10 minutes
 
@@ -1568,6 +1572,7 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 			const stream = this.attemptApiRequest()
 			let assistantMessage = ""
 			let reasoningMessage = ""
+			let accumulatedToolCalls: any[] = []
 			this.isStreaming = true
 
 			try {
@@ -1611,6 +1616,34 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 							// Present content to user.
 							presentAssistantMessage(this)
 							break
+						}
+						case "tool_call": {
+							if (chunk.toolCallType === "openai") {
+								const xmlContent = handleOpenaiToolCall(accumulatedToolCalls, chunk)
+								if (xmlContent) {
+									assistantMessage += xmlContent
+
+									// Parse raw assistant message chunk into content blocks.
+									const prevLength = this.assistantMessageContent.length
+									if (this.isAssistantMessageParserEnabled && this.assistantMessageParser) {
+										this.assistantMessageContent =
+											this.assistantMessageParser.processChunk(xmlContent)
+									} else {
+										// Use the old parsing method when experiment is disabled
+										this.assistantMessageContent = parseAssistantMessage(assistantMessage)
+									}
+
+									if (this.assistantMessageContent.length > prevLength) {
+										// New content we need to present, reset to
+										// false in case previous content set this to true.
+										this.userMessageContentReady = false
+									}
+
+									// Present content to user.
+									presentAssistantMessage(this)
+									break
+								}
+							}
 						}
 					}
 
@@ -1884,6 +1917,7 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 				{
 					maxConcurrentFileReads: maxConcurrentFileReads ?? 5,
 					todoListEnabled: apiConfiguration?.todoListEnabled ?? true,
+					toolCallEnabled: apiConfiguration?.toolCallEnabled ?? false,
 					useAgentRules: vscode.workspace.getConfiguration("roo-cline").get<boolean>("useAgentRules") ?? true,
 				},
 			)
@@ -1902,6 +1936,12 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 			autoCondenseContext = true,
 			autoCondenseContextPercent = 100,
 			profileThresholds = {},
+			browserViewportSize,
+			experiments,
+			enableMcpServerCreation,
+			maxConcurrentFileReads,
+			maxReadFileLine,
+			browserToolEnabled,
 		} = state ?? {}
 
 		// Get condensing configuration for automatic triggers.
@@ -2024,9 +2064,69 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 			throw new Error("Auto-approval limit reached and user did not approve continuation")
 		}
 
+		// Generate tool schemas if toolCallEnabled is true
+		let tools: string[] | undefined = undefined
+		let toolArgs: ToolArgs | undefined
+		const apiProvider = this.apiConfiguration.apiProvider
+		if (this.apiConfiguration.toolCallEnabled === true && supportToolCall(apiProvider)) {
+			const toolRegistry = getToolRegistry()
+			const provider = this.providerRef.deref()
+
+			if (provider) {
+				const state = await provider.getState()
+				const modeConfig =
+					getModeBySlug(mode!, state.customModes) || modes.find((m) => m.slug === mode) || modes[0]
+				const availableTools = getToolsForMode(modeConfig.groups)
+				const supportedTools = toolRegistry.getSupportedTools(availableTools)
+				tools = supportedTools
+
+				// Determine if browser tools can be used based on model support, mode, and user settings
+				let modelSupportsComputerUse = false
+
+				// Create a temporary API handler to check if the model supports computer use
+				// This avoids relying on an active Cline instance which might not exist during preview
+				try {
+					const tempApiHandler = buildApiHandler(apiConfiguration!)
+					modelSupportsComputerUse = tempApiHandler.getModel().info.supportsComputerUse ?? false
+				} catch (error) {
+					console.error("Error checking if model supports computer use:", error)
+				}
+
+				const modeSupportsBrowser =
+					modeConfig?.groups.some((group) => getGroupName(group) === "browser") ?? false
+
+				// Only enable browser tools if the model supports it, the mode includes browser tools,
+				// and browser tools are enabled in settings
+				const canUseBrowserTool =
+					modelSupportsComputerUse && modeSupportsBrowser && (browserToolEnabled ?? true)
+
+				toolArgs = {
+					cwd: this.cwd,
+					supportsComputerUse: canUseBrowserTool,
+					diffStrategy: this.diffStrategy,
+					browserViewportSize,
+					mcpHub: provider.getMcpHub(),
+					partialReadsEnabled: maxReadFileLine !== -1,
+					settings: {
+						...{
+							maxConcurrentFileReads: maxConcurrentFileReads ?? 5,
+							todoListEnabled: apiConfiguration?.todoListEnabled ?? true,
+							toolCallEnabled: apiConfiguration?.toolCallEnabled ?? false,
+							useAgentRules:
+								vscode.workspace.getConfiguration("roo-cline").get<boolean>("useAgentRules") ?? true,
+						},
+						enableMcpServerCreation,
+					},
+					experiments,
+				}
+			}
+		}
+
 		const metadata: ApiHandlerCreateMessageMetadata = {
 			mode: mode,
 			taskId: this.taskId,
+			tools: tools,
+			toolArgs: toolArgs,
 		}
 
 		const stream = this.api.createMessage(systemPrompt, cleanConversationHistory, metadata)

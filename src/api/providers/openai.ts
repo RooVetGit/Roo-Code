@@ -23,6 +23,7 @@ import { getModelParams } from "../transform/model-params"
 import { DEFAULT_HEADERS } from "./constants"
 import { BaseProvider } from "./base-provider"
 import type { SingleCompletionHandler, ApiHandlerCreateMessageMetadata } from "../index"
+import { getToolRegistry } from "../../core/tools/schemas/tool-registry"
 
 // TODO: Rename this to OpenAICompatibleHandler. Also, I think the
 // `OpenAINativeHandler` can subclass from this, since it's obviously
@@ -85,6 +86,9 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 		const isAzureAiInference = this._isAzureAiInference(modelUrl)
 		const deepseekReasoner = modelId.includes("deepseek-reasoner") || enabledR1Format
 		const ark = modelUrl.includes(".volces.com")
+
+		const toolCallEnabled = metadata?.tools && metadata.tools.length > 0
+		const toolRegistry = getToolRegistry()
 
 		if (modelId.includes("o1") || modelId.includes("o3") || modelId.includes("o4")) {
 			yield* this.handleO3FamilyMessage(modelId, systemPrompt, messages)
@@ -157,6 +161,9 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 				...(isGrokXAI ? {} : { stream_options: { include_usage: true } }),
 				...(reasoning && reasoning),
 			}
+			if (toolCallEnabled) {
+				requestOptions.tools = toolRegistry.generateFunctionCallSchemas(metadata.tools!)
+			}
 
 			// Add max_tokens if needed
 			this.addMaxTokensIfNeeded(requestOptions, modelInfo)
@@ -191,6 +198,9 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 						type: "reasoning",
 						text: (delta.reasoning_content as string | undefined) || "",
 					}
+				}
+				if (delta?.tool_calls) {
+					yield { type: "tool_call", toolCalls: delta.tool_calls, toolCallType: "openai" }
 				}
 				if (chunk.usage) {
 					lastUsage = chunk.usage

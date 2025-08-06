@@ -32,6 +32,7 @@ export const providerProfilesSchema = z.object({
 			openAiHeadersMigrated: z.boolean().optional(),
 			consecutiveMistakeLimitMigrated: z.boolean().optional(),
 			todoListEnabledMigrated: z.boolean().optional(),
+			toolcallEnabledMigrated: z.boolean().optional(),
 		})
 		.optional(),
 })
@@ -156,6 +157,11 @@ export class ProviderSettingsManager {
 					providerProfiles.migrations.todoListEnabledMigrated = true
 					isDirty = true
 				}
+				if (!providerProfiles.migrations.toolcallEnabledMigrated) {
+					await this.migrateToolCallEnabled(providerProfiles)
+					providerProfiles.migrations.toolcallEnabledMigrated = true
+					isDirty = true
+				}
 
 				if (isDirty) {
 					await this.store(providerProfiles)
@@ -271,6 +277,17 @@ export class ProviderSettingsManager {
 			}
 		} catch (error) {
 			console.error(`[MigrateTodoListEnabled] Failed to migrate todo list enabled setting:`, error)
+		}
+	}
+	private async migrateToolCallEnabled(providerProfiles: ProviderProfiles) {
+		try {
+			for (const [_name, apiConfig] of Object.entries(providerProfiles.apiConfigs)) {
+				if (apiConfig.toolCallEnabled === undefined) {
+					apiConfig.toolCallEnabled = false
+				}
+			}
+		} catch (error) {
+			console.error(`[migrateToolCallEnabled] Failed to migrate tool call enabled setting:`, error)
 		}
 	}
 

@@ -24,6 +24,7 @@ import { getNewTaskDescription } from "./new-task"
 import { getCodebaseSearchDescription } from "./codebase-search"
 import { getUpdateTodoListDescription } from "./update-todo-list"
 import { CodeIndexManager } from "../../../services/code-index/manager"
+import { getToolRegistry } from "../../tools/schemas/tool-registry"
 
 // Map of tool names to their description functions
 const toolDescriptionMap: Record<string, (args: ToolArgs) => string | undefined> = {
@@ -118,7 +119,21 @@ export function getToolDescriptionsForMode(
 		tools.delete("update_todo_list")
 	}
 
-	// Map tool descriptions for allowed tools
+	// If toolCallEnabled is true, skip XML tool descriptions for supported tools
+	let supportedTools = []
+	if (settings?.toolCallEnabled === true) {
+		const toolRegistry = getToolRegistry()
+		supportedTools = toolRegistry.getSupportedTools(Array.from(tools))
+
+		for (const tool of supportedTools) {
+			// tools.delete(tool)
+			toolDescriptionMap[tool] = (args) => {
+				return `## ${tool}\n\nMUST USE ${tool} TOOL BY LLM NATIVE TOOL CALL. NOT USING XML FORMAT.`
+			}
+		}
+	}
+
+	// Map tool descriptions for allowed tools (traditional XML mode)
 	const descriptions = Array.from(tools).map((toolName) => {
 		const descriptionFn = toolDescriptionMap[toolName]
 		if (!descriptionFn) {

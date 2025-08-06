@@ -36,6 +36,7 @@ import {
 	ZAiHandler,
 	FireworksHandler,
 } from "./providers"
+import { ToolArgs } from "../core/prompts/tools/types"
 
 export interface SingleCompletionHandler {
 	completePrompt(prompt: string): Promise<string>
@@ -44,6 +45,8 @@ export interface SingleCompletionHandler {
 export interface ApiHandlerCreateMessageMetadata {
 	mode?: string
 	taskId: string
+	tools?: string[]
+	toolArgs?: ToolArgs
 }
 
 export interface ApiHandler {
