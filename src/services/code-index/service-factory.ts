@@ -145,6 +145,8 @@ export class CodeIndexServiceFactory {
 				vectorSize,
 				config.valkeyUsername,
 				config.valkeyPassword,
+				config.valkeyUseSsl ?? false,
+				config.valkeyRejectUnauthorized ?? true,
 			)
 		}
 

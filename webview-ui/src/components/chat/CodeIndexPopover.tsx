@@ -78,6 +78,8 @@ interface LocalCodeIndexSettings {
 	codebaseIndexGeminiApiKey?: string
 	codebaseIndexMistralApiKey?: string
 	codebaseIndexValkeyUsername?: string
+	codebaseIndexValkeyUseSsl?: boolean
+	codebaseIndexValkeyRejectUnauthorized?: boolean
 	searchProvider?: string
 }
 
@@ -101,6 +103,8 @@ const createValidationSchema = (provider: EmbedderProvider, searchProvider: Sear
 				: z.number().optional(),
 		codebaseIndexValkeyUsername: z.string().optional(),
 		codeIndexValkeyPassword: z.string().optional(),
+		codebaseIndexValkeyUseSsl: z.boolean().optional(),
+		codebaseIndexValkeyRejectUnauthorized: z.boolean().optional(),
 		searchProvider: z.string().optional(),
 	})
 
@@ -197,6 +201,8 @@ export const CodeIndexPopover: React.FC<CodeIndexPopoverProps> = ({
 		codebaseIndexMistralApiKey: "",
 		codebaseIndexValkeyUsername: "",
 		codeIndexValkeyPassword: "",
+		codebaseIndexValkeyUseSsl: false,
+		codebaseIndexValkeyRejectUnauthorized: true,
 		searchProvider: "",
 	})
 
@@ -236,6 +242,8 @@ export const CodeIndexPopover: React.FC<CodeIndexPopoverProps> = ({
 				codebaseIndexMistralApiKey: "",
 				codebaseIndexValkeyUsername: codebaseIndexConfig.codebaseIndexValkeyUsername || "",
 				codeIndexValkeyPassword: codebaseIndexConfig.codebaseIndexValkeyPassword || "",
+				codebaseIndexValkeyUseSsl: codebaseIndexConfig.codebaseIndexValkeyUseSsl || false,
+				codebaseIndexValkeyRejectUnauthorized: codebaseIndexConfig.codebaseIndexValkeyRejectUnauthorized || true,
 				searchProvider: codebaseIndexConfig.searchProvider,
 			}
 			setInitialSettings(settings)
@@ -1256,6 +1264,38 @@ export const CodeIndexPopover: React.FC<CodeIndexPopoverProps> = ({
 													</p>
 												)}
 											</div>
+
+											<div className="space-y-2">
+												<div className="flex items-center gap-2">
+													<VSCodeCheckbox
+														checked={currentSettings.codebaseIndexValkeyUseSsl}
+														onChange={(e: any) => {
+															updateSetting("codebaseIndexValkeyUseSsl", e.target.checked)
+														}}>
+														<span className="font-medium">{t("settings:codeIndex.valkeyUseSslLabel")}</span>
+													</VSCodeCheckbox>
+													<StandardTooltip content={t("settings:codeIndex.valkeyUseSslDescription")}>
+														<span className="codicon codicon-info text-xs text-vscode-descriptionForeground cursor-help" />
+													</StandardTooltip>
+												</div>
+											</div>
+
+											{currentSettings.codebaseIndexValkeyUseSsl && (
+												<div className="space-y-2">
+													<div className="flex items-center gap-2">
+														<VSCodeCheckbox
+															checked={currentSettings.codebaseIndexValkeyRejectUnauthorized}
+															onChange={(e: any) => {
+																updateSetting("codebaseIndexValkeyRejectUnauthorized", e.target.checked)
+															}}>
+															<span className="font-medium">{t("settings:codeIndex.valkeyUseSslLabel")}</span>
+														</VSCodeCheckbox>
+														<StandardTooltip content={t("settings:codeIndex.valkeyUseSslDescription")}>
+															<span className="codicon codicon-info text-xs text-vscode-descriptionForeground cursor-help" />
+														</StandardTooltip>
+													</div>
+												</div>
+											)}
 										</>
 									)}
 								</div>
