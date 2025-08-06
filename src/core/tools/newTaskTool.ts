@@ -102,7 +102,6 @@ export async function newTaskTool(
 				return
 			}
 
-			// Re-get provider reference (we already have it from above)
 			if (!provider) {
 				return
 			}
