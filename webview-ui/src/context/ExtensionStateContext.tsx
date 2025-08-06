@@ -38,6 +38,8 @@ export interface ExtensionStateContextType extends ExtensionState {
 	organizationSettingsVersion: number
 	cloudIsAuthenticated: boolean
 	sharingEnabled: boolean
+	totalClineMessages?: number
+	hasMoreMessages?: boolean
 	maxConcurrentFileReads?: number
 	mdmCompliant?: boolean
 	hasOpenedModeSelector: boolean // New property to track if user has opened mode selector
@@ -266,6 +268,8 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 		global: {},
 	})
 	const [includeTaskHistoryInEnhance, setIncludeTaskHistoryInEnhance] = useState(false)
+	const [totalClineMessages, setTotalClineMessages] = useState<number>(0)
+	const [hasMoreMessages, setHasMoreMessages] = useState<boolean>(false)
 
 	const setListApiConfigMeta = useCallback(
 		(value: ProviderSettingsEntry[]) => setState((prevState) => ({ ...prevState, listApiConfigMeta: value })),
@@ -309,6 +313,13 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 					}
 					if (newState.marketplaceInstalledMetadata !== undefined) {
 						setMarketplaceInstalledMetadata(newState.marketplaceInstalledMetadata)
+					}
+					// Handle totalClineMessages if present
+					if ((newState as any).totalClineMessages !== undefined) {
+						setTotalClineMessages((newState as any).totalClineMessages)
+						// If we have more messages than what's loaded, we can load more
+						const loadedMessages = newState.clineMessages?.length || 0
+						setHasMoreMessages((newState as any).totalClineMessages > loadedMessages)
 					}
 					break
 				}
@@ -369,6 +380,31 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 					}
 					break
 				}
+				case "taskMessagesResponse": {
+					// Handle lazy loading response - append older messages to the beginning
+					if (message.messages && message.messages.length > 0) {
+						setState((prevState) => {
+							// Filter out any messages that might already exist (by timestamp)
+							const newMessages = message.messages!.filter(
+								(msg: any) => !prevState.clineMessages.some((existing) => existing.ts === msg.ts),
+							)
+
+							// Prepend new messages to the beginning (they are older messages)
+							return {
+								...prevState,
+								clineMessages: [...newMessages, ...prevState.clineMessages],
+							}
+						})
+					}
+					// Update total messages and hasMore flag
+					if (message.totalMessages !== undefined) {
+						setTotalClineMessages(message.totalMessages)
+					}
+					if (message.hasMore !== undefined) {
+						setHasMoreMessages(message.hasMore)
+					}
+					break
+				}
 			}
 		},
 		[setListApiConfigMeta],
@@ -408,6 +444,8 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 		profileThresholds: state.profileThresholds ?? {},
 		alwaysAllowFollowupQuestions,
 		followupAutoApproveTimeoutMs,
+		totalClineMessages,
+		hasMoreMessages,
 		setExperimentEnabled: (id, enabled) =>
 			setState((prevState) => ({ ...prevState, experiments: { ...prevState.experiments, [id]: enabled } })),
 		setApiConfiguration,

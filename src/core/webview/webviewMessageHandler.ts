@@ -2597,5 +2597,52 @@ export const webviewMessageHandler = async (
 			}
 			break
 		}
+		case "requestTaskMessages": {
+			// Handle lazy loading of task messages
+			const currentCline = provider.getCurrentCline()
+			if (!currentCline) {
+				// No active task, send empty response
+				await provider.postMessageToWebview({
+					type: "taskMessagesResponse",
+					messages: [],
+					totalMessages: 0,
+					hasMore: false,
+				})
+				break
+			}
+
+			const allMessages = currentCline.clineMessages || []
+			const offset = message.offset || 0
+			const limit = message.limit || 50
+
+			// Calculate the range of messages to send
+			// We want to get messages from the end, working backwards
+			const totalMessages = allMessages.length
+
+			// If offset is beyond the total messages, return empty array
+			if (offset >= totalMessages) {
+				await provider.postMessageToWebview({
+					type: "taskMessagesResponse",
+					messages: [],
+					totalMessages: totalMessages,
+					hasMore: false,
+				})
+				break
+			}
+
+			const startIndex = Math.max(0, totalMessages - offset - limit)
+			const endIndex = totalMessages - offset
+
+			const messages = allMessages.slice(startIndex, endIndex)
+			const hasMore = startIndex > 0
+
+			await provider.postMessageToWebview({
+				type: "taskMessagesResponse",
+				messages: messages,
+				totalMessages: totalMessages,
+				hasMore: hasMore,
+			})
+			break
+		}
 	}
 }

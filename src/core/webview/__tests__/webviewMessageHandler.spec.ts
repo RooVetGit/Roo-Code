@@ -576,3 +576,243 @@ describe("webviewMessageHandler - message dialog preferences", () => {
 		})
 	})
 })
+
+describe("webviewMessageHandler - requestTaskMessages", () => {
+	beforeEach(() => {
+		vi.clearAllMocks()
+		// Mock a current Cline instance with many messages
+		const mockCline = {
+			taskId: "test-task-id",
+			apiConversationHistory: [],
+			clineMessages: Array.from({ length: 150 }, (_, i) => ({
+				ts: i + 1000,
+				type: "say",
+				say: "assistant",
+				text: `Message ${i + 1}`,
+				partial: false,
+			})),
+		}
+		vi.mocked(mockClineProvider.getCurrentCline).mockReturnValue(mockCline as any)
+	})
+
+	it("should return paginated messages with correct offset and limit", async () => {
+		await webviewMessageHandler(mockClineProvider, {
+			type: "requestTaskMessages",
+			offset: 0,
+			limit: 50,
+		})
+
+		expect(mockClineProvider.getCurrentCline).toHaveBeenCalled()
+		expect(mockClineProvider.postMessageToWebview).toHaveBeenCalledWith({
+			type: "taskMessagesResponse",
+			messages: expect.arrayContaining([
+				expect.objectContaining({ text: "Message 101" }), // 150 - 50 + 1
+				expect.objectContaining({ text: "Message 102" }),
+				// ... up to Message 150
+			]),
+			totalMessages: 150,
+			hasMore: true,
+		})
+
+		// Verify we got exactly 50 messages
+		const call = vi.mocked(mockClineProvider.postMessageToWebview).mock.calls[0]
+		const response = call?.[0] as any
+		expect(response.messages).toHaveLength(50)
+		expect(response.messages[0].text).toBe("Message 101")
+		expect(response.messages[49].text).toBe("Message 150")
+	})
+
+	it("should return older messages when offset is increased", async () => {
+		await webviewMessageHandler(mockClineProvider, {
+			type: "requestTaskMessages",
+			offset: 50,
+			limit: 50,
+		})
+
+		expect(mockClineProvider.postMessageToWebview).toHaveBeenCalledWith({
+			type: "taskMessagesResponse",
+			messages: expect.arrayContaining([
+				expect.objectContaining({ text: "Message 51" }), // 150 - 50 - 50 + 1
+				expect.objectContaining({ text: "Message 52" }),
+				// ... up to Message 100
+			]),
+			totalMessages: 150,
+			hasMore: true,
+		})
+
+		// Verify we got exactly 50 messages
+		const call = vi.mocked(mockClineProvider.postMessageToWebview).mock.calls[0]
+		const response = call?.[0] as any
+		expect(response.messages).toHaveLength(50)
+		expect(response.messages[0].text).toBe("Message 51")
+		expect(response.messages[49].text).toBe("Message 100")
+	})
+
+	it("should set hasMore to false when all messages are loaded", async () => {
+		await webviewMessageHandler(mockClineProvider, {
+			type: "requestTaskMessages",
+			offset: 100,
+			limit: 50,
+		})
+
+		expect(mockClineProvider.postMessageToWebview).toHaveBeenCalledWith({
+			type: "taskMessagesResponse",
+			messages: expect.arrayContaining([
+				expect.objectContaining({ text: "Message 1" }),
+				expect.objectContaining({ text: "Message 2" }),
+				// ... up to Message 50
+			]),
+			totalMessages: 150,
+			hasMore: false, // No more messages to load
+		})
+
+		// Verify we got exactly 50 messages
+		const call = vi.mocked(mockClineProvider.postMessageToWebview).mock.calls[0]
+		const response = call?.[0] as any
+		expect(response.messages).toHaveLength(50)
+		expect(response.messages[0].text).toBe("Message 1")
+		expect(response.messages[49].text).toBe("Message 50")
+	})
+
+	it("should handle partial page at the beginning", async () => {
+		await webviewMessageHandler(mockClineProvider, {
+			type: "requestTaskMessages",
+			offset: 140,
+			limit: 50,
+		})
+
+		expect(mockClineProvider.postMessageToWebview).toHaveBeenCalledWith({
+			type: "taskMessagesResponse",
+			messages: expect.arrayContaining([
+				expect.objectContaining({ text: "Message 1" }),
+				expect.objectContaining({ text: "Message 2" }),
+				// ... up to Message 10
+			]),
+			totalMessages: 150,
+			hasMore: false,
+		})
+
+		// Verify we got only 10 messages (the remaining ones)
+		const call = vi.mocked(mockClineProvider.postMessageToWebview).mock.calls[0]
+		const response = call?.[0] as any
+		expect(response.messages).toHaveLength(10)
+		expect(response.messages[0].text).toBe("Message 1")
+		expect(response.messages[9].text).toBe("Message 10")
+	})
+
+	it("should handle task with fewer messages than limit", async () => {
+		// Mock a current Cline with only 30 messages
+		const mockCline = {
+			taskId: "test-task-id",
+			apiConversationHistory: [],
+			clineMessages: Array.from({ length: 30 }, (_, i) => ({
+				ts: i + 1000,
+				type: "say",
+				say: "assistant",
+				text: `Message ${i + 1}`,
+				partial: false,
+			})),
+		}
+		vi.mocked(mockClineProvider.getCurrentCline).mockReturnValue(mockCline as any)
+
+		await webviewMessageHandler(mockClineProvider, {
+			type: "requestTaskMessages",
+			offset: 0,
+			limit: 50,
+		})
+
+		expect(mockClineProvider.postMessageToWebview).toHaveBeenCalledWith({
+			type: "taskMessagesResponse",
+			messages: expect.arrayContaining([
+				expect.objectContaining({ text: "Message 1" }),
+				expect.objectContaining({ text: "Message 30" }),
+			]),
+			totalMessages: 30,
+			hasMore: false, // All messages loaded in first request
+		})
+
+		// Verify we got all 30 messages
+		const call = vi.mocked(mockClineProvider.postMessageToWebview).mock.calls[0]
+		const response = call?.[0] as any
+		expect(response.messages).toHaveLength(30)
+	})
+
+	it("should handle no current Cline instance", async () => {
+		vi.mocked(mockClineProvider.getCurrentCline).mockReturnValue(undefined)
+
+		await webviewMessageHandler(mockClineProvider, {
+			type: "requestTaskMessages",
+			offset: 0,
+			limit: 50,
+		})
+
+		expect(mockClineProvider.postMessageToWebview).toHaveBeenCalledWith({
+			type: "taskMessagesResponse",
+			messages: [],
+			totalMessages: 0,
+			hasMore: false,
+		})
+	})
+
+	it("should handle Cline with no messages", async () => {
+		const mockCline = {
+			taskId: "test-task-id",
+			apiConversationHistory: [],
+			clineMessages: [],
+		}
+		vi.mocked(mockClineProvider.getCurrentCline).mockReturnValue(mockCline as any)
+
+		await webviewMessageHandler(mockClineProvider, {
+			type: "requestTaskMessages",
+			offset: 0,
+			limit: 50,
+		})
+
+		expect(mockClineProvider.postMessageToWebview).toHaveBeenCalledWith({
+			type: "taskMessagesResponse",
+			messages: [],
+			totalMessages: 0,
+			hasMore: false,
+		})
+	})
+
+	it("should handle offset beyond message count", async () => {
+		await webviewMessageHandler(mockClineProvider, {
+			type: "requestTaskMessages",
+			offset: 200, // Beyond 150 messages
+			limit: 50,
+		})
+
+		const call = vi.mocked(mockClineProvider.postMessageToWebview).mock.calls[0]
+		const response = call?.[0] as any
+
+		expect(response).toEqual({
+			type: "taskMessagesResponse",
+			messages: [],
+			totalMessages: 150,
+			hasMore: false,
+		})
+	})
+
+	it("should handle undefined clineMessages", async () => {
+		const mockCline = {
+			taskId: "test-task-id",
+			apiConversationHistory: [],
+			clineMessages: undefined,
+		}
+		vi.mocked(mockClineProvider.getCurrentCline).mockReturnValue(mockCline as any)
+
+		await webviewMessageHandler(mockClineProvider, {
+			type: "requestTaskMessages",
+			offset: 0,
+			limit: 50,
+		})
+
+		expect(mockClineProvider.postMessageToWebview).toHaveBeenCalledWith({
+			type: "taskMessagesResponse",
+			messages: [],
+			totalMessages: 0,
+			hasMore: false,
+		})
+	})
+})

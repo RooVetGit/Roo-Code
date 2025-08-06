@@ -117,6 +117,8 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 		soundEnabled,
 		soundVolume,
 		cloudIsAuthenticated,
+		totalClineMessages: _totalClineMessages,
+		hasMoreMessages,
 	} = useExtensionState()
 
 	const messagesRef = useRef(messages)
@@ -188,6 +190,8 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 	const autoApproveTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 	const userRespondedRef = useRef<boolean>(false)
 	const [currentFollowUpTs, setCurrentFollowUpTs] = useState<number | null>(null)
+	const [isLoadingMoreMessages, setIsLoadingMoreMessages] = useState(false)
+	const loadingMoreRef = useRef(false)
 
 	const clineAskRef = useRef(clineAsk)
 	useEffect(() => {
@@ -871,6 +875,11 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 						}
 						setIsCondensing(false)
 					}
+					break
+				case "taskMessagesResponse":
+					// Reset loading state when messages are received
+					loadingMoreRef.current = false
+					setIsLoadingMoreMessages(false)
 					break
 			}
 			// textAreaRef.current is not explicitly required here since React
@@ -1899,6 +1908,41 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 							}}
 							atBottomThreshold={10}
 							initialTopMostItemIndex={groupedMessages.length - 1}
+							startReached={() => {
+								// Load more messages when scrolled to top
+								if (hasMoreMessages && !loadingMoreRef.current && messages.length > 0) {
+									loadingMoreRef.current = true
+									setIsLoadingMoreMessages(true)
+
+									// Request more messages from the extension
+									const offset = messages.length
+									const limit = 50
+									vscode.postMessage({
+										type: "requestTaskMessages",
+										offset: offset,
+										limit: limit,
+									})
+
+									// Reset loading state after a timeout to prevent stuck state
+									setTimeout(() => {
+										loadingMoreRef.current = false
+										setIsLoadingMoreMessages(false)
+									}, 5000)
+								}
+							}}
+							components={{
+								Header: () =>
+									isLoadingMoreMessages ? (
+										<div className="flex justify-center items-center py-2 text-vscode-descriptionForeground">
+											<span className="codicon codicon-loading codicon-modifier-spin mr-2"></span>
+											{t("chat:loadingMoreMessages")}
+										</div>
+									) : hasMoreMessages ? (
+										<div className="flex justify-center items-center py-2 text-vscode-descriptionForeground text-xs">
+											{t("chat:scrollUpForMore")}
+										</div>
+									) : null,
+							}}
 						/>
 					</div>
 					<div className={`flex-initial min-h-0 ${!areButtonsVisible ? "mb-1" : ""}`}>

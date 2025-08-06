@@ -378,5 +378,7 @@
 	"queuedMessages": {
 		"title": "Queued Messages:",
 		"clickToEdit": "Click to edit message"
-	}
+	},
+	"loadingMoreMessages": "Loading more messages...",
+	"scrollUpForMore": "Scroll up to load more messages"
 }

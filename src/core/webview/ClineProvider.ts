@@ -1664,7 +1664,17 @@ export class ClineProvider
 			currentTaskItem: this.getCurrentCline()?.taskId
 				? (taskHistory || []).find((item: HistoryItem) => item.id === this.getCurrentCline()?.taskId)
 				: undefined,
-			clineMessages: this.getCurrentCline()?.clineMessages || [],
+			// Send only initial batch of messages for lazy loading
+			clineMessages: (() => {
+				const allMessages = this.getCurrentCline()?.clineMessages || []
+				const INITIAL_MESSAGE_COUNT = 50
+				// If we have more messages than the initial count, send only the last N messages
+				if (allMessages.length > INITIAL_MESSAGE_COUNT) {
+					return allMessages.slice(-INITIAL_MESSAGE_COUNT)
+				}
+				return allMessages
+			})(),
+			totalClineMessages: this.getCurrentCline()?.clineMessages?.length || 0,
 			taskHistory: (taskHistory || [])
 				.filter((item: HistoryItem) => item.ts && item.task)
 				.sort((a: HistoryItem, b: HistoryItem) => b.ts - a.ts),

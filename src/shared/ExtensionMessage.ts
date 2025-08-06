@@ -121,6 +121,7 @@ export interface ExtensionMessage {
 		| "showEditMessageDialog"
 		| "commands"
 		| "insertTextIntoTextarea"
+		| "taskMessagesResponse"
 	text?: string
 	payload?: any // Add a generic payload for now, can refine later
 	action?:
@@ -195,6 +196,10 @@ export interface ExtensionMessage {
 	messageTs?: number
 	context?: string
 	commands?: Command[]
+	// For lazy loading messages
+	messages?: ClineMessage[]
+	totalMessages?: number
+	hasMore?: boolean
 }
 
 export type ExtensionState = Pick<
