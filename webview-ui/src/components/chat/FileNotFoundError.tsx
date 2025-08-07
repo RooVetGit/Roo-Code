@@ -11,17 +11,12 @@ export const FileNotFoundError: React.FC<FileNotFoundErrorProps> = ({ filePaths 
 	const isMultiple = paths.length > 1
 
 	return (
-		<div
-			style={{
-				marginTop: "8px",
-				marginBottom: "8px",
-			}}>
+		<div>
 			<div
 				style={{
 					display: "flex",
 					alignItems: "center",
 					gap: "10px",
-					marginBottom: "8px",
 					fontSize: "var(--vscode-font-size)",
 					color: "var(--vscode-editor-foreground)",
 				}}>
@@ -38,32 +33,29 @@ export const FileNotFoundError: React.FC<FileNotFoundErrorProps> = ({ filePaths 
 					{isMultiple ? t("chat:fileOperations.filesNotFound") : t("chat:fileOperations.fileNotFound")}
 				</span>
 			</div>
+			{paths.map((path, index) => (
+				<div
+					key={index}
+					style={{
+						fontFamily: "var(--vscode-editor-font-family)",
+						fontSize: "var(--vscode-editor-font-size)",
+						marginTop: index === 0 ? "10px" : "4px",
+						marginBottom: "4px",
+						wordBreak: "break-all",
+						color: "var(--vscode-foreground)",
+					}}>
+					<code>{path}</code>
+				</div>
+			))}
 			<div
 				style={{
-					paddingLeft: "26px", // Align with text after icon (16px icon + 10px gap)
+					color: "var(--vscode-descriptionForeground)",
+					fontSize: "var(--vscode-font-size)",
+					marginTop: "4px",
 				}}>
-				{paths.map((path, index) => (
-					<div
-						key={index}
-						style={{
-							fontFamily: "var(--vscode-editor-font-family)",
-							fontSize: "var(--vscode-editor-font-size)",
-							marginBottom: index === paths.length - 1 ? "8px" : "4px",
-							wordBreak: "break-all",
-							color: "var(--vscode-foreground)",
-						}}>
-						<code>{path}</code>
-					</div>
-				))}
-				<div
-					style={{
-						color: "var(--vscode-descriptionForeground)",
-						fontSize: "var(--vscode-font-size)",
-					}}>
-					{isMultiple
-						? t("chat:fileOperations.filesNotFoundMessage")
-						: t("chat:fileOperations.fileNotFoundMessage")}
-				</div>
+				{isMultiple
+					? t("chat:fileOperations.filesNotFoundMessage")
+					: t("chat:fileOperations.fileNotFoundMessage")}
 			</div>
 		</div>
 	)
