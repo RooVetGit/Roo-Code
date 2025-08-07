@@ -145,6 +145,10 @@ export class CodeIndexServiceFactory {
 				vectorSize,
 				config.valkeyUsername,
 				config.valkeyPassword,
+				config.valkeyUseSsl,
+				config.valkeySslCa,
+				config.valkeySslCert,
+				config.valkeySslKey,
 			)
 		}
 

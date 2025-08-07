@@ -78,6 +78,10 @@ interface LocalCodeIndexSettings {
 	codebaseIndexGeminiApiKey?: string
 	codebaseIndexMistralApiKey?: string
 	codebaseIndexValkeyUsername?: string
+	codebaseIndexValkeyUseSsl: boolean
+	codebaseIndexValkeySslCa?: string
+	codebaseIndexValkeySslCert?: string
+	codebaseIndexValkeySslKey?: string
 	searchProvider?: string
 }
 
@@ -101,6 +105,10 @@ const createValidationSchema = (provider: EmbedderProvider, searchProvider: Sear
 				: z.number().optional(),
 		codebaseIndexValkeyUsername: z.string().optional(),
 		codeIndexValkeyPassword: z.string().optional(),
+		codebaseIndexValkeyUseSsl: z.boolean(),
+		codebaseIndexValkeySslCa: z.string().optional(),
+		codebaseIndexValkeySslCert: z.string().optional(),
+		codebaseIndexValkeySslKey: z.string().optional(),
 		searchProvider: z.string().optional(),
 	})
 
@@ -197,6 +205,10 @@ export const CodeIndexPopover: React.FC<CodeIndexPopoverProps> = ({
 		codebaseIndexMistralApiKey: "",
 		codebaseIndexValkeyUsername: "",
 		codeIndexValkeyPassword: "",
+		codebaseIndexValkeyUseSsl: false,
+		codebaseIndexValkeySslCa: "",
+		codebaseIndexValkeySslCert: "",
+		codebaseIndexValkeySslKey: "",
 		searchProvider: "",
 	})
 
@@ -236,6 +248,10 @@ export const CodeIndexPopover: React.FC<CodeIndexPopoverProps> = ({
 				codebaseIndexMistralApiKey: "",
 				codebaseIndexValkeyUsername: codebaseIndexConfig.codebaseIndexValkeyUsername || "",
 				codeIndexValkeyPassword: codebaseIndexConfig.codebaseIndexValkeyPassword || "",
+				codebaseIndexValkeyUseSsl: codebaseIndexConfig.codebaseIndexValkeyUseSsl || false,
+				codebaseIndexValkeySslCa: codebaseIndexConfig.codebaseIndexValkeySslCa || "",
+				codebaseIndexValkeySslCert: codebaseIndexConfig.codebaseIndexValkeySslCert || "",
+				codebaseIndexValkeySslKey: codebaseIndexConfig.codebaseIndexValkeySslKey || "",
 				searchProvider: codebaseIndexConfig.searchProvider,
 			}
 			setInitialSettings(settings)
@@ -288,7 +304,11 @@ export const CodeIndexPopover: React.FC<CodeIndexPopoverProps> = ({
 					setSaveStatus("saved")
 					// Update initial settings to match current settings after successful save
 					// This ensures hasUnsavedChanges becomes false
-					const savedSettings = { ...currentSettingsRef.current }
+					const savedSettings = {
+						...currentSettingsRef.current,
+						searchProvider: currentSettingsRef.current.searchProvider || "valkey",
+						codebaseIndexValkeyUseSsl: currentSettingsRef.current.codebaseIndexValkeyUseSsl ?? false,
+					}
 					setInitialSettings(savedSettings)
 					// Also update current settings to maintain consistency
 					setCurrentSettings(savedSettings)
@@ -347,6 +367,15 @@ export const CodeIndexPopover: React.FC<CodeIndexPopoverProps> = ({
 					}
 					if (!prev.codeIndexValkeyPassword || prev.codeIndexValkeyPassword === SECRET_PLACEHOLDER) {
 						updated.codeIndexValkeyPassword = secretStatus.hasValkeyPassword ? SECRET_PLACEHOLDER : ""
+					}
+					if (!prev.codebaseIndexValkeySslCa || prev.codebaseIndexValkeySslCa === SECRET_PLACEHOLDER) {
+						updated.codebaseIndexValkeySslCa = secretStatus.hasValkeySslCa ? SECRET_PLACEHOLDER : ""
+					}
+					if (!prev.codebaseIndexValkeySslCert || prev.codebaseIndexValkeySslCert === SECRET_PLACEHOLDER) {
+						updated.codebaseIndexValkeySslCert = secretStatus.hasValkeySslCert ? SECRET_PLACEHOLDER : ""
+					}
+					if (!prev.codebaseIndexValkeySslKey || prev.codebaseIndexValkeySslKey === SECRET_PLACEHOLDER) {
+						updated.codebaseIndexValkeySslKey = secretStatus.hasValkeySslKey ? SECRET_PLACEHOLDER : ""
 					}
 
 					return updated
@@ -508,28 +537,28 @@ export const CodeIndexPopover: React.FC<CodeIndexPopoverProps> = ({
 		// Iterate through all current settings
 		for (const [key, value] of Object.entries(currentSettings)) {
 			// Skip placeholder values for required secret fields
+			// Always include non-secret fields
 			if (
-				value === SECRET_PLACEHOLDER &&
-				key !== "codebaseIndexValkeyUsername" &&
-				key !== "codeIndexValkeyPassword"
+				value !== SECRET_PLACEHOLDER ||
+				key === "codebaseIndexValkeyUsername" ||
+				key === "codeIndexValkeyPassword" ||
+				key === "codebaseIndexValkeyUseSsl"
 			) {
-				continue
-			}
-
-			// For optional Valkey credentials, send empty string to clear them
-			if (
-				(key === "codebaseIndexValkeyUsername" || key === "codeIndexValkeyPassword") &&
-				value === SECRET_PLACEHOLDER
-			) {
-				settingsToSave[key] = ""
-			} else {
-				// Include all other fields
-				settingsToSave[key] = value
+				// For optional Valkey credentials, send empty string to clear them
+				if (
+					(key === "codebaseIndexValkeyUsername" || key === "codeIndexValkeyPassword") &&
+					value === SECRET_PLACEHOLDER
+				) {
+					settingsToSave[key] = ""
+				} else {
+					// Include all other fields
+					settingsToSave[key] = value
+				}
 			}
 		}
 
 		// Always include codebaseIndexEnabled to ensure it's persisted
-		settingsToSave.codebaseIndexEnabled = currentSettings.codebaseIndexEnabled
+		settingsToSave.codebaseIndexValkeyUseSsl = currentSettings.codebaseIndexValkeyUseSsl
 
 		// Save settings to backend
 		vscode.postMessage({
@@ -1254,6 +1283,81 @@ export const CodeIndexPopover: React.FC<CodeIndexPopoverProps> = ({
 													<p className="text-xs text-vscode-errorForeground mt-1 mb-0">
 														{formErrors.codeIndexValkeyPassword}
 													</p>
+												)}
+											</div>
+
+											{/* SSL Configuration */}
+											<div className="space-y-2">
+												<VSCodeCheckbox
+													checked={currentSettings.codebaseIndexValkeyUseSsl}
+													onChange={(e: any) => {
+														updateSetting("codebaseIndexValkeyUseSsl", e.target.checked)
+													}}>
+													<span className="font-medium">
+														{t("settings:codeIndex.valkeyUseSslLabel")}
+													</span>
+												</VSCodeCheckbox>
+
+												{currentSettings.codebaseIndexValkeyUseSsl && (
+													<>
+														<div className="space-y-2">
+															<label className="text-sm font-medium">
+																{t("settings:codeIndex.valkeySslCaLabel")}
+															</label>
+															<VSCodeTextField
+																type="text"
+																value={currentSettings.codebaseIndexValkeySslCa || ""}
+																onInput={(e: any) =>
+																	updateSetting(
+																		"codebaseIndexValkeySslCa",
+																		e.target.value,
+																	)
+																}
+																placeholder={t(
+																	"settings:codeIndex.valkeySslCaPlaceholder",
+																)}
+																className="w-full"
+															/>
+														</div>
+														<div className="space-y-2">
+															<label className="text-sm font-medium">
+																{t("settings:codeIndex.valkeySslCertLabel")}
+															</label>
+															<VSCodeTextField
+																type="text"
+																value={currentSettings.codebaseIndexValkeySslCert || ""}
+																onInput={(e: any) =>
+																	updateSetting(
+																		"codebaseIndexValkeySslCert",
+																		e.target.value,
+																	)
+																}
+																placeholder={t(
+																	"settings:codeIndex.valkeySslCertPlaceholder",
+																)}
+																className="w-full"
+															/>
+														</div>
+														<div className="space-y-2">
+															<label className="text-sm font-medium">
+																{t("settings:codeIndex.valkeySslKeyLabel")}
+															</label>
+															<VSCodeTextField
+																type="text"
+																value={currentSettings.codebaseIndexValkeySslKey || ""}
+																onInput={(e: any) =>
+																	updateSetting(
+																		"codebaseIndexValkeySslKey",
+																		e.target.value,
+																	)
+																}
+																placeholder={t(
+																	"settings:codeIndex.valkeySslKeyPlaceholder",
+																)}
+																className="w-full"
+															/>
+														</div>
+													</>
 												)}
 											</div>
 										</>

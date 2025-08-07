@@ -113,6 +113,8 @@ describe("CodeIndexConfigManager", () => {
 				ollamaOptions: { ollamaBaseUrl: "" },
 				qdrantUrl: "http://localhost:6333",
 				valkeyHostname: "localhost",
+				valkeyPassword: "",
+				valkeyUsername: "",
 				valkeyPort: 6379,
 				qdrantApiKey: "",
 				searchMinScore: 0.4,

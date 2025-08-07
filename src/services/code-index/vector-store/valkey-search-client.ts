@@ -4,6 +4,7 @@ import * as path from "path"
 import { IVectorStore, VectorStoreSearchResult } from "../interfaces"
 import { DEFAULT_MAX_SEARCH_RESULTS } from "../constants"
 import { t } from "../../../i18n"
+import * as fs from "fs"
 
 export class ValkeySearchVectorStore implements IVectorStore {
 	private readonly vectorSize: number
@@ -15,6 +16,10 @@ export class ValkeySearchVectorStore implements IVectorStore {
 	private readonly valkeyPort: number
 	private readonly valkeyUsername?: string
 	private readonly valkeyPassword?: string
+	private readonly useSsl: boolean = false
+	private readonly tlsCa?: string = undefined
+	private readonly tlsCert?: string = undefined
+	private readonly tlsKey?: string = undefined
 
 	constructor(
 		workspacePath: string,
@@ -23,12 +28,20 @@ export class ValkeySearchVectorStore implements IVectorStore {
 		vectorSize: number,
 		username?: string,
 		password?: string,
+		useSsl: boolean = false,
+		tlsCa?: string,
+		tlsCert?: string,
+		tlsKey?: string,
 	) {
 		this.valkeyHostname = hostname
 		this.valkeyPort = port
 		this.valkeyUsername = username
 		this.valkeyPassword = password
 		this.vectorSize = vectorSize
+		this.useSsl = useSsl
+		this.tlsCa = tlsCa
+		this.tlsCert = tlsCert
+		this.tlsKey = tlsKey
 
 		const hash = createHash("sha256").update(workspacePath).digest("hex")
 		this.indexName = `ws-${hash.substring(0, 16)}`
@@ -36,7 +49,8 @@ export class ValkeySearchVectorStore implements IVectorStore {
 	}
 
 	private async initializeClient(): Promise<void> {
-		if (this.isInitializing || (this.client && this.client.status === "ready")) {
+		if (this.isInitializing) {
+			console.log("[ValkeySearch] Connection already initializing")
 			return
 		}
 
@@ -44,10 +58,18 @@ export class ValkeySearchVectorStore implements IVectorStore {
 
 		try {
 			this.client = new Valkey({
-				host: this.valkeyHostname,
-				port: this.valkeyPort,
 				password: this.valkeyPassword,
 				username: this.valkeyUsername,
+				host: this.valkeyHostname,
+				port: this.valkeyPort,
+				tls: this.useSsl
+					? {
+							ca: fs.readFileSync(this.tlsCa!),
+							cert: fs.readFileSync(this.tlsCert!),
+							key: fs.readFileSync(this.tlsKey!),
+							rejectUnauthorized: false,
+						}
+					: undefined,
 			})
 			this.client.on("error", (err: Error) => {
 				console.error("[ValkeySearch] Connection error:", err)
@@ -80,8 +102,8 @@ export class ValkeySearchVectorStore implements IVectorStore {
 				}
 				throw new Error(
 					t("embeddings:vectorStore.valkeyConnectionFailed", {
-						valkeyHostname: this.valkeyHostname,
-						valkeyPort: this.valkeyPort,
+						valkeyUrl: this.valkeyHostname + ":" + this.valkeyPort,
+						errorMessage: error,
 					}),
 					{ cause: error },
 				)

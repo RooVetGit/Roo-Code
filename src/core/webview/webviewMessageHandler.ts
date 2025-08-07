@@ -2019,6 +2019,10 @@ export const webviewMessageHandler = async (
 					codebaseIndexValkeyPort: settings.codebaseIndexValkeyPort,
 					codebaseIndexValkeyUsername: settings.codebaseIndexValkeyUsername,
 					codebaseIndexValkeyPassword: settings.codeIndexValkeyPassword,
+					codebaseIndexValkeyUseSsl: settings.codebaseIndexValkeyUseSsl,
+					codebaseIndexValkeySslCa: settings.codebaseIndexValkeySslCa,
+					codebaseIndexValkeySslCert: settings.codebaseIndexValkeySslCert,
+					codebaseIndexValkeySslKey: settings.codebaseIndexValkeySslKey,
 					codebaseIndexEmbedderProvider: settings.codebaseIndexEmbedderProvider,
 					codebaseIndexEmbedderBaseUrl: settings.codebaseIndexEmbedderBaseUrl,
 					codebaseIndexEmbedderModelId: settings.codebaseIndexEmbedderModelId,
@@ -2041,6 +2045,24 @@ export const webviewMessageHandler = async (
 				}
 				if (settings.codeIndexValkeyPassword !== undefined) {
 					await provider.contextProxy.storeSecret("codeIndexValkeyPassword", settings.codeIndexValkeyPassword)
+				}
+				if (settings.codebaseIndexValkeySslCa !== undefined) {
+					await provider.contextProxy.storeSecret(
+						"codebaseIndexValkeySslCa",
+						settings.codebaseIndexValkeySslCa,
+					)
+				}
+				if (settings.codebaseIndexValkeySslCert !== undefined) {
+					await provider.contextProxy.storeSecret(
+						"codebaseIndexValkeySslCert",
+						settings.codebaseIndexValkeySslCert,
+					)
+				}
+				if (settings.codebaseIndexValkeySslKey !== undefined) {
+					await provider.contextProxy.storeSecret(
+						"codebaseIndexValkeySslKey",
+						settings.codebaseIndexValkeySslKey,
+					)
 				}
 				if (settings.codebaseIndexOpenAiCompatibleApiKey !== undefined) {
 					await provider.contextProxy.storeSecret(
@@ -2190,12 +2212,16 @@ export const webviewMessageHandler = async (
 			const hasOpenAiKey = !!(await provider.context.secrets.get("codeIndexOpenAiKey"))
 			const hasQdrantApiKey = !!(await provider.context.secrets.get("codeIndexQdrantApiKey"))
 			const hasValkeyPassword = !!(await provider.context.secrets.get("codeIndexValkeyPassword"))
+			const hasValkeySslCa = !!(await provider.context.secrets.get("codebaseIndexValkeySslCa"))
+			const hasValkeySslCert = !!(await provider.context.secrets.get("codebaseIndexValkeySslCert"))
+			const hasValkeySslKey = !!(await provider.context.secrets.get("codebaseIndexValkeySslKey"))
 			const hasOpenAiCompatibleApiKey = !!(await provider.context.secrets.get(
 				"codebaseIndexOpenAiCompatibleApiKey",
 			))
 			const hasGeminiApiKey = !!(await provider.context.secrets.get("codebaseIndexGeminiApiKey"))
 			const hasMistralApiKey = !!(await provider.context.secrets.get("codebaseIndexMistralApiKey"))
 
+			//here denis
 			provider.postMessageToWebview({
 				type: "codeIndexSecretStatus",
 				values: {
@@ -2205,6 +2231,9 @@ export const webviewMessageHandler = async (
 					hasGeminiApiKey,
 					hasMistralApiKey,
 					hasValkeyPassword,
+					hasValkeySslCa,
+					hasValkeySslCert,
+					hasValkeySslKey,
 				},
 			})
 			break

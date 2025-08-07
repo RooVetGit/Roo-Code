@@ -26,6 +26,10 @@ export class CodeIndexConfigManager {
 	private valkeyPort?: number = 6379
 	private valkeyUsername?: string
 	private valkeyPassword?: string
+	private valkeyUseSsl: boolean = false
+	private valkeySslCa?: string
+	private valkeySslCert?: string
+	private valkeySslKey?: string
 	private searchMinScore?: number
 	private searchMaxResults?: number
 
@@ -53,11 +57,18 @@ export class CodeIndexConfigManager {
 			codebaseIndexValkeyHostname: "localhost",
 			codebaseIndexValkeyPort: 6379,
 			codebaseIndexValkeyUsername: "",
+			codebaseIndexValkeyUseSsl: false,
+			codebaseIndexValkeySslCa: "",
+			codebaseIndexValkeySslCert: "",
+			codebaseIndexValkeySslKey: "",
 			codebaseIndexEmbedderProvider: "openai",
 			codebaseIndexEmbedderBaseUrl: "",
 			codebaseIndexEmbedderModelId: "",
+			codebaseIndexEmbedderModelDimension: undefined,
 			codebaseIndexSearchMinScore: undefined,
 			codebaseIndexSearchMaxResults: undefined,
+			codebaseIndexOpenAiCompatibleBaseUrl: "",
+			searchProvider: undefined,
 		}
 
 		const {
@@ -66,6 +77,7 @@ export class CodeIndexConfigManager {
 			codebaseIndexValkeyHostname,
 			codebaseIndexValkeyPort,
 			codebaseIndexValkeyUsername,
+			codebaseIndexValkeyUseSsl,
 			codebaseIndexEmbedderProvider,
 			codebaseIndexEmbedderBaseUrl,
 			codebaseIndexEmbedderModelId,
@@ -77,6 +89,9 @@ export class CodeIndexConfigManager {
 		const openAiKey = this.contextProxy?.getSecret("codeIndexOpenAiKey") ?? ""
 		const qdrantApiKey = this.contextProxy?.getSecret("codeIndexQdrantApiKey") ?? ""
 		const valkeyPassword = this.contextProxy?.getSecret("codeIndexValkeyPassword") ?? ""
+		const valkeySslCa = this.contextProxy?.getSecret("codebaseIndexValkeySslCa") ?? ""
+		const valkeySslCert = this.contextProxy?.getSecret("codebaseIndexValkeySslCert") ?? ""
+		const valkeySslKey = this.contextProxy?.getSecret("codebaseIndexValkeySslKey") ?? ""
 		// Fix: Read OpenAI Compatible settings from the correct location within codebaseIndexConfig
 		const openAiCompatibleBaseUrl = codebaseIndexConfig.codebaseIndexOpenAiCompatibleBaseUrl ?? ""
 		const openAiCompatibleApiKey = this.contextProxy?.getSecret("codebaseIndexOpenAiCompatibleApiKey") ?? ""
@@ -91,6 +106,10 @@ export class CodeIndexConfigManager {
 		this.valkeyPort = codebaseIndexValkeyPort ?? 6379
 		this.valkeyPassword = valkeyPassword
 		this.valkeyUsername = codebaseIndexValkeyUsername
+		this.valkeyUseSsl = codebaseIndexValkeyUseSsl || false
+		this.valkeySslCa = valkeySslCa
+		this.valkeySslCert = valkeySslCert
+		this.valkeySslKey = valkeySslKey
 		this.searchMinScore = codebaseIndexSearchMinScore
 		this.searchMaxResults = codebaseIndexSearchMaxResults
 		this.searchProvider = searchProvider
@@ -165,6 +184,10 @@ export class CodeIndexConfigManager {
 			valkeyPort?: number
 			valkeyPassword?: string
 			valkeyUsername?: string
+			valkeyUseSsl?: boolean
+			valkeySslCa?: string
+			valkeySslCert?: string
+			valkeySslKey?: string
 			searchProvider?: string
 			searchMinScore?: number
 		}
@@ -186,6 +209,10 @@ export class CodeIndexConfigManager {
 			qdrantUrl: this.qdrantUrl ?? "",
 			valkeyHostname: this.valkeyHostname ?? "",
 			valkeyPort: this.valkeyPort ?? 6379,
+			valkeyUseSsl: this.valkeyUseSsl ?? false,
+			valkeySslCa: this.valkeySslCa ?? "",
+			valkeySslCert: this.valkeySslCert ?? "",
+			valkeySslKey: this.valkeySslKey ?? "",
 			valkeyUsername: this.valkeyUsername ?? "",
 			searchProvider: this.searchProvider ?? "",
 			qdrantApiKey: this.qdrantApiKey ?? "",
@@ -291,6 +318,10 @@ export class CodeIndexConfigManager {
 		const prevQdrantApiKey = prev?.qdrantApiKey ?? ""
 		const prevValkeyPassword = prev?.valkeyPassword ?? ""
 		const prevValkeyUsername = prev?.valkeyUsername ?? ""
+		const prevValkeyUseSsl = prev?.valkeyUseSsl ?? false
+		const prevValkeySslCa = prev?.valkeySslCa ?? ""
+		const prevValkeySslCert = prev?.valkeySslCert ?? ""
+		const prevValkeySslKey = prev?.valkeySslKey ?? ""
 
 		// 1. Transition from disabled/unconfigured to enabled/configured
 		if ((!prevEnabled || !prevConfigured) && this.codebaseIndexEnabled && nowConfigured) {
@@ -299,6 +330,10 @@ export class CodeIndexConfigManager {
 
 		// 2. Transition from enabled to disabled
 		if (prevEnabled && !this.codebaseIndexEnabled) {
+			return true
+		}
+
+		if (prevValkeyUseSsl && !this.valkeyUseSsl) {
 			return true
 		}
 
@@ -333,6 +368,10 @@ export class CodeIndexConfigManager {
 		const currentQdrantApiKey = this.qdrantApiKey ?? ""
 		const currentValkeyPassword = this.valkeyPassword ?? ""
 		const currentValkeyUsername = this.valkeyUsername ?? ""
+		const currentValkeyUseSsl = this.valkeyUseSsl ?? false
+		const currentValkeySslCa = this.valkeySslCa ?? ""
+		const currentValkeySslCert = this.valkeySslCert ?? ""
+		const currentValkeySslKey = this.valkeySslKey ?? ""
 
 		if (prevOpenAiKey !== currentOpenAiKey) {
 			return true
@@ -379,6 +418,18 @@ export class CodeIndexConfigManager {
 		}
 
 		if (prevValkeyUsername !== currentValkeyUsername) {
+			return true
+		}
+
+		if (prevValkeyUseSsl !== currentValkeyUseSsl) {
+			return true
+		}
+
+		if (
+			prevValkeySslCa !== currentValkeySslCa ||
+			prevValkeySslCert !== currentValkeySslCert ||
+			prevValkeySslKey !== currentValkeySslKey
+		) {
 			return true
 		}
 
@@ -441,6 +492,10 @@ export class CodeIndexConfigManager {
 			valkeyPort: this.valkeyPort,
 			valkeyUsername: this.valkeyUsername,
 			valkeyPassword: this.valkeyPassword,
+			valkeyUseSsl: this.valkeyUseSsl,
+			valkeySslCa: this.valkeySslCa,
+			valkeySslCert: this.valkeySslCert,
+			valkeySslKey: this.valkeySslKey,
 			searchMinScore: this.currentSearchMinScore,
 			searchMaxResults: this.currentSearchMaxResults,
 		}

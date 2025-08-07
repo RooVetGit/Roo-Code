@@ -38,6 +38,10 @@ export const codebaseIndexConfigSchema = z.object({
 	codebaseIndexValkeyPort: z.number().optional(),
 	codebaseIndexValkeyUsername: z.string().optional(),
 	codebaseIndexValkeyPassword: z.string().optional(),
+	codebaseIndexValkeyUseSsl: z.boolean().optional(),
+	codebaseIndexValkeySslCa: z.string().optional(),
+	codebaseIndexValkeySslCert: z.string().optional(),
+	codebaseIndexValkeySslKey: z.string().optional(),
 	searchProvider: z.string().optional(),
 })
 
@@ -66,6 +70,10 @@ export const codebaseIndexProviderSchema = z.object({
 	codeIndexQdrantApiKey: z.string().optional(),
 	codebaseIndexValkeyUsername: z.string().optional(),
 	codeIndexValkeyPassword: z.string().optional(),
+	codebaseIndexValkeyUseSsl: z.boolean().optional(),
+	codebaseIndexValkeySslCa: z.string().optional(),
+	codebaseIndexValkeySslCert: z.string().optional(),
+	codebaseIndexValkeySslKey: z.string().optional(),
 	codebaseIndexOpenAiCompatibleBaseUrl: z.string().optional(),
 	codebaseIndexOpenAiCompatibleApiKey: z.string().optional(),
 	codebaseIndexOpenAiCompatibleModelDimension: z.number().optional(),
