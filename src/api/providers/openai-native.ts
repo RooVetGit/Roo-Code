@@ -68,6 +68,8 @@ export class OpenAiNativeHandler extends BaseProvider implements SingleCompletio
 		// o1 supports developer prompt with formatting
 		// o1-preview and o1-mini only support user messages
 		const isOriginalO1 = model.id === "o1"
+		const { reasoning } = this.getModel()
+
 		const response = await this.client.chat.completions.create({
 			model: model.id,
 			messages: [
@@ -79,6 +81,7 @@ export class OpenAiNativeHandler extends BaseProvider implements SingleCompletio
 			],
 			stream: true,
 			stream_options: { include_usage: true },
+			...(reasoning && reasoning),
 		})
 
 		yield* this.handleStreamResponse(response, model)
@@ -114,12 +117,15 @@ export class OpenAiNativeHandler extends BaseProvider implements SingleCompletio
 		systemPrompt: string,
 		messages: Anthropic.Messages.MessageParam[],
 	): ApiStream {
+		const { reasoning } = this.getModel()
+
 		const stream = await this.client.chat.completions.create({
 			model: model.id,
 			temperature: this.options.modelTemperature ?? OPENAI_NATIVE_DEFAULT_TEMPERATURE,
 			messages: [{ role: "system", content: systemPrompt }, ...convertToOpenAiMessages(messages)],
 			stream: true,
 			stream_options: { include_usage: true },
+			...(reasoning && reasoning),
 		})
 
 		yield* this.handleStreamResponse(stream, model)
@@ -130,12 +136,15 @@ export class OpenAiNativeHandler extends BaseProvider implements SingleCompletio
 		systemPrompt: string,
 		messages: Anthropic.Messages.MessageParam[],
 	): ApiStream {
+		const { reasoning } = this.getModel()
+
 		const stream = await this.client.chat.completions.create({
 			model: model.id,
 			temperature: this.options.modelTemperature ?? OPENAI_NATIVE_DEFAULT_TEMPERATURE,
 			messages: [{ role: "developer", content: systemPrompt }, ...convertToOpenAiMessages(messages)],
 			stream: true,
 			stream_options: { include_usage: true },
+			...(reasoning && reasoning),
 		})
 
 		yield* this.handleStreamResponse(stream, model)
