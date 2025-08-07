@@ -8,6 +8,7 @@ import {
 	openAiNativeModels,
 	OPENAI_NATIVE_DEFAULT_TEMPERATURE,
 	type ReasoningEffort,
+	type VerbosityLevel,
 } from "@roo-code/types"
 
 import type { ApiHandlerOptions } from "../../shared/api"
@@ -24,7 +25,6 @@ import type { SingleCompletionHandler, ApiHandlerCreateMessageMetadata } from ".
 export type OpenAiNativeModel = ReturnType<OpenAiNativeHandler["getModel"]>
 
 // GPT-5 specific types for Responses API
-type Verbosity = "low" | "medium" | "high"
 type ReasoningEffortWithMinimal = ReasoningEffort | "minimal"
 
 interface GPT5ResponsesAPIParams {
@@ -34,7 +34,7 @@ interface GPT5ResponsesAPIParams {
 		effort: ReasoningEffortWithMinimal
 	}
 	text?: {
-		verbosity: Verbosity
+		verbosity: VerbosityLevel
 	}
 }
 
@@ -53,7 +53,6 @@ interface GPT5ResponseChunk {
 export class OpenAiNativeHandler extends BaseProvider implements SingleCompletionHandler {
 	protected options: ApiHandlerOptions
 	private client: OpenAI
-	private gpt5Verbosity: Verbosity = "medium" // Default verbosity for GPT-5
 
 	constructor(options: ApiHandlerOptions) {
 		super()
@@ -146,18 +145,35 @@ export class OpenAiNativeHandler extends BaseProvider implements SingleCompletio
 		systemPrompt: string,
 		messages: Anthropic.Messages.MessageParam[],
 	): ApiStream {
-		const { reasoning } = this.getModel()
+		const { reasoning, verbosity } = this.getModel()
 
-		const stream = await this.client.chat.completions.create({
+		// Prepare the request parameters
+		const params: any = {
 			model: model.id,
 			temperature: this.options.modelTemperature ?? OPENAI_NATIVE_DEFAULT_TEMPERATURE,
 			messages: [{ role: "system", content: systemPrompt }, ...convertToOpenAiMessages(messages)],
 			stream: true,
 			stream_options: { include_usage: true },
 			...(reasoning && reasoning),
-		})
+		}
 
-		yield* this.handleStreamResponse(stream, model)
+		// Add verbosity if supported (for future GPT-5 models)
+		if (verbosity && model.id.startsWith("gpt-5")) {
+			params.verbosity = verbosity
+		}
+
+		const stream = await this.client.chat.completions.create(params)
+
+		if (typeof (stream as any)[Symbol.asyncIterator] !== "function") {
+			throw new Error(
+				"OpenAI SDK did not return an AsyncIterable for streaming response. Please check SDK version and usage.",
+			)
+		}
+
+		yield* this.handleStreamResponse(
+			stream as unknown as AsyncIterable<OpenAI.Chat.Completions.ChatCompletionChunk>,
+			model,
+		)
 	}
 
 	private async *handleGpt5Message(
@@ -172,6 +188,9 @@ export class OpenAiNativeHandler extends BaseProvider implements SingleCompletio
 		// Get reasoning effort, supporting the new "minimal" option for GPT-5
 		const reasoningEffort = this.getGpt5ReasoningEffort(model)
 
+		// Get verbosity from model settings, default to "medium" if not specified
+		const verbosity = model.verbosity || "medium"
+
 		// Prepare the request parameters for Responses API
 		const params: GPT5ResponsesAPIParams = {
 			model: model.id,
@@ -182,7 +201,7 @@ export class OpenAiNativeHandler extends BaseProvider implements SingleCompletio
 				},
 			}),
 			text: {
-				verbosity: this.gpt5Verbosity,
+				verbosity: verbosity,
 			},
 		}
 
@@ -332,16 +351,6 @@ export class OpenAiNativeHandler extends BaseProvider implements SingleCompletio
 		}
 	}
 
-	// Method to set verbosity for GPT-5 models
-	setGpt5Verbosity(verbosity: Verbosity) {
-		this.gpt5Verbosity = verbosity
-	}
-
-	// Method to get current verbosity setting
-	getGpt5Verbosity(): Verbosity {
-		return this.gpt5Verbosity
-	}
-
 	private isGpt5Model(modelId: string): boolean {
 		return modelId.startsWith("gpt-5")
 	}
@@ -411,14 +420,16 @@ export class OpenAiNativeHandler extends BaseProvider implements SingleCompletio
 
 		// The o3 models are named like "o3-mini-[reasoning-effort]", which are
 		// not valid model ids, so we need to strip the suffix.
-		return { id: id.startsWith("o3-mini") ? "o3-mini" : id, info, ...params }
+		return { id: id.startsWith("o3-mini") ? "o3-mini" : id, info, ...params, verbosity: params.verbosity }
 	}
 
 	async completePrompt(prompt: string): Promise<string> {
 		try {
-			const { id, temperature, reasoning } = this.getModel()
+			const { id, temperature, reasoning, verbosity } = this.getModel()
 
-			const params: OpenAI.Chat.Completions.ChatCompletionCreateParamsNonStreaming & { verbosity?: Verbosity } = {
+			const params: OpenAI.Chat.Completions.ChatCompletionCreateParamsNonStreaming & {
+				verbosity?: VerbosityLevel
+			} = {
 				model: id,
 				messages: [{ role: "user", content: prompt }],
 				temperature,
@@ -426,8 +437,8 @@ export class OpenAiNativeHandler extends BaseProvider implements SingleCompletio
 			}
 
 			// Add verbosity for GPT-5 models
-			if (this.isGpt5Model(id)) {
-				params.verbosity = this.gpt5Verbosity
+			if (this.isGpt5Model(id) && verbosity) {
+				params.verbosity = verbosity
 			}
 
 			const response = await this.client.chat.completions.create(params as any)

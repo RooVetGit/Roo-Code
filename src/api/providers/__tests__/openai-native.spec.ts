@@ -538,15 +538,8 @@ describe("OpenAiNativeHandler", () => {
 			handler = new OpenAiNativeHandler({
 				...mockOptions,
 				apiModelId: "gpt-5-2025-08-07",
+				verbosity: "low", // Set verbosity through options
 			})
-
-			// Test that the handler has verbosity control methods
-			expect(handler.setGpt5Verbosity).toBeDefined()
-			expect(handler.getGpt5Verbosity).toBeDefined()
-
-			// Set verbosity to low
-			handler.setGpt5Verbosity("low")
-			expect(handler.getGpt5Verbosity()).toBe("low")
 
 			// Create a message to verify verbosity is passed
 			const stream = handler.createMessage(systemPrompt, messages)
@@ -597,10 +590,9 @@ describe("OpenAiNativeHandler", () => {
 			handler = new OpenAiNativeHandler({
 				...mockOptions,
 				apiModelId: "gpt-5-2025-08-07",
+				verbosity: "high", // Set verbosity through options
+				reasoningEffort: "low", // Set reasoning effort
 			})
-
-			// Set both verbosity and reasoning effort
-			handler.setGpt5Verbosity("high")
 
 			const stream = handler.createMessage(systemPrompt, messages)
 			const chunks: any[] = []
@@ -615,7 +607,7 @@ describe("OpenAiNativeHandler", () => {
 					messages: expect.any(Array),
 					stream: true,
 					stream_options: { include_usage: true },
-					reasoning_effort: "minimal", // Default for GPT-5
+					reasoning_effort: "low",
 					verbosity: "high",
 				}),
 			)
