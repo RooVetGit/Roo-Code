@@ -56,7 +56,10 @@ describe("ExecaTerminalProcess", () => {
 	})
 
 	describe("UTF-8 encoding fix", () => {
-		it("should set LANG and LC_ALL to en_US.UTF-8", async () => {
+		it("should set LANG and LC_ALL to en_US.UTF-8 when no locale is set", async () => {
+			delete process.env.LANG
+			delete process.env.LC_ALL
+			terminalProcess = new ExecaTerminalProcess(mockTerminal)
 			await terminalProcess.run("echo test")
 			const execaMock = vitest.mocked(execa)
 			expect(execaMock).toHaveBeenCalledWith(
@@ -81,9 +84,49 @@ describe("ExecaTerminalProcess", () => {
 			expect(calledOptions.env.EXISTING_VAR).toBe("existing")
 		})
 
-		it("should override existing LANG and LC_ALL values", async () => {
-			process.env.LANG = "C"
-			process.env.LC_ALL = "POSIX"
+		it("should convert Chinese GBK locale to UTF-8", async () => {
+			process.env.LANG = "zh_CN.GBK"
+			terminalProcess = new ExecaTerminalProcess(mockTerminal)
+			await terminalProcess.run("echo test")
+			const execaMock = vitest.mocked(execa)
+			const calledOptions = execaMock.mock.calls[0][0] as any
+			expect(calledOptions.env.LANG).toBe("zh_CN.UTF-8")
+			expect(calledOptions.env.LC_ALL).toBe("zh_CN.UTF-8")
+		})
+
+		it("should convert Japanese locale to UTF-8", async () => {
+			process.env.LANG = "ja_JP.SJIS"
+			terminalProcess = new ExecaTerminalProcess(mockTerminal)
+			await terminalProcess.run("echo test")
+			const execaMock = vitest.mocked(execa)
+			const calledOptions = execaMock.mock.calls[0][0] as any
+			expect(calledOptions.env.LANG).toBe("ja_JP.UTF-8")
+			expect(calledOptions.env.LC_ALL).toBe("ja_JP.UTF-8")
+		})
+
+		it("should handle locale from LC_ALL when LANG is not set", async () => {
+			delete process.env.LANG
+			process.env.LC_ALL = "ko_KR.EUC-KR"
+			terminalProcess = new ExecaTerminalProcess(mockTerminal)
+			await terminalProcess.run("echo test")
+			const execaMock = vitest.mocked(execa)
+			const calledOptions = execaMock.mock.calls[0][0] as any
+			expect(calledOptions.env.LANG).toBe("ko_KR.UTF-8")
+			expect(calledOptions.env.LC_ALL).toBe("ko_KR.UTF-8")
+		})
+
+		it("should handle already UTF-8 locale", async () => {
+			process.env.LANG = "zh_CN.UTF-8"
+			terminalProcess = new ExecaTerminalProcess(mockTerminal)
+			await terminalProcess.run("echo test")
+			const execaMock = vitest.mocked(execa)
+			const calledOptions = execaMock.mock.calls[0][0] as any
+			expect(calledOptions.env.LANG).toBe("zh_CN.UTF-8")
+			expect(calledOptions.env.LC_ALL).toBe("zh_CN.UTF-8")
+		})
+
+		it("should fallback to en_US.UTF-8 for invalid locale format", async () => {
+			process.env.LANG = "invalid_locale"
 			terminalProcess = new ExecaTerminalProcess(mockTerminal)
 			await terminalProcess.run("echo test")
 			const execaMock = vitest.mocked(execa)

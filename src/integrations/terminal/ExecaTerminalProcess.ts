@@ -32,11 +32,40 @@ export class ExecaTerminalProcess extends BaseTerminalProcess {
 		return terminal
 	}
 
+	/**
+	 * Gets the appropriate UTF-8 locale based on the system's current locale.
+	 * This ensures proper encoding for different languages, especially for
+	 * non-Latin character sets like Chinese, Japanese, Korean, etc.
+	 */
+	private getUtf8Locale(): { LANG: string; LC_ALL: string } {
+		const currentLang = process.env.LANG || process.env.LC_ALL || ""
+
+		// Extract the language/country part before the encoding (e.g., "zh_CN" from "zh_CN.GBK")
+		const langMatch = currentLang.match(/^([a-z]{2}_[A-Z]{2})/i)
+
+		if (langMatch) {
+			// Use the detected locale with UTF-8 encoding
+			const utf8Locale = `${langMatch[1]}.UTF-8`
+			return {
+				LANG: utf8Locale,
+				LC_ALL: utf8Locale,
+			}
+		}
+
+		// Fallback to en_US.UTF-8 if no locale is detected
+		return {
+			LANG: "en_US.UTF-8",
+			LC_ALL: "en_US.UTF-8",
+		}
+	}
+
 	public override async run(command: string) {
 		this.command = command
 
 		try {
 			this.isHot = true
+
+			const utf8Locale = this.getUtf8Locale()
 
 			this.subprocess = execa({
 				shell: true,
@@ -44,9 +73,8 @@ export class ExecaTerminalProcess extends BaseTerminalProcess {
 				all: true,
 				env: {
 					...process.env,
-					// Ensure UTF-8 encoding for Ruby, CocoaPods, etc.
-					LANG: "en_US.UTF-8",
-					LC_ALL: "en_US.UTF-8",
+					// Ensure UTF-8 encoding based on system locale
+					...utf8Locale,
 				},
 			})`${command}`
 
