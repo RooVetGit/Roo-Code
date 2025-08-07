@@ -35,6 +35,35 @@ export const handleUri = async (uri: vscode.Uri) => {
 			}
 			break
 		}
+		case "/litellm": {
+			const accessToken = query.get("access_token")
+			const tokenType = query.get("token_type")
+			const expiresIn = query.get("expires_in")
+			const scope = query.get("scope")
+			const error = query.get("error")
+			const errorDescription = query.get("error_description")
+
+			if (error) {
+				// Handle OAuth error
+				console.error(`LiteLLM OAuth error: ${error}`, errorDescription)
+				vscode.window.showErrorMessage(
+					`LiteLLM authentication failed: ${error}${errorDescription ? ` - ${errorDescription}` : ""}`,
+				)
+				return
+			}
+
+			if (accessToken) {
+				await visibleProvider.handleLiteLLMCallback({
+					accessToken,
+					tokenType: tokenType || "Bearer",
+					expiresIn: expiresIn ? parseInt(expiresIn, 10) : 86400,
+					scope: scope || undefined,
+				})
+			} else {
+				vscode.window.showErrorMessage("LiteLLM authentication failed: No access token received")
+			}
+			break
+		}
 		case "/auth/clerk/callback": {
 			const code = query.get("code")
 			const state = query.get("state")
