@@ -72,8 +72,8 @@ function getUrlToFileMap() {
 function getLastModifiedDate(filePath) {
 	try {
 		// Get the last commit date for the file
-		const gitCommand = `git log -1 --format="%ai" -- "${filePath}"`
-		const result = execSync(gitCommand, {
+		// Use execFileSync to prevent command injection by separating command from arguments
+		const result = execFileSync("git", ["log", "-1", "--format=%ai", "--", filePath], {
 			cwd: path.join(__dirname, "../"), // Go to repo root
 			encoding: "utf8",
 		}).trim()
