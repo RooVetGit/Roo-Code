@@ -264,10 +264,16 @@ export interface WebviewMessage {
 		codebaseIndexOpenAiCompatibleBaseUrl?: string
 		codebaseIndexSearchMaxResults?: number
 		codebaseIndexSearchMinScore?: number
+		searchProvider?: string
+		codebaseIndexValkeyHostname?: string
+		codebaseIndexValkeyPort?: number
+		codebaseIndexValkeyUsername?: string
+		codebaseIndexValkeyUseSsl?: boolean
 
 		// Secret settings
 		codeIndexOpenAiKey?: string
 		codeIndexQdrantApiKey?: string
+		codeIndexValkeyPassword?: string
 		codebaseIndexOpenAiCompatibleApiKey?: string
 		codebaseIndexGeminiApiKey?: string
 		codebaseIndexMistralApiKey?: string

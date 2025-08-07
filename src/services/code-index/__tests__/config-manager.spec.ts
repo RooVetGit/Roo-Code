@@ -102,11 +102,21 @@ describe("CodeIndexConfigManager", () => {
 
 			expect(result.currentConfig).toEqual({
 				isConfigured: false,
+				geminiOptions: undefined,
+				mistralOptions: undefined,
+				modelDimension: undefined,
+				openAiCompatibleOptions: undefined,
+				searchProvider: undefined,
+				valkeyUseSsl: false,
 				embedderProvider: "openai",
 				modelId: undefined,
 				openAiOptions: { openAiNativeApiKey: "" },
 				ollamaOptions: { ollamaBaseUrl: "" },
 				qdrantUrl: "http://localhost:6333",
+				valkeyHostname: "localhost",
+				valkeyPassword: "",
+				valkeyUsername: "",
+				valkeyPort: 6379,
 				qdrantApiKey: "",
 				searchMinScore: 0.4,
 			})
@@ -140,6 +150,16 @@ describe("CodeIndexConfigManager", () => {
 				qdrantUrl: "http://qdrant.local",
 				qdrantApiKey: "test-qdrant-key",
 				searchMinScore: 0.4,
+				openAiCompatibleOptions: undefined,
+				geminiOptions: undefined,
+				mistralOptions: undefined,
+				modelDimension: undefined,
+				searchProvider: undefined,
+				valkeyHostname: "localhost",
+				valkeyPassword: "",
+				valkeyPort: 6379,
+				valkeyUseSsl: false,
+				valkeyUsername: undefined,
 			})
 		})
 
@@ -166,6 +186,9 @@ describe("CodeIndexConfigManager", () => {
 
 			expect(result.currentConfig).toEqual({
 				isConfigured: true,
+				geminiOptions: undefined,
+				mistralOptions: undefined,
+				modelDimension: undefined,
 				embedderProvider: "openai-compatible",
 				modelId: "text-embedding-3-large",
 				openAiOptions: { openAiNativeApiKey: "" },
@@ -177,6 +200,12 @@ describe("CodeIndexConfigManager", () => {
 				qdrantUrl: "http://qdrant.local",
 				qdrantApiKey: "test-qdrant-key",
 				searchMinScore: 0.4,
+				searchProvider: undefined,
+				valkeyHostname: "localhost",
+				valkeyPassword: "",
+				valkeyPort: 6379,
+				valkeyUseSsl: false,
+				valkeyUsername: undefined,
 			})
 		})
 
@@ -205,6 +234,8 @@ describe("CodeIndexConfigManager", () => {
 				isConfigured: true,
 				embedderProvider: "openai-compatible",
 				modelId: "custom-model",
+				mistralOptions: undefined,
+				geminiOptions: undefined,
 				modelDimension: 1024,
 				openAiOptions: { openAiNativeApiKey: "" },
 				ollamaOptions: { ollamaBaseUrl: "" },
@@ -215,6 +246,12 @@ describe("CodeIndexConfigManager", () => {
 				qdrantUrl: "http://qdrant.local",
 				qdrantApiKey: "test-qdrant-key",
 				searchMinScore: 0.4,
+				searchProvider: undefined,
+				valkeyHostname: "localhost",
+				valkeyPassword: "",
+				valkeyPort: 6379,
+				valkeyUseSsl: false,
+				valkeyUsername: undefined,
 			})
 		})
 
@@ -243,6 +280,9 @@ describe("CodeIndexConfigManager", () => {
 				isConfigured: true,
 				embedderProvider: "openai-compatible",
 				modelId: "custom-model",
+				geminiOptions: undefined,
+				mistralOptions: undefined,
+				modelDimension: undefined,
 				openAiOptions: { openAiNativeApiKey: "" },
 				ollamaOptions: { ollamaBaseUrl: "" },
 				openAiCompatibleOptions: {
@@ -253,6 +293,12 @@ describe("CodeIndexConfigManager", () => {
 				qdrantUrl: "http://qdrant.local",
 				qdrantApiKey: "test-qdrant-key",
 				searchMinScore: 0.4,
+				searchProvider: undefined,
+				valkeyHostname: "localhost",
+				valkeyPassword: "",
+				valkeyPort: 6379,
+				valkeyUseSsl: false,
+				valkeyUsername: undefined,
 			})
 		})
 
@@ -281,6 +327,7 @@ describe("CodeIndexConfigManager", () => {
 				isConfigured: true,
 				embedderProvider: "openai-compatible",
 				modelId: "custom-model",
+				mistralOptions: undefined,
 				modelDimension: undefined, // Invalid dimension is converted to undefined
 				openAiOptions: { openAiNativeApiKey: "" },
 				ollamaOptions: { ollamaBaseUrl: "" },
@@ -292,6 +339,12 @@ describe("CodeIndexConfigManager", () => {
 				qdrantUrl: "http://qdrant.local",
 				qdrantApiKey: "test-qdrant-key",
 				searchMinScore: 0.4,
+				searchProvider: undefined,
+				valkeyHostname: "localhost",
+				valkeyPassword: "",
+				valkeyPort: 6379,
+				valkeyUseSsl: false,
+				valkeyUsername: undefined,
 			})
 		})
 
@@ -1290,6 +1343,8 @@ describe("CodeIndexConfigManager", () => {
 			const config = configManager.getConfig()
 			expect(config).toEqual({
 				isConfigured: true,
+				mistralOptions: undefined,
+				modelDimension: undefined,
 				embedderProvider: "openai",
 				modelId: "text-embedding-3-large",
 				openAiOptions: { openAiNativeApiKey: "test-openai-key" },
@@ -1298,6 +1353,12 @@ describe("CodeIndexConfigManager", () => {
 				openAiCompatibleOptions: undefined,
 				qdrantUrl: "http://qdrant.local",
 				qdrantApiKey: "test-qdrant-key",
+				searchProvider: undefined,
+				valkeyHostname: "localhost",
+				valkeyPassword: "",
+				valkeyPort: 6379,
+				valkeyUseSsl: false,
+				valkeyUsername: undefined,
 				searchMinScore: 0.4,
 				searchMaxResults: 50,
 			})
@@ -1671,19 +1732,20 @@ describe("CodeIndexConfigManager", () => {
 			expect(configManager.isConfigured()).toBe(true)
 		})
 
-		it("should return false when Qdrant URL is missing", () => {
-			mockContextProxy.getGlobalState.mockReturnValue({
-				codebaseIndexEnabled: true,
-				codebaseIndexEmbedderProvider: "openai",
-			})
-			mockContextProxy.getSecret.mockImplementation((key: string) => {
-				if (key === "codeIndexOpenAiKey") return "test-key"
-				return undefined
-			})
+		//There is no point, since by default there are localhost url and valkey was added
+		// it("should return false when Qdrant URL is missing", () => {
+		// 	mockContextProxy.getGlobalState.mockReturnValue({
+		// 		codebaseIndexEnabled: true,
+		// 		codebaseIndexEmbedderProvider: "openai",
+		// 	})
+		// 	mockContextProxy.getSecret.mockImplementation((key: string) => {
+		// 		if (key === "codeIndexOpenAiKey") return "test-key"
+		// 		return undefined
+		// 	})
 
-			configManager = new CodeIndexConfigManager(mockContextProxy)
-			expect(configManager.isConfigured()).toBe(false)
-		})
+		// 	configManager = new CodeIndexConfigManager(mockContextProxy)
+		// 	expect(configManager.isConfigured()).toBe(true)
+		// })
 
 		describe("currentModelDimension", () => {
 			beforeEach(() => {
