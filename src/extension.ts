@@ -213,7 +213,6 @@ export async function activate(context: vscode.ExtensionContext) {
 			{ path: context.extensionPath, name: "extension" },
 			{ path: path.join(context.extensionPath, "../packages/types"), name: "types" },
 			{ path: path.join(context.extensionPath, "../packages/telemetry"), name: "telemetry" },
-			{ path: path.join(context.extensionPath, "../packages/cloud"), name: "cloud" },
 		]
 
 		console.log(
