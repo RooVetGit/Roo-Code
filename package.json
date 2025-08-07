@@ -24,8 +24,8 @@
 		"knip": "knip --include files",
 		"update-contributors": "node scripts/update-contributors.js",
 		"evals": "dotenvx run -f packages/evals/.env.development packages/evals/.env.local -- docker compose -f packages/evals/docker-compose.yml --profile server --profile runner up --build --scale runner=0",
-		"link:cloud": "node scripts/link-cloud.js",
-		"unlink:cloud": "rm -f src/node_modules/@roo-code/cloud && cd src && pnpm install && echo '✅ @roo-code/cloud SDK unlinked successfully!'"
+		"link-workspace-packages": "node scripts/link-packages.js",
+		"unlink-workspace-packages": "node scripts/link-packages.js --unlink"
 	},
 	"devDependencies": {
 		"@changesets/cli": "^2.27.10",
