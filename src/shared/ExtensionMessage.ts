@@ -22,7 +22,7 @@ import type { MarketplaceItem } from "@roo-code/types"
 // Command interface for frontend/backend communication
 export interface Command {
 	name: string
-	source: "global" | "project"
+	source: "global" | "project" | "built-in"
 	filePath?: string
 	description?: string
 	argumentHint?: string
