@@ -1204,6 +1204,37 @@ export const ChatRowContent = ({
 					return <CodebaseSearchResultsDisplay results={results} />
 				case "user_edit_todos":
 					return <UpdateTodoListToolBlock userEdited onChange={() => {}} />
+				case "browser_action_result":
+					// This should not normally be rendered here as browser_action_result messages
+					// should be grouped into browser sessions and rendered by BrowserSessionRow.
+					// If we see this, it means the message grouping logic has a bug.
+					return (
+						<>
+							{title && (
+								<div style={headerStyle}>
+									{icon}
+									{title}
+								</div>
+							)}
+							<div style={{ paddingTop: 10 }}>
+								<div
+									style={{
+										color: "var(--vscode-errorForeground)",
+										fontFamily: "monospace",
+										fontSize: "12px",
+										padding: "8px",
+										backgroundColor: "var(--vscode-editor-background)",
+										border: "1px solid var(--vscode-editorError-border)",
+										borderRadius: "4px",
+										marginBottom: "8px",
+									}}>
+									⚠️ Browser action result not properly grouped - this is a bug in the message
+									grouping logic
+								</div>
+								<Markdown markdown={message.text} partial={message.partial} />
+							</div>
+						</>
+					)
 				default:
 					return (
 						<>
