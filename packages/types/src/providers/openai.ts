@@ -180,6 +180,15 @@ export const openAiNativeModels = {
 		outputPrice: 0.6,
 		cacheReadsPrice: 0.075,
 	},
+	"codex-mini-latest": {
+		maxTokens: 16_384, // Standard max tokens for non-reasoning models
+		contextWindow: 200_000,
+		supportsImages: false,
+		supportsPromptCache: false,
+		inputPrice: 1.5,
+		outputPrice: 6,
+		cacheReadsPrice: 0,
+	},
 } as const satisfies Record<string, ModelInfo>
 
 export const openAiModelInfoSaneDefaults: ModelInfo = {
