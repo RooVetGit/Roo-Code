@@ -1,0 +1,14 @@
+version: '3.8'
+
+services:
+  valkey:
+    image: redis/redis-stack-server:latest
+    ports:
+      - "6379:6379"
+    volumes:
+      - ./redis.conf:/usr/local/etc/redis/redis.conf
+      - ./users.acl:/usr/local/etc/redis/users.acl
+    command: ["redis-stack-server", "/usr/local/etc/redis/redis.conf"]
+
+volumes:
+  valkey_data:

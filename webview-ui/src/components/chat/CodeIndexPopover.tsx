@@ -105,7 +105,7 @@ const createValidationSchema = (provider: EmbedderProvider, searchProvider: Sear
 				: z.number().optional(),
 		codebaseIndexValkeyUsername: z.string().optional(),
 		codeIndexValkeyPassword: z.string().optional(),
-		codebaseIndexValkeyUseSsl: z.boolean(),
+		codebaseIndexValkeyUseSsl: z.boolean().optional(),
 		codebaseIndexValkeySslCa: z.string().optional(),
 		codebaseIndexValkeySslCert: z.string().optional(),
 		codebaseIndexValkeySslKey: z.string().optional(),

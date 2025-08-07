@@ -1997,11 +1997,11 @@ export class ClineProvider
 					stateValues.codebaseIndexConfig?.codebaseIndexValkeyHostname ?? "localhost",
 				codebaseIndexValkeyPort: stateValues.codebaseIndexConfig?.codebaseIndexValkeyPort ?? 6379,
 				codebaseIndexValkeyUsername: stateValues.codebaseIndexConfig?.codebaseIndexValkeyUsername ?? "",
-				codebaseIndexValkeyUseSsl: stateValues.codebaseIndexValkeyUseSsl || false,
 				codebaseIndexValkeySslCa: stateValues.codebaseIndexValkeySslCa ?? "",
 				codebaseIndexValkeySslCert: stateValues.codebaseIndexValkeySslCert ?? "",
 				codebaseIndexValkeySslKey: stateValues.codebaseIndexValkeySslKey ?? "",
 				codebaseIndexValkeyPassword: stateValues.codebaseIndexConfig?.codebaseIndexValkeyPassword ?? "",
+				codebaseIndexValkeyUseSsl: stateValues.codebaseIndexConfig?.codebaseIndexValkeyUseSsl ?? false,
 				codebaseIndexEmbedderProvider:
 					stateValues.codebaseIndexConfig?.codebaseIndexEmbedderProvider ?? "openai",
 				codebaseIndexEmbedderBaseUrl: stateValues.codebaseIndexConfig?.codebaseIndexEmbedderBaseUrl ?? "",

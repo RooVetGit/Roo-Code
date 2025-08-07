@@ -26,10 +26,10 @@ export class CodeIndexConfigManager {
 	private valkeyPort?: number = 6379
 	private valkeyUsername?: string
 	private valkeyPassword?: string
-	private valkeyUseSsl: boolean = false
 	private valkeySslCa?: string
 	private valkeySslCert?: string
 	private valkeySslKey?: string
+	private valkeyUseSsl?: boolean = false
 	private searchMinScore?: number
 	private searchMaxResults?: number
 
@@ -61,6 +61,7 @@ export class CodeIndexConfigManager {
 			codebaseIndexValkeySslCa: "",
 			codebaseIndexValkeySslCert: "",
 			codebaseIndexValkeySslKey: "",
+			codebaseIndexValkeyPassword: "",
 			codebaseIndexEmbedderProvider: "openai",
 			codebaseIndexEmbedderBaseUrl: "",
 			codebaseIndexEmbedderModelId: "",
@@ -77,6 +78,7 @@ export class CodeIndexConfigManager {
 			codebaseIndexValkeyHostname,
 			codebaseIndexValkeyPort,
 			codebaseIndexValkeyUsername,
+			codebaseIndexValkeyPassword,
 			codebaseIndexValkeyUseSsl,
 			codebaseIndexEmbedderProvider,
 			codebaseIndexEmbedderBaseUrl,
@@ -110,6 +112,7 @@ export class CodeIndexConfigManager {
 		this.valkeySslCa = valkeySslCa
 		this.valkeySslCert = valkeySslCert
 		this.valkeySslKey = valkeySslKey
+		this.valkeyUseSsl = codebaseIndexValkeyUseSsl ?? false
 		this.searchMinScore = codebaseIndexSearchMinScore
 		this.searchMaxResults = codebaseIndexSearchMaxResults
 		this.searchProvider = searchProvider
@@ -245,6 +248,7 @@ export class CodeIndexConfigManager {
 				valkeyPort: this.valkeyPort,
 				valkeyPassword: this.valkeyPassword,
 				valkeyUsername: this.valkeyUsername,
+				valkeyUseSsl: this.valkeyUseSsl,
 				searchProvider: this.searchProvider,
 				searchMinScore: this.currentSearchMinScore,
 			},
@@ -410,6 +414,10 @@ export class CodeIndexConfigManager {
 		}
 
 		if (prevValkeyHostname !== currentValkeyHostname || prevValkeyPort !== currentValkeyPort) {
+			return true
+		}
+
+		if (prevValkeyUseSsl !== currentValkeyUseSsl) {
 			return true
 		}
 

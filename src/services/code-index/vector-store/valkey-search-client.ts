@@ -16,10 +16,10 @@ export class ValkeySearchVectorStore implements IVectorStore {
 	private readonly valkeyPort: number
 	private readonly valkeyUsername?: string
 	private readonly valkeyPassword?: string
-	private readonly useSsl: boolean = false
 	private readonly tlsCa?: string = undefined
 	private readonly tlsCert?: string = undefined
 	private readonly tlsKey?: string = undefined
+	private readonly useSsl: boolean
 
 	constructor(
 		workspacePath: string,
@@ -42,6 +42,7 @@ export class ValkeySearchVectorStore implements IVectorStore {
 		this.tlsCa = tlsCa
 		this.tlsCert = tlsCert
 		this.tlsKey = tlsKey
+		this.useSsl = useSsl || false
 
 		const hash = createHash("sha256").update(workspacePath).digest("hex")
 		this.indexName = `ws-${hash.substring(0, 16)}`
@@ -64,22 +65,18 @@ export class ValkeySearchVectorStore implements IVectorStore {
 				port: this.valkeyPort,
 				tls: this.useSsl
 					? {
-							ca: fs.readFileSync(this.tlsCa!),
-							cert: fs.readFileSync(this.tlsCert!),
-							key: fs.readFileSync(this.tlsKey!),
 							rejectUnauthorized: false,
 						}
 					: undefined,
 			})
-			this.client.on("error", (err: Error) => {
-				console.error("[ValkeySearch] Connection error:", err)
+			this.client.on("error", (error: Error) => {
+				console.error("[ValkeySearch] Connection error:", error)
 				this.isInitializing = false
 				throw new Error(
 					t("embeddings:vectorStore.vectorError", {
-						valkeyHostname: this.valkeyHostname,
-						valkeyPort: this.valkeyPort,
+						errorMessage: error.message,
 					}),
-					{ cause: err },
+					{ cause: error },
 				)
 			})
 
@@ -102,7 +99,7 @@ export class ValkeySearchVectorStore implements IVectorStore {
 				}
 				throw new Error(
 					t("embeddings:vectorStore.valkeyConnectionFailed", {
-						valkeyUrl: this.valkeyHostname + ":" + this.valkeyPort,
+						valkeyUrl: `${this.valkeyHostname}:${this.valkeyPort}`,
 						errorMessage: error,
 					}),
 					{ cause: error },
@@ -129,21 +126,27 @@ export class ValkeySearchVectorStore implements IVectorStore {
 	async initialize(): Promise<boolean> {
 		await this.ensureConnected()
 
+		let info: {
+			attributes: Array<{ attribute: string; dimension?: number }>
+		} | null = null
+
 		try {
-			const info = (await this.client?.sendCommand(new Command("FT.INFO", [this.indexName]))) as {
+			info = (await this.client?.sendCommand(new Command("FT.INFO", [this.indexName]))) as {
 				attributes: Array<{ attribute: string; dimension?: number }>
 			}
+		} catch {}
 
-			const vectorAttr = info?.attributes?.find((attr) => attr.attribute === "vector")
-			if (vectorAttr?.dimension === this.vectorSize) {
-				return false
+		try {
+			if (info) {
+				const vectorAttr = info?.attributes?.find((attr) => attr.attribute === "vector")
+				if (vectorAttr?.dimension === this.vectorSize) {
+					return false
+				}
+
+				await this.deleteCollection()
 			}
-
-			await this.client?.sendCommand(new Command("FT.DROPINDEX", [this.indexName, "DD"]))
 		} catch (error) {
-			if (!(error instanceof Error && error.message.includes("Unknown index name"))) {
-				throw new Error(error.message, { cause: error })
-			}
+			throw new Error(error.message, { cause: error })
 		}
 
 		try {
@@ -289,7 +292,7 @@ export class ValkeySearchVectorStore implements IVectorStore {
 
 	async deleteCollection(): Promise<void> {
 		await this.ensureConnected()
-		await this.client?.sendCommand(new Command("FT.DROPINDEX", [this.indexName, "DD"]))
+		await this.client?.sendCommand(new Command("FT.DROPINDEX", [this.indexName]))
 	}
 
 	async clearCollection(): Promise<void> {

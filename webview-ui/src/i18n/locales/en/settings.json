@@ -87,6 +87,7 @@
 		"valkeySslCertPlaceholder": "Enter client certificate path or contents",
 		"valkeySslKeyLabel": "Client Key",
 		"valkeySslKeyPlaceholder": "Enter client key path or contents",
+		"valkeyUseSslLabel": "Use SSL",
 		"qdrantKeyLabel": "Qdrant Key:",
 		"qdrantApiKeyLabel": "Qdrant API Key",
 		"qdrantApiKeyPlaceholder": "Enter your Qdrant API key (optional)",

@@ -80,6 +80,7 @@
 		"valkeyUsernamePlaceholder": "Entrez le nom d'utilisateur Valkey (optionnel)",
 		"valkeyPasswordLabel": "Mot de passe Valkey",
 		"valkeyPasswordPlaceholder": "Entrez le mot de passe Valkey (optionnel)",
+		"valkeyUseSslLabel": "Utiliser SSL",
 		"qdrantKeyLabel": "Clé Qdrant :",
 		"qdrantApiKeyLabel": "Clé API Qdrant",
 		"qdrantApiKeyPlaceholder": "Entrez votre clé API Qdrant (optionnel)",
