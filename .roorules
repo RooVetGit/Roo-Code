@@ -1,0 +1,242 @@
+.roorules
+
+This file provides guidance to Roo Code (or other AI coding assistants) when working with code in this repository.
+
+## Project Overview
+
+**Roo Code** is a VSCode extension that provides an AI-powered autonomous coding agent. Built as a monorepo using TypeScript, React, and VSCode Extension API, it enables natural language code generation, refactoring, and intelligent assistance directly within the editor.
+
+**Tech Stack:**
+- **Core:** TypeScript, VSCode Extension API, Node.js 20.19.2
+- **Frontend:** React 18, Vite, Tailwind CSS, Radix UI
+- **Build:** pnpm workspaces, Turbo, ESBuild, Vite
+- **Testing:** Vitest
+- **State Management:** VSCode Extension Context, React Context
+- **Communication:** Webview API, IPC
+
+## Essential Commands
+
+```bash
+# Installation & Setup
+pnpm install              # Install all dependencies (uses pnpm 10.8.1)
+
+# Development
+pnpm lint                 # Run ESLint across all workspaces
+pnpm check-types          # TypeScript type checking
+pnpm test                 # Run all tests
+pnpm format               # Format with Prettier
+pnpm build                # Build all packages
+pnpm clean                # Clean build artifacts
+
+# Extension Development
+cd src && pnpm bundle     # Bundle extension code
+pnpm vsix                 # Create VSIX package for distribution
+pnpm install:vsix         # Build and install extension locally
+Press F5 in VSCode        # Launch extension in debug mode
+
+# Testing (CRITICAL - Must run from correct directory!)
+cd src && npx vitest run tests/user.test.ts     # Backend tests
+cd webview-ui && npx vitest run src/test.ts     # UI tests
+# NEVER run tests from project root - causes "vitest: command not found"
+```
+
+## Architecture Overview
+
+```
+User Input → VSCode Extension → Webview UI
+                ↓                    ↓
+         ClineProvider ←→ WebviewMessageHandler
+                ↓
+            Task Engine
+                ↓
+        Tool Execution System
+         ↙     ↓      ↘
+    Files  Terminal  Browser
+```
+
+### Core Components
+
+1. **Extension Entry** ([`src/extension.ts`](src/extension.ts))
+   - Activates on VSCode startup
+   - Initializes services (Cloud, Telemetry, MDM, MCP)
+   - Registers commands and providers
+
+2. **ClineProvider** ([`src/core/webview/ClineProvider.ts`](src/core/webview/ClineProvider.ts))
+   - Central orchestrator for all interactions
+   - Manages webview lifecycle
+   - Handles task stack and state persistence
+
+3. **Task System** ([`src/core/task/Task.ts`](src/core/task/Task.ts))
+   - Executes AI agent workflows
+   - Manages tool usage and message flow
+   - Handles checkpoints and recovery
+
+4. **Webview UI** ([`webview-ui/`](webview-ui/))
+   - React-based chat interface
+   - Communicates via postMessage API
+   - Styled with Tailwind + VSCode theme variables
+
+## Development Guides
+
+### Adding a New AI Provider
+
+1. Create provider class in [`src/api/providers/`](src/api/providers/)
+2. Extend `BaseProvider` or `BaseOpenAICompatibleProvider`
+3. Implement required methods: `createMessage()`, `getModel()`
+4. Register in [`src/api/index.ts`](src/api/index.ts)
+5. Add UI configuration in webview settings
+
+### Creating a Custom Mode
+
+1. Add mode definition to [`.roomodes/`](.roomodes/)
+2. Include mode metadata (name, slug, model preferences)
+3. Define system prompt and tool restrictions
+4. Register in [`CustomModesManager`](src/core/config/CustomModesManager.ts)
+
+### Adding a New Tool
+
+1. Create tool file in [`src/core/tools/`](src/core/tools/)
+2. Implement tool interface with `execute()` method
+3. Add tool to system prompt in [`src/core/prompts/tools/`](src/core/prompts/tools/)
+4. Handle tool response in Task execution flow
+
+### Modifying the Webview UI
+
+1. Components live in [`webview-ui/src/components/`](webview-ui/src/components/)
+2. Use Tailwind classes, not inline styles
+3. VSCode CSS variables must be added to [`webview-ui/src/index.css`](webview-ui/src/index.css)
+4. Test with both light and dark themes
+
+## Project-Specific Patterns
+
+### State Management
+- Extension state: VSCode `globalState` and `secrets` APIs via `ContextProxy`
+- Webview state: React Context + message passing
+- Task persistence: JSON files in global storage directory
+
+### Message Flow
+```typescript
+// Webview → Extension
+vscode.postMessage({ type: "newTask", text: "..." })
+
+// Extension → Webview  
+provider.postMessageToWebview({ type: "taskUpdated", ... })
+```
+
+### Error Handling
+- All async operations wrapped in try-catch
+- Errors logged to output channel
+- User-facing errors shown via `vscode.window.showErrorMessage`
+
+### File Operations
+- Always use VSCode workspace APIs for file access
+- Respect `.rooignore` patterns
+- Use `FileContextTracker` for monitoring file changes
+
+## Code Style
+
+```typescript
+// Formatting (from .prettierrc.json)
+- Tabs (width: 4)
+- No semicolons
+- Print width: 120 chars
+- Brackets on same line
+
+// TypeScript
+- Strict mode enabled
+- No implicit any (currently disabled in ESLint)
+- Use type imports: import type { ... }
+
+// Naming Conventions
+- Files: camelCase.ts or PascalCase.ts for classes
+- Interfaces: IPrefixed or suffixed with Interface
+- Types: PascalCase
+- Constants: UPPER_SNAKE_CASE
+```
+
+## Testing Guidelines
+
+### Test Structure
+```typescript
+// Tests use Vitest with globals (vi, describe, test, it)
+describe("ComponentName", () => {
+    test("should do something", async () => {
+        // Arrange
+        const mock = vi.fn()
+        
+        // Act
+        await doSomething()
+        
+        // Assert
+        expect(mock).toHaveBeenCalled()
+    })
+})
+```
+
+### Running Tests
+```bash
+# CRITICAL: Tests must run from workspace directory!
+cd src && npx vitest run path/to/test.ts  # Backend
+cd webview-ui && npx vitest run src/...    # Frontend
+
+# Watch mode for development
+cd src && npx vitest watch
+```
+
+### Mocking VSCode APIs
+- Mock modules in [`src/__mocks__/vscode.ts`](src/__mocks__/vscode.ts)
+- Use `vi.mock("vscode")` in test files
+- Mock extension context for provider tests
+
+## Security Considerations
+
+- **API Keys:** Stored in VSCode secrets, never in code
+- **File Access:** Respect workspace boundaries and .rooignore
+- **Command Execution:** User approval required for terminal commands
+- **Protected Files:** RooProtectedController prevents accidental overwrites
+
+## Performance Optimization
+
+- **Lazy Loading:** MCP servers and code indexing initialize on-demand
+- **Debouncing:** File watchers and UI updates are debounced
+- **Caching:** Model lists and API responses cached with TTL
+- **Streaming:** LLM responses streamed for better UX
+
+## Critical Rules
+
+1. **Never disable lint rules** without explicit user approval
+2. **Always ensure test coverage** before attempting completion
+3. **Use Tailwind CSS** for new UI components, not inline styles
+4. **Run tests from correct directory** - see Testing Guidelines
+5. **Respect file restrictions** - some modes can only edit specific file types
+6. **Wait for tool confirmation** - never assume tool success without user response
+
+## Troubleshooting
+
+### Common Issues
+
+**"vitest: command not found"**
+- You're running tests from the wrong directory
+- Solution: `cd src` or `cd webview-ui` first
+
+**Extension not loading**
+- Check output channel for errors
+- Verify all dependencies installed: `pnpm install`
+- Try clean rebuild: `pnpm clean && pnpm build`
+
+**Webview not updating**
+- In dev mode (F5), changes should hot-reload
+- For VSIX installation, rebuild and reinstall
+
+**MCP server connection failed**
+- Check server configuration in settings
+- Verify server binary is executable
+- Check logs in output channel
+
+## Development Workflow
+
+1. **Branch naming:** `feature/description` or `fix/issue-number`
+2. **Commits:** Descriptive messages referencing issues
+3. **Testing:** Run tests before pushing
+4. **Code review:** All PRs require approval
+5. **Deployment:** Automated via GitHub Actions on merge to main
