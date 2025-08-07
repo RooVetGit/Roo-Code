@@ -8,7 +8,7 @@ export const openAiNativeDefaultModelId: OpenAiNativeModelId = "gpt-5-2025-08-07
 export const openAiNativeModels = {
 	"gpt-5-2025-08-07": {
 		maxTokens: 128000,
-		contextWindow: 256000,
+		contextWindow: 400000,
 		supportsImages: true,
 		supportsPromptCache: true,
 		supportsReasoningEffort: true,
@@ -18,7 +18,7 @@ export const openAiNativeModels = {
 	},
 	"gpt-5-mini-2025-08-07": {
 		maxTokens: 128000,
-		contextWindow: 256000,
+		contextWindow: 400000,
 		supportsImages: true,
 		supportsPromptCache: true,
 		supportsReasoningEffort: true,
@@ -28,7 +28,7 @@ export const openAiNativeModels = {
 	},
 	"gpt-5-nano-2025-08-07": {
 		maxTokens: 128000,
-		contextWindow: 256000,
+		contextWindow: 400000,
 		supportsImages: true,
 		supportsPromptCache: true,
 		supportsReasoningEffort: true,
@@ -38,7 +38,7 @@ export const openAiNativeModels = {
 	},
 	"nectarine-alpha-new-reasoning-effort-2025-07-25": {
 		maxTokens: 128000,
-		contextWindow: 256000,
+		contextWindow: 400000,
 		supportsImages: true,
 		supportsPromptCache: true,
 		supportsReasoningEffort: true,
