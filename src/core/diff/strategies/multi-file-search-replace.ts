@@ -105,42 +105,31 @@ When applying the diffs, be extra careful to remember to change any closing brac
 ALWAYS make as many changes in a single 'apply_diff' request as possible using multiple SEARCH/REPLACE blocks
 
 Parameters:
-- args: Contains one or more file elements, where each file contains:
+- file: One or more file elements, where each file contains:
   - path: (required) The path of the file to modify (relative to the current workspace directory ${args.cwd})
-  - diff: (required) One or more diff elements containing:
-    - content: (required) The search/replace block defining the changes.
-    - start_line: (required) The line number of original content where the search block starts.
+  - diff: (required) One or more diff elements containing the search/replace blocks directly (no content wrapper needed)
 
 Diff format:
-\`\`\`
 <<<<<<< SEARCH
-:start_line: (required) The line number of original content where the search block starts.
--------
 [exact content to find including whitespace]
 =======
 [new content to replace with]
 >>>>>>> REPLACE
-\`\`\`
 
 Example:
 
 Original file:
-\`\`\`
 1 | def calculate_total(items):
 2 |     total = 0
 3 |     for item in items:
 4 |         total += item
 5 |     return total
-\`\`\`
 
 Search/Replace content:
 <apply_diff>
-<args>
 <file>
   <path>eg.file.py</path>
   <diff>
-    <content>
-\`\`\`
 <<<<<<< SEARCH
 def calculate_total(items):
     total = 0
@@ -152,21 +141,15 @@ def calculate_total(items):
     """Calculate total with 10% markup"""
     return sum(item * 1.1 for item in items)
 >>>>>>> REPLACE
-\`\`\`
-    </content>
   </diff>
 </file>
-</args>
 </apply_diff>
 
 Search/Replace content with multi edits across multiple files:
 <apply_diff>
-<args>
 <file>
   <path>eg.file.py</path>
   <diff>
-    <content>
-\`\`\`
 <<<<<<< SEARCH
 def calculate_total(items):
     sum = 0
@@ -174,12 +157,8 @@ def calculate_total(items):
 def calculate_sum(items):
     sum = 0
 >>>>>>> REPLACE
-\`\`\`
-    </content>
   </diff>
   <diff>
-    <content>
-\`\`\`
 <<<<<<< SEARCH
         total += item
     return total
@@ -187,15 +166,11 @@ def calculate_sum(items):
         sum += item
     return sum 
 >>>>>>> REPLACE
-\`\`\`
-    </content>
   </diff>
 </file>
 <file>
   <path>eg.file2.py</path>
   <diff>
-    <content>
-\`\`\`
 <<<<<<< SEARCH
 def greet(name):
     return "Hello " + name
@@ -203,40 +178,33 @@ def greet(name):
 def greet(name):
     return f"Hello {name}!"
 >>>>>>> REPLACE
-\`\`\`
-    </content>
   </diff>
 </file>
-</args>
 </apply_diff>
 
 
 Usage:
 <apply_diff>
-<args>
 <file>
   <path>File path here</path>
   <diff>
-    <content>
-Your search/replace content here
-You can use multi search/replace block in one diff block, but make sure to include the line numbers for each block.
-Only use a single line of '=======' between search and replacement content, because multiple '=======' will corrupt the file.
-    </content>
-    <start_line>1</start_line>
+<<<<<<< SEARCH
+Your exact search content here
+=======
+Your replacement content here
+>>>>>>> REPLACE
   </diff>
 </file>
 <file>
   <path>Another file path</path>
   <diff>
-    <content>
-Another search/replace content here
-You can apply changes to multiple files in a single request.
-Each file requires its own path, start_line, and diff elements.
-    </content>
-    <start_line>5</start_line>
+<<<<<<< SEARCH
+Another search content here
+=======
+Another replacement content here
+>>>>>>> REPLACE
   </diff>
 </file>
-</args>
 </apply_diff>`
 	}
 

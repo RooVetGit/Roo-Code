@@ -106,9 +106,10 @@ export async function applyDiffTool(
 	}
 
 	if (argsXmlTag) {
-		// Parse file entries from XML (new way)
+		// Parse file entries from XML
 		try {
-			const parsed = parseXml(argsXmlTag, ["file.diff.content"]) as ParsedXmlResult
+			// Try parsing with simplified schema (no content wrapper)
+			const parsed = parseXml(argsXmlTag, ["file.diff"]) as ParsedXmlResult
 			const files = Array.isArray(parsed.file) ? parsed.file : [parsed.file].filter(Boolean)
 
 			for (const file of files) {
@@ -132,8 +133,19 @@ export async function applyDiffTool(
 					let diffContent: string
 					let startLine: number | undefined
 
-					diffContent = diff.content
-					startLine = diff.start_line ? parseInt(diff.start_line) : undefined
+					// For simplified format, diff is the content directly
+					// For legacy format, diff has content and start_line properties
+					if (typeof diff === "object" && diff.content) {
+						// Legacy format with content wrapper
+						diffContent = diff.content
+						startLine = diff.start_line ? parseInt(diff.start_line) : undefined
+					} else {
+						// New simplified format - diff is the content string directly
+						diffContent = String(diff)
+						// Extract start_line from the diff content if present
+						const startLineMatch = diffContent.match(/:start_line:\s*(\d+)/)
+						startLine = startLineMatch ? parseInt(startLineMatch[1]) : undefined
+					}
 
 					operationsMap[filePath].diff.push({
 						content: diffContent,
@@ -148,16 +160,17 @@ export async function applyDiffTool(
 2. Missing required <file>, <path>, or <diff> tags
 3. Invalid characters or encoding in the XML
 
-Expected structure:
-<args>
-  <file>
-    <path>relative/path/to/file.ext</path>
-    <diff>
-      <content>diff content here</content>
-      <start_line>line number</start_line>
-    </diff>
-  </file>
-</args>
+Expected structure (simplified):
+<file>
+  <path>relative/path/to/file.ext</path>
+  <diff>
+<<<<<<< SEARCH
+exact content to find
+=======
+replacement content
+>>>>>>> REPLACE
+  </diff>
+</file>
 
 Original error: ${errorMessage}`
 			cline.consecutiveMistakeCount++
