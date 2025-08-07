@@ -3,39 +3,9 @@ import type { ModelInfo } from "../model.js"
 // https://openai.com/api/pricing/
 export type OpenAiNativeModelId = keyof typeof openAiNativeModels
 
-export const openAiNativeDefaultModelId: OpenAiNativeModelId = "gpt-5-2025-08-07"
+export const openAiNativeDefaultModelId: OpenAiNativeModelId = "gpt-4o"
 
 export const openAiNativeModels = {
-	"gpt-5-2025-08-07": {
-		maxTokens: 128000,
-		contextWindow: 400000,
-		supportsImages: true,
-		supportsPromptCache: true,
-		supportsReasoningEffort: true,
-		inputPrice: 1.25,
-		outputPrice: 10.0,
-		cacheReadsPrice: 0.125,
-	},
-	"gpt-5-mini-2025-08-07": {
-		maxTokens: 128000,
-		contextWindow: 400000,
-		supportsImages: true,
-		supportsPromptCache: true,
-		supportsReasoningEffort: true,
-		inputPrice: 0.25,
-		outputPrice: 2.0,
-		cacheReadsPrice: 0.025,
-	},
-	"gpt-5-nano-2025-08-07": {
-		maxTokens: 128000,
-		contextWindow: 400000,
-		supportsImages: true,
-		supportsPromptCache: true,
-		supportsReasoningEffort: true,
-		inputPrice: 0.05,
-		outputPrice: 0.4,
-		cacheReadsPrice: 0.005,
-	},
 	"nectarine-alpha-new-reasoning-effort-2025-07-25": {
 		maxTokens: 128000,
 		contextWindow: 400000,
@@ -51,7 +21,6 @@ export const openAiNativeModels = {
 		contextWindow: 1_047_576,
 		supportsImages: true,
 		supportsPromptCache: true,
-		supportsReasoningEffort: true,
 		inputPrice: 2,
 		outputPrice: 8,
 		cacheReadsPrice: 0.5,
@@ -61,7 +30,6 @@ export const openAiNativeModels = {
 		contextWindow: 1_047_576,
 		supportsImages: true,
 		supportsPromptCache: true,
-		supportsReasoningEffort: true,
 		inputPrice: 0.4,
 		outputPrice: 1.6,
 		cacheReadsPrice: 0.1,
@@ -71,7 +39,6 @@ export const openAiNativeModels = {
 		contextWindow: 1_047_576,
 		supportsImages: true,
 		supportsPromptCache: true,
-		supportsReasoningEffort: true,
 		inputPrice: 0.1,
 		outputPrice: 0.4,
 		cacheReadsPrice: 0.025,
@@ -84,7 +51,6 @@ export const openAiNativeModels = {
 		inputPrice: 2.0,
 		outputPrice: 8.0,
 		cacheReadsPrice: 0.5,
-		supportsReasoningEffort: true,
 		reasoningEffort: "medium",
 	},
 	"o3-high": {
@@ -115,7 +81,6 @@ export const openAiNativeModels = {
 		inputPrice: 1.1,
 		outputPrice: 4.4,
 		cacheReadsPrice: 0.275,
-		supportsReasoningEffort: true,
 		reasoningEffort: "medium",
 	},
 	"o4-mini-high": {
@@ -146,7 +111,6 @@ export const openAiNativeModels = {
 		inputPrice: 1.1,
 		outputPrice: 4.4,
 		cacheReadsPrice: 0.55,
-		supportsReasoningEffort: true,
 		reasoningEffort: "medium",
 	},
 	"o3-mini-high": {
@@ -174,7 +138,6 @@ export const openAiNativeModels = {
 		contextWindow: 200_000,
 		supportsImages: true,
 		supportsPromptCache: true,
-		supportsReasoningEffort: true,
 		inputPrice: 15,
 		outputPrice: 60,
 		cacheReadsPrice: 7.5,
@@ -184,7 +147,6 @@ export const openAiNativeModels = {
 		contextWindow: 128_000,
 		supportsImages: true,
 		supportsPromptCache: true,
-		supportsReasoningEffort: true,
 		inputPrice: 15,
 		outputPrice: 60,
 		cacheReadsPrice: 7.5,
@@ -194,7 +156,6 @@ export const openAiNativeModels = {
 		contextWindow: 128_000,
 		supportsImages: true,
 		supportsPromptCache: true,
-		supportsReasoningEffort: true,
 		inputPrice: 1.1,
 		outputPrice: 4.4,
 		cacheReadsPrice: 0.55,
@@ -204,7 +165,6 @@ export const openAiNativeModels = {
 		contextWindow: 128_000,
 		supportsImages: true,
 		supportsPromptCache: true,
-		supportsReasoningEffort: true,
 		inputPrice: 75,
 		outputPrice: 150,
 		cacheReadsPrice: 37.5,
@@ -214,7 +174,6 @@ export const openAiNativeModels = {
 		contextWindow: 128_000,
 		supportsImages: true,
 		supportsPromptCache: true,
-		supportsReasoningEffort: true,
 		inputPrice: 2.5,
 		outputPrice: 10,
 		cacheReadsPrice: 1.25,
@@ -224,7 +183,6 @@ export const openAiNativeModels = {
 		contextWindow: 128_000,
 		supportsImages: true,
 		supportsPromptCache: true,
-		supportsReasoningEffort: true,
 		inputPrice: 0.15,
 		outputPrice: 0.6,
 		cacheReadsPrice: 0.075,
