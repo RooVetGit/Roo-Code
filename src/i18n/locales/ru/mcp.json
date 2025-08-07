@@ -5,7 +5,10 @@
 		"invalid_settings_validation": "Неверный формат настроек MCP: {{errorMessages}}",
 		"create_json": "Не удалось создать или открыть .roo/mcp.json: {{error}}",
 		"failed_update_project": "Не удалось обновить серверы проекта MCP",
-		"invalidJsonArgument": "Roo попытался использовать {{toolName}} с недопустимым JSON-аргументом. Повторная попытка..."
+		"invalidJsonArgument": "Roo попытался использовать {{toolName}} с недопустимым JSON-аргументом. Повторная попытка...",
+		"refresh_after_disable": "Failed to refresh MCP connections after disabling",
+		"refresh_after_enable": "Failed to refresh MCP connections after enabling",
+		"disconnect_servers_partial": "Failed to disconnect {{count}} MCP server(s). Check the output for details."
 	},
 	"info": {
 		"server_restarting": "Перезапуск сервера MCP {{serverName}}...",

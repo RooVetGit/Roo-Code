@@ -5,7 +5,10 @@
 		"invalid_settings_validation": "잘못된 MCP 설정 형식: {{errorMessages}}",
 		"create_json": ".roo/mcp.json 생성 또는 열기 실패: {{error}}",
 		"failed_update_project": "프로젝트 MCP 서버 업데이트에 실패했습니다",
-		"invalidJsonArgument": "Roo가 유효하지 않은 JSON 인자로 {{toolName}}을(를) 사용하려고 했습니다. 다시 시도 중..."
+		"invalidJsonArgument": "Roo가 유효하지 않은 JSON 인자로 {{toolName}}을(를) 사용하려고 했습니다. 다시 시도 중...",
+		"refresh_after_disable": "Failed to refresh MCP connections after disabling",
+		"refresh_after_enable": "Failed to refresh MCP connections after enabling",
+		"disconnect_servers_partial": "Failed to disconnect {{count}} MCP server(s). Check the output for details."
 	},
 	"info": {
 		"server_restarting": "{{serverName}} MCP 서버를 재시작하는 중...",

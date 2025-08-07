@@ -5,7 +5,10 @@
 		"invalid_settings_validation": "Formato de configurações MCP inválido: {{errorMessages}}",
 		"create_json": "Falha ao criar ou abrir .roo/mcp.json: {{error}}",
 		"failed_update_project": "Falha ao atualizar os servidores MCP do projeto",
-		"invalidJsonArgument": "Roo tentou usar {{toolName}} com um argumento JSON inválido. Tentando novamente..."
+		"invalidJsonArgument": "Roo tentou usar {{toolName}} com um argumento JSON inválido. Tentando novamente...",
+		"refresh_after_disable": "Failed to refresh MCP connections after disabling",
+		"refresh_after_enable": "Failed to refresh MCP connections after enabling",
+		"disconnect_servers_partial": "Failed to disconnect {{count}} MCP server(s). Check the output for details."
 	},
 	"info": {
 		"server_restarting": "Reiniciando o servidor MCP {{serverName}}...",

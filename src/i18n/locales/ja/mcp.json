@@ -5,7 +5,10 @@
 		"invalid_settings_validation": "MCP設定フォーマットが無効です：{{errorMessages}}",
 		"create_json": ".roo/mcp.jsonの作成または開くことに失敗しました：{{error}}",
 		"failed_update_project": "プロジェクトMCPサーバーの更新に失敗しました",
-		"invalidJsonArgument": "Rooが無効なJSON引数で{{toolName}}を使用しようとしました。再試行中..."
+		"invalidJsonArgument": "Rooが無効なJSON引数で{{toolName}}を使用しようとしました。再試行中...",
+		"refresh_after_disable": "Failed to refresh MCP connections after disabling",
+		"refresh_after_enable": "Failed to refresh MCP connections after enabling",
+		"disconnect_servers_partial": "Failed to disconnect {{count}} MCP server(s). Check the output for details."
 	},
 	"info": {
 		"server_restarting": "MCPサーバー{{serverName}}を再起動中...",
