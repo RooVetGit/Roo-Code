@@ -6283,6 +6283,10 @@ packages:
 
   ioredis@5.6.1:
     resolution: {integrity: sha512-UxC0Yv1Y4WRJiGQxQkP0hfdL0/5/6YvdfOOClRgJ0qppSarkhneSa6UvkMkms0AkdGimSH3Ikqm+6mkMmX7vGA==}
+
+  ioredis@5.7.0:
+    resolution: {integrity: sha512-NUcA93i1lukyXU+riqEyPtSEkyFq8tX90uL659J+qpCZ3rEdViB/APC58oAhIh3+bJln2hzdlZbBZsGNrlsR8g==}
+
     engines: {node: '>=12.22.0'}
 
 
@@ -12212,7 +12216,7 @@ snapshots:
   '@roo-code/cloud@0.5.0':
     dependencies:
       '@roo-code/types': 1.44.0
-      ioredis: 5.6.1
+      ioredis: 5.7.0
       p-wait-for: 5.0.2
       zod: 3.25.76
     transitivePeerDependencies:
@@ -15984,11 +15988,13 @@ snapshots:
   internmap@2.0.3: {}
 
 
+
   iovalkey@0.3.3:
     dependencies:
       '@iovalkey/commands': 0.1.0
 
-  ioredis@5.6.1:
+  ioredis@5.7.0:
+
     dependencies:
       '@ioredis/commands': 1.3.0
       cluster-key-slot: 1.1.2
