@@ -180,6 +180,23 @@ const ApiOptions = ({
 			apiConfiguration.openRouterModelId in routerModels.openrouter,
 	})
 
+	// Initialize openRouterSpecificProvider with default value when the dropdown becomes available
+	useEffect(() => {
+		if (
+			selectedProvider === "openrouter" &&
+			openRouterModelProviders &&
+			Object.keys(openRouterModelProviders).length > 0 &&
+			apiConfiguration?.openRouterSpecificProvider === undefined
+		) {
+			setApiConfigurationField("openRouterSpecificProvider", OPENROUTER_DEFAULT_PROVIDER_NAME)
+		}
+	}, [
+		selectedProvider,
+		openRouterModelProviders,
+		apiConfiguration?.openRouterSpecificProvider,
+		setApiConfigurationField,
+	])
+
 	// Update `apiModelId` whenever `selectedModelId` changes.
 	useEffect(() => {
 		if (selectedModelId && apiConfiguration.apiModelId !== selectedModelId) {
