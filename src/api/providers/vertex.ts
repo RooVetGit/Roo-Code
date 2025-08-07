@@ -1,4 +1,4 @@
-import { type ModelInfo, type VertexModelId, vertexDefaultModelId, vertexModels } from "@roo-code/types"
+import { type ModelInfo, vertexDefaultModelId, vertexModels, mapLegacyVertexModel } from "@roo-code/types"
 
 import type { ApiHandlerOptions } from "../../shared/api"
 
@@ -14,7 +14,12 @@ export class VertexHandler extends GeminiHandler implements SingleCompletionHand
 
 	override getModel() {
 		const modelId = this.options.apiModelId
-		let id = modelId && modelId in vertexModels ? (modelId as VertexModelId) : vertexDefaultModelId
+		let id = modelId ? mapLegacyVertexModel(modelId) : vertexDefaultModelId
+
+		if (modelId && id && modelId !== id) {
+			this.options.apiModelId = id
+		}
+
 		const info: ModelInfo = vertexModels[id]
 		const params = getModelParams({ format: "gemini", modelId: id, model: info, settings: this.options })
 
