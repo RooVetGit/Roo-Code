@@ -53,7 +53,7 @@ export class OpenAiNativeHandler extends BaseProvider implements SingleCompletio
 			yield* this.handleReasonerMessage(model, id, systemPrompt, messages)
 		} else if (model.id.startsWith("o1")) {
 			yield* this.handleO1FamilyMessage(model, systemPrompt, messages)
-		} else if (this.isNectarineModel(model.id)) {
+		} else if (this.isNectarineModel(model.id) || this.isGpt5Model(model.id)) {
 			yield* this.handleNectarineMessage(model, systemPrompt, messages)
 		} else {
 			yield* this.handleDefaultModelMessage(model, systemPrompt, messages)
@@ -152,6 +152,10 @@ export class OpenAiNativeHandler extends BaseProvider implements SingleCompletio
 
 	private isNectarineModel(modelId: string): boolean {
 		return modelId.includes("nectarine")
+	}
+
+	private isGpt5Model(modelId: string): boolean {
+		return modelId.startsWith("gpt-5")
 	}
 
 	private async *handleStreamResponse(
