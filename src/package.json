@@ -312,6 +312,15 @@
 				"label": "%views.terminalMenu.label%"
 			}
 		],
+		"keybindings": [
+			{
+				"command": "roo-cline.newTask",
+				"key": "cmd+r",
+				"mac": "cmd+r",
+				"win": "ctrl+r",
+				"linux": "ctrl+r"
+			}
+		],
 		"configuration": {
 			"title": "%configuration.title%",
 			"properties": {
