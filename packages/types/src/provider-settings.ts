@@ -252,6 +252,10 @@ const litellmSchema = baseProviderSettingsSchema.extend({
 	litellmApiKey: z.string().optional(),
 	litellmModelId: z.string().optional(),
 	litellmUsePromptCache: z.boolean().optional(),
+	// OAuth metadata (optional)
+	litellmTokenType: z.string().optional(),
+	litellmTokenExpiresAt: z.string().optional(),
+	litellmTokenScope: z.string().optional(),
 })
 
 const cerebrasSchema = apiModelIdProviderModelSchema.extend({

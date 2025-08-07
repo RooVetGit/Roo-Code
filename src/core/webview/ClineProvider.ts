@@ -1255,7 +1255,9 @@ export class ClineProvider
 		await this.upsertProviderProfile(currentApiConfigName, newConfiguration)
 	}
 
-	// LiteLLM
+	// LiteLLM OAuth2 SSO integration
+	// Flow: User clicks SSO button -> LiteLLM OAuth page -> redirect back with access_token
+	// Token is stored as API key for the LiteLLM provider. Based on LiteLLM PR #13227.
 	async handleLiteLLMCallback(oauthResponse: {
 		accessToken: string
 		tokenType: string
@@ -1277,14 +1279,34 @@ export class ClineProvider
 			apiProvider: "litellm",
 			litellmApiKey: accessToken,
 			litellmModelId: apiConfiguration?.litellmModelId || litellmDefaultModelId,
+			litellmTokenType: tokenType,
+			litellmTokenExpiresAt: expiresAt,
+			litellmTokenScope: scope,
 		}
 		await this.upsertProviderProfile(currentApiConfigName, newConfiguration)
 
 		// Notify webview of the configuration update
 		await this.postStateToWebview()
 
-		// Show success message to user
-		vscode.window.showInformationMessage("Successfully authenticated with LiteLLM via SSO!")
+		// Show success message to user including token expiry information
+		vscode.window.showInformationMessage(
+			`Successfully authenticated with LiteLLM via SSO! Token expires in ${expiresIn} seconds.`,
+		)
+
+		// Schedule a pre-expiry warning if expiry is reasonable
+		try {
+			const msUntilExpiry = expiresIn * 1000
+			const warnMs = Math.max(0, msUntilExpiry - 5 * 60 * 1000) // 5 minutes before
+			if (warnMs > 0 && warnMs < 7 * 24 * 60 * 60 * 1000) {
+				setTimeout(() => {
+					void vscode.window.showWarningMessage(
+						"Your LiteLLM OAuth token is about to expire. Please re-authenticate via SSO to avoid interruptions.",
+					)
+				}, warnMs)
+			}
+		} catch {
+			// ignore scheduling errors
+		}
 	}
 
 	// Glama

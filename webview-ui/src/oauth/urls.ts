@@ -17,6 +17,13 @@ export function getRequestyAuthUrl(uriScheme?: string) {
 }
 
 export function getLiteLLMAuthUrl(baseUrl: string, uriScheme?: string) {
+	// Validate URL format to avoid malformed links
+	try {
+		// Throws on invalid URL
+		new URL(baseUrl)
+	} catch {
+		return ""
+	}
 	const cleanBaseUrl = baseUrl.replace(/\/+$/, "")
 	return `${cleanBaseUrl}/sso/key/generate?response_type=oauth_token&redirect_uri=${getCallbackUrl("litellm", uriScheme)}`
 }

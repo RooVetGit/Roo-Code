@@ -115,14 +115,16 @@ export const LiteLLM = ({
 				{t("settings:providers.apiKeyStorageNotice")}
 			</div>
 
-			{apiConfiguration?.litellmBaseUrl && (
-				<VSCodeButtonLink
-					href={getLiteLLMAuthUrl(apiConfiguration.litellmBaseUrl, uriScheme)}
-					style={{ width: "100%" }}
-					appearance="primary">
-					{t("settings:providers.getLiteLLMApiKey")}
-				</VSCodeButtonLink>
-			)}
+			{(() => {
+				if (!apiConfiguration?.litellmBaseUrl || apiConfiguration?.litellmApiKey) return null
+				const authUrl = getLiteLLMAuthUrl(apiConfiguration.litellmBaseUrl, uriScheme)
+				if (!authUrl) return null
+				return (
+					<VSCodeButtonLink href={authUrl} style={{ width: "100%" }} appearance="primary">
+						{t("settings:providers.getLiteLLMApiKey")}
+					</VSCodeButtonLink>
+				)
+			})()}
 
 			<Button
 				variant="outline"
