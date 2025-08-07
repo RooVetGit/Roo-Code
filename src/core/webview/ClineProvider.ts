@@ -641,7 +641,12 @@ export class ClineProvider
 		options: Partial<
 			Pick<
 				TaskOptions,
-				"enableDiff" | "enableCheckpoints" | "fuzzyMatchThreshold" | "consecutiveMistakeLimit" | "experiments"
+				| "enableDiff"
+				| "enableCheckpoints"
+				| "fuzzyMatchThreshold"
+				| "consecutiveMistakeLimit"
+				| "experiments"
+				| "initialTodos"
 			>
 		> = {},
 	) {
@@ -672,6 +677,7 @@ export class ClineProvider
 			parentTask,
 			taskNumber: this.clineStack.length + 1,
 			onCreated: (instance) => this.emit(RooCodeEventName.TaskCreated, instance),
+			initialTodos: options.initialTodos,
 			...options,
 		})
 
@@ -1665,6 +1671,7 @@ export class ClineProvider
 				? (taskHistory || []).find((item: HistoryItem) => item.id === this.getCurrentCline()?.taskId)
 				: undefined,
 			clineMessages: this.getCurrentCline()?.clineMessages || [],
+			currentTaskTodos: this.getCurrentCline()?.todoList || [],
 			taskHistory: (taskHistory || [])
 				.filter((item: HistoryItem) => item.ts && item.task)
 				.sort((a: HistoryItem, b: HistoryItem) => b.ts - a.ts),
