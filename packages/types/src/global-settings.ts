@@ -148,6 +148,14 @@ export const globalSettingsSchema = z.object({
 	hasOpenedModeSelector: z.boolean().optional(),
 	lastModeExportPath: z.string().optional(),
 	lastModeImportPath: z.string().optional(),
+	rulesSettings: z
+		.object({
+			selectedRuleTypes: z.array(z.string()),
+			addToGitignore: z.boolean(),
+			includeCustomRules: z.boolean(),
+			customRulesText: z.string(),
+		})
+		.optional(),
 })
 
 export type GlobalSettings = z.infer<typeof globalSettingsSchema>

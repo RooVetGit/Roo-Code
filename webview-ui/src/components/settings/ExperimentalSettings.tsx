@@ -8,19 +8,31 @@ import { EXPERIMENT_IDS, experimentConfigsMap } from "@roo/experiments"
 import { useAppTranslation } from "@src/i18n/TranslationContext"
 import { cn } from "@src/lib/utils"
 
-import { SetExperimentEnabled } from "./types"
+import { SetExperimentEnabled, SetCachedStateField } from "./types"
 import { SectionHeader } from "./SectionHeader"
 import { Section } from "./Section"
 import { ExperimentalFeature } from "./ExperimentalFeature"
+import { RulesSettings } from "./RulesSettings"
 
 type ExperimentalSettingsProps = HTMLAttributes<HTMLDivElement> & {
 	experiments: Experiments
 	setExperimentEnabled: SetExperimentEnabled
+	hasUnsavedChanges?: boolean
+	rulesSettings?: {
+		selectedRuleTypes: string[]
+		addToGitignore: boolean
+		includeCustomRules: boolean
+		customRulesText: string
+	}
+	setCachedStateField: SetCachedStateField<"rulesSettings">
 }
 
 export const ExperimentalSettings = ({
 	experiments,
 	setExperimentEnabled,
+	hasUnsavedChanges,
+	rulesSettings,
+	setCachedStateField,
 	className,
 	...props
 }: ExperimentalSettingsProps) => {
@@ -66,6 +78,8 @@ export const ExperimentalSettings = ({
 						)
 					})}
 			</Section>
+
+			<RulesSettings className="mt-3" rulesSettings={rulesSettings} setCachedStateField={setCachedStateField} />
 		</div>
 	)
 }
