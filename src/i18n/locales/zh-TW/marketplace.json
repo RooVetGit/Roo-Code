@@ -2,7 +2,8 @@
 	"type-group": {
 		"modes": "模式",
 		"mcps": "MCP 伺服器",
-		"match": "符合"
+		"match": "符合",
+		"agents": "代理"
 	},
 	"item-card": {
 		"type-mode": "模式",
@@ -14,7 +15,8 @@
 		"filter-by-tag": "依標籤篩選：{{tag}}",
 		"component-details": "元件詳情",
 		"view": "檢視",
-		"source": "來源"
+		"source": "來源",
+		"type-agent": "代理"
 	},
 	"filters": {
 		"search": {
@@ -24,7 +26,8 @@
 			"label": "類型",
 			"all": "所有類型",
 			"mode": "模式",
-			"mcpServer": "MCP 伺服器"
+			"mcpServer": "MCP 伺服器",
+			"agent": "代理"
 		},
 		"sort": {
 			"label": "排序方式",

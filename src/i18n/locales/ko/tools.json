@@ -14,5 +14,11 @@
 		"errors": {
 			"policy_restriction": "정책 제한으로 인해 새 작업을 생성하지 못했습니다."
 		}
+	},
+	"agentSelector": {
+		"selectAgent": "에이전트 선택",
+		"currentAgent": "현재 에이전트: {{agent}}",
+		"switchAgent": "{{agent}}로 전환",
+		"noAgentsAvailable": "사용 가능한 에이전트가 없습니다"
 	}
 }

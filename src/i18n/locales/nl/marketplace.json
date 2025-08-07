@@ -2,7 +2,8 @@
 	"type-group": {
 		"modes": "Modi",
 		"mcps": "MCP Servers",
-		"match": "overeenkomst"
+		"match": "overeenkomst",
+		"agents": "Agenten"
 	},
 	"item-card": {
 		"type-mode": "Modus",
@@ -14,7 +15,8 @@
 		"filter-by-tag": "Filteren op tag: {{tag}}",
 		"component-details": "Component details",
 		"view": "Bekijken",
-		"source": "Bron"
+		"source": "Bron",
+		"type-agent": "Agent"
 	},
 	"filters": {
 		"search": {
@@ -24,7 +26,8 @@
 			"label": "Type",
 			"all": "Alle types",
 			"mode": "Modus",
-			"mcpServer": "MCP Server"
+			"mcpServer": "MCP Server",
+			"agent": "Agent"
 		},
 		"sort": {
 			"label": "Sorteren op",

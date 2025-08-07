@@ -14,5 +14,11 @@
 		"errors": {
 			"policy_restriction": "No s'ha pogut crear una nova tasca a causa de restriccions de política."
 		}
+	},
+	"agentSelector": {
+		"selectAgent": "Seleccionar Agent",
+		"currentAgent": "Agent Actual: {{agent}}",
+		"switchAgent": "Canviar a {{agent}}",
+		"noAgentsAvailable": "No hi ha agents disponibles"
 	}
 }

@@ -2,7 +2,8 @@
 	"type-group": {
 		"modes": "Chế độ",
 		"mcps": "Máy chủ MCP",
-		"match": "khớp"
+		"match": "khớp",
+		"agents": "Đại lý"
 	},
 	"item-card": {
 		"type-mode": "Chế độ",
@@ -14,7 +15,8 @@
 		"filter-by-tag": "Lọc theo thẻ: {{tag}}",
 		"component-details": "Chi tiết thành phần",
 		"view": "Xem",
-		"source": "Nguồn"
+		"source": "Nguồn",
+		"type-agent": "Đại lý"
 	},
 	"filters": {
 		"search": {
@@ -24,7 +26,8 @@
 			"label": "Loại",
 			"all": "Tất cả loại",
 			"mode": "Chế độ",
-			"mcpServer": "Máy chủ MCP"
+			"mcpServer": "Máy chủ MCP",
+			"agent": "Đại lý"
 		},
 		"sort": {
 			"label": "Sắp xếp theo",

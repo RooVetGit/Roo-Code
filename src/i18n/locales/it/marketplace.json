@@ -2,7 +2,8 @@
 	"type-group": {
 		"modes": "Modalità",
 		"mcps": "Server MCP",
-		"match": "corrispondenza"
+		"match": "corrispondenza",
+		"agents": "Agenti"
 	},
 	"item-card": {
 		"type-mode": "Modalità",
@@ -14,7 +15,8 @@
 		"filter-by-tag": "Filtra per tag: {{tag}}",
 		"component-details": "Dettagli componente",
 		"view": "Visualizza",
-		"source": "Sorgente"
+		"source": "Sorgente",
+		"type-agent": "Agente"
 	},
 	"filters": {
 		"search": {
@@ -24,7 +26,8 @@
 			"label": "Tipo",
 			"all": "Tutti i tipi",
 			"mode": "Modalità",
-			"mcpServer": "Server MCP"
+			"mcpServer": "Server MCP",
+			"agent": "Agente"
 		},
 		"sort": {
 			"label": "Ordina per",
