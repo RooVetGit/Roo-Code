@@ -410,8 +410,11 @@ export async function presentAssistantMessage(cline: Task) {
 
 			switch (block.name) {
 				case "write_to_file":
-					await checkpointSaveAndMark(cline)
+					// Save checkpoint BEFORE file edit
+					await checkpointSaveAndMark(cline, "before")
 					await writeToFileTool(cline, block, askApproval, handleError, pushToolResult, removeClosingTag)
+					// Save checkpoint AFTER file edit
+					await checkpointSaveAndMark(cline, "after")
 					break
 				case "update_todo_list":
 					await updateTodoListTool(cline, block, askApproval, handleError, pushToolResult, removeClosingTag)
@@ -429,11 +432,12 @@ export async function presentAssistantMessage(cline: Task) {
 						)
 					}
 
+					// Save checkpoint BEFORE file edit
+					await checkpointSaveAndMark(cline, "before")
+
 					if (isMultiFileApplyDiffEnabled) {
-						await checkpointSaveAndMark(cline)
 						await applyDiffTool(cline, block, askApproval, handleError, pushToolResult, removeClosingTag)
 					} else {
-						await checkpointSaveAndMark(cline)
 						await applyDiffToolLegacy(
 							cline,
 							block,
@@ -443,15 +447,23 @@ export async function presentAssistantMessage(cline: Task) {
 							removeClosingTag,
 						)
 					}
+					// Save checkpoint AFTER file edit
+					await checkpointSaveAndMark(cline, "after")
 					break
 				}
 				case "insert_content":
-					await checkpointSaveAndMark(cline)
+					// Save checkpoint BEFORE file edit
+					await checkpointSaveAndMark(cline, "before")
 					await insertContentTool(cline, block, askApproval, handleError, pushToolResult, removeClosingTag)
+					// Save checkpoint AFTER file edit
+					await checkpointSaveAndMark(cline, "after")
 					break
 				case "search_and_replace":
-					await checkpointSaveAndMark(cline)
+					// Save checkpoint BEFORE file edit
+					await checkpointSaveAndMark(cline, "before")
 					await searchAndReplaceTool(cline, block, askApproval, handleError, pushToolResult, removeClosingTag)
+					// Save checkpoint AFTER file edit
+					await checkpointSaveAndMark(cline, "after")
 					break
 				case "read_file":
 					await readFileTool(cline, block, askApproval, handleError, pushToolResult, removeClosingTag)
@@ -583,16 +595,25 @@ export async function presentAssistantMessage(cline: Task) {
 /**
  * save checkpoint and mark done in the current streaming task.
  * @param task The Task instance to checkpoint save and mark.
+ * @param timing Whether this is a "before" or "after" checkpoint for file edits
  * @returns
  */
-async function checkpointSaveAndMark(task: Task) {
-	if (task.currentStreamingDidCheckpoint) {
+async function checkpointSaveAndMark(task: Task, timing?: "before" | "after") {
+	// For "before" checkpoints, always save regardless of currentStreamingDidCheckpoint
+	// For "after" checkpoints or no timing specified, use the original logic
+	if (timing !== "before" && task.currentStreamingDidCheckpoint) {
 		return
 	}
 	try {
 		await task.checkpointSave(true)
-		task.currentStreamingDidCheckpoint = true
+		// Only mark as done for "after" checkpoints or when no timing is specified
+		if (timing !== "before") {
+			task.currentStreamingDidCheckpoint = true
+		}
 	} catch (error) {
-		console.error(`[Task#presentAssistantMessage] Error saving checkpoint: ${error.message}`, error)
+		console.error(
+			`[Task#presentAssistantMessage] Error saving checkpoint (${timing || "default"}): ${error.message}`,
+			error,
+		)
 	}
 }

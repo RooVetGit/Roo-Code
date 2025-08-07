@@ -1360,6 +1360,19 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 			throw new Error(`[RooCode#recursivelyMakeRooRequests] task ${this.taskId}.${this.instanceId} aborted`)
 		}
 
+		// Save checkpoint before processing new user prompt
+		// This allows users to revert to the state right before a new interaction
+		if (this.enableCheckpoints && userContent.length > 0) {
+			try {
+				await this.checkpointSave(true)
+			} catch (error) {
+				console.error(
+					`[Task#recursivelyMakeClineRequests] Error saving checkpoint before new prompt: ${error.message}`,
+					error,
+				)
+			}
+		}
+
 		if (this.consecutiveMistakeLimit > 0 && this.consecutiveMistakeCount >= this.consecutiveMistakeLimit) {
 			const { response, text, images } = await this.ask(
 				"mistake_limit_reached",
