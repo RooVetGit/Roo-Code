@@ -1086,9 +1086,9 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 		// The todo list is already set in the constructor if initialTodos were provided
 		// No need to add any messages - the todoList property is already set
 
-		await this.say("text", task, images)
-
 		await this.providerRef.deref()?.postStateToWebview()
+
+		await this.say("text", task, images)
 		this.isInitialized = true
 
 		let imageBlocks: Anthropic.ImageBlockParam[] = formatResponse.imageBlocks(images)
