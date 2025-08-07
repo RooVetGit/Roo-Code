@@ -101,7 +101,12 @@ export function NewRun() {
 		async (values: CreateRun) => {
 			try {
 				if (mode === "openrouter") {
-					values.settings = { ...(values.settings || {}), openRouterModelId: model }
+					// Ensure apiProvider is set along with the model ID
+					values.settings = {
+						...(values.settings || {}),
+						apiProvider: "openrouter",
+						openRouterModelId: model,
+					}
 				}
 
 				const { id } = await createRun({ ...values, systemPrompt })

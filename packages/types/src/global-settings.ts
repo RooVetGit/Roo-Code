@@ -219,7 +219,8 @@ export const isGlobalStateKey = (key: string): key is Keys<GlobalState> =>
 
 // Default settings when running evals (unless overridden).
 export const EVALS_SETTINGS: RooCodeSettings = {
-	apiProvider: "openrouter",
+	// apiProvider is intentionally not set here to allow flexibility
+	// It should be provided via run.settings or environment configuration
 	openRouterUseMiddleOutTransform: false,
 
 	lastShownAnnouncementId: "jul-09-2025-3-23-0",
