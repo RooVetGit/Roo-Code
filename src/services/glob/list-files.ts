@@ -270,19 +270,9 @@ function buildRecursiveArgs(dirPath: string): string[] {
 			continue
 		}
 
-		// When explicitly targeting a directory that's in the ignore list (e.g., "temp"),
-		// we need special handling:
-		// - Don't add any exclusion pattern for the target directory itself
-		// - Only exclude nested subdirectories with the same name
-		// This ensures all files in the target directory are listed, while still
-		// preventing recursion into nested directories with the same ignored name
-		if (dir === targetDirName && isTargetInIgnoreList) {
-			// Skip adding any exclusion pattern - we want to see everything in the target directory
-			continue
-		}
-
-		// For all other cases, exclude the directory pattern globally
-		args.push("-g", `!**/${dir}/**`)
+		// For all other cases, all children only
+		args.push("-g", `!${dir}`)
+		args.push("-g", `!${dir}/**`)
 	}
 
 	return args
