@@ -126,6 +126,7 @@ ${await addCustomInstructions(baseInstructions, globalCustomInstructions || "", 
 	language: language ?? formatLanguage(vscode.env.language),
 	rooIgnoreInstructions,
 	settings,
+	customInstructionPaths: settings?.customInstructionPaths,
 })}`
 
 	return basePrompt
@@ -188,6 +189,7 @@ export const SYSTEM_PROMPT = async (
 				language: language ?? formatLanguage(vscode.env.language),
 				rooIgnoreInstructions,
 				settings,
+				customInstructionPaths: settings?.customInstructionPaths,
 			},
 		)
 
