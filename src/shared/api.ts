@@ -51,6 +51,7 @@ export const shouldUseReasoningEffort = ({
 
 export const DEFAULT_HYBRID_REASONING_MODEL_MAX_TOKENS = 16_384
 export const DEFAULT_HYBRID_REASONING_MODEL_THINKING_TOKENS = 8_192
+export const GEMINI_25_PRO_MIN_THINKING_TOKENS = 128
 
 // Max Tokens
 
@@ -89,9 +90,9 @@ export const getModelMaxOutputTokens = ({
 		return ANTHROPIC_DEFAULT_MAX_TOKENS
 	}
 
-	// If model has explicit maxTokens and it's not the full context window, use it
-	if (model.maxTokens && model.maxTokens !== model.contextWindow) {
-		return model.maxTokens
+	// If model has explicit maxTokens, clamp it to 20% of the context window
+	if (model.maxTokens) {
+		return Math.min(model.maxTokens, model.contextWindow * 0.2)
 	}
 
 	// For non-Anthropic formats without explicit maxTokens, return undefined

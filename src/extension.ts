@@ -116,22 +116,28 @@ export async function activate(context: vscode.ExtensionContext) {
 	}
 
 	const contextProxy = await ContextProxy.getInstance(context)
-	const codeIndexManager = CodeIndexManager.getInstance(context)
 
-	try {
-		await codeIndexManager?.initialize(contextProxy)
-	} catch (error) {
-		outputChannel.appendLine(
-			`[CodeIndexManager] Error during background CodeIndexManager configuration/indexing: ${error.message || error}`,
-		)
+	// Initialize code index managers for all workspace folders
+	const codeIndexManagers: CodeIndexManager[] = []
+	if (vscode.workspace.workspaceFolders) {
+		for (const folder of vscode.workspace.workspaceFolders) {
+			const manager = CodeIndexManager.getInstance(context, folder.uri.fsPath)
+			if (manager) {
+				codeIndexManagers.push(manager)
+				try {
+					await manager.initialize(contextProxy)
+				} catch (error) {
+					outputChannel.appendLine(
+						`[CodeIndexManager] Error during background CodeIndexManager configuration/indexing for ${folder.uri.fsPath}: ${error.message || error}`,
+					)
+				}
+				context.subscriptions.push(manager)
+			}
+		}
 	}
 
-	const provider = new ClineProvider(context, outputChannel, "sidebar", contextProxy, codeIndexManager, mdmService)
+	const provider = new ClineProvider(context, outputChannel, "sidebar", contextProxy, mdmService)
 	TelemetryService.instance.setProvider(provider)
-
-	if (codeIndexManager) {
-		context.subscriptions.push(codeIndexManager)
-	}
 
 	context.subscriptions.push(
 		vscode.window.registerWebviewViewProvider(ClineProvider.sideBarId, provider, {
@@ -207,7 +213,6 @@ export async function activate(context: vscode.ExtensionContext) {
 			{ path: context.extensionPath, name: "extension" },
 			{ path: path.join(context.extensionPath, "../packages/types"), name: "types" },
 			{ path: path.join(context.extensionPath, "../packages/telemetry"), name: "telemetry" },
-			{ path: path.join(context.extensionPath, "../packages/cloud"), name: "cloud" },
 		]
 
 		console.log(
