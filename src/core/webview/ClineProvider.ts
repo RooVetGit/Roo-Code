@@ -1432,6 +1432,42 @@ export class ClineProvider
 		if (!this.checkMdmCompliance()) {
 			await this.postMessageToWebview({ type: "action", action: "accountButtonClicked" })
 		}
+
+		// Load persistent usage data asynchronously
+		this.loadPersistentUsageDataAsync()
+	}
+
+	/**
+	 * Load persistent usage data asynchronously and send to webview
+	 */
+	public async loadPersistentUsageDataAsync() {
+		try {
+			const { getUsageTrackingService } = await import("../../services/usage-tracking")
+			const usageService = getUsageTrackingService()
+
+			// Get both all workspaces and current workspace data
+			const [allData, currentData] = await Promise.all([
+				usageService.getUsageSummary(),
+				usageService.getUsageSummary(this.cwd),
+			])
+
+			// Send to webview
+			await this.postMessageToWebview({
+				type: "persistentUsageData",
+				persistentUsageData: {
+					all: allData,
+					current: currentData,
+				},
+			})
+
+			// Migrate existing task history if needed
+			const taskHistory = this.getGlobalState("taskHistory") ?? []
+			if (taskHistory.length > 0) {
+				await usageService.migrateFromTaskHistory(taskHistory, this.cwd)
+			}
+		} catch (error) {
+			this.log(`Failed to load persistent usage data: ${error}`)
+		}
 	}
 
 	/**
@@ -1957,6 +1993,16 @@ export class ClineProvider
 		}
 
 		await this.updateGlobalState("taskHistory", history)
+
+		// Update persistent usage tracking
+		try {
+			const { getUsageTrackingService } = await import("../../services/usage-tracking")
+			const usageService = getUsageTrackingService()
+			await usageService.updateUsageTracking(item, this.cwd)
+		} catch (error) {
+			this.log(`Failed to update usage tracking: ${error}`)
+		}
+
 		return history
 	}
 

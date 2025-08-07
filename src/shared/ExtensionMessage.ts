@@ -121,6 +121,7 @@ export interface ExtensionMessage {
 		| "showEditMessageDialog"
 		| "commands"
 		| "insertTextIntoTextarea"
+		| "persistentUsageData"
 	text?: string
 	payload?: any // Add a generic payload for now, can refine later
 	action?:
@@ -195,6 +196,10 @@ export interface ExtensionMessage {
 	messageTs?: number
 	context?: string
 	commands?: Command[]
+	persistentUsageData?: {
+		all: any // UsageSummary type
+		current: any // UsageSummary type
+	}
 }
 
 export type ExtensionState = Pick<

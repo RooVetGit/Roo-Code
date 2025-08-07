@@ -147,6 +147,10 @@ export interface ExtensionStateContextType extends ExtensionState {
 	setMaxDiagnosticMessages: (value: number) => void
 	includeTaskHistoryInEnhance?: boolean
 	setIncludeTaskHistoryInEnhance: (value: boolean) => void
+	persistentUsageData?: {
+		all: any // UsageSummary type
+		current: any // UsageSummary type
+	}
 }
 
 export const ExtensionStateContext = createContext<ExtensionStateContextType | undefined>(undefined)
@@ -266,6 +270,13 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 		global: {},
 	})
 	const [includeTaskHistoryInEnhance, setIncludeTaskHistoryInEnhance] = useState(false)
+	const [persistentUsageData, setPersistentUsageData] = useState<
+		| {
+				all: any // UsageSummary type
+				current: any // UsageSummary type
+		  }
+		| undefined
+	>(undefined)
 
 	const setListApiConfigMeta = useCallback(
 		(value: ProviderSettingsEntry[]) => setState((prevState) => ({ ...prevState, listApiConfigMeta: value })),
@@ -369,6 +380,12 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 					}
 					break
 				}
+				case "persistentUsageData": {
+					if (message.persistentUsageData) {
+						setPersistentUsageData(message.persistentUsageData)
+					}
+					break
+				}
 			}
 		},
 		[setListApiConfigMeta],
@@ -395,6 +412,7 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 		filePaths,
 		openedTabs,
 		commands,
+		persistentUsageData,
 		soundVolume: state.soundVolume,
 		ttsSpeed: state.ttsSpeed,
 		fuzzyMatchThreshold: state.fuzzyMatchThreshold,

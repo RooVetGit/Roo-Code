@@ -15,9 +15,11 @@ import ApiOptions from "../settings/ApiOptions"
 import { Tab, TabContent } from "../common/Tab"
 
 import RooHero from "./RooHero"
+import CostSummary from "./CostSummary"
 
 const WelcomeView = () => {
-	const { apiConfiguration, currentApiConfigName, setApiConfiguration, uriScheme, machineId } = useExtensionState()
+	const { apiConfiguration, currentApiConfigName, setApiConfiguration, uriScheme, machineId, persistentUsageData } =
+		useExtensionState()
 	const { t } = useAppTranslation()
 	const [errorMessage, setErrorMessage] = useState<string | undefined>(undefined)
 
@@ -51,6 +53,10 @@ const WelcomeView = () => {
 		<Tab>
 			<TabContent className="flex flex-col gap-5 p-16">
 				<RooHero />
+
+				{/* Add CostSummary component */}
+				<CostSummary usageData={persistentUsageData} />
+
 				<h2 className="mt-0 mb-0">{t("welcome:greeting")}</h2>
 
 				<div className="font-bold">

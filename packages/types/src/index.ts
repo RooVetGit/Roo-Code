@@ -20,6 +20,7 @@ export * from "./telemetry.js"
 export * from "./terminal.js"
 export * from "./tool.js"
 export * from "./type-fu.js"
+export * from "./usage.js"
 export * from "./vscode.js"
 
 export * from "./providers/index.js"
