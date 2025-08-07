@@ -56,37 +56,19 @@ try {
 		log("green", "✓ Dependencies already installed")
 	}
 
-	// Step 2: Build in development mode
-	log("yellow", "🔨 Building SDK in development mode...")
-
-	execSync("pnpm build:development", {
-		cwd: cloudSdkPath,
-		stdio: "inherit",
-		env: { ...process.env, FORCE_COLOR: "1" },
-	})
-
-	// Step 3: Build for npm directory
-	log("yellow", "📦 Building for npm directory...")
-
-	execSync("NODE_ENV=development pnpm tsup --outDir npm/dist", {
-		cwd: cloudSdkPath,
-		stdio: "inherit",
-		env: { ...process.env, NODE_ENV: "development", FORCE_COLOR: "1" },
-	})
-
-	// Step 4: Remove existing link if it exists
+	// Step 2: Remove existing link if it exists
 	if (fs.existsSync(targetPath)) {
 		log("yellow", "🗑️  Removing existing @roo-code/cloud package...")
 		fs.rmSync(targetPath, { recursive: true, force: true })
 	}
 
-	// Step 5: Create @roo-code directory if needed
+	// Step 3: Create @roo-code directory if needed
 	const rooCodeDir = path.join(extensionNodeModules, "@roo-code")
 	if (!fs.existsSync(rooCodeDir)) {
 		fs.mkdirSync(rooCodeDir, { recursive: true })
 	}
 
-	// Step 6: Create symlink
+	// Step 4: Create symlink
 	const npmPath = path.join(cloudSdkPath, "npm")
 	fs.symlinkSync(npmPath, targetPath, "dir")
 
