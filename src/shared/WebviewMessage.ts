@@ -275,9 +275,6 @@ export interface WebviewMessage {
 		codeIndexOpenAiKey?: string
 		codeIndexQdrantApiKey?: string
 		codeIndexValkeyPassword?: string
-		codebaseIndexValkeySslCa?: string
-		codebaseIndexValkeySslCert?: string
-		codebaseIndexValkeySslKey?: string
 		codebaseIndexOpenAiCompatibleApiKey?: string
 		codebaseIndexGeminiApiKey?: string
 		codebaseIndexMistralApiKey?: string

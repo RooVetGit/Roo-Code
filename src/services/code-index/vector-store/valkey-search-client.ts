@@ -4,7 +4,6 @@ import * as path from "path"
 import { IVectorStore, VectorStoreSearchResult } from "../interfaces"
 import { DEFAULT_MAX_SEARCH_RESULTS } from "../constants"
 import { t } from "../../../i18n"
-import * as fs from "fs"
 
 export class ValkeySearchVectorStore implements IVectorStore {
 	private readonly vectorSize: number
@@ -16,9 +15,6 @@ export class ValkeySearchVectorStore implements IVectorStore {
 	private readonly valkeyPort: number
 	private readonly valkeyUsername?: string
 	private readonly valkeyPassword?: string
-	private readonly tlsCa?: string = undefined
-	private readonly tlsCert?: string = undefined
-	private readonly tlsKey?: string = undefined
 	private readonly useSsl: boolean
 
 	constructor(
@@ -29,19 +25,12 @@ export class ValkeySearchVectorStore implements IVectorStore {
 		username?: string,
 		password?: string,
 		useSsl: boolean = false,
-		tlsCa?: string,
-		tlsCert?: string,
-		tlsKey?: string,
 	) {
 		this.valkeyHostname = hostname
 		this.valkeyPort = port
 		this.valkeyUsername = username
 		this.valkeyPassword = password
 		this.vectorSize = vectorSize
-		this.useSsl = useSsl
-		this.tlsCa = tlsCa
-		this.tlsCert = tlsCert
-		this.tlsKey = tlsKey
 		this.useSsl = useSsl || false
 
 		const hash = createHash("sha256").update(workspacePath).digest("hex")
@@ -70,13 +59,12 @@ export class ValkeySearchVectorStore implements IVectorStore {
 					: undefined,
 			})
 			this.client.on("error", (error: Error) => {
-				console.error("[ValkeySearch] Connection error:", error)
+				console.error("[ValkeySearch] Connection error:", error.message)
 				this.isInitializing = false
 				throw new Error(
 					t("embeddings:vectorStore.vectorError", {
 						errorMessage: error.message,
 					}),
-					{ cause: error },
 				)
 			})
 
@@ -94,15 +82,11 @@ export class ValkeySearchVectorStore implements IVectorStore {
 		} catch (error) {
 			this.isInitializing = false
 			if (error instanceof Error) {
-				if (error.cause) {
-					throw error
-				}
 				throw new Error(
 					t("embeddings:vectorStore.valkeyConnectionFailed", {
 						valkeyUrl: `${this.valkeyHostname}:${this.valkeyPort}`,
 						errorMessage: error,
 					}),
-					{ cause: error },
 				)
 			}
 			throw error
@@ -134,9 +118,6 @@ export class ValkeySearchVectorStore implements IVectorStore {
 			info = (await this.client?.sendCommand(new Command("FT.INFO", [this.indexName]))) as {
 				attributes: Array<{ attribute: string; dimension?: number }>
 			}
-		} catch {}
-
-		try {
 			if (info) {
 				const vectorAttr = info?.attributes?.find((attr) => attr.attribute === "vector")
 				if (vectorAttr?.dimension === this.vectorSize) {
@@ -146,7 +127,7 @@ export class ValkeySearchVectorStore implements IVectorStore {
 				await this.deleteCollection()
 			}
 		} catch (error) {
-			throw new Error(error.message, { cause: error })
+			return false
 		}
 
 		try {
@@ -154,7 +135,7 @@ export class ValkeySearchVectorStore implements IVectorStore {
 			await this._createPayloadIndexes()
 			return true
 		} catch (error) {
-			throw new Error(error.message, { cause: error })
+			throw new Error(error.message)
 		}
 	}
 
@@ -314,10 +295,7 @@ export class ValkeySearchVectorStore implements IVectorStore {
 			await this.client?.sendCommand(new Command("FT.INFO", [this.indexName]))
 			return true
 		} catch (error) {
-			if (error instanceof Error && error.message.includes("Unknown index name")) {
-				return false
-			}
-			throw error
+			return false
 		}
 	}
 
@@ -342,9 +320,7 @@ export class ValkeySearchVectorStore implements IVectorStore {
 					]),
 				)
 			} catch (error) {
-				if (!(error instanceof Error && error.message.includes("already exists"))) {
-					console.warn(`[ValkeySearch] Failed to create index for pathSegments.${i}:`, error)
-				}
+				console.warn(`[ValkeySearch] Failed to create index for pathSegments.${i}:`, error)
 			}
 		}
 	}

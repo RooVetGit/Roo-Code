@@ -146,9 +146,6 @@ export class CodeIndexServiceFactory {
 				config.valkeyUsername,
 				config.valkeyPassword,
 				config.valkeyUseSsl,
-				config.valkeySslCa,
-				config.valkeySslCert,
-				config.valkeySslKey,
 			)
 		}
 
