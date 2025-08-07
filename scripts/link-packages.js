@@ -31,6 +31,20 @@ if (!packages.length) {
 
 packages.forEach(unlink ? unlinkPackage : linkPackage)
 
+// After unlinking, restore npm packages with a single pnpm install.
+if (unlink && packages.length > 0) {
+	const srcPath = path.resolve(__dirname, "..", "src")
+	console.log("\nRestoring npm packages...")
+
+	try {
+		execSync("pnpm install", { cwd: srcPath, stdio: "inherit" })
+		console.log("Successfully restored npm packages")
+	} catch (error) {
+		console.error(`Failed to restore packages: ${error.message}`)
+		console.log("You may need to run 'pnpm install' manually in the src directory")
+	}
+}
+
 if (!unlink && watch) {
 	const watchers = packages.filter((pkg) => pkg.watchCommand).map(startWatch)
 
