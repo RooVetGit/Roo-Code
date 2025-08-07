@@ -88,14 +88,10 @@ const sdkProcess = spawn("pnpm", ["build:development:watch"], {
 	shell: true,
 })
 
-sdkProcess.on('error', (error) => {
+sdkProcess.on("error", (error) => {
 	log("red", "❌ Failed to start SDK watch mode: " + error.message)
 	log("yellow", "Make sure 'build:development:watch' script exists in the Cloud SDK package.json")
 	process.exit(1)
-})
-	cwd: cloudSdkPath,
-	stdio: ["inherit", "pipe", "pipe"],
-	shell: true,
 })
 
 sdkProcess.stdout.on("data", (data) => {
