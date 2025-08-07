@@ -482,7 +482,7 @@ describe("OpenAiNativeHandler", () => {
 			expect(mockResponsesCreate).toHaveBeenCalledWith({
 				model: "codex-mini-latest",
 				instructions: systemPrompt,
-				input: "Hello!",
+				input: "User: Hello!",
 				stream: true,
 			})
 
@@ -518,6 +518,57 @@ describe("OpenAiNativeHandler", () => {
 					// Should not reach here
 				}
 			}).rejects.toThrow("OpenAI Responses API error: This model is only supported in v1/responses")
+		})
+
+		it("should handle multi-turn conversations with both user and assistant messages", async () => {
+			const multiTurnMessages: Anthropic.Messages.MessageParam[] = [
+				{
+					role: "user",
+					content: "What is TypeScript?",
+				},
+				{
+					role: "assistant",
+					content: "TypeScript is a typed superset of JavaScript.",
+				},
+				{
+					role: "user",
+					content: "Can you give me an example?",
+				},
+			]
+
+			mockResponsesCreate.mockImplementation(async (options) => {
+				// Verify that the input includes both user and assistant messages
+				expect(options.input).toContain("User: What is TypeScript?")
+				expect(options.input).toContain("Assistant: TypeScript is a typed superset of JavaScript.")
+				expect(options.input).toContain("User: Can you give me an example?")
+				expect(options.stream).toBe(true)
+
+				return {
+					[Symbol.asyncIterator]: async function* () {
+						yield { type: "response.output_text.delta", delta: "Here's an example:" }
+						yield { type: "response.output_text.delta", delta: " const x: number = 5;" }
+						yield { type: "response.completed" }
+					},
+				}
+			})
+
+			const responseStream = handler.createMessage(systemPrompt, multiTurnMessages)
+			const chunks: any[] = []
+			for await (const chunk of responseStream) {
+				chunks.push(chunk)
+			}
+
+			expect(mockResponsesCreate).toHaveBeenCalledWith({
+				model: "codex-mini-latest",
+				instructions: systemPrompt,
+				input: "User: What is TypeScript?\n\nAssistant: TypeScript is a typed superset of JavaScript.\n\nUser: Can you give me an example?",
+				stream: true,
+			})
+
+			const textChunks = chunks.filter((chunk) => chunk.type === "text")
+			expect(textChunks).toHaveLength(2)
+			expect(textChunks[0].text).toBe("Here's an example:")
+			expect(textChunks[1].text).toBe(" const x: number = 5;")
 		})
 	})
 

@@ -159,19 +159,25 @@ export class OpenAiNativeHandler extends BaseProvider implements SingleCompletio
 	}
 
 	private convertMessagesToInput(messages: Anthropic.Messages.MessageParam[]): string {
-		// Extract only user messages and convert to plain text
-		// This is specific to the codex-mini-latest model's requirements
+		// Convert both user and assistant messages to maintain conversation context
+		// The v1/responses endpoint expects a formatted conversation string
 		return messages
 			.map((msg) => {
-				if (msg.role === "user") {
-					if (typeof msg.content === "string") {
-						return msg.content
-					} else if (Array.isArray(msg.content)) {
-						return msg.content
-							.filter((part) => part.type === "text")
-							.map((part) => part.text)
-							.join("\n")
-					}
+				let content = ""
+
+				// Extract text content from the message
+				if (typeof msg.content === "string") {
+					content = msg.content
+				} else if (Array.isArray(msg.content)) {
+					content = msg.content
+						.filter((part) => part.type === "text")
+						.map((part) => part.text)
+						.join("\n")
+				}
+
+				// Add role prefix to maintain conversation structure
+				if (content) {
+					return msg.role === "user" ? `User: ${content}` : `Assistant: ${content}`
 				}
 				return ""
 			})
