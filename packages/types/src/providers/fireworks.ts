@@ -6,8 +6,8 @@ export type FireworksModelId =
 	| "accounts/fireworks/models/qwen3-coder-480b-a35b-instruct"
 	| "accounts/fireworks/models/deepseek-r1-0528"
 	| "accounts/fireworks/models/deepseek-v3"
-	| "accounts/fireworks/models/glm-4-5"
-	| "accounts/fireworks/models/glm-4-5-air"
+	| "accounts/fireworks/models/glm-4p5"
+	| "accounts/fireworks/models/glm-4p5-air"
 	| "accounts/fireworks/models/gpt-oss-20b"
 	| "accounts/fireworks/models/gpt-oss-120b"
 
@@ -62,7 +62,7 @@ export const fireworksModels = {
 		description:
 			"A strong Mixture-of-Experts (MoE) language model with 671B total parameters with 37B activated for each token from Deepseek. Note that fine-tuning for this model is only available through contacting fireworks at https://fireworks.ai/company/contact-us.",
 	},
-	"accounts/fireworks/models/glm-4-5": {
+	"accounts/fireworks/models/glm-4p5": {
 		maxTokens: 16384,
 		contextWindow: 128000,
 		supportsImages: false,
@@ -72,7 +72,7 @@ export const fireworksModels = {
 		description:
 			"Z.ai GLM-4.5 with 355B total parameters and 32B active parameters. Features unified reasoning, coding, and intelligent agent capabilities.",
 	},
-	"accounts/fireworks/models/glm-4-5-air": {
+	"accounts/fireworks/models/glm-4p5-air": {
 		maxTokens: 16384,
 		contextWindow: 128000,
 		supportsImages: false,

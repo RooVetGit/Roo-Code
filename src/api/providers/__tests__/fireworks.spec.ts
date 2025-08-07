@@ -180,7 +180,7 @@ describe("FireworksHandler", () => {
 	})
 
 	it("should return GLM-4.5 model with correct configuration", () => {
-		const testModelId: FireworksModelId = "accounts/fireworks/models/glm-4-5"
+		const testModelId: FireworksModelId = "accounts/fireworks/models/glm-4p5"
 		const handlerWithModel = new FireworksHandler({
 			apiModelId: testModelId,
 			fireworksApiKey: "test-fireworks-api-key",
@@ -201,7 +201,7 @@ describe("FireworksHandler", () => {
 	})
 
 	it("should return GLM-4.5-Air model with correct configuration", () => {
-		const testModelId: FireworksModelId = "accounts/fireworks/models/glm-4-5-air"
+		const testModelId: FireworksModelId = "accounts/fireworks/models/glm-4p5-air"
 		const handlerWithModel = new FireworksHandler({
 			apiModelId: testModelId,
 			fireworksApiKey: "test-fireworks-api-key",
