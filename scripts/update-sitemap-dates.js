@@ -10,14 +10,58 @@ const { execSync } = require("child_process")
  */
 
 const SITEMAP_PATH = path.join(__dirname, "../apps/web-roo-code/src/app/sitemap.ts")
+const APP_DIR = path.join(__dirname, "../apps/web-roo-code/src/app")
 
-// Map of sitemap URLs to their corresponding page files
-const URL_TO_FILE_MAP = {
-	"/": "apps/web-roo-code/src/app/page.tsx",
-	"/enterprise": "apps/web-roo-code/src/app/enterprise/page.tsx",
-	"/evals": "apps/web-roo-code/src/app/evals/page.tsx",
-	"/privacy": "apps/web-roo-code/src/app/privacy/page.tsx",
-	"/terms": "apps/web-roo-code/src/app/terms/page.tsx",
+/**
+ * Recursively find all page.tsx files in the app directory
+ * @param {string} dir - Directory to search
+ * @param {string} basePath - Base path for building relative paths
+ * @returns {Array<{url: string, filePath: string}>} Array of URL to file mappings
+ */
+function findPageFiles(dir, basePath = "") {
+	const pages = []
+	const entries = fs.readdirSync(dir, { withFileTypes: true })
+
+	for (const entry of entries) {
+		const fullPath = path.join(dir, entry.name)
+
+		if (entry.isDirectory()) {
+			// Skip certain directories that shouldn't contain pages
+			if (entry.name.startsWith(".") || entry.name === "api") {
+				continue
+			}
+
+			// Recursively search subdirectories
+			const subPages = findPageFiles(fullPath, path.join(basePath, entry.name))
+			pages.push(...subPages)
+		} else if (entry.name === "page.tsx") {
+			// Convert file path to URL following Next.js app router conventions
+			const url = basePath === "" ? "/" : `/${basePath}`
+			const relativeFilePath = path.relative(path.join(__dirname, "../"), fullPath)
+
+			pages.push({
+				url,
+				filePath: relativeFilePath,
+			})
+		}
+	}
+
+	return pages
+}
+
+/**
+ * Get URL to file mapping by scanning the app directory
+ * @returns {Object} Map of URLs to their corresponding page files
+ */
+function getUrlToFileMap() {
+	const pages = findPageFiles(APP_DIR)
+	const urlToFileMap = {}
+
+	for (const page of pages) {
+		urlToFileMap[page.url] = page.filePath
+	}
+
+	return urlToFileMap
 }
 
 /**
@@ -51,7 +95,16 @@ function getLastModifiedDate(filePath) {
  * Update the sitemap.ts file with new dates
  */
 function updateSitemap() {
-	console.log("🔍 Reading current sitemap...")
+	console.log("🔍 Discovering page files...")
+
+	// Dynamically discover page files
+	const urlToFileMap = getUrlToFileMap()
+	console.log(`Found ${Object.keys(urlToFileMap).length} page files:`)
+	for (const [url, filePath] of Object.entries(urlToFileMap)) {
+		console.log(`  ${url} → ${filePath}`)
+	}
+
+	console.log("\n🔍 Reading current sitemap...")
 
 	// Read the current sitemap file
 	const sitemapContent = fs.readFileSync(SITEMAP_PATH, "utf8")
@@ -60,7 +113,7 @@ function updateSitemap() {
 
 	// Get modification dates for each URL
 	const urlDates = {}
-	for (const [url, filePath] of Object.entries(URL_TO_FILE_MAP)) {
+	for (const [url, filePath] of Object.entries(urlToFileMap)) {
 		const lastModified = getLastModifiedDate(filePath)
 		urlDates[url] = lastModified
 		console.log(`  ${url}: ${lastModified}`)
@@ -78,6 +131,21 @@ function updateSitemap() {
 			`(\\{[^}]*url:\\s*\`\\$\\{baseUrl\\}${url.replace("/", "\\/")}\`[^}]*lastModified:\\s*)new Date\\([^)]*\\)`,
 			"g",
 		)
+		const isFound = updatedContent.match(urlPattern)
+
+		if (!isFound) {
+			console.error(`\n⚠️  No matching entry found for ${url}, skipping update`)
+			console.log(
+				`📝 To add this missing entry to the sitemap, add the following to apps/web-roo-code/src/app/sitemap.ts:`,
+			)
+			console.log(`\n{`)
+			console.log(`\turl: \`\${baseUrl}${url}\`,`)
+			console.log(`\tlastModified: new Date("${isoDate}"),`)
+			console.log(`\tchangeFrequency: "monthly",`)
+			console.log(`\tpriority: 0.8,`)
+			console.log(`},\n`)
+			continue
+		}
 
 		updatedContent = updatedContent.replace(urlPattern, `$1new Date("${isoDate}")`)
 	}
@@ -99,4 +167,4 @@ if (require.main === module) {
 	}
 }
 
-module.exports = { updateSitemap, getLastModifiedDate }
+module.exports = { updateSitemap, getLastModifiedDate, findPageFiles, getUrlToFileMap }
