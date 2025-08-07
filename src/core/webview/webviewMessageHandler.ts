@@ -2422,6 +2422,7 @@ export const webviewMessageHandler = async (
 					filePath: command.filePath,
 					description: command.description,
 					argumentHint: command.argumentHint,
+					mode: command.mode,
 				}))
 
 				await provider.postMessageToWebview({
@@ -2581,6 +2582,8 @@ export const webviewMessageHandler = async (
 					source: command.source,
 					filePath: command.filePath,
 					description: command.description,
+					argumentHint: command.argumentHint,
+					mode: command.mode,
 				}))
 				await provider.postMessageToWebview({
 					type: "commands",

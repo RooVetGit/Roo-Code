@@ -26,6 +26,7 @@ export interface Command {
 	filePath?: string
 	description?: string
 	argumentHint?: string
+	mode?: string
 }
 
 // Type for marketplace installed metadata

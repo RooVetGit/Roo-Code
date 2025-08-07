@@ -308,6 +308,14 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 					setInputValue("")
 					setShowContextMenu(false)
 
+					// Check if the command has a mode specified
+					const selectedCommand = commands?.find((cmd) => cmd.name === value)
+					if (selectedCommand?.mode) {
+						// Switch to the specified mode
+						setMode(selectedCommand.mode)
+						vscode.postMessage({ type: "mode", text: selectedCommand.mode })
+					}
+
 					// Insert the command mention into the textarea
 					const commandMention = `/${value}`
 					setInputValue(commandMention + " ")

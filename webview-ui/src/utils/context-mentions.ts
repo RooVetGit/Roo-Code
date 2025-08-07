@@ -164,6 +164,7 @@ export function getContextMenuOptions(
 						slashCommand: `/${command.name}`,
 						description: command.description,
 						argumentHint: command.argumentHint,
+						mode: command.mode,
 					}))
 
 			if (matchingCommands.length > 0) {
