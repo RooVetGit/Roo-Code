@@ -95,6 +95,12 @@ export const globalSettingsSchema = z.object({
 
 	ttsEnabled: z.boolean().optional(),
 	ttsSpeed: z.number().optional(),
+	ttsProvider: z.enum(["native", "google-cloud", "azure"]).optional(),
+	ttsVoice: z.string().optional(),
+	googleCloudTtsApiKey: z.string().optional(),
+	googleCloudTtsProjectId: z.string().optional(),
+	azureTtsSubscriptionKey: z.string().optional(),
+	azureTtsRegion: z.string().optional(),
 	soundEnabled: z.boolean().optional(),
 	soundVolume: z.number().optional(),
 
@@ -255,6 +261,12 @@ export const EVALS_SETTINGS: RooCodeSettings = {
 
 	ttsEnabled: false,
 	ttsSpeed: 1,
+	ttsProvider: "native",
+	ttsVoice: undefined,
+	googleCloudTtsApiKey: undefined,
+	googleCloudTtsProjectId: undefined,
+	azureTtsSubscriptionKey: undefined,
+	azureTtsRegion: undefined,
 	soundEnabled: false,
 	soundVolume: 0.5,
 

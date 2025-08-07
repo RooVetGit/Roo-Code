@@ -1,81 +1,82 @@
-interface Say {
-	speak: (text: string, voice?: string, speed?: number, callback?: (err?: string) => void) => void
-	stop: () => void
-}
+import { TtsManager } from "../services/tts/TtsManager"
 
 type PlayTtsOptions = {
 	onStart?: () => void
 	onStop?: () => void
 }
 
-type QueueItem = {
-	message: string
-	options: PlayTtsOptions
+// Get the singleton TTS manager instance
+const ttsManager = TtsManager.getInstance()
+
+/**
+ * Enable or disable TTS
+ */
+export const setTtsEnabled = (enabled: boolean) => {
+	ttsManager.setEnabled(enabled)
 }
 
-let isTtsEnabled = false
+/**
+ * Set the TTS speed
+ */
+export const setTtsSpeed = (newSpeed: number) => {
+	ttsManager.setSpeed(newSpeed)
+}
 
-export const setTtsEnabled = (enabled: boolean) => (isTtsEnabled = enabled)
-
-let speed = 1.0
-
-export const setTtsSpeed = (newSpeed: number) => (speed = newSpeed)
-
-let sayInstance: Say | undefined = undefined
-let queue: QueueItem[] = []
-
+/**
+ * Play text-to-speech
+ */
 export const playTts = async (message: string, options: PlayTtsOptions = {}) => {
-	if (!isTtsEnabled) {
-		return
-	}
-
-	try {
-		queue.push({ message, options })
-		await processQueue()
-	} catch (error) {}
+	await ttsManager.speak(message, options)
 }
 
+/**
+ * Stop any ongoing TTS playback
+ */
 export const stopTts = () => {
-	sayInstance?.stop()
-	sayInstance = undefined
-	queue = []
+	ttsManager.stop()
 }
 
-const processQueue = async (): Promise<void> => {
-	if (!isTtsEnabled || sayInstance) {
-		return
-	}
+/**
+ * Initialize TTS with configuration
+ * This should be called when the extension activates
+ */
+export const initializeTts = async (config?: {
+	provider?: "native" | "google-cloud" | "azure"
+	googleCloudApiKey?: string
+	googleCloudProjectId?: string
+	azureSubscriptionKey?: string
+	azureRegion?: string
+}) => {
+	await ttsManager.initialize({
+		provider: config?.provider,
+		googleCloud: {
+			apiKey: config?.googleCloudApiKey,
+			projectId: config?.googleCloudProjectId,
+		},
+		azure: {
+			subscriptionKey: config?.azureSubscriptionKey,
+			region: config?.azureRegion,
+		},
+	})
+}
 
-	const item = queue.shift()
+/**
+ * Get available TTS providers
+ */
+export const getAvailableTtsProviders = async () => {
+	return await ttsManager.getAvailableProviders()
+}
 
-	if (!item) {
-		return
-	}
+/**
+ * Set the active TTS provider
+ */
+export const setTtsProvider = async (provider: "native" | "google-cloud" | "azure") => {
+	await ttsManager.setActiveProvider(provider)
+}
 
-	try {
-		const { message: nextUtterance, options } = item
-
-		await new Promise<void>((resolve, reject) => {
-			const say: Say = require("say")
-			sayInstance = say
-			options.onStart?.()
-
-			say.speak(nextUtterance, undefined, speed, (err) => {
-				options.onStop?.()
-
-				if (err) {
-					reject(new Error(err))
-				} else {
-					resolve()
-				}
-
-				sayInstance = undefined
-			})
-		})
-
-		await processQueue()
-	} catch (error: any) {
-		sayInstance = undefined
-		await processQueue()
-	}
+/**
+ * Get voices from the active provider
+ */
+export const getTtsVoices = async () => {
+	return await ttsManager.getVoices()
 }

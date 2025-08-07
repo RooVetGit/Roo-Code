@@ -63,7 +63,7 @@ import type { IndexProgressUpdate } from "../../services/code-index/interfaces/m
 import { MdmService } from "../../services/mdm/MdmService"
 
 import { fileExistsAtPath } from "../../utils/fs"
-import { setTtsEnabled, setTtsSpeed } from "../../utils/tts"
+import { setTtsEnabled, setTtsSpeed, initializeTts } from "../../utils/tts"
 import { getWorkspaceGitInfo } from "../../utils/git"
 import { getWorkspacePath } from "../../utils/path"
 
@@ -532,13 +532,29 @@ export class ClineProvider
 			},
 		)
 
-		// Initialize tts enabled state
-		this.getState().then(({ ttsEnabled }) => {
-			setTtsEnabled(ttsEnabled ?? false)
-		})
+		// Initialize TTS with configuration
+		this.getState().then(async (state) => {
+			const {
+				ttsEnabled,
+				ttsSpeed,
+				ttsProvider,
+				googleCloudTtsApiKey,
+				googleCloudTtsProjectId,
+				azureTtsSubscriptionKey,
+				azureTtsRegion,
+			} = state
 
-		// Initialize tts speed state
-		this.getState().then(({ ttsSpeed }) => {
+			// Initialize TTS manager with provider configuration
+			await initializeTts({
+				provider: ttsProvider as "native" | "google-cloud" | "azure" | undefined,
+				googleCloudApiKey: googleCloudTtsApiKey,
+				googleCloudProjectId: googleCloudTtsProjectId,
+				azureSubscriptionKey: azureTtsSubscriptionKey,
+				azureRegion: azureTtsRegion,
+			})
+
+			// Set enabled state and speed
+			setTtsEnabled(ttsEnabled ?? false)
 			setTtsSpeed(ttsSpeed ?? 1)
 		})
 
@@ -1567,6 +1583,12 @@ export class ClineProvider
 			soundEnabled,
 			ttsEnabled,
 			ttsSpeed,
+			ttsProvider,
+			ttsVoice,
+			googleCloudTtsApiKey,
+			googleCloudTtsProjectId,
+			azureTtsSubscriptionKey,
+			azureTtsRegion,
 			diffEnabled,
 			enableCheckpoints,
 			taskHistory,
@@ -1671,6 +1693,12 @@ export class ClineProvider
 			soundEnabled: soundEnabled ?? false,
 			ttsEnabled: ttsEnabled ?? false,
 			ttsSpeed: ttsSpeed ?? 1.0,
+			ttsProvider: ttsProvider ?? "native",
+			ttsVoice: ttsVoice ?? undefined,
+			googleCloudTtsApiKey: googleCloudTtsApiKey ?? undefined,
+			googleCloudTtsProjectId: googleCloudTtsProjectId ?? undefined,
+			azureTtsSubscriptionKey: azureTtsSubscriptionKey ?? undefined,
+			azureTtsRegion: azureTtsRegion ?? undefined,
 			diffEnabled: diffEnabled ?? true,
 			enableCheckpoints: enableCheckpoints ?? true,
 			shouldShowAnnouncement:
@@ -1863,6 +1891,12 @@ export class ClineProvider
 			soundEnabled: stateValues.soundEnabled ?? false,
 			ttsEnabled: stateValues.ttsEnabled ?? false,
 			ttsSpeed: stateValues.ttsSpeed ?? 1.0,
+			ttsProvider: stateValues.ttsProvider ?? "native",
+			ttsVoice: stateValues.ttsVoice ?? undefined,
+			googleCloudTtsApiKey: stateValues.googleCloudTtsApiKey ?? undefined,
+			googleCloudTtsProjectId: stateValues.googleCloudTtsProjectId ?? undefined,
+			azureTtsSubscriptionKey: stateValues.azureTtsSubscriptionKey ?? undefined,
+			azureTtsRegion: stateValues.azureTtsRegion ?? undefined,
 			diffEnabled: stateValues.diffEnabled ?? true,
 			enableCheckpoints: stateValues.enableCheckpoints ?? true,
 			soundVolume: stateValues.soundVolume,

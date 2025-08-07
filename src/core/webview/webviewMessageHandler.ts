@@ -36,7 +36,7 @@ import { getTheme } from "../../integrations/theme/getTheme"
 import { discoverChromeHostUrl, tryChromeHostUrl } from "../../services/browser/browserDiscovery"
 import { searchWorkspaceFiles } from "../../services/search/file-search"
 import { fileExistsAtPath } from "../../utils/fs"
-import { playTts, setTtsEnabled, setTtsSpeed, stopTts } from "../../utils/tts"
+import { playTts, setTtsEnabled, setTtsSpeed, stopTts, setTtsProvider, initializeTts } from "../../utils/tts"
 import { searchCommits } from "../../utils/git"
 import { exportSettings, importSettingsWithFeedback } from "../config/importExport"
 import { getOpenAiModels } from "../../api/providers/openai"
@@ -330,11 +330,11 @@ export const webviewMessageHandler = async (
 			await provider.postStateToWebview()
 			break
 		case "allowedMaxRequests":
-			await updateGlobalState("allowedMaxRequests", message.value)
+			await updateGlobalState("allowedMaxRequests", Number(message.value))
 			await provider.postStateToWebview()
 			break
 		case "allowedMaxCost":
-			await updateGlobalState("allowedMaxCost", message.value)
+			await updateGlobalState("allowedMaxCost", Number(message.value))
 			await provider.postStateToWebview()
 			break
 		case "alwaysAllowSubtasks":
@@ -353,7 +353,7 @@ export const webviewMessageHandler = async (
 			await provider.postStateToWebview()
 			break
 		case "autoCondenseContextPercent":
-			await updateGlobalState("autoCondenseContextPercent", message.value)
+			await updateGlobalState("autoCondenseContextPercent", Number(message.value))
 			await provider.postStateToWebview()
 			break
 		case "terminalOperation":
@@ -936,19 +936,86 @@ export const webviewMessageHandler = async (
 			break
 		case "soundVolume":
 			const soundVolume = message.value ?? 0.5
-			await updateGlobalState("soundVolume", soundVolume)
+			await updateGlobalState("soundVolume", Number(soundVolume))
 			await provider.postStateToWebview()
 			break
 		case "ttsEnabled":
 			const ttsEnabled = message.bool ?? true
 			await updateGlobalState("ttsEnabled", ttsEnabled)
-			setTtsEnabled(ttsEnabled) // Add this line to update the tts utility
+			setTtsEnabled(ttsEnabled)
 			await provider.postStateToWebview()
 			break
 		case "ttsSpeed":
-			const ttsSpeed = message.value ?? 1.0
+			const ttsSpeed = Number(message.value ?? 1.0)
 			await updateGlobalState("ttsSpeed", ttsSpeed)
 			setTtsSpeed(ttsSpeed)
+			await provider.postStateToWebview()
+			break
+		case "ttsProvider":
+			const ttsProvider = String(message.value) as "native" | "google-cloud" | "azure"
+			await updateGlobalState("ttsProvider", ttsProvider)
+			await setTtsProvider(ttsProvider)
+			await provider.postStateToWebview()
+			break
+		case "ttsVoice":
+			const ttsVoice = String(message.value)
+			await updateGlobalState("ttsVoice", ttsVoice)
+			await provider.postStateToWebview()
+			break
+		case "googleCloudTtsApiKey":
+			const googleCloudApiKey = String(message.value)
+			await updateGlobalState("googleCloudTtsApiKey", googleCloudApiKey)
+			// Re-initialize TTS with new config
+			const gcState = await provider.getState()
+			await initializeTts({
+				provider: gcState.ttsProvider as "native" | "google-cloud" | "azure" | undefined,
+				googleCloudApiKey: googleCloudApiKey,
+				googleCloudProjectId: gcState.googleCloudTtsProjectId,
+				azureSubscriptionKey: gcState.azureTtsSubscriptionKey,
+				azureRegion: gcState.azureTtsRegion,
+			})
+			await provider.postStateToWebview()
+			break
+		case "googleCloudTtsProjectId":
+			const googleCloudProjectId = String(message.value)
+			await updateGlobalState("googleCloudTtsProjectId", googleCloudProjectId)
+			// Re-initialize TTS with new config
+			const gcpState = await provider.getState()
+			await initializeTts({
+				provider: gcpState.ttsProvider as "native" | "google-cloud" | "azure" | undefined,
+				googleCloudApiKey: gcpState.googleCloudTtsApiKey,
+				googleCloudProjectId: googleCloudProjectId,
+				azureSubscriptionKey: gcpState.azureTtsSubscriptionKey,
+				azureRegion: gcpState.azureTtsRegion,
+			})
+			await provider.postStateToWebview()
+			break
+		case "azureTtsSubscriptionKey":
+			const azureSubscriptionKey = String(message.value)
+			await updateGlobalState("azureTtsSubscriptionKey", azureSubscriptionKey)
+			// Re-initialize TTS with new config
+			const azState = await provider.getState()
+			await initializeTts({
+				provider: azState.ttsProvider as "native" | "google-cloud" | "azure" | undefined,
+				googleCloudApiKey: azState.googleCloudTtsApiKey,
+				googleCloudProjectId: azState.googleCloudTtsProjectId,
+				azureSubscriptionKey: azureSubscriptionKey,
+				azureRegion: azState.azureTtsRegion,
+			})
+			await provider.postStateToWebview()
+			break
+		case "azureTtsRegion":
+			const azureRegion = String(message.value)
+			await updateGlobalState("azureTtsRegion", azureRegion)
+			// Re-initialize TTS with new config
+			const azrState = await provider.getState()
+			await initializeTts({
+				provider: azrState.ttsProvider as "native" | "google-cloud" | "azure" | undefined,
+				googleCloudApiKey: azrState.googleCloudTtsApiKey,
+				googleCloudProjectId: azrState.googleCloudTtsProjectId,
+				azureSubscriptionKey: azrState.azureTtsSubscriptionKey,
+				azureRegion: azureRegion,
+			})
 			await provider.postStateToWebview()
 			break
 		case "playTts":
@@ -1028,7 +1095,7 @@ export const webviewMessageHandler = async (
 			}
 			break
 		case "fuzzyMatchThreshold":
-			await updateGlobalState("fuzzyMatchThreshold", message.value)
+			await updateGlobalState("fuzzyMatchThreshold", Number(message.value))
 			await provider.postStateToWebview()
 			break
 		case "updateVSCodeSetting": {
@@ -1072,11 +1139,11 @@ export const webviewMessageHandler = async (
 			await provider.postStateToWebview()
 			break
 		case "requestDelaySeconds":
-			await updateGlobalState("requestDelaySeconds", message.value ?? 5)
+			await updateGlobalState("requestDelaySeconds", Number(message.value ?? 5))
 			await provider.postStateToWebview()
 			break
 		case "writeDelayMs":
-			await updateGlobalState("writeDelayMs", message.value)
+			await updateGlobalState("writeDelayMs", Number(message.value))
 			await provider.postStateToWebview()
 			break
 		case "diagnosticsEnabled":
@@ -1109,10 +1176,10 @@ export const webviewMessageHandler = async (
 			}
 			break
 		case "terminalShellIntegrationTimeout":
-			await updateGlobalState("terminalShellIntegrationTimeout", message.value)
+			await updateGlobalState("terminalShellIntegrationTimeout", Number(message.value))
 			await provider.postStateToWebview()
 			if (message.value !== undefined) {
-				Terminal.setShellIntegrationTimeout(message.value)
+				Terminal.setShellIntegrationTimeout(Number(message.value))
 			}
 			break
 		case "terminalShellIntegrationDisabled":
@@ -1123,10 +1190,10 @@ export const webviewMessageHandler = async (
 			}
 			break
 		case "terminalCommandDelay":
-			await updateGlobalState("terminalCommandDelay", message.value)
+			await updateGlobalState("terminalCommandDelay", Number(message.value))
 			await provider.postStateToWebview()
 			if (message.value !== undefined) {
-				Terminal.setCommandDelay(message.value)
+				Terminal.setCommandDelay(Number(message.value))
 			}
 			break
 		case "terminalPowershellCounter":
@@ -1242,16 +1309,16 @@ export const webviewMessageHandler = async (
 			break
 		}
 		case "screenshotQuality":
-			await updateGlobalState("screenshotQuality", message.value)
+			await updateGlobalState("screenshotQuality", Number(message.value))
 			await provider.postStateToWebview()
 			break
 		case "maxOpenTabsContext":
-			const tabCount = Math.min(Math.max(0, message.value ?? 20), 500)
+			const tabCount = Math.min(Math.max(0, Number(message.value ?? 20)), 500)
 			await updateGlobalState("maxOpenTabsContext", tabCount)
 			await provider.postStateToWebview()
 			break
 		case "maxWorkspaceFiles":
-			const fileCount = Math.min(Math.max(0, message.value ?? 200), 500)
+			const fileCount = Math.min(Math.max(0, Number(message.value ?? 200)), 500)
 			await updateGlobalState("maxWorkspaceFiles", fileCount)
 			await provider.postStateToWebview()
 			break
@@ -1260,7 +1327,7 @@ export const webviewMessageHandler = async (
 			await provider.postStateToWebview()
 			break
 		case "followupAutoApproveTimeoutMs":
-			await updateGlobalState("followupAutoApproveTimeoutMs", message.value)
+			await updateGlobalState("followupAutoApproveTimeoutMs", Number(message.value))
 			await provider.postStateToWebview()
 			break
 		case "browserToolEnabled":
@@ -1281,20 +1348,20 @@ export const webviewMessageHandler = async (
 			await provider.postStateToWebview()
 			break
 		case "maxReadFileLine":
-			await updateGlobalState("maxReadFileLine", message.value)
+			await updateGlobalState("maxReadFileLine", Number(message.value))
 			await provider.postStateToWebview()
 			break
 		case "maxImageFileSize":
-			await updateGlobalState("maxImageFileSize", message.value)
+			await updateGlobalState("maxImageFileSize", Number(message.value))
 			await provider.postStateToWebview()
 			break
 		case "maxTotalImageSize":
-			await updateGlobalState("maxTotalImageSize", message.value)
+			await updateGlobalState("maxTotalImageSize", Number(message.value))
 			await provider.postStateToWebview()
 			break
 		case "maxConcurrentFileReads":
 			const valueToSave = message.value // Capture the value intended for saving
-			await updateGlobalState("maxConcurrentFileReads", valueToSave)
+			await updateGlobalState("maxConcurrentFileReads", Number(valueToSave))
 			await provider.postStateToWebview()
 			break
 		case "includeDiagnosticMessages":
@@ -1304,7 +1371,7 @@ export const webviewMessageHandler = async (
 			await provider.postStateToWebview()
 			break
 		case "maxDiagnosticMessages":
-			await updateGlobalState("maxDiagnosticMessages", message.value ?? 50)
+			await updateGlobalState("maxDiagnosticMessages", Number(message.value ?? 50))
 			await provider.postStateToWebview()
 			break
 		case "setHistoryPreviewCollapsed": // Add the new case handler

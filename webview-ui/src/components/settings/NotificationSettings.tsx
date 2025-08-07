@@ -1,24 +1,49 @@
 import { HTMLAttributes } from "react"
 import { useAppTranslation } from "@/i18n/TranslationContext"
-import { VSCodeCheckbox } from "@vscode/webview-ui-toolkit/react"
+import { VSCodeCheckbox, VSCodeDropdown, VSCodeOption } from "@vscode/webview-ui-toolkit/react"
 import { Bell } from "lucide-react"
 
 import { SetCachedStateField } from "./types"
 import { SectionHeader } from "./SectionHeader"
 import { Section } from "./Section"
 import { Slider } from "../ui"
+import { GoogleCloudTtsSettings } from "./GoogleCloudTtsSettings"
+import { AzureTtsSettings } from "./AzureTtsSettings"
 
 type NotificationSettingsProps = HTMLAttributes<HTMLDivElement> & {
 	ttsEnabled?: boolean
 	ttsSpeed?: number
+	ttsProvider?: string
+	ttsVoice?: string
+	googleCloudTtsApiKey?: string
+	googleCloudTtsProjectId?: string
+	azureTtsSubscriptionKey?: string
+	azureTtsRegion?: string
 	soundEnabled?: boolean
 	soundVolume?: number
-	setCachedStateField: SetCachedStateField<"ttsEnabled" | "ttsSpeed" | "soundEnabled" | "soundVolume">
+	setCachedStateField: SetCachedStateField<
+		| "ttsEnabled"
+		| "ttsSpeed"
+		| "ttsProvider"
+		| "ttsVoice"
+		| "googleCloudTtsApiKey"
+		| "googleCloudTtsProjectId"
+		| "azureTtsSubscriptionKey"
+		| "azureTtsRegion"
+		| "soundEnabled"
+		| "soundVolume"
+	>
 }
 
 export const NotificationSettings = ({
 	ttsEnabled,
 	ttsSpeed,
+	ttsProvider = "native",
+	ttsVoice,
+	googleCloudTtsApiKey,
+	googleCloudTtsProjectId,
+	azureTtsSubscriptionKey,
+	azureTtsRegion,
 	soundEnabled,
 	soundVolume,
 	setCachedStateField,
@@ -50,6 +75,18 @@ export const NotificationSettings = ({
 				{ttsEnabled && (
 					<div className="flex flex-col gap-3 pl-3 border-l-2 border-vscode-button-background">
 						<div>
+							<label className="block font-medium mb-1">{t("settings:notifications.tts.provider")}</label>
+							<VSCodeDropdown
+								value={ttsProvider}
+								onChange={(e: any) => setCachedStateField("ttsProvider", e.target.value)}
+								className="w-full">
+								<VSCodeOption value="native">System TTS</VSCodeOption>
+								<VSCodeOption value="google-cloud">Google Cloud TTS</VSCodeOption>
+								<VSCodeOption value="azure">Azure Speech Services</VSCodeOption>
+							</VSCodeDropdown>
+						</div>
+
+						<div>
 							<label className="block font-medium mb-1">
 								{t("settings:notifications.tts.speedLabel")}
 							</label>
@@ -65,6 +102,26 @@ export const NotificationSettings = ({
 								<span className="w-10">{((ttsSpeed ?? 1.0) * 100).toFixed(0)}%</span>
 							</div>
 						</div>
+
+						{ttsProvider === "google-cloud" && (
+							<GoogleCloudTtsSettings
+								apiKey={googleCloudTtsApiKey}
+								projectId={googleCloudTtsProjectId}
+								onApiKeyChange={(value) => setCachedStateField("googleCloudTtsApiKey", value)}
+								onProjectIdChange={(value) => setCachedStateField("googleCloudTtsProjectId", value)}
+							/>
+						)}
+
+						{ttsProvider === "azure" && (
+							<AzureTtsSettings
+								subscriptionKey={azureTtsSubscriptionKey}
+								region={azureTtsRegion}
+								onSubscriptionKeyChange={(value) =>
+									setCachedStateField("azureTtsSubscriptionKey", value)
+								}
+								onRegionChange={(value) => setCachedStateField("azureTtsRegion", value)}
+							/>
+						)}
 					</div>
 				)}
 

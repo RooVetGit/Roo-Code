@@ -232,6 +232,12 @@ export type ExtensionState = Pick<
 	// | "enableCheckpoints" // Optional in GlobalSettings, required here.
 	| "ttsEnabled"
 	| "ttsSpeed"
+	| "ttsProvider"
+	| "ttsVoice"
+	| "googleCloudTtsApiKey"
+	| "googleCloudTtsProjectId"
+	| "azureTtsSubscriptionKey"
+	| "azureTtsRegion"
 	| "soundEnabled"
 	| "soundVolume"
 	// | "maxOpenTabsContext" // Optional in GlobalSettings, required here.
