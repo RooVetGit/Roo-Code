@@ -1429,7 +1429,13 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 			includeDiagnosticMessages = true,
 			maxDiagnosticMessages = 50,
 			maxReadFileLine = -1,
+			maxImageFileSize = 5,
+			maxTotalImageSize = 20,
 		} = (await this.providerRef.deref()?.getState()) ?? {}
+
+		// Check if the model supports images
+		const modelInfo = this.api.getModel().info
+		const supportsImages = modelInfo.supportsImages ?? false
 
 		const parsedUserContent = await processUserContentMentions({
 			userContent,
@@ -1441,6 +1447,9 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 			includeDiagnosticMessages,
 			maxDiagnosticMessages,
 			maxReadFileLine,
+			supportsImages,
+			maxImageFileSize,
+			maxTotalImageSize,
 		})
 
 		const environmentDetails = await getEnvironmentDetails(this, includeFileDetails)

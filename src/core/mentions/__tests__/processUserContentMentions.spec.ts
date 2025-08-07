@@ -23,8 +23,11 @@ describe("processUserContentMentions", () => {
 		mockFileContextTracker = {} as FileContextTracker
 		mockRooIgnoreController = {}
 
-		// Default mock implementation
-		vi.mocked(parseMentions).mockImplementation(async (text) => `parsed: ${text}`)
+		// Default mock implementation - parseMentions now returns an object with text and images
+		vi.mocked(parseMentions).mockImplementation(async (text) => ({
+			text: `parsed: ${text}`,
+			images: [],
+		}))
 	})
 
 	describe("maxReadFileLine parameter", () => {
@@ -55,6 +58,9 @@ describe("processUserContentMentions", () => {
 				true, // includeDiagnosticMessages
 				50, // maxDiagnosticMessages
 				100,
+				false, // supportsImages
+				5, // maxImageFileSize
+				20, // maxTotalImageSize
 			)
 		})
 
@@ -84,6 +90,9 @@ describe("processUserContentMentions", () => {
 				true, // includeDiagnosticMessages
 				50, // maxDiagnosticMessages
 				undefined,
+				false, // supportsImages
+				5, // maxImageFileSize
+				20, // maxTotalImageSize
 			)
 		})
 
@@ -114,6 +123,9 @@ describe("processUserContentMentions", () => {
 				true, // includeDiagnosticMessages
 				50, // maxDiagnosticMessages
 				-1,
+				false, // supportsImages
+				5, // maxImageFileSize
+				20, // maxTotalImageSize
 			)
 		})
 	})
@@ -318,6 +330,9 @@ describe("processUserContentMentions", () => {
 				true, // includeDiagnosticMessages
 				50, // maxDiagnosticMessages
 				undefined,
+				false, // supportsImages
+				5, // maxImageFileSize
+				20, // maxTotalImageSize
 			)
 		})
 
@@ -347,6 +362,9 @@ describe("processUserContentMentions", () => {
 				true, // includeDiagnosticMessages
 				50, // maxDiagnosticMessages
 				undefined,
+				false, // supportsImages
+				5, // maxImageFileSize
+				20, // maxTotalImageSize
 			)
 		})
 	})
