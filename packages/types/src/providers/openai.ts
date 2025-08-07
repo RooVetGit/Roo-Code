@@ -3,9 +3,45 @@ import type { ModelInfo } from "../model.js"
 // https://openai.com/api/pricing/
 export type OpenAiNativeModelId = keyof typeof openAiNativeModels
 
-export const openAiNativeDefaultModelId: OpenAiNativeModelId = "gpt-4.1"
+export const openAiNativeDefaultModelId: OpenAiNativeModelId = "gpt-5-2025-08-07"
 
 export const openAiNativeModels = {
+	"gpt-5-2025-08-07": {
+		maxTokens: 128000,
+		contextWindow: 256000,
+		supportsImages: true,
+		supportsPromptCache: true,
+		inputPrice: 1.25,
+		outputPrice: 10.0,
+		cacheReadsPrice: 0.125,
+	},
+	"gpt-5-mini-2025-08-07": {
+		maxTokens: 128000,
+		contextWindow: 256000,
+		supportsImages: true,
+		supportsPromptCache: true,
+		inputPrice: 0.25,
+		outputPrice: 2.0,
+		cacheReadsPrice: 0.025,
+	},
+	"gpt-5-nano-2025-08-07": {
+		maxTokens: 128000,
+		contextWindow: 256000,
+		supportsImages: true,
+		supportsPromptCache: true,
+		inputPrice: 0.05,
+		outputPrice: 0.4,
+		cacheReadsPrice: 0.005,
+	},
+	"nectarine-alpha-new-reasoning-effort-2025-07-25": {
+		maxTokens: 128000,
+		contextWindow: 256000,
+		supportsImages: true,
+		supportsPromptCache: true,
+		inputPrice: 0,
+		outputPrice: 0,
+		cacheReadsPrice: 0,
+	},
 	"gpt-4.1": {
 		maxTokens: 32_768,
 		contextWindow: 1_047_576,
