@@ -107,6 +107,7 @@ describe("CodeIndexConfigManager", () => {
 				modelDimension: undefined,
 				openAiCompatibleOptions: undefined,
 				searchProvider: undefined,
+				valkeyUseSsl: false,
 				embedderProvider: "openai",
 				modelId: undefined,
 				openAiOptions: { openAiNativeApiKey: "" },
@@ -149,6 +150,16 @@ describe("CodeIndexConfigManager", () => {
 				qdrantUrl: "http://qdrant.local",
 				qdrantApiKey: "test-qdrant-key",
 				searchMinScore: 0.4,
+				openAiCompatibleOptions: undefined,
+				geminiOptions: undefined,
+				mistralOptions: undefined,
+				modelDimension: undefined,
+				searchProvider: undefined,
+				valkeyHostname: "localhost",
+				valkeyPassword: "",
+				valkeyPort: 6379,
+				valkeyUseSsl: false,
+				valkeyUsername: undefined,
 			})
 		})
 
@@ -175,6 +186,9 @@ describe("CodeIndexConfigManager", () => {
 
 			expect(result.currentConfig).toEqual({
 				isConfigured: true,
+				geminiOptions: undefined,
+				mistralOptions: undefined,
+				modelDimension: undefined,
 				embedderProvider: "openai-compatible",
 				modelId: "text-embedding-3-large",
 				openAiOptions: { openAiNativeApiKey: "" },
@@ -186,6 +200,12 @@ describe("CodeIndexConfigManager", () => {
 				qdrantUrl: "http://qdrant.local",
 				qdrantApiKey: "test-qdrant-key",
 				searchMinScore: 0.4,
+				searchProvider: undefined,
+				valkeyHostname: "localhost",
+				valkeyPassword: "",
+				valkeyPort: 6379,
+				valkeyUseSsl: false,
+				valkeyUsername: undefined,
 			})
 		})
 
@@ -214,6 +234,8 @@ describe("CodeIndexConfigManager", () => {
 				isConfigured: true,
 				embedderProvider: "openai-compatible",
 				modelId: "custom-model",
+				mistralOptions: undefined,
+				geminiOptions: undefined,
 				modelDimension: 1024,
 				openAiOptions: { openAiNativeApiKey: "" },
 				ollamaOptions: { ollamaBaseUrl: "" },
@@ -224,6 +246,12 @@ describe("CodeIndexConfigManager", () => {
 				qdrantUrl: "http://qdrant.local",
 				qdrantApiKey: "test-qdrant-key",
 				searchMinScore: 0.4,
+				searchProvider: undefined,
+				valkeyHostname: "localhost",
+				valkeyPassword: "",
+				valkeyPort: 6379,
+				valkeyUseSsl: false,
+				valkeyUsername: undefined,
 			})
 		})
 
@@ -252,6 +280,9 @@ describe("CodeIndexConfigManager", () => {
 				isConfigured: true,
 				embedderProvider: "openai-compatible",
 				modelId: "custom-model",
+				geminiOptions: undefined,
+				mistralOptions: undefined,
+				modelDimension: undefined,
 				openAiOptions: { openAiNativeApiKey: "" },
 				ollamaOptions: { ollamaBaseUrl: "" },
 				openAiCompatibleOptions: {
@@ -262,6 +293,12 @@ describe("CodeIndexConfigManager", () => {
 				qdrantUrl: "http://qdrant.local",
 				qdrantApiKey: "test-qdrant-key",
 				searchMinScore: 0.4,
+				searchProvider: undefined,
+				valkeyHostname: "localhost",
+				valkeyPassword: "",
+				valkeyPort: 6379,
+				valkeyUseSsl: false,
+				valkeyUsername: undefined,
 			})
 		})
 
@@ -290,6 +327,7 @@ describe("CodeIndexConfigManager", () => {
 				isConfigured: true,
 				embedderProvider: "openai-compatible",
 				modelId: "custom-model",
+				mistralOptions: undefined,
 				modelDimension: undefined, // Invalid dimension is converted to undefined
 				openAiOptions: { openAiNativeApiKey: "" },
 				ollamaOptions: { ollamaBaseUrl: "" },
@@ -301,6 +339,12 @@ describe("CodeIndexConfigManager", () => {
 				qdrantUrl: "http://qdrant.local",
 				qdrantApiKey: "test-qdrant-key",
 				searchMinScore: 0.4,
+				searchProvider: undefined,
+				valkeyHostname: "localhost",
+				valkeyPassword: "",
+				valkeyPort: 6379,
+				valkeyUseSsl: false,
+				valkeyUsername: undefined,
 			})
 		})
 
@@ -1299,6 +1343,8 @@ describe("CodeIndexConfigManager", () => {
 			const config = configManager.getConfig()
 			expect(config).toEqual({
 				isConfigured: true,
+				mistralOptions: undefined,
+				modelDimension: undefined,
 				embedderProvider: "openai",
 				modelId: "text-embedding-3-large",
 				openAiOptions: { openAiNativeApiKey: "test-openai-key" },
@@ -1307,6 +1353,12 @@ describe("CodeIndexConfigManager", () => {
 				openAiCompatibleOptions: undefined,
 				qdrantUrl: "http://qdrant.local",
 				qdrantApiKey: "test-qdrant-key",
+				searchProvider: undefined,
+				valkeyHostname: "localhost",
+				valkeyPassword: "",
+				valkeyPort: 6379,
+				valkeyUseSsl: false,
+				valkeyUsername: undefined,
 				searchMinScore: 0.4,
 				searchMaxResults: 50,
 			})
