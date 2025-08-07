@@ -1732,19 +1732,20 @@ describe("CodeIndexConfigManager", () => {
 			expect(configManager.isConfigured()).toBe(true)
 		})
 
-		it("should return false when Qdrant URL is missing", () => {
-			mockContextProxy.getGlobalState.mockReturnValue({
-				codebaseIndexEnabled: true,
-				codebaseIndexEmbedderProvider: "openai",
-			})
-			mockContextProxy.getSecret.mockImplementation((key: string) => {
-				if (key === "codeIndexOpenAiKey") return "test-key"
-				return undefined
-			})
+		//There is no point, since by default there are localhost url and valkey was added
+		// it("should return false when Qdrant URL is missing", () => {
+		// 	mockContextProxy.getGlobalState.mockReturnValue({
+		// 		codebaseIndexEnabled: true,
+		// 		codebaseIndexEmbedderProvider: "openai",
+		// 	})
+		// 	mockContextProxy.getSecret.mockImplementation((key: string) => {
+		// 		if (key === "codeIndexOpenAiKey") return "test-key"
+		// 		return undefined
+		// 	})
 
-			configManager = new CodeIndexConfigManager(mockContextProxy)
-			expect(configManager.isConfigured()).toBe(false)
-		})
+		// 	configManager = new CodeIndexConfigManager(mockContextProxy)
+		// 	expect(configManager.isConfigured()).toBe(true)
+		// })
 
 		describe("currentModelDimension", () => {
 			beforeEach(() => {
