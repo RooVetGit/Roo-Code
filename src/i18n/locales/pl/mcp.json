@@ -6,9 +6,9 @@
 		"create_json": "Nie udało się utworzyć lub otworzyć .roo/mcp.json: {{error}}",
 		"failed_update_project": "Nie udało się zaktualizować serwerów MCP projektu",
 		"invalidJsonArgument": "Roo próbował użyć {{toolName}} z nieprawidłowym argumentem JSON. Ponawianie...",
-		"refresh_after_disable": "Failed to refresh MCP connections after disabling",
-		"refresh_after_enable": "Failed to refresh MCP connections after enabling",
-		"disconnect_servers_partial": "Failed to disconnect {{count}} MCP server(s). Check the output for details."
+		"refresh_after_disable": "Nie udało się odświeżyć połączeń MCP po wyłączeniu",
+		"refresh_after_enable": "Nie udało się odświeżyć połączeń MCP po włączeniu",
+		"disconnect_servers_partial": "Nie udało się odłączyć {{count}} serwera(ów) MCP. Sprawdź dane wyjściowe, aby uzyskać szczegóły."
 	},
 	"info": {
 		"server_restarting": "Ponowne uruchamianie serwera MCP {{serverName}}...",

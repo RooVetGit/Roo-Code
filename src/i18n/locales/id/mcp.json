@@ -6,9 +6,9 @@
 		"create_json": "Gagal membuat atau membuka .roo/mcp.json: {{error}}",
 		"failed_update_project": "Gagal memperbarui server MCP proyek",
 		"invalidJsonArgument": "Roo mencoba menggunakan {{toolName}} dengan argumen JSON yang tidak valid. Mencoba lagi...",
-		"refresh_after_disable": "Failed to refresh MCP connections after disabling",
-		"refresh_after_enable": "Failed to refresh MCP connections after enabling",
-		"disconnect_servers_partial": "Failed to disconnect {{count}} MCP server(s). Check the output for details."
+		"refresh_after_disable": "Gagal me-refresh koneksi MCP setelah menonaktifkan",
+		"refresh_after_enable": "Gagal me-refresh koneksi MCP setelah mengaktifkan",
+		"disconnect_servers_partial": "Gagal memutus koneksi {{count}} server MCP. Periksa output untuk detailnya."
 	},
 	"info": {
 		"server_restarting": "Merestart server MCP {{serverName}}...",
