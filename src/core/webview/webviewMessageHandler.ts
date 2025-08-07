@@ -43,7 +43,7 @@ import { getOpenAiModels } from "../../api/providers/openai"
 import { getVsCodeLmModels } from "../../api/providers/vscode-lm"
 import { openMention } from "../mentions"
 import { TelemetrySetting } from "../../shared/TelemetrySetting"
-import { getWorkspacePath } from "../../utils/path"
+import { getWorkspacePath, findWorkspaceWithRoo } from "../../utils/path"
 import { ensureSettingsDirectoryExists } from "../../utils/globalContext"
 import { Mode, defaultModeSlug } from "../../shared/modes"
 import { getModels, flushModels } from "../../api/providers/fetchers/modelCache"
@@ -2494,13 +2494,13 @@ export const webviewMessageHandler = async (
 					const globalConfigDir = path.join(os.homedir(), ".roo")
 					commandsDir = path.join(globalConfigDir, "commands")
 				} else {
-					// Project commands
-					const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath
-					if (!workspaceRoot) {
+					// Project commands - find the workspace with .roo directory
+					const workspaceWithRoo = await findWorkspaceWithRoo()
+					if (!workspaceWithRoo) {
 						vscode.window.showErrorMessage(t("common:errors.no_workspace_for_project_command"))
 						break
 					}
-					commandsDir = path.join(workspaceRoot, ".roo", "commands")
+					commandsDir = path.join(workspaceWithRoo.uri.fsPath, ".roo", "commands")
 				}
 
 				// Ensure the commands directory exists

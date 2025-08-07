@@ -3,9 +3,18 @@
 import os from "os"
 import * as path from "path"
 
-import { arePathsEqual, getReadablePath, getWorkspacePath } from "../path"
+// Use vi.hoisted to ensure mocks are available during module loading
+const { mockWorkspaceFolders, mockGetWorkspaceFolder, mockFileExistsAtPath } = vi.hoisted(() => {
+	const mockWorkspaceFolders = vi.fn()
+	const mockGetWorkspaceFolder = vi.fn()
+	const mockFileExistsAtPath = vi.fn()
+	return { mockWorkspaceFolders, mockGetWorkspaceFolder, mockFileExistsAtPath }
+})
 
-// Mock modules
+// Mock modules before imports
+vi.mock("../fs", () => ({
+	fileExistsAtPath: mockFileExistsAtPath,
+}))
 
 vi.mock("vscode", () => ({
 	window: {
@@ -16,23 +25,37 @@ vi.mock("vscode", () => ({
 		},
 	},
 	workspace: {
-		workspaceFolders: [
+		get workspaceFolders() {
+			return mockWorkspaceFolders()
+		},
+		getWorkspaceFolder: mockGetWorkspaceFolder,
+	},
+}))
+
+import { arePathsEqual, getReadablePath, getWorkspacePath, findWorkspaceWithRoo } from "../path"
+import { fileExistsAtPath } from "../fs"
+
+describe("Path Utilities", () => {
+	const originalPlatform = process.platform
+	// Helper to mock VS Code configuration
+
+	beforeEach(() => {
+		// Reset mocks before each test
+		vi.clearAllMocks()
+		// Set default workspace folders
+		mockWorkspaceFolders.mockReturnValue([
 			{
 				uri: { fsPath: "/test/workspace" },
 				name: "test",
 				index: 0,
 			},
-		],
-		getWorkspaceFolder: vi.fn().mockReturnValue({
+		])
+		mockGetWorkspaceFolder.mockReturnValue({
 			uri: {
 				fsPath: "/test/workspaceFolder",
 			},
-		}),
-	},
-}))
-describe("Path Utilities", () => {
-	const originalPlatform = process.platform
-	// Helper to mock VS Code configuration
+		})
+	})
 
 	afterEach(() => {
 		Object.defineProperty(process, "platform", {

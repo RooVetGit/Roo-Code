@@ -1,6 +1,7 @@
 import * as path from "path"
 import os from "os"
 import * as vscode from "vscode"
+import { fileExistsAtPath } from "./fs"
 
 /*
 The Node.js 'path' module resolves and normalizes paths differently depending on the platform:
@@ -129,4 +130,34 @@ export const getWorkspacePathForContext = (contextPath?: string): string => {
 
 	// Fall back to current behavior
 	return getWorkspacePath()
+}
+
+/**
+ * Finds the workspace folder that contains a .roo directory.
+ * In multi-root workspaces, this ensures we find the correct workspace
+ * rather than just using the first one.
+ *
+ * @returns The workspace folder containing .roo, or undefined if none found
+ */
+export async function findWorkspaceWithRoo(): Promise<vscode.WorkspaceFolder | undefined> {
+	const workspaceFolders = vscode.workspace.workspaceFolders
+	if (!workspaceFolders || workspaceFolders.length === 0) {
+		return undefined
+	}
+
+	// If there's only one workspace folder, return it
+	if (workspaceFolders.length === 1) {
+		return workspaceFolders[0]
+	}
+
+	// Check each workspace folder for a .roo directory
+	for (const folder of workspaceFolders) {
+		const rooPath = path.join(folder.uri.fsPath, ".roo")
+		if (await fileExistsAtPath(rooPath)) {
+			return folder
+		}
+	}
+
+	// If no .roo directory found in any workspace, return the first one as fallback
+	return workspaceFolders[0]
 }
