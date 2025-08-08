@@ -1966,6 +1966,7 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 			})
 
 			const contextWindow = modelInfo.contextWindow
+			const inputTokens = modelInfo.inputTokens
 
 			const currentProfileId =
 				state?.listApiConfigMeta.find((profile) => profile.name === state?.currentApiConfigName)?.id ??
@@ -1976,6 +1977,7 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 				totalTokens: contextTokens,
 				maxTokens,
 				contextWindow,
+				inputTokens,
 				apiHandler: this.api,
 				autoCondenseContext,
 				autoCondenseContextPercent,

@@ -8,6 +8,7 @@ export const openAiNativeDefaultModelId: OpenAiNativeModelId = "gpt-5-2025-08-07
 export const openAiNativeModels = {
 	"gpt-5-2025-08-07": {
 		maxTokens: 128000,
+		inputTokens: 272000,
 		contextWindow: 400000,
 		supportsImages: true,
 		supportsPromptCache: true,
@@ -19,6 +20,7 @@ export const openAiNativeModels = {
 	},
 	"gpt-5-mini-2025-08-07": {
 		maxTokens: 128000,
+		inputTokens: 272000,
 		contextWindow: 400000,
 		supportsImages: true,
 		supportsPromptCache: true,
@@ -30,6 +32,7 @@ export const openAiNativeModels = {
 	},
 	"gpt-5-nano-2025-08-07": {
 		maxTokens: 128000,
+		inputTokens: 272000,
 		contextWindow: 400000,
 		supportsImages: true,
 		supportsPromptCache: true,

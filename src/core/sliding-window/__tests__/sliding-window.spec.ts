@@ -1244,4 +1244,182 @@ describe("Sliding Window", () => {
 			expect(result2.messages.length).toBe(3) // Truncated with 0.5 fraction
 		})
 	})
+
+	/**
+	 * Tests for inputTokens field support
+	 */
+	describe("inputTokens support", () => {
+		const createModelInfo = (contextWindow: number, inputTokens?: number, maxTokens?: number): ModelInfo => ({
+			contextWindow,
+			inputTokens,
+			supportsPromptCache: true,
+			maxTokens,
+		})
+
+		const messages: ApiMessage[] = [
+			{ role: "user", content: "First message" },
+			{ role: "assistant", content: "Second message" },
+			{ role: "user", content: "Third message" },
+			{ role: "assistant", content: "Fourth message" },
+			{ role: "user", content: "Fifth message" },
+		]
+
+		it("should use inputTokens limit when available instead of contextWindow", async () => {
+			// Model with separate input/output limits (like GPT-5)
+			const modelInfo = createModelInfo(400000, 272000, 128000)
+
+			// Create messages with very small content in the last one to avoid token overflow
+			const messagesWithSmallContent = [
+				...messages.slice(0, -1),
+				{ ...messages[messages.length - 1], content: "" },
+			]
+
+			// Set tokens to be below inputTokens limit but would exceed if using contextWindow
+			// inputTokens: 272000, with buffer and maxTokens: 272000 * 0.9 - 128000 = 116800
+			const totalTokens = 116000 // Below the inputTokens-based threshold
+
+			const result = await truncateConversationIfNeeded({
+				messages: messagesWithSmallContent,
+				totalTokens,
+				contextWindow: modelInfo.contextWindow,
+				inputTokens: modelInfo.inputTokens,
+				maxTokens: modelInfo.maxTokens,
+				apiHandler: mockApiHandler,
+				autoCondenseContext: false,
+				autoCondenseContextPercent: 100,
+				systemPrompt: "System prompt",
+				taskId,
+				profileThresholds: {},
+				currentProfileId: "default",
+			})
+
+			// Should not truncate as we're below the inputTokens limit
+			expect(result).toEqual({
+				messages: messagesWithSmallContent,
+				summary: "",
+				cost: 0,
+				prevContextTokens: totalTokens,
+			})
+
+			// Now test with tokens exceeding the inputTokens limit
+			const totalTokensExceeding = 117000 // Above the threshold
+
+			const result2 = await truncateConversationIfNeeded({
+				messages: messagesWithSmallContent,
+				totalTokens: totalTokensExceeding,
+				contextWindow: modelInfo.contextWindow,
+				inputTokens: modelInfo.inputTokens,
+				maxTokens: modelInfo.maxTokens,
+				apiHandler: mockApiHandler,
+				autoCondenseContext: false,
+				autoCondenseContextPercent: 100,
+				systemPrompt: "System prompt",
+				taskId,
+				profileThresholds: {},
+				currentProfileId: "default",
+			})
+
+			// Should truncate as we're above the inputTokens limit
+			expect(result2.messages).not.toEqual(messagesWithSmallContent)
+			expect(result2.messages.length).toBe(3) // Truncated with 0.5 fraction
+		})
+
+		it("should use inputTokens for percentage calculation when autoCondenseContext is enabled", async () => {
+			// Model with separate input/output limits (like GPT-5)
+			const modelInfo = createModelInfo(400000, 272000, 128000)
+
+			// Create messages with very small content in the last one to avoid token overflow
+			const messagesWithSmallContent = [
+				...messages.slice(0, -1),
+				{ ...messages[messages.length - 1], content: "" },
+			]
+
+			// Set tokens to 60% of inputTokens (not contextWindow)
+			// 60% of 272000 = 163200
+			const totalTokens = 163200
+
+			// Mock the summarizeConversation function
+			const mockSummary = "Summary based on inputTokens percentage"
+			const mockCost = 0.05
+			const mockSummarizeResponse: condenseModule.SummarizeResponse = {
+				messages: [
+					{ role: "user", content: "First message" },
+					{ role: "assistant", content: mockSummary, isSummary: true },
+					{ role: "user", content: "Last message" },
+				],
+				summary: mockSummary,
+				cost: mockCost,
+				newContextTokens: 100,
+			}
+
+			const summarizeSpy = vi
+				.spyOn(condenseModule, "summarizeConversation")
+				.mockResolvedValue(mockSummarizeResponse)
+
+			const result = await truncateConversationIfNeeded({
+				messages: messagesWithSmallContent,
+				totalTokens,
+				contextWindow: modelInfo.contextWindow,
+				inputTokens: modelInfo.inputTokens,
+				maxTokens: modelInfo.maxTokens,
+				apiHandler: mockApiHandler,
+				autoCondenseContext: true,
+				autoCondenseContextPercent: 50, // 50% threshold
+				systemPrompt: "System prompt",
+				taskId,
+				profileThresholds: {},
+				currentProfileId: "default",
+			})
+
+			// Should trigger condensing because 60% > 50% (of inputTokens, not contextWindow)
+			expect(summarizeSpy).toHaveBeenCalled()
+			expect(result).toMatchObject({
+				messages: mockSummarizeResponse.messages,
+				summary: mockSummary,
+				cost: mockCost,
+				prevContextTokens: totalTokens,
+			})
+
+			// Clean up
+			summarizeSpy.mockRestore()
+		})
+
+		it("should fall back to contextWindow when inputTokens is not provided", async () => {
+			// Model without inputTokens field (traditional model)
+			const modelInfo = createModelInfo(100000, undefined, 30000)
+
+			// Create messages with very small content in the last one to avoid token overflow
+			const messagesWithSmallContent = [
+				...messages.slice(0, -1),
+				{ ...messages[messages.length - 1], content: "" },
+			]
+
+			// Set tokens based on contextWindow calculation
+			// contextWindow: 100000, with buffer and maxTokens: 100000 * 0.9 - 30000 = 60000
+			const totalTokens = 59999 // Just below the contextWindow-based threshold
+
+			const result = await truncateConversationIfNeeded({
+				messages: messagesWithSmallContent,
+				totalTokens,
+				contextWindow: modelInfo.contextWindow,
+				inputTokens: modelInfo.inputTokens,
+				maxTokens: modelInfo.maxTokens,
+				apiHandler: mockApiHandler,
+				autoCondenseContext: false,
+				autoCondenseContextPercent: 100,
+				systemPrompt: "System prompt",
+				taskId,
+				profileThresholds: {},
+				currentProfileId: "default",
+			})
+
+			// Should not truncate as we're below the contextWindow limit
+			expect(result).toEqual({
+				messages: messagesWithSmallContent,
+				summary: "",
+				cost: 0,
+				prevContextTokens: totalTokens,
+			})
+		})
+	})
 })

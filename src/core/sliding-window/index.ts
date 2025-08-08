@@ -67,6 +67,7 @@ type TruncateOptions = {
 	messages: ApiMessage[]
 	totalTokens: number
 	contextWindow: number
+	inputTokens?: number | null
 	maxTokens?: number | null
 	apiHandler: ApiHandler
 	autoCondenseContext: boolean
@@ -92,6 +93,7 @@ export async function truncateConversationIfNeeded({
 	messages,
 	totalTokens,
 	contextWindow,
+	inputTokens,
 	maxTokens,
 	apiHandler,
 	autoCondenseContext,
@@ -118,9 +120,13 @@ export async function truncateConversationIfNeeded({
 	// Calculate total effective tokens (totalTokens never includes the last message)
 	const prevContextTokens = totalTokens + lastMessageTokens
 
+	// Use inputTokens if available (for models with separate input/output limits like GPT-5)
+	// Otherwise fall back to contextWindow
+	const effectiveInputLimit = inputTokens || contextWindow
+
 	// Calculate available tokens for conversation history
-	// Truncate if we're within TOKEN_BUFFER_PERCENTAGE of the context window
-	const allowedTokens = contextWindow * (1 - TOKEN_BUFFER_PERCENTAGE) - reservedTokens
+	// Truncate if we're within TOKEN_BUFFER_PERCENTAGE of the input limit
+	const allowedTokens = effectiveInputLimit * (1 - TOKEN_BUFFER_PERCENTAGE) - reservedTokens
 
 	// Determine the effective threshold to use
 	let effectiveThreshold = autoCondenseContextPercent
@@ -143,7 +149,8 @@ export async function truncateConversationIfNeeded({
 	// If no specific threshold is found for the profile, fall back to global setting
 
 	if (autoCondenseContext) {
-		const contextPercent = (100 * prevContextTokens) / contextWindow
+		// Use inputTokens if available for percentage calculation
+		const contextPercent = (100 * prevContextTokens) / effectiveInputLimit
 		if (contextPercent >= effectiveThreshold || prevContextTokens > allowedTokens) {
 			// Attempt to intelligently condense the context
 			const result = await summarizeConversation(
