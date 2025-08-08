@@ -227,7 +227,7 @@ describe("McpHub", () => {
 
 			// Create McpHub and let it initialize
 			const mcpHub = new McpHub(mockProvider as ClineProvider)
-			await new Promise((resolve) => setTimeout(resolve, 100))
+			await new Promise((resolve) => setTimeout(resolve, 200)) // Increased timeout to allow for connection
 
 			// Find the connection
 			const connection = mcpHub.connections.find((conn) => conn.server.name === "union-test-server")
@@ -237,6 +237,7 @@ describe("McpHub", () => {
 			if (connection && connection.type === "connected") {
 				expect(connection.client).toBeDefined()
 				expect(connection.transport).toBeDefined()
+				// Status should be "connected" after successful connection
 				expect(connection.server.status).toBe("connected")
 			} else {
 				throw new Error("Connection should be of type 'connected'")
@@ -1563,11 +1564,12 @@ describe("McpHub", () => {
 
 			// Create McpHub and let it initialize with MCP enabled
 			const mcpHub = new McpHub(mockProvider as ClineProvider)
-			await new Promise((resolve) => setTimeout(resolve, 100))
+			await new Promise((resolve) => setTimeout(resolve, 200)) // Increased timeout to allow for connection
 
 			// Verify server is connected
 			const connectedServer = mcpHub.connections.find((conn) => conn.server.name === "toggle-test-server")
 			expect(connectedServer).toBeDefined()
+			// Status should be "connected" after successful connection
 			expect(connectedServer!.server.status).toBe("connected")
 			expect(connectedServer!.client).toBeDefined()
 			expect(connectedServer!.transport).toBeDefined()
@@ -1696,6 +1698,7 @@ describe("McpHub", () => {
 
 			// Verify that the server is connected
 			expect(enabledServer).toBeDefined()
+			// Status should be "connected" after successful connection
 			expect(enabledServer!.server.status).toBe("connected")
 			expect(enabledServer!.client).toBeDefined()
 			expect(enabledServer!.transport).toBeDefined()

@@ -127,7 +127,28 @@ async function executeToolAndProcessResult(
 		toolName,
 	})
 
-	const toolResult = await cline.providerRef.deref()?.getMcpHub()?.callTool(serverName, toolName, parsedArguments)
+	// Execute the tool
+	let toolResult: any
+	try {
+		const mcpHub = cline.providerRef.deref()?.getMcpHub()
+		if (!mcpHub) {
+			throw new Error("MCP Hub not available")
+		}
+
+		toolResult = await mcpHub.callTool(serverName, toolName, parsedArguments)
+	} catch (error: any) {
+		const errorMessage = error?.message || String(error)
+
+		// Send error status
+		await sendExecutionStatus(cline, {
+			executionId,
+			status: "error",
+			error: errorMessage,
+		})
+
+		// Re-throw to be handled by the caller
+		throw error
+	}
 
 	let toolResultPretty = "(No response)"
 
