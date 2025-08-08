@@ -5,9 +5,13 @@
 export type EmbedderProvider = "openai" | "ollama" | "openai-compatible" | "gemini" | "mistral" // Add other providers as needed
 
 export interface EmbeddingModelProfile {
+	/** The fixed dimension for the model, or a fallback for models with variable dimensions. */
 	dimension: number
 	scoreThreshold?: number // Model-specific minimum score threshold for semantic search
 	queryPrefix?: string // Optional prefix required by the model for queries
+	minDimension?: number // The minimum dimension supported by a variable-dimension model.
+	maxDimension?: number // The maximum dimension supported by a variable-dimension model.
+	defaultDimension?: number // The default dimension for a variable-dimension model, used for UI presentation.
 	// Add other model-specific properties if needed, e.g., context window size
 }
 
@@ -48,7 +52,13 @@ export const EMBEDDING_MODEL_PROFILES: EmbeddingModelProfiles = {
 	},
 	gemini: {
 		"text-embedding-004": { dimension: 768 },
-		"gemini-embedding-001": { dimension: 3072, scoreThreshold: 0.4 },
+		"gemini-embedding-001": {
+			dimension: 3072, // Fallback, but defaultDimension is preferred
+			minDimension: 128,
+			maxDimension: 3072,
+			defaultDimension: 3072,
+			scoreThreshold: 0.4,
+		},
 	},
 	mistral: {
 		"codestral-embed-2505": { dimension: 1536, scoreThreshold: 0.4 },
