@@ -231,6 +231,50 @@ describe("ChutesHandler", () => {
 		)
 	})
 
+	it("should return Qwen/Qwen3-Coder-480B-A35B-Instruct-FP8 model with correct configuration", () => {
+		const testModelId: ChutesModelId = "Qwen/Qwen3-Coder-480B-A35B-Instruct-FP8"
+		const handlerWithModel = new ChutesHandler({
+			apiModelId: testModelId,
+			chutesApiKey: "test-chutes-api-key",
+		})
+		const model = handlerWithModel.getModel()
+		expect(model.id).toBe(testModelId)
+		expect(model.info).toEqual(
+			expect.objectContaining({
+				maxTokens: 32768,
+				contextWindow: 131072,
+				supportsImages: false,
+				supportsPromptCache: false,
+				inputPrice: 0,
+				outputPrice: 0,
+				description: "Qwen3 Coder 480B A35B Instruct FP8 model, optimized for coding tasks.",
+				temperature: 0.5, // Default temperature for non-DeepSeek models
+			}),
+		)
+	})
+
+	it("should return moonshotai/Kimi-K2-Instruct model with correct configuration", () => {
+		const testModelId: ChutesModelId = "moonshotai/Kimi-K2-Instruct"
+		const handlerWithModel = new ChutesHandler({
+			apiModelId: testModelId,
+			chutesApiKey: "test-chutes-api-key",
+		})
+		const model = handlerWithModel.getModel()
+		expect(model.id).toBe(testModelId)
+		expect(model.info).toEqual(
+			expect.objectContaining({
+				maxTokens: 32768,
+				contextWindow: 131072,
+				supportsImages: false,
+				supportsPromptCache: false,
+				inputPrice: 0,
+				outputPrice: 0,
+				description: "Moonshot AI Kimi K2 Instruct model.",
+				temperature: 0.5, // Default temperature for non-DeepSeek models
+			}),
+		)
+	})
+
 	it("completePrompt method should return text from Chutes API", async () => {
 		const expectedResponse = "This is a test response from Chutes"
 		mockCreate.mockResolvedValueOnce({ choices: [{ message: { content: expectedResponse } }] })
