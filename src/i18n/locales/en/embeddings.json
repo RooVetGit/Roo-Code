@@ -15,7 +15,8 @@
 		"serviceUnavailable": "Ollama service is unavailable (status: {{status}})",
 		"modelNotFound": "Ollama model not found: {{modelId}}",
 		"modelNotEmbeddingCapable": "Ollama model is not embedding capable: {{modelId}}",
-		"hostNotFound": "Ollama host not found: {{baseUrl}}"
+		"hostNotFound": "Ollama host not found: {{baseUrl}}",
+		"batchTimeoutError": "Ollama embedding timed out after {{timeout}} seconds while processing {{count}} texts. Consider reducing batch size or increasing timeout."
 	},
 	"scanner": {
 		"unknownErrorProcessingFile": "Unknown error processing file {{filePath}}",

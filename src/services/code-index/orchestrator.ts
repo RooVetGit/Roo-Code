@@ -138,11 +138,13 @@ export class CodeIndexOrchestrator {
 
 			const handleFileParsed = (fileBlockCount: number) => {
 				cumulativeBlocksFoundSoFar += fileBlockCount
+				// Update progress immediately when blocks are found
 				this.stateManager.reportBlockIndexingProgress(cumulativeBlocksIndexed, cumulativeBlocksFoundSoFar)
 			}
 
 			const handleBlocksIndexed = (indexedCount: number) => {
 				cumulativeBlocksIndexed += indexedCount
+				// Update progress immediately when blocks are indexed
 				this.stateManager.reportBlockIndexingProgress(cumulativeBlocksIndexed, cumulativeBlocksFoundSoFar)
 			}
 
@@ -154,6 +156,8 @@ export class CodeIndexOrchestrator {
 						batchError,
 					)
 					batchErrors.push(batchError)
+					// Update state to show error immediately
+					this.stateManager.setSystemState("Error", `Indexing error: ${batchError.message}`)
 				},
 				handleBlocksIndexed,
 				handleFileParsed,

@@ -385,8 +385,29 @@ export class DirectoryScanner implements IDirectoryScanner {
 				}
 				// --- End Deletion Step ---
 
-				// Create embeddings for batch
-				const { embeddings } = await this.embedder.createEmbeddings(batchTexts)
+				// Create embeddings for batch with better error context
+				let embeddings: number[][]
+				try {
+					const response = await this.embedder.createEmbeddings(batchTexts)
+					embeddings = response.embeddings
+				} catch (embeddingError: any) {
+					// Log specific details about the embedding failure
+					console.error(
+						`[DirectoryScanner] Embedding creation failed for batch of ${batchTexts.length} texts:`,
+						embeddingError,
+					)
+
+					// Check if it's a timeout error and provide more context
+					if (embeddingError.message?.includes("timed out") || embeddingError.message?.includes("timeout")) {
+						throw new Error(
+							`Embedding timeout for batch of ${batchTexts.length} texts. This may indicate the Ollama service is overloaded or the model is too slow. ${embeddingError.message}`,
+							{ cause: embeddingError },
+						)
+					}
+
+					// Re-throw with additional context
+					throw embeddingError
+				}
 
 				// Prepare points for Qdrant
 				const points = batchBlocks.map((block, index) => {
@@ -420,7 +441,7 @@ export class DirectoryScanner implements IDirectoryScanner {
 			} catch (error) {
 				lastError = error as Error
 				console.error(
-					`[DirectoryScanner] Error processing batch (attempt ${attempts}) in workspace ${scanWorkspace}:`,
+					`[DirectoryScanner] Error processing batch (attempt ${attempts}/${MAX_BATCH_RETRIES}) in workspace ${scanWorkspace}:`,
 					error,
 				)
 				TelemetryService.instance.captureEvent(TelemetryEventName.CODE_INDEX_ERROR, {
@@ -433,6 +454,7 @@ export class DirectoryScanner implements IDirectoryScanner {
 
 				if (attempts < MAX_BATCH_RETRIES) {
 					const delay = INITIAL_RETRY_DELAY_MS * Math.pow(2, attempts - 1)
+					console.log(`[DirectoryScanner] Retrying batch processing in ${delay}ms...`)
 					await new Promise((resolve) => setTimeout(resolve, delay))
 				}
 			}
@@ -454,6 +476,9 @@ export class DirectoryScanner implements IDirectoryScanner {
 					),
 				)
 			}
+			// CRITICAL: Throw the error to ensure it's caught by the orchestrator
+			// This prevents the indexing from appearing to succeed when it actually failed
+			throw lastError
 		}
 	}
 }

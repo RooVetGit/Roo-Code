@@ -69,8 +69,10 @@ export class CodeIndexOllamaEmbedder implements IEmbedder {
 			// Implementing based on user's specific request structure.
 
 			// Add timeout to prevent indefinite hanging
+			// Use a longer timeout for batch operations as they can take more time
+			const batchTimeout = Math.max(OLLAMA_EMBEDDING_TIMEOUT_MS, texts.length * 2000) // At least 2 seconds per text
 			const controller = new AbortController()
-			const timeoutId = setTimeout(() => controller.abort(), OLLAMA_EMBEDDING_TIMEOUT_MS)
+			const timeoutId = setTimeout(() => controller.abort(), batchTimeout)
 
 			const response = await fetch(url, {
 				method: "POST",
@@ -125,7 +127,15 @@ export class CodeIndexOllamaEmbedder implements IEmbedder {
 
 			// Handle specific error types with better messages
 			if (error.name === "AbortError") {
-				throw new Error(t("embeddings:validation.connectionFailed"))
+				// More specific timeout error message for batch operations
+				const timeoutMessage =
+					texts.length > 1
+						? t("embeddings:ollama.batchTimeoutError", {
+								count: texts.length,
+								timeout: Math.round(Math.max(OLLAMA_EMBEDDING_TIMEOUT_MS, texts.length * 2000) / 1000),
+							})
+						: t("embeddings:validation.connectionFailed")
+				throw new Error(timeoutMessage)
 			} else if (error.message?.includes("fetch failed") || error.code === "ECONNREFUSED") {
 				throw new Error(t("embeddings:ollama.serviceNotRunning", { baseUrl: this.baseUrl }))
 			} else if (error.code === "ENOTFOUND") {
