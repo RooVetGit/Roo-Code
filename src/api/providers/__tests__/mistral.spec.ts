@@ -118,6 +118,86 @@ describe("MistralHandler", () => {
 			expect(results[0].text).toBe("Test response")
 		})
 
+		it("should handle thinking type in content array", async () => {
+			// Override the mock to return content with thinking type
+			mockCreate.mockImplementationOnce(async (_options) => {
+				const stream = {
+					[Symbol.asyncIterator]: async function* () {
+						yield {
+							data: {
+								choices: [
+									{
+										delta: {
+											content: [
+												{ type: "thinking", text: "Let me think about this..." },
+												{ type: "text", text: "Here is my response" },
+											],
+										},
+										index: 0,
+									},
+								],
+							},
+						}
+					},
+				}
+				return stream
+			})
+
+			const iterator = handler.createMessage(systemPrompt, messages)
+			const results: ApiStreamTextChunk[] = []
+
+			for await (const chunk of iterator) {
+				if ("text" in chunk) {
+					results.push(chunk as ApiStreamTextChunk)
+				}
+			}
+
+			// Should only include the text type content, not thinking
+			expect(results.length).toBe(1)
+			expect(results[0].text).toBe("Here is my response")
+		})
+
+		it("should handle mixed content types gracefully", async () => {
+			// Override the mock to return various content types
+			mockCreate.mockImplementationOnce(async (_options) => {
+				const stream = {
+					[Symbol.asyncIterator]: async function* () {
+						yield {
+							data: {
+								choices: [
+									{
+										delta: {
+											content: [
+												{ type: "thinking", text: "Processing..." },
+												{ type: "text", text: "First part" },
+												{ type: "unknown", data: "some data" },
+												{ type: "text", text: " Second part" },
+											],
+										},
+										index: 0,
+									},
+								],
+							},
+						}
+					},
+				}
+				return stream
+			})
+
+			const iterator = handler.createMessage(systemPrompt, messages)
+			const results: ApiStreamTextChunk[] = []
+
+			for await (const chunk of iterator) {
+				if ("text" in chunk) {
+					results.push(chunk as ApiStreamTextChunk)
+				}
+			}
+
+			// Should concatenate only text type content
+			expect(results.length).toBe(1)
+			expect(results[0].text).toBe("First part Second part")
+		})
+
 		it("should handle errors gracefully", async () => {
 			mockCreate.mockRejectedValueOnce(new Error("API Error"))
 			await expect(handler.createMessage(systemPrompt, messages).next()).rejects.toThrow("API Error")

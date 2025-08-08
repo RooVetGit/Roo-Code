@@ -57,10 +57,17 @@ export class MistralHandler extends BaseProvider implements SingleCompletionHand
 				if (typeof delta.content === "string") {
 					content = delta.content
 				} else if (Array.isArray(delta.content)) {
-					content = delta.content.map((c) => (c.type === "text" ? c.text : "")).join("")
+					// Handle array content, filtering out "thinking" type and other non-text types
+					content = delta.content
+						.filter((c: any) => c.type === "text")
+						.map((c: any) => c.text || "")
+						.join("")
 				}
 
-				yield { type: "text", text: content }
+				// Only yield if we have actual content to send
+				if (content) {
+					yield { type: "text", text: content }
+				}
 			}
 
 			if (chunk.data.usage) {
@@ -97,7 +104,11 @@ export class MistralHandler extends BaseProvider implements SingleCompletionHand
 			const content = response.choices?.[0]?.message.content
 
 			if (Array.isArray(content)) {
-				return content.map((c) => (c.type === "text" ? c.text : "")).join("")
+				// Handle array content, filtering out "thinking" type and other non-text types
+				return content
+					.filter((c: any) => c.type === "text")
+					.map((c: any) => c.text || "")
+					.join("")
 			}
 
 			return content || ""
