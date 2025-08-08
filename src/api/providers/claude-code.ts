@@ -56,7 +56,7 @@ export class ClaudeCodeHandler extends BaseProvider implements ApiHandler {
 			if (typeof chunk === "string") {
 				yield {
 					type: "text",
-					text: chunk,
+					text: chunk.replace(/\\n/g, "\n"),
 				}
 
 				continue
@@ -100,7 +100,7 @@ export class ClaudeCodeHandler extends BaseProvider implements ApiHandler {
 						case "text":
 							yield {
 								type: "text",
-								text: content.text,
+								text: content.text.replace(/\\n/g, "\n"),
 							}
 							break
 						case "thinking":
