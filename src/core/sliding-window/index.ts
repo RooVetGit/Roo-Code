@@ -144,7 +144,17 @@ export async function truncateConversationIfNeeded({
 
 	if (autoCondenseContext) {
 		const contextPercent = (100 * prevContextTokens) / contextWindow
-		if (contextPercent >= effectiveThreshold || prevContextTokens > allowedTokens) {
+		// Check if we should trigger condensation based on percentage threshold
+		const shouldCondenseByPercentage = contextPercent >= effectiveThreshold
+		// Check if we're over the hard token limit
+		const isOverHardLimit = prevContextTokens > allowedTokens
+
+		// Only trigger automatic condensation when the percentage threshold is met
+		// If we're over the hard limit but below percentage, we'll use sliding window instead
+		if (shouldCondenseByPercentage) {
+			console.log(
+				`[Condensation] Triggering automatic condensation: ${contextPercent.toFixed(1)}% >= ${effectiveThreshold}% threshold`,
+			)
 			// Attempt to intelligently condense the context
 			const result = await summarizeConversation(
 				messages,
@@ -159,14 +169,29 @@ export async function truncateConversationIfNeeded({
 			if (result.error) {
 				error = result.error
 				cost = result.cost
+				console.log(`[Condensation] Condensation failed: ${result.error}`)
+				// If condensation fails and we're over the hard limit, fall through to sliding window
 			} else {
+				console.log(
+					`[Condensation] Successfully condensed context from ${prevContextTokens} to ${result.newContextTokens} tokens`,
+				)
 				return { ...result, prevContextTokens }
 			}
+		} else if (isOverHardLimit) {
+			// If we're over the hard limit but haven't reached the percentage threshold,
+			// log this condition - we'll use sliding window truncation below
+			console.log(
+				`[Condensation] Context tokens (${prevContextTokens}) exceed allowed (${allowedTokens}), but percentage (${contextPercent.toFixed(1)}%) < threshold (${effectiveThreshold}%). Will use sliding window truncation.`,
+			)
 		}
 	}
 
 	// Fall back to sliding window truncation if needed
+	// This happens when we're over the hard token limit regardless of percentage
 	if (prevContextTokens > allowedTokens) {
+		console.log(
+			`[Condensation] Using sliding window truncation: ${prevContextTokens} tokens > ${allowedTokens} allowed`,
+		)
 		const truncatedMessages = truncateConversation(messages, 0.5, taskId)
 		return { messages: truncatedMessages, prevContextTokens, summary: "", cost, error }
 	}

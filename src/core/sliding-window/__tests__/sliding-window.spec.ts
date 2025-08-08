@@ -544,86 +544,13 @@ describe("Sliding Window", () => {
 			})
 		})
 
-		it("should use summarizeConversation when autoCondenseContext is true and tokens exceed threshold", async () => {
-			// Mock the summarizeConversation function
-			const mockSummary = "This is a summary of the conversation"
-			const mockCost = 0.05
-			const mockSummarizeResponse: condenseModule.SummarizeResponse = {
-				messages: [
-					{ role: "user", content: "First message" },
-					{ role: "assistant", content: mockSummary, isSummary: true },
-					{ role: "user", content: "Last message" },
-				],
-				summary: mockSummary,
-				cost: mockCost,
-				newContextTokens: 100,
-			}
-
-			const summarizeSpy = vi
-				.spyOn(condenseModule, "summarizeConversation")
-				.mockResolvedValue(mockSummarizeResponse)
+		it("should NOT use summarizeConversation when tokens exceed hard limit but percentage is below threshold", async () => {
+			// Reset any previous mock calls
+			vi.clearAllMocks()
+			const summarizeSpy = vi.spyOn(condenseModule, "summarizeConversation")
 
 			const modelInfo = createModelInfo(100000, 30000)
-			const totalTokens = 70001 // Above threshold
-			const messagesWithSmallContent = [
-				...messages.slice(0, -1),
-				{ ...messages[messages.length - 1], content: "" },
-			]
-
-			const result = await truncateConversationIfNeeded({
-				messages: messagesWithSmallContent,
-				totalTokens,
-				contextWindow: modelInfo.contextWindow,
-				maxTokens: modelInfo.maxTokens,
-				apiHandler: mockApiHandler,
-				autoCondenseContext: true,
-				autoCondenseContextPercent: 100,
-				systemPrompt: "System prompt",
-				taskId,
-				profileThresholds: {},
-				currentProfileId: "default",
-			})
-
-			// Verify summarizeConversation was called with the right parameters
-			expect(summarizeSpy).toHaveBeenCalledWith(
-				messagesWithSmallContent,
-				mockApiHandler,
-				"System prompt",
-				taskId,
-				70001,
-				true,
-				undefined, // customCondensingPrompt
-				undefined, // condensingApiHandler
-			)
-
-			// Verify the result contains the summary information
-			expect(result).toMatchObject({
-				messages: mockSummarizeResponse.messages,
-				summary: mockSummary,
-				cost: mockCost,
-				prevContextTokens: totalTokens,
-			})
-			// newContextTokens might be present, but we don't need to verify its exact value
-
-			// Clean up
-			summarizeSpy.mockRestore()
-		})
-
-		it("should fall back to truncateConversation when autoCondenseContext is true but summarization fails", async () => {
-			// Mock the summarizeConversation function to return an error
-			const mockSummarizeResponse: condenseModule.SummarizeResponse = {
-				messages: messages, // Original messages unchanged
-				summary: "", // Empty summary
-				cost: 0.01,
-				error: "Summarization failed", // Error indicates failure
-			}
-
-			const summarizeSpy = vi
-				.spyOn(condenseModule, "summarizeConversation")
-				.mockResolvedValue(mockSummarizeResponse)
-
-			const modelInfo = createModelInfo(100000, 30000)
-			const totalTokens = 70001 // Above threshold
+			const totalTokens = 70001 // Above hard limit but only 70% of context window
 			const messagesWithSmallContent = [
 				...messages.slice(0, -1),
 				{ ...messages[messages.length - 1], content: "" },
@@ -644,17 +571,75 @@ describe("Sliding Window", () => {
 				maxTokens: modelInfo.maxTokens,
 				apiHandler: mockApiHandler,
 				autoCondenseContext: true,
-				autoCondenseContextPercent: 100,
+				autoCondenseContextPercent: 100, // 100% threshold, but tokens are only at 70%
 				systemPrompt: "System prompt",
 				taskId,
 				profileThresholds: {},
 				currentProfileId: "default",
 			})
 
-			// Verify summarizeConversation was called
+			// Verify summarizeConversation was NOT called (percentage threshold not met)
+			expect(summarizeSpy).not.toHaveBeenCalled()
+
+			// Verify it used sliding window truncation instead
+			expect(result).toEqual({
+				messages: expectedMessages,
+				summary: "",
+				cost: 0,
+				prevContextTokens: totalTokens,
+			})
+
+			// Clean up
+			summarizeSpy.mockRestore()
+		})
+
+		it("should fall back to truncateConversation when autoCondenseContext is true, percentage threshold is met, but summarization fails", async () => {
+			// Mock the summarizeConversation function to return an error
+			const mockSummarizeResponse: condenseModule.SummarizeResponse = {
+				messages: messages, // Original messages unchanged
+				summary: "", // Empty summary
+				cost: 0.01,
+				error: "Summarization failed", // Error indicates failure
+			}
+
+			const summarizeSpy = vi
+				.spyOn(condenseModule, "summarizeConversation")
+				.mockResolvedValue(mockSummarizeResponse)
+
+			const modelInfo = createModelInfo(100000, 30000)
+			// Set tokens to meet percentage threshold (100% of context)
+			const totalTokens = 100001 // Above 100% threshold
+			const messagesWithSmallContent = [
+				...messages.slice(0, -1),
+				{ ...messages[messages.length - 1], content: "" },
+			]
+
+			// When truncating, always uses 0.5 fraction
+			// With 4 messages after the first, 0.5 fraction means remove 2 messages
+			const expectedMessages = [
+				messagesWithSmallContent[0],
+				messagesWithSmallContent[3],
+				messagesWithSmallContent[4],
+			]
+
+			const result = await truncateConversationIfNeeded({
+				messages: messagesWithSmallContent,
+				totalTokens,
+				contextWindow: modelInfo.contextWindow,
+				maxTokens: modelInfo.maxTokens,
+				apiHandler: mockApiHandler,
+				autoCondenseContext: true,
+				autoCondenseContextPercent: 100, // 100% threshold, tokens are at 100%+
+				systemPrompt: "System prompt",
+				taskId,
+				profileThresholds: {},
+				currentProfileId: "default",
+			})
+
+			// Verify summarizeConversation was called (percentage threshold was met)
 			expect(summarizeSpy).toHaveBeenCalled()
 
-			// Verify it fell back to truncation
+			// Verify it fell back to truncation after summarization failed
 			expect(result.messages).toEqual(expectedMessages)
 			expect(result.summary).toBe("")
 			expect(result.prevContextTokens).toBe(totalTokens)
