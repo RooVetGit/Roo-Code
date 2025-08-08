@@ -112,6 +112,7 @@ Make Roo Code work your way with:
 
 - [Basic Usage Guide](https://docs.roocode.com/basic-usage/the-chat-interface)
 - [Advanced Features](https://docs.roocode.com/advanced-usage/auto-approving-actions)
+- [MCP Server Integrations](./docs/mcp-servers/) - Documentation for integrating MCP servers like BurpSuite
 - [Frequently Asked Questions](https://docs.roocode.com/faq)
 
 ### Community
