@@ -3,7 +3,7 @@ import { BaseToolSchema } from "./base-tool-schema"
 const baseReadFileSchema: BaseToolSchema = {
 	name: "read_file",
 	description:
-		"Request to read the contents a file. Supports text extraction from PDF and DOCX files, but may not handle other binary files properly.",
+		"Request to read the contents of a file. Supports text extraction from PDF and DOCX files, but may not handle other binary files properly.",
 	parameters: [
 		{
 			name: "args",

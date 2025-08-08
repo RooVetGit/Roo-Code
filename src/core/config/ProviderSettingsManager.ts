@@ -32,7 +32,7 @@ export const providerProfilesSchema = z.object({
 			openAiHeadersMigrated: z.boolean().optional(),
 			consecutiveMistakeLimitMigrated: z.boolean().optional(),
 			todoListEnabledMigrated: z.boolean().optional(),
-			toolcallEnabledMigrated: z.boolean().optional(),
+			toolCallEnabledMigrated: z.boolean().optional(),
 		})
 		.optional(),
 })
@@ -57,7 +57,7 @@ export class ProviderSettingsManager {
 			openAiHeadersMigrated: true, // Mark as migrated on fresh installs
 			consecutiveMistakeLimitMigrated: true, // Mark as migrated on fresh installs
 			todoListEnabledMigrated: true, // Mark as migrated on fresh installs
-			toolcallEnabledMigrated: true, // Mark as migrated on fresh installs
+			toolCallEnabledMigrated: true, // Mark as migrated on fresh installs
 		},
 	}
 
@@ -158,9 +158,9 @@ export class ProviderSettingsManager {
 					providerProfiles.migrations.todoListEnabledMigrated = true
 					isDirty = true
 				}
-				if (!providerProfiles.migrations.toolcallEnabledMigrated) {
+				if (!providerProfiles.migrations.toolCallEnabledMigrated) {
 					await this.migrateToolCallEnabled(providerProfiles)
-					providerProfiles.migrations.toolcallEnabledMigrated = true
+					providerProfiles.migrations.toolCallEnabledMigrated = true
 					isDirty = true
 				}
 
