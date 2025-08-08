@@ -7,6 +7,7 @@ import { XMLBuilder } from "fast-xml-parser"
 import delay from "delay"
 
 import { createDirectoriesForFile } from "../../utils/fs"
+import { readFileWithEncodingDetection } from "../../utils/encoding"
 import { arePathsEqual, getReadablePath } from "../../utils/path"
 import { formatResponse } from "../../core/prompts/responses"
 import { diagnosticsToProblemsString, getNewDiagnostics } from "../diagnostics"
@@ -68,7 +69,7 @@ export class DiffViewProvider {
 		this.preDiagnostics = vscode.languages.getDiagnostics()
 
 		if (fileExists) {
-			this.originalContent = await fs.readFile(absolutePath, "utf-8")
+			this.originalContent = await readFileWithEncodingDetection(absolutePath)
 		} else {
 			this.originalContent = ""
 		}

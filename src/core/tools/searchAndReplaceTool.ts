@@ -4,6 +4,7 @@ import fs from "fs/promises"
 import delay from "delay"
 
 // Internal imports
+import { readFileWithEncodingDetection } from "../../utils/encoding"
 import { Task } from "../task/Task"
 import { AskApproval, HandleError, PushToolResult, RemoveClosingTag, ToolUse } from "../../shared/tools"
 import { formatResponse } from "../prompts/responses"
@@ -148,7 +149,7 @@ export async function searchAndReplaceTool(
 		// Read and process file content
 		let fileContent: string
 		try {
-			fileContent = await fs.readFile(absolutePath, "utf-8")
+			fileContent = await readFileWithEncodingDetection(absolutePath)
 		} catch (error) {
 			cline.consecutiveMistakeCount++
 			cline.recordToolError("search_and_replace")

@@ -9,10 +9,18 @@ vi.mock("delay", () => ({
 }))
 
 // Mock fs/promises
-vi.mock("fs/promises", () => ({
-	readFile: vi.fn().mockResolvedValue("file content"),
-	writeFile: vi.fn().mockResolvedValue(undefined),
-}))
+vi.mock("fs/promises", async () => {
+	const actual = await vi.importActual("fs/promises");
+	return {
+		...actual,
+		readFile: vi.fn().mockResolvedValue("file content"),
+		writeFile: vi.fn().mockResolvedValue(undefined),
+		default: {
+			readFile: vi.fn().mockResolvedValue("file content"),
+			writeFile: vi.fn().mockResolvedValue(undefined),
+		}
+	}
+})
 
 // Mock utils
 vi.mock("../../../utils/fs", () => ({
@@ -20,11 +28,15 @@ vi.mock("../../../utils/fs", () => ({
 }))
 
 // Mock path
-vi.mock("path", () => ({
-	resolve: vi.fn((cwd, relPath) => `${cwd}/${relPath}`),
-	basename: vi.fn((path) => path.split("/").pop()),
-}))
-
+vi.mock("path", async () => {
+	const actual = await vi.importActual("path");
+	return {
+		...actual,
+		resolve: vi.fn((cwd, relPath) => `${cwd}/${relPath}`),
+		basename: vi.fn((path) => path.split("/").pop()),
+	};
+})
+// Mock vscode
 // Mock vscode
 vi.mock("vscode", () => ({
 	workspace: {
@@ -90,7 +102,6 @@ vi.mock("vscode", () => ({
 		parse: vi.fn((uri) => ({ with: vi.fn(() => ({})) })),
 	},
 }))
-
 // Mock DecorationController
 vi.mock("../DecorationController", () => ({
 	DecorationController: vi.fn().mockImplementation(() => ({

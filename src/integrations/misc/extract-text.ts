@@ -7,6 +7,7 @@ import { isBinaryFile } from "isbinaryfile"
 import { extractTextFromXLSX } from "./extract-text-from-xlsx"
 import { countFileLines } from "./line-counter"
 import { readLines } from "./read-lines"
+import { readFileWithEncodingDetection } from "../../utils/encoding"
 
 async function extractTextFromPDF(filePath: string): Promise<string> {
 	const dataBuffer = await fs.readFile(filePath)
@@ -20,7 +21,7 @@ async function extractTextFromDOCX(filePath: string): Promise<string> {
 }
 
 async function extractTextFromIPYNB(filePath: string): Promise<string> {
-	const data = await fs.readFile(filePath, "utf8")
+	const data = await readFileWithEncodingDetection(filePath)
 	const notebook = JSON.parse(data)
 	let extractedText = ""
 
@@ -103,7 +104,7 @@ export async function extractTextFromFile(filePath: string, maxReadFileLine?: nu
 			}
 		}
 		// Read the entire file if no limit or file is within limit
-		return addLineNumbers(await fs.readFile(filePath, "utf8"))
+		return addLineNumbers(await readFileWithEncodingDetection(filePath))
 	} else {
 		throw new Error(`Cannot read text for file type: ${fileExtension}`)
 	}
