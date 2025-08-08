@@ -145,12 +145,12 @@ export class OpenAiNativeHandler extends BaseProvider implements SingleCompletio
 		systemPrompt: string,
 		messages: Anthropic.Messages.MessageParam[],
 	): ApiStream {
-		const { reasoning, verbosity } = this.getModel()
+		const { reasoning, verbosity, temperature } = this.getModel()
 
 		// Prepare the request parameters
 		const params: any = {
 			model: model.id,
-			temperature: this.options.modelTemperature ?? OPENAI_NATIVE_DEFAULT_TEMPERATURE,
+			temperature: temperature,
 			messages: [{ role: "system", content: systemPrompt }, ...convertToOpenAiMessages(messages)],
 			stream: true,
 			stream_options: { include_usage: true },
@@ -191,10 +191,14 @@ export class OpenAiNativeHandler extends BaseProvider implements SingleCompletio
 		// Get verbosity from model settings, default to "medium" if not specified
 		const verbosity = model.verbosity || "medium"
 
+		// Get temperature from model settings
+		const temperature = model.temperature
+
 		// Prepare the request parameters for Responses API
-		const params: GPT5ResponsesAPIParams = {
+		const params: GPT5ResponsesAPIParams & { temperature?: number } = {
 			model: model.id,
 			input: formattedInput,
+			temperature: temperature,
 			...(reasoningEffort && {
 				reasoning: {
 					effort: reasoningEffort,
@@ -246,7 +250,7 @@ export class OpenAiNativeHandler extends BaseProvider implements SingleCompletio
 	}
 
 	private async makeGpt5ResponsesAPIRequest(
-		params: GPT5ResponsesAPIParams,
+		params: GPT5ResponsesAPIParams & { temperature?: number },
 		model: OpenAiNativeModel,
 	): Promise<AsyncIterable<GPT5ResponseChunk>> {
 		// The OpenAI SDK doesn't have direct support for the Responses API yet,
@@ -264,6 +268,11 @@ export class OpenAiNativeHandler extends BaseProvider implements SingleCompletio
 			messages,
 			stream: true,
 			stream_options: { include_usage: true },
+		}
+
+		// Add temperature if specified
+		if ("temperature" in params && params.temperature !== undefined) {
+			requestParams.temperature = params.temperature
 		}
 
 		// Add reasoning effort if specified (supporting "minimal" for GPT-5)
@@ -351,6 +360,11 @@ export class OpenAiNativeHandler extends BaseProvider implements SingleCompletio
 		}
 	}
 
+	/**
+	 * Checks if a model is a GPT-5 variant.
+	 * GPT-5 models use temperature 1.0 as default for optimal performance,
+	 * as this setting provides the best balance between creativity and coherence.
+	 */
 	private isGpt5Model(modelId: string): boolean {
 		return modelId.startsWith("gpt-5")
 	}
@@ -401,12 +415,16 @@ export class OpenAiNativeHandler extends BaseProvider implements SingleCompletio
 
 		const info: ModelInfo = openAiNativeModels[id]
 
+		// For GPT-5 models, use temperature 1.0 as default for optimal performance
+		// This provides the best balance between creativity and coherence for GPT-5 models
+		const defaultTemp = this.isGpt5Model(id) ? 1.0 : OPENAI_NATIVE_DEFAULT_TEMPERATURE
+
 		const params = getModelParams({
 			format: "openai",
 			modelId: id,
 			model: info,
 			settings: this.options,
-			defaultTemperature: OPENAI_NATIVE_DEFAULT_TEMPERATURE,
+			defaultTemperature: defaultTemp,
 		})
 
 		// For GPT-5 models, ensure we support minimal reasoning effort

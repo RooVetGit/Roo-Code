@@ -461,6 +461,101 @@ describe("OpenAiNativeHandler", () => {
 	})
 
 	describe("GPT-5 models", () => {
+		it("should use temperature 1.0 as default for GPT-5 models", async () => {
+			// Test GPT-5 model without custom temperature
+			handler = new OpenAiNativeHandler({
+				...mockOptions,
+				apiModelId: "gpt-5-2025-08-07",
+			})
+
+			const stream = handler.createMessage(systemPrompt, messages)
+			const chunks: any[] = []
+			for await (const chunk of stream) {
+				chunks.push(chunk)
+			}
+
+			// Verify temperature 1.0 is used as default for GPT-5
+			expect(mockCreate).toHaveBeenCalledWith(
+				expect.objectContaining({
+					model: "gpt-5-2025-08-07",
+					temperature: 1.0, // Default temperature for GPT-5
+					messages: [{ role: "developer", content: expect.stringContaining(systemPrompt) }],
+					stream: true,
+					stream_options: { include_usage: true },
+					reasoning_effort: "minimal",
+					verbosity: "medium",
+				}),
+			)
+		})
+
+		it("should respect custom temperature for GPT-5 models", async () => {
+			// Test GPT-5 model with custom temperature
+			handler = new OpenAiNativeHandler({
+				...mockOptions,
+				apiModelId: "gpt-5-2025-08-07",
+				modelTemperature: 0.7,
+			})
+
+			const stream = handler.createMessage(systemPrompt, messages)
+			const chunks: any[] = []
+			for await (const chunk of stream) {
+				chunks.push(chunk)
+			}
+
+			// Verify custom temperature is used when specified
+			expect(mockCreate).toHaveBeenCalledWith(
+				expect.objectContaining({
+					model: "gpt-5-2025-08-07",
+					temperature: 0.7, // Custom temperature
+					messages: [{ role: "developer", content: expect.stringContaining(systemPrompt) }],
+					stream: true,
+					stream_options: { include_usage: true },
+					reasoning_effort: "minimal",
+					verbosity: "medium",
+				}),
+			)
+		})
+
+		it("should use temperature 1.0 for GPT-5-mini and GPT-5-nano models", async () => {
+			// Test GPT-5-mini
+			handler = new OpenAiNativeHandler({
+				...mockOptions,
+				apiModelId: "gpt-5-mini-2025-08-07",
+			})
+
+			let stream = handler.createMessage(systemPrompt, messages)
+			for await (const chunk of stream) {
+				// consume stream
+			}
+
+			expect(mockCreate).toHaveBeenCalledWith(
+				expect.objectContaining({
+					model: "gpt-5-mini-2025-08-07",
+					temperature: 1.0, // Default temperature for GPT-5 variants
+				}),
+			)
+
+			mockCreate.mockClear()
+
+			// Test GPT-5-nano
+			handler = new OpenAiNativeHandler({
+				...mockOptions,
+				apiModelId: "gpt-5-nano-2025-08-07",
+			})
+
+			stream = handler.createMessage(systemPrompt, messages)
+			for await (const chunk of stream) {
+				// consume stream
+			}
+
+			expect(mockCreate).toHaveBeenCalledWith(
+				expect.objectContaining({
+					model: "gpt-5-nano-2025-08-07",
+					temperature: 1.0, // Default temperature for GPT-5 variants
+				}),
+			)
+		})
+
 		it("should handle GPT-5 model with developer role", async () => {
 			handler = new OpenAiNativeHandler({
 				...mockOptions,
