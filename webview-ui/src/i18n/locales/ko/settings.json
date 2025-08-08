@@ -187,7 +187,11 @@
 			"commandPlaceholder": "명령 접두사 입력(예: 'git ')",
 			"deniedCommandPlaceholder": "거부할 명령 접두사 입력(예: 'rm -rf')",
 			"addButton": "추가",
-			"autoDenied": "접두사 `{{prefix}}`를 가진 명령어는 사용자에 의해 금지되었습니다. 다른 명령어를 실행하여 이 제한을 우회하지 마세요."
+			"autoDenied": "접두사 `{{prefix}}`를 가진 명령어는 사용자에 의해 금지되었습니다. 다른 명령어를 실행하여 이 제한을 우회하지 마세요.",
+			"useCustomMessage": "Use custom message",
+			"customMessagePlaceholder": "Enter custom message for this command prefix",
+			"defaultDeniedMessage": "Commands with the prefix '{{prefix}}' have been forbidden by the user. Do not bypass this restriction by running another command.",
+			"hasCustomMessage": "Has custom message"
 		},
 		"updateTodoList": {
 			"label": "Todo",

@@ -15,7 +15,7 @@ import { cn } from "@src/lib/utils"
 import { Button } from "@src/components/ui"
 import CodeBlock from "../common/CodeBlock"
 import { CommandPatternSelector } from "./CommandPatternSelector"
-import { parseCommand } from "../../utils/command-validation"
+import { parseCommand, deniedCommandsToPrefixes } from "../../utils/command-validation"
 import { extractPatternsFromCommand } from "../../utils/command-parser"
 
 interface CommandPattern {
@@ -82,7 +82,10 @@ export const CommandExecution = ({ executionId, text, icon, title }: CommandExec
 	const handleAllowPatternChange = (pattern: string) => {
 		const isAllowed = allowedCommands.includes(pattern)
 		const newAllowed = isAllowed ? allowedCommands.filter((p) => p !== pattern) : [...allowedCommands, pattern]
-		const newDenied = deniedCommands.filter((p) => p !== pattern)
+		const newDenied = deniedCommands.filter((cmd) => {
+			const prefix = typeof cmd === "string" ? cmd : cmd.prefix
+			return prefix !== pattern
+		})
 
 		setAllowedCommands(newAllowed)
 		setDeniedCommands(newDenied)
@@ -91,8 +94,14 @@ export const CommandExecution = ({ executionId, text, icon, title }: CommandExec
 	}
 
 	const handleDenyPatternChange = (pattern: string) => {
-		const isDenied = deniedCommands.includes(pattern)
-		const newDenied = isDenied ? deniedCommands.filter((p) => p !== pattern) : [...deniedCommands, pattern]
+		const deniedPrefixes = deniedCommandsToPrefixes(deniedCommands)
+		const isDenied = deniedPrefixes.includes(pattern)
+		const newDenied = isDenied
+			? deniedCommands.filter((cmd) => {
+					const prefix = typeof cmd === "string" ? cmd : cmd.prefix
+					return prefix !== pattern
+				})
+			: [...deniedCommands, pattern]
 		const newAllowed = allowedCommands.filter((p) => p !== pattern)
 
 		setAllowedCommands(newAllowed)
@@ -194,7 +203,7 @@ export const CommandExecution = ({ executionId, text, icon, title }: CommandExec
 					<CommandPatternSelector
 						patterns={commandPatterns}
 						allowedCommands={allowedCommands}
-						deniedCommands={deniedCommands}
+						deniedCommands={deniedCommandsToPrefixes(deniedCommands)}
 						onAllowPatternChange={handleAllowPatternChange}
 						onDenyPatternChange={handleDenyPatternChange}
 					/>

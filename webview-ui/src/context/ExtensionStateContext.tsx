@@ -7,6 +7,7 @@ import {
 	type ModeConfig,
 	type ExperimentId,
 	type OrganizationAllowList,
+	type DeniedCommand,
 	ORGANIZATION_ALLOW_ALL,
 } from "@roo-code/types"
 
@@ -69,7 +70,7 @@ export interface ExtensionStateContextType extends ExtensionState {
 	setShowRooIgnoredFiles: (value: boolean) => void
 	setShowAnnouncement: (value: boolean) => void
 	setAllowedCommands: (value: string[]) => void
-	setDeniedCommands: (value: string[]) => void
+	setDeniedCommands: (value: DeniedCommand[]) => void
 	setAllowedMaxRequests: (value: number | undefined) => void
 	setAllowedMaxCost: (value: number | undefined) => void
 	setSoundEnabled: (value: boolean) => void

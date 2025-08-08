@@ -27,7 +27,7 @@ import { vscode } from "@src/utils/vscode"
 import {
 	getCommandDecision,
 	CommandDecision,
-	findLongestPrefixMatch,
+	findLongestDeniedMatch,
 	parseCommand,
 } from "@src/utils/command-validation"
 import { useTranslation } from "react-i18next"
@@ -1077,17 +1077,17 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 		[getCommandDecisionForMessage],
 	)
 
-	// Helper function to get the denied prefix for a command
-	const getDeniedPrefix = useCallback(
-		(command: string): string | null => {
+	// Helper function to get the denied command info (prefix and optional message) for a command
+	const getDeniedCommandInfo = useCallback(
+		(command: string): { prefix: string; message?: string } | null => {
 			if (!command || !deniedCommands?.length) return null
 
 			// Parse the command into sub-commands and check each one
 			const subCommands = parseCommand(command)
 			for (const cmd of subCommands) {
-				const deniedMatch = findLongestPrefixMatch(cmd, deniedCommands)
-				if (deniedMatch) {
-					return deniedMatch
+				const deniedMatch = findLongestDeniedMatch(cmd, deniedCommands)
+				if (deniedMatch.prefix) {
+					return deniedMatch as { prefix: string; message?: string }
 				}
 			}
 			return null
@@ -1589,11 +1589,12 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 		const autoApproveOrReject = async () => {
 			// Check for auto-reject first (commands that should be denied)
 			if (lastMessage?.ask === "command" && isDeniedCommand(lastMessage)) {
-				// Get the denied prefix for the localized message
-				const deniedPrefix = getDeniedPrefix(lastMessage.text || "")
-				if (deniedPrefix) {
-					// Create the localized auto-deny message and send it with the rejection
-					const autoDenyMessage = tSettings("autoApprove.execute.autoDenied", { prefix: deniedPrefix })
+				// Get the denied command info (prefix and optional custom message)
+				const deniedInfo = getDeniedCommandInfo(lastMessage.text || "")
+				if (deniedInfo) {
+					// Use custom message if provided, otherwise use the default localized message
+					const autoDenyMessage =
+						deniedInfo.message || tSettings("autoApprove.execute.autoDenied", { prefix: deniedInfo.prefix })
 
 					vscode.postMessage({
 						type: "askResponse",
@@ -1693,7 +1694,7 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 		handleSuggestionClickInRow,
 		isAllowedCommand,
 		isDeniedCommand,
-		getDeniedPrefix,
+		getDeniedCommandInfo,
 		tSettings,
 	])
 

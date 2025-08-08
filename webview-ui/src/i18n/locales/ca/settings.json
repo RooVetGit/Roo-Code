@@ -187,7 +187,11 @@
 			"commandPlaceholder": "Introduïu prefix de comanda (ex. 'git ')",
 			"deniedCommandPlaceholder": "Introduïu prefix de comanda a denegar (ex. 'rm -rf')",
 			"addButton": "Afegir",
-			"autoDenied": "Les comandes amb el prefix `{{prefix}}` han estat prohibides per l'usuari. No eludeixis aquesta restricció executant una altra comanda."
+			"autoDenied": "Les comandes amb el prefix `{{prefix}}` han estat prohibides per l'usuari. No eludeixis aquesta restricció executant una altra comanda.",
+			"useCustomMessage": "Use custom message",
+			"customMessagePlaceholder": "Enter custom message for this command prefix",
+			"defaultDeniedMessage": "Commands with the prefix '{{prefix}}' have been forbidden by the user. Do not bypass this restriction by running another command.",
+			"hasCustomMessage": "Has custom message"
 		},
 		"updateTodoList": {
 			"label": "Todo",

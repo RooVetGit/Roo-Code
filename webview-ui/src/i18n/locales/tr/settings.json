@@ -187,7 +187,11 @@
 			"commandPlaceholder": "Komut öneki girin (örn. 'git ')",
 			"deniedCommandPlaceholder": "Reddetmek için komut öneki girin (örn. 'rm -rf')",
 			"addButton": "Ekle",
-			"autoDenied": "`{{prefix}}` önekli komutlar kullanıcı tarafından yasaklandı. Başka bir komut çalıştırarak bu kısıtlamayı aşma."
+			"autoDenied": "`{{prefix}}` önekli komutlar kullanıcı tarafından yasaklandı. Başka bir komut çalıştırarak bu kısıtlamayı aşma.",
+			"useCustomMessage": "Use custom message",
+			"customMessagePlaceholder": "Enter custom message for this command prefix",
+			"defaultDeniedMessage": "Commands with the prefix '{{prefix}}' have been forbidden by the user. Do not bypass this restriction by running another command.",
+			"hasCustomMessage": "Has custom message"
 		},
 		"updateTodoList": {
 			"label": "Todo",

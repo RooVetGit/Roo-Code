@@ -187,7 +187,11 @@
 			"commandPlaceholder": "コマンドプレフィックスを入力（例：'git '）",
 			"deniedCommandPlaceholder": "拒否するコマンドプレフィックスを入力（例：'rm -rf'）",
 			"addButton": "追加",
-			"autoDenied": "プレフィックス `{{prefix}}` を持つコマンドはユーザーによって禁止されています。別のコマンドを実行してこの制限を回避しないでください。"
+			"autoDenied": "プレフィックス `{{prefix}}` を持つコマンドはユーザーによって禁止されています。別のコマンドを実行してこの制限を回避しないでください。",
+			"useCustomMessage": "Use custom message",
+			"customMessagePlaceholder": "Enter custom message for this command prefix",
+			"defaultDeniedMessage": "Commands with the prefix '{{prefix}}' have been forbidden by the user. Do not bypass this restriction by running another command.",
+			"hasCustomMessage": "Has custom message"
 		},
 		"updateTodoList": {
 			"label": "Todo",

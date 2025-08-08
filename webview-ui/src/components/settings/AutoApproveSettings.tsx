@@ -5,6 +5,7 @@ import { useAppTranslation } from "@/i18n/TranslationContext"
 import { VSCodeCheckbox } from "@vscode/webview-ui-toolkit/react"
 import { vscode } from "@/utils/vscode"
 import { Button, Input, Slider, StandardTooltip } from "@/components/ui"
+import type { DeniedCommand } from "@roo-code/types"
 
 import { SetCachedStateField } from "./types"
 import { SectionHeader } from "./SectionHeader"
@@ -34,7 +35,7 @@ type AutoApproveSettingsProps = HTMLAttributes<HTMLDivElement> & {
 	allowedCommands?: string[]
 	allowedMaxRequests?: number | undefined
 	allowedMaxCost?: number | undefined
-	deniedCommands?: string[]
+	deniedCommands?: DeniedCommand[]
 	setCachedStateField: SetCachedStateField<
 		| "alwaysAllowReadOnly"
 		| "alwaysAllowReadOnlyOutsideWorkspace"
@@ -84,6 +85,8 @@ export const AutoApproveSettings = ({
 	const { t } = useAppTranslation()
 	const [commandInput, setCommandInput] = useState("")
 	const [deniedCommandInput, setDeniedCommandInput] = useState("")
+	const [deniedCommandMessage, setDeniedCommandMessage] = useState("")
+	const [showCustomMessage, setShowCustomMessage] = useState(false)
 	const { autoApprovalEnabled, setAutoApprovalEnabled } = useExtensionState()
 
 	const toggles = useAutoApprovalToggles()
@@ -104,11 +107,26 @@ export const AutoApproveSettings = ({
 	const handleAddDeniedCommand = () => {
 		const currentCommands = deniedCommands ?? []
 
-		if (deniedCommandInput && !currentCommands.includes(deniedCommandInput)) {
-			const newCommands = [...currentCommands, deniedCommandInput]
-			setCachedStateField("deniedCommands", newCommands)
-			setDeniedCommandInput("")
-			vscode.postMessage({ type: "deniedCommands", commands: newCommands })
+		if (deniedCommandInput) {
+			// Check if this prefix already exists
+			const existingIndex = currentCommands.findIndex(
+				(cmd) => (typeof cmd === "string" ? cmd : cmd.prefix) === deniedCommandInput,
+			)
+
+			if (existingIndex === -1) {
+				// Add new denied command
+				const newCommand: DeniedCommand =
+					showCustomMessage && deniedCommandMessage.trim()
+						? { prefix: deniedCommandInput, message: deniedCommandMessage.trim() }
+						: deniedCommandInput
+
+				const newCommands = [...currentCommands, newCommand]
+				setCachedStateField("deniedCommands", newCommands)
+				setDeniedCommandInput("")
+				setDeniedCommandMessage("")
+				setShowCustomMessage(false)
+				vscode.postMessage({ type: "deniedCommands", commands: newCommands })
+			}
 		}
 	}
 
@@ -356,45 +374,94 @@ export const AutoApproveSettings = ({
 							</div>
 						</div>
 
-						<div className="flex gap-2">
-							<Input
-								value={deniedCommandInput}
-								onChange={(e: any) => setDeniedCommandInput(e.target.value)}
-								onKeyDown={(e: any) => {
-									if (e.key === "Enter") {
-										e.preventDefault()
-										handleAddDeniedCommand()
-									}
-								}}
-								placeholder={t("settings:autoApprove.execute.deniedCommandPlaceholder")}
-								className="grow"
-								data-testid="denied-command-input"
-							/>
-							<Button
-								className="h-8"
-								onClick={handleAddDeniedCommand}
-								data-testid="add-denied-command-button">
-								{t("settings:autoApprove.execute.addButton")}
-							</Button>
+						<div className="space-y-2">
+							<div className="flex gap-2">
+								<Input
+									value={deniedCommandInput}
+									onChange={(e: any) => setDeniedCommandInput(e.target.value)}
+									onKeyDown={(e: any) => {
+										if (e.key === "Enter" && !showCustomMessage) {
+											e.preventDefault()
+											handleAddDeniedCommand()
+										}
+									}}
+									placeholder={t("settings:autoApprove.execute.deniedCommandPlaceholder")}
+									className="grow"
+									data-testid="denied-command-input"
+								/>
+								<Button
+									className="h-8"
+									onClick={handleAddDeniedCommand}
+									data-testid="add-denied-command-button">
+									{t("settings:autoApprove.execute.addButton")}
+								</Button>
+							</div>
+
+							<div className="flex items-center gap-2">
+								<VSCodeCheckbox
+									checked={showCustomMessage}
+									onChange={(e: any) => {
+										setShowCustomMessage(e.target.checked)
+										if (!e.target.checked) {
+											setDeniedCommandMessage("")
+										}
+									}}
+									data-testid="custom-message-checkbox">
+									<span className="text-sm">
+										{t("settings:autoApprove.execute.useCustomMessage")}
+									</span>
+								</VSCodeCheckbox>
+							</div>
+
+							{showCustomMessage && (
+								<Input
+									value={deniedCommandMessage}
+									onChange={(e: any) => setDeniedCommandMessage(e.target.value)}
+									onKeyDown={(e: any) => {
+										if (e.key === "Enter") {
+											e.preventDefault()
+											handleAddDeniedCommand()
+										}
+									}}
+									placeholder={t("settings:autoApprove.execute.customMessagePlaceholder")}
+									className="w-full"
+									data-testid="custom-message-input"
+								/>
+							)}
 						</div>
 
 						<div className="flex flex-wrap gap-2">
-							{(deniedCommands ?? []).map((cmd, index) => (
-								<Button
-									key={index}
-									variant="secondary"
-									data-testid={`remove-denied-command-${index}`}
-									onClick={() => {
-										const newCommands = (deniedCommands ?? []).filter((_, i) => i !== index)
-										setCachedStateField("deniedCommands", newCommands)
-										vscode.postMessage({ type: "deniedCommands", commands: newCommands })
-									}}>
-									<div className="flex flex-row items-center gap-1">
-										<div>{cmd}</div>
-										<X className="text-foreground scale-75" />
-									</div>
-								</Button>
-							))}
+							{(deniedCommands ?? []).map((cmd, index) => {
+								const prefix = typeof cmd === "string" ? cmd : cmd.prefix
+								const hasCustomMessage = typeof cmd === "object" && cmd.message
+
+								return (
+									<StandardTooltip
+										key={index}
+										content={
+											hasCustomMessage
+												? cmd.message
+												: t("settings:autoApprove.execute.defaultDeniedMessage", { prefix })
+										}>
+										<Button
+											variant="secondary"
+											data-testid={`remove-denied-command-${index}`}
+											onClick={() => {
+												const newCommands = (deniedCommands ?? []).filter((_, i) => i !== index)
+												setCachedStateField("deniedCommands", newCommands)
+												vscode.postMessage({ type: "deniedCommands", commands: newCommands })
+											}}>
+											<div className="flex flex-row items-center gap-1">
+												<div>{prefix}</div>
+												{hasCustomMessage && (
+													<span className="text-vscode-descriptionForeground">*</span>
+												)}
+												<X className="text-foreground scale-75" />
+											</div>
+										</Button>
+									</StandardTooltip>
+								)
+							})}
 						</div>
 					</div>
 				)}

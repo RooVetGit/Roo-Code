@@ -12,6 +12,7 @@ import {
 	type GlobalState,
 	type ClineMessage,
 	TelemetryEventName,
+	type DeniedCommand,
 } from "@roo-code/types"
 import { CloudService } from "@roo-code/cloud"
 import { TelemetryService } from "@roo-code/telemetry"
@@ -751,7 +752,7 @@ export const webviewMessageHandler = async (
 				? commands.filter((cmd) => typeof cmd === "string" && cmd.trim().length > 0)
 				: []
 
-			await updateGlobalState("allowedCommands", validCommands)
+			await updateGlobalState("allowedCommands", validCommands as string[])
 
 			// Also update workspace settings.
 			await vscode.workspace
@@ -761,10 +762,18 @@ export const webviewMessageHandler = async (
 			break
 		}
 		case "deniedCommands": {
-			// Validate and sanitize the commands array
+			// Validate and sanitize the commands array - now supports both string and object format
 			const commands = message.commands ?? []
 			const validCommands = Array.isArray(commands)
-				? commands.filter((cmd) => typeof cmd === "string" && cmd.trim().length > 0)
+				? commands.filter((cmd): cmd is string | DeniedCommand => {
+						if (typeof cmd === "string") {
+							return cmd.trim().length > 0
+						} else if (typeof cmd === "object" && cmd !== null && "prefix" in cmd) {
+							// Validate object format
+							return typeof cmd.prefix === "string" && cmd.prefix.trim().length > 0
+						}
+						return false
+					})
 				: []
 
 			await updateGlobalState("deniedCommands", validCommands)
@@ -772,7 +781,7 @@ export const webviewMessageHandler = async (
 			// Also update workspace settings.
 			await vscode.workspace
 				.getConfiguration(Package.name)
-				.update("deniedCommands", validCommands, vscode.ConfigurationTarget.Global)
+				.update("deniedCommands", validCommands as any, vscode.ConfigurationTarget.Global)
 
 			break
 		}

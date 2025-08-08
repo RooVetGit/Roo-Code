@@ -187,7 +187,11 @@
 			"commandPlaceholder": "輸入命令前綴（例如 'git '）",
 			"deniedCommandPlaceholder": "輸入要拒絕的命令前綴（例如 'rm -rf'）",
 			"addButton": "新增",
-			"autoDenied": "前綴為 `{{prefix}}` 的命令已被使用者禁止。不要透過執行其他命令來繞過此限制。"
+			"autoDenied": "前綴為 `{{prefix}}` 的命令已被使用者禁止。不要透過執行其他命令來繞過此限制。",
+			"useCustomMessage": "Use custom message",
+			"customMessagePlaceholder": "Enter custom message for this command prefix",
+			"defaultDeniedMessage": "Commands with the prefix '{{prefix}}' have been forbidden by the user. Do not bypass this restriction by running another command.",
+			"hasCustomMessage": "Has custom message"
 		},
 		"updateTodoList": {
 			"label": "待辦",

@@ -333,7 +333,28 @@
 				"roo-cline.deniedCommands": {
 					"type": "array",
 					"items": {
-						"type": "string"
+						"oneOf": [
+							{
+								"type": "string"
+							},
+							{
+								"type": "object",
+								"properties": {
+									"prefix": {
+										"type": "string",
+										"description": "The command prefix to deny"
+									},
+									"message": {
+										"type": "string",
+										"description": "Custom message to show when this command is denied"
+									}
+								},
+								"required": [
+									"prefix"
+								],
+								"additionalProperties": false
+							}
+						]
 					},
 					"default": [],
 					"description": "%commands.deniedCommands.description%"

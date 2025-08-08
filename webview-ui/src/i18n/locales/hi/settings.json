@@ -187,7 +187,11 @@
 			"commandPlaceholder": "कमांड प्रीफिक्स दर्ज करें (उदा. 'git ')",
 			"deniedCommandPlaceholder": "अस्वीकार करने के लिए कमांड प्रीफिक्स दर्ज करें (उदा. 'rm -rf')",
 			"addButton": "जोड़ें",
-			"autoDenied": "प्रीफिक्स `{{prefix}}` वाले कमांड उपयोगकर्ता द्वारा प्रतिबंधित किए गए हैं। दूसरा कमांड चलाकर इस प्रतिबंध को दरकिनार न करें।"
+			"autoDenied": "प्रीफिक्स `{{prefix}}` वाले कमांड उपयोगकर्ता द्वारा प्रतिबंधित किए गए हैं। दूसरा कमांड चलाकर इस प्रतिबंध को दरकिनार न करें।",
+			"useCustomMessage": "Use custom message",
+			"customMessagePlaceholder": "Enter custom message for this command prefix",
+			"defaultDeniedMessage": "Commands with the prefix '{{prefix}}' have been forbidden by the user. Do not bypass this restriction by running another command.",
+			"hasCustomMessage": "Has custom message"
 		},
 		"updateTodoList": {
 			"label": "टूडू",

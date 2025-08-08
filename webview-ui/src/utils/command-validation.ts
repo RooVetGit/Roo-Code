@@ -1,4 +1,5 @@
 import { parse } from "shell-quote"
+import type { DeniedCommand } from "@roo-code/types"
 
 type ShellToken = string | { op: string } | { command: string }
 
@@ -381,6 +382,52 @@ export function findLongestPrefixMatch(command: string, prefixes: string[]): str
 }
 
 /**
+ * Find the longest matching denied command (with optional custom message) from a list of denied commands.
+ *
+ * @param command - The command to match against
+ * @param deniedCommands - List of denied commands (string or object format)
+ * @returns The matching denied command object with prefix and optional message, or null if no match found
+ */
+export function findLongestDeniedMatch(
+	command: string,
+	deniedCommands: DeniedCommand[],
+): { prefix: string | null; message?: string } {
+	if (!command || !deniedCommands?.length) return { prefix: null, message: undefined }
+
+	const trimmedCommand = command.trim().toLowerCase()
+	let longestMatch: { prefix: string; message?: string } | null = null
+
+	for (const denied of deniedCommands) {
+		const prefix = typeof denied === "string" ? denied : denied.prefix
+		const lowerPrefix = prefix.toLowerCase()
+
+		// Handle wildcard "*" - it matches any command
+		if (lowerPrefix === "*" || trimmedCommand.startsWith(lowerPrefix)) {
+			if (!longestMatch || lowerPrefix.length > longestMatch.prefix.length) {
+				longestMatch = {
+					prefix: lowerPrefix,
+					message: typeof denied === "object" ? denied.message : undefined,
+				}
+			}
+		}
+	}
+
+	return longestMatch || { prefix: null, message: undefined }
+}
+
+/**
+ * Convert a list of DeniedCommand objects to a list of prefix strings.
+ * This is used for backward compatibility with existing code.
+ *
+ * @param deniedCommands - List of denied commands (string or object format)
+ * @returns List of prefix strings
+ */
+export function deniedCommandsToPrefixes(deniedCommands: DeniedCommand[]): string[] {
+	if (!deniedCommands) return []
+	return deniedCommands.map((cmd) => (typeof cmd === "string" ? cmd : cmd.prefix))
+}
+
+/**
  * Check if a single command should be auto-approved.
  * Returns true only for commands that explicitly match the allowlist
  * and either don't match the denylist or have a longer allowlist match.
@@ -508,9 +555,12 @@ export type CommandDecision = "auto_approve" | "auto_deny" | "ask_user"
 export function getCommandDecision(
 	command: string,
 	allowedCommands: string[],
-	deniedCommands?: string[],
+	deniedCommands?: DeniedCommand[],
 ): CommandDecision {
 	if (!command?.trim()) return "auto_approve"
+
+	// Convert DeniedCommand[] to string[] for backward compatibility
+	const deniedPrefixes = deniedCommands ? deniedCommandsToPrefixes(deniedCommands) : undefined
 
 	// Parse into sub-commands (split by &&, ||, ;, |)
 	const subCommands = parseCommand(command)
@@ -520,7 +570,7 @@ export function getCommandDecision(
 		// Remove simple PowerShell-like redirections (e.g. 2>&1) before checking
 		const cmdWithoutRedirection = cmd.replace(/\d*>&\d*/, "").trim()
 
-		return getSingleCommandDecision(cmdWithoutRedirection, allowedCommands, deniedCommands)
+		return getSingleCommandDecision(cmdWithoutRedirection, allowedCommands, deniedPrefixes)
 	})
 
 	// If any sub-command is denied, deny the whole command
@@ -622,13 +672,13 @@ export function getSingleCommandDecision(
 export class CommandValidator {
 	constructor(
 		private allowedCommands: string[],
-		private deniedCommands?: string[],
+		private deniedCommands?: DeniedCommand[],
 	) {}
 
 	/**
 	 * Update the command lists used for validation
 	 */
-	updateCommandLists(allowedCommands: string[], deniedCommands?: string[]) {
+	updateCommandLists(allowedCommands: string[], deniedCommands?: DeniedCommand[]) {
 		this.allowedCommands = allowedCommands
 		this.deniedCommands = deniedCommands
 	}
@@ -693,7 +743,10 @@ export class CommandValidator {
 
 		const deniedMatches = subCommands.map((cmd) => ({
 			command: cmd,
-			match: findLongestPrefixMatch(cmd.replace(/\d*>&\d*/, "").trim(), this.deniedCommands || []),
+			match: findLongestPrefixMatch(
+				cmd.replace(/\d*>&\d*/, "").trim(),
+				deniedCommandsToPrefixes(this.deniedCommands || []),
+			),
 		}))
 
 		return {
@@ -741,6 +794,6 @@ export class CommandValidator {
  * Factory function to create a CommandValidator instance
  * This is the recommended way to create validators in the application
  */
-export function createCommandValidator(allowedCommands: string[], deniedCommands?: string[]): CommandValidator {
+export function createCommandValidator(allowedCommands: string[], deniedCommands?: DeniedCommand[]): CommandValidator {
 	return new CommandValidator(allowedCommands, deniedCommands)
 }

@@ -30,6 +30,20 @@ export const DEFAULT_WRITE_DELAY_MS = 1000
 export const DEFAULT_TERMINAL_OUTPUT_CHARACTER_LIMIT = 50_000
 
 /**
+ * DeniedCommand type - can be either a string (for backward compatibility)
+ * or an object with prefix and optional custom message
+ */
+export const deniedCommandSchema = z.union([
+	z.string(),
+	z.object({
+		prefix: z.string(),
+		message: z.string().optional(),
+	}),
+])
+
+export type DeniedCommand = z.infer<typeof deniedCommandSchema>
+
+/**
  * GlobalSettings
  */
 
@@ -63,7 +77,7 @@ export const globalSettingsSchema = z.object({
 	followupAutoApproveTimeoutMs: z.number().optional(),
 	alwaysAllowUpdateTodoList: z.boolean().optional(),
 	allowedCommands: z.array(z.string()).optional(),
-	deniedCommands: z.array(z.string()).optional(),
+	deniedCommands: z.array(deniedCommandSchema).optional(),
 	commandExecutionTimeout: z.number().optional(),
 	commandTimeoutAllowlist: z.array(z.string()).optional(),
 	preventCompletionWithOpenTodos: z.boolean().optional(),

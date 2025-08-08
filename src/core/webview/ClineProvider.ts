@@ -1498,8 +1498,62 @@ export class ClineProvider
 	 * Merges denied commands from global state and workspace configuration
 	 * with proper validation and deduplication
 	 */
-	private mergeDeniedCommands(globalStateCommands?: string[]): string[] {
-		return this.mergeCommandLists("deniedCommands", "denied", globalStateCommands)
+	private mergeDeniedCommands(
+		globalStateCommands?: (string | { prefix: string; message?: string })[],
+	): (string | { prefix: string; message?: string })[] {
+		try {
+			// Validate and sanitize global state commands
+			const validGlobalCommands = Array.isArray(globalStateCommands)
+				? globalStateCommands.filter((cmd) => {
+						if (typeof cmd === "string") {
+							return cmd.trim().length > 0
+						} else if (typeof cmd === "object" && cmd !== null && "prefix" in cmd) {
+							return typeof cmd.prefix === "string" && cmd.prefix.trim().length > 0
+						}
+						return false
+					})
+				: []
+
+			// Get workspace configuration commands
+			const workspaceCommands =
+				vscode.workspace
+					.getConfiguration(Package.name)
+					.get<(string | { prefix: string; message?: string })[]>("deniedCommands") || []
+
+			// Validate and sanitize workspace commands
+			const validWorkspaceCommands = Array.isArray(workspaceCommands)
+				? workspaceCommands.filter((cmd) => {
+						if (typeof cmd === "string") {
+							return cmd.trim().length > 0
+						} else if (typeof cmd === "object" && cmd !== null && "prefix" in cmd) {
+							return typeof cmd.prefix === "string" && cmd.prefix.trim().length > 0
+						}
+						return false
+					})
+				: []
+
+			// Combine and deduplicate commands
+			// Global state takes precedence over workspace configuration
+			const prefixMap = new Map<string, string | { prefix: string; message?: string }>()
+
+			// Add workspace commands first
+			validWorkspaceCommands.forEach((cmd) => {
+				const prefix = typeof cmd === "string" ? cmd : cmd.prefix
+				prefixMap.set(prefix, cmd)
+			})
+
+			// Add global commands (overwriting workspace if same prefix)
+			validGlobalCommands.forEach((cmd) => {
+				const prefix = typeof cmd === "string" ? cmd : cmd.prefix
+				prefixMap.set(prefix, cmd)
+			})
+
+			return Array.from(prefixMap.values())
+		} catch (error) {
+			console.error(`Error merging denied commands:`, error)
+			// Return empty array as fallback to prevent crashes
+			return []
+		}
 	}
 
 	/**

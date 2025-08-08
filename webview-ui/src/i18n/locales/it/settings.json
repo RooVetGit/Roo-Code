@@ -187,7 +187,11 @@
 			"commandPlaceholder": "Inserisci prefisso comando (es. 'git ')",
 			"deniedCommandPlaceholder": "Inserisci prefisso comando da negare (es. 'rm -rf')",
 			"addButton": "Aggiungi",
-			"autoDenied": "I comandi con il prefisso `{{prefix}}` sono stati vietati dall'utente. Non aggirare questa restrizione eseguendo un altro comando."
+			"autoDenied": "I comandi con il prefisso `{{prefix}}` sono stati vietati dall'utente. Non aggirare questa restrizione eseguendo un altro comando.",
+			"useCustomMessage": "Use custom message",
+			"customMessagePlaceholder": "Enter custom message for this command prefix",
+			"defaultDeniedMessage": "Commands with the prefix '{{prefix}}' have been forbidden by the user. Do not bypass this restriction by running another command.",
+			"hasCustomMessage": "Has custom message"
 		},
 		"updateTodoList": {
 			"label": "Todo",

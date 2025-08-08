@@ -187,7 +187,11 @@
 			"commandPlaceholder": "Masukkan prefix perintah (misalnya, 'git ')",
 			"deniedCommandPlaceholder": "Masukkan prefix perintah untuk ditolak (misalnya, 'rm -rf')",
 			"addButton": "Tambah",
-			"autoDenied": "Perintah dengan awalan `{{prefix}}` telah dilarang oleh pengguna. Jangan menghindari pembatasan ini dengan menjalankan perintah lain."
+			"autoDenied": "Perintah dengan awalan `{{prefix}}` telah dilarang oleh pengguna. Jangan menghindari pembatasan ini dengan menjalankan perintah lain.",
+			"useCustomMessage": "Use custom message",
+			"customMessagePlaceholder": "Enter custom message for this command prefix",
+			"defaultDeniedMessage": "Commands with the prefix '{{prefix}}' have been forbidden by the user. Do not bypass this restriction by running another command.",
+			"hasCustomMessage": "Has custom message"
 		},
 		"showMenu": {
 			"label": "Tampilkan menu auto-approve di tampilan chat",

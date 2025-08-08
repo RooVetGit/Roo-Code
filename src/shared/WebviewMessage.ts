@@ -7,6 +7,7 @@ import type {
 	InstallMarketplaceItemOptions,
 	MarketplaceItem,
 	ShareVisibility,
+	DeniedCommand,
 } from "@roo-code/types"
 import { marketplaceItemSchema } from "@roo-code/types"
 
@@ -221,7 +222,7 @@ export interface WebviewMessage {
 	images?: string[]
 	bool?: boolean
 	value?: number
-	commands?: string[]
+	commands?: string[] | DeniedCommand[]
 	audioType?: AudioType
 	serverName?: string
 	toolName?: string

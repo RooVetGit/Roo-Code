@@ -12,6 +12,8 @@ import {
 	CommandValidator,
 	createCommandValidator,
 	containsSubshell,
+	findLongestDeniedMatch,
+	deniedCommandsToPrefixes,
 } from "../command-validation"
 
 describe("Command Validation", () => {
@@ -1185,6 +1187,145 @@ describe("Unified Command Decision Functions", () => {
 						expect(decision).toBe("auto_approve")
 					})
 				})
+			})
+		})
+	})
+})
+
+describe("Custom Denied Command Messages", () => {
+	describe("deniedCommandsToPrefixes", () => {
+		it("converts string array to prefixes", () => {
+			const result = deniedCommandsToPrefixes(["rm", "sudo", "chmod"])
+			expect(result).toEqual(["rm", "sudo", "chmod"])
+		})
+
+		it("converts DeniedCommand objects to prefixes", () => {
+			const result = deniedCommandsToPrefixes([
+				{ prefix: "rm", message: "Dangerous!" },
+				{ prefix: "sudo" },
+				"chmod",
+			])
+			expect(result).toEqual(["rm", "sudo", "chmod"])
+		})
+
+		it("handles empty array", () => {
+			const result = deniedCommandsToPrefixes([])
+			expect(result).toEqual([])
+		})
+
+		it("handles undefined", () => {
+			const result = deniedCommandsToPrefixes(undefined as any)
+			expect(result).toEqual([])
+		})
+	})
+
+	describe("findLongestDeniedMatch", () => {
+		it("returns null when no match found", () => {
+			const deniedCommands = ["rm", "sudo"]
+			const result = findLongestDeniedMatch("echo hello", deniedCommands)
+			expect(result).toEqual({ prefix: null, message: undefined })
+		})
+
+		it("finds match with string array", () => {
+			const deniedCommands = ["rm", "sudo", "chmod"]
+			const result = findLongestDeniedMatch("rm -rf /", deniedCommands)
+			expect(result).toEqual({ prefix: "rm", message: undefined })
+		})
+
+		it("finds match with DeniedCommand objects", () => {
+			const deniedCommands = [
+				{ prefix: "rm", message: "File deletion is not allowed" },
+				{ prefix: "sudo", message: "Elevated privileges are forbidden" },
+				"chmod",
+			]
+			const result = findLongestDeniedMatch("rm -rf /", deniedCommands)
+			expect(result).toEqual({ prefix: "rm", message: "File deletion is not allowed" })
+		})
+
+		it("returns custom message when available", () => {
+			const deniedCommands = [{ prefix: "sudo", message: "No admin access allowed!" }]
+			const result = findLongestDeniedMatch("sudo apt-get update", deniedCommands)
+			expect(result).toEqual({ prefix: "sudo", message: "No admin access allowed!" })
+		})
+
+		it("returns undefined message for string entries", () => {
+			const deniedCommands = ["sudo"]
+			const result = findLongestDeniedMatch("sudo apt-get update", deniedCommands)
+			expect(result).toEqual({ prefix: "sudo", message: undefined })
+		})
+
+		it("finds longest matching prefix", () => {
+			const deniedCommands = [
+				{ prefix: "git", message: "Git commands restricted" },
+				{ prefix: "git push", message: "Pushing to remote is forbidden" },
+				"git pull",
+			]
+			const result = findLongestDeniedMatch("git push origin main", deniedCommands)
+			expect(result).toEqual({ prefix: "git push", message: "Pushing to remote is forbidden" })
+		})
+
+		it("handles case insensitive matching", () => {
+			const deniedCommands = [{ prefix: "RM", message: "No file deletion" }]
+			const result = findLongestDeniedMatch("rm -rf /", deniedCommands)
+			expect(result).toEqual({ prefix: "rm", message: "No file deletion" })
+		})
+
+		it("handles empty command", () => {
+			const deniedCommands = [{ prefix: "rm" }]
+			const result = findLongestDeniedMatch("", deniedCommands)
+			expect(result).toEqual({ prefix: null, message: undefined })
+		})
+
+		it("handles empty denied commands", () => {
+			const result = findLongestDeniedMatch("rm -rf /", [])
+			expect(result).toEqual({ prefix: null, message: undefined })
+		})
+
+		it("handles undefined denied commands", () => {
+			const result = findLongestDeniedMatch("rm -rf /", undefined as any)
+			expect(result).toEqual({ prefix: null, message: undefined })
+		})
+	})
+
+	describe("Integration with existing functions", () => {
+		it("getCommandDecision works with DeniedCommand objects", () => {
+			const allowedCommands = ["echo", "ls"]
+			const deniedCommands = [{ prefix: "rm", message: "File deletion is dangerous" }, "sudo"]
+
+			// Should auto-deny with custom message available
+			expect(getCommandDecision("rm -rf /", allowedCommands, deniedCommands)).toBe("auto_deny")
+
+			// Should auto-deny without custom message
+			expect(getCommandDecision("sudo apt-get", allowedCommands, deniedCommands)).toBe("auto_deny")
+
+			// Should auto-approve allowed commands
+			expect(getCommandDecision("echo hello", allowedCommands, deniedCommands)).toBe("auto_approve")
+		})
+
+		it("CommandValidator works with DeniedCommand objects", () => {
+			const validator = new CommandValidator(
+				["npm", "echo"],
+				[
+					{ prefix: "rm", message: "Deletion not allowed" },
+					{ prefix: "sudo", message: "Admin access forbidden" },
+					"chmod",
+				],
+			)
+
+			expect(validator.validateCommand("rm file.txt")).toBe("auto_deny")
+			expect(validator.validateCommand("sudo command")).toBe("auto_deny")
+			expect(validator.validateCommand("chmod +x file")).toBe("auto_deny")
+			expect(validator.validateCommand("npm install")).toBe("auto_approve")
+		})
+
+		it("CommandValidator getValidationDetails includes denied command info", () => {
+			const validator = new CommandValidator(["npm"], [{ prefix: "rm", message: "Custom denial message" }])
+
+			const details = validator.getValidationDetails("rm -rf /")
+			expect(details.decision).toBe("auto_deny")
+			expect(details.deniedMatches[0]).toEqual({
+				command: "rm -rf /",
+				match: "rm",
 			})
 		})
 	})
