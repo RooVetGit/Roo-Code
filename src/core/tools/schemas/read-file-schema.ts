@@ -55,7 +55,7 @@ export const readFileSchema: BaseToolSchema = {
 				required: false,
 			}
 		}
-		schema.description = `Request to read the contents of ${isMultipleReadsEnabled ? "one or more files" : "a file"}. The tool outputs line-numbered content (e.g. "1 | const x = 1") for easy reference when creating diffs or discussing code.${args.partialReadsEnabled ? " Use line ranges to efficiently read specific portions of large files." : ""} Supports text extraction from PDF and DOCX files, but may not handle other binary files properly.`
+		schema.description = `Request to read the contents of ${isMultipleReadsEnabled ? `up to ${maxConcurrentReads} files at once` : "a file"}. The tool outputs line-numbered content (e.g. "1 | const x = 1") for easy reference when creating diffs or discussing code.${args.partialReadsEnabled ? " Use line ranges to efficiently read specific portions of large files." : ""} Supports text extraction from PDF and DOCX files, but may not handle other binary files properly.`
 		if (isMultipleReadsEnabled) {
 			// schema.description += `\n\n**IMPORTANT: You can read a maximum of ${maxConcurrentReads} files in a single request.** If you need to read more files, use multiple sequential read_file requests.`
 		}

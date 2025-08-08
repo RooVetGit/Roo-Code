@@ -101,7 +101,7 @@ import { getMessagesSinceLastSummary, summarizeConversation } from "../condense"
 import { maybeRemoveImageBlocks } from "../../api/transform/image-cleaning"
 import { restoreTodoListForTask } from "../tools/updateTodoListTool"
 import { AutoApprovalHandler } from "./AutoApprovalHandler"
-import { handleOpenaiToolCall } from "./tool-call-helper"
+import { StreamingToolCallProcessor, handleOpenaiToolCallStreaming } from "./tool-call-helper"
 import { ToolArgs } from "../prompts/tools/types"
 
 const MAX_EXPONENTIAL_BACKOFF_SECONDS = 600 // 10 minutes
@@ -235,6 +235,9 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 	consecutiveMistakeLimit: number
 	consecutiveMistakeCountForApplyDiff: Map<string, number> = new Map()
 	toolUsage: ToolUsage = {}
+
+	// Streaming Tool Call Processing
+	streamingToolCallProcessor: StreamingToolCallProcessor = new StreamingToolCallProcessor()
 
 	// Checkpoints
 	enableCheckpoints: boolean
@@ -1564,6 +1567,9 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 				this.assistantMessageParser.reset()
 			}
 
+			// Reset streaming tool call processor
+			this.streamingToolCallProcessor.reset()
+
 			await this.diffViewProvider.reset()
 
 			// Yields only if the first chunk is successful, otherwise will
@@ -1572,7 +1578,6 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 			const stream = this.attemptApiRequest()
 			let assistantMessage = ""
 			let reasoningMessage = ""
-			let accumulatedToolCalls: any[] = []
 			this.isStreaming = true
 
 			try {
@@ -1595,13 +1600,25 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 							cacheReadTokens += chunk.cacheReadTokens ?? 0
 							totalCost = chunk.totalCost
 							break
-						case "text": {
-							assistantMessage += chunk.text
+						case "text":
+						case "tool_call": {
+							let chunkContent
+							if (chunk.type == "tool_call") {
+								chunkContent =
+									handleOpenaiToolCallStreaming(
+										this.streamingToolCallProcessor,
+										chunk.toolCalls,
+										chunk.toolCallType,
+									) ?? ""
+							} else {
+								chunkContent = chunk.text
+							}
+							assistantMessage += chunkContent
 
 							// Parse raw assistant message chunk into content blocks.
 							const prevLength = this.assistantMessageContent.length
 							if (this.isAssistantMessageParserEnabled && this.assistantMessageParser) {
-								this.assistantMessageContent = this.assistantMessageParser.processChunk(chunk.text)
+								this.assistantMessageContent = this.assistantMessageParser.processChunk(chunkContent)
 							} else {
 								// Use the old parsing method when experiment is disabled
 								this.assistantMessageContent = parseAssistantMessage(assistantMessage)
@@ -1616,34 +1633,6 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 							// Present content to user.
 							presentAssistantMessage(this)
 							break
-						}
-						case "tool_call": {
-							if (chunk.toolCallType === "openai") {
-								const xmlContent = handleOpenaiToolCall(accumulatedToolCalls, chunk)
-								if (xmlContent) {
-									assistantMessage += xmlContent
-
-									// Parse raw assistant message chunk into content blocks.
-									const prevLength = this.assistantMessageContent.length
-									if (this.isAssistantMessageParserEnabled && this.assistantMessageParser) {
-										this.assistantMessageContent =
-											this.assistantMessageParser.processChunk(xmlContent)
-									} else {
-										// Use the old parsing method when experiment is disabled
-										this.assistantMessageContent = parseAssistantMessage(assistantMessage)
-									}
-
-									if (this.assistantMessageContent.length > prevLength) {
-										// New content we need to present, reset to
-										// false in case previous content set this to true.
-										this.userMessageContentReady = false
-									}
-
-									// Present content to user.
-									presentAssistantMessage(this)
-									break
-								}
-							}
 						}
 					}
 
@@ -1759,6 +1748,8 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 				this.assistantMessageContent = this.assistantMessageParser.getContentBlocks()
 			}
 			// When using old parser, no finalization needed - parsing already happened during streaming
+
+			this.streamingToolCallProcessor.reset()
 
 			if (partialBlocks.length > 0) {
 				// If there is content to update then it will complete and
@@ -1917,7 +1908,8 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 				{
 					maxConcurrentFileReads: maxConcurrentFileReads ?? 5,
 					todoListEnabled: apiConfiguration?.todoListEnabled ?? true,
-					toolCallEnabled: apiConfiguration?.toolCallEnabled ?? false,
+					toolCallEnabled:
+						(apiConfiguration?.toolCallEnabled ?? false) && supportToolCall(apiConfiguration?.apiProvider),
 					useAgentRules: vscode.workspace.getConfiguration("roo-cline").get<boolean>("useAgentRules") ?? true,
 				},
 			)
@@ -2111,7 +2103,9 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 						...{
 							maxConcurrentFileReads: maxConcurrentFileReads ?? 5,
 							todoListEnabled: apiConfiguration?.todoListEnabled ?? true,
-							toolCallEnabled: apiConfiguration?.toolCallEnabled ?? false,
+							toolCallEnabled:
+								(apiConfiguration?.toolCallEnabled ?? false) &&
+								supportToolCall(apiConfiguration?.apiProvider),
 							useAgentRules:
 								vscode.workspace.getConfiguration("roo-cline").get<boolean>("useAgentRules") ?? true,
 						},

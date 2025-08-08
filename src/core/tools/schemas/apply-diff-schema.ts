@@ -14,12 +14,12 @@ export const applyDiffSchema: BaseToolSchema = {
 				file: {
 					name: "file",
 					type: "array",
-					description: "Array of file operations to perform",
+					description: "the operations of multiple files to perform",
 					required: true,
 					items: {
 						name: "fileItem",
 						type: "object",
-						description: "Single file operation",
+						description: "Single file diff",
 						required: true,
 						properties: {
 							path: {
