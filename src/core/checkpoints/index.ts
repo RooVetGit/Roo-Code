@@ -24,23 +24,6 @@ export async function getCheckpointService(
 		return undefined
 	}
 
-	if (cline.checkpointService) {
-		if (cline.checkpointServiceInitializing) {
-			console.log("[Task#getCheckpointService] checkpoint service is still initializing")
-			const service = cline.checkpointService
-			await pWaitFor(
-				() => {
-					console.log("[Task#getCheckpointService] waiting for service to initialize")
-					return service.isInitialized
-				},
-				{ interval, timeout },
-			)
-			return service.isInitialized ? cline.checkpointService : undefined
-		} else {
-			return cline.checkpointService
-		}
-	}
-
 	const provider = cline.providerRef.deref()
 
 	const log = (message: string) => {
@@ -52,8 +35,6 @@ export async function getCheckpointService(
 			// NO-OP
 		}
 	}
-
-	console.log("[Task#getCheckpointService] initializing checkpoints service")
 
 	try {
 		const workspaceDir = getWorkspacePath()
@@ -78,20 +59,31 @@ export async function getCheckpointService(
 			shadowDir: globalStorageDir,
 			log,
 		}
-
-		const service = RepoPerTaskCheckpointService.create(options)
+		if (cline.checkpointServiceInitializing) {
+			await pWaitFor(
+				() => {
+					console.log("[Task#getCheckpointService] waiting for service to initialize")
+					return cline.checkpointService?.isInitialized === true
+				},
+				{ interval, timeout },
+			)
+			return cline.checkpointService
+		}
+		console.log("[Task#getCheckpointService] initializing checkpoints service")
 		cline.checkpointServiceInitializing = true
+		const service = RepoPerTaskCheckpointService.create(options)
+		cline.checkpointService = service
 
 		// Check if Git is installed before initializing the service
 		// Only assign the service after successful initialization
 		try {
 			await checkGitInstallation(cline, service, log, provider)
-			cline.checkpointService = service
 			return service
 		} catch (err) {
 			// Clean up on failure
 			cline.checkpointServiceInitializing = false
 			cline.enableCheckpoints = false
+			cline.checkpointService = undefined
 			throw err
 		}
 	} catch (err) {
