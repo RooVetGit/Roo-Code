@@ -638,14 +638,35 @@ export class ClineProvider
 		text?: string,
 		images?: string[],
 		parentTask?: Task,
-		options: Partial<
+		configNameOrOptions?:
+			| string
+			| Partial<
+					Pick<
+						TaskOptions,
+						| "enableDiff"
+						| "enableCheckpoints"
+						| "fuzzyMatchThreshold"
+						| "consecutiveMistakeLimit"
+						| "experiments"
+					>
+			  >,
+	) {
+		// Handle both string (config name) and options object
+		let configName: string | undefined
+		let options: Partial<
 			Pick<
 				TaskOptions,
 				"enableDiff" | "enableCheckpoints" | "fuzzyMatchThreshold" | "consecutiveMistakeLimit" | "experiments"
 			>
-		> = {},
-	) {
-		const {
+		> = {}
+
+		if (typeof configNameOrOptions === "string") {
+			configName = configNameOrOptions
+		} else if (configNameOrOptions) {
+			options = configNameOrOptions
+		}
+
+		let {
 			apiConfiguration,
 			organizationAllowList,
 			diffEnabled: enableDiff,
@@ -653,6 +674,26 @@ export class ClineProvider
 			fuzzyMatchThreshold,
 			experiments,
 		} = await this.getState()
+
+		// If a specific config was requested, load and apply it
+		if (configName) {
+			try {
+				const configProfile = await this.providerSettingsManager.getProfile({ name: configName })
+				// Use the configuration from the specified profile
+				apiConfiguration = configProfile
+				// Also use the diff and fuzzy match settings from the profile if available
+				if (configProfile.diffEnabled !== undefined) {
+					enableDiff = configProfile.diffEnabled
+				}
+				if (configProfile.fuzzyMatchThreshold !== undefined) {
+					fuzzyMatchThreshold = configProfile.fuzzyMatchThreshold
+				}
+			} catch (error) {
+				// Log error but continue with default config
+				this.log(`Failed to load config '${configName}' for new task: ${error}`)
+				// Continue with the current/default configuration
+			}
+		}
 
 		if (!ProfileValidator.isProfileAllowed(apiConfiguration, organizationAllowList)) {
 			throw new OrganizationAllowListViolationError(t("common:errors.violated_organization_allowlist"))

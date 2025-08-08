@@ -26,6 +26,7 @@ const mockInitClineWithTask = vi.fn<() => Promise<MockClineInstance>>().mockReso
 const mockEmit = vi.fn()
 const mockRecordToolError = vi.fn()
 const mockSayAndCreateMissingParamError = vi.fn()
+const mockHasConfig = vi.fn()
 
 // Mock the Cline instance and its methods/properties
 const mockCline = {
@@ -41,6 +42,9 @@ const mockCline = {
 			getState: vi.fn(() => ({ customModes: [], mode: "ask" })),
 			handleModeSwitch: vi.fn(),
 			initClineWithTask: mockInitClineWithTask,
+			providerSettingsManager: {
+				hasConfig: mockHasConfig,
+			},
 		})),
 	},
 }
@@ -63,6 +67,7 @@ describe("newTaskTool", () => {
 		}) // Default valid mode
 		mockCline.consecutiveMistakeCount = 0
 		mockCline.isPaused = false
+		mockHasConfig.mockResolvedValue(true) // Default to config exists
 	})
 
 	it("should correctly un-escape \\\\@ to \\@ in the message passed to the new task", async () => {
@@ -93,6 +98,7 @@ describe("newTaskTool", () => {
 			"Review this: \\@file1.txt and also \\\\\\@file2.txt", // Unit Test Expectation: \\@ -> \@, \\\\@ -> \\\\@
 			undefined,
 			mockCline,
+			undefined, // No config parameter for this test
 		)
 
 		// Verify side effects
@@ -126,6 +132,7 @@ describe("newTaskTool", () => {
 			"This is already unescaped: \\@file1.txt", // Expected: \@ remains \@
 			undefined,
 			mockCline,
+			undefined, // No config parameter for this test
 		)
 	})
 
@@ -153,6 +160,7 @@ describe("newTaskTool", () => {
 			"A normal mention @file1.txt", // Expected: @ remains @
 			undefined,
 			mockCline,
+			undefined, // No config parameter for this test
 		)
 	})
 
@@ -180,7 +188,187 @@ describe("newTaskTool", () => {
 			"Mix: @file0.txt, \\@file1.txt, \\@file2.txt, \\\\\\@file3.txt", // Unit Test Expectation: @->@, \@->\@, \\@->\@, \\\\@->\\\\@
 			undefined,
 			mockCline,
+			undefined, // No config parameter for this test
 		)
+	})
+
+	// Tests for the new config parameter functionality
+	describe("config parameter", () => {
+		it("should pass config parameter to initClineWithTask when valid config is provided", async () => {
+			const block: ToolUse = {
+				type: "tool_use",
+				name: "new_task",
+				params: {
+					mode: "code",
+					message: "Test message",
+					config: "fast-model",
+				},
+				partial: false,
+			}
+
+			mockHasConfig.mockResolvedValue(true)
+
+			await newTaskTool(
+				mockCline as any,
+				block,
+				mockAskApproval,
+				mockHandleError,
+				mockPushToolResult,
+				mockRemoveClosingTag,
+			)
+
+			// Verify hasConfig was called to validate the config
+			expect(mockHasConfig).toHaveBeenCalledWith("fast-model")
+
+			// Verify initClineWithTask was called with the config parameter
+			expect(mockInitClineWithTask).toHaveBeenCalledWith(
+				"Test message",
+				undefined,
+				mockCline,
+				"fast-model", // The config parameter should be passed
+			)
+
+			// Verify success message includes config name
+			expect(mockPushToolResult).toHaveBeenCalledWith(expect.stringContaining("configuration 'fast-model'"))
+		})
+
+		it("should continue without config when invalid config is provided", async () => {
+			const block: ToolUse = {
+				type: "tool_use",
+				name: "new_task",
+				params: {
+					mode: "code",
+					message: "Test message",
+					config: "non-existent-config",
+				},
+				partial: false,
+			}
+
+			mockHasConfig.mockResolvedValue(false)
+
+			await newTaskTool(
+				mockCline as any,
+				block,
+				mockAskApproval,
+				mockHandleError,
+				mockPushToolResult,
+				mockRemoveClosingTag,
+			)
+
+			// Verify hasConfig was called
+			expect(mockHasConfig).toHaveBeenCalledWith("non-existent-config")
+
+			// Verify error message was pushed
+			expect(mockPushToolResult).toHaveBeenCalledWith(
+				expect.stringContaining("Configuration profile 'non-existent-config' not found"),
+			)
+
+			// Verify initClineWithTask was called without the config parameter
+			expect(mockInitClineWithTask).toHaveBeenCalledWith(
+				"Test message",
+				undefined,
+				mockCline,
+				undefined, // No config should be passed
+			)
+
+			// Verify success message doesn't include config
+			expect(mockPushToolResult).toHaveBeenCalledWith(
+				expect.stringContaining("Successfully created new task in Code Mode mode with message: Test message"),
+			)
+		})
+
+		it("should work without config parameter (backward compatibility)", async () => {
+			const block: ToolUse = {
+				type: "tool_use",
+				name: "new_task",
+				params: {
+					mode: "code",
+					message: "Test message",
+					// No config parameter
+				},
+				partial: false,
+			}
+
+			await newTaskTool(
+				mockCline as any,
+				block,
+				mockAskApproval,
+				mockHandleError,
+				mockPushToolResult,
+				mockRemoveClosingTag,
+			)
+
+			// Verify hasConfig was NOT called
+			expect(mockHasConfig).not.toHaveBeenCalled()
+
+			// Verify initClineWithTask was called without config
+			expect(mockInitClineWithTask).toHaveBeenCalledWith(
+				"Test message",
+				undefined,
+				mockCline,
+				undefined, // No config parameter
+			)
+
+			// Verify success message doesn't include config
+			expect(mockPushToolResult).toHaveBeenCalledWith(
+				expect.stringContaining("Successfully created new task in Code Mode mode with message: Test message"),
+			)
+		})
+
+		it("should include config in approval message when config is provided", async () => {
+			const block: ToolUse = {
+				type: "tool_use",
+				name: "new_task",
+				params: {
+					mode: "code",
+					message: "Test message",
+					config: "accurate-model",
+				},
+				partial: false,
+			}
+
+			mockHasConfig.mockResolvedValue(true)
+
+			await newTaskTool(
+				mockCline as any,
+				block,
+				mockAskApproval,
+				mockHandleError,
+				mockPushToolResult,
+				mockRemoveClosingTag,
+			)
+
+			// Verify askApproval was called with a message containing the config
+			expect(mockAskApproval).toHaveBeenCalledWith("tool", expect.stringContaining('"config":"accurate-model"'))
+		})
+
+		it("should handle partial messages with config parameter", async () => {
+			const block: ToolUse = {
+				type: "tool_use",
+				name: "new_task",
+				params: {
+					mode: "code",
+					message: "Test message",
+					config: "fast-model",
+				},
+				partial: true,
+			}
+
+			await newTaskTool(
+				mockCline as any,
+				block,
+				mockAskApproval,
+				mockHandleError,
+				mockPushToolResult,
+				mockRemoveClosingTag,
+			)
+
+			// Verify ask was called with partial message including config
+			expect(mockCline.ask).toHaveBeenCalledWith("tool", expect.stringContaining('"config":"fast-model"'), true)
+
+			// Verify initClineWithTask was NOT called for partial message
+			expect(mockInitClineWithTask).not.toHaveBeenCalled()
+		})
 	})
 
 	// Add more tests for error handling (missing params, invalid mode, approval denied) if needed

@@ -18,6 +18,7 @@ export async function newTaskTool(
 ) {
 	const mode: string | undefined = block.params.mode
 	const message: string | undefined = block.params.message
+	const config: string | undefined = block.params.config
 
 	try {
 		if (block.partial) {
@@ -25,6 +26,7 @@ export async function newTaskTool(
 				tool: "newTask",
 				mode: removeClosingTag("mode", mode),
 				content: removeClosingTag("message", message),
+				config: config ? removeClosingTag("config", config) : undefined,
 			})
 
 			await cline.ask("tool", partialMessage, block.partial).catch(() => {})
@@ -57,10 +59,33 @@ export async function newTaskTool(
 				return
 			}
 
+			// If a config was specified, verify it exists
+			let configName: string | undefined
+			if (config) {
+				const provider = cline.providerRef.deref()
+				if (!provider) {
+					return
+				}
+
+				// Check if the specified config exists
+				const hasConfig = await provider.providerSettingsManager.hasConfig(config)
+				if (!hasConfig) {
+					pushToolResult(
+						formatResponse.toolError(
+							`Configuration profile '${config}' not found. Using default configuration.`,
+						),
+					)
+					// Continue without the config rather than failing completely
+				} else {
+					configName = config
+				}
+			}
+
 			const toolMessage = JSON.stringify({
 				tool: "newTask",
 				mode: targetMode.name,
 				content: message,
+				...(configName && { config: configName }),
 			})
 
 			const didApprove = await askApproval("tool", toolMessage)
@@ -83,7 +108,7 @@ export async function newTaskTool(
 			cline.pausedModeSlug = (await provider.getState()).mode ?? defaultModeSlug
 
 			// Create new task instance first (this preserves parent's current mode in its history)
-			const newCline = await provider.initClineWithTask(unescapedMessage, undefined, cline)
+			const newCline = await provider.initClineWithTask(unescapedMessage, undefined, cline, configName)
 			if (!newCline) {
 				pushToolResult(t("tools:newTask.errors.policy_restriction"))
 				return
@@ -97,7 +122,10 @@ export async function newTaskTool(
 
 			cline.emit(RooCodeEventName.TaskSpawned, newCline.taskId)
 
-			pushToolResult(`Successfully created new task in ${targetMode.name} mode with message: ${unescapedMessage}`)
+			const successMessage = configName
+				? `Successfully created new task in ${targetMode.name} mode with configuration '${configName}' and message: ${unescapedMessage}`
+				: `Successfully created new task in ${targetMode.name} mode with message: ${unescapedMessage}`
+			pushToolResult(successMessage)
 
 			// Set the isPaused flag to true so the parent
 			// task can wait for the sub-task to finish.
