@@ -885,4 +885,136 @@ describe("getModelParams", () => {
 			expect(result.reasoningBudget).toBe(8192) // Default thinking tokens
 		})
 	})
+
+	describe("GPT-5 temperature hardcoding", () => {
+		it("should hardcode temperature to 1 for gpt-5 models", () => {
+			const model: ModelInfo = {
+				...baseModel,
+			}
+
+			const result = getModelParams({
+				modelId: "gpt-5-2025-08-07",
+				format: "openai" as const,
+				settings: { modelTemperature: 0.5 }, // User setting should be overridden
+				model,
+			})
+
+			expect(result.temperature).toBe(1)
+		})
+
+		it("should hardcode temperature to 1 for gpt-5-mini models", () => {
+			const model: ModelInfo = {
+				...baseModel,
+			}
+
+			const result = getModelParams({
+				modelId: "gpt-5-mini-2025-08-07",
+				format: "openai" as const,
+				settings: { modelTemperature: 0.7 }, // User setting should be overridden
+				model,
+			})
+
+			expect(result.temperature).toBe(1)
+		})
+
+		it("should hardcode temperature to 1 for gpt-5-nano models", () => {
+			const model: ModelInfo = {
+				...baseModel,
+			}
+
+			const result = getModelParams({
+				modelId: "gpt-5-nano-2025-08-07",
+				format: "openai" as const,
+				settings: { modelTemperature: 0.3 }, // User setting should be overridden
+				model,
+			})
+
+			expect(result.temperature).toBe(1)
+		})
+
+		it("should hardcode temperature to 1 even when no temperature is specified for gpt-5", () => {
+			const model: ModelInfo = {
+				...baseModel,
+			}
+
+			const result = getModelParams({
+				modelId: "gpt-5-2025-08-07",
+				format: "openai" as const,
+				settings: {}, // No temperature specified
+				model,
+				defaultTemperature: 0.2, // Default should also be overridden
+			})
+
+			expect(result.temperature).toBe(1)
+		})
+
+		it("should not hardcode temperature for non-gpt-5 openai models", () => {
+			const model: ModelInfo = {
+				...baseModel,
+			}
+
+			const result = getModelParams({
+				modelId: "gpt-4-turbo",
+				format: "openai" as const,
+				settings: { modelTemperature: 0.5 },
+				model,
+			})
+
+			expect(result.temperature).toBe(0.5)
+		})
+
+		it("should not hardcode temperature for gpt-5 models in non-openai format", () => {
+			const model: ModelInfo = {
+				...baseModel,
+			}
+
+			const result = getModelParams({
+				modelId: "gpt-5-2025-08-07",
+				format: "openrouter" as const,
+				settings: { modelTemperature: 0.5 },
+				model,
+			})
+
+			expect(result.temperature).toBe(0.5) // Should not be hardcoded for openrouter
+		})
+
+		it("should hardcode temperature for gpt-5 with reasoning effort", () => {
+			const model: ModelInfo = {
+				...baseModel,
+				supportsReasoningEffort: true,
+			}
+
+			const result = getModelParams({
+				modelId: "gpt-5-2025-08-07",
+				format: "openai" as const,
+				settings: {
+					modelTemperature: 0.5,
+					reasoningEffort: "high",
+				},
+				model,
+			})
+
+			expect(result.temperature).toBe(1)
+			expect(result.reasoningEffort).toBe("high")
+		})
+
+		it("should hardcode temperature for gpt-5 with verbosity settings", () => {
+			const model: ModelInfo = {
+				...baseModel,
+			}
+
+			const result = getModelParams({
+				modelId: "gpt-5-2025-08-07",
+				format: "openai" as const,
+				settings: {
+					modelTemperature: 0.5,
+					verbosity: "high",
+				},
+				model,
+			})
+
+			expect(result.temperature).toBe(1)
+			expect(result.verbosity).toBe("high")
+		})
+	})
 })

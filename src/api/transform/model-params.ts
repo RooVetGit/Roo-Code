@@ -146,6 +146,11 @@ export function getModelParams({
 			params.temperature = undefined
 		}
 
+		// Hardcode temperature to 1 for GPT-5 models
+		if (modelId.startsWith("gpt-5")) {
+			params.temperature = 1
+		}
+
 		return {
 			format,
 			...params,
