@@ -37,6 +37,8 @@ export class DiffViewProvider {
 	private streamedLines: string[] = []
 	private preDiagnostics: [vscode.Uri, vscode.Diagnostic[]][] = []
 	private taskRef: WeakRef<Task>
+	private savedCursorPosition?: vscode.Position
+	private savedVisibleRanges?: vscode.Range[]
 
 	constructor(
 		private cwd: string,
@@ -50,6 +52,13 @@ export class DiffViewProvider {
 		const fileExists = this.editType === "modify"
 		const absolutePath = path.resolve(this.cwd, relPath)
 		this.isEditing = true
+
+		// Capture the current cursor position and visible ranges if the file is open
+		const activeEditor = vscode.window.activeTextEditor
+		if (activeEditor && arePathsEqual(activeEditor.document.uri.fsPath, absolutePath)) {
+			this.savedCursorPosition = activeEditor.selection.active
+			this.savedVisibleRanges = [...activeEditor.visibleRanges] // Create a copy of the readonly array
+		}
 
 		// If the file is already open, ensure it's not dirty before getting its
 		// contents.
@@ -207,7 +216,29 @@ export class DiffViewProvider {
 			await updatedDocument.save()
 		}
 
-		await vscode.window.showTextDocument(vscode.Uri.file(absolutePath), { preview: false, preserveFocus: true })
+		// Show the document and restore cursor position
+		const editor = await vscode.window.showTextDocument(vscode.Uri.file(absolutePath), {
+			preview: false,
+			preserveFocus: true,
+		})
+
+		// Restore the saved cursor position and visible range
+		if (this.savedCursorPosition) {
+			const newPosition = this.savedCursorPosition
+			editor.selection = new vscode.Selection(newPosition, newPosition)
+
+			// Restore the visible range if it was saved
+			if (this.savedVisibleRanges && this.savedVisibleRanges.length > 0) {
+				editor.revealRange(this.savedVisibleRanges[0], vscode.TextEditorRevealType.Default)
+			} else {
+				// If no visible range was saved, at least reveal the cursor position
+				editor.revealRange(
+					new vscode.Range(newPosition, newPosition),
+					vscode.TextEditorRevealType.InCenterIfOutsideViewport,
+				)
+			}
+		}
+
 		await this.closeAllDiffViews()
 
 		// Getting diagnostics before and after the file edit is a better approach than
@@ -405,10 +436,23 @@ export class DiffViewProvider {
 			await updatedDocument.save()
 
 			if (this.documentWasOpen) {
-				await vscode.window.showTextDocument(vscode.Uri.file(absolutePath), {
+				const editor = await vscode.window.showTextDocument(vscode.Uri.file(absolutePath), {
 					preview: false,
 					preserveFocus: true,
 				})
+
+				// Restore cursor position after reverting
+				if (this.savedCursorPosition) {
+					editor.selection = new vscode.Selection(this.savedCursorPosition, this.savedCursorPosition)
+					if (this.savedVisibleRanges && this.savedVisibleRanges.length > 0) {
+						editor.revealRange(this.savedVisibleRanges[0], vscode.TextEditorRevealType.Default)
+					} else {
+						editor.revealRange(
+							new vscode.Range(this.savedCursorPosition, this.savedCursorPosition),
+							vscode.TextEditorRevealType.InCenterIfOutsideViewport,
+						)
+					}
+				}
 			}
 
 			await this.closeAllDiffViews()
@@ -627,6 +671,8 @@ export class DiffViewProvider {
 		this.activeLineController = undefined
 		this.streamedLines = []
 		this.preDiagnostics = []
+		this.savedCursorPosition = undefined
+		this.savedVisibleRanges = undefined
 	}
 
 	/**
@@ -658,14 +704,36 @@ export class DiffViewProvider {
 		await createDirectoriesForFile(absolutePath)
 		await fs.writeFile(absolutePath, content, "utf-8")
 
+		// Capture the current cursor position and visible ranges before any file operations
+		const activeEditor = vscode.window.activeTextEditor
+		let savedPosition: vscode.Position | undefined
+		let savedRanges: vscode.Range[] | undefined
+		if (activeEditor && arePathsEqual(activeEditor.document.uri.fsPath, absolutePath)) {
+			savedPosition = activeEditor.selection.active
+			savedRanges = [...activeEditor.visibleRanges] // Create a copy of the readonly array
+		}
+
 		// Open the document to ensure diagnostics are loaded
 		// When openFile is false (PREVENT_FOCUS_DISRUPTION enabled), we only open in memory
 		if (openFile) {
 			// Show the document in the editor
-			await vscode.window.showTextDocument(vscode.Uri.file(absolutePath), {
+			const editor = await vscode.window.showTextDocument(vscode.Uri.file(absolutePath), {
 				preview: false,
 				preserveFocus: true,
 			})
+
+			// Restore cursor position if we had one saved
+			if (savedPosition) {
+				editor.selection = new vscode.Selection(savedPosition, savedPosition)
+				if (savedRanges && savedRanges.length > 0) {
+					editor.revealRange(savedRanges[0], vscode.TextEditorRevealType.Default)
+				} else {
+					editor.revealRange(
+						new vscode.Range(savedPosition, savedPosition),
+						vscode.TextEditorRevealType.InCenterIfOutsideViewport,
+					)
+				}
+			}
 		} else {
 			// Just open the document in memory to trigger diagnostics without showing it
 			const doc = await vscode.workspace.openTextDocument(vscode.Uri.file(absolutePath))
