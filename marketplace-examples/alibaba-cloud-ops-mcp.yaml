@@ -1,0 +1,108 @@
+# Alibaba Cloud Ops MCP Server
+# This is an example configuration for the Alibaba Cloud Ops MCP Server
+# that can be used as a reference for marketplace integration
+
+id: alibaba-cloud-ops
+name: Alibaba Cloud Ops MCP Server
+description: MCP server that provides seamless integration with Alibaba Cloud APIs, enabling AI assistants to operate resources on Alibaba Cloud, supporting ECS, Cloud Monitor, OOS and other widely used cloud products.
+author: Alibaba Cloud
+authorUrl: https://github.com/aliyun
+url: https://github.com/aliyun/alibaba-cloud-ops-mcp-server
+tags:
+  - cloud
+  - alibaba
+  - alibabacloud
+  - cloudops
+  - infrastructure
+  - devops
+  - mcp
+prerequisites:
+  - Python 3.8 or higher
+  - uv package manager
+  - Alibaba Cloud Access Key ID and Secret
+
+# Multiple installation methods for different scenarios
+content:
+  - name: Standard Installation
+    content: |
+      {
+        "timeout": 600,
+        "command": "uvx",
+        "args": [
+          "alibaba-cloud-ops-mcp-server@latest"
+        ],
+        "env": {
+          "ALIBABA_CLOUD_ACCESS_KEY_ID": "${ALIBABA_CLOUD_ACCESS_KEY_ID}",
+          "ALIBABA_CLOUD_ACCESS_KEY_SECRET": "${ALIBABA_CLOUD_ACCESS_KEY_SECRET}"
+        }
+      }
+    parameters:
+      - name: Alibaba Cloud Access Key ID
+        key: ALIBABA_CLOUD_ACCESS_KEY_ID
+        placeholder: Your Alibaba Cloud Access Key ID
+        optional: false
+      - name: Alibaba Cloud Access Key Secret
+        key: ALIBABA_CLOUD_ACCESS_KEY_SECRET
+        placeholder: Your Alibaba Cloud Access Key Secret
+        optional: false
+
+  - name: Installation with Custom Region
+    content: |
+      {
+        "timeout": 600,
+        "command": "uvx",
+        "args": [
+          "alibaba-cloud-ops-mcp-server@latest"
+        ],
+        "env": {
+          "ALIBABA_CLOUD_ACCESS_KEY_ID": "${ALIBABA_CLOUD_ACCESS_KEY_ID}",
+          "ALIBABA_CLOUD_ACCESS_KEY_SECRET": "${ALIBABA_CLOUD_ACCESS_KEY_SECRET}",
+          "ALIBABA_CLOUD_REGION_ID": "${ALIBABA_CLOUD_REGION_ID}"
+        }
+      }
+    parameters:
+      - name: Alibaba Cloud Access Key ID
+        key: ALIBABA_CLOUD_ACCESS_KEY_ID
+        placeholder: Your Alibaba Cloud Access Key ID
+        optional: false
+      - name: Alibaba Cloud Access Key Secret
+        key: ALIBABA_CLOUD_ACCESS_KEY_SECRET
+        placeholder: Your Alibaba Cloud Access Key Secret
+        optional: false
+      - name: Alibaba Cloud Region ID
+        key: ALIBABA_CLOUD_REGION_ID
+        placeholder: e.g., cn-hangzhou, us-west-1
+        optional: true
+
+  - name: Installation with STS Token
+    content: |
+      {
+        "timeout": 600,
+        "command": "uvx",
+        "args": [
+          "alibaba-cloud-ops-mcp-server@latest"
+        ],
+        "env": {
+          "ALIBABA_CLOUD_ACCESS_KEY_ID": "${ALIBABA_CLOUD_ACCESS_KEY_ID}",
+          "ALIBABA_CLOUD_ACCESS_KEY_SECRET": "${ALIBABA_CLOUD_ACCESS_KEY_SECRET}",
+          "ALIBABA_CLOUD_SECURITY_TOKEN": "${ALIBABA_CLOUD_SECURITY_TOKEN}",
+          "ALIBABA_CLOUD_REGION_ID": "${ALIBABA_CLOUD_REGION_ID}"
+        }
+      }
+    parameters:
+      - name: Alibaba Cloud Access Key ID
+        key: ALIBABA_CLOUD_ACCESS_KEY_ID
+        placeholder: Your Alibaba Cloud Access Key ID
+        optional: false
+      - name: Alibaba Cloud Access Key Secret
+        key: ALIBABA_CLOUD_ACCESS_KEY_SECRET
+        placeholder: Your Alibaba Cloud Access Key Secret
+        optional: false
+      - name: Alibaba Cloud Security Token
+        key: ALIBABA_CLOUD_SECURITY_TOKEN
+        placeholder: Your STS Security Token
+        optional: false
+      - name: Alibaba Cloud Region ID
+        key: ALIBABA_CLOUD_REGION_ID
+        placeholder: e.g., cn-hangzhou, us-west-1
+        optional: true
