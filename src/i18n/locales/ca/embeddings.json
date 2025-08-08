@@ -61,5 +61,8 @@
 		"failedDuringInitialScan": "Ha fallat durant l'escaneig inicial: {{errorMessage}}",
 		"unknownError": "Error desconegut",
 		"indexingRequiresWorkspace": "Indexació requereix una carpeta de workspace oberta"
+	},
+	"openai": {
+		"invalidResponseFormat": "Invalid response format from OpenAI API"
 	}
 }

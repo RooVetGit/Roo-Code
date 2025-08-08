@@ -23,5 +23,10 @@
 		"allow": "Izinkan",
 		"deny": "Tolak"
 	},
-	"importSettings": "Impor Pengaturan"
+	"importSettings": "Impor Pengaturan",
+	"rooCloudCTA": {
+		"title": "Join Roo Cloud",
+		"description": "Get access to cloud features and enhanced capabilities",
+		"joinWaitlist": "Join Waitlist"
+	}
 }

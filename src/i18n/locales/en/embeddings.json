@@ -17,6 +17,9 @@
 		"modelNotEmbeddingCapable": "Ollama model is not embedding capable: {{modelId}}",
 		"hostNotFound": "Ollama host not found: {{baseUrl}}"
 	},
+	"openai": {
+		"invalidResponseFormat": "Invalid response format from OpenAI API"
+	},
 	"scanner": {
 		"unknownErrorProcessingFile": "Unknown error processing file {{filePath}}",
 		"unknownErrorDeletingPoints": "Unknown error deleting points for {{filePath}}",

@@ -83,5 +83,9 @@
 		"months_ago": "{{count}} tháng trước",
 		"year_ago": "một năm trước",
 		"years_ago": "{{count}} năm trước"
+	},
+	"errors": {
+		"invalid_line_limit": "Invalid line limit specified",
+		"invalid_character_limit": "Invalid character limit specified"
 	}
 }

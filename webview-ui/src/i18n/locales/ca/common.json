@@ -83,5 +83,9 @@
 		"months_ago": "fa {{count}} mesos",
 		"year_ago": "fa un any",
 		"years_ago": "fa {{count}} anys"
+	},
+	"errors": {
+		"invalid_line_limit": "Invalid line limit specified",
+		"invalid_character_limit": "Invalid character limit specified"
 	}
 }

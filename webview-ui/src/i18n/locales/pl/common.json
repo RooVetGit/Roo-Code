@@ -83,5 +83,9 @@
 		"months_ago": "{{count}} miesięcy temu",
 		"year_ago": "rok temu",
 		"years_ago": "{{count}} lat temu"
+	},
+	"errors": {
+		"invalid_line_limit": "Invalid line limit specified",
+		"invalid_character_limit": "Invalid character limit specified"
 	}
 }

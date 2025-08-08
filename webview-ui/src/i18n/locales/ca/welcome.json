@@ -23,5 +23,10 @@
 		"allow": "Permetre",
 		"deny": "Denegar"
 	},
-	"importSettings": "Importar configuració"
+	"importSettings": "Importar configuració",
+	"rooCloudCTA": {
+		"title": "Join Roo Cloud",
+		"description": "Get access to cloud features and enhanced capabilities",
+		"joinWaitlist": "Join Waitlist"
+	}
 }

@@ -83,5 +83,9 @@
 		"months_ago": "{{count}} महीने पहले",
 		"year_ago": "एक साल पहले",
 		"years_ago": "{{count}} साल पहले"
+	},
+	"errors": {
+		"invalid_line_limit": "Invalid line limit specified",
+		"invalid_character_limit": "Invalid character limit specified"
 	}
 }
