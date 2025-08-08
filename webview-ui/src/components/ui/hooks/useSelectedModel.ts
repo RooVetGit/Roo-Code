@@ -31,6 +31,7 @@ import {
 	vscodeLlmDefaultModelId,
 	openRouterDefaultModelId,
 	requestyDefaultModelId,
+	tarsDefaultModelId,
 	glamaDefaultModelId,
 	unboundDefaultModelId,
 	litellmDefaultModelId,
@@ -128,6 +129,11 @@ function getSelectedModel({
 		case "requesty": {
 			const id = apiConfiguration.requestyModelId ?? requestyDefaultModelId
 			const info = routerModels.requesty[id]
+			return { id, info }
+		}
+		case "tars": {
+			const id = apiConfiguration.tarsModelId ?? tarsDefaultModelId
+			const info = routerModels.tars?.[id]
 			return { id, info }
 		}
 		case "glama": {

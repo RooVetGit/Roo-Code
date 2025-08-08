@@ -47,6 +47,11 @@ function validateModelsAndKeysProvided(apiConfiguration: ProviderSettings): stri
 				return i18next.t("settings:validation.apiKey")
 			}
 			break
+		case "tars":
+			if (!apiConfiguration.tarsApiKey) {
+				return i18next.t("settings:validation.apiKey")
+			}
+			break
 		case "litellm":
 			if (!apiConfiguration.litellmApiKey) {
 				return i18next.t("settings:validation.apiKey")
@@ -173,6 +178,8 @@ function getModelIdForProvider(apiConfiguration: ProviderSettings, provider: str
 			return apiConfiguration.unboundModelId
 		case "requesty":
 			return apiConfiguration.requestyModelId
+		case "tars":
+			return apiConfiguration.tarsModelId
 		case "litellm":
 			return apiConfiguration.litellmModelId
 		case "openai":
@@ -256,6 +263,9 @@ export function validateModelId(apiConfiguration: ProviderSettings, routerModels
 		case "litellm":
 			modelId = apiConfiguration.litellmModelId
 			break
+		case "tars":
+			modelId = apiConfiguration.tarsModelId
+			break
 	}
 
 	if (!modelId) {
@@ -291,7 +301,8 @@ export function getModelValidationError(
 		return orgError.message
 	}
 
-	return validateModelId(configWithModelId, routerModels)
+	const modelError = validateModelId(configWithModelId, routerModels)
+	return modelError
 }
 
 /**
