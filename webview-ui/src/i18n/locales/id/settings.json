@@ -257,6 +257,8 @@
 			"error": "Gagal merefresh daftar model. Silakan coba lagi."
 		},
 		"getRequestyApiKey": "Dapatkan Requesty API Key",
+		"tarsApiKey": "Kunci API TARS",
+		"getTarsApiKey": "Dapatkan Kunci API TARS",
 		"openRouterTransformsText": "Kompres prompt dan rantai pesan ke ukuran konteks (<a>OpenRouter Transforms</a>)",
 		"anthropicApiKey": "Anthropic API Key",
 		"getAnthropicApiKey": "Dapatkan Anthropic API Key",

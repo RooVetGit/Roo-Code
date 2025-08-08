@@ -228,11 +228,7 @@ export const ModelPicker = ({
 			)}
 			<div className="text-sm text-vscode-descriptionForeground">
 				<Trans
-					i18nKey={
-						apiConfiguration.apiProvider === "tars"
-							? "settings:modelPicker.automaticFetchTars"
-							: "settings:modelPicker.automaticFetch"
-					}
+					i18nKey="settings:modelPicker.automaticFetch"
 					components={{
 						serviceLink: <VSCodeLink href={serviceUrl} className="text-sm" />,
 						defaultModelLink: <VSCodeLink onClick={() => onSelect(defaultModelId)} className="text-sm" />,
