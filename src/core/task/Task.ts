@@ -1273,7 +1273,13 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 		}
 	}
 
-	public async abortTask(isAbandoned = false) {
+	/**
+	 * Aborts the current task and optionally saves messages.
+	 *
+	 * @param isAbandoned - If true, marks the task as abandoned (no cleanup needed)
+	 * @param skipSave - If true, skips saving messages (used during user cancellation when messages are already saved)
+	 */
+	public async abortTask(isAbandoned = false, skipSave = false) {
 		console.log(`[subtasks] aborting task ${this.taskId}.${this.instanceId}`)
 
 		// Will stop any autonomously running promises.
@@ -1290,13 +1296,93 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 			console.error(`Error during task ${this.taskId}.${this.instanceId} disposal:`, error)
 			// Don't rethrow - we want abort to always succeed
 		}
-		// Save the countdown message in the automatic retry or other content.
-		try {
-			// Save the countdown message in the automatic retry or other content.
-			await this.saveClineMessages()
-		} catch (error) {
-			console.error(`Error saving messages during abort for task ${this.taskId}.${this.instanceId}:`, error)
+
+		// Only save messages if not skipping (e.g., during user cancellation where messages are already saved)
+		if (!skipSave) {
+			try {
+				// Save the countdown message in the automatic retry or other content.
+				await this.saveClineMessages()
+			} catch (error) {
+				console.error(`Error saving messages during abort for task ${this.taskId}.${this.instanceId}:`, error)
+			}
 		}
+	}
+
+	/**
+	 * Reset the task to a resumable state without recreating the instance.
+	 * This is used when canceling a task to avoid unnecessary rerenders.
+	 *
+	 * IMPORTANT: This method cleans up resources to prevent memory leaks
+	 * while preserving the task instance for resumption.
+	 */
+	public async resetToResumableState() {
+		console.log(`[subtasks] resetting task ${this.taskId}.${this.instanceId} to resumable state`)
+
+		// Reset abort flags
+		this.abort = false
+		this.abandoned = false
+
+		// Reset streaming state
+		this.isStreaming = false
+		this.isWaitingForFirstChunk = false
+		this.didFinishAbortingStream = true
+		this.didCompleteReadingStream = false
+
+		// Clear streaming content
+		this.currentStreamingContentIndex = 0
+		this.currentStreamingDidCheckpoint = false
+		this.assistantMessageContent = []
+		this.userMessageContent = []
+		this.userMessageContentReady = false
+		this.didRejectTool = false
+		this.didAlreadyUseTool = false
+		this.presentAssistantMessageLocked = false
+		this.presentAssistantMessageHasPendingUpdates = false
+
+		// Reset API state
+		this.consecutiveMistakeCount = 0
+
+		// Reset ask response state to allow new messages
+		this.askResponse = undefined
+		this.askResponseText = undefined
+		this.askResponseImages = undefined
+		this.blockingAsk = undefined
+
+		// Reset parser if exists
+		if (this.assistantMessageParser) {
+			this.assistantMessageParser.reset()
+		}
+
+		// Only reset diff view if it's actively editing
+		// This avoids unnecessary operations when diff view is not in use
+		if (this.diffViewProvider && this.diffViewProvider.isEditing) {
+			await this.diffViewProvider.reset()
+		}
+
+		// Dispose of resources that could accumulate if tasks are repeatedly cancelled
+		// These will be recreated as needed when the task resumes
+		try {
+			// Close browser sessions to free memory and browser processes
+			if (this.urlContentFetcher) {
+				this.urlContentFetcher.closeBrowser()
+			}
+			if (this.browserSession) {
+				this.browserSession.closeBrowser()
+			}
+
+			// Release any terminals associated with this task
+			// They will be recreated if needed when the task resumes
+			if (this.terminalProcess) {
+				this.terminalProcess.abort()
+				this.terminalProcess = undefined
+			}
+		} catch (error) {
+			console.error(`Error disposing resources during resetToResumableState: ${error}`)
+			// Continue even if resource cleanup fails
+		}
+
+		// Keep messages and history intact for resumption
+		// The task is now ready to be resumed without recreation
 	}
 
 	// Used when a sub-task is launched and the parent task is waiting for it to
@@ -1502,20 +1588,22 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 				} satisfies ClineApiReqInfo)
 			}
 
-			const abortStream = async (cancelReason: ClineApiReqCancelReason, streamingFailedMessage?: string) => {
+			const abortStream = async (
+				cancelReason: ClineApiReqCancelReason,
+				streamingFailedMessage?: string,
+				skipUIUpdates: boolean = false,
+			) => {
 				if (this.diffViewProvider.isEditing) {
 					await this.diffViewProvider.revertChanges() // closes diff view
 				}
 
-				// if last message is a partial we need to update and save it
+				// if last message is a partial we need to update it
 				const lastMessage = this.clineMessages.at(-1)
 
 				if (lastMessage && lastMessage.partial) {
 					// lastMessage.ts = Date.now() DO NOT update ts since it is used as a key for virtuoso list
 					lastMessage.partial = false
-					// instead of streaming partialMessage events, we do a save and post like normal to persist to disk
 					console.log("updating partial message", lastMessage)
-					// await this.saveClineMessages()
 				}
 
 				// Let assistant know their response was interrupted for when task is resumed
@@ -1538,7 +1626,14 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 				// Update `api_req_started` to have cancelled and cost, so that
 				// we can display the cost of the partial stream.
 				updateApiReqMsg(cancelReason, streamingFailedMessage)
+
+				// Always save messages to ensure the API request status is updated
 				await this.saveClineMessages()
+
+				// Only post to webview if we're not skipping UI updates
+				if (!skipUIUpdates) {
+					await this.providerRef.deref()?.postStateToWebview()
+				}
 
 				// Signals to provider that it can retrieve the saved messages
 				// from disk, as abortTask can not be awaited on in nature.
@@ -1622,7 +1717,8 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 							// isn't abandoned (sometimes OpenRouter stream
 							// hangs, in which case this would affect future
 							// instances of Cline).
-							await abortStream("user_cancelled")
+							// Don't skip UI updates - we need to update the API request status
+							await abortStream("user_cancelled", undefined, false)
 						}
 
 						break // Aborts the stream.
@@ -1659,24 +1755,11 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 					// may have executed), so we just resort to replicating a
 					// cancel task.
 
-					// Check if this was a user-initiated cancellation BEFORE calling abortTask
-					// If this.abort is already true, it means the user clicked cancel, so we should
-					// treat this as "user_cancelled" rather than "streaming_failed"
-					const cancelReason = this.abort ? "user_cancelled" : "streaming_failed"
+					const streamingFailedMessage = error.message ?? JSON.stringify(serializeError(error), null, 2)
 
-					const streamingFailedMessage = this.abort
-						? undefined
-						: (error.message ?? JSON.stringify(serializeError(error), null, 2))
-
-					// Now call abortTask after determining the cancel reason.
-					await this.abortTask()
-					await abortStream(cancelReason, streamingFailedMessage)
-
-					const history = await provider?.getTaskWithId(this.taskId)
-
-					if (history) {
-						await provider?.initClineWithHistoryItem(history.historyItem)
-					}
+					// For streaming failures, use the original abort flow
+					await this.abortTask(false, false)
+					await abortStream("streaming_failed", streamingFailedMessage, false)
 				}
 			} finally {
 				this.isStreaming = false
@@ -1702,6 +1785,10 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 
 			// Need to call here in case the stream was aborted.
 			if (this.abort || this.abandoned) {
+				// If this was a user cancellation, handle resumption
+				if (this.abort && !this.abandoned) {
+					return await this.handleUserCancellationResume()
+				}
 				throw new Error(`[RooCode#recursivelyMakeRooRequests] task ${this.taskId}.${this.instanceId} aborted`)
 			}
 
@@ -2169,6 +2256,45 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 
 		if (error) {
 			this.emit(RooCodeEventName.TaskToolFailed, this.taskId, toolName, error)
+		}
+	}
+
+	/**
+	 * Handles the resumption flow after a user cancels a task.
+	 * This method resets the task state, shows the resume prompt,
+	 * and continues with new user input if provided.
+	 *
+	 * @returns Promise<boolean> - true if the task should end, false to continue
+	 */
+	private async handleUserCancellationResume(): Promise<boolean> {
+		try {
+			// Reset the task to a resumable state
+			this.abort = false
+			await this.resetToResumableState()
+
+			// Show the resume prompt
+			const { response, text, images } = await this.ask("resume_task")
+
+			if (response === "messageResponse") {
+				await this.say("user_feedback", text, images)
+				// Continue with the new user input
+				const newUserContent: Anthropic.Messages.ContentBlockParam[] = []
+				if (text) {
+					newUserContent.push({ type: "text", text })
+				}
+				if (images && images.length > 0) {
+					newUserContent.push(...formatResponse.imageBlocks(images))
+				}
+				// Recursively continue with the new content
+				return await this.recursivelyMakeClineRequests(newUserContent)
+			}
+			// If not messageResponse, the task will end
+			return true
+		} catch (error) {
+			// If there's an error during resumption, log it and end the task
+			console.error(`Error during user cancellation resume: ${error}`)
+			// Re-throw to maintain existing error handling behavior
+			throw error
 		}
 	}
 
