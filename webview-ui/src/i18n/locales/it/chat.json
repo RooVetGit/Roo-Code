@@ -229,7 +229,8 @@
 		"completionContent": "Sottoattività completata",
 		"resultContent": "Risultati sottoattività",
 		"defaultResult": "Per favore continua con la prossima attività.",
-		"completionInstructions": "Sottoattività completata! Puoi rivedere i risultati e suggerire correzioni o prossimi passi. Se tutto sembra a posto, conferma per restituire il risultato all'attività principale."
+		"completionInstructions": "Sottoattività completata! Puoi rivedere i risultati e suggerire correzioni o prossimi passi. Se tutto sembra a posto, conferma per restituire il risultato all'attività principale.",
+		"selectMode": "Clicca per selezionare una modalità diversa per questo sottocompito"
 	},
 	"questions": {
 		"hasQuestion": "Roo ha una domanda:"

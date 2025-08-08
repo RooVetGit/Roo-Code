@@ -229,7 +229,8 @@
 		"completionContent": "Alt Görev Tamamlandı",
 		"resultContent": "Alt Görev Sonuçları",
 		"defaultResult": "Lütfen sonraki göreve devam edin.",
-		"completionInstructions": "Alt görev tamamlandı! Sonuçları inceleyebilir ve düzeltmeler veya sonraki adımlar önerebilirsiniz. Her şey iyi görünüyorsa, sonucu üst göreve döndürmek için onaylayın."
+		"completionInstructions": "Alt görev tamamlandı! Sonuçları inceleyebilir ve düzeltmeler veya sonraki adımlar önerebilirsiniz. Her şey iyi görünüyorsa, sonucu üst göreve döndürmek için onaylayın.",
+		"selectMode": "Bu alt görev için farklı bir mod seçmek için tıklayın"
 	},
 	"questions": {
 		"hasQuestion": "Roo'nun bir sorusu var:"

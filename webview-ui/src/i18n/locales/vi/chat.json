@@ -229,7 +229,8 @@
 		"completionContent": "Nhiệm vụ phụ đã hoàn thành",
 		"resultContent": "Kết quả nhiệm vụ phụ",
 		"defaultResult": "Vui lòng tiếp tục với nhiệm vụ tiếp theo.",
-		"completionInstructions": "Nhiệm vụ phụ đã hoàn thành! Bạn có thể xem lại kết quả và đề xuất các sửa đổi hoặc bước tiếp theo. Nếu mọi thứ có vẻ tốt, hãy xác nhận để trả kết quả về nhiệm vụ chính."
+		"completionInstructions": "Nhiệm vụ phụ đã hoàn thành! Bạn có thể xem lại kết quả và đề xuất các sửa đổi hoặc bước tiếp theo. Nếu mọi thứ có vẻ tốt, hãy xác nhận để trả kết quả về nhiệm vụ chính.",
+		"selectMode": "Nhấp để chọn chế độ khác cho tác vụ phụ này"
 	},
 	"questions": {
 		"hasQuestion": "Roo có một câu hỏi:"

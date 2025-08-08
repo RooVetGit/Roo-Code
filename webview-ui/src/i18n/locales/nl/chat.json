@@ -224,7 +224,8 @@
 		"completionContent": "Subtaak voltooid",
 		"resultContent": "Subtaakresultaten",
 		"defaultResult": "Ga verder met de volgende taak.",
-		"completionInstructions": "Subtaak voltooid! Je kunt de resultaten bekijken en eventuele correcties of volgende stappen voorstellen. Als alles goed is, bevestig dan om het resultaat terug te sturen naar de hoofdtaak."
+		"completionInstructions": "Subtaak voltooid! Je kunt de resultaten bekijken en eventuele correcties of volgende stappen voorstellen. Als alles goed is, bevestig dan om het resultaat terug te sturen naar de hoofdtaak.",
+		"selectMode": "Klik om een andere modus voor deze subtaak te selecteren"
 	},
 	"questions": {
 		"hasQuestion": "Roo heeft een vraag:"

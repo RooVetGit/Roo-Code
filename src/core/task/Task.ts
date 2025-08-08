@@ -224,7 +224,13 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 	private askResponse?: ClineAskResponse
 	private askResponseText?: string
 	private askResponseImages?: string[]
+	private askResponseValues?: Record<string, any>
 	public lastMessageTs?: number
+
+	// Getter for askResponseValues to allow tools to access it
+	get getAskResponseValues(): Record<string, any> | undefined {
+		return this.askResponseValues
+	}
 
 	// Tool Use
 	consecutiveMistakeCount: number = 0
@@ -732,10 +738,19 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 		this.handleWebviewAskResponse("messageResponse", text, images)
 	}
 
-	handleWebviewAskResponse(askResponse: ClineAskResponse, text?: string, images?: string[]) {
+	handleWebviewAskResponse(
+		askResponse: ClineAskResponse,
+		text?: string,
+		images?: string[],
+		values?: Record<string, any>,
+	) {
 		this.askResponse = askResponse
 		this.askResponseText = text
 		this.askResponseImages = images
+		// Store values for later use if needed
+		if (values) {
+			this.askResponseValues = values
+		}
 	}
 
 	async handleTerminalOperation(terminalOperation: "continue" | "abort") {

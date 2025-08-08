@@ -33,6 +33,7 @@ import MarkdownBlock from "../common/MarkdownBlock"
 import { ReasoningBlock } from "./ReasoningBlock"
 import Thumbnails from "../common/Thumbnails"
 import McpResourceRow from "../mcp/McpResourceRow"
+import ModeSelector from "./ModeSelector"
 
 import { Mention } from "./Mention"
 import { CheckpointSaved } from "./checkpoints/CheckpointSaved"
@@ -60,6 +61,7 @@ interface ChatRowProps {
 	onFollowUpUnmount?: () => void
 	isFollowUpAnswered?: boolean
 	editable?: boolean
+	onNewTaskModeChange?: (mode: string) => void
 }
 
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
@@ -112,9 +114,10 @@ export const ChatRowContent = ({
 	onBatchFileResponse,
 	isFollowUpAnswered,
 	editable,
+	onNewTaskModeChange,
 }: ChatRowContentProps) => {
 	const { t } = useTranslation()
-	const { mcpServers, alwaysAllowMcp, currentCheckpoint, mode } = useExtensionState()
+	const { mcpServers, alwaysAllowMcp, currentCheckpoint, mode, customModes, customModePrompts } = useExtensionState()
 	const [reasoningCollapsed, setReasoningCollapsed] = useState(true)
 	const [isDiffErrorExpanded, setIsDiffErrorExpanded] = useState(false)
 	const [showCopySuccess, setShowCopySuccess] = useState(false)
@@ -122,6 +125,7 @@ export const ChatRowContent = ({
 	const [editedContent, setEditedContent] = useState("")
 	const [editMode, setEditMode] = useState<Mode>(mode || "code")
 	const [editImages, setEditImages] = useState<string[]>([])
+	const [selectedNewTaskMode, setSelectedNewTaskMode] = useState<Mode | null>(null)
 	const { copyWithFeedback } = useCopyToClipboard()
 
 	// Handle message events for image selection during edit mode
@@ -765,16 +769,39 @@ export const ChatRowContent = ({
 					</>
 				)
 			case "newTask":
+				// Use the selected mode if available, otherwise use the tool's mode
+				const effectiveMode = selectedNewTaskMode || tool.mode
+
 				return (
 					<>
 						<div style={headerStyle}>
 							{toolIcon("tasklist")}
-							<span style={{ fontWeight: "bold" }}>
-								<Trans
-									i18nKey="chat:subtasks.wantsToCreate"
-									components={{ code: <code>{tool.mode}</code> }}
-									values={{ mode: tool.mode }}
-								/>
+							<span style={{ fontWeight: "bold", display: "flex", alignItems: "center", gap: "4px" }}>
+								{t("chat:subtasks.wantsToCreate").split("{mode}")[0]}
+								{message.type === "ask" ? (
+									<ModeSelector
+										value={effectiveMode as Mode}
+										onChange={(newMode) => {
+											setSelectedNewTaskMode(newMode)
+											// Update the tool data with the new mode
+											if (tool) {
+												tool.mode = newMode
+											}
+											// Notify parent component
+											onNewTaskModeChange?.(newMode)
+										}}
+										disabled={false}
+										title={t("chat:subtasks.selectMode")}
+										triggerClassName="inline-flex"
+										modeShortcutText=""
+										customModes={customModes}
+										customModePrompts={customModePrompts}
+										disableSearch={true}
+									/>
+								) : (
+									<code>{effectiveMode}</code>
+								)}
+								{t("chat:subtasks.wantsToCreate").split("{mode}")[1]}
 							</span>
 						</div>
 						<div

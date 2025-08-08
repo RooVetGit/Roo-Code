@@ -188,6 +188,7 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 	const autoApproveTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 	const userRespondedRef = useRef<boolean>(false)
 	const [currentFollowUpTs, setCurrentFollowUpTs] = useState<number | null>(null)
+	const [selectedNewTaskModes, setSelectedNewTaskModes] = useState<Record<number, string>>({})
 
 	const clineAskRef = useRef(clineAsk)
 	useEffect(() => {
@@ -717,7 +718,7 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 	// after which buttons are shown and we then send an askResponse to the
 	// extension.
 	const handlePrimaryButtonClick = useCallback(
-		(text?: string, images?: string[]) => {
+		(text?: string, images?: string[], additionalData?: any) => {
 			// Mark that user has responded
 			userRespondedRef.current = true
 
@@ -738,12 +739,17 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 							askResponse: "yesButtonClicked",
 							text: trimmedInput,
 							images: images,
+							values: additionalData,
 						})
 						// Clear input state after sending
 						setInputValue("")
 						setSelectedImages([])
 					} else {
-						vscode.postMessage({ type: "askResponse", askResponse: "yesButtonClicked" })
+						vscode.postMessage({
+							type: "askResponse",
+							askResponse: "yesButtonClicked",
+							values: additionalData,
+						})
 					}
 					break
 				case "completion_result":
@@ -1533,6 +1539,9 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 					onBatchFileResponse={handleBatchFileResponse}
 					onFollowUpUnmount={handleFollowUpUnmount}
 					isFollowUpAnswered={messageOrGroup.ts === currentFollowUpTs}
+					onNewTaskModeChange={(mode: string) => {
+						setSelectedNewTaskModes((prev) => ({ ...prev, [messageOrGroup.ts]: mode }))
+					}}
 					editable={
 						messageOrGroup.type === "ask" &&
 						messageOrGroup.ask === "tool" &&
@@ -1937,7 +1946,26 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 												appearance="primary"
 												disabled={!enableButtons}
 												className={secondaryButtonText ? "flex-1 mr-[6px]" : "flex-[2] mr-0"}
-												onClick={() => handlePrimaryButtonClick(inputValue, selectedImages)}>
+												onClick={() => {
+													// Check if this is a newTask tool and we have a selected mode
+													let additionalData = undefined
+													if (lastMessage?.ask === "tool") {
+														try {
+															const tool = JSON.parse(lastMessage.text || "{}")
+															if (
+																tool.tool === "newTask" &&
+																selectedNewTaskModes[lastMessage.ts]
+															) {
+																additionalData = {
+																	selectedMode: selectedNewTaskModes[lastMessage.ts],
+																}
+															}
+														} catch (_e) {
+															// Ignore parse errors
+														}
+													}
+													handlePrimaryButtonClick(inputValue, selectedImages, additionalData)
+												}}>
 												{primaryButtonText}
 											</VSCodeButton>
 										</StandardTooltip>

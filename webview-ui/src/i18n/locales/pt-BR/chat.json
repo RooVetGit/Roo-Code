@@ -229,7 +229,8 @@
 		"completionContent": "Subtarefa concluída",
 		"resultContent": "Resultados da subtarefa",
 		"defaultResult": "Por favor, continue com a próxima tarefa.",
-		"completionInstructions": "Subtarefa concluída! Você pode revisar os resultados e sugerir correções ou próximos passos. Se tudo parecer bom, confirme para retornar o resultado à tarefa principal."
+		"completionInstructions": "Subtarefa concluída! Você pode revisar os resultados e sugerir correções ou próximos passos. Se tudo parecer bom, confirme para retornar o resultado à tarefa principal.",
+		"selectMode": "Clique para selecionar um modo diferente para esta subtarefa"
 	},
 	"questions": {
 		"hasQuestion": "Roo tem uma pergunta:"

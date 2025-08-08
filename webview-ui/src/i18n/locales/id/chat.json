@@ -251,7 +251,8 @@
 		"completionContent": "Subtugas Selesai",
 		"resultContent": "Hasil Subtugas",
 		"defaultResult": "Silakan lanjutkan ke tugas berikutnya.",
-		"completionInstructions": "Subtugas selesai! Kamu bisa meninjau hasilnya dan menyarankan koreksi atau langkah selanjutnya. Jika semuanya terlihat baik, konfirmasi untuk mengembalikan hasil ke tugas induk."
+		"completionInstructions": "Subtugas selesai! Kamu bisa meninjau hasilnya dan menyarankan koreksi atau langkah selanjutnya. Jika semuanya terlihat baik, konfirmasi untuk mengembalikan hasil ke tugas induk.",
+		"selectMode": "Klik untuk memilih mode yang berbeda untuk subtugas ini"
 	},
 	"questions": {
 		"hasQuestion": "Roo punya pertanyaan:"

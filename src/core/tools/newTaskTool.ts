@@ -75,6 +75,17 @@ export async function newTaskTool(
 				return
 			}
 
+			// Check if user selected a different mode during approval
+			const selectedMode = cline.getAskResponseValues?.selectedMode as string | undefined
+			const finalMode = selectedMode || mode
+
+			// Verify the final mode exists
+			const finalTargetMode = getModeBySlug(finalMode, (await provider.getState())?.customModes)
+			if (!finalTargetMode) {
+				pushToolResult(formatResponse.toolError(`Invalid mode: ${finalMode}`))
+				return
+			}
+
 			if (cline.enableCheckpoints) {
 				cline.checkpointSave(true)
 			}
@@ -89,15 +100,17 @@ export async function newTaskTool(
 				return
 			}
 
-			// Now switch the newly created task to the desired mode
-			await provider.handleModeSwitch(mode)
+			// Now switch the newly created task to the desired mode (using the final mode)
+			await provider.handleModeSwitch(finalMode)
 
 			// Delay to allow mode change to take effect
 			await delay(500)
 
 			cline.emit(RooCodeEventName.TaskSpawned, newCline.taskId)
 
-			pushToolResult(`Successfully created new task in ${targetMode.name} mode with message: ${unescapedMessage}`)
+			pushToolResult(
+				`Successfully created new task in ${finalTargetMode.name} mode with message: ${unescapedMessage}`,
+			)
 
 			// Set the isPaused flag to true so the parent
 			// task can wait for the sub-task to finish.

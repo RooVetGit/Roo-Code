@@ -229,7 +229,8 @@
 		"completionContent": "Podzadanie zakończone",
 		"resultContent": "Wyniki podzadania",
 		"defaultResult": "Proszę kontynuować następne zadanie.",
-		"completionInstructions": "Podzadanie zakończone! Możesz przejrzeć wyniki i zasugerować poprawki lub następne kroki. Jeśli wszystko wygląda dobrze, potwierdź, aby zwrócić wynik do zadania nadrzędnego."
+		"completionInstructions": "Podzadanie zakończone! Możesz przejrzeć wyniki i zasugerować poprawki lub następne kroki. Jeśli wszystko wygląda dobrze, potwierdź, aby zwrócić wynik do zadania nadrzędnego.",
+		"selectMode": "Kliknij, aby wybrać inny tryb dla tego podzadania"
 	},
 	"questions": {
 		"hasQuestion": "Roo ma pytanie:"

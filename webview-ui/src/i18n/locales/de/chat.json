@@ -229,7 +229,8 @@
 		"completionContent": "Teilaufgabe abgeschlossen",
 		"resultContent": "Teilaufgabenergebnisse",
 		"defaultResult": "Bitte fahre mit der nächsten Aufgabe fort.",
-		"completionInstructions": "Teilaufgabe abgeschlossen! Du kannst die Ergebnisse überprüfen und Korrekturen oder nächste Schritte vorschlagen. Wenn alles gut aussieht, bestätige, um das Ergebnis an die übergeordnete Aufgabe zurückzugeben."
+		"completionInstructions": "Teilaufgabe abgeschlossen! Du kannst die Ergebnisse überprüfen und Korrekturen oder nächste Schritte vorschlagen. Wenn alles gut aussieht, bestätige, um das Ergebnis an die übergeordnete Aufgabe zurückzugeben.",
+		"selectMode": "Klicken Sie, um einen anderen Modus für diese Unteraufgabe auszuwählen"
 	},
 	"questions": {
 		"hasQuestion": "Roo hat eine Frage:"

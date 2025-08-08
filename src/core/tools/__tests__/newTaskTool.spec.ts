@@ -36,6 +36,7 @@ const mockCline = {
 	consecutiveMistakeCount: 0,
 	isPaused: false,
 	pausedModeSlug: "ask",
+	getAskResponseValues: undefined as Record<string, any> | undefined,
 	providerRef: {
 		deref: vi.fn(() => ({
 			getState: vi.fn(() => ({ customModes: [], mode: "ask" })),
@@ -184,4 +185,143 @@ describe("newTaskTool", () => {
 	})
 
 	// Add more tests for error handling (missing params, invalid mode, approval denied) if needed
+
+	it("should use user-selected mode when provided in askResponseValues", async () => {
+		const block: ToolUse = {
+			type: "tool_use",
+			name: "new_task",
+			params: {
+				mode: "code",
+				message: "Create a new feature",
+			},
+			partial: false,
+		}
+
+		// Mock user selecting a different mode
+		mockCline.getAskResponseValues = { selectedMode: "architect" }
+
+		// Mock the architect mode
+		vi.mocked(getModeBySlug).mockImplementation((slug) => {
+			if (slug === "architect") {
+				return {
+					slug: "architect",
+					name: "Architect Mode",
+					roleDefinition: "Architecture role definition",
+					groups: ["command", "read"],
+				}
+			}
+			return {
+				slug: "code",
+				name: "Code Mode",
+				roleDefinition: "Test role definition",
+				groups: ["command", "read", "edit"],
+			}
+		})
+
+		const mockHandleModeSwitch = vi.fn()
+		mockCline.providerRef.deref = vi.fn(() => ({
+			getState: vi.fn(() => ({ customModes: [], mode: "ask" })),
+			handleModeSwitch: mockHandleModeSwitch,
+			initClineWithTask: mockInitClineWithTask,
+		}))
+
+		await newTaskTool(
+			mockCline as any,
+			block,
+			mockAskApproval,
+			mockHandleError,
+			mockPushToolResult,
+			mockRemoveClosingTag,
+		)
+
+		// Verify the mode switch was called with the user-selected mode
+		expect(mockHandleModeSwitch).toHaveBeenCalledWith("architect")
+
+		// Verify the success message includes the correct mode name
+		expect(mockPushToolResult).toHaveBeenCalledWith(
+			expect.stringContaining("Successfully created new task in Architect Mode"),
+		)
+	})
+
+	it("should use original mode when no user selection is provided", async () => {
+		const block: ToolUse = {
+			type: "tool_use",
+			name: "new_task",
+			params: {
+				mode: "code",
+				message: "Create a new feature",
+			},
+			partial: false,
+		}
+
+		// No user selection
+		mockCline.getAskResponseValues = undefined
+
+		const mockHandleModeSwitch = vi.fn()
+		mockCline.providerRef.deref = vi.fn(() => ({
+			getState: vi.fn(() => ({ customModes: [], mode: "ask" })),
+			handleModeSwitch: mockHandleModeSwitch,
+			initClineWithTask: mockInitClineWithTask,
+		}))
+
+		await newTaskTool(
+			mockCline as any,
+			block,
+			mockAskApproval,
+			mockHandleError,
+			mockPushToolResult,
+			mockRemoveClosingTag,
+		)
+
+		// Verify the mode switch was called with the original mode
+		expect(mockHandleModeSwitch).toHaveBeenCalledWith("code")
+
+		// Verify the success message includes the correct mode name
+		expect(mockPushToolResult).toHaveBeenCalledWith(
+			expect.stringContaining("Successfully created new task in Code Mode"),
+		)
+	})
+
+	it("should handle invalid user-selected mode gracefully", async () => {
+		const block: ToolUse = {
+			type: "tool_use",
+			name: "new_task",
+			params: {
+				mode: "code",
+				message: "Create a new feature",
+			},
+			partial: false,
+		}
+
+		// Mock user selecting an invalid mode
+		mockCline.getAskResponseValues = { selectedMode: "invalid-mode" }
+
+		// Mock getModeBySlug to return undefined for invalid mode
+		vi.mocked(getModeBySlug).mockImplementation((slug) => {
+			if (slug === "invalid-mode") {
+				return undefined
+			}
+			return {
+				slug: "code",
+				name: "Code Mode",
+				roleDefinition: "Test role definition",
+				groups: ["command", "read", "edit"],
+			}
+		})
+
+		await newTaskTool(
+			mockCline as any,
+			block,
+			mockAskApproval,
+			mockHandleError,
+			mockPushToolResult,
+			mockRemoveClosingTag,
+		)
+
+		// Verify error was pushed
+		expect(mockPushToolResult).toHaveBeenCalledWith("Tool Error: Invalid mode: invalid-mode")
+
+		// Verify no task was created
+		expect(mockInitClineWithTask).not.toHaveBeenCalled()
+	})
 })
