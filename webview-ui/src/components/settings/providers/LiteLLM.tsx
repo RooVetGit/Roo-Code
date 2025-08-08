@@ -13,6 +13,7 @@ import { Button } from "@src/components/ui"
 
 import { inputEventTransform } from "../transforms"
 import { ModelPicker } from "../ModelPicker"
+import { ApiKey } from "../ApiKey"
 
 type LiteLLMProps = {
 	apiConfiguration: ProviderSettings
@@ -98,19 +99,15 @@ export const LiteLLM = ({
 				<label className="block font-medium mb-1">{t("settings:providers.litellmBaseUrl")}</label>
 			</VSCodeTextField>
 
-			<VSCodeTextField
-				value={apiConfiguration?.litellmApiKey || ""}
-				type="password"
-				onInput={handleInputChange("litellmApiKey")}
-				placeholder={t("settings:placeholders.apiKey")}
-				className="w-full">
-				<label className="block font-medium mb-1">{t("settings:providers.litellmApiKey")}</label>
-			</VSCodeTextField>
-
-			<div className="text-sm text-vscode-descriptionForeground -mt-2">
-				{t("settings:providers.apiKeyStorageNotice")}
-			</div>
-
+			<ApiKey
+				apiKey={apiConfiguration?.litellmApiKey || ""}
+				apiKeyEnvVar="LITELLM_API_KEY"
+				configUseEnvVars={!!apiConfiguration?.litellmConfigUseEnvVars}
+				setApiKey={(value: string) => setApiConfigurationField("litellmApiKey", value)}
+				setConfigUseEnvVars={(value: boolean) => setApiConfigurationField("litellmConfigUseEnvVars", value)}
+				apiKeyLabel={t("settings:providers.litellmApiKey")}
+				getApiKeyLabel={t("settings:providers.getLitellmApiKey")}
+			/>
 			<Button
 				variant="outline"
 				onClick={handleRefreshModels}

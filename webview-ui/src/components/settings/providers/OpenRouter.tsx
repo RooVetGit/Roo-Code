@@ -9,12 +9,12 @@ import type { RouterModels } from "@roo/api"
 
 import { useAppTranslation } from "@src/i18n/TranslationContext"
 import { getOpenRouterAuthUrl } from "@src/oauth/urls"
-import { VSCodeButtonLink } from "@src/components/common/VSCodeButtonLink"
 
 import { inputEventTransform, noTransform } from "../transforms"
 
 import { ModelPicker } from "../ModelPicker"
 import { OpenRouterBalanceDisplay } from "./OpenRouterBalanceDisplay"
+import { ApiKey } from "../ApiKey"
 
 type OpenRouterProps = {
 	apiConfiguration: ProviderSettings
@@ -53,30 +53,22 @@ export const OpenRouter = ({
 
 	return (
 		<>
-			<VSCodeTextField
-				value={apiConfiguration?.openRouterApiKey || ""}
-				type="password"
-				onInput={handleInputChange("openRouterApiKey")}
-				placeholder={t("settings:placeholders.apiKey")}
-				className="w-full">
-				<div className="flex justify-between items-center mb-1">
-					<label className="block font-medium">{t("settings:providers.openRouterApiKey")}</label>
-					{apiConfiguration?.openRouterApiKey && (
-						<OpenRouterBalanceDisplay
-							apiKey={apiConfiguration.openRouterApiKey}
-							baseUrl={apiConfiguration.openRouterBaseUrl}
-						/>
-					)}
-				</div>
-			</VSCodeTextField>
-			<div className="text-sm text-vscode-descriptionForeground -mt-2">
-				{t("settings:providers.apiKeyStorageNotice")}
-			</div>
-			{!apiConfiguration?.openRouterApiKey && (
-				<VSCodeButtonLink href={getOpenRouterAuthUrl(uriScheme)} style={{ width: "100%" }} appearance="primary">
-					{t("settings:providers.getOpenRouterApiKey")}
-				</VSCodeButtonLink>
-			)}
+			<ApiKey
+				apiKey={apiConfiguration?.openRouterApiKey || ""}
+				apiKeyEnvVar="OPEN_ROUTER_API_KEY"
+				configUseEnvVars={!!apiConfiguration?.openRouterConfigUseEnvVars}
+				setApiKey={(value: string) => setApiConfigurationField("openRouterApiKey", value)}
+				setConfigUseEnvVars={(value: boolean) => setApiConfigurationField("openRouterConfigUseEnvVars", value)}
+				apiKeyLabel={t("settings:providers.openRouterApiKey")}
+				getApiKeyUrl={getOpenRouterAuthUrl(uriScheme)}
+				getApiKeyLabel={t("settings:providers.getOpenRouterApiKey")}
+				balanceDisplay={apiConfiguration?.openRouterApiKey && (
+					<OpenRouterBalanceDisplay
+						apiKey={apiConfiguration.openRouterApiKey}
+						baseUrl={apiConfiguration.openRouterBaseUrl}
+					/>
+				)}
+			/>
 			{!fromWelcomeView && (
 				<>
 					<div>

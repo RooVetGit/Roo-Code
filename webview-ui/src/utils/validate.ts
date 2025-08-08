@@ -53,7 +53,7 @@ function validateModelsAndKeysProvided(apiConfiguration: ProviderSettings): stri
 			}
 			break
 		case "anthropic":
-			if (!apiConfiguration.apiKey) {
+			if (!(apiConfiguration.apiKey || apiConfiguration.anthropicConfigUseEnvVars)) {
 				return i18next.t("settings:validation.apiKey")
 			}
 			break

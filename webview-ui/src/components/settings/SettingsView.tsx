@@ -118,6 +118,7 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 	const confirmDialogHandler = useRef<() => void>()
 
 	const [cachedState, setCachedState] = useState(extensionState)
+	const [env, _] = useState<Record<string, string | undefined>>({})
 
 	const {
 		alwaysAllowReadOnly,
@@ -605,6 +606,7 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 									setApiConfigurationField={setApiConfigurationField}
 									errorMessage={errorMessage}
 									setErrorMessage={setErrorMessage}
+									env={env}
 								/>
 							</Section>
 						</div>

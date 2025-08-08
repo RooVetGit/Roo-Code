@@ -1,5 +1,4 @@
-import { useCallback, useState } from "react"
-import { VSCodeTextField } from "@vscode/webview-ui-toolkit/react"
+import { useState } from "react"
 
 import { type ProviderSettings, type OrganizationAllowList, requestyDefaultModelId } from "@roo-code/types"
 
@@ -7,12 +6,11 @@ import type { RouterModels } from "@roo/api"
 
 import { vscode } from "@src/utils/vscode"
 import { useAppTranslation } from "@src/i18n/TranslationContext"
-import { VSCodeButtonLink } from "@src/components/common/VSCodeButtonLink"
 import { Button } from "@src/components/ui"
 
-import { inputEventTransform } from "../transforms"
 import { ModelPicker } from "../ModelPicker"
 import { RequestyBalanceDisplay } from "./RequestyBalanceDisplay"
+import { ApiKey } from "../ApiKey"
 
 type RequestyProps = {
 	apiConfiguration: ProviderSettings
@@ -35,43 +33,23 @@ export const Requesty = ({
 
 	const [didRefetch, setDidRefetch] = useState<boolean>()
 
-	const handleInputChange = useCallback(
-		<K extends keyof ProviderSettings, E>(
-			field: K,
-			transform: (event: E) => ProviderSettings[K] = inputEventTransform,
-		) =>
-			(event: E | Event) => {
-				setApiConfigurationField(field, transform(event as E))
-			},
-		[setApiConfigurationField],
-	)
-
 	return (
 		<>
-			<VSCodeTextField
-				value={apiConfiguration?.requestyApiKey || ""}
-				type="password"
-				onInput={handleInputChange("requestyApiKey")}
-				placeholder={t("settings:providers.getRequestyApiKey")}
-				className="w-full">
-				<div className="flex justify-between items-center mb-1">
-					<label className="block font-medium">{t("settings:providers.requestyApiKey")}</label>
-					{apiConfiguration?.requestyApiKey && (
+			<ApiKey
+				apiKey={apiConfiguration?.requestyApiKey || ""}
+				apiKeyEnvVar="REQUESTY_API_KEY"
+				configUseEnvVars={!!apiConfiguration?.requestyConfigUseEnvVars}
+				setApiKey={(value: string) => setApiConfigurationField("requestyApiKey", value)}
+				setConfigUseEnvVars={(value: boolean) => setApiConfigurationField("requestyConfigUseEnvVars", value)}
+				apiKeyLabel={t("settings:providers.requestyApiKey")}
+				getApiKeyUrl="https://app.requesty.ai/api-keys"
+				getApiKeyLabel={t("settings:providers.getRequestyApiKey")}
+				balanceDisplay={
+					apiConfiguration?.requestyApiKey && (
 						<RequestyBalanceDisplay apiKey={apiConfiguration.requestyApiKey} />
-					)}
-				</div>
-			</VSCodeTextField>
-			<div className="text-sm text-vscode-descriptionForeground -mt-2">
-				{t("settings:providers.apiKeyStorageNotice")}
-			</div>
-			{!apiConfiguration?.requestyApiKey && (
-				<VSCodeButtonLink
-					href="https://app.requesty.ai/api-keys"
-					style={{ width: "100%" }}
-					appearance="primary">
-					{t("settings:providers.getRequestyApiKey")}
-				</VSCodeButtonLink>
-			)}
+					)
+				}
+			/>
 			<Button
 				variant="outline"
 				onClick={() => {
