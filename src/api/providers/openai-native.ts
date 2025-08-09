@@ -60,7 +60,6 @@ export class OpenAiNativeHandler extends BaseProvider implements SingleCompletio
 		this.client = new OpenAI({ baseURL: this.options.openAiNativeBaseUrl, apiKey })
 	}
 
-	// Review comment 1: Extract usage normalization helper
 	private normalizeGpt5Usage(usage: any, model: OpenAiNativeModel): ApiStreamUsageChunk | undefined {
 		if (!usage) return undefined
 
@@ -87,7 +86,6 @@ export class OpenAiNativeHandler extends BaseProvider implements SingleCompletio
 		}
 	}
 
-	// Review comment 3: Deduplicate response ID resolver logic
 	private resolveResponseId(responseId: string | undefined): void {
 		if (responseId) {
 			this.lastResponseId = responseId
@@ -362,7 +360,6 @@ export class OpenAiNativeHandler extends BaseProvider implements SingleCompletio
 
 	private formatInputForResponsesAPI(systemPrompt: string, messages: Anthropic.Messages.MessageParam[]): string {
 		// Format the conversation for the Responses API input field
-		// Review comment 8: Add clarifying comment for Developer prefix
 		// Use Developer role format for GPT-5 (aligning with o1/o3 Developer role usage per GPT-5 Responses guidance)
 		// This ensures consistent instruction handling across reasoning models
 		let formattedInput = `Developer: ${systemPrompt}\n\n`
@@ -1238,6 +1235,13 @@ export class OpenAiNativeHandler extends BaseProvider implements SingleCompletio
 		try {
 			const { id, temperature, reasoning, verbosity } = this.getModel()
 			const isGpt5 = this.isGpt5Model(id)
+
+			if (isGpt5) {
+				// GPT-5 uses the Responses API, not Chat Completions. Avoid undefined behavior here.
+				throw new Error(
+					"completePrompt is not supported for GPT-5 models. Use createMessage (Responses API) instead.",
+				)
+			}
 
 			const params: any = {
 				model: id,
