@@ -30,6 +30,7 @@ vi.mock("../fetchers/io-intelligence", () => ({
 		"meta-llama/Llama-4-Maverick-17B-128E-Instruct-FP8": {
 			maxTokens: 8192,
 			contextWindow: 430000,
+			description: "Llama 4 Maverick 17B model",
 			supportsImages: true,
 			supportsPromptCache: false,
 		},
@@ -251,6 +252,7 @@ describe("IOIntelligenceHandler", () => {
 		expect(model.info).toEqual({
 			maxTokens: 8192,
 			contextWindow: 430000,
+			description: "Llama 4 Maverick 17B model",
 			supportsImages: true,
 			supportsPromptCache: false,
 		})
@@ -266,6 +268,7 @@ describe("IOIntelligenceHandler", () => {
 		expect(model.info).toEqual({
 			maxTokens: 8192,
 			contextWindow: 430000,
+			description: "Llama 4 Maverick 17B model",
 			supportsImages: true,
 			supportsPromptCache: false,
 		})
