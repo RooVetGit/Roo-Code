@@ -3,6 +3,7 @@
 		"linesRange": " ({{start}}-{{end}}행)",
 		"definitionsOnly": " (정의만)",
 		"maxLines": " (최대 {{max}}행)",
+		"showingOnlyLines": "전체 {{total}}행 중 {{shown}}행만 표시하고 있습니다. 더 많은 행을 읽으려면 line_range를 사용하세요",
 		"imageTooLarge": "이미지 파일이 너무 큽니다 ({{size}} MB). 최대 허용 크기는 {{max}} MB입니다.",
 		"imageWithSize": "이미지 파일 ({{size}} KB)"
 	},

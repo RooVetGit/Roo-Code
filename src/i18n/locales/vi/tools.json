@@ -3,6 +3,7 @@
 		"linesRange": " (dòng {{start}}-{{end}})",
 		"definitionsOnly": " (chỉ định nghĩa)",
 		"maxLines": " (tối đa {{max}} dòng)",
+		"showingOnlyLines": "Chỉ hiển thị {{shown}} trong tổng số {{total}} dòng. Sử dụng line_range nếu bạn cần đọc thêm dòng",
 		"imageTooLarge": "Tệp hình ảnh quá lớn ({{size}} MB). Kích thước tối đa cho phép là {{max}} MB.",
 		"imageWithSize": "Tệp hình ảnh ({{size}} KB)"
 	},

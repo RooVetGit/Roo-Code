@@ -3,6 +3,7 @@
 		"linesRange": " (baris {{start}}-{{end}})",
 		"definitionsOnly": " (hanya definisi)",
 		"maxLines": " (maks {{max}} baris)",
+		"showingOnlyLines": "Menampilkan hanya {{shown}} dari {{total}} total baris. Gunakan line_range jika kamu perlu membaca lebih banyak baris",
 		"imageTooLarge": "File gambar terlalu besar ({{size}} MB). Ukuran maksimum yang diizinkan adalah {{max}} MB.",
 		"imageWithSize": "File gambar ({{size}} KB)"
 	},

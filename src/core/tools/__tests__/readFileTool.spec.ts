@@ -4,13 +4,18 @@ import * as path from "path"
 
 import { countFileLines } from "../../../integrations/misc/line-counter"
 import { readLines } from "../../../integrations/misc/read-lines"
-import { extractTextFromFile } from "../../../integrations/misc/extract-text"
+import { extractTextFromFile, addLineNumbers, getSupportedBinaryFormats } from "../../../integrations/misc/extract-text"
 import { parseSourceCodeDefinitionsForFile } from "../../../services/tree-sitter"
 import { isBinaryFile } from "isbinaryfile"
 import { ReadFileToolUse, ToolParamName, ToolResponse } from "../../../shared/tools"
 import { readFileTool } from "../readFileTool"
 import { formatResponse } from "../../prompts/responses"
+import * as contextValidatorModule from "../contextValidator"
 import { DEFAULT_MAX_IMAGE_FILE_SIZE_MB, DEFAULT_MAX_TOTAL_IMAGE_SIZE_MB } from "../helpers/imageHelpers"
+
+vi.mock("../../../i18n", () => ({
+	t: vi.fn((key: string) => key),
+}))
 
 vi.mock("path", async () => {
 	const originalPath = await vi.importActual("path")
@@ -26,11 +31,14 @@ vi.mock("path", async () => {
 vi.mock("isbinaryfile")
 
 vi.mock("../../../integrations/misc/line-counter")
-vi.mock("../../../integrations/misc/read-lines")
+vi.mock("../../../integrations/misc/read-lines", () => ({
+	readLines: vi.fn().mockResolvedValue("mocked line content"),
+}))
+vi.mock("../contextValidator")
 
 // Mock fs/promises readFile for image tests
 const fsPromises = vi.hoisted(() => ({
-	readFile: vi.fn(),
+	readFile: vi.fn().mockResolvedValue(Buffer.from("mock file content")),
 	stat: vi.fn().mockResolvedValue({ size: 1024 }),
 }))
 vi.mock("fs/promises", () => fsPromises)
@@ -115,7 +123,7 @@ vi.mock("../../ignore/RooIgnoreController", () => ({
 }))
 
 vi.mock("../../../utils/fs", () => ({
-	fileExistsAtPath: vi.fn().mockReturnValue(true),
+	fileExistsAtPath: vi.fn().mockResolvedValue(true),
 }))
 
 // Global beforeEach to ensure clean mock state between all test suites
@@ -263,6 +271,12 @@ describe("read_file tool with maxReadFileLine setting", () => {
 		mockedPathResolve.mockReturnValue(absoluteFilePath)
 		mockedIsBinaryFile.mockResolvedValue(false)
 
+		// Default mock for validateFileSizeForContext - no limit
+		vi.mocked(contextValidatorModule.validateFileSizeForContext).mockResolvedValue({
+			shouldLimit: false,
+			safeContentLimit: -1,
+		})
+
 		mockInputContent = fileContent
 
 		// Setup the extractTextFromFile mock implementation with the current mockInputContent
@@ -382,8 +396,7 @@ describe("read_file tool with maxReadFileLine setting", () => {
 			expect(result).toContain(`<list_code_definition_names>`)
 
 			// Verify XML structure
-			expect(result).toContain("<notice>Showing only 0 of 5 total lines")
-			expect(result).toContain("</notice>")
+			expect(result).toContain("<notice>tools:readFile.showingOnlyLines</notice>")
 			expect(result).toContain("<list_code_definition_names>")
 			expect(result).toContain(sourceCodeDef.trim())
 			expect(result).toContain("</list_code_definition_names>")
@@ -409,7 +422,7 @@ describe("read_file tool with maxReadFileLine setting", () => {
 			expect(result).toContain(`<file><path>${testFilePath}</path>`)
 			expect(result).toContain(`<content lines="1-3">`)
 			expect(result).toContain(`<list_code_definition_names>`)
-			expect(result).toContain("<notice>Showing only 3 of 5 total lines")
+			expect(result).toContain("<notice>tools:readFile.showingOnlyLines</notice>")
 		})
 	})
 
@@ -523,6 +536,7 @@ describe("read_file tool XML output structure", () => {
 
 		mockedPathResolve.mockReturnValue(absoluteFilePath)
 		mockedIsBinaryFile.mockResolvedValue(false)
+		mockedCountFileLines.mockResolvedValue(5) // Default line count
 
 		// Set default implementation for extractTextFromFile
 		mockedExtractTextFromFile.mockImplementation((filePath) => {
@@ -1326,6 +1340,144 @@ describe("read_file tool XML output structure", () => {
 			)
 		})
 	})
+
+	describe("line range instructions", () => {
+		beforeEach(() => {
+			// Reset mocks
+			vi.clearAllMocks()
+
+			// Mock file system functions
+			vi.mocked(isBinaryFile).mockResolvedValue(false)
+			vi.mocked(countFileLines).mockResolvedValue(10000) // Large file
+			vi.mocked(readLines).mockResolvedValue("line content")
+			vi.mocked(extractTextFromFile).mockResolvedValue("file content")
+
+			// Mock addLineNumbers
+			vi.mocked(addLineNumbers).mockImplementation((content, start) => `${start || 1} | ${content}`)
+		})
+
+		it("should always include inline line_range instructions when shouldLimit is true", async () => {
+			// Mock a large file
+			vi.mocked(countFileLines).mockResolvedValue(10000)
+
+			// Mock contextValidator to return shouldLimit true
+			vi.mocked(contextValidatorModule.validateFileSizeForContext).mockResolvedValue({
+				shouldLimit: true,
+				safeContentLimit: 2000,
+				reason: "This is a partial read - the remaining content cannot be accessed due to context limitations.",
+			})
+
+			// Mock readLines to return truncated content with maxChars
+			vi.mocked(readLines).mockResolvedValue("Line 1\nLine 2\n...truncated...")
+
+			const result = await executeReadFileTool(
+				{ args: `<file><path>large-file.ts</path></file>` },
+				{ totalLines: 10000, maxReadFileLine: -1 },
+			)
+
+			// Verify the result contains the simplified partial read notice
+			expect(result).toContain("<notice>")
+			expect(result).toContain(
+				"This is a partial read - the remaining content cannot be accessed due to context limitations.",
+			)
+		})
+
+		it("should not show any special notice when file fits in context", async () => {
+			// Mock small file that fits in context
+			vi.mocked(countFileLines).mockResolvedValue(100)
+			vi.mocked(contextValidatorModule.validateFileSizeForContext).mockResolvedValue({
+				shouldLimit: false,
+				safeContentLimit: -1,
+			})
+
+			const result = await executeReadFileTool({ args: `<file><path>small-file.ts</path></file>` })
+
+			// Should have file content but no notice about limits
+			expect(result).toContain("<file>")
+			expect(result).toContain("<path>small-file.ts</path>")
+			expect(result).toContain("<content")
+			expect(result).not.toContain("Use line_range")
+			expect(result).not.toContain("File exceeds available context space")
+		})
+
+		it("should not include line_range instructions for single-line files", async () => {
+			// Mock a single-line file that exceeds context
+			vi.mocked(countFileLines).mockResolvedValue(1)
+
+			// Mock contextValidator to return shouldLimit true with single-line file message
+			vi.mocked(contextValidatorModule.validateFileSizeForContext).mockResolvedValue({
+				shouldLimit: true,
+				safeContentLimit: 5000,
+				reason: "This is a partial read - the remaining content cannot be accessed due to context limitations.",
+			})
+
+			// Mock readLines to return truncated content for single-line file with maxChars
+			vi.mocked(readLines).mockResolvedValue("const a=1;const b=2;...truncated")
+
+			const result = await executeReadFileTool(
+				{ args: `<file><path>minified.js</path></file>` },
+				{ totalLines: 1, maxReadFileLine: -1 },
+			)
+
+			// Verify the result contains the simplified partial read notice
+			expect(result).toContain("<notice>")
+			expect(result).toContain(
+				"This is a partial read - the remaining content cannot be accessed due to context limitations.",
+			)
+		})
+
+		it("should include line_range instructions for multi-line files that exceed context", async () => {
+			// Mock a multi-line file that exceeds context
+			vi.mocked(countFileLines).mockResolvedValue(5000)
+
+			// Mock contextValidator to return shouldLimit true with multi-line file message
+			vi.mocked(contextValidatorModule.validateFileSizeForContext).mockResolvedValue({
+				shouldLimit: true,
+				safeContentLimit: 50000,
+				reason: "This is a partial read - the remaining content cannot be accessed due to context limitations.",
+			})
+
+			// Mock readLines to return truncated content with maxChars
+			vi.mocked(readLines).mockResolvedValue("Line 1\nLine 2\n...truncated...")
+
+			const result = await executeReadFileTool(
+				{ args: `<file><path>large-file.ts</path></file>` },
+				{ totalLines: 5000, maxReadFileLine: -1 },
+			)
+
+			// Verify the result contains the simplified partial read notice
+			expect(result).toContain("<notice>")
+			expect(result).toContain(
+				"This is a partial read - the remaining content cannot be accessed due to context limitations.",
+			)
+		})
+
+		it("should handle normal file read section for single-line files with validation notice", async () => {
+			// Mock a single-line file that has shouldLimit true but fits after truncation
+			vi.mocked(countFileLines).mockResolvedValue(1)
+
+			// Mock contextValidator to return shouldLimit true with a single-line file notice
+			vi.mocked(contextValidatorModule.validateFileSizeForContext).mockResolvedValue({
+				shouldLimit: true,
+				safeContentLimit: 8000,
+				reason: "This is a partial read - the remaining content cannot be accessed due to context limitations.",
+			})
+
+			// Mock readLines for single-line file with maxChars
+			vi.mocked(readLines).mockResolvedValue("const a=1;const b=2;const c=3;")
+
+			const result = await executeReadFileTool(
+				{ args: `<file><path>semi-large.js</path></file>` },
+				{ totalLines: 1, maxReadFileLine: -1 },
+			)
+
+			// Verify the result contains the simplified partial read notice
+			expect(result).toContain("<notice>")
+			expect(result).toContain(
+				"This is a partial read - the remaining content cannot be accessed due to context limitations.",
+			)
+		})
+	})
 })
 
 describe("read_file tool with image support", () => {
@@ -1591,12 +1743,24 @@ describe("read_file tool with image support", () => {
 			mockedPathResolve.mockReturnValue(absolutePath)
 			mockedExtractTextFromFile.mockResolvedValue("PDF content extracted")
 
+			// Ensure the file is treated as binary and PDF is in supported formats
+			mockedIsBinaryFile.mockResolvedValue(true)
+			mockedCountFileLines.mockResolvedValue(0)
+			vi.mocked(getSupportedBinaryFormats).mockReturnValue([".pdf", ".docx", ".ipynb"])
+
+			// Mock contextValidator to not interfere with PDF processing
+			vi.mocked(contextValidatorModule.validateFileSizeForContext).mockResolvedValue({
+				shouldLimit: false,
+				safeContentLimit: -1,
+			})
+
 			// Execute
 			const result = await executeReadImageTool(binaryPath)
 
-			// Verify it uses extractTextFromFile instead
+			// Verify it doesn't treat the PDF as an image
 			expect(result).not.toContain("<image_data>")
-			// Make the test platform-agnostic by checking the call was made (path normalization can vary)
+
+			// Should call extractTextFromFile for PDF processing
 			expect(mockedExtractTextFromFile).toHaveBeenCalledTimes(1)
 			const callArgs = mockedExtractTextFromFile.mock.calls[0]
 			expect(callArgs[0]).toMatch(/[\\\/]test[\\\/]document\.pdf$/)

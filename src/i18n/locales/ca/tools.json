@@ -3,6 +3,7 @@
 		"linesRange": " (línies {{start}}-{{end}})",
 		"definitionsOnly": " (només definicions)",
 		"maxLines": " (màxim {{max}} línies)",
+		"showingOnlyLines": "Mostrant només {{shown}} de {{total}} línies totals. Utilitza line_range si necessites llegir més línies",
 		"imageTooLarge": "El fitxer d'imatge és massa gran ({{size}} MB). La mida màxima permesa és {{max}} MB.",
 		"imageWithSize": "Fitxer d'imatge ({{size}} KB)"
 	},
