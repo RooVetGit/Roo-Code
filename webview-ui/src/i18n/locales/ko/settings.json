@@ -429,9 +429,17 @@
 		},
 		"reasoningEffort": {
 			"label": "모델 추론 노력",
+			"minimal": "최소 (가장 빠름)",
 			"high": "높음",
 			"medium": "중간",
 			"low": "낮음"
+		},
+		"verbosity": {
+			"label": "출력 상세도",
+			"high": "높음",
+			"medium": "중간",
+			"low": "낮음",
+			"description": "모델 응답의 상세도를 제어합니다. 낮은 상세도는 간결한 답변을 생성하고, 높은 상세도는 상세한 설명을 제공합니다."
 		},
 		"setReasoningLevel": "추론 노력 활성화",
 		"claudeCode": {

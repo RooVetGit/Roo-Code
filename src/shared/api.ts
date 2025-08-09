@@ -6,8 +6,15 @@ import {
 } from "@roo-code/types"
 
 // ApiHandlerOptions
-
-export type ApiHandlerOptions = Omit<ProviderSettings, "apiProvider">
+// Extend ProviderSettings (minus apiProvider) with handler-specific toggles.
+export type ApiHandlerOptions = Omit<ProviderSettings, "apiProvider"> & {
+	/**
+	 * When true and using GPT‑5 Responses API, include reasoning.summary: "auto"
+	 * so the API returns reasoning summaries (we already parse and surface them).
+	 * Defaults to true; set to false to disable summaries.
+	 */
+	enableGpt5ReasoningSummary?: boolean
+}
 
 // RouterName
 
@@ -92,7 +99,7 @@ export const getModelMaxOutputTokens = ({
 
 	// If model has explicit maxTokens, clamp it to 20% of the context window
 	if (model.maxTokens) {
-		return Math.min(model.maxTokens, model.contextWindow * 0.2)
+		return Math.min(model.maxTokens, Math.ceil(model.contextWindow * 0.2))
 	}
 
 	// For non-Anthropic formats without explicit maxTokens, return undefined

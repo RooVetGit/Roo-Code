@@ -429,9 +429,17 @@
 		},
 		"reasoningEffort": {
 			"label": "Model redeneervermogen",
+			"minimal": "Minimaal (Snelst)",
 			"high": "Hoog",
 			"medium": "Middel",
 			"low": "Laag"
+		},
+		"verbosity": {
+			"label": "Uitvoerbaarheid",
+			"high": "Hoog",
+			"medium": "Gemiddeld",
+			"low": "Laag",
+			"description": "Bepaalt hoe gedetailleerd de reacties van het model zijn. Lage uitvoerbaarheid levert beknopte antwoorden op, terwijl hoge uitvoerbaarheid uitgebreide uitleg geeft."
 		},
 		"setReasoningLevel": "Redeneervermogen inschakelen",
 		"claudeCode": {

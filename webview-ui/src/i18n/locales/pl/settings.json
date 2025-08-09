@@ -429,9 +429,17 @@
 		},
 		"reasoningEffort": {
 			"label": "Wysiłek rozumowania modelu",
+			"minimal": "Minimalny (najszybszy)",
 			"high": "Wysoki",
 			"medium": "Średni",
 			"low": "Niski"
+		},
+		"verbosity": {
+			"label": "Szczegółowość danych wyjściowych",
+			"high": "Wysoka",
+			"medium": "Średnia",
+			"low": "Niska",
+			"description": "Kontroluje, jak szczegółowe są odpowiedzi modelu. Niska szczegółowość generuje zwięzłe odpowiedzi, podczas gdy wysoka szczegółowość dostarcza dokładnych wyjaśnień."
 		},
 		"setReasoningLevel": "Włącz wysiłek rozumowania",
 		"claudeCode": {

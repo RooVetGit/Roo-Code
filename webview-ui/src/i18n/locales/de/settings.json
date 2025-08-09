@@ -429,9 +429,17 @@
 		},
 		"reasoningEffort": {
 			"label": "Modell-Denkaufwand",
+			"minimal": "Minimal (schnellste)",
 			"high": "Hoch",
 			"medium": "Mittel",
 			"low": "Niedrig"
+		},
+		"verbosity": {
+			"label": "Ausgabe-Ausführlichkeit",
+			"high": "Hoch",
+			"medium": "Mittel",
+			"low": "Niedrig",
+			"description": "Steuert, wie detailliert die Antworten des Modells sind. Niedrige Ausführlichkeit erzeugt knappe Antworten, während hohe Ausführlichkeit gründliche Erklärungen liefert."
 		},
 		"setReasoningLevel": "Denkaufwand aktivieren",
 		"claudeCode": {
