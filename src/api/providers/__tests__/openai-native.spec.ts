@@ -1464,4 +1464,54 @@ describe("GPT-5 streaming event coverage (additional)", () => {
 		// @ts-ignore
 		delete global.fetch
 	})
+
+	it("should ignore malformed JSON lines in SSE stream", async () => {
+		const mockFetch = vitest.fn().mockResolvedValue({
+			ok: true,
+			body: new ReadableStream({
+				start(controller) {
+					controller.enqueue(
+						new TextEncoder().encode(
+							'data: {"type":"response.output_item.added","item":{"type":"text","text":"Before"}}\n\n',
+						),
+					)
+					// Malformed JSON line
+					controller.enqueue(
+						new TextEncoder().encode('data: {"type":"response.text.delta","delta":"Bad"\n\n'),
+					)
+					// Valid line after malformed
+					controller.enqueue(
+						new TextEncoder().encode(
+							'data: {"type":"response.output_item.added","item":{"type":"text","text":"After"}}\n\n',
+						),
+					)
+					controller.enqueue(new TextEncoder().encode("data: [DONE]\n\n"))
+					controller.close()
+				},
+			}),
+		})
+		// @ts-ignore
+		global.fetch = mockFetch
+
+		const handler = new OpenAiNativeHandler({
+			apiModelId: "gpt-5-2025-08-07",
+			openAiNativeApiKey: "test-api-key",
+		})
+
+		const systemPrompt = "You are a helpful assistant."
+		const messages: Anthropic.Messages.MessageParam[] = [{ role: "user", content: "Hello!" }]
+		const stream = handler.createMessage(systemPrompt, messages)
+
+		const chunks: any[] = []
+		for await (const chunk of stream) {
+			chunks.push(chunk)
+		}
+
+		// It should not throw and still capture the valid texts around the malformed line
+		const textChunks = chunks.filter((c) => c.type === "text")
+		expect(textChunks.map((c: any) => c.text)).toEqual(["Before", "After"])
+
+		// @ts-ignore
+		delete global.fetch
+	})
 })

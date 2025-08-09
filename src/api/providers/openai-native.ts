@@ -35,6 +35,20 @@ export class OpenAiNativeHandler extends BaseProvider implements SingleCompletio
 	private responseIdPromise: Promise<string | undefined> | undefined
 	private responseIdResolver: ((value: string | undefined) => void) | undefined
 
+	// Event types handled by the shared GPT-5 event processor to avoid duplication
+	private readonly gpt5CoreHandledTypes = new Set<string>([
+		"response.text.delta",
+		"response.output_text.delta",
+		"response.reasoning.delta",
+		"response.reasoning_text.delta",
+		"response.reasoning_summary.delta",
+		"response.reasoning_summary_text.delta",
+		"response.refusal.delta",
+		"response.output_item.added",
+		"response.done",
+		"response.completed",
+	])
+
 	constructor(options: ApiHandlerOptions) {
 		super()
 		this.options = options
@@ -462,7 +476,7 @@ export class OpenAiNativeHandler extends BaseProvider implements SingleCompletio
 					}
 
 					if (!retryResponse.body) {
-						throw new Error("No response body from Responses API retry")
+						throw new Error("GPT-5 Responses API error: No response body from retry request")
 					}
 
 					// Handle the successful retry response
@@ -506,7 +520,7 @@ export class OpenAiNativeHandler extends BaseProvider implements SingleCompletio
 			}
 
 			if (!response.body) {
-				throw new Error("No response body from Responses API")
+				throw new Error("GPT-5 Responses API error: No response body")
 			}
 
 			// Handle streaming response
@@ -601,6 +615,18 @@ export class OpenAiNativeHandler extends BaseProvider implements SingleCompletio
 							// Store response ID for conversation continuity
 							if (parsed.response?.id) {
 								this.resolveResponseId(parsed.response.id)
+							}
+
+							// Delegate standard event types to the shared processor to avoid duplication
+							if (parsed?.type && this.gpt5CoreHandledTypes.has(parsed.type)) {
+								for await (const outChunk of this.processGpt5Event(parsed, model)) {
+									// Track whether we've emitted any content so fallback handling can decide appropriately
+									if (outChunk.type === "text" || outChunk.type === "reasoning") {
+										hasContent = true
+									}
+									yield outChunk
+								}
+								continue
 							}
 
 							// Check if this is a complete response (non-streaming format)
@@ -1185,12 +1211,20 @@ export class OpenAiNativeHandler extends BaseProvider implements SingleCompletio
 		return { id: id.startsWith("o3-mini") ? "o3-mini" : id, info, ...params, verbosity: params.verbosity }
 	}
 
-	// Method to get the last response ID for external use
+	/**
+	 * Gets the last GPT-5 response ID captured from the Responses API stream.
+	 * Used for maintaining conversation continuity across requests.
+	 * @returns The response ID, or undefined if not available yet
+	 */
 	getLastResponseId(): string | undefined {
 		return this.lastResponseId
 	}
 
-	// Method to set a response ID for conversation continuity
+	/**
+	 * Sets the last GPT-5 response ID for conversation continuity.
+	 * Typically only used in tests or special flows.
+	 * @param responseId The GPT-5 response ID to store
+	 */
 	setResponseId(responseId: string): void {
 		this.lastResponseId = responseId
 	}
