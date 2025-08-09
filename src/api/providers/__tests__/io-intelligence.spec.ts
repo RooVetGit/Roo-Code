@@ -40,7 +40,7 @@ vi.mock("../fetchers/io-intelligence", () => ({
 			supportsPromptCache: false,
 			description: "DeepSeek R1 reasoning model",
 		},
-		"Intel/Qwen3-Coder-480B-A35B-Instruct-int4-mixed-ar	": {
+		"Intel/Qwen3-Coder-480B-A35B-Instruct-int4-mixed-ar": {
 			maxTokens: 4096,
 			contextWindow: 106000,
 			supportsImages: false,

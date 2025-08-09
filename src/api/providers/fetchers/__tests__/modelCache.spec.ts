@@ -41,7 +41,7 @@ const mockGetOpenRouterModels = getOpenRouterModels as Mock<typeof getOpenRouter
 const mockGetRequestyModels = getRequestyModels as Mock<typeof getRequestyModels>
 const mockGetGlamaModels = getGlamaModels as Mock<typeof getGlamaModels>
 const mockGetUnboundModels = getUnboundModels as Mock<typeof getUnboundModels>
-const mockGetIOIntelligencedModels = getIOIntelligenceModels as Mock<typeof getIOIntelligenceModels>
+const mockGetIOIntelligenceModels = getIOIntelligenceModels as Mock<typeof getIOIntelligenceModels>
 
 const DUMMY_REQUESTY_KEY = "requesty-key-for-testing"
 const DUMMY_UNBOUND_KEY = "unbound-key-for-testing"
@@ -150,11 +150,11 @@ describe("getModels with new GetModelsOptions", () => {
 				description: "IO Intelligence Model",
 			},
 		}
-		mockGetIOIntelligencedModels.mockResolvedValue(mockModels)
+		mockGetIOIntelligenceModels.mockResolvedValue(mockModels)
 
 		const result = await getModels({ provider: "io-intelligence", apiKey: DUMMY_IOINTELLIGENCE_KEY })
 
-		expect(mockGetIOIntelligencedModels).toHaveBeenCalled()
+		expect(mockGetIOIntelligenceModels).toHaveBeenCalled()
 		expect(result).toEqual(mockModels)
 	})
 
