@@ -110,7 +110,7 @@ export class StreamingToolCallProcessor {
 			// Process the new arguments chunk.
 			if (toolCall.function.arguments.length > state.arguments.length) {
 				state.arguments = toolCall.function.arguments
-				xmlOutput += this.processArguments(state)
+				xmlOutput += this.processArguments(state, toolCall.function.name)
 			}
 
 			// Check if the JSON is complete and close the function tag.
@@ -145,14 +145,14 @@ export class StreamingToolCallProcessor {
 			// Process any remaining buffered arguments
 			if (toolCall.function.arguments.length > state.arguments.length) {
 				state.arguments = toolCall.function.arguments
-				finalXml += this.processArguments(state)
+				finalXml += this.processArguments(state, toolCall.function.name)
 			}
 
 			// Close remaining tags from the stack in reverse order.
 			while (state.xmlTagStack.length > 0) {
-				const tag = state.xmlTagStack.pop()
+				const tag = state.xmlTagStack.pop()!
 				const indentLevel = state.bracketStack.filter((b) => b === "{").length - 1
-				finalXml += `${this.getIndent(indentLevel)}</${tag}>\n`
+				finalXml += `${this.getIndent(indentLevel)}${this.onCloseTag(tag, toolCall.function.name)}`
 			}
 
 			if (state.functionNameOutputted) {
@@ -182,9 +182,10 @@ export class StreamingToolCallProcessor {
 	/**
 	 * The core state machine for parsing JSON arguments and generating XML.
 	 * @param state - The current processing state for a tool call.
+	 * @param toolName - The name of the current tool being processed.
 	 * @returns The generated XML string for the processed chunk.
 	 */
-	private processArguments(state: ToolCallProcessingState): string {
+	private processArguments(state: ToolCallProcessingState, toolName: string): string {
 		let xml = ""
 		const args = state.arguments
 
@@ -218,9 +219,9 @@ export class StreamingToolCallProcessor {
 						state.isStreamingStringValue = false
 						const parent = state.bracketStack[state.bracketStack.length - 1]
 						if (parent === "{") {
-							const tag = state.xmlTagStack.pop()
+							const tag = state.xmlTagStack.pop()!
 							if (tag) {
-								xml += `</${tag}>\n`
+								xml += `${this.onCloseTag(tag, toolName)}`
 							}
 						}
 						state.parserState = ParserState.EXPECT_COMMA_OR_CLOSING
@@ -247,7 +248,7 @@ export class StreamingToolCallProcessor {
 						// This must be a key, because values are streamed.
 						state.xmlTagStack.push(finalString)
 						const indentLevel = state.bracketStack.filter((b) => b === "{").length - 1
-						xml += `${this.getIndent(indentLevel)}<${finalString}>`
+						xml += `${this.getIndent(indentLevel)}${this.onOpenTag(finalString, toolName)}`
 						state.parserState = ParserState.EXPECT_COLON
 						state.currentString = ""
 					} else {
@@ -269,9 +270,9 @@ export class StreamingToolCallProcessor {
 				const primitiveMatch = args.substring(state.cursor).match(/^-?\d+(\.\d+)?|true|false|null/)
 				if (primitiveMatch) {
 					const value = primitiveMatch[0]
-					const tag = state.xmlTagStack.pop()
+					const tag = state.xmlTagStack.pop()!
 					if (tag) {
-						xml += `${value}</${tag}>\n`
+						xml += `${value}${this.onCloseTag(tag, toolName)}`
 					}
 					state.parserState = ParserState.EXPECT_COMMA_OR_CLOSING
 					state.cursor += value.length
@@ -291,7 +292,7 @@ export class StreamingToolCallProcessor {
 								const arrayElementTag = state.xmlTagStack[state.xmlTagStack.length - 1]
 								if (arrayElementTag) {
 									const indentLevel = state.bracketStack.filter((b) => b === "{").length - 1
-									xml += `${this.getIndent(indentLevel)}<${arrayElementTag}>`
+									xml += `${this.getIndent(indentLevel)}${this.onOpenTag(arrayElementTag, toolName)}`
 								}
 							}
 						}
@@ -316,14 +317,14 @@ export class StreamingToolCallProcessor {
 							const arrayElementTag = state.xmlTagStack[state.xmlTagStack.length - 1]
 							if (arrayElementTag) {
 								const indentLevel = state.bracketStack.filter((b) => b === "{").length - 1
-								xml += `${this.getIndent(indentLevel)}</${arrayElementTag}>\n`
+								xml += `${this.getIndent(indentLevel)}${this.onCloseTag(arrayElementTag, toolName)}`
 							}
 						} else {
 							// Normal object closure.
-							const tag = state.xmlTagStack.pop()
+							const tag = state.xmlTagStack.pop()!
 							if (tag) {
 								const indentLevel = state.bracketStack.filter((b) => b === "{").length - 1
-								xml += `${this.getIndent(indentLevel)}</${tag}>\n`
+								xml += `${this.getIndent(indentLevel)}${this.onCloseTag(tag, toolName)}`
 							}
 						}
 						state.parserState = ParserState.EXPECT_COMMA_OR_CLOSING
@@ -402,6 +403,30 @@ export class StreamingToolCallProcessor {
 		}
 		// For simple escapes like \n, \", \\, etc.
 		return str.substring(pos, pos + 2)
+	}
+
+	private onOpenTag(tag: string, toolName: string): string {
+		if (toolName === "apply_diff") {
+			if (tag === "content_1") {
+				return "<content><![CDATA[\n<<<<<<< SEARCH\n"
+			}
+			if (tag === "content_2") {
+				return "\n=======\n"
+			}
+		}
+		return `<${tag}>`
+	}
+
+	private onCloseTag(tag: string, toolName: string): string {
+		if (toolName === "apply_diff") {
+			if (tag === "content_1") {
+				return ""
+			}
+			if (tag === "content_2") {
+				return "\n>>>>>>> REPLACE\n]]></content>\n"
+			}
+		}
+		return `</${tag}>\n`
 	}
 }
 

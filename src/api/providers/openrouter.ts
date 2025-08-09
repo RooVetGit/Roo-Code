@@ -25,7 +25,7 @@ import { getModelEndpoints } from "./fetchers/modelEndpointCache"
 import { DEFAULT_HEADERS } from "./constants"
 import { BaseProvider } from "./base-provider"
 import type { SingleCompletionHandler, ApiHandlerCreateMessageMetadata } from "../index"
-import { getToolRegistry } from "../../core/tools/schemas/tool-registry"
+import { getToolRegistry } from "../../core/prompts/tools/schemas/tool-registry"
 
 // Add custom interface for OpenRouter params.
 type OpenRouterChatCompletionParams = OpenAI.Chat.ChatCompletionCreateParams & {

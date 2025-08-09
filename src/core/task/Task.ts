@@ -36,7 +36,7 @@ import { CloudService } from "@roo-code/cloud"
 
 // api
 import { ApiHandler, ApiHandlerCreateMessageMetadata, buildApiHandler } from "../../api"
-import { getToolRegistry } from "../tools/schemas/tool-registry"
+import { getToolRegistry } from "../prompts/tools/schemas/tool-registry"
 import { getGroupName, getToolsForMode } from "../../shared/modes"
 import { ApiStream } from "../../api/transform/stream"
 
@@ -2057,7 +2057,7 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 		}
 
 		// Generate tool schemas if toolCallEnabled is true
-		let tools: string[] | undefined = undefined
+		let tools: ToolName[] | undefined = undefined
 		let toolArgs: ToolArgs | undefined
 		const apiProvider = this.apiConfiguration.apiProvider
 		if (this.apiConfiguration.toolCallEnabled === true && supportToolCall(apiProvider)) {
@@ -2069,7 +2069,7 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 				const modeConfig =
 					getModeBySlug(mode!, state.customModes) || modes.find((m) => m.slug === mode) || modes[0]
 				const availableTools = getToolsForMode(modeConfig.groups)
-				const supportedTools = toolRegistry.getSupportedTools(availableTools)
+				const supportedTools = toolRegistry.getSupportedTools(availableTools as ToolName[])
 				tools = supportedTools
 
 				// Determine if browser tools can be used based on model support, mode, and user settings

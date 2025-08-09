@@ -23,7 +23,7 @@ import { getModelParams } from "../transform/model-params"
 import { DEFAULT_HEADERS } from "./constants"
 import { BaseProvider } from "./base-provider"
 import type { SingleCompletionHandler, ApiHandlerCreateMessageMetadata } from "../index"
-import { getToolRegistry } from "../../core/tools/schemas/tool-registry"
+import { getToolRegistry } from "../../core/prompts/tools/schemas/tool-registry"
 
 // TODO: Rename this to OpenAICompatibleHandler. Also, I think the
 // `OpenAINativeHandler` can subclass from this, since it's obviously
@@ -162,7 +162,7 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 				...(reasoning && reasoning),
 			}
 			if (toolCallEnabled) {
-				requestOptions.tools = toolRegistry.generateFunctionCallSchemas(metadata.tools!)
+				requestOptions.tools = toolRegistry.generateFunctionCallSchemas(metadata.tools!, metadata.toolArgs)
 			}
 
 			// Add max_tokens if needed

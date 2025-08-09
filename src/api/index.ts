@@ -1,6 +1,6 @@
 import { Anthropic } from "@anthropic-ai/sdk"
 
-import type { ProviderSettings, ModelInfo } from "@roo-code/types"
+import type { ProviderSettings, ModelInfo, ToolName } from "@roo-code/types"
 
 import { ApiStream } from "./transform/stream"
 
@@ -45,7 +45,7 @@ export interface SingleCompletionHandler {
 export interface ApiHandlerCreateMessageMetadata {
 	mode?: string
 	taskId: string
-	tools?: string[]
+	tools?: ToolName[]
 	toolArgs?: ToolArgs
 }
 

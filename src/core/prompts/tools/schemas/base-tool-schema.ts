@@ -2,7 +2,7 @@
  * Base tool schema that can generate both XML descriptions and native function call schemas
  */
 
-import { ToolArgs } from "../../prompts/tools/types"
+import { ToolArgs } from "../types"
 
 export interface ToolParameter {
 	name: string
@@ -19,6 +19,7 @@ export interface BaseToolSchema {
 	description: string
 	parameters: ToolParameter[]
 	customDescription?: (args: ToolArgs) => BaseToolSchema | undefined
+	systemPropmt?: string
 }
 
 /**
