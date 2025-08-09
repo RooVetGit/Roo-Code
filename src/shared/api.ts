@@ -11,7 +11,7 @@ export type ApiHandlerOptions = Omit<ProviderSettings, "apiProvider"> & {
 	/**
 	 * When true and using GPT‑5 Responses API, include reasoning.summary: "auto"
 	 * so the API returns reasoning summaries (we already parse and surface them).
-	 * Defaults to false to preserve existing request body expectations.
+	 * Defaults to true; set to false to disable summaries.
 	 */
 	enableGpt5ReasoningSummary?: boolean
 }

@@ -2052,16 +2052,18 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 		try {
 			const modelId = this.api.getModel().id
 			if (modelId && modelId.startsWith("gpt-5") && !this.skipPrevResponseIdOnce) {
-				// Find the last assistant message that has a response_id stored
+				// Find the last assistant message that has a previous_response_id stored
 				const idx = findLastIndex(
 					this.clineMessages,
-					(m) => m.type === "say" && (m as any).say === "text" && (m as any).metadata?.gpt5?.response_id,
+					(m) =>
+						m.type === "say" &&
+						(m as any).say === "text" &&
+						(m as any).metadata?.gpt5?.previous_response_id,
 				)
 				if (idx !== -1) {
-					// Use the response_id from the last assistant message as the previous_response_id for this request
-					previousResponseId = ((this.clineMessages[idx] as any).metadata.gpt5.response_id || undefined) as
-						| string
-						| undefined
+					// Use the previous_response_id from the last assistant message for this request
+					previousResponseId = ((this.clineMessages[idx] as any).metadata.gpt5.previous_response_id ||
+						undefined) as string | undefined
 				}
 			}
 		} catch {
@@ -2225,7 +2227,7 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 	}
 
 	/**
-	 * Persist GPT-5 per-turn metadata (response_id, instructions, reasoning_summary)
+	 * Persist GPT-5 per-turn metadata (previous_response_id, instructions, reasoning_summary)
 	 * onto the last complete assistant say("text") message.
 	 */
 	private async persistGpt5Metadata(reasoningMessage?: string): Promise<void> {
@@ -2243,7 +2245,7 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 				msg.metadata = msg.metadata ?? {}
 				msg.metadata.gpt5 = {
 					...(msg.metadata.gpt5 ?? {}),
-					response_id: lastResponseId,
+					previous_response_id: lastResponseId,
 					instructions: this.lastUsedInstructions,
 					reasoning_summary: (reasoningMessage ?? "").trim() || undefined,
 				}
