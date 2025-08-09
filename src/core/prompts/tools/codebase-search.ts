@@ -1,19 +1,24 @@
 export function getCodebaseSearchDescription(): string {
 	return `## codebase_search
-Description: Find files most relevant to the search query.\nThis is a semantic search tool, so the query should ask for something semantically matching what is needed.\nIf it makes sense to only search in a particular directory, please specify it in the path parameter.\nUnless there is a clear reason to use your own search query, please just reuse the user's exact query with their wording.\nTheir exact wording/phrasing can often be helpful for the semantic search query. Keeping the same exact question format can also be helpful.\nIMPORTANT: Queries MUST be in English. Translate non-English queries before searching.
+Description: Find files most relevant to the search query using semantic search.\nThis tool searches based on meaning rather than exact text matches.\nBy default, it searches the entire workspace - only specify a path if you need to limit the search to a specific subdirectory.\nUnless there is a clear reason to use your own search query, please just reuse the user's exact query with their wording.\nTheir exact wording/phrasing can often be helpful for the semantic search query. Keeping the same exact question format can also be helpful.\nIMPORTANT: Queries MUST be in English. Translate non-English queries before searching.
 Parameters:
 - query: (required) The search query to find relevant code. You should reuse the user's exact query/most recent message with their wording unless there is a clear reason not to.
-- path: (optional) The path to the directory to search in relative to the current working directory. This parameter should only be a directory path, file paths are not supported. Defaults to the current working directory.
+- path: (optional) Only specify this to limit search to a specific subdirectory. Leave empty to search the entire workspace. Must be a directory path relative to the workspace root.
 Usage:
 <codebase_search>
 <query>Your natural language query here</query>
-<path>Path to the directory to search in (optional)</path>
+<path>Subdirectory path (optional - only if limiting search scope)</path>
 </codebase_search>
 
-Example: Searching for functions related to user authentication
+Example 1: Search entire workspace for browser implementation
+<codebase_search>
+<query>browser use implementation</query>
+</codebase_search>
+
+Example 2: Search only in src/auth directory for authentication
 <codebase_search>
 <query>User login and password hashing</query>
-<path>/path/to/directory</path>
+<path>src/auth</path>
 </codebase_search>
 `
 }
