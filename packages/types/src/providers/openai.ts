@@ -12,6 +12,7 @@ export const openAiNativeModels = {
 		supportsImages: true,
 		supportsPromptCache: true,
 		supportsReasoningEffort: true,
+		reasoningEffort: "medium",
 		inputPrice: 1.25,
 		outputPrice: 10.0,
 		cacheReadsPrice: 0.13,
@@ -23,6 +24,7 @@ export const openAiNativeModels = {
 		supportsImages: true,
 		supportsPromptCache: true,
 		supportsReasoningEffort: true,
+		reasoningEffort: "medium",
 		inputPrice: 0.25,
 		outputPrice: 2.0,
 		cacheReadsPrice: 0.03,
@@ -34,6 +36,7 @@ export const openAiNativeModels = {
 		supportsImages: true,
 		supportsPromptCache: true,
 		supportsReasoningEffort: true,
+		reasoningEffort: "medium",
 		inputPrice: 0.05,
 		outputPrice: 0.4,
 		cacheReadsPrice: 0.01,
@@ -229,5 +232,6 @@ export const openAiModelInfoSaneDefaults: ModelInfo = {
 export const azureOpenAiDefaultApiVersion = "2024-08-01-preview"
 
 export const OPENAI_NATIVE_DEFAULT_TEMPERATURE = 0
+export const GPT5_DEFAULT_TEMPERATURE = 1.0
 
 export const OPENAI_AZURE_AI_INFERENCE_PATH = "/models/chat/completions"

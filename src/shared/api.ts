@@ -6,8 +6,15 @@ import {
 } from "@roo-code/types"
 
 // ApiHandlerOptions
-
-export type ApiHandlerOptions = Omit<ProviderSettings, "apiProvider">
+// Extend ProviderSettings (minus apiProvider) with handler-specific toggles.
+export type ApiHandlerOptions = Omit<ProviderSettings, "apiProvider"> & {
+	/**
+	 * When true and using GPT‑5 Responses API, include reasoning.summary: "auto"
+	 * so the API returns reasoning summaries (we already parse and surface them).
+	 * Defaults to false to preserve existing request body expectations.
+	 */
+	enableGpt5ReasoningSummary?: boolean
+}
 
 // RouterName
 
