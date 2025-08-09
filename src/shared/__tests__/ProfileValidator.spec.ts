@@ -194,7 +194,6 @@ describe("ProfileValidator", () => {
 			"chutes",
 			"sambanova",
 			"fireworks",
-			"io-intelligence",
 		]
 
 		apiModelProviders.forEach((provider) => {
@@ -225,6 +224,22 @@ describe("ProfileValidator", () => {
 			const profile: ProviderSettings = {
 				apiProvider: "litellm" as any,
 				litellmModelId: "test-model",
+			}
+
+			expect(ProfileValidator.isProfileAllowed(profile, allowList)).toBe(true)
+		})
+
+		// Test for io-intelligence provider which uses ioIntelligenceModelId
+		it(`should extract ioIntelligenceModelId for io-intelligence provider`, () => {
+			const allowList: OrganizationAllowList = {
+				allowAll: false,
+				providers: {
+					"io-intelligence": { allowAll: false, models: ["test-model"] },
+				},
+			}
+			const profile: ProviderSettings = {
+				apiProvider: "io-intelligence" as any,
+				ioIntelligenceModelId: "test-model",
 			}
 
 			expect(ProfileValidator.isProfileAllowed(profile, allowList)).toBe(true)
