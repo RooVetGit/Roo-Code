@@ -623,6 +623,8 @@ const ApiOptions = ({
 				modelInfo={selectedModelInfo}
 			/>
 
+			{/* TODO: Gate Verbosity UI by capability flag (e.g., supportsVerbosity) once added to ModelInfo type.
+			   Currently only GPT-5 models support verbosity, so we check the model ID prefix. */}
 			{selectedModelId?.startsWith("gpt-5") && (
 				<Verbosity
 					apiConfiguration={apiConfiguration}

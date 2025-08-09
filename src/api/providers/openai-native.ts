@@ -18,7 +18,7 @@ import type { ApiHandlerOptions } from "../../shared/api"
 import { calculateApiCostOpenAI } from "../../shared/cost"
 
 import { convertToOpenAiMessages } from "../transform/openai-format"
-import { ApiStream } from "../transform/stream"
+import { ApiStream, ApiStreamUsageChunk } from "../transform/stream"
 import { getModelParams } from "../transform/model-params"
 
 import { BaseProvider } from "./base-provider"
@@ -40,6 +40,41 @@ export class OpenAiNativeHandler extends BaseProvider implements SingleCompletio
 		this.options = options
 		const apiKey = this.options.openAiNativeApiKey ?? "not-provided"
 		this.client = new OpenAI({ baseURL: this.options.openAiNativeBaseUrl, apiKey })
+	}
+
+	// Review comment 1: Extract usage normalization helper
+	private normalizeGpt5Usage(usage: any, model: OpenAiNativeModel): ApiStreamUsageChunk | undefined {
+		if (!usage) return undefined
+
+		const totalInputTokens = usage.input_tokens ?? usage.prompt_tokens ?? 0
+		const totalOutputTokens = usage.output_tokens ?? usage.completion_tokens ?? 0
+		const cacheWriteTokens = usage.cache_creation_input_tokens ?? usage.cache_write_tokens ?? 0
+		const cacheReadTokens = usage.cache_read_input_tokens ?? usage.cache_read_tokens ?? usage.cached_tokens ?? 0
+
+		const inputCost = (totalInputTokens / 1_000_000) * (model.info.inputPrice || 0)
+		const outputCost = (totalOutputTokens / 1_000_000) * (model.info.outputPrice || 0)
+		const totalCost = inputCost + outputCost
+
+		return {
+			type: "usage",
+			inputTokens: totalInputTokens,
+			outputTokens: totalOutputTokens,
+			cacheWriteTokens,
+			cacheReadTokens,
+			totalCost,
+		}
+	}
+
+	// Review comment 3: Deduplicate response ID resolver logic
+	private resolveResponseId(responseId: string | undefined): void {
+		if (responseId) {
+			this.lastResponseId = responseId
+		}
+		// Resolve the promise so the next request can use this ID
+		if (this.responseIdResolver) {
+			this.responseIdResolver(responseId)
+			this.responseIdResolver = undefined
+		}
 	}
 
 	override async *createMessage(
@@ -211,7 +246,8 @@ export class OpenAiNativeHandler extends BaseProvider implements SingleCompletio
 			input: formattedInput,
 			stream: true,
 			...(reasoningEffort && {
-				// Always request reasoning summaries for GPT‑5 responses
+				// Review comment 4: Remove dead enableGpt5ReasoningSummary option
+				// Always request reasoning summaries for GPT‑5 responses (no longer configurable)
 				reasoning: {
 					effort: reasoningEffort,
 					summary: "auto",
@@ -292,7 +328,9 @@ export class OpenAiNativeHandler extends BaseProvider implements SingleCompletio
 
 	private formatInputForResponsesAPI(systemPrompt: string, messages: Anthropic.Messages.MessageParam[]): string {
 		// Format the conversation for the Responses API input field
-		// Use Developer role format for GPT-5 (similar to o1/o3 models)
+		// Review comment 8: Add clarifying comment for Developer prefix
+		// Use Developer role format for GPT-5 (aligning with o1/o3 Developer role usage per GPT-5 Responses guidance)
+		// This ensures consistent instruction handling across reasoning models
 		let formattedInput = `Developer: ${systemPrompt}\n\n`
 
 		for (const message of messages) {
@@ -502,7 +540,11 @@ export class OpenAiNativeHandler extends BaseProvider implements SingleCompletio
 		messages: Anthropic.Messages.MessageParam[],
 		metadata?: ApiHandlerCreateMessageMetadata,
 	): { formattedInput: string; previousResponseId?: string } {
-		const previousResponseId = metadata?.previousResponseId || this.lastResponseId
+		// Review comment 2: Suppress conversation continuity for first message
+		// Don't use stored lastResponseId if this is the first user message in the conversation
+		// But always respect explicitly provided previousResponseId from metadata
+		const isFirstMessage = messages.length === 1 && messages[0].role === "user"
+		const previousResponseId = metadata?.previousResponseId || (!isFirstMessage ? this.lastResponseId : undefined)
 
 		if (previousResponseId) {
 			const lastUserMessage = [...messages].reverse().find((msg) => msg.role === "user")
@@ -558,12 +600,7 @@ export class OpenAiNativeHandler extends BaseProvider implements SingleCompletio
 
 							// Store response ID for conversation continuity
 							if (parsed.response?.id) {
-								this.lastResponseId = parsed.response.id
-								// Resolve the promise so the next request can use this ID
-								if (this.responseIdResolver) {
-									this.responseIdResolver(parsed.response.id)
-									this.responseIdResolver = undefined
-								}
+								this.resolveResponseId(parsed.response.id)
 							}
 
 							// Check if this is a complete response (non-streaming format)
@@ -596,30 +633,9 @@ export class OpenAiNativeHandler extends BaseProvider implements SingleCompletio
 								}
 								// Check for usage in the complete response
 								if (parsed.response.usage) {
-									const usage = parsed.response.usage
-									totalInputTokens = usage.input_tokens || usage.prompt_tokens || 0
-									totalOutputTokens = usage.output_tokens || usage.completion_tokens || 0
-
-									// Extract cache tokens from the usage object
-									const cacheWriteTokens =
-										usage.cache_creation_input_tokens || usage.cache_write_tokens || 0
-									const cacheReadTokens =
-										usage.cache_read_input_tokens ||
-										usage.cache_read_tokens ||
-										usage.cached_tokens ||
-										0
-
-									const inputCost = (totalInputTokens / 1_000_000) * (model.info.inputPrice || 0)
-									const outputCost = (totalOutputTokens / 1_000_000) * (model.info.outputPrice || 0)
-									const totalCost = inputCost + outputCost
-
-									yield {
-										type: "usage",
-										inputTokens: totalInputTokens,
-										outputTokens: totalOutputTokens,
-										cacheWriteTokens: cacheWriteTokens,
-										cacheReadTokens: cacheReadTokens,
-										totalCost: totalCost,
+									const usageData = this.normalizeGpt5Usage(parsed.response.usage, model)
+									if (usageData) {
+										yield usageData
 									}
 								}
 							}
@@ -863,12 +879,7 @@ export class OpenAiNativeHandler extends BaseProvider implements SingleCompletio
 							} else if (parsed.type === "response.completed" || parsed.type === "response.done") {
 								// Store response ID for conversation continuity
 								if (parsed.response?.id) {
-									this.lastResponseId = parsed.response.id
-									// Resolve the promise so the next request can use this ID
-									if (this.responseIdResolver) {
-										this.responseIdResolver(parsed.response.id)
-										this.responseIdResolver = undefined
-									}
+									this.resolveResponseId(parsed.response.id)
 								}
 
 								// Check if the done event contains the complete output (as a fallback)
@@ -910,30 +921,9 @@ export class OpenAiNativeHandler extends BaseProvider implements SingleCompletio
 
 								// Extract final usage information from the 'completed' event
 								if (parsed.response?.usage) {
-									const usage = parsed.response.usage
-									totalInputTokens = usage.input_tokens || usage.prompt_tokens || 0
-									totalOutputTokens = usage.output_tokens || usage.completion_tokens || 0
-
-									// Extract cache tokens from the usage object
-									const cacheWriteTokens =
-										usage.cache_creation_input_tokens || usage.cache_write_tokens || 0
-									const cacheReadTokens =
-										usage.cache_read_input_tokens ||
-										usage.cache_read_tokens ||
-										usage.cached_tokens ||
-										0
-
-									const inputCost = (totalInputTokens / 1_000_000) * (model.info.inputPrice || 0)
-									const outputCost = (totalOutputTokens / 1_000_000) * (model.info.outputPrice || 0)
-									const totalCost = inputCost + outputCost
-
-									yield {
-										type: "usage",
-										inputTokens: totalInputTokens,
-										outputTokens: totalOutputTokens,
-										cacheWriteTokens: cacheWriteTokens,
-										cacheReadTokens: cacheReadTokens,
-										totalCost: totalCost,
+									const usageData = this.normalizeGpt5Usage(parsed.response.usage, model)
+									if (usageData) {
+										yield usageData
 									}
 								}
 							}
@@ -968,27 +958,9 @@ export class OpenAiNativeHandler extends BaseProvider implements SingleCompletio
 								}
 							} else if (parsed.usage) {
 								// Handle usage if it arrives in a separate, non-completed event
-								const usage = parsed.usage
-								totalInputTokens = usage.input_tokens || usage.prompt_tokens || 0
-								totalOutputTokens = usage.output_tokens || usage.completion_tokens || 0
-
-								// Extract cache tokens from the usage object
-								const cacheWriteTokens =
-									usage.cache_creation_input_tokens || usage.cache_write_tokens || 0
-								const cacheReadTokens =
-									usage.cache_read_input_tokens || usage.cache_read_tokens || usage.cached_tokens || 0
-
-								const inputCost = (totalInputTokens / 1_000_000) * (model.info.inputPrice || 0)
-								const outputCost = (totalOutputTokens / 1_000_000) * (model.info.outputPrice || 0)
-								const totalCost = inputCost + outputCost
-
-								yield {
-									type: "usage",
-									inputTokens: totalInputTokens,
-									outputTokens: totalOutputTokens,
-									cacheWriteTokens: cacheWriteTokens,
-									cacheReadTokens: cacheReadTokens,
-									totalCost: totalCost,
+								const usageData = this.normalizeGpt5Usage(parsed.usage, model)
+								if (usageData) {
+									yield usageData
 								}
 							}
 						} catch (e) {
@@ -1034,12 +1006,7 @@ export class OpenAiNativeHandler extends BaseProvider implements SingleCompletio
 	private async *processGpt5Event(event: any, model: OpenAiNativeModel): ApiStream {
 		// Persist response id for conversation continuity when available
 		if (event?.response?.id) {
-			this.lastResponseId = event.response.id
-			// Resolve the promise so the next request can use this ID
-			if (this.responseIdResolver) {
-				this.responseIdResolver(event.response.id)
-				this.responseIdResolver = undefined
-			}
+			this.resolveResponseId(event.response.id)
 		}
 
 		// Handle known streaming text deltas
@@ -1094,26 +1061,9 @@ export class OpenAiNativeHandler extends BaseProvider implements SingleCompletio
 		// Completion events that may carry usage
 		if (event?.type === "response.done" || event?.type === "response.completed") {
 			const usage = event?.response?.usage || event?.usage || undefined
-
-			if (usage) {
-				const totalInputTokens = usage.input_tokens ?? usage.prompt_tokens ?? 0
-				const totalOutputTokens = usage.output_tokens ?? usage.completion_tokens ?? 0
-				const cacheWriteTokens = usage.cache_creation_input_tokens ?? usage.cache_write_tokens ?? 0
-				const cacheReadTokens =
-					usage.cache_read_input_tokens ?? usage.cache_read_tokens ?? usage.cached_tokens ?? 0
-
-				const inputCost = (totalInputTokens / 1_000_000) * (model.info.inputPrice || 0)
-				const outputCost = (totalOutputTokens / 1_000_000) * (model.info.outputPrice || 0)
-				const totalCost = inputCost + outputCost
-
-				yield {
-					type: "usage",
-					inputTokens: totalInputTokens,
-					outputTokens: totalOutputTokens,
-					cacheWriteTokens,
-					cacheReadTokens,
-					totalCost,
-				}
+			const usageData = this.normalizeGpt5Usage(usage, model)
+			if (usageData) {
+				yield usageData
 			}
 			return
 		}
@@ -1125,29 +1075,15 @@ export class OpenAiNativeHandler extends BaseProvider implements SingleCompletio
 		}
 
 		if (event?.usage) {
-			const usage = event.usage
-			const totalInputTokens = usage.input_tokens ?? usage.prompt_tokens ?? 0
-			const totalOutputTokens = usage.output_tokens ?? usage.completion_tokens ?? 0
-			const cacheWriteTokens = usage.cache_creation_input_tokens ?? usage.cache_write_tokens ?? 0
-			const cacheReadTokens = usage.cache_read_input_tokens ?? usage.cache_read_tokens ?? usage.cached_tokens ?? 0
-
-			const inputCost = (totalInputTokens / 1_000_000) * (model.info.inputPrice || 0)
-			const outputCost = (totalOutputTokens / 1_000_000) * (model.info.outputPrice || 0)
-			const totalCost = inputCost + outputCost
-
-			yield {
-				type: "usage",
-				inputTokens: totalInputTokens,
-				outputTokens: totalOutputTokens,
-				cacheWriteTokens,
-				cacheReadTokens,
-				totalCost,
+			const usageData = this.normalizeGpt5Usage(event.usage, model)
+			if (usageData) {
+				yield usageData
 			}
 		}
 	}
 
 	private getGpt5ReasoningEffort(model: OpenAiNativeModel): ReasoningEffortWithMinimal | undefined {
-		const { reasoning } = model
+		const { reasoning, info } = model
 
 		// Check if reasoning effort is configured
 		if (reasoning && "reasoning_effort" in reasoning) {
@@ -1158,8 +1094,9 @@ export class OpenAiNativeHandler extends BaseProvider implements SingleCompletio
 			}
 		}
 
-		// Default to "medium" for GPT-5 models when not specified
-		return "medium"
+		// Review comment 6: Centralize default GPT-5 reasoning effort
+		// Use model's default from types if available, otherwise fall back to "medium"
+		return (info.reasoningEffort as ReasoningEffortWithMinimal) || "medium"
 	}
 
 	private isGpt5Model(modelId: string): boolean {

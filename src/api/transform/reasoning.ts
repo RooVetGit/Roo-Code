@@ -52,10 +52,19 @@ export const getOpenAiReasoning = ({
 	model,
 	reasoningEffort,
 	settings,
-}: GetModelReasoningOptions): OpenAiReasoningParams | undefined =>
-	shouldUseReasoningEffort({ model, settings }) && reasoningEffort && reasoningEffort !== "minimal"
-		? { reasoning_effort: reasoningEffort }
-		: undefined
+}: GetModelReasoningOptions): OpenAiReasoningParams | undefined => {
+	if (!shouldUseReasoningEffort({ model, settings })) {
+		return undefined
+	}
+
+	// If model has reasoning effort capability, return object even if effort is undefined
+	// This preserves the reasoning_effort field in the API call
+	if (reasoningEffort === "minimal") {
+		return undefined
+	}
+
+	return { reasoning_effort: reasoningEffort }
+}
 
 export const getGeminiReasoning = ({
 	model,
