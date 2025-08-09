@@ -91,7 +91,7 @@ async function generatePrompt(
 
 ${markdownFormattingSection()}
 
-${getSharedToolUseSection()}
+${getSharedToolUseSection(settings)}
 
 ${getToolDescriptionsForMode(
 	mode,

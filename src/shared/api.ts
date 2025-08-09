@@ -114,3 +114,12 @@ export type GetModelsOptions =
 	| { provider: "litellm"; apiKey: string; baseUrl: string }
 	| { provider: "ollama"; baseUrl?: string }
 	| { provider: "lmstudio"; baseUrl?: string }
+
+export const supportToolCall = (provider: string | null | undefined) => {
+	if (provider === null || provider === undefined) {
+		return false
+	}
+	return ["openrouter", "openai", "deepseek"].includes(provider)
+}
+
+export type ToolCallProviderType = "openai" | "anthropic" | "vscode-lm"
