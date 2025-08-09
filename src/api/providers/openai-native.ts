@@ -32,6 +32,8 @@ export class OpenAiNativeHandler extends BaseProvider implements SingleCompletio
 	protected options: ApiHandlerOptions
 	private client: OpenAI
 	private lastResponseId: string | undefined
+	private responseIdPromise: Promise<string | undefined> | undefined
+	private responseIdResolver: ((value: string | undefined) => void) | undefined
 
 	constructor(options: ApiHandlerOptions) {
 		super()
@@ -167,22 +169,39 @@ export class OpenAiNativeHandler extends BaseProvider implements SingleCompletio
 		// Resolve reasoning effort (supports "minimal" for GPT‑5)
 		const reasoningEffort = this.getGpt5ReasoningEffort(model)
 
-		// Prepare inputs and potential conversation continuity.
-		// If metadata.previousResponseId is not provided, attempt to read the last persisted assistant turn's gpt5.previous_response_id
-		// via a metadata hook (taskId should be set for all Task-driven requests).
+		// Wait for any pending response ID from a previous request to be available
+		// This handles the race condition with fast nano model responses
 		let effectivePreviousResponseId = metadata?.previousResponseId
-		try {
-			if (!effectivePreviousResponseId && metadata?.taskId) {
-				// Defer to Task layer via metadata hook if present (the Task will propagate this in future refactor).
-				// For now, keep behavior unchanged if not available.
+
+		// If we have a pending response ID promise, wait for it to resolve
+		if (!effectivePreviousResponseId && this.responseIdPromise) {
+			try {
+				const resolvedId = await Promise.race([
+					this.responseIdPromise,
+					// Timeout after 100ms to avoid blocking too long
+					new Promise<undefined>((resolve) => setTimeout(() => resolve(undefined), 100)),
+				])
+				if (resolvedId) {
+					effectivePreviousResponseId = resolvedId
+				}
+			} catch {
+				// Non-fatal if promise fails
 			}
-		} catch {
-			// Non-fatal if lookup fails
 		}
 
-		// Format input and capture continuity id (falls back to this.lastResponseId when metadata doesn't provide one)
+		// Fall back to the last known response ID if still not available
+		if (!effectivePreviousResponseId) {
+			effectivePreviousResponseId = this.lastResponseId
+		}
+
+		// Format input and capture continuity id
 		const { formattedInput, previousResponseId } = this.prepareGpt5Input(systemPrompt, messages, metadata)
 		const requestPreviousResponseId = effectivePreviousResponseId ?? previousResponseId
+
+		// Create a new promise for this request's response ID
+		this.responseIdPromise = new Promise<string | undefined>((resolve) => {
+			this.responseIdResolver = resolve
+		})
 
 		// Build a request body (also used for fallback)
 		// Ensure we explicitly pass max_output_tokens for GPT‑5 based on Roo's reserved model response calculation
@@ -375,6 +394,18 @@ export class OpenAiNativeHandler extends BaseProvider implements SingleCompletio
 
 					// Clear the stored lastResponseId to prevent using it again
 					this.lastResponseId = undefined
+					// Resolve the promise with undefined to unblock any waiting requests
+					const sdkResolver = this.responseIdResolver
+					if (sdkResolver) {
+						sdkResolver(undefined)
+						this.responseIdResolver = undefined
+					}
+					// Resolve the promise with undefined to unblock any waiting requests
+					const resolver = this.responseIdResolver
+					if (resolver) {
+						resolver(undefined)
+						this.responseIdResolver = undefined
+					}
 
 					// Retry the request without the previous_response_id
 					const retryResponse = await fetch(url, {
@@ -528,6 +559,11 @@ export class OpenAiNativeHandler extends BaseProvider implements SingleCompletio
 							// Store response ID for conversation continuity
 							if (parsed.response?.id) {
 								this.lastResponseId = parsed.response.id
+								// Resolve the promise so the next request can use this ID
+								if (this.responseIdResolver) {
+									this.responseIdResolver(parsed.response.id)
+									this.responseIdResolver = undefined
+								}
 							}
 
 							// Check if this is a complete response (non-streaming format)
@@ -828,6 +864,11 @@ export class OpenAiNativeHandler extends BaseProvider implements SingleCompletio
 								// Store response ID for conversation continuity
 								if (parsed.response?.id) {
 									this.lastResponseId = parsed.response.id
+									// Resolve the promise so the next request can use this ID
+									if (this.responseIdResolver) {
+										this.responseIdResolver(parsed.response.id)
+										this.responseIdResolver = undefined
+									}
 								}
 
 								// Check if the done event contains the complete output (as a fallback)
@@ -994,6 +1035,11 @@ export class OpenAiNativeHandler extends BaseProvider implements SingleCompletio
 		// Persist response id for conversation continuity when available
 		if (event?.response?.id) {
 			this.lastResponseId = event.response.id
+			// Resolve the promise so the next request can use this ID
+			if (this.responseIdResolver) {
+				this.responseIdResolver(event.response.id)
+				this.responseIdResolver = undefined
+			}
 		}
 
 		// Handle known streaming text deltas
