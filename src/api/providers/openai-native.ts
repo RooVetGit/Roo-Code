@@ -221,8 +221,52 @@ export class OpenAiNativeHandler extends BaseProvider implements SingleCompletio
 					yield outChunk
 				}
 			}
-		} catch (_sdkErr) {
-			// Fallback to manual SSE via fetch to maintain functionality with custom base URLs or older SDKs
+		} catch (sdkErr: any) {
+			// Check if this is a 400 error about previous_response_id not found
+			const errorMessage = sdkErr?.message || sdkErr?.error?.message || ""
+			const is400Error = sdkErr?.status === 400 || sdkErr?.response?.status === 400
+			const isPreviousResponseError =
+				errorMessage.includes("Previous response") || errorMessage.includes("not found")
+
+			if (is400Error && requestBody.previous_response_id && isPreviousResponseError) {
+				// Log the error and retry without the previous_response_id
+				console.warn(
+					`[GPT-5] Previous response ID not found (${requestBody.previous_response_id}), retrying without it`,
+				)
+
+				// Remove the problematic previous_response_id and retry
+				const retryRequestBody = { ...requestBody }
+				delete retryRequestBody.previous_response_id
+
+				// Clear the stored lastResponseId to prevent using it again
+				this.lastResponseId = undefined
+
+				try {
+					// Retry with the SDK
+					const retryStream = (await (this.client as any).responses.create(
+						retryRequestBody,
+					)) as AsyncIterable<any>
+
+					if (typeof (retryStream as any)[Symbol.asyncIterator] !== "function") {
+						// If SDK fails, fall back to SSE
+						yield* this.makeGpt5ResponsesAPIRequest(retryRequestBody, model, metadata)
+						return
+					}
+
+					for await (const event of retryStream) {
+						for await (const outChunk of this.processGpt5Event(event, model)) {
+							yield outChunk
+						}
+					}
+					return
+				} catch (retryErr) {
+					// If retry also fails, fall back to SSE
+					yield* this.makeGpt5ResponsesAPIRequest(retryRequestBody, model, metadata)
+					return
+				}
+			}
+
+			// For other errors, fallback to manual SSE via fetch
 			yield* this.makeGpt5ResponsesAPIRequest(requestBody, model, metadata)
 		}
 	}
@@ -313,6 +357,48 @@ export class OpenAiNativeHandler extends BaseProvider implements SingleCompletio
 				} catch {
 					// If not JSON, use the raw text
 					errorDetails = errorText
+				}
+
+				// Check if this is a 400 error about previous_response_id not found
+				const isPreviousResponseError =
+					errorDetails.includes("Previous response") || errorDetails.includes("not found")
+
+				if (response.status === 400 && requestBody.previous_response_id && isPreviousResponseError) {
+					// Log the error and retry without the previous_response_id
+					console.warn(
+						`[GPT-5 SSE] Previous response ID not found (${requestBody.previous_response_id}), retrying without it`,
+					)
+
+					// Remove the problematic previous_response_id and retry
+					const retryRequestBody = { ...requestBody }
+					delete retryRequestBody.previous_response_id
+
+					// Clear the stored lastResponseId to prevent using it again
+					this.lastResponseId = undefined
+
+					// Retry the request without the previous_response_id
+					const retryResponse = await fetch(url, {
+						method: "POST",
+						headers: {
+							"Content-Type": "application/json",
+							Authorization: `Bearer ${apiKey}`,
+							Accept: "text/event-stream",
+						},
+						body: JSON.stringify(retryRequestBody),
+					})
+
+					if (!retryResponse.ok) {
+						// If retry also fails, throw the original error
+						throw new Error(`GPT-5 API retry failed (${retryResponse.status})`)
+					}
+
+					if (!retryResponse.body) {
+						throw new Error("No response body from Responses API retry")
+					}
+
+					// Handle the successful retry response
+					yield* this.handleGpt5StreamResponse(retryResponse.body, model)
+					return
 				}
 
 				// Provide user-friendly error messages based on status code
