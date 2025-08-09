@@ -7,7 +7,7 @@ import type { ProviderSettings } from "@roo-code/types"
 import { useAppTranslation } from "@src/i18n/TranslationContext"
 import { VSCodeButtonLink } from "@src/components/common/VSCodeButtonLink"
 
-import { inputEventTransform } from "../transforms"
+import { inputEventTransform, noTransform } from "../transforms"
 
 type OpenAIProps = {
 	apiConfiguration: ProviderSettings
@@ -72,6 +72,14 @@ export const OpenAI = ({ apiConfiguration, setApiConfigurationField }: OpenAIPro
 					{t("settings:providers.getOpenAiApiKey")}
 				</VSCodeButtonLink>
 			)}
+			<Checkbox
+				checked={apiConfiguration?.openAiNativeStreamingEnabled ?? true}
+				onChange={handleInputChange("openAiNativeStreamingEnabled", noTransform)}>
+				{t("settings:modelInfo.enableStreaming")}
+			</Checkbox>
+			<div className="text-sm text-vscode-descriptionForeground ml-6 -mt-2">
+				{t("settings:modelInfo.enableStreamingDescription")}
+			</div>
 		</>
 	)
 }
