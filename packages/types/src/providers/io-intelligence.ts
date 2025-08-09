@@ -10,6 +10,8 @@ export const ioIntelligenceDefaultModelId: IOIntelligenceModelId = "meta-llama/L
 
 export const ioIntelligenceDefaultBaseUrl = "https://api.intelligence.io.solutions/api/v1"
 
+export const IO_INTELLIGENCE_CACHE_DURATION = 1000 * 60 * 60 // 1 hour
+
 export const ioIntelligenceModels = {
 	"deepseek-ai/DeepSeek-R1-0528": {
 		maxTokens: 8192,

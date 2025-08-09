@@ -1,6 +1,7 @@
 import axios from "axios"
 import { z } from "zod"
 import type { ModelInfo } from "@roo-code/types"
+import { IO_INTELLIGENCE_CACHE_DURATION } from "@roo-code/types"
 import type { ModelRecord } from "../../../shared/api"
 
 /**
@@ -53,7 +54,6 @@ interface CacheEntry {
 }
 
 let cache: CacheEntry | null = null
-const CACHE_DURATION = 5 * 60 * 1000 // 5 minutes
 
 /**
  * Model context length mapping based on the documentation
@@ -80,7 +80,8 @@ const VISION_MODELS = new Set([
  */
 function parseIOIntelligenceModel(model: IOIntelligenceModel): ModelInfo {
 	const contextLength = MODEL_CONTEXT_LENGTHS[model.id] || 8192
-	const maxTokens = Math.min(contextLength, Math.ceil(contextLength * 0.2))
+	// Cap maxTokens at 32k for very large context windows, or 20% of context length, whichever is smaller
+	const maxTokens = Math.min(contextLength, Math.ceil(contextLength * 0.2), 32768)
 	const supportsImages = VISION_MODELS.has(model.id)
 
 	return {
@@ -101,7 +102,7 @@ export async function getIOIntelligenceModels(apiKey?: string): Promise<ModelRec
 	const now = Date.now()
 
 	// Check cache
-	if (cache && now - cache.timestamp < CACHE_DURATION) {
+	if (cache && now - cache.timestamp < IO_INTELLIGENCE_CACHE_DURATION) {
 		return cache.data
 	}
 
