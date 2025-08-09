@@ -117,7 +117,7 @@ export async function getIOIntelligenceModels(apiKey?: string): Promise<ModelRec
 		if (apiKey) {
 			headers.Authorization = `Bearer ${apiKey}`
 		} else {
-			console.error("You have to provide an api KEY")
+			console.error("You have to provide an API key")
 			throw new Error("Invalid API Key for IO Intelligence")
 		}
 
