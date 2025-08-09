@@ -17,6 +17,8 @@ export const openAiNativeModels = {
 		outputPrice: 10.0,
 		cacheReadsPrice: 0.13,
 		description: "GPT-5: The best model for coding and agentic tasks across domains",
+		// supportsVerbosity is a new capability; ensure ModelInfo includes it
+		supportsVerbosity: true,
 	},
 	"gpt-5-mini-2025-08-07": {
 		maxTokens: 128000,
@@ -29,6 +31,7 @@ export const openAiNativeModels = {
 		outputPrice: 2.0,
 		cacheReadsPrice: 0.03,
 		description: "GPT-5 Mini: A faster, more cost-efficient version of GPT-5 for well-defined tasks",
+		supportsVerbosity: true,
 	},
 	"gpt-5-nano-2025-08-07": {
 		maxTokens: 128000,
@@ -41,6 +44,7 @@ export const openAiNativeModels = {
 		outputPrice: 0.4,
 		cacheReadsPrice: 0.01,
 		description: "GPT-5 Nano: Fastest, most cost-efficient version of GPT-5",
+		supportsVerbosity: true,
 	},
 	"gpt-4.1": {
 		maxTokens: 32_768,

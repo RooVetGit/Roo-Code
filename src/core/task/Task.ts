@@ -2072,6 +2072,8 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 			mode: mode,
 			taskId: this.taskId,
 			...(previousResponseId ? { previousResponseId } : {}),
+			// If a condense just occurred, explicitly suppress continuity fallback for the next call
+			...(this.skipPrevResponseIdOnce ? { suppressPreviousResponseId: true } : {}),
 		}
 
 		// Reset skip flag after applying (it only affects the immediate next call)

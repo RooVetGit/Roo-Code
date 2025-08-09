@@ -65,9 +65,13 @@ export class OpenAiNativeHandler extends BaseProvider implements SingleCompletio
 		const cacheWriteTokens = usage.cache_creation_input_tokens ?? usage.cache_write_tokens ?? 0
 		const cacheReadTokens = usage.cache_read_input_tokens ?? usage.cache_read_tokens ?? usage.cached_tokens ?? 0
 
-		const inputCost = (totalInputTokens / 1_000_000) * (model.info.inputPrice || 0)
-		const outputCost = (totalOutputTokens / 1_000_000) * (model.info.outputPrice || 0)
-		const totalCost = inputCost + outputCost
+		const totalCost = calculateApiCostOpenAI(
+			model.info,
+			totalInputTokens,
+			totalOutputTokens,
+			cacheWriteTokens || 0,
+			cacheReadTokens || 0,
+		)
 
 		return {
 			type: "usage",
@@ -222,25 +226,28 @@ export class OpenAiNativeHandler extends BaseProvider implements SingleCompletio
 		// This handles the race condition with fast nano model responses
 		let effectivePreviousResponseId = metadata?.previousResponseId
 
-		// If we have a pending response ID promise, wait for it to resolve
-		if (!effectivePreviousResponseId && this.responseIdPromise) {
-			try {
-				const resolvedId = await Promise.race([
-					this.responseIdPromise,
-					// Timeout after 100ms to avoid blocking too long
-					new Promise<undefined>((resolve) => setTimeout(() => resolve(undefined), 100)),
-				])
-				if (resolvedId) {
-					effectivePreviousResponseId = resolvedId
+		// Only allow fallback to pending/last response id when not explicitly suppressed
+		if (!metadata?.suppressPreviousResponseId) {
+			// If we have a pending response ID promise, wait for it to resolve
+			if (!effectivePreviousResponseId && this.responseIdPromise) {
+				try {
+					const resolvedId = await Promise.race([
+						this.responseIdPromise,
+						// Timeout after 100ms to avoid blocking too long
+						new Promise<undefined>((resolve) => setTimeout(() => resolve(undefined), 100)),
+					])
+					if (resolvedId) {
+						effectivePreviousResponseId = resolvedId
+					}
+				} catch {
+					// Non-fatal if promise fails
 				}
-			} catch {
-				// Non-fatal if promise fails
 			}
-		}
 
-		// Fall back to the last known response ID if still not available
-		if (!effectivePreviousResponseId) {
-			effectivePreviousResponseId = this.lastResponseId
+			// Fall back to the last known response ID if still not available
+			if (!effectivePreviousResponseId) {
+				effectivePreviousResponseId = this.lastResponseId
+			}
 		}
 
 		// Format input and capture continuity id
@@ -255,19 +262,28 @@ export class OpenAiNativeHandler extends BaseProvider implements SingleCompletio
 		// Build a request body (also used for fallback)
 		// Ensure we explicitly pass max_output_tokens for GPT‑5 based on Roo's reserved model response calculation
 		// so requests do not default to very large limits (e.g., 120k).
-		const requestBody: any = {
+		interface Gpt5RequestBody {
+			model: string
+			input: string
+			stream: boolean
+			reasoning?: { effort: ReasoningEffortWithMinimal; summary?: "auto" }
+			text?: { verbosity: VerbosityLevel }
+			temperature?: number
+			max_output_tokens?: number
+			previous_response_id?: string
+		}
+
+		const requestBody: Gpt5RequestBody = {
 			model: model.id,
 			input: formattedInput,
 			stream: true,
 			...(reasoningEffort && {
-				// Review comment 4: Remove dead enableGpt5ReasoningSummary option
-				// Always request reasoning summaries for GPT‑5 responses (no longer configurable)
 				reasoning: {
 					effort: reasoningEffort,
-					summary: "auto",
+					...(this.options.enableGpt5ReasoningSummary ? { summary: "auto" as const } : {}),
 				},
 			}),
-			text: { verbosity: verbosity || "medium" },
+			text: { verbosity: (verbosity || "medium") as VerbosityLevel },
 			temperature: this.options.modelTemperature ?? GPT5_DEFAULT_TEMPERATURE,
 			// Explicitly include the calculated max output tokens for GPT‑5.
 			// Use the per-request reserved output computed by Roo (params.maxTokens from getModelParams).
@@ -446,18 +462,8 @@ export class OpenAiNativeHandler extends BaseProvider implements SingleCompletio
 
 					// Clear the stored lastResponseId to prevent using it again
 					this.lastResponseId = undefined
-					// Resolve the promise with undefined to unblock any waiting requests
-					const sdkResolver = this.responseIdResolver
-					if (sdkResolver) {
-						sdkResolver(undefined)
-						this.responseIdResolver = undefined
-					}
-					// Resolve the promise with undefined to unblock any waiting requests
-					const resolver = this.responseIdResolver
-					if (resolver) {
-						resolver(undefined)
-						this.responseIdResolver = undefined
-					}
+					// Resolve the promise once to unblock any waiting requests
+					this.resolveResponseId(undefined)
 
 					// Retry the request without the previous_response_id
 					const retryResponse = await fetch(url, {
@@ -554,11 +560,12 @@ export class OpenAiNativeHandler extends BaseProvider implements SingleCompletio
 		messages: Anthropic.Messages.MessageParam[],
 		metadata?: ApiHandlerCreateMessageMetadata,
 	): { formattedInput: string; previousResponseId?: string } {
-		// Review comment 2: Suppress conversation continuity for first message
-		// Don't use stored lastResponseId if this is the first user message in the conversation
-		// But always respect explicitly provided previousResponseId from metadata
+		// Respect explicit suppression signal for continuity (e.g. immediately after condense)
 		const isFirstMessage = messages.length === 1 && messages[0].role === "user"
-		const previousResponseId = metadata?.previousResponseId || (!isFirstMessage ? this.lastResponseId : undefined)
+		const allowFallback = !metadata?.suppressPreviousResponseId
+
+		const previousResponseId =
+			metadata?.previousResponseId ?? (allowFallback && !isFirstMessage ? this.lastResponseId : undefined)
 
 		if (previousResponseId) {
 			const lastUserMessage = [...messages].reverse().find((msg) => msg.role === "user")
@@ -945,13 +952,8 @@ export class OpenAiNativeHandler extends BaseProvider implements SingleCompletio
 									}
 								}
 
-								// Extract final usage information from the 'completed' event
-								if (parsed.response?.usage) {
-									const usageData = this.normalizeGpt5Usage(parsed.response.usage, model)
-									if (usageData) {
-										yield usageData
-									}
-								}
+								// Usage for done/completed is already handled by processGpt5Event in SDK path.
+								// For SSE path, usage often arrives separately; avoid double-emitting here.
 							}
 							// These are structural or status events, we can just log them at a lower level or ignore.
 							else if (
@@ -1120,9 +1122,8 @@ export class OpenAiNativeHandler extends BaseProvider implements SingleCompletio
 			}
 		}
 
-		// Review comment 6: Centralize default GPT-5 reasoning effort
-		// Use model's default from types if available, otherwise fall back to "medium"
-		return (info.reasoningEffort as ReasoningEffortWithMinimal) || "medium"
+		// Centralize default: use the model's default from types if available; otherwise undefined
+		return info.reasoningEffort as ReasoningEffortWithMinimal | undefined
 	}
 
 	private isGpt5Model(modelId: string): boolean {
@@ -1197,12 +1198,12 @@ export class OpenAiNativeHandler extends BaseProvider implements SingleCompletio
 
 		// For GPT-5 models, ensure we support minimal reasoning effort
 		if (this.isGpt5Model(id)) {
-			// Allow "minimal" effort for GPT-5 models (in addition to low, medium, high)
-			const effort = this.options.reasoningEffort as ReasoningEffortWithMinimal
+			const effort =
+				(this.options.reasoningEffort as ReasoningEffortWithMinimal | undefined) ??
+				(info.reasoningEffort as ReasoningEffortWithMinimal | undefined)
+
 			if (effort) {
 				;(params.reasoning as any) = { reasoning_effort: effort }
-			} else {
-				;(params.reasoning as any) = { reasoning_effort: "medium" }
 			}
 		}
 
