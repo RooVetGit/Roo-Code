@@ -63,6 +63,7 @@ const MODEL_CONTEXT_LENGTHS: Record<string, number> = {
 	"meta-llama/Llama-4-Maverick-17B-128E-Instruct-FP8": 430000,
 	"deepseek-ai/DeepSeek-R1-0528": 128000,
 	"Intel/Qwen3-Coder-480B-A35B-Instruct-int4-mixed-ar": 106000,
+	"openai/gpt-oss-120b": 131072,
 }
 
 /**

@@ -47,6 +47,13 @@ vi.mock("../fetchers/io-intelligence", () => ({
 			supportsPromptCache: false,
 			description: "Qwen3 Coder 480B specialized for coding",
 		},
+		"openai/gpt-oss-120b": {
+			maxTokens: 8192,
+			contextWindow: 131072,
+			supportsImages: false,
+			supportsPromptCache: false,
+			description: "OpenAI GPT-OSS 120B model",
+		},
 	})),
 }))
 
