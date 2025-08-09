@@ -32,6 +32,7 @@ import {
 import { fileExistsAtPath } from "../../utils/fs"
 import { arePathsEqual } from "../../utils/path"
 import { injectVariables } from "../../utils/config"
+import { getProjectRooDirectoryForCwd } from "../../services/roo-config/wrapper"
 
 // Discriminated union for connection states
 export type ConnectedMcpConnection = {
@@ -554,7 +555,7 @@ export class McpHub {
 		}
 
 		const workspaceFolder = vscode.workspace.workspaceFolders[0]
-		const projectMcpDir = path.join(workspaceFolder.uri.fsPath, ".roo")
+		const projectMcpDir = await getProjectRooDirectoryForCwd(workspaceFolder.uri.fsPath)
 		const projectMcpPath = path.join(projectMcpDir, "mcp.json")
 
 		try {

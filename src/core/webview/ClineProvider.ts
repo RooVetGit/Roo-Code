@@ -1482,7 +1482,7 @@ export class ClineProvider
 	 * Checks if there is a file-based system prompt override for the given mode
 	 */
 	async hasFileBasedSystemPromptOverride(mode: Mode): Promise<boolean> {
-		const promptFilePath = getSystemPromptFilePath(this.cwd, mode)
+		const promptFilePath = await getSystemPromptFilePath(this.cwd, mode)
 		return await fileExistsAtPath(promptFilePath)
 	}
 

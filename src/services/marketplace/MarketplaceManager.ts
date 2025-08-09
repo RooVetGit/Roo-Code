@@ -12,6 +12,7 @@ import { GlobalFileNames } from "../../shared/globalFileNames"
 import { ensureSettingsDirectoryExists } from "../../utils/globalContext"
 import { t } from "../../i18n"
 import type { CustomModesManager } from "../../core/config/CustomModesManager"
+import { getProjectRooDirectoryForCwd } from "../../services/roo-config/wrapper"
 
 import { RemoteConfigLoader } from "./RemoteConfigLoader"
 import { SimpleInstaller } from "./SimpleInstaller"
@@ -270,7 +271,8 @@ export class MarketplaceManager {
 			}
 
 			// Check MCPs in .roo/mcp.json
-			const projectMcpPath = path.join(workspaceFolder.uri.fsPath, ".roo", "mcp.json")
+			const rooDir = await getProjectRooDirectoryForCwd(workspaceFolder.uri.fsPath)
+			const projectMcpPath = path.join(rooDir, "mcp.json")
 			try {
 				const content = await fs.readFile(projectMcpPath, "utf-8")
 				const data = JSON.parse(content)

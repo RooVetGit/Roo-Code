@@ -1,11 +1,13 @@
 import * as path from "path"
+import * as vscode from "vscode"
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest"
 
 // Use vi.hoisted to ensure mocks are available during hoisting
-const { mockStat, mockReadFile, mockHomedir } = vi.hoisted(() => ({
+const { mockStat, mockReadFile, mockHomedir, mockWorkspaceFolders } = vi.hoisted(() => ({
 	mockStat: vi.fn(),
 	mockReadFile: vi.fn(),
 	mockHomedir: vi.fn(),
+	mockWorkspaceFolders: vi.fn(),
 }))
 
 // Mock fs/promises module
@@ -21,20 +23,30 @@ vi.mock("os", () => ({
 	homedir: mockHomedir,
 }))
 
-import {
-	getGlobalRooDirectory,
-	getProjectRooDirectoryForCwd,
-	directoryExists,
-	fileExists,
-	readFileIfExists,
-	getRooDirectoriesForCwd,
-	loadConfiguration,
-} from "../index"
+// Mock vscode module
+vi.mock("vscode", () => ({
+	workspace: {
+		get workspaceFolders() {
+			return mockWorkspaceFolders()
+		},
+	},
+	Uri: {
+		file: (path: string) => ({ fsPath: path }),
+	},
+}))
+
+import { getGlobalRooDirectory, directoryExists, fileExists, readFileIfExists, loadConfiguration } from "../index"
+import { findWorkspaceWithRoo } from "../vscode-utils"
+import { getProjectRooDirectoryForCwd, getRooDirectoriesForCwd, setVscodeUtils } from "../wrapper"
+
+// Initialize the wrapper with vscode utilities for testing
+setVscodeUtils({ findWorkspaceWithRoo })
 
 describe("RooConfigService", () => {
 	beforeEach(() => {
 		vi.clearAllMocks()
 		mockHomedir.mockReturnValue("/mock/home")
+		mockWorkspaceFolders.mockReturnValue(undefined)
 	})
 
 	afterEach(() => {
@@ -54,10 +66,81 @@ describe("RooConfigService", () => {
 		})
 	})
 
+	describe("findWorkspaceWithRoo", () => {
+		it("should return undefined when no workspace folders exist", () => {
+			mockWorkspaceFolders.mockReturnValue(undefined)
+			const result = findWorkspaceWithRoo()
+			expect(result).toBeUndefined()
+		})
+
+		it("should return undefined when workspace folders array is empty", () => {
+			mockWorkspaceFolders.mockReturnValue([])
+			const result = findWorkspaceWithRoo()
+			expect(result).toBeUndefined()
+		})
+
+		it("should return the workspace folder named .roo", () => {
+			const workspaceFolders = [
+				{ uri: { fsPath: "/workspace/project1" }, name: "project1", index: 0 },
+				{ uri: { fsPath: "/workspace/.roo" }, name: ".roo", index: 1 },
+				{ uri: { fsPath: "/workspace/project2" }, name: "project2", index: 2 },
+			]
+			mockWorkspaceFolders.mockReturnValue(workspaceFolders)
+
+			const result = findWorkspaceWithRoo()
+			expect(result).toBe(workspaceFolders[1])
+		})
+
+		it("should return undefined when no workspace folder is named .roo", () => {
+			const workspaceFolders = [
+				{ uri: { fsPath: "/workspace/project1" }, name: "project1", index: 0 },
+				{ uri: { fsPath: "/workspace/project2" }, name: "project2", index: 1 },
+			]
+			mockWorkspaceFolders.mockReturnValue(workspaceFolders)
+
+			const result = findWorkspaceWithRoo()
+			expect(result).toBeUndefined()
+		})
+
+		it("should handle workspace folders with .roo in path but not as basename", () => {
+			const workspaceFolders = [
+				{ uri: { fsPath: "/workspace/.roo/subproject" }, name: "subproject", index: 0 },
+				{ uri: { fsPath: "/workspace/project.roo" }, name: "project.roo", index: 1 },
+			]
+			mockWorkspaceFolders.mockReturnValue(workspaceFolders)
+
+			const result = findWorkspaceWithRoo()
+			expect(result).toBeUndefined()
+		})
+	})
+
 	describe("getProjectRooDirectoryForCwd", () => {
-		it("should return correct path for given cwd", () => {
+		it("should return .roo workspace folder path when it exists", async () => {
+			const workspaceFolders = [
+				{ uri: { fsPath: "/workspace/project1" }, name: "project1", index: 0 },
+				{ uri: { fsPath: "/workspace/.roo" }, name: ".roo", index: 1 },
+			]
+			mockWorkspaceFolders.mockReturnValue(workspaceFolders)
+
+			const cwd = "/workspace/project1"
+			const result = await getProjectRooDirectoryForCwd(cwd)
+			expect(result).toBe("/workspace/.roo")
+		})
+
+		it("should return cwd/.roo when no .roo workspace folder exists", async () => {
+			const workspaceFolders = [{ uri: { fsPath: "/workspace/project1" }, name: "project1", index: 0 }]
+			mockWorkspaceFolders.mockReturnValue(workspaceFolders)
+
 			const cwd = "/custom/project/path"
-			const result = getProjectRooDirectoryForCwd(cwd)
+			const result = await getProjectRooDirectoryForCwd(cwd)
+			expect(result).toBe(path.join(cwd, ".roo"))
+		})
+
+		it("should return cwd/.roo when no workspace folders exist", async () => {
+			mockWorkspaceFolders.mockReturnValue(undefined)
+
+			const cwd = "/custom/project/path"
+			const result = await getProjectRooDirectoryForCwd(cwd)
 			expect(result).toBe(path.join(cwd, ".roo"))
 		})
 	})
@@ -206,12 +289,25 @@ describe("RooConfigService", () => {
 	})
 
 	describe("getRooDirectoriesForCwd", () => {
-		it("should return directories for given cwd", () => {
+		it("should return directories for given cwd", async () => {
 			const cwd = "/custom/project/path"
 
-			const result = getRooDirectoriesForCwd(cwd)
+			const result = await getRooDirectoriesForCwd(cwd)
 
 			expect(result).toEqual([path.join("/mock/home", ".roo"), path.join(cwd, ".roo")])
+		})
+
+		it("should use .roo workspace folder when it exists", async () => {
+			const workspaceFolders = [
+				{ uri: { fsPath: "/workspace/project1" }, name: "project1", index: 0 },
+				{ uri: { fsPath: "/workspace/.roo" }, name: ".roo", index: 1 },
+			]
+			mockWorkspaceFolders.mockReturnValue(workspaceFolders)
+
+			const cwd = "/workspace/project1"
+			const result = await getRooDirectoriesForCwd(cwd)
+
+			expect(result).toEqual([path.join("/mock/home", ".roo"), "/workspace/.roo"])
 		})
 	})
 

@@ -59,6 +59,11 @@ export async function activate(context: vscode.ExtensionContext) {
 	context.subscriptions.push(outputChannel)
 	outputChannel.appendLine(`${Package.name} extension activated - ${JSON.stringify(Package)}`)
 
+	// Initialize vscode utilities for roo-config wrapper
+	const { setVscodeUtils } = await import("./services/roo-config/wrapper")
+	const { findWorkspaceWithRoo } = await import("./services/roo-config/vscode-utils")
+	setVscodeUtils({ findWorkspaceWithRoo })
+
 	// Migrate old settings to new
 	await migrateSettings(context, outputChannel)
 

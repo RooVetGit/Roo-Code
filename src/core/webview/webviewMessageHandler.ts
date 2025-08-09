@@ -50,6 +50,7 @@ import { getModels, flushModels } from "../../api/providers/fetchers/modelCache"
 import { GetModelsOptions } from "../../shared/api"
 import { generateSystemPrompt } from "./generateSystemPrompt"
 import { getCommand } from "../../utils/commands"
+import { getProjectRooDirectoryForCwd } from "../../services/roo-config/wrapper"
 
 const ALLOWED_VSCODE_SETTINGS = new Set(["terminal.integrated.inheritEnv"])
 
@@ -801,7 +802,7 @@ export const webviewMessageHandler = async (
 			}
 
 			const workspaceFolder = vscode.workspace.workspaceFolders[0]
-			const rooDir = path.join(workspaceFolder.uri.fsPath, ".roo")
+			const rooDir = await getProjectRooDirectoryForCwd(workspaceFolder.uri.fsPath)
 			const mcpPath = path.join(rooDir, "mcp.json")
 
 			try {
@@ -2500,7 +2501,8 @@ export const webviewMessageHandler = async (
 						vscode.window.showErrorMessage(t("common:errors.no_workspace_for_project_command"))
 						break
 					}
-					commandsDir = path.join(workspaceRoot, ".roo", "commands")
+					const rooDir = await getProjectRooDirectoryForCwd(workspaceRoot)
+					commandsDir = path.join(rooDir, "commands")
 				}
 
 				// Ensure the commands directory exists

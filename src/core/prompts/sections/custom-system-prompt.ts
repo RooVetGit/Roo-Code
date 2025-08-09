@@ -2,6 +2,7 @@ import fs from "fs/promises"
 import path from "path"
 import { Mode } from "../../../shared/modes"
 import { fileExistsAtPath } from "../../../utils/fs"
+import { getProjectRooDirectoryForCwd } from "../../../services/roo-config/wrapper"
 
 export type PromptVariables = {
 	workspace?: string
@@ -45,8 +46,9 @@ async function safeReadFile(filePath: string): Promise<string> {
 /**
  * Get the path to a system prompt file for a specific mode
  */
-export function getSystemPromptFilePath(cwd: string, mode: Mode): string {
-	return path.join(cwd, ".roo", `system-prompt-${mode}`)
+export async function getSystemPromptFilePath(cwd: string, mode: Mode): Promise<string> {
+	const rooDir = await getProjectRooDirectoryForCwd(cwd)
+	return path.join(rooDir, `system-prompt-${mode}`)
 }
 
 /**
@@ -54,7 +56,7 @@ export function getSystemPromptFilePath(cwd: string, mode: Mode): string {
  * If the file doesn't exist, returns an empty string
  */
 export async function loadSystemPromptFile(cwd: string, mode: Mode, variables: PromptVariables): Promise<string> {
-	const filePath = getSystemPromptFilePath(cwd, mode)
+	const filePath = await getSystemPromptFilePath(cwd, mode)
 	const rawContent = await safeReadFile(filePath)
 	if (!rawContent) {
 		return ""
@@ -67,7 +69,7 @@ export async function loadSystemPromptFile(cwd: string, mode: Mode, variables: P
  * Ensures the .roo directory exists, creating it if necessary
  */
 export async function ensureRooDirectory(cwd: string): Promise<void> {
-	const rooDir = path.join(cwd, ".roo")
+	const rooDir = await getProjectRooDirectoryForCwd(cwd)
 
 	// Check if directory already exists
 	if (await fileExistsAtPath(rooDir)) {

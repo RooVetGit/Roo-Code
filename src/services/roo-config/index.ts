@@ -56,8 +56,16 @@ export function getGlobalRooDirectory(): string {
  * │   └── index.ts
  * └── package.json
  * ```
+ *
+ * @note In multi-root workspaces, if .roo is one of the workspace folders,
+ * this function will return that folder's path instead of creating a .roo
+ * subdirectory in the first workspace folder.
  */
 export function getProjectRooDirectoryForCwd(cwd: string): string {
+	// Note: In VS Code extension context, this function is overridden
+	// by the extension to check for .roo workspace folders.
+	// This base implementation is used by the webview and other contexts
+	// where vscode API is not available.
 	return path.join(cwd, ".roo")
 }
 
