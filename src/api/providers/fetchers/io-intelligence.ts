@@ -62,13 +62,17 @@ const CACHE_DURATION = 5 * 60 * 1000 // 5 minutes
 const MODEL_CONTEXT_LENGTHS: Record<string, number> = {
 	"meta-llama/Llama-4-Maverick-17B-128E-Instruct-FP8": 430000,
 	"deepseek-ai/DeepSeek-R1-0528": 128000,
-	"Qwen/Qwen3-235B-A22B-FP8": 32000,
+	"Intel/Qwen3-Coder-480B-A35B-Instruct-int4-mixed-ar": 106000,
 }
 
 /**
  * Vision models that support images
  */
-const VISION_MODELS = new Set(["Qwen/Qwen2.5-VL-32B-Instruct", "meta-llama/Llama-3.2-90B-Vision-Instruct"])
+const VISION_MODELS = new Set([
+	"Qwen/Qwen2.5-VL-32B-Instruct",
+	"meta-llama/Llama-3.2-90B-Vision-Instruct",
+	"meta-llama/Llama-4-Maverick-17B-128E-Instruct-FP8",
+])
 
 /**
  * Parse an IO Intelligence model into ModelInfo format

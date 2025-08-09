@@ -29,22 +29,23 @@ vi.mock("../fetchers/io-intelligence", () => ({
 	getCachedIOIntelligenceModels: vi.fn(() => ({
 		"meta-llama/Llama-4-Maverick-17B-128E-Instruct-FP8": {
 			maxTokens: 8192,
-			contextWindow: 131072,
-			supportsImages: false,
+			contextWindow: 430000,
+			supportsImages: true,
 			supportsPromptCache: false,
 		},
-		"meta-llama/Llama-3.3-70B-Instruct": {
+		"deepseek-ai/DeepSeek-R1-0528": {
 			maxTokens: 8192,
-			contextWindow: 131072,
+			contextWindow: 128000,
 			supportsImages: false,
 			supportsPromptCache: false,
-			description: "Llama 3.3 70B instruction-tuned model",
+			description: "DeepSeek R1 reasoning model",
 		},
-		"meta-llama/Llama-3.1-8B-Instruct": {
+		"Intel/Qwen3-Coder-480B-A35B-Instruct-int4-mixed-ar	": {
 			maxTokens: 4096,
-			contextWindow: 32000,
+			contextWindow: 106000,
 			supportsImages: false,
 			supportsPromptCache: false,
+			description: "Qwen3 Coder 480B specialized for coding",
 		},
 	})),
 }))
@@ -67,7 +68,7 @@ describe("IOIntelligenceHandler", () => {
 		vi.clearAllMocks()
 		mockOptions = {
 			ioIntelligenceApiKey: "test-api-key",
-			apiModelId: "meta-llama/Llama-3.3-70B-Instruct",
+			apiModelId: "meta-llama/Llama-4-Maverick-17B-128E-Instruct-FP8",
 			modelTemperature: 0.7,
 			includeMaxTokens: false,
 			modelMaxTokens: undefined,
@@ -239,27 +240,26 @@ describe("IOIntelligenceHandler", () => {
 
 	it("should return model info from cache when available", () => {
 		const model = handler.getModel()
-		expect(model.id).toBe("meta-llama/Llama-3.3-70B-Instruct")
+		expect(model.id).toBe("meta-llama/Llama-4-Maverick-17B-128E-Instruct-FP8")
 		expect(model.info).toEqual({
 			maxTokens: 8192,
-			contextWindow: 131072,
-			supportsImages: false,
+			contextWindow: 430000,
+			supportsImages: true,
 			supportsPromptCache: false,
-			description: "Llama 3.3 70B instruction-tuned model",
 		})
 	})
 
 	it("should return fallback model info when not in cache", () => {
 		const handlerWithUnknownModel = new IOIntelligenceHandler({
 			...mockOptions,
-			apiModelId: "unknown-model",
+			apiModelId: "meta-llama/Llama-4-Maverick-17B-128E-Instruct-FP8",
 		})
 		const model = handlerWithUnknownModel.getModel()
-		expect(model.id).toBe("unknown-model")
+		expect(model.id).toBe("meta-llama/Llama-4-Maverick-17B-128E-Instruct-FP8")
 		expect(model.info).toEqual({
 			maxTokens: 8192,
-			contextWindow: 128000,
-			supportsImages: false,
+			contextWindow: 430000,
+			supportsImages: true,
 			supportsPromptCache: false,
 		})
 	})
