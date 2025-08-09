@@ -1212,10 +1212,6 @@ export class McpHub {
 
 	public async refreshAllConnections(): Promise<void> {
 		if (this.isConnecting) {
-			// TODO: This notification is temporarily disabled as a stopgap until we can separate
-			// MCP settings from regular settings, allowing them to be saved independently without
-			// triggering unnecessary MCP server refreshes
-			// Disabled notification: vscode.window.showInformationMessage(t("mcp:info.already_refreshing"))
 			return
 		}
 
@@ -1237,10 +1233,6 @@ export class McpHub {
 		}
 
 		this.isConnecting = true
-		// TODO: This notification is temporarily disabled as a stopgap until we can separate
-		// MCP settings from regular settings, allowing them to be saved independently without
-		// triggering unnecessary MCP server refreshes
-		// Disabled notification: vscode.window.showInformationMessage(t("mcp:info.refreshing_all"))
 
 		try {
 			const globalPath = await this.getMcpSettingsFilePath()
@@ -1250,14 +1242,6 @@ export class McpHub {
 				const globalConfig = JSON.parse(globalContent)
 				globalServers = globalConfig.mcpServers || {}
 				const globalServerNames = Object.keys(globalServers)
-				// TODO: This notification is temporarily disabled as a stopgap until we can separate
-				// MCP settings from regular settings, allowing them to be saved independently without
-				// triggering unnecessary MCP server refreshes
-				// Disabled notification: vscode.window.showInformationMessage(
-				// 	t("mcp:info.global_servers_active", {
-				// 		mcpServers: `${globalServerNames.join(", ") || "none"}`,
-				// 	}),
-				// )
 			} catch (error) {
 				console.log("Error reading global MCP config:", error)
 			}
@@ -1270,14 +1254,6 @@ export class McpHub {
 					const projectConfig = JSON.parse(projectContent)
 					projectServers = projectConfig.mcpServers || {}
 					const projectServerNames = Object.keys(projectServers)
-					// TODO: This notification is temporarily disabled as a stopgap until we can separate
-					// MCP settings from regular settings, allowing them to be saved independently without
-					// triggering unnecessary MCP server refreshes
-					// Disabled notification: vscode.window.showInformationMessage(
-					// 	t("mcp:info.project_servers_active", {
-					// 		mcpServers: `${projectServerNames.join(", ") || "none"}`,
-					// 	}),
-					// )
 				} catch (error) {
 					console.log("Error reading project MCP config:", error)
 				}
@@ -1297,11 +1273,6 @@ export class McpHub {
 			await delay(100)
 
 			await this.notifyWebviewOfServerChanges()
-
-			// TODO: This notification is temporarily disabled as a stopgap until we can separate
-			// MCP settings from regular settings, allowing them to be saved independently without
-			// triggering unnecessary MCP server refreshes
-			// Disabled notification: vscode.window.showInformationMessage(t("mcp:info.all_refreshed"))
 		} catch (error) {
 			this.showErrorMessage("Failed to refresh MCP servers", error)
 		} finally {
