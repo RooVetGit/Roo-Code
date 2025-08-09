@@ -183,7 +183,7 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 	isInitialized = false
 	isPaused: boolean = false
 	pausedModeSlug: string = defaultModeSlug
-	private pauseInterval: NodeJS.Timeout | undefined
+	private pauseResolve: (() => void) | undefined
 
 	// API
 	readonly apiConfiguration: ProviderSettings
@@ -586,6 +586,7 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 				globalStoragePath: this.globalStoragePath,
 				workspace: this.cwd,
 				mode: this._taskMode || defaultModeSlug, // Use the task's own mode, not the current provider mode
+				parentTaskId: this.parentTask?.taskId,
 			})
 
 			this.emit(RooCodeEventName.TaskTokenUsageUpdated, this.taskId, tokenUsage)
@@ -1221,10 +1222,10 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 	public dispose(): void {
 		console.log(`[Task] disposing task ${this.taskId}.${this.instanceId}`)
 
-		// Stop waiting for child task completion.
-		if (this.pauseInterval) {
-			clearInterval(this.pauseInterval)
-			this.pauseInterval = undefined
+		// If waiting for resume, resolve the promise to unblock
+		if (this.pauseResolve) {
+			this.pauseResolve()
+			this.pauseResolve = undefined
 		}
 
 		// Release any terminals associated with this task.
@@ -1300,18 +1301,18 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 	}
 
 	// Used when a sub-task is launched and the parent task is waiting for it to
-	// finish.
-	// TBD: The 1s should be added to the settings, also should add a timeout to
-	// prevent infinite waiting.
+	// finish. Uses event-driven approach instead of polling.
 	public async waitForResume() {
 		await new Promise<void>((resolve) => {
-			this.pauseInterval = setInterval(() => {
-				if (!this.isPaused) {
-					clearInterval(this.pauseInterval)
-					this.pauseInterval = undefined
-					resolve()
+			this.pauseResolve = resolve
+
+			// Set up event listener for TaskUnpaused event
+			const unsubscribe = this.once(RooCodeEventName.TaskUnpaused, () => {
+				if (this.pauseResolve) {
+					this.pauseResolve()
+					this.pauseResolve = undefined
 				}
-			}, 1000)
+			})
 		})
 	}
 
