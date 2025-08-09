@@ -19,13 +19,12 @@ export async function searchFilesTool(
 	const regex: string | undefined = block.params.regex
 	const filePattern: string | undefined = block.params.file_pattern
 
-	// Default to current working directory if no path is provided
 	const absolutePath = relDirPath ? path.resolve(cline.cwd, relDirPath) : cline.cwd
 	const isOutsideWorkspace = isPathOutsideWorkspace(absolutePath)
 
 	const sharedMessageProps: ClineSayTool = {
 		tool: "searchFiles",
-		path: getReadablePath(cline.cwd, removeClosingTag("path", relDirPath) || "."),
+		path: getReadablePath(cline.cwd, removeClosingTag("path", relDirPath)),
 		regex: removeClosingTag("regex", regex),
 		filePattern: removeClosingTag("file_pattern", filePattern),
 		isOutsideWorkspace,
@@ -37,7 +36,13 @@ export async function searchFilesTool(
 			await cline.ask("tool", partialMessage, block.partial).catch(() => {})
 			return
 		} else {
-			// Path is now optional - defaults to current working directory
+			if (!relDirPath) {
+				cline.consecutiveMistakeCount++
+				cline.recordToolError("search_files")
+				pushToolResult(await cline.sayAndCreateMissingParamError("search_files", "path"))
+				return
+			}
+
 			if (!regex) {
 				cline.consecutiveMistakeCount++
 				cline.recordToolError("search_files")
