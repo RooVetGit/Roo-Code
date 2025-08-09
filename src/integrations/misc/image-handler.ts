@@ -3,6 +3,7 @@ import * as os from "os"
 import * as vscode from "vscode"
 import { getWorkspacePath } from "../../utils/path"
 import { t } from "../../i18n"
+import { showSaveDialogSafe } from "../../utils/safeDialogs"
 
 export async function openImage(dataUri: string, options?: { values?: { action?: string } }) {
 	const matches = dataUri.match(/^data:image\/([a-zA-Z]+);base64,(.+)$/)
@@ -67,8 +68,8 @@ export async function saveImage(dataUri: string) {
 	const defaultFileName = `mermaid_diagram_${Date.now()}.${format}`
 	const defaultUri = vscode.Uri.file(path.join(defaultPath, defaultFileName))
 
-	// Show save dialog
-	const saveUri = await vscode.window.showSaveDialog({
+	// Show save dialog using safe wrapper to prevent UI freezing
+	const saveUri = await showSaveDialogSafe({
 		filters: {
 			Images: [format],
 			"All Files": ["*"],

@@ -5,6 +5,7 @@ import * as fs from "fs/promises"
 import pWaitFor from "p-wait-for"
 import * as vscode from "vscode"
 import * as yaml from "yaml"
+import { showSaveDialogSafe, showOpenDialogSafe } from "../../utils/safeDialogs"
 
 import {
 	type Language,
@@ -1791,8 +1792,8 @@ export const webviewMessageHandler = async (
 							}
 						}
 
-						// Show save dialog
-						const saveUri = await vscode.window.showSaveDialog({
+						// Show save dialog using safe wrapper to prevent UI freezing
+						const saveUri = await showSaveDialogSafe({
 							defaultUri,
 							filters: {
 								"YAML files": ["yaml", "yml"],
@@ -1866,8 +1867,8 @@ export const webviewMessageHandler = async (
 					}
 				}
 
-				// Show file picker to select YAML file
-				const fileUri = await vscode.window.showOpenDialog({
+				// Show file picker to select YAML file using safe wrapper to prevent UI freezing
+				const fileUri = await showOpenDialogSafe({
 					canSelectFiles: true,
 					canSelectFolders: false,
 					canSelectMany: false,

@@ -5,6 +5,7 @@ import fs from "fs/promises"
 
 import * as vscode from "vscode"
 import { z, ZodError } from "zod"
+import { showSaveDialogSafe, showOpenDialogSafe } from "../../utils/safeDialogs"
 
 import { globalSettingsSchema } from "@roo-code/types"
 import { TelemetryService } from "@roo-code/telemetry"
@@ -109,7 +110,7 @@ export async function importSettingsFromPath(
  * @returns Promise resolving to import result
  */
 export const importSettings = async ({ providerSettingsManager, contextProxy, customModesManager }: ImportOptions) => {
-	const uris = await vscode.window.showOpenDialog({
+	const uris = await showOpenDialogSafe({
 		filters: { JSON: ["json"] },
 		canSelectMany: false,
 	})
@@ -143,7 +144,7 @@ export const importSettingsFromFile = async (
 }
 
 export const exportSettings = async ({ providerSettingsManager, contextProxy }: ExportOptions) => {
-	const uri = await vscode.window.showSaveDialog({
+	const uri = await showSaveDialogSafe({
 		filters: { JSON: ["json"] },
 		defaultUri: vscode.Uri.file(path.join(os.homedir(), "Documents", "roo-code-settings.json")),
 	})

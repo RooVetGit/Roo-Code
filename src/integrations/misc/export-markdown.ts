@@ -2,6 +2,7 @@ import { Anthropic } from "@anthropic-ai/sdk"
 import os from "os"
 import * as path from "path"
 import * as vscode from "vscode"
+import { showSaveDialogSafe } from "../../utils/safeDialogs"
 
 export async function downloadTask(dateTs: number, conversationHistory: Anthropic.MessageParam[]) {
 	// File name
@@ -28,8 +29,8 @@ export async function downloadTask(dateTs: number, conversationHistory: Anthropi
 		})
 		.join("---\n\n")
 
-	// Prompt user for save location
-	const saveUri = await vscode.window.showSaveDialog({
+	// Prompt user for save location using safe wrapper to prevent UI freezing
+	const saveUri = await showSaveDialogSafe({
 		filters: { Markdown: ["md"] },
 		defaultUri: vscode.Uri.file(path.join(os.homedir(), "Downloads", fileName)),
 	})
