@@ -263,6 +263,8 @@
 		"getChutesApiKey": "Lấy khóa API Chutes",
 		"fireworksApiKey": "Khóa API Fireworks",
 		"getFireworksApiKey": "Lấy khóa API Fireworks",
+		"ioIntelligenceApiKey": "Khóa API IO Intelligence",
+		"getIoIntelligenceApiKey": "Lấy khóa API IO Intelligence",
 		"deepSeekApiKey": "Khóa API DeepSeek",
 		"getDeepSeekApiKey": "Lấy khóa API DeepSeek",
 		"doubaoApiKey": "Khóa API Doubao",

@@ -262,6 +262,8 @@
 		"getChutesApiKey": "Get Chutes API Key",
 		"fireworksApiKey": "Fireworks API Key",
 		"getFireworksApiKey": "Get Fireworks API Key",
+		"ioIntelligenceApiKey": "IO Intelligence API Key",
+		"getIoIntelligenceApiKey": "Get IO Intelligence API Key",
 		"deepSeekApiKey": "DeepSeek API Key",
 		"getDeepSeekApiKey": "Get DeepSeek API Key",
 		"doubaoApiKey": "Doubao API Key",
