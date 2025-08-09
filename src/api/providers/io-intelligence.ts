@@ -20,8 +20,9 @@ export class IOIntelligenceHandler extends BaseOpenAiCompatibleProvider<IOIntell
 		})
 	}
 	override getModel() {
-		const modelId = this.options.ioIntelligenceModelId || ioIntelligenceDefaultModelId
-		const modelInfo = this.providerModels[modelId as IOIntelligenceModelId]
+		const modelId = this.options.ioIntelligenceModelId || (ioIntelligenceDefaultModelId as IOIntelligenceModelId)
+		const modelInfo =
+			this.providerModels[modelId as IOIntelligenceModelId] ?? this.providerModels[ioIntelligenceDefaultModelId]
 
 		if (modelInfo) {
 			return { id: modelId as IOIntelligenceModelId, info: modelInfo }
