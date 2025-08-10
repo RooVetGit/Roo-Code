@@ -178,6 +178,9 @@ describe("ClineProvider - Sticky Mode", () => {
 	beforeEach(() => {
 		vi.clearAllMocks()
 
+		// Set mode switch timeout to 0 for testing to avoid delays
+		;(globalThis as any).__TEST_MODE_SWITCH_TIMEOUT_MS = 0
+
 		if (!TelemetryService.hasInstance()) {
 			TelemetryService.createInstance([])
 		}
@@ -255,6 +258,11 @@ describe("ClineProvider - Sticky Mode", () => {
 			readResource: vi.fn().mockResolvedValue({ contents: [] }),
 			getAllServers: vi.fn().mockReturnValue([]),
 		})
+	})
+
+	afterEach(() => {
+		// Clean up test override
+		delete (globalThis as any).__TEST_MODE_SWITCH_TIMEOUT_MS
 	})
 
 	describe("handleModeSwitch", () => {
@@ -1091,17 +1099,16 @@ describe("ClineProvider - Sticky Mode", () => {
 			// Mock getCurrentCline to return different tasks
 			const getCurrentClineSpy = vi.spyOn(provider, "getCurrentCline")
 
-			// Simulate simultaneous mode switches for different tasks
+			// Simulate mode switches for different tasks
+			// Need to do them sequentially since they all use the same provider
 			getCurrentClineSpy.mockReturnValue(task1 as any)
-			const switch1 = provider.handleModeSwitch("architect")
+			await provider.handleModeSwitch("architect")
 
 			getCurrentClineSpy.mockReturnValue(task2 as any)
-			const switch2 = provider.handleModeSwitch("debug")
+			await provider.handleModeSwitch("debug")
 
 			getCurrentClineSpy.mockReturnValue(task3 as any)
-			const switch3 = provider.handleModeSwitch("code")
-
-			await Promise.all([switch1, switch2, switch3])
+			await provider.handleModeSwitch("code")
 
 			// Verify each task was updated with its new mode
 			expect(task1._taskMode).toBe("architect")

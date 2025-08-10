@@ -1,6 +1,10 @@
 import React, { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from "react"
 import { useDeepCompareEffect, useEvent, useMount } from "react-use"
 import debounce from "debounce"
+
+// Constants for mode switching delays
+const MODE_SWITCH_DEBOUNCE_MS = 150
+const MODE_SWITCH_RESET_DELAY_MS = 150 // Aligned with debounce for consistency
 import { Virtuoso, type VirtuosoHandle } from "react-virtuoso"
 import removeMd from "remove-markdown"
 import { VSCodeButton } from "@vscode/webview-ui-toolkit/react"
@@ -179,6 +183,7 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 	const [showCheckpointWarning, setShowCheckpointWarning] = useState<boolean>(false)
 	const [isCondensing, setIsCondensing] = useState<boolean>(false)
 	const [showAnnouncementModal, setShowAnnouncementModal] = useState(false)
+	const [isModeSwitching, setIsModeSwitching] = useState<boolean>(false)
 	const everVisibleMessagesTsRef = useRef<LRUCache<number, boolean>>(
 		new LRUCache({
 			max: 100,
@@ -1439,16 +1444,37 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 	// Function to switch to a specific mode
 	const switchToMode = useCallback(
 		(modeSlug: string): void => {
-			// Update local state and notify extension to sync mode change
-			setMode(modeSlug)
+			// Prevent concurrent mode switches
+			if (isModeSwitching) {
+				return
+			}
 
-			// Send the mode switch message
-			vscode.postMessage({
-				type: "mode",
-				text: modeSlug,
-			})
+			try {
+				// Set flag to prevent concurrent switches
+				setIsModeSwitching(true)
+
+				// Update local state and notify extension to sync mode change
+				setMode(modeSlug)
+
+				// Send the mode switch message
+				vscode.postMessage({
+					type: "mode",
+					text: modeSlug,
+				})
+
+				// Reset the flag after a short delay to allow the mode switch to complete
+				setTimeout(() => {
+					setIsModeSwitching(false)
+				}, MODE_SWITCH_RESET_DELAY_MS)
+			} catch (error) {
+				// Reset the flag on error to allow retry
+				setIsModeSwitching(false)
+				console.error("Failed to switch mode:", error)
+				// Optionally show user-friendly error message
+				// You could add a toast notification here if available
+			}
 		},
-		[setMode],
+		[setMode, isModeSwitching],
 	)
 
 	const handleSuggestionClickInRow = useCallback(
@@ -1697,23 +1723,31 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 		tSettings,
 	])
 
-	// Function to handle mode switching
-	const switchToNextMode = useCallback(() => {
-		const allModes = getAllModes(customModes)
-		const currentModeIndex = allModes.findIndex((m) => m.slug === mode)
-		const nextModeIndex = (currentModeIndex + 1) % allModes.length
-		// Update local state and notify extension to sync mode change
-		switchToMode(allModes[nextModeIndex].slug)
-	}, [mode, customModes, switchToMode])
+	// Function to handle mode switching with debouncing
+	const switchToNextMode = useMemo(
+		() =>
+			debounce(() => {
+				const allModes = getAllModes(customModes)
+				const currentModeIndex = allModes.findIndex((m) => m.slug === mode)
+				const nextModeIndex = (currentModeIndex + 1) % allModes.length
+				// Update local state and notify extension to sync mode change
+				switchToMode(allModes[nextModeIndex].slug)
+			}, MODE_SWITCH_DEBOUNCE_MS),
+		[mode, customModes, switchToMode],
+	)
 
-	// Function to handle switching to previous mode
-	const switchToPreviousMode = useCallback(() => {
-		const allModes = getAllModes(customModes)
-		const currentModeIndex = allModes.findIndex((m) => m.slug === mode)
-		const previousModeIndex = (currentModeIndex - 1 + allModes.length) % allModes.length
-		// Update local state and notify extension to sync mode change
-		switchToMode(allModes[previousModeIndex].slug)
-	}, [mode, customModes, switchToMode])
+	// Function to handle switching to previous mode with debouncing
+	const switchToPreviousMode = useMemo(
+		() =>
+			debounce(() => {
+				const allModes = getAllModes(customModes)
+				const currentModeIndex = allModes.findIndex((m) => m.slug === mode)
+				const previousModeIndex = (currentModeIndex - 1 + allModes.length) % allModes.length
+				// Update local state and notify extension to sync mode change
+				switchToMode(allModes[previousModeIndex].slug)
+			}, MODE_SWITCH_DEBOUNCE_MS),
+		[mode, customModes, switchToMode],
+	)
 
 	// Add keyboard event handler
 	const handleKeyDown = useCallback(
@@ -1735,13 +1769,20 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 		[switchToNextMode, switchToPreviousMode],
 	)
 
-	// Add event listener
+	// Add event listener and cleanup debounced functions
 	useEffect(() => {
 		window.addEventListener("keydown", handleKeyDown)
 		return () => {
 			window.removeEventListener("keydown", handleKeyDown)
+			// Cancel any pending debounced calls when unmounting
+			if (typeof (switchToNextMode as any).cancel === "function") {
+				;(switchToNextMode as any).cancel()
+			}
+			if (typeof (switchToPreviousMode as any).cancel === "function") {
+				;(switchToPreviousMode as any).cancel()
+			}
 		}
-	}, [handleKeyDown])
+	}, [handleKeyDown, switchToNextMode, switchToPreviousMode])
 
 	useImperativeHandle(ref, () => ({
 		acceptInput: () => {

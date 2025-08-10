@@ -162,8 +162,9 @@ describe("ChatView - Keyboard Shortcut Fix for Dvorak", () => {
 			shiftKey: false,
 		})
 
-		// Wait for event to be processed
-		await new Promise((resolve) => setTimeout(resolve, 50))
+		// Wait for event to be processed and debounce delay (150ms)
+		// Adding extra buffer to ensure debounce completes
+		await new Promise((resolve) => setTimeout(resolve, 200))
 
 		// Check if mode switch was triggered
 		const callsAfterPeriod = (vscode.postMessage as any).mock.calls
@@ -183,7 +184,7 @@ describe("ChatView - Keyboard Shortcut Fix for Dvorak", () => {
 		})
 
 		// Wait for event to be processed
-		await new Promise((resolve) => setTimeout(resolve, 50))
+		await new Promise((resolve) => setTimeout(resolve, 200))
 
 		// Check that NO mode switch was triggered
 		const callsAfterV = (vscode.postMessage as any).mock.calls
@@ -244,8 +245,9 @@ describe("ChatView - Keyboard Shortcut Fix for Dvorak", () => {
 			shiftKey: false,
 		})
 
-		// Wait for event to be processed
-		await new Promise((resolve) => setTimeout(resolve, 50))
+		// Wait for event to be processed and debounce delay (150ms)
+		// Adding extra buffer to ensure debounce completes
+		await new Promise((resolve) => setTimeout(resolve, 200))
 
 		// Check if mode switch was triggered
 		const calls = (vscode.postMessage as any).mock.calls
@@ -277,8 +279,9 @@ describe("ChatView - Keyboard Shortcut Fix for Dvorak", () => {
 			shiftKey: true, // Should go to previous mode
 		})
 
-		// Wait for event to be processed
-		await new Promise((resolve) => setTimeout(resolve, 50))
+		// Wait for event to be processed and debounce delay (150ms)
+		// Adding extra buffer to ensure debounce completes
+		await new Promise((resolve) => setTimeout(resolve, 200))
 
 		// Check if mode switch was triggered
 		const calls = (vscode.postMessage as any).mock.calls
