@@ -77,6 +77,10 @@ type TruncateOptions = {
 	condensingApiHandler?: ApiHandler
 	profileThresholds: Record<string, number>
 	currentProfileId: string
+	// Context for batch operations and settings saves - cleaner architecture
+	isBatchActive?: boolean
+	isSettingsSave?: boolean
+	maxConcurrentFileReads?: number
 }
 
 type TruncateResponse = SummarizeResponse & { prevContextTokens: number }
@@ -102,6 +106,7 @@ export async function truncateConversationIfNeeded({
 	condensingApiHandler,
 	profileThresholds,
 	currentProfileId,
+	skipContextCompression,
 }: TruncateOptions): Promise<TruncateResponse> {
 	let error: string | undefined
 	let cost = 0
@@ -145,6 +150,10 @@ export async function truncateConversationIfNeeded({
 	if (autoCondenseContext) {
 		const contextPercent = (100 * prevContextTokens) / contextWindow
 		if (contextPercent >= effectiveThreshold || prevContextTokens > allowedTokens) {
+			if (skipContextCompression) {
+				return { messages, summary: "", cost, prevContextTokens, error }
+			}
+
 			// Attempt to intelligently condense the context
 			const result = await summarizeConversation(
 				messages,

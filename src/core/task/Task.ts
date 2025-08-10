@@ -2003,7 +2003,13 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 				condensingApiHandler,
 				profileThresholds,
 				currentProfileId,
+				skipContextCompression: (this as any)._skipNextContextCompressionCheck,
 			})
+
+			// Clear the skip flag after use
+			if ((this as any)._skipNextContextCompressionCheck) {
+				delete (this as any)._skipNextContextCompressionCheck
+			}
 			if (truncateResult.messages !== this.apiConversationHistory) {
 				await this.overwriteApiConversationHistory(truncateResult.messages)
 			}

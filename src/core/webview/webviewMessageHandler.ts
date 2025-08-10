@@ -1288,6 +1288,10 @@ export const webviewMessageHandler = async (
 		case "maxConcurrentFileReads":
 			const valueToSave = message.value // Capture the value intended for saving
 			await updateGlobalState("maxConcurrentFileReads", valueToSave)
+			const activeTask = provider.getCurrentCline()
+			if (activeTask && typeof valueToSave === "number" && valueToSave > 1) {
+				;(activeTask as any)._skipNextContextCompressionCheck = true
+			}
 			await provider.postStateToWebview()
 			break
 		case "includeDiagnosticMessages":
