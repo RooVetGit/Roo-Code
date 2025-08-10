@@ -131,6 +131,31 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 	readonly workspacePath: string
 
 	/**
+	 * Flag to skip context compression on the next API request.
+	 * Used to prevent unwanted compression during batch operations like multi-file reads or settings saves.
+	 * Automatically cleared after use to prevent side effects.
+	 */
+	private skipNextContextCompressionCheck: boolean = false
+
+	/**
+	 * Sets the flag to skip context compression on the next API request.
+	 * This is used to prevent unwanted compression during batch operations.
+	 */
+	public setSkipNextContextCompression(): void {
+		this.skipNextContextCompressionCheck = true
+	}
+
+	/**
+	 * Gets and clears the skip context compression flag.
+	 * This ensures the flag is only used once and doesn't persist.
+	 */
+	private getAndClearSkipContextCompression(): boolean {
+		const shouldSkip = this.skipNextContextCompressionCheck
+		this.skipNextContextCompressionCheck = false
+		return shouldSkip
+	}
+
+	/**
 	 * The mode associated with this task. Persisted across sessions
 	 * to maintain user context when reopening tasks from history.
 	 *
@@ -2003,13 +2028,10 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 				condensingApiHandler,
 				profileThresholds,
 				currentProfileId,
-				skipContextCompression: (this as any)._skipNextContextCompressionCheck,
+				skipContextCompression: this.getAndClearSkipContextCompression(),
 			})
 
-			// Clear the skip flag after use
-			if ((this as any)._skipNextContextCompressionCheck) {
-				delete (this as any)._skipNextContextCompressionCheck
-			}
+			// Flag is automatically cleared by getAndClearSkipContextCompression()
 			if (truncateResult.messages !== this.apiConversationHistory) {
 				await this.overwriteApiConversationHistory(truncateResult.messages)
 			}

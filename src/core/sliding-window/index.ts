@@ -77,10 +77,7 @@ type TruncateOptions = {
 	condensingApiHandler?: ApiHandler
 	profileThresholds: Record<string, number>
 	currentProfileId: string
-	// Context for batch operations and settings saves - cleaner architecture
-	isBatchActive?: boolean
-	isSettingsSave?: boolean
-	maxConcurrentFileReads?: number
+	skipContextCompression?: boolean
 }
 
 type TruncateResponse = SummarizeResponse & { prevContextTokens: number }

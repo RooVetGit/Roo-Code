@@ -1275,6 +1275,11 @@ export const webviewMessageHandler = async (
 			break
 		case "maxReadFileLine":
 			await updateGlobalState("maxReadFileLine", message.value)
+			// Skip context compression for file reading settings changes
+			const activeTaskForFileRead = provider.getCurrentCline()
+			if (activeTaskForFileRead) {
+				activeTaskForFileRead.setSkipNextContextCompression()
+			}
 			await provider.postStateToWebview()
 			break
 		case "maxImageFileSize":
@@ -1290,7 +1295,7 @@ export const webviewMessageHandler = async (
 			await updateGlobalState("maxConcurrentFileReads", valueToSave)
 			const activeTask = provider.getCurrentCline()
 			if (activeTask && typeof valueToSave === "number" && valueToSave > 1) {
-				;(activeTask as any)._skipNextContextCompressionCheck = true
+				activeTask.setSkipNextContextCompression()
 			}
 			await provider.postStateToWebview()
 			break
@@ -1298,10 +1303,20 @@ export const webviewMessageHandler = async (
 			// Only apply default if the value is truly undefined (not false)
 			const includeValue = message.bool !== undefined ? message.bool : true
 			await updateGlobalState("includeDiagnosticMessages", includeValue)
+			// Skip context compression for diagnostic settings changes
+			const activeTaskForDiagnostics = provider.getCurrentCline()
+			if (activeTaskForDiagnostics) {
+				activeTaskForDiagnostics.setSkipNextContextCompression()
+			}
 			await provider.postStateToWebview()
 			break
 		case "maxDiagnosticMessages":
 			await updateGlobalState("maxDiagnosticMessages", message.value ?? 50)
+			// Skip context compression for diagnostic settings changes
+			const activeTaskForMaxDiagnostics = provider.getCurrentCline()
+			if (activeTaskForMaxDiagnostics) {
+				activeTaskForMaxDiagnostics.setSkipNextContextCompression()
+			}
 			await provider.postStateToWebview()
 			break
 		case "setHistoryPreviewCollapsed": // Add the new case handler

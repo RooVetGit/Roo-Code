@@ -146,4 +146,51 @@ describe("Context Compression Fix for Issue #4430", () => {
 		expect(result.summary).toBe("")
 		expect(result.cost).toBe(0)
 	})
+
+	it("should clear the skip flag after use to prevent side effects", async () => {
+		// First call with skip flag set to true
+		const firstResult = await truncateConversationIfNeeded({
+			messages: testMessages,
+			totalTokens: 8000, // High token count to trigger compression
+			contextWindow: 10000,
+			maxTokens: 1000,
+			apiHandler: mockApiHandler,
+			autoCondenseContext: true,
+			autoCondenseContextPercent: 50, // Low threshold to trigger compression
+			systemPrompt: "Test system prompt",
+			taskId: "test-task-id",
+			profileThresholds: {},
+			currentProfileId: "default",
+			skipContextCompression: true, // Skip compression on first call
+		})
+
+		// Should skip compression
+		expect(firstResult.messages).toBe(testMessages)
+		expect(firstResult.summary).toBe("")
+		expect(mockSummarizeConversation).not.toHaveBeenCalled()
+
+		// Reset mock call count
+		vi.clearAllMocks()
+
+		// Second call without skip flag (simulating next API request)
+		const secondResult = await truncateConversationIfNeeded({
+			messages: testMessages,
+			totalTokens: 8000, // Same high token count
+			contextWindow: 10000,
+			maxTokens: 1000,
+			apiHandler: mockApiHandler,
+			autoCondenseContext: true,
+			autoCondenseContextPercent: 50, // Same low threshold
+			systemPrompt: "Test system prompt",
+			taskId: "test-task-id",
+			profileThresholds: {},
+			currentProfileId: "default",
+			skipContextCompression: false, // Normal compression should occur
+		})
+
+		// Should perform compression this time
+		expect(mockSummarizeConversation).toHaveBeenCalled()
+		expect(secondResult.summary).toBe("Test summary")
+		expect(secondResult.cost).toBe(0.01)
+	})
 })
