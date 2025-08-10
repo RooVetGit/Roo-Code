@@ -118,6 +118,7 @@ export type TaskOptions = {
 	parentTask?: Task
 	taskNumber?: number
 	onCreated?: (task: Task) => void
+	initialTodos?: TodoItem[]
 }
 
 export class Task extends EventEmitter<TaskEvents> implements TaskLike {
@@ -270,6 +271,7 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 		parentTask,
 		taskNumber = -1,
 		onCreated,
+		initialTodos,
 	}: TaskOptions) {
 		super()
 
@@ -346,6 +348,11 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 		}
 
 		this.toolRepetitionDetector = new ToolRepetitionDetector(this.consecutiveMistakeLimit)
+
+		// Initialize todo list if provided
+		if (initialTodos && initialTodos.length > 0) {
+			this.todoList = initialTodos
+		}
 
 		onCreated?.(this)
 
@@ -980,6 +987,10 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 		// messages from previous session).
 		this.clineMessages = []
 		this.apiConversationHistory = []
+
+		// The todo list is already set in the constructor if initialTodos were provided
+		// No need to add any messages - the todoList property is already set
+
 		await this.providerRef.deref()?.postStateToWebview()
 
 		await this.say("text", task, images)

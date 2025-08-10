@@ -10,6 +10,7 @@ import type {
 	OrganizationAllowList,
 	CloudUserInfo,
 	ShareVisibility,
+	TodoItem,
 } from "@roo-code/types"
 
 import { GitCommit } from "../utils/git"
@@ -275,6 +276,7 @@ export type ExtensionState = Pick<
 	version: string
 	clineMessages: ClineMessage[]
 	currentTaskItem?: HistoryItem
+	currentTaskTodos?: TodoItem[] // Initial todos for the current task
 	apiConfiguration?: ProviderSettings
 	uriScheme?: string
 	shouldShowAnnouncement: boolean
