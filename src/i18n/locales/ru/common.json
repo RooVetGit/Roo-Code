@@ -100,6 +100,9 @@
 			"genericError": "Ошибка Cerebras API ({{status}}): {{message}}",
 			"noResponseBody": "Ошибка Cerebras API: Нет тела ответа",
 			"completionError": "Ошибка завершения Cerebras: {{error}}"
+		},
+		"qwenCode": {
+			"oauthLoadFailed": "Не удалось загрузить учетные данные OAuth QwenCode: {{error}}"
 		}
 	},
 	"warnings": {
