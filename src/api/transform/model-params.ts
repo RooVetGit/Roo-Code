@@ -2,7 +2,6 @@ import {
 	type ModelInfo,
 	type ProviderSettings,
 	type VerbosityLevel,
-	type ReasoningEffortWithMinimal,
 	ANTHROPIC_DEFAULT_MAX_TOKENS,
 } from "@roo-code/types"
 
@@ -39,7 +38,7 @@ type GetModelParamsOptions<T extends Format> = {
 type BaseModelParams = {
 	maxTokens: number | undefined
 	temperature: number | undefined
-	reasoningEffort: ReasoningEffortWithMinimal | undefined
+	reasoningEffort: "low" | "medium" | "high" | undefined
 	reasoningBudget: number | undefined
 	verbosity: VerbosityLevel | undefined
 }
@@ -129,8 +128,7 @@ export function getModelParams({
 		temperature = 1.0
 	} else if (shouldUseReasoningEffort({ model, settings })) {
 		// "Traditional" reasoning models use the `reasoningEffort` parameter.
-		const effort = customReasoningEffort ?? model.reasoningEffort
-		reasoningEffort = effort as ReasoningEffortWithMinimal
+		reasoningEffort = customReasoningEffort ?? model.reasoningEffort
 	}
 
 	const params: BaseModelParams = { maxTokens, temperature, reasoningEffort, reasoningBudget, verbosity }
