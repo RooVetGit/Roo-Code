@@ -264,6 +264,7 @@
 		"fireworksApiKey": "Clau API de Fireworks",
 		"getFireworksApiKey": "Obtenir clau API de Fireworks",
 		"ioIntelligenceApiKey": "Clau API d'IO Intelligence",
+		"ioIntelligenceApiKeyPlaceholder": "Introdueix la teva clau d'API de IO Intelligence",
 		"getIoIntelligenceApiKey": "Obtenir clau API d'IO Intelligence",
 		"deepSeekApiKey": "Clau API de DeepSeek",
 		"getDeepSeekApiKey": "Obtenir clau API de DeepSeek",

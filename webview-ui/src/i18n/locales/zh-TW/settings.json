@@ -264,6 +264,7 @@
 		"fireworksApiKey": "Fireworks API 金鑰",
 		"getFireworksApiKey": "取得 Fireworks API 金鑰",
 		"ioIntelligenceApiKey": "IO Intelligence API 金鑰",
+		"ioIntelligenceApiKeyPlaceholder": "輸入您的 IO Intelligence API 金鑰",
 		"getIoIntelligenceApiKey": "取得 IO Intelligence API 金鑰",
 		"deepSeekApiKey": "DeepSeek API 金鑰",
 		"getDeepSeekApiKey": "取得 DeepSeek API 金鑰",

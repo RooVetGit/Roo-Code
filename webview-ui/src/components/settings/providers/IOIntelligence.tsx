@@ -44,7 +44,7 @@ export const IOIntelligence = ({
 				value={apiConfiguration?.ioIntelligenceApiKey || ""}
 				type="password"
 				onInput={handleInputChange("ioIntelligenceApiKey")}
-				placeholder="Enter your IO Intelligence API key"
+				placeholder={t("settings:providers.ioIntelligenceApiKeyPlaceholder")}
 				className="w-full">
 				<label className="block font-medium mb-1">{t("settings:providers.ioIntelligenceApiKey")}</label>
 			</VSCodeTextField>
