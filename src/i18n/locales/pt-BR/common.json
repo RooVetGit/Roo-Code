@@ -107,6 +107,9 @@
 		},
 		"roo": {
 			"authenticationRequired": "O provedor Roo requer autenticação na nuvem. Faça login no Roo Code Cloud."
+		},
+		"qwenCode": {
+			"oauthLoadFailed": "Falha ao carregar credenciais OAuth do QwenCode: {{error}}"
 		}
 	},
 	"warnings": {
