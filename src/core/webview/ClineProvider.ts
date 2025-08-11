@@ -724,9 +724,6 @@ export class ClineProvider
 			throw new OrganizationAllowListViolationError(t("common:errors.violated_organization_allowlist"))
 		}
 
-		// Determine if TaskBridge should be enabled
-		const enableTaskBridge = isRemoteControlEnabled(cloudUserInfo, remoteControlEnabled)
-
 		const task = new Task({
 			provider: this,
 			apiConfiguration,
@@ -741,7 +738,7 @@ export class ClineProvider
 			parentTask,
 			taskNumber: this.clineStack.length + 1,
 			onCreated: this.taskCreationCallback,
-			enableTaskBridge,
+			enableTaskBridge: isRemoteControlEnabled(cloudUserInfo, remoteControlEnabled),
 			...options,
 		})
 
@@ -2139,26 +2136,49 @@ export class ClineProvider
 	 * Handle remote control enabled/disabled state changes
 	 * Manages ExtensionBridgeService and TaskBridgeService lifecycle
 	 */
-	public async handleRemoteControlToggle(enabled: boolean): Promise<void> {
+	public async handleRemoteControlToggle(enabled: boolean) {
 		const {
 			CloudService: CloudServiceImport,
 			ExtensionBridgeService,
 			TaskBridgeService,
 		} = await import("@roo-code/cloud")
+
 		const userInfo = CloudServiceImport.instance.getUserInfo()
 
-		// Handle ExtensionBridgeService using static method
-		await ExtensionBridgeService.handleRemoteControlState(userInfo, enabled, this, (message: string) =>
-			this.log(message),
+		const bridgeConfig = await CloudServiceImport.instance.cloudAPI?.bridgeConfig()
+
+		if (!bridgeConfig) {
+			this.log("[CloudService] Failed to get bridge config")
+			return
+		}
+
+		ExtensionBridgeService.handleRemoteControlState(
+			userInfo,
+			enabled,
+			{ ...bridgeConfig, provider: this },
+			(message: string) => this.log(message),
 		)
 
 		if (isRemoteControlEnabled(userInfo, enabled)) {
-			// Set up TaskBridgeService for the currently active task if one exists
+			// Set up TaskBridgeService for the currently active task if one exists.
 			const currentTask = this.getCurrentCline()
-			if (currentTask && !currentTask.taskBridgeService) {
+
+			if (currentTask && !currentTask.taskBridgeService && CloudService.hasInstance()) {
 				try {
-					currentTask.taskBridgeService = TaskBridgeService.getInstance()
-					await currentTask.taskBridgeService.subscribeToTask(currentTask)
+					if (!currentTask.taskBridgeService) {
+						const bridgeConfig = await CloudService.instance.cloudAPI?.bridgeConfig()
+
+						if (bridgeConfig) {
+							currentTask.taskBridgeService = await TaskBridgeService.createInstance({
+								...bridgeConfig,
+							})
+						}
+					}
+
+					if (currentTask.taskBridgeService) {
+						await currentTask.taskBridgeService.subscribeToTask(currentTask)
+					}
+
 					this.log(`[TaskBridgeService] Subscribed current task ${currentTask.taskId} to TaskBridge`)
 				} catch (error) {
 					const message = `[TaskBridgeService#subscribeToTask] ${error instanceof Error ? error.message : String(error)}`
@@ -2167,12 +2187,12 @@ export class ClineProvider
 				}
 			}
 		} else {
-			// Disconnect TaskBridgeService for all tasks in the stack
+			// Disconnect TaskBridgeService for all tasks in the stack.
 			for (const task of this.clineStack) {
 				if (task.taskBridgeService) {
 					try {
 						await task.taskBridgeService.unsubscribeFromTask(task.taskId)
-						task.taskBridgeService = undefined
+						task.taskBridgeService = null
 						this.log(`[TaskBridgeService] Unsubscribed task ${task.taskId} from TaskBridge`)
 					} catch (error) {
 						const message = `[TaskBridgeService#unsubscribeFromTask] for task ${task.taskId}: ${error instanceof Error ? error.message : String(error)}`
@@ -2181,6 +2201,8 @@ export class ClineProvider
 					}
 				}
 			}
+
+			TaskBridgeService.resetInstance()
 		}
 	}
 

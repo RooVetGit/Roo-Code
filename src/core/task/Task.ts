@@ -107,6 +107,7 @@ export type TaskOptions = {
 	apiConfiguration: ProviderSettings
 	enableDiff?: boolean
 	enableCheckpoints?: boolean
+	enableTaskBridge?: boolean
 	fuzzyMatchThreshold?: number
 	consecutiveMistakeLimit?: number
 	task?: string
@@ -118,7 +119,6 @@ export type TaskOptions = {
 	parentTask?: Task
 	taskNumber?: number
 	onCreated?: (task: Task) => void
-	enableTaskBridge?: boolean
 }
 
 export class Task extends EventEmitter<TaskEvents> implements TaskLike {
@@ -239,7 +239,8 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 	checkpointServiceInitializing = false
 
 	// Task Bridge
-	taskBridgeService?: TaskBridgeService
+	enableTaskBridge: boolean
+	taskBridgeService: TaskBridgeService | null = null
 
 	// Streaming
 	isWaitingForFirstChunk = false
@@ -264,6 +265,7 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 		apiConfiguration,
 		enableDiff = false,
 		enableCheckpoints = true,
+		enableTaskBridge = false,
 		fuzzyMatchThreshold = 1.0,
 		consecutiveMistakeLimit = DEFAULT_CONSECUTIVE_MISTAKE_LIMIT,
 		task,
@@ -274,7 +276,6 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 		parentTask,
 		taskNumber = -1,
 		onCreated,
-		enableTaskBridge = false,
 	}: TaskOptions) {
 		super()
 
@@ -313,6 +314,7 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 		this.globalStoragePath = provider.context.globalStorageUri.fsPath
 		this.diffViewProvider = new DiffViewProvider(this.cwd, this)
 		this.enableCheckpoints = enableCheckpoints
+		this.enableTaskBridge = enableTaskBridge
 
 		this.rootTask = rootTask
 		this.parentTask = parentTask
@@ -351,11 +353,6 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 		}
 
 		this.toolRepetitionDetector = new ToolRepetitionDetector(this.consecutiveMistakeLimit)
-
-		// Initialize TaskBridgeService only if enabled
-		if (enableTaskBridge) {
-			this.taskBridgeService = TaskBridgeService.getInstance()
-		}
 
 		onCreated?.(this)
 
@@ -982,9 +979,20 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 	// Start / Abort / Resume
 
 	private async startTask(task?: string, images?: string[]): Promise<void> {
-		if (this.taskBridgeService) {
-			await this.taskBridgeService.initialize()
-			await this.taskBridgeService.subscribeToTask(this)
+		if (this.enableTaskBridge && CloudService.hasInstance()) {
+			if (!this.taskBridgeService) {
+				const bridgeConfig = await CloudService.instance.cloudAPI?.bridgeConfig()
+
+				if (bridgeConfig) {
+					this.taskBridgeService = await TaskBridgeService.createInstance({
+						...bridgeConfig,
+					})
+				}
+			}
+
+			if (this.taskBridgeService) {
+				await this.taskBridgeService.subscribeToTask(this)
+			}
 		}
 
 		// `conversationHistory` (for API) and `clineMessages` (for webview)
@@ -1038,9 +1046,20 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 	}
 
 	private async resumeTaskFromHistory() {
-		if (this.taskBridgeService) {
-			await this.taskBridgeService.initialize()
-			await this.taskBridgeService.subscribeToTask(this)
+		if (this.enableTaskBridge && CloudService.hasInstance()) {
+			if (!this.taskBridgeService) {
+				const bridgeConfig = await CloudService.instance.cloudAPI?.bridgeConfig()
+
+				if (bridgeConfig) {
+					this.taskBridgeService = await TaskBridgeService.createInstance({
+						...bridgeConfig,
+					})
+				}
+			}
+
+			if (this.taskBridgeService) {
+				await this.taskBridgeService.subscribeToTask(this)
+			}
 		}
 
 		const modifiedClineMessages = await this.getSavedClineMessages()
@@ -1293,6 +1312,7 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 			this.taskBridgeService
 				.unsubscribeFromTask(this.taskId)
 				.catch((error) => console.error("Error unsubscribing from task bridge:", error))
+			this.taskBridgeService = null
 		}
 
 		// Release any terminals associated with this task.
