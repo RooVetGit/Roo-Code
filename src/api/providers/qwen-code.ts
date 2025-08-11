@@ -148,7 +148,7 @@ export class QwenCodeHandler extends BaseProvider implements SingleCompletionHan
 			expiry_date: Date.now() + tokenData.expires_in * 1000,
 		}
 
-		const filePath = getQwenCachedCredentialPath()
+		const filePath = getQwenCachedCredentialPath(this.options.qwenCodeOAuthPath)
 		await fs.writeFile(filePath, JSON.stringify(newCredentials, null, 2))
 		console.log("Successfully refreshed and cached new credentials.")
 
