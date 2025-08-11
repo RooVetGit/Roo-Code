@@ -60,6 +60,61 @@ export const webviewMessageHandler = async (
 	message: WebviewMessage,
 	marketplaceManager?: MarketplaceManager,
 ) => {
+	/**
+	 * Handles importing a task from a file
+	 */
+	const handleImportTask = async () => {
+		try {
+			const file = await vscode.window.showOpenDialog({
+				canSelectFiles: true,
+				canSelectFolders: false,
+				canSelectMany: false,
+				filters: {
+					"JSON files": ["json"],
+				},
+			})
+
+			if (file && file[0]) {
+				const content = await fs.readFile(file[0].fsPath, "utf-8")
+				const task = JSON.parse(content)
+				await provider.initClineWithHistoryItem(task)
+			}
+		} catch (error) {
+			console.error("Error importing task:", error)
+			vscode.window.showErrorMessage(
+				`Error importing task: ${error instanceof Error ? error.message : String(error)}`,
+			)
+		}
+	}
+
+	/**
+	 * Handles exporting the current task to a file
+	 */
+	const handleExportTask = async () => {
+		const currentCline = provider.getCurrentCline()
+		if (currentCline) {
+			try {
+				const { historyItem } = await provider.getTaskWithId(currentCline.taskId)
+				const content = JSON.stringify(historyItem, null, 2)
+				const file = await vscode.window.showSaveDialog({
+					defaultUri: vscode.Uri.file(`${currentCline.taskId}.json`),
+					filters: {
+						"JSON files": ["json"],
+					},
+				})
+
+				if (file) {
+					await fs.writeFile(file.fsPath, content, "utf-8")
+					vscode.window.showInformationMessage("Task exported successfully!")
+				}
+			} catch (error) {
+				console.error("Error exporting task:", error)
+				vscode.window.showErrorMessage(
+					`Error exporting task: ${error instanceof Error ? error.message : String(error)}`,
+				)
+			}
+		}
+	}
 	// Utility functions provided for concise get/update of global state via contextProxy API.
 	const getGlobalState = <K extends keyof GlobalState>(key: K) => provider.contextProxy.getValue(key)
 	const updateGlobalState = async <K extends keyof GlobalState>(key: K, value: GlobalState[K]) =>
@@ -392,12 +447,25 @@ export const webviewMessageHandler = async (
 				messageTs: message.messageTs,
 			})
 			break
+		case "importTask":
+			await handleImportTask()
+			break
 		case "exportCurrentTask":
-			const currentTaskId = provider.getCurrentCline()?.taskId
-			if (currentTaskId) {
-				provider.exportTaskWithId(currentTaskId)
+			await handleExportTask()
+			break
+		case "exportTaskToCloud": {
+			await provider.exportTaskToCloud()
+			break
+		}
+		case "importTaskFromCloud": {
+			const { id, url } = message.values || {}
+			if (id) {
+				await provider.importTaskFromCloudById(id)
+			} else if (url) {
+				await provider.importTaskFromCloudByUrl(url)
 			}
 			break
+		}
 		case "shareCurrentTask":
 			const shareTaskId = provider.getCurrentCline()?.taskId
 			const clineMessages = provider.getCurrentCline()?.clineMessages

@@ -727,6 +727,15 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 						case "secondaryButtonClick":
 							handleSecondaryButtonClick(message.text ?? "", message.images ?? [])
 							break
+						case "exportTaskToCloud":
+							vscode.postMessage({ type: "exportTaskToCloud" })
+							break
+						case "importTaskFromCloud":
+							vscode.postMessage({
+								type: "importTaskFromCloud",
+								values: { url: message.text },
+							})
+							break
 					}
 					break
 				case "condenseTaskContextResponse":

@@ -72,6 +72,7 @@ import { EMBEDDING_MODEL_PROFILES } from "../../shared/embeddingModels"
 import { ProfileValidator } from "../../shared/ProfileValidator"
 import { getWorkspaceGitInfo } from "../../utils/git"
 
+import { exportTaskToCloud, importTaskFromCloudById, importTaskFromCloudByUrl } from "../../services/session/sharing"
 /**
  * https://github.com/microsoft/vscode-webview-ui-toolkit-samples/blob/main/default/weather-webview/src/providers/WeatherViewProvider.ts
  * https://github.com/KumarVariable/vscode-extension-sidebar-html/blob/master/src/customSidebarViewProvider.ts
@@ -1236,6 +1237,45 @@ export class ClineProvider
 			}
 			throw error
 		}
+	}
+
+	async exportTaskToCloud(): Promise<string | undefined> {
+		const currentCline = this.getCurrentCline()
+		if (currentCline) {
+			const { historyItem } = await this.getTaskWithId(currentCline.taskId)
+			if (historyItem) {
+				const { apiConfiguration } = await this.getState()
+				const token = apiConfiguration.syntxApiKey
+				if (!token) {
+					vscode.window.showErrorMessage(t("common:errors.syntx_api_key_not_set"))
+					return
+				}
+				try {
+					const result = await exportTaskToCloud(historyItem, this.context.globalStorageUri.fsPath, { token })
+					if (result) {
+						vscode.window.showInformationMessage(t("common:info.task_exported_to_cloud", { id: result }))
+					}
+					return result
+				} catch (error) {
+					vscode.window.showErrorMessage(
+						t("common:errors.export_task_to_cloud_failed", { error: error.message }),
+					)
+				}
+			}
+		}
+		return undefined
+	}
+
+	async importTaskFromCloudById(id: string) {
+		const { apiConfiguration } = await this.getState()
+		await importTaskFromCloudById(id, this.context.globalStorageUri.fsPath, { token: apiConfiguration.syntxApiKey })
+	}
+
+	async importTaskFromCloudByUrl(url: string) {
+		const { apiConfiguration } = await this.getState()
+		await importTaskFromCloudByUrl(url, this.context.globalStorageUri.fsPath, {
+			token: apiConfiguration.syntxApiKey,
+		})
 	}
 
 	async deleteTaskFromState(id: string) {

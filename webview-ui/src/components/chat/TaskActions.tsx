@@ -21,18 +21,41 @@ export const TaskActions = ({ item, buttonsDisabled }: TaskActionsProps) => {
 	const [deleteTaskId, setDeleteTaskId] = useState<string | null>(null)
 	const { t } = useTranslation()
 	const { copyWithFeedback, showCopyFeedback } = useCopyToClipboard()
-	const { apiConfiguration: _apiConfiguration } = useExtensionState()
-
-	// Check if using syntx provider - allow override for testing
-	const isSyntxProvider = typeof globalThis !== "undefined" && "vi" in globalThis ? false : true // Hide Share button for all providers except in tests
+	const { apiConfiguration: _apiConfiguration, syntxApiKey } = useExtensionState()
 
 	return (
 		<div className="flex flex-row gap-1">
-			{!isSyntxProvider && <ShareButton item={item} disabled={false} />}
+			<ShareButton
+				onClick={() => {
+					vscode.postMessage({ type: "exportTaskToCloud", text: syntxApiKey })
+				}}
+				item={item}
+				disabled={buttonsDisabled}
+			/>
 			<IconButton
 				iconClass="codicon-desktop-download"
 				title={t("chat:task.export")}
 				onClick={() => vscode.postMessage({ type: "exportCurrentTask" })}
+			/>
+			<IconButton
+				iconClass="codicon-cloud-upload"
+				title={t("chat:task.import")}
+				onClick={() => {
+					const value = window.prompt(t("chat:prompts.import_from_id_or_url"))
+					if (value) {
+						if (value.startsWith("http")) {
+							vscode.postMessage({
+								type: "importTaskFromCloud",
+								text: value,
+							})
+						} else {
+							vscode.postMessage({
+								type: "importTaskFromCloud",
+								text: value,
+							})
+						}
+					}
+				}}
 			/>
 			{item?.task && (
 				<IconButton

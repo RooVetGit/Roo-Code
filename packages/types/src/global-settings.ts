@@ -139,6 +139,12 @@ export const globalSettingsSchema = z.object({
 
 	selectedAgentId: z.string().optional(),
 	showModes: z.boolean().optional(),
+	sessionImport: z
+		.object({
+			id: z.string().optional(),
+			url: z.string().optional(),
+		})
+		.optional(),
 })
 
 export type GlobalSettings = z.infer<typeof globalSettingsSchema>

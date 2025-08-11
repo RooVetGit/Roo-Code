@@ -37,5 +37,6 @@
 	"settings.vsCodeLmModelSelector.family.description": "The family of the language model (e.g. gpt-4)",
 	"settings.customStoragePath.description": "Custom storage path. Leave empty to use the default location. Supports absolute paths (e.g. 'D:\\SyntXStorage')",
 	"settings.enableCodeActions.description": "Enable Syntx quick fixes",
-	"settings.autoImportSettingsPath.description": "Path to a SyntX configuration file to automatically import on extension startup. Supports absolute paths and paths relative to the home directory (e.g. '~/Documents/syntx-settings.json'). Leave empty to disable auto-import."
+	"settings.autoImportSettingsPath.description": "Path to a SyntX configuration file to automatically import on extension startup. Supports absolute paths and paths relative to the home directory (e.g. '~/Documents/syntx-settings.json'). Leave empty to disable auto-import.",
+	"settings.sessionSharing.baseUrl.description": "Base URL for the Syntx session sharing service (e.g., https://sessions.syntx.dev). Can also be set via SYNTX_SESSIONS_BASE_URL."
 }

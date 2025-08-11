@@ -26,9 +26,10 @@ import {
 interface ShareButtonProps {
 	item?: HistoryItem
 	disabled?: boolean
+	onClick?: () => void
 }
 
-export const ShareButton = ({ item, disabled = false }: ShareButtonProps) => {
+export const ShareButton = ({ item, disabled = false, onClick }: ShareButtonProps) => {
 	const [shareDropdownOpen, setShareDropdownOpen] = useState(false)
 	const [connectModalOpen, setConnectModalOpen] = useState(false)
 	const [shareSuccess, setShareSuccess] = useState<{ visibility: ShareVisibility; url: string } | null>(null)
@@ -105,6 +106,10 @@ export const ShareButton = ({ item, disabled = false }: ShareButtonProps) => {
 	}
 
 	const handleShareButtonClick = () => {
+		if (onClick) {
+			onClick()
+			return
+		}
 		// Send telemetry for share button click
 		telemetryClient.capture(TelemetryEventName.SHARE_BUTTON_CLICKED)
 

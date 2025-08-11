@@ -96,6 +96,7 @@ export default defineConfig(({ mode }) => {
 			reportCompressedSize: false,
 			sourcemap: true,
 			rollupOptions: {
+				external: ["fs/promises", "path", "os"],
 				output: {
 					entryFileNames: `assets/[name].js`,
 					chunkFileNames: (chunkInfo) => {

@@ -127,7 +127,14 @@ export interface ExtensionMessage {
 		| "didBecomeVisible"
 		| "focusInput"
 		| "switchTab"
-	invoke?: "newChat" | "sendMessage" | "primaryButtonClick" | "secondaryButtonClick" | "setChatBoxMessage"
+	invoke?:
+		| "newChat"
+		| "sendMessage"
+		| "primaryButtonClick"
+		| "secondaryButtonClick"
+		| "setChatBoxMessage"
+		| "exportTaskToCloud"
+		| "importTaskFromCloud"
 	state?: ExtensionState
 	images?: string[]
 	filePaths?: string[]
@@ -284,6 +291,10 @@ export type ExtensionState = Pick<
 	cloudIsAuthenticated: boolean
 	cloudApiUrl?: string
 	sharingEnabled: boolean
+	sessionImport?: {
+		id?: string
+		url?: string
+	}
 	organizationAllowList: OrganizationAllowList
 
 	// Website authentication states
