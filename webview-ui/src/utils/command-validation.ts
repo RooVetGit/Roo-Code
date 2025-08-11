@@ -1,4 +1,6 @@
 import { parse } from "shell-quote"
+import type { Experiments } from "@roo-code/types"
+import { EXPERIMENT_IDS, experiments as experimentsV2 } from "@roo/experiments"
 
 type ShellToken = string | { op: string } | { command: string }
 
@@ -508,8 +510,13 @@ export type CommandDecision = "auto_approve" | "auto_deny" | "ask_user"
 export function getCommandDecision(
 	command: string,
 	allowedCommands: string[],
-	deniedCommands?: string[],
+	deniedCommands: string[] | undefined,
+	experiments: Experiments,
 ): CommandDecision {
+	if (experimentsV2.isEnabled(experiments, EXPERIMENT_IDS.COMMAND_FILTERING_MODE)) {
+		return getCommandDecisionAlternate(command, allowedCommands, deniedCommands)
+	}
+
 	if (!command?.trim()) return "auto_approve"
 
 	// Parse into sub-commands (split by &&, ||, ;, |)
@@ -582,6 +589,59 @@ export function getCommandDecision(
  * @param deniedCommands - Optional list of denied command prefixes
  * @returns Decision for this specific command
  */
+/**
+ * Get the decision for a single command using an alternate strategy.
+ * In this mode, both allowlist and denylist act as denylists.
+ * A command is approved only if it does not match any prefix in either list.
+ */
+export function getSingleCommandDecisionAlternate(
+	command: string,
+	allowedCommands: string[],
+	deniedCommands?: string[],
+): CommandDecision {
+	if (!command) return "auto_approve"
+
+	// Find if there is any match on the denylist.
+	const longestDeniedMatch = findLongestPrefixMatch(command, deniedCommands || [])
+	if (longestDeniedMatch) {
+		return "auto_deny"
+	}
+
+	// Find if there is any match on the allowlist (acting as a denylist).
+	const longestAllowedMatch = findLongestPrefixMatch(command, allowedCommands || [])
+	if (longestAllowedMatch) {
+		return "auto_deny"
+	}
+
+	// If no match in either list, approve.
+	return "auto_approve"
+}
+
+/**
+ * Get the decision for a command chain using the alternate strategy.
+ */
+export function getCommandDecisionAlternate(
+	command: string,
+	allowedCommands: string[],
+	deniedCommands?: string[],
+): CommandDecision {
+	if (!command?.trim()) return "auto_approve"
+
+	const subCommands = parseCommand(command)
+
+	for (const cmd of subCommands) {
+		const cmdWithoutRedirection = cmd.replace(/\d*>&\d*/, "").trim()
+		if (!cmdWithoutRedirection) continue
+
+		const decision = getSingleCommandDecisionAlternate(cmdWithoutRedirection, allowedCommands, deniedCommands)
+		if (decision === "auto_deny") {
+			return "auto_deny"
+		}
+	}
+
+	return "auto_approve"
+}
+
 export function getSingleCommandDecision(
 	command: string,
 	allowedCommands: string[],

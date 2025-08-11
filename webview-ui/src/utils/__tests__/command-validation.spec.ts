@@ -13,6 +13,7 @@ import {
 	createCommandValidator,
 	containsSubshell,
 } from "../command-validation"
+import { experimentDefault } from "@roo/experiments"
 
 describe("Command Validation", () => {
 	describe("parseCommand", () => {
@@ -765,61 +766,85 @@ describe("Unified Command Decision Functions", () => {
 	describe("getCommandDecision", () => {
 		const allowedCommands = ["npm", "echo"]
 		const deniedCommands = ["npm test"]
+		const experiments = experimentDefault
 
 		it("returns auto_approve for commands with all sub-commands auto-approved", () => {
-			expect(getCommandDecision("npm install", allowedCommands, deniedCommands)).toBe("auto_approve")
-			expect(getCommandDecision("npm install && echo done", allowedCommands, deniedCommands)).toBe("auto_approve")
+			expect(getCommandDecision("npm install", allowedCommands, deniedCommands, experiments)).toBe("auto_approve")
+			expect(getCommandDecision("npm install && echo done", allowedCommands, deniedCommands, experiments)).toBe(
+				"auto_approve",
+			)
 		})
 
 		it("returns auto_deny for commands with any sub-command auto-denied", () => {
-			expect(getCommandDecision("npm test", allowedCommands, deniedCommands)).toBe("auto_deny")
-			expect(getCommandDecision("npm install && npm test", allowedCommands, deniedCommands)).toBe("auto_deny")
+			expect(getCommandDecision("npm test", allowedCommands, deniedCommands, experiments)).toBe("auto_deny")
+			expect(getCommandDecision("npm install && npm test", allowedCommands, deniedCommands, experiments)).toBe(
+				"auto_deny",
+			)
 		})
 
 		it("returns ask_user for commands with mixed or unknown sub-commands", () => {
-			expect(getCommandDecision("dangerous", allowedCommands, deniedCommands)).toBe("ask_user")
-			expect(getCommandDecision("npm install && dangerous", allowedCommands, deniedCommands)).toBe("ask_user")
+			expect(getCommandDecision("dangerous", allowedCommands, deniedCommands, experiments)).toBe("ask_user")
+			expect(getCommandDecision("npm install && dangerous", allowedCommands, deniedCommands, experiments)).toBe(
+				"ask_user",
+			)
 		})
 
 		it("properly validates subshell commands by checking all parsed commands", () => {
 			// Subshells without denied prefixes should be auto-approved if all commands are allowed
-			expect(getCommandDecision("npm install $(echo test)", allowedCommands, deniedCommands)).toBe("auto_approve")
-			expect(getCommandDecision("npm install `echo test`", allowedCommands, deniedCommands)).toBe("auto_approve")
-
-			// Subshells with denied prefixes should be auto-denied
-			expect(getCommandDecision("npm install $(npm test)", allowedCommands, deniedCommands)).toBe("auto_deny")
-			expect(getCommandDecision("npm install `npm test --coverage`", allowedCommands, deniedCommands)).toBe(
-				"auto_deny",
+			expect(getCommandDecision("npm install $(echo test)", allowedCommands, deniedCommands, experiments)).toBe(
+				"auto_approve",
+			)
+			expect(getCommandDecision("npm install `echo test`", allowedCommands, deniedCommands, experiments)).toBe(
+				"auto_approve",
 			)
 
+			// Subshells with denied prefixes should be auto-denied
+			expect(getCommandDecision("npm install $(npm test)", allowedCommands, deniedCommands, experiments)).toBe(
+				"auto_deny",
+			)
+			expect(
+				getCommandDecision("npm install `npm test --coverage`", allowedCommands, deniedCommands, experiments),
+			).toBe("auto_deny")
+
 			// Main command with denied prefix should also be auto-denied
-			expect(getCommandDecision("npm test $(echo hello)", allowedCommands, deniedCommands)).toBe("auto_deny")
+			expect(getCommandDecision("npm test $(echo hello)", allowedCommands, deniedCommands, experiments)).toBe(
+				"auto_deny",
+			)
 		})
 
 		it("properly validates subshell commands when no denylist is present", () => {
-			expect(getCommandDecision("npm install $(echo test)", allowedCommands)).toBe("auto_approve")
-			expect(getCommandDecision("npm install `echo test`", allowedCommands)).toBe("auto_approve")
+			expect(getCommandDecision("npm install $(echo test)", allowedCommands, undefined, experiments)).toBe(
+				"auto_approve",
+			)
+			expect(getCommandDecision("npm install `echo test`", allowedCommands, undefined, experiments)).toBe(
+				"auto_approve",
+			)
 		})
 
 		it("handles empty command", () => {
-			expect(getCommandDecision("", allowedCommands, deniedCommands)).toBe("auto_approve")
+			expect(getCommandDecision("", allowedCommands, deniedCommands, experiments)).toBe("auto_approve")
 		})
 
 		it("handles complex chained commands", () => {
 			// All sub-commands auto-approved
-			expect(getCommandDecision("npm install && echo success && npm run build", ["npm", "echo"], [])).toBe(
-				"auto_approve",
-			)
+			expect(
+				getCommandDecision("npm install && echo success && npm run build", ["npm", "echo"], [], experiments),
+			).toBe("auto_approve")
 
 			// One sub-command auto-denied
-			expect(getCommandDecision("npm install && npm test && echo done", allowedCommands, deniedCommands)).toBe(
-				"auto_deny",
-			)
+			expect(
+				getCommandDecision("npm install && npm test && echo done", allowedCommands, deniedCommands, experiments),
+			).toBe("auto_deny")
 
 			// Mixed decisions (some ask_user)
-			expect(getCommandDecision("npm install && dangerous && echo done", allowedCommands, deniedCommands)).toBe(
-				"ask_user",
-			)
+			expect(
+				getCommandDecision(
+					"npm install && dangerous && echo done",
+					allowedCommands,
+					deniedCommands,
+					experiments,
+				),
+			).toBe("ask_user")
 		})
 
 		it("demonstrates the three-tier system comprehensively", () => {
@@ -827,25 +852,28 @@ describe("Unified Command Decision Functions", () => {
 			const denied = ["npm test"]
 
 			// Auto-approved: all sub-commands match allowlist, none match denylist
-			expect(getCommandDecision("npm install", allowed, denied)).toBe("auto_approve")
-			expect(getCommandDecision("npm install && npm run build", allowed, denied)).toBe("auto_approve")
+			expect(getCommandDecision("npm install", allowed, denied, experiments)).toBe("auto_approve")
+			expect(getCommandDecision("npm install && npm run build", allowed, denied, experiments)).toBe(
+				"auto_approve",
+			)
 
 			// Auto-denied: any sub-command matches denylist
-			expect(getCommandDecision("npm test", allowed, denied)).toBe("auto_deny")
-			expect(getCommandDecision("npm install && npm test", allowed, denied)).toBe("auto_deny")
+			expect(getCommandDecision("npm test", allowed, denied, experiments)).toBe("auto_deny")
+			expect(getCommandDecision("npm install && npm test", allowed, denied, experiments)).toBe("auto_deny")
 
 			// Ask user: commands that match neither list
-			expect(getCommandDecision("dangerous", allowed, denied)).toBe("ask_user")
-			expect(getCommandDecision("npm install && dangerous", allowed, denied)).toBe("ask_user")
+			expect(getCommandDecision("dangerous", allowed, denied, experiments)).toBe("ask_user")
+			expect(getCommandDecision("npm install && dangerous", allowed, denied, experiments)).toBe("ask_user")
 		})
 	})
 
 	describe("CommandValidator Integration Tests", () => {
+		const experiments = experimentDefault
 		describe("CommandValidator Class", () => {
 			let validator: CommandValidator
 
 			beforeEach(() => {
-				validator = new CommandValidator(["npm", "echo", "git"], ["npm test", "git push"])
+				validator = new CommandValidator(["npm", "echo", "git"], ["npm test", "git push"], experiments)
 			})
 
 			describe("Basic validation methods", () => {
@@ -872,7 +900,7 @@ describe("Unified Command Decision Functions", () => {
 
 			describe("Configuration management", () => {
 				it("updates command lists", () => {
-					validator.updateCommandLists(["echo"], ["echo hello"])
+					validator.updateCommandLists(["echo"], ["echo hello"], experiments)
 
 					expect(validator.validateCommand("npm install")).toBe("ask_user")
 					expect(validator.validateCommand("echo world")).toBe("auto_approve")
@@ -886,7 +914,7 @@ describe("Unified Command Decision Functions", () => {
 				})
 
 				it("handles undefined denied commands", () => {
-					const validatorNoDeny = new CommandValidator(["npm"])
+					const validatorNoDeny = new CommandValidator(["npm"], undefined, experiments)
 					const lists = validatorNoDeny.getCommandLists()
 					expect(lists.allowedCommands).toEqual(["npm"])
 					expect(lists.deniedCommands).toBeUndefined()
@@ -953,13 +981,13 @@ describe("Unified Command Decision Functions", () => {
 				it("detects if rules are configured", () => {
 					expect(validator.hasRules()).toBe(true)
 
-					const emptyValidator = new CommandValidator([], [])
+					const emptyValidator = new CommandValidator([], [], experiments)
 					expect(emptyValidator.hasRules()).toBe(false)
 
-					const allowOnlyValidator = new CommandValidator(["npm"], [])
+					const allowOnlyValidator = new CommandValidator(["npm"], [], experiments)
 					expect(allowOnlyValidator.hasRules()).toBe(true)
 
-					const denyOnlyValidator = new CommandValidator([], ["rm"])
+					const denyOnlyValidator = new CommandValidator([], ["rm"], experiments)
 					expect(denyOnlyValidator.hasRules()).toBe(true)
 				})
 
@@ -972,7 +1000,7 @@ describe("Unified Command Decision Functions", () => {
 				})
 
 				it("detects wildcard configuration", () => {
-					const wildcardValidator = new CommandValidator(["*", "npm"], ["rm"])
+					const wildcardValidator = new CommandValidator(["*", "npm"], ["rm"], experiments)
 					const stats = wildcardValidator.getStats()
 					expect(stats.hasWildcard).toBe(true)
 				})
@@ -999,23 +1027,25 @@ describe("Unified Command Decision Functions", () => {
 		})
 
 		describe("Factory function", () => {
+			const experiments = experimentDefault
 			it("creates validator instances correctly", () => {
-				const validator = createCommandValidator(["npm"], ["rm"])
+				const validator = createCommandValidator(["npm"], ["rm"], experiments)
 				expect(validator).toBeInstanceOf(CommandValidator)
 				expect(validator.validateCommand("npm test")).toBe("auto_approve")
 				expect(validator.validateCommand("rm file")).toBe("auto_deny")
 			})
 
 			it("handles optional denied commands", () => {
-				const validator = createCommandValidator(["npm"])
+				const validator = createCommandValidator(["npm"], undefined, experiments)
 				expect(validator.validateCommand("npm test")).toBe("auto_approve")
 				expect(validator.validateCommand("dangerous")).toBe("ask_user")
 			})
 		})
 
 		describe("Subshell edge cases", () => {
+			const experiments = experimentDefault
 			it("handles multiple subshells correctly", () => {
-				const validator = createCommandValidator(["echo", "npm"], ["rm", "sudo"])
+				const validator = createCommandValidator(["echo", "npm"], ["rm", "sudo"], experiments)
 
 				// Multiple subshells, none with denied prefixes but subshell commands not in allowlist
 				// parseCommand extracts subshells as separate commands, so date and pwd are not allowed
@@ -1030,7 +1060,11 @@ describe("Unified Command Decision Functions", () => {
 			})
 
 			it("handles complex commands with subshells", () => {
-				const validator = createCommandValidator(["npm", "git", "echo"], ["git push", "npm publish"])
+				const validator = createCommandValidator(
+					["npm", "git", "echo"],
+					["git push", "npm publish"],
+					experiments,
+				)
 
 				// Subshell with allowed command - git status is extracted as separate command
 				// Since "git status" starts with "git" which is allowed, it's approved
@@ -1049,6 +1083,7 @@ describe("Unified Command Decision Functions", () => {
 		})
 
 		describe("Real-world integration scenarios", () => {
+			const experiments = experimentDefault
 			describe("Development workflow validation", () => {
 				let devValidator: CommandValidator
 
@@ -1056,6 +1091,7 @@ describe("Unified Command Decision Functions", () => {
 					devValidator = createCommandValidator(
 						["npm", "git", "echo", "ls", "cat"],
 						["git push", "rm", "sudo", "npm publish"],
+						experiments,
 					)
 				})
 
@@ -1106,6 +1142,7 @@ describe("Unified Command Decision Functions", () => {
 					prodValidator = createCommandValidator(
 						["ls", "cat", "grep", "tail"],
 						["*"], // Deny everything by default
+						experiments,
 					)
 				})
 
@@ -1132,6 +1169,7 @@ describe("Unified Command Decision Functions", () => {
 					complexValidator = createCommandValidator(
 						["git", "git push", "git push --dry-run", "npm", "npm test"],
 						["git push", "npm test --coverage"],
+						experiments,
 					)
 				})
 
@@ -1166,7 +1204,7 @@ describe("Unified Command Decision Functions", () => {
 					const largeAllowList = Array.from({ length: 1000 }, (_, i) => `command${i}`)
 					const largeDenyList = Array.from({ length: 500 }, (_, i) => `dangerous${i}`)
 
-					const largeValidator = createCommandValidator(largeAllowList, largeDenyList)
+					const largeValidator = createCommandValidator(largeAllowList, largeDenyList, experiments)
 
 					// Should still work efficiently
 					expect(largeValidator.isAutoApproved("command500 --flag")).toBe(true)
@@ -1175,7 +1213,7 @@ describe("Unified Command Decision Functions", () => {
 				})
 
 				it("handles batch validation efficiently", () => {
-					const batchValidator = createCommandValidator(["npm"], ["rm"])
+					const batchValidator = createCommandValidator(["npm"], ["rm"], experiments)
 					const commands = Array.from({ length: 100 }, (_, i) => `npm test${i}`)
 					const results = batchValidator.validateCommands(commands)
 

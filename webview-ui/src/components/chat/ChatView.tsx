@@ -117,6 +117,7 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 		soundEnabled,
 		soundVolume,
 		cloudIsAuthenticated,
+		experiments,
 	} = useExtensionState()
 
 	const messagesRef = useRef(messages)
@@ -1056,9 +1057,14 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 	const getCommandDecisionForMessage = useCallback(
 		(message: ClineMessage | undefined): CommandDecision => {
 			if (message?.type !== "ask") return "ask_user"
-			return getCommandDecision(message.text || "", allowedCommands || [], deniedCommands || [])
+			return getCommandDecision(
+				message.text || "",
+				allowedCommands || [],
+				deniedCommands || [],
+				experiments,
+			)
 		},
-		[allowedCommands, deniedCommands],
+		[allowedCommands, deniedCommands, experiments],
 	)
 
 	// Check if a command message should be auto-approved.
