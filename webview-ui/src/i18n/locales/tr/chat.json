@@ -15,6 +15,7 @@
 		"export": "Görev geçmişini dışa aktar",
 		"delete": "Görevi sil (Onayı atlamak için Shift + Tıkla)",
 		"condenseContext": "Bağlamı akıllıca yoğunlaştır",
+		"cancelCondense": "Sıkıştırmayı iptal et",
 		"share": "Görevi paylaş",
 		"shareWithOrganization": "Kuruluşla paylaş",
 		"shareWithOrganizationDescription": "Sadece kuruluşunuzun üyeleri erişebilir",
