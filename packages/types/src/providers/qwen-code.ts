@@ -8,9 +8,17 @@ export const qwenCodeModels = {
 		provider: "qwen-code" as ProviderName,
 		contextWindow: 1000000,
 		maxTokens: 65536,
-		supportsPromptCache: true,
+		supportsPromptCache: false,
 	},
-}
+	"qwen3-coder-flash": {
+		id: "qwen3-coder-flash",
+		name: "Qwen3 Coder Flash",
+		provider: "qwen-code" as ProviderName,
+		contextWindow: 1000000,
+		maxTokens: 65536,
+		supportsPromptCache: false,
+	},
+} as const
 
 export type QwenCodeModelId = keyof typeof qwenCodeModels
 
@@ -26,4 +34,11 @@ export const getQwenCodeModelInfo = (modelId: string): ModelInfo => {
 	}
 	// Fallback to a default or throw an error
 	return qwenCodeModels[qwenCodeDefaultModelId]
+}
+
+export type QwenCodeProvider = {
+	id: "qwen-code"
+	apiKey?: string
+	baseUrl?: string
+	model: QwenCodeModelId
 }

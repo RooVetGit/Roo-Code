@@ -4,6 +4,7 @@ import * as os from "os"
 import * as path from "path"
 import OpenAI from "openai"
 
+import { XmlMatcher } from "../../utils/xml-matcher"
 import type { ModelInfo, QwenCodeModelId } from "@roo-code/types"
 import { qwenCodeDefaultModelId, qwenCodeModels } from "@roo-code/types"
 
@@ -23,7 +24,6 @@ const QWEN_OAUTH_TOKEN_ENDPOINT = `${QWEN_OAUTH_BASE_URL}/api/v1/oauth2/token`
 const QWEN_OAUTH_CLIENT_ID = "f0304373b74a44d2b584a3fb70ca9e56"
 const QWEN_DIR = ".qwen"
 const QWEN_CREDENTIAL_FILENAME = "oauth_creds.json"
-const TOKEN_REFRESH_BUFFER_MS = 30 * 1000 // 30s buffer
 
 interface QwenOAuthCredentials {
 	access_token: string
@@ -46,11 +46,18 @@ function objectToUrlEncoded(data: Record<string, string>): string {
 export class QwenCodeHandler extends BaseProvider implements SingleCompletionHandler {
 	protected options: ApiHandlerOptions
 	private credentials: QwenOAuthCredentials | null = null
-	private client: OpenAI | null = null
+	private client: OpenAI
 
 	constructor(options: ApiHandlerOptions) {
 		super()
 		this.options = options
+		// Create the client instance once in the constructor.
+		// The API key will be updated dynamically via ensureAuthenticated.
+		this.client = new OpenAI({
+			apiKey: "dummy-key-will-be-replaced",
+			baseURL: "https://dashscope.aliyuncs.com/compatible-mode/v1", // A default base URL
+			defaultHeaders: DEFAULT_HEADERS,
+		})
 	}
 
 	private async loadCachedQwenCredentials(): Promise<QwenOAuthCredentials> {
@@ -59,6 +66,7 @@ export class QwenCodeHandler extends BaseProvider implements SingleCompletionHan
 			const credsStr = await fs.readFile(keyFile, "utf-8")
 			return JSON.parse(credsStr)
 		} catch (error) {
+			console.error(`Error reading or parsing credentials file at ${getQwenCachedCredentialPath()}`)
 			throw new Error(t("common:errors.qwenCode.oauthLoadFailed", { error }))
 		}
 	}
@@ -104,11 +112,13 @@ export class QwenCodeHandler extends BaseProvider implements SingleCompletionHan
 
 		const filePath = getQwenCachedCredentialPath()
 		await fs.writeFile(filePath, JSON.stringify(newCredentials, null, 2))
+		// console.log("Successfully refreshed and cached new credentials.")
 
 		return newCredentials
 	}
 
 	private isTokenValid(credentials: QwenOAuthCredentials): boolean {
+		const TOKEN_REFRESH_BUFFER_MS = 30 * 1000 // 30s buffer
 		if (!credentials.expiry_date) {
 			return false
 		}
@@ -124,9 +134,9 @@ export class QwenCodeHandler extends BaseProvider implements SingleCompletionHan
 			this.credentials = await this.refreshAccessToken(this.credentials)
 		}
 
-		if (!this.client || this.client.apiKey !== this.credentials.access_token) {
-			this.setupClient()
-		}
+		// After authentication, just update the apiKey and baseURL on the existing client.
+		this.client.apiKey = this.credentials.access_token
+		this.client.baseURL = this.getBaseUrl(this.credentials)
 	}
 
 	private getBaseUrl(creds: QwenOAuthCredentials): string {
@@ -137,26 +147,16 @@ export class QwenCodeHandler extends BaseProvider implements SingleCompletionHan
 		return baseUrl.endsWith("/v1") ? baseUrl : `${baseUrl}/v1`
 	}
 
-	private setupClient(): void {
-		if (!this.credentials) {
-			throw new Error("Credentials not loaded.")
-		}
-		const headers = { ...DEFAULT_HEADERS }
-
-		this.client = new OpenAI({
-			apiKey: this.credentials.access_token,
-			baseURL: this.getBaseUrl(this.credentials),
-			defaultHeaders: headers,
-		})
-	}
-
 	private async callApiWithRetry<T>(apiCall: () => Promise<T>): Promise<T> {
 		try {
 			return await apiCall()
 		} catch (error: any) {
 			if (error.status === 401) {
+				// console.log("Authentication failed. Forcing token refresh and retrying...")
 				this.credentials = await this.refreshAccessToken(this.credentials!)
-				this.setupClient()
+				// Just update the key, don't re-create the client
+				this.client.apiKey = this.credentials.access_token
+				this.client.baseURL = this.getBaseUrl(this.credentials)
 				return await apiCall()
 			} else {
 				throw error
@@ -188,26 +188,54 @@ export class QwenCodeHandler extends BaseProvider implements SingleCompletionHan
 			stream_options: { include_usage: true },
 		}
 
-		if (this.options.includeMaxTokens) {
-			requestOptions.max_tokens = this.options.modelMaxTokens || modelInfo.maxTokens
-		}
+		this.addMaxTokensIfNeeded(requestOptions, modelInfo)
 
 		const stream = await this.callApiWithRetry(() => this.client!.chat.completions.create(requestOptions))
 
-		let lastUsage: any
+		// XmlMatcher
+		const matcher = new XmlMatcher(
+			"think",
+			(chunk) =>
+				({
+					type: chunk.matched ? "reasoning" : "text",
+					text: chunk.data,
+				}) as const,
+		)
 
-		for await (const chunk of stream) {
-			const delta = chunk.choices[0]?.delta ?? {}
+		let lastUsage: any
+		let fullContent = ""
+
+		for await (const apiChunk of stream) {
+			const delta = apiChunk.choices[0]?.delta ?? {}
 
 			if (delta.content) {
-				yield {
-					type: "text",
-					text: delta.content,
+				let newText = delta.content
+				if (newText.startsWith(fullContent)) {
+					newText = newText.substring(fullContent.length)
+				}
+				fullContent = delta.content
+
+				if (newText) {
+					// this.options.log?.(`[qwen-code] chunk: ${newText}`)
+					for (const processedChunk of matcher.update(newText)) {
+						yield processedChunk
+					}
 				}
 			}
-			if (chunk.usage) {
-				lastUsage = chunk.usage
+
+			if ("reasoning_content" in delta && delta.reasoning_content) {
+				yield {
+					type: "reasoning",
+					text: (delta.reasoning_content as string | undefined) || "",
+				}
 			}
+			if (apiChunk.usage) {
+				lastUsage = apiChunk.usage
+			}
+		}
+
+		for (const chunk of matcher.final()) {
+			yield chunk
 		}
 
 		if (lastUsage) {
@@ -225,9 +253,7 @@ export class QwenCodeHandler extends BaseProvider implements SingleCompletionHan
 			messages: [{ role: "user", content: prompt }],
 		}
 
-		if (this.options.includeMaxTokens) {
-			requestOptions.max_tokens = this.options.modelMaxTokens || modelInfo.maxTokens
-		}
+		this.addMaxTokensIfNeeded(requestOptions, modelInfo)
 
 		const response = await this.callApiWithRetry(() => this.client!.chat.completions.create(requestOptions))
 
@@ -248,6 +274,20 @@ export class QwenCodeHandler extends BaseProvider implements SingleCompletionHan
 			type: "usage",
 			inputTokens: usage?.prompt_tokens || 0,
 			outputTokens: usage?.completion_tokens || 0,
+		}
+	}
+
+	/**
+	 * Adds max_completion_tokens to the request body if needed based on provider configuration
+	 */
+	private addMaxTokensIfNeeded(
+		requestOptions:
+			| OpenAI.Chat.Completions.ChatCompletionCreateParamsStreaming
+			| OpenAI.Chat.Completions.ChatCompletionCreateParamsNonStreaming,
+		modelInfo: ModelInfo,
+	): void {
+		if (this.options.includeMaxTokens === true) {
+			requestOptions.max_completion_tokens = this.options.modelMaxTokens || modelInfo.maxTokens
 		}
 	}
 }
