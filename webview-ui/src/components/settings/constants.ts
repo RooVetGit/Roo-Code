@@ -60,6 +60,7 @@ export const PROVIDERS = [
 	{ value: "ollama", label: "Ollama" },
 	{ value: "unbound", label: "Unbound" },
 	{ value: "requesty", label: "Requesty" },
+	{ value: "tars", label: "Tetrate Agent Router Service" },
 	{ value: "human-relay", label: "Human Relay" },
 	{ value: "xai", label: "xAI (Grok)" },
 	{ value: "groq", label: "Groq" },
