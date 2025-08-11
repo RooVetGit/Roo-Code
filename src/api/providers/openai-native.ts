@@ -117,8 +117,9 @@ export class OpenAiNativeHandler extends BaseProvider implements SingleCompletio
 			yield* this.handleReasonerMessage(model, id, systemPrompt, messages)
 		} else if (model.id.startsWith("o1")) {
 			yield* this.handleO1FamilyMessage(model, systemPrompt, messages)
-		} else if (this.isGpt5Model(model.id)) {
-			yield* this.handleGpt5Message(model, systemPrompt, messages, metadata)
+		} else if (this.isResponsesApiModel(model.id)) {
+			// Both GPT-5 and Codex Mini use the v1/responses endpoint
+			yield* this.handleResponsesApiMessage(model, systemPrompt, messages, metadata)
 		} else {
 			yield* this.handleDefaultModelMessage(model, systemPrompt, messages)
 		}
@@ -212,7 +213,7 @@ export class OpenAiNativeHandler extends BaseProvider implements SingleCompletio
 		)
 	}
 
-	private async *handleGpt5Message(
+	private async *handleResponsesApiMessage(
 		model: OpenAiNativeModel,
 		systemPrompt: string,
 		messages: Anthropic.Messages.MessageParam[],
@@ -220,6 +221,12 @@ export class OpenAiNativeHandler extends BaseProvider implements SingleCompletio
 	): ApiStream {
 		// Prefer the official SDK Responses API with streaming; fall back to fetch-based SSE if needed.
 		const { verbosity } = this.getModel()
+
+		// For Codex Mini, we use a simpler request format
+		if (model.id === "codex-mini-latest") {
+			yield* this.handleCodexMiniWithResponsesApi(model, systemPrompt, messages)
+			return
+		}
 
 		// Resolve reasoning effort (supports "minimal" for GPT‑5)
 		const reasoningEffort = this.getGpt5ReasoningEffort(model)
@@ -1131,6 +1138,167 @@ export class OpenAiNativeHandler extends BaseProvider implements SingleCompletio
 		return modelId.startsWith("gpt-5")
 	}
 
+	private isResponsesApiModel(modelId: string): boolean {
+		// Both GPT-5 and Codex Mini use the v1/responses endpoint
+		return modelId.startsWith("gpt-5") || modelId === "codex-mini-latest"
+	}
+
+	private async *handleCodexMiniWithResponsesApi(
+		model: OpenAiNativeModel,
+		systemPrompt: string,
+		messages: Anthropic.Messages.MessageParam[],
+	): ApiStream {
+		// Convert messages to a simple input format for Codex Mini
+		const input = messages
+			.filter((msg) => msg.role === "user")
+			.map((msg) => {
+				if (typeof msg.content === "string") {
+					return msg.content
+				} else if (Array.isArray(msg.content)) {
+					return msg.content
+						.filter((part) => part.type === "text")
+						.map((part) => (part as any).text)
+						.join("\n")
+				}
+				return ""
+			})
+			.filter((content) => content)
+			.join("\n\n")
+
+		// Build request body for Codex Mini
+		const requestBody = {
+			model: model.id,
+			instructions: systemPrompt,
+			input: input,
+			stream: true,
+		}
+
+		// Use the existing responses API infrastructure
+		const apiKey = this.options.openAiNativeApiKey ?? "not-provided"
+		const baseUrl = this.options.openAiNativeBaseUrl || "https://api.openai.com"
+		const url = `${baseUrl}/v1/responses`
+
+		try {
+			const response = await fetch(url, {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+					Authorization: `Bearer ${apiKey}`,
+					Accept: "text/event-stream",
+				},
+				body: JSON.stringify(requestBody),
+			})
+
+			if (!response.ok) {
+				const errorText = await response.text()
+				let errorMessage = `Codex Mini API request failed (${response.status})`
+
+				try {
+					const errorJson = JSON.parse(errorText)
+					if (errorJson.error?.message) {
+						errorMessage += `: ${errorJson.error.message}`
+					} else if (errorJson.message) {
+						errorMessage += `: ${errorJson.message}`
+					} else {
+						errorMessage += `: ${errorText}`
+					}
+				} catch {
+					errorMessage += `: ${errorText}`
+				}
+
+				throw new Error(errorMessage)
+			}
+
+			if (!response.body) {
+				throw new Error("Codex Mini Responses API error: No response body")
+			}
+
+			// Handle the streaming response for Codex Mini
+			yield* this.handleCodexMiniStreamResponse(response.body, model, systemPrompt, input)
+		} catch (error) {
+			if (error instanceof Error) {
+				throw error
+			}
+			throw new Error(`Unexpected error connecting to Codex Mini API`)
+		}
+	}
+
+	private async *handleCodexMiniStreamResponse(
+		body: ReadableStream<Uint8Array>,
+		model: OpenAiNativeModel,
+		systemPrompt: string,
+		userInput: string,
+	): ApiStream {
+		const reader = body.getReader()
+		const decoder = new TextDecoder()
+		let buffer = ""
+		let totalText = ""
+
+		try {
+			while (true) {
+				const { done, value } = await reader.read()
+				if (done) break
+
+				buffer += decoder.decode(value, { stream: true })
+				const lines = buffer.split("\n")
+				buffer = lines.pop() || ""
+
+				for (const line of lines) {
+					if (line.trim() === "") continue
+					if (line.startsWith("data: ")) {
+						const data = line.slice(6)
+						if (data === "[DONE]") continue
+
+						try {
+							const event = JSON.parse(data)
+
+							// Handle different event types from responses API
+							if (event.type === "response.output_text.delta") {
+								yield {
+									type: "text",
+									text: event.delta,
+								}
+								totalText += event.delta
+							} else if (event.type === "response.completed" || event.type === "response.done") {
+								// Calculate usage based on text length (approximate)
+								// Estimate tokens: ~1 token per 4 characters
+								const promptTokens = Math.ceil((systemPrompt.length + userInput.length) / 4)
+								const completionTokens = Math.ceil(totalText.length / 4)
+
+								const totalCost = calculateApiCostOpenAI(
+									model.info,
+									promptTokens,
+									completionTokens,
+									0,
+									0,
+								)
+
+								yield {
+									type: "usage",
+									inputTokens: promptTokens,
+									outputTokens: completionTokens,
+									cacheWriteTokens: 0,
+									cacheReadTokens: 0,
+									totalCost,
+								}
+							} else if (event.type === "response.error") {
+								throw new Error(`Codex Mini stream error: ${event.error?.message || "Unknown error"}`)
+							}
+						} catch (e) {
+							if (e instanceof SyntaxError) {
+								console.debug("Codex Mini: Failed to parse SSE data", data)
+							} else {
+								throw e
+							}
+						}
+					}
+				}
+			}
+		} finally {
+			reader.releaseLock()
+		}
+	}
+
 	private async *handleStreamResponse(
 		stream: AsyncIterable<OpenAI.Chat.Completions.ChatCompletionChunk>,
 		model: OpenAiNativeModel,
@@ -1234,13 +1402,44 @@ export class OpenAiNativeHandler extends BaseProvider implements SingleCompletio
 	async completePrompt(prompt: string): Promise<string> {
 		try {
 			const { id, temperature, reasoning, verbosity } = this.getModel()
-			const isGpt5 = this.isGpt5Model(id)
+			const isResponsesApi = this.isResponsesApiModel(id)
 
-			if (isGpt5) {
-				// GPT-5 uses the Responses API, not Chat Completions. Avoid undefined behavior here.
-				throw new Error(
-					"completePrompt is not supported for GPT-5 models. Use createMessage (Responses API) instead.",
-				)
+			if (isResponsesApi) {
+				// Handle models that use the Responses API
+				if (id === "codex-mini-latest") {
+					// Codex Mini can use the responses API for non-streaming completion
+					const apiKey = this.options.openAiNativeApiKey ?? "not-provided"
+					const baseURL = this.options.openAiNativeBaseUrl ?? "https://api.openai.com/v1"
+
+					const response = await fetch(`${baseURL}/responses`, {
+						method: "POST",
+						headers: {
+							"Content-Type": "application/json",
+							Authorization: `Bearer ${apiKey}`,
+						},
+						body: JSON.stringify({
+							model: id,
+							instructions: "Complete the following prompt:",
+							input: prompt,
+							stream: false,
+						}),
+					})
+
+					if (!response.ok) {
+						const errorText = await response.text()
+						throw new Error(
+							`Codex Mini API error: ${response.status} ${response.statusText} - ${errorText}`,
+						)
+					}
+
+					const data = await response.json()
+					return data.output_text || ""
+				} else {
+					// GPT-5 models don't support non-streaming completion
+					throw new Error(
+						"completePrompt is not supported for GPT-5 models. Use createMessage (Responses API) instead.",
+					)
+				}
 			}
 
 			const params: any = {
@@ -1254,7 +1453,8 @@ export class OpenAiNativeHandler extends BaseProvider implements SingleCompletio
 			}
 
 			// For GPT-5 models, add reasoning_effort and verbosity as top-level parameters
-			if (isGpt5) {
+			// (Note: This code path won't be reached for GPT-5 or Codex Mini since they use responses API)
+			if (this.isGpt5Model(id)) {
 				if (reasoning && "reasoning_effort" in reasoning) {
 					params.reasoning_effort = reasoning.reasoning_effort
 				}

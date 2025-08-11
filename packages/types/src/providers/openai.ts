@@ -220,6 +220,16 @@ export const openAiNativeModels = {
 		outputPrice: 0.6,
 		cacheReadsPrice: 0.075,
 	},
+	"codex-mini-latest": {
+		maxTokens: 16_384,
+		contextWindow: 200_000,
+		supportsImages: false,
+		supportsPromptCache: false,
+		inputPrice: 1.5,
+		outputPrice: 6,
+		cacheReadsPrice: 0,
+		description: "Codex Mini: Optimized coding model using v1/responses endpoint",
+	},
 } as const satisfies Record<string, ModelInfo>
 
 export const openAiModelInfoSaneDefaults: ModelInfo = {
