@@ -19,6 +19,7 @@ import {
 	internationalZAiModels,
 	fireworksModels,
 	rooModels,
+	qwenCodeModels,
 	featherlessModels,
 } from "@roo-code/types"
 
@@ -41,6 +42,7 @@ export const MODELS_BY_PROVIDER: Partial<Record<ProviderName, Record<string, Mod
 	zai: internationalZAiModels,
 	fireworks: fireworksModels,
 	roo: rooModels,
+	"qwen-code": qwenCodeModels,
 	featherless: featherlessModels,
 }
 
@@ -72,6 +74,7 @@ export const PROVIDERS = [
 	{ value: "litellm", label: "LiteLLM" },
 	{ value: "sambanova", label: "SambaNova" },
 	{ value: "zai", label: "Z AI" },
+	{ value: "qwen-code", label: "Qwen Code" },
 	{ value: "fireworks", label: "Fireworks AI" },
 	{ value: "featherless", label: "Featherless AI" },
 	{ value: "io-intelligence", label: "IO Intelligence" },
