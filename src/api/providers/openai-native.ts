@@ -1208,8 +1208,8 @@ export class OpenAiNativeHandler extends BaseProvider implements SingleCompletio
 			defaultTemperature: this.isGpt5Model(id) ? GPT5_DEFAULT_TEMPERATURE : OPENAI_NATIVE_DEFAULT_TEMPERATURE,
 		})
 
-		// For GPT-5 models, ensure we support minimal reasoning effort
-		if (this.isGpt5Model(id)) {
+		// For models using the Responses API (GPT-5 and Codex Mini), ensure we support reasoning effort
+		if (this.isResponsesApiModel(id)) {
 			const effort =
 				(this.options.reasoningEffort as ReasoningEffortWithMinimal | undefined) ??
 				(info.reasoningEffort as ReasoningEffortWithMinimal | undefined)
@@ -1262,20 +1262,9 @@ export class OpenAiNativeHandler extends BaseProvider implements SingleCompletio
 				params.temperature = temperature
 			}
 
-			// For GPT-5 models, add reasoning_effort and verbosity as top-level parameters
-			// (Note: This code path won't be reached for GPT-5 or Codex Mini since they use responses API)
-			if (this.isGpt5Model(id)) {
-				if (reasoning && "reasoning_effort" in reasoning) {
-					params.reasoning_effort = reasoning.reasoning_effort
-				}
-				if (verbosity) {
-					params.verbosity = verbosity
-				}
-			} else {
-				// For non-GPT-5 models, add reasoning as is
-				if (reasoning) {
-					Object.assign(params, reasoning)
-				}
+			// Add reasoning parameters for models that support them
+			if (reasoning) {
+				Object.assign(params, reasoning)
 			}
 
 			const response = await this.client.chat.completions.create(params)
