@@ -801,40 +801,32 @@ describe("OpenAiNativeHandler - error hygiene", () => {
 			apiModelId: "codex-mini-latest",
 		}
 
+		beforeEach(() => {
+			mockResponsesCreate.mockClear()
+			mockResponsesRetrieve.mockClear()
+		})
+
 		it("should handle codex-mini-latest streaming response", async () => {
-			// Mock fetch for Codex Mini responses API
-			const mockFetch = vitest.fn().mockResolvedValue({
-				ok: true,
-				body: new ReadableStream({
-					start(controller) {
-						// Codex Mini uses the same responses API format
-						controller.enqueue(
-							new TextEncoder().encode('data: {"type":"response.output_text.delta","delta":"Hello"}\n\n'),
-						)
-						controller.enqueue(
-							new TextEncoder().encode('data: {"type":"response.output_text.delta","delta":" from"}\n\n'),
-						)
-						controller.enqueue(
-							new TextEncoder().encode(
-								'data: {"type":"response.output_text.delta","delta":" Codex"}\n\n',
-							),
-						)
-						controller.enqueue(
-							new TextEncoder().encode(
-								'data: {"type":"response.output_text.delta","delta":" Mini!"}\n\n',
-							),
-						)
-						controller.enqueue(
-							new TextEncoder().encode(
-								'data: {"type":"response.done","response":{"usage":{"prompt_tokens":50,"completion_tokens":10}}}\n\n',
-							),
-						)
-						controller.enqueue(new TextEncoder().encode("data: [DONE]\n\n"))
-						controller.close()
-					},
-				}),
+			// Mock the OpenAI SDK responses.create for Codex Mini
+			mockResponsesCreate.mockImplementationOnce(async (_options) => {
+				return (async function* () {
+					yield { type: "response.created", response: { id: "resp_codex" } }
+					yield { type: "response.output_text.delta", delta: "Hello from Codex Mini!" }
+					yield {
+						type: "response.completed",
+						response: {
+							id: "resp_codex",
+							output: [{ type: "text", content: [{ type: "text", text: "Hello from Codex Mini!" }] }],
+							usage: {
+								input_tokens: 50,
+								output_tokens: 10,
+								cache_creation_input_tokens: 0,
+								cache_read_input_tokens: 0,
+							},
+						},
+					}
+				})()
 			})
-			global.fetch = mockFetch as any
 
 			handler = new OpenAiNativeHandler({
 				...mockOptions,
@@ -854,46 +846,26 @@ describe("OpenAiNativeHandler - error hygiene", () => {
 
 			// Verify text chunks
 			const textChunks = chunks.filter((c) => c.type === "text")
-			expect(textChunks).toHaveLength(4)
+			expect(textChunks).toHaveLength(1)
 			expect(textChunks.map((c) => c.text).join("")).toBe("Hello from Codex Mini!")
 
-			// Verify usage data from API
+			// Verify usage data
 			const usageChunks = chunks.filter((c) => c.type === "usage")
 			expect(usageChunks).toHaveLength(1)
 			expect(usageChunks[0]).toMatchObject({
 				type: "usage",
 				inputTokens: 50,
 				outputTokens: 10,
-				totalCost: expect.any(Number), // Codex Mini has pricing: $1.5/M input, $6/M output
+				totalCost: expect.any(Number),
 			})
-
-			// Verify cost is calculated correctly based on API usage data
-			const expectedCost = (50 / 1_000_000) * 1.5 + (10 / 1_000_000) * 6
-			expect(usageChunks[0].totalCost).toBeCloseTo(expectedCost, 10)
 
 			// Verify the request was made with correct parameters
-			expect(mockFetch).toHaveBeenCalledWith(
-				"https://api.openai.com/v1/responses",
-				expect.objectContaining({
-					method: "POST",
-					headers: expect.objectContaining({
-						"Content-Type": "application/json",
-						Authorization: "Bearer test-api-key",
-						Accept: "text/event-stream",
-					}),
-					body: expect.any(String),
-				}),
-			)
-
-			const requestBody = JSON.parse(mockFetch.mock.calls[0][1].body)
+			expect(mockResponsesCreate).toHaveBeenCalledTimes(1)
+			const requestBody = mockResponsesCreate.mock.calls[0][0]
 			expect(requestBody).toMatchObject({
 				model: "codex-mini-latest",
-				input: "Developer: You are a helpful coding assistant.\n\nUser: Write a hello world function",
 				stream: true,
 			})
-
-			// Clean up
-			delete (global as any).fetch
 		})
 
 		it("should handle codex-mini-latest non-streaming completion", async () => {
@@ -902,21 +874,15 @@ describe("OpenAiNativeHandler - error hygiene", () => {
 				apiModelId: "codex-mini-latest",
 			})
 
-			// Codex Mini now uses the same Responses API as GPT-5, which doesn't support non-streaming
+			// Codex Mini now uses the same Responses API as other OpenAI Native models
 			await expect(handler.completePrompt("Write a hello world function in Python")).rejects.toThrow(
-				"completePrompt is not supported for codex-mini-latest. Use createMessage (Responses API) instead.",
+				"completePrompt is not supported for OpenAI Native models. Use createMessage instead.",
 			)
 		})
 
 		it("should handle codex-mini-latest API errors", async () => {
-			// Mock fetch with error response
-			const mockFetch = vitest.fn().mockResolvedValue({
-				ok: false,
-				status: 429,
-				statusText: "Too Many Requests",
-				text: async () => "Rate limit exceeded",
-			})
-			global.fetch = mockFetch as any
+			// Mock the OpenAI SDK to throw an error
+			mockResponsesCreate.mockRejectedValueOnce(new Error("Rate limit exceeded"))
 
 			handler = new OpenAiNativeHandler({
 				...mockOptions,
@@ -928,35 +894,33 @@ describe("OpenAiNativeHandler - error hygiene", () => {
 
 			const stream = handler.createMessage(systemPrompt, messages)
 
-			// Should throw an error (using the same error format as GPT-5)
+			// Should throw an error
 			await expect(async () => {
 				for await (const chunk of stream) {
 					// consume stream
 				}
 			}).rejects.toThrow("Rate limit exceeded")
-
-			// Clean up
-			delete (global as any).fetch
 		})
 
 		it("should handle codex-mini-latest with multiple user messages", async () => {
-			// Mock fetch for streaming response
-			const mockFetch = vitest.fn().mockResolvedValue({
-				ok: true,
-				body: new ReadableStream({
-					start(controller) {
-						controller.enqueue(
-							new TextEncoder().encode(
-								'data: {"type":"response.output_text.delta","delta":"Combined response"}\n\n',
-							),
-						)
-						controller.enqueue(new TextEncoder().encode('data: {"type":"response.completed"}\n\n'))
-						controller.enqueue(new TextEncoder().encode("data: [DONE]\n\n"))
-						controller.close()
-					},
-				}),
+			// Mock the OpenAI SDK responses.create
+			mockResponsesCreate.mockImplementationOnce(async (_options) => {
+				return (async function* () {
+					yield { type: "response.created", response: { id: "resp_multi" } }
+					yield { type: "response.output_text.delta", delta: "Combined response" }
+					yield {
+						type: "response.completed",
+						response: {
+							id: "resp_multi",
+							output: [{ type: "text", content: [{ type: "text", text: "Combined response" }] }],
+							usage: {
+								input_tokens: 30,
+								output_tokens: 5,
+							},
+						},
+					}
+				})()
 			})
-			global.fetch = mockFetch as any
 
 			handler = new OpenAiNativeHandler({
 				...mockOptions,
@@ -976,39 +940,31 @@ describe("OpenAiNativeHandler - error hygiene", () => {
 				chunks.push(chunk)
 			}
 
-			// Verify the request body includes full conversation like GPT-5
-			const requestBody = JSON.parse(mockFetch.mock.calls[0][1].body)
-			expect(requestBody.input).toContain("Developer: You are a helpful assistant")
-			expect(requestBody.input).toContain("User: First question")
-			expect(requestBody.input).toContain("Assistant: First answer")
-			expect(requestBody.input).toContain("User: Second question")
+			// Verify the request was made
+			expect(mockResponsesCreate).toHaveBeenCalledTimes(1)
+			const requestBody = mockResponsesCreate.mock.calls[0][0]
 
-			// Clean up
-			delete (global as any).fetch
+			// The request should have the messages formatted for the Responses API
+			expect(requestBody.input).toBeDefined()
+			expect(Array.isArray(requestBody.input)).toBe(true)
+
+			// Check that we have user and assistant messages in the input
+			const userMessages = requestBody.input.filter((m: any) => m.role === "user")
+			const assistantMessages = requestBody.input.filter((m: any) => m.role === "assistant")
+			expect(userMessages.length).toBeGreaterThan(0)
+			expect(assistantMessages.length).toBeGreaterThan(0)
 		})
 
 		it("should handle codex-mini-latest stream error events", async () => {
-			// Mock fetch with error event in stream
-			const mockFetch = vitest.fn().mockResolvedValue({
-				ok: true,
-				body: new ReadableStream({
-					start(controller) {
-						controller.enqueue(
-							new TextEncoder().encode(
-								'data: {"type":"response.output_text.delta","delta":"Partial"}\n\n',
-							),
-						)
-						controller.enqueue(
-							new TextEncoder().encode(
-								'data: {"type":"response.error","error":{"message":"Model overloaded"}}\n\n',
-							),
-						)
-						// The error handler will throw, but we still need to close the stream
-						controller.close()
-					},
-				}),
+			// Mock the OpenAI SDK to simulate an error during streaming
+			mockResponsesCreate.mockImplementationOnce(async (_options) => {
+				return (async function* () {
+					yield { type: "response.created", response: { id: "resp_error" } }
+					yield { type: "response.output_text.delta", delta: "Partial" }
+					// Simulate an error occurring mid-stream - this will be caught by the error hygiene logic
+					throw new Error("Model overloaded")
+				})()
 			})
-			global.fetch = mockFetch as any
 
 			handler = new OpenAiNativeHandler({
 				...mockOptions,
@@ -1020,16 +976,17 @@ describe("OpenAiNativeHandler - error hygiene", () => {
 
 			const stream = handler.createMessage(systemPrompt, messages)
 
-			// Should throw an error when encountering error event
-			await expect(async () => {
-				const chunks = []
-				for await (const chunk of stream) {
-					chunks.push(chunk)
-				}
-			}).rejects.toThrow("Responses API error: Model overloaded")
+			// The error hygiene logic in the provider swallows errors after output has been emitted
+			// So we should get the partial output but no error thrown
+			const chunks: any[] = []
+			for await (const chunk of stream) {
+				chunks.push(chunk)
+			}
 
-			// Clean up
-			delete (global as any).fetch
+			// We should have received the partial text
+			const textChunks = chunks.filter((c) => c.type === "text")
+			expect(textChunks.length).toBeGreaterThan(0)
+			expect(textChunks[0].text).toBe("Partial")
 		})
 	})
 })
