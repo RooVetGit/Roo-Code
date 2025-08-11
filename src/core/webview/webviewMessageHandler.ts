@@ -125,6 +125,18 @@ export const webviewMessageHandler = async (
 
 					// Initialize with history item after deletion
 					await provider.createTaskWithHistoryItem(historyItem)
+
+					// Invalidate GPT‑5 continuity for the newly initialized task so the next call does NOT
+					// send previous_response_id (prevents mismatched lineage after delete/trim).
+					try {
+						const newTask = provider.getCurrentTask()
+						if (newTask) {
+							// Call overwriteClineMessages with the same array to trigger the one-turn suppression flag.
+							await newTask.overwriteClineMessages(newTask.clineMessages)
+						}
+					} catch (e) {
+						console.error("Failed to invalidate continuity after delete:", e)
+					}
 				} catch (error) {
 					console.error("Error in delete message:", error)
 					vscode.window.showErrorMessage(
@@ -345,9 +357,27 @@ export const webviewMessageHandler = async (
 			await updateGlobalState("alwaysAllowUpdateTodoList", message.bool)
 			await provider.postStateToWebview()
 			break
-		case "askResponse":
+		case "askResponse": {
+			const task = provider.getCurrentTask()
+			// Optional single-flight guard: if the special first post-condense turn is in-flight,
+			// suppress duplicate UI-triggered sends to avoid racing a scheduled stateless call.
+			if (
+				task &&
+				typeof (task as any).isPostCondenseFirstCallScheduled === "boolean" &&
+				typeof (task as any).isPostCondenseFirstCallInFlight === "boolean" &&
+				(task as any).isPostCondenseFirstCallScheduled &&
+				(task as any).isPostCondenseFirstCallInFlight
+			) {
+				try {
+					provider.log?.(
+						`[webview] askResponse suppressed during post-condense first-turn in-flight for task ${(task as any).taskId}`,
+					)
+				} catch {}
+				break
+			}
 			provider.getCurrentTask()?.handleWebviewAskResponse(message.askResponse!, message.text, message.images)
 			break
+		}
 		case "autoCondenseContext":
 			await updateGlobalState("autoCondenseContext", message.bool)
 			await provider.postStateToWebview()

@@ -14,6 +14,20 @@ export type ApiHandlerOptions = Omit<ProviderSettings, "apiProvider"> & {
 	 * Defaults to true; set to false to disable summaries.
 	 */
 	enableGpt5ReasoningSummary?: boolean
+
+	/**
+	 * Controls statefulness for Responses API.
+	 * When false, treat interactions as stateless and avoid using previous_response_id.
+	 * The provider will include encrypted reasoning content to allow passing it back explicitly.
+	 * Defaults to true (stateful) if not provided.
+	 */
+	store?: boolean
+
+	/**
+	 * Optional default cache key for OpenAI Responses API prompt bucketing.
+	 * Per-call metadata.promptCacheKey takes precedence when provided.
+	 */
+	promptCacheKey?: string
 }
 
 // RouterName

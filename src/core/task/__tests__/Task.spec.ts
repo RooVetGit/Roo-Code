@@ -18,6 +18,7 @@ import { MultiSearchReplaceDiffStrategy } from "../../diff/strategies/multi-sear
 import { MultiFileSearchReplaceDiffStrategy } from "../../diff/strategies/multi-file-search-replace"
 import { EXPERIMENT_IDS } from "../../../shared/experiments"
 
+import * as slidingWindowModule from "../../sliding-window"
 // Mock delay before any imports that might use it
 vi.mock("delay", () => ({
 	__esModule: true,
@@ -1712,5 +1713,154 @@ describe("Cline", () => {
 			// Restore console.error
 			consoleErrorSpy.mockRestore()
 		})
+	})
+})
+
+// Additional tests for stateless override behavior after condense/sliding-window
+
+describe("Stateless overrides after context rewriting", () => {
+	const makeSimpleStream = (text: string = "ok"): AsyncGenerator<ApiStreamChunk> =>
+		(async function* () {
+			yield { type: "text", text } as any
+		})() as any
+
+	const makeProvider = () =>
+		({
+			context: { globalStorageUri: { fsPath: "/tmp/test-storage" } },
+			getState: vi.fn().mockResolvedValue({
+				// minimal state used by attemptApiRequest
+				apiConfiguration: { apiProvider: "anthropic", apiModelId: "claude-3" },
+				autoApprovalEnabled: true,
+				alwaysApproveResubmit: false,
+				requestDelaySeconds: 0,
+				autoCondenseContext: true,
+				autoCondenseContextPercent: 100,
+				profileThresholds: {},
+				listApiConfigMeta: [],
+			}),
+			postStateToWebview: vi.fn().mockResolvedValue(undefined),
+			postMessageToWebview: vi.fn().mockResolvedValue(undefined),
+			updateTaskHistory: vi.fn().mockResolvedValue(undefined),
+			log: vi.fn(),
+		}) as any
+
+	it("passes metadata.forceStateless=true (and suppressPreviousResponseId) on the next call after condense", async () => {
+		const provider = makeProvider()
+		const cline = new Task({
+			provider,
+			apiConfiguration: { apiProvider: "anthropic", apiModelId: "claude-3" },
+			task: "test",
+			startTask: false,
+		})
+
+		// Force contextTokens > 0 so the condense/sliding-window logic runs
+		vi.spyOn(cline, "getTokenUsage").mockReturnValue({ contextTokens: 100 } as any)
+
+		// Mock truncateConversationIfNeeded to simulate a condense (summary present)
+		const condenseMessages = [
+			{ role: "user", content: [{ type: "text", text: "Please continue from the following summary:" }] },
+			{ role: "assistant", content: [{ type: "text", text: "Condensed summary" }], isSummary: true },
+		] as any
+		const truncateSpy = vi.spyOn(slidingWindowModule, "truncateConversationIfNeeded").mockResolvedValue({
+			messages: condenseMessages,
+			summary: "Condensed summary",
+			cost: 0,
+			newContextTokens: 50,
+			prevContextTokens: 100,
+		} as any)
+
+		// Spy on createMessage to capture metadata
+		const cmSpy = vi.spyOn(cline.api, "createMessage").mockReturnValue(makeSimpleStream("done"))
+
+		const it1 = cline.attemptApiRequest(0)
+		await it1.next()
+
+		expect(truncateSpy).toHaveBeenCalled()
+		expect(cmSpy).toHaveBeenCalled()
+		const call = cmSpy.mock.calls[0]
+		const metadata = call?.[2] as any
+		expect(metadata).toBeDefined()
+		expect(metadata.forceStateless).toBe(true)
+		// After condense we also suppress previous_response_id
+		expect(metadata.suppressPreviousResponseId).toBe(true)
+	})
+
+	it("passes metadata.forceStateless=true (without suppressPreviousResponseId) on the next call after sliding-window truncation", async () => {
+		const provider = makeProvider()
+		const cline = new Task({
+			provider,
+			apiConfiguration: { apiProvider: "anthropic", apiModelId: "claude-3" },
+			task: "test",
+			startTask: false,
+		})
+
+		// Force contextTokens > 0 so the condense/sliding-window logic runs
+		vi.spyOn(cline, "getTokenUsage").mockReturnValue({ contextTokens: 200 } as any)
+
+		// Mock truncateConversationIfNeeded to simulate sliding-window truncation (no summary, messages changed)
+		const truncatedMessages = [
+			{ role: "user", content: [{ type: "text", text: "First message" }] },
+			{ role: "assistant", content: [{ type: "text", text: "Fourth message" }] },
+			{ role: "user", content: [{ type: "text", text: "Fifth message" }] },
+		] as any
+		const truncateSpy = vi.spyOn(slidingWindowModule, "truncateConversationIfNeeded").mockResolvedValue({
+			messages: truncatedMessages,
+			summary: "",
+			cost: 0,
+			prevContextTokens: 200,
+		} as any)
+
+		// Spy on createMessage to capture metadata
+		const cmSpy = vi.spyOn(cline.api, "createMessage").mockReturnValue(makeSimpleStream("done"))
+
+		const it1 = cline.attemptApiRequest(0)
+		await it1.next()
+
+		expect(truncateSpy).toHaveBeenCalled()
+		expect(cmSpy).toHaveBeenCalled()
+		const call = cmSpy.mock.calls[0]
+		const metadata = call?.[2] as any
+		expect(metadata).toBeDefined()
+		expect(metadata.forceStateless).toBe(true)
+		// Sliding-window path does not set suppressPreviousResponseId in metadata (provider will suppress via forceStateless)
+		expect(metadata.suppressPreviousResponseId).toBeUndefined()
+	})
+	it("only initiates one provider call for the first post-condense turn, even if two triggers fire", async () => {
+		const provider = makeProvider()
+		const cline = new Task({
+			provider,
+			apiConfiguration: { apiProvider: "anthropic", apiModelId: "claude-3" },
+			task: "test",
+			startTask: false,
+		})
+
+		// Ensure condense/sliding-window logic runs
+		vi.spyOn(cline, "getTokenUsage").mockReturnValue({ contextTokens: 100 } as any)
+
+		// Mock condense result to schedule the first post-condense call as stateless
+		const condenseMessages = [
+			{ role: "user", content: [{ type: "text", text: "Please continue from summary" }] },
+			{ role: "assistant", content: [{ type: "text", text: "Condensed summary" }], isSummary: true },
+		] as any
+		vi.spyOn(slidingWindowModule, "truncateConversationIfNeeded").mockResolvedValue({
+			messages: condenseMessages,
+			summary: "Condensed summary",
+			cost: 0,
+			newContextTokens: 50,
+			prevContextTokens: 100,
+		} as any)
+
+		// Spy on provider call and return a simple stream
+		const cmSpy = vi.spyOn(cline.api, "createMessage").mockReturnValue(makeSimpleStream("done"))
+
+		// Fire two triggers for the "first turn after condense"
+		const it1 = cline.attemptApiRequest(0)
+		await it1.next() // enters request, sets in-flight guard
+
+		const it2 = cline.attemptApiRequest(0)
+		await it2.next() // should no-op due to re-entrancy guard
+
+		// Exactly one provider invocation
+		expect(cmSpy).toHaveBeenCalledTimes(1)
 	})
 })

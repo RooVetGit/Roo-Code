@@ -115,7 +115,8 @@ export const ChatRowContent = ({
 }: ChatRowContentProps) => {
 	const { t } = useTranslation()
 	const { mcpServers, alwaysAllowMcp, currentCheckpoint, mode } = useExtensionState()
-	const [reasoningCollapsed, setReasoningCollapsed] = useState(true)
+	const [reasoningCollapsed, setReasoningCollapsed] = useState<boolean>(true)
+
 	const [isDiffErrorExpanded, setIsDiffErrorExpanded] = useState(false)
 	const [showCopySuccess, setShowCopySuccess] = useState(false)
 	const [isEditing, setIsEditing] = useState(false)

@@ -3,7 +3,7 @@ import type { ModelInfo } from "../model.js"
 // https://openai.com/api/pricing/
 export type OpenAiNativeModelId = keyof typeof openAiNativeModels
 
-export const openAiNativeDefaultModelId: OpenAiNativeModelId = "gpt-5-2025-08-07"
+export const openAiNativeDefaultModelId: OpenAiNativeModelId = "gpt-5"
 
 export const openAiNativeModels = {
 	"gpt-5-chat-latest": {
@@ -31,6 +31,28 @@ export const openAiNativeModels = {
 		description: "GPT-5: The best model for coding and agentic tasks across domains",
 		// supportsVerbosity is a new capability; ensure ModelInfo includes it
 		supportsVerbosity: true,
+		// GPT-5 supports Responses API reasoning summaries
+		supportsReasoningSummary: true,
+		systemPromptRole: "developer",
+		supportsTemperature: false,
+	},
+	"gpt-5": {
+		maxTokens: 128000,
+		contextWindow: 400000,
+		supportsImages: true,
+		supportsPromptCache: true,
+		supportsReasoningEffort: true,
+		reasoningEffort: "medium",
+		inputPrice: 1.25,
+		outputPrice: 10.0,
+		cacheReadsPrice: 0.13,
+		description: "GPT-5: The best model for coding and agentic tasks across domains",
+		// supportsVerbosity is a new capability; ensure ModelInfo includes it
+		supportsVerbosity: true,
+		// GPT-5 supports Responses API reasoning summaries
+		supportsReasoningSummary: true,
+		systemPromptRole: "developer",
+		supportsTemperature: false,
 	},
 	"gpt-5-mini-2025-08-07": {
 		maxTokens: 128000,
@@ -44,6 +66,27 @@ export const openAiNativeModels = {
 		cacheReadsPrice: 0.03,
 		description: "GPT-5 Mini: A faster, more cost-efficient version of GPT-5 for well-defined tasks",
 		supportsVerbosity: true,
+		// GPT-5 supports Responses API reasoning summaries
+		supportsReasoningSummary: true,
+		systemPromptRole: "developer",
+		supportsTemperature: false,
+	},
+	"gpt-5-mini": {
+		maxTokens: 128000,
+		contextWindow: 400000,
+		supportsImages: true,
+		supportsPromptCache: true,
+		supportsReasoningEffort: true,
+		reasoningEffort: "medium",
+		inputPrice: 0.25,
+		outputPrice: 2.0,
+		cacheReadsPrice: 0.03,
+		description: "GPT-5 Mini: A faster, more cost-efficient version of GPT-5 for well-defined tasks",
+		supportsVerbosity: true,
+		// GPT-5 supports Responses API reasoning summaries
+		supportsReasoningSummary: true,
+		systemPromptRole: "developer",
+		supportsTemperature: false,
 	},
 	"gpt-5-nano-2025-08-07": {
 		maxTokens: 128000,
@@ -57,6 +100,27 @@ export const openAiNativeModels = {
 		cacheReadsPrice: 0.01,
 		description: "GPT-5 Nano: Fastest, most cost-efficient version of GPT-5",
 		supportsVerbosity: true,
+		// GPT-5 supports Responses API reasoning summaries
+		supportsReasoningSummary: true,
+		systemPromptRole: "developer",
+		supportsTemperature: false,
+	},
+	"gpt-5-nano": {
+		maxTokens: 128000,
+		contextWindow: 400000,
+		supportsImages: true,
+		supportsPromptCache: true,
+		supportsReasoningEffort: true,
+		reasoningEffort: "medium",
+		inputPrice: 0.05,
+		outputPrice: 0.4,
+		cacheReadsPrice: 0.01,
+		description: "GPT-5 Nano: Fastest, most cost-efficient version of GPT-5",
+		supportsVerbosity: true,
+		// GPT-5 supports Responses API reasoning summaries
+		supportsReasoningSummary: true,
+		systemPromptRole: "developer",
+		supportsTemperature: false,
 	},
 	"gpt-4.1": {
 		maxTokens: 32_768,
@@ -66,6 +130,9 @@ export const openAiNativeModels = {
 		inputPrice: 2,
 		outputPrice: 8,
 		cacheReadsPrice: 0.5,
+		systemPromptRole: "system",
+		defaultTemperature: 0,
+		supportsTemperature: true,
 	},
 	"gpt-4.1-mini": {
 		maxTokens: 32_768,
@@ -75,6 +142,9 @@ export const openAiNativeModels = {
 		inputPrice: 0.4,
 		outputPrice: 1.6,
 		cacheReadsPrice: 0.1,
+		systemPromptRole: "system",
+		defaultTemperature: 0,
+		supportsTemperature: true,
 	},
 	"gpt-4.1-nano": {
 		maxTokens: 32_768,
@@ -84,6 +154,9 @@ export const openAiNativeModels = {
 		inputPrice: 0.1,
 		outputPrice: 0.4,
 		cacheReadsPrice: 0.025,
+		systemPromptRole: "system",
+		defaultTemperature: 0,
+		supportsTemperature: true,
 	},
 	o3: {
 		maxTokens: 100_000,
@@ -95,26 +168,8 @@ export const openAiNativeModels = {
 		cacheReadsPrice: 0.5,
 		supportsReasoningEffort: true,
 		reasoningEffort: "medium",
-	},
-	"o3-high": {
-		maxTokens: 100_000,
-		contextWindow: 200_000,
-		supportsImages: true,
-		supportsPromptCache: true,
-		inputPrice: 2.0,
-		outputPrice: 8.0,
-		cacheReadsPrice: 0.5,
-		reasoningEffort: "high",
-	},
-	"o3-low": {
-		maxTokens: 100_000,
-		contextWindow: 200_000,
-		supportsImages: true,
-		supportsPromptCache: true,
-		inputPrice: 2.0,
-		outputPrice: 8.0,
-		cacheReadsPrice: 0.5,
-		reasoningEffort: "low",
+		systemPromptRole: "developer",
+		supportsTemperature: false,
 	},
 	"o4-mini": {
 		maxTokens: 100_000,
@@ -126,26 +181,8 @@ export const openAiNativeModels = {
 		cacheReadsPrice: 0.275,
 		supportsReasoningEffort: true,
 		reasoningEffort: "medium",
-	},
-	"o4-mini-high": {
-		maxTokens: 100_000,
-		contextWindow: 200_000,
-		supportsImages: true,
-		supportsPromptCache: true,
-		inputPrice: 1.1,
-		outputPrice: 4.4,
-		cacheReadsPrice: 0.275,
-		reasoningEffort: "high",
-	},
-	"o4-mini-low": {
-		maxTokens: 100_000,
-		contextWindow: 200_000,
-		supportsImages: true,
-		supportsPromptCache: true,
-		inputPrice: 1.1,
-		outputPrice: 4.4,
-		cacheReadsPrice: 0.275,
-		reasoningEffort: "low",
+		systemPromptRole: "developer",
+		supportsTemperature: false,
 	},
 	"o3-mini": {
 		maxTokens: 100_000,
@@ -157,26 +194,8 @@ export const openAiNativeModels = {
 		cacheReadsPrice: 0.55,
 		supportsReasoningEffort: true,
 		reasoningEffort: "medium",
-	},
-	"o3-mini-high": {
-		maxTokens: 100_000,
-		contextWindow: 200_000,
-		supportsImages: false,
-		supportsPromptCache: true,
-		inputPrice: 1.1,
-		outputPrice: 4.4,
-		cacheReadsPrice: 0.55,
-		reasoningEffort: "high",
-	},
-	"o3-mini-low": {
-		maxTokens: 100_000,
-		contextWindow: 200_000,
-		supportsImages: false,
-		supportsPromptCache: true,
-		inputPrice: 1.1,
-		outputPrice: 4.4,
-		cacheReadsPrice: 0.55,
-		reasoningEffort: "low",
+		systemPromptRole: "developer",
+		supportsTemperature: false,
 	},
 	o1: {
 		maxTokens: 100_000,
@@ -186,15 +205,8 @@ export const openAiNativeModels = {
 		inputPrice: 15,
 		outputPrice: 60,
 		cacheReadsPrice: 7.5,
-	},
-	"o1-preview": {
-		maxTokens: 32_768,
-		contextWindow: 128_000,
-		supportsImages: true,
-		supportsPromptCache: true,
-		inputPrice: 15,
-		outputPrice: 60,
-		cacheReadsPrice: 7.5,
+		systemPromptRole: "developer",
+		supportsTemperature: false,
 	},
 	"o1-mini": {
 		maxTokens: 65_536,
@@ -204,6 +216,8 @@ export const openAiNativeModels = {
 		inputPrice: 1.1,
 		outputPrice: 4.4,
 		cacheReadsPrice: 0.55,
+		systemPromptRole: "developer",
+		supportsTemperature: false,
 	},
 	"gpt-4o": {
 		maxTokens: 16_384,
@@ -213,6 +227,9 @@ export const openAiNativeModels = {
 		inputPrice: 2.5,
 		outputPrice: 10,
 		cacheReadsPrice: 1.25,
+		systemPromptRole: "system",
+		defaultTemperature: 0,
+		supportsTemperature: true,
 	},
 	"gpt-4o-mini": {
 		maxTokens: 16_384,
@@ -222,6 +239,8 @@ export const openAiNativeModels = {
 		inputPrice: 0.15,
 		outputPrice: 0.6,
 		cacheReadsPrice: 0.075,
+		systemPromptRole: "system",
+		defaultTemperature: 0,
 	},
 	"codex-mini-latest": {
 		maxTokens: 16_384,
@@ -243,13 +262,11 @@ export const openAiModelInfoSaneDefaults: ModelInfo = {
 	supportsPromptCache: false,
 	inputPrice: 0,
 	outputPrice: 0,
+	defaultTemperature: 0,
 }
 
 // https://learn.microsoft.com/en-us/azure/ai-services/openai/api-version-deprecation
 // https://learn.microsoft.com/en-us/azure/ai-services/openai/reference#api-specs
 export const azureOpenAiDefaultApiVersion = "2024-08-01-preview"
-
-export const OPENAI_NATIVE_DEFAULT_TEMPERATURE = 0
-export const GPT5_DEFAULT_TEMPERATURE = 1.0
 
 export const OPENAI_AZURE_AI_INFERENCE_PATH = "/models/chat/completions"

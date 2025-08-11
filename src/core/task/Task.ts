@@ -270,6 +270,10 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 	isAssistantMessageParserEnabled = false
 	private lastUsedInstructions?: string
 	private skipPrevResponseIdOnce: boolean = false
+	private forceStatelessNextCallOnce: boolean = false
+	// Re-entrancy guard for the first post-condense/sliding-window call
+	private _postCondenseFirstCallScheduled?: boolean
+	private _postCondenseFirstCallInFlight?: boolean
 
 	constructor({
 		provider,
@@ -922,6 +926,18 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 			{ isNonInteractive: true } /* options */,
 			contextCondense,
 		)
+		// Ensure the immediate next model call is stateless after manual condense,
+		// and suppress previous_response_id once to avoid lineage mismatches.
+		this.skipPrevResponseIdOnce = true
+		this.forceStatelessNextCallOnce = true
+		// Mark that the immediate next call is the post-condense first call (one-shot)
+		this._postCondenseFirstCallScheduled = true
+		this._postCondenseFirstCallInFlight = false
+		try {
+			this.providerRef
+				.deref()
+				?.log(`[post-condense] manual condense scheduled first-turn stateless call for task ${this.taskId}`)
+		} catch {}
 	}
 
 	async say(
@@ -2312,6 +2328,9 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 				state?.listApiConfigMeta.find((profile) => profile.name === state?.currentApiConfigName)?.id ??
 				"default"
 
+			// Track whether the immediate next call must be stateless due to local context rewriting.
+			let forceStatelessNextCall = false
+
 			const truncateResult = await truncateConversationIfNeeded({
 				messages: this.apiConversationHistory,
 				totalTokens: contextTokens,
@@ -2327,15 +2346,20 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 				profileThresholds,
 				currentProfileId,
 			})
-			if (truncateResult.messages !== this.apiConversationHistory) {
+
+			const didRewriteContext = truncateResult.messages !== this.apiConversationHistory
+
+			if (didRewriteContext) {
 				await this.overwriteApiConversationHistory(truncateResult.messages)
 			}
+
 			if (truncateResult.error) {
 				await this.say("condense_context_error", truncateResult.error)
 			} else if (truncateResult.summary) {
 				// A condense operation occurred; for the next GPT‑5 API call we should NOT
 				// send previous_response_id so the request reflects the fresh condensed context.
 				this.skipPrevResponseIdOnce = true
+				forceStatelessNextCall = true
 
 				const { summary, cost, prevContextTokens, newContextTokens = 0 } = truncateResult
 				const contextCondense: ContextCondense = { summary, cost, newContextTokens, prevContextTokens }
@@ -2349,6 +2373,36 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 					{ isNonInteractive: true } /* options */,
 					contextCondense,
 				)
+			} else if (didRewriteContext) {
+				// Sliding-window truncation occurred (messages changed without a condense summary).
+				// Force the immediate next call to be stateless to align server state with locally rewritten context.
+				forceStatelessNextCall = true
+			}
+
+			// Persist the decision for this turn so we can include it in metadata for the next call.
+			if (forceStatelessNextCall) {
+				this.forceStatelessNextCallOnce = true
+				// Schedule one-shot guard for the first call after condense/sliding-window.
+				// Do not reset inFlight if a first-turn call is already in progress.
+				if (!this._postCondenseFirstCallScheduled) {
+					this._postCondenseFirstCallScheduled = true
+					this._postCondenseFirstCallInFlight = false
+					try {
+						this.providerRef
+							.deref()
+							?.log(
+								`[post-condense] scheduled first-turn guard (stateless next call) for task ${this.taskId}`,
+							)
+					} catch {}
+				} else {
+					try {
+						this.providerRef
+							.deref()
+							?.log(
+								`[post-condense] guard already scheduled; leaving in-flight state unchanged (task ${this.taskId})`,
+							)
+					} catch {}
+				}
 			}
 		}
 
@@ -2399,11 +2453,35 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 			...(previousResponseId ? { previousResponseId } : {}),
 			// If a condense just occurred, explicitly suppress continuity fallback for the next call
 			...(this.skipPrevResponseIdOnce ? { suppressPreviousResponseId: true } : {}),
+			// If either condense or sliding-window rewrote the local context, force stateless for the next call.
+			...(this.forceStatelessNextCallOnce ? { forceStateless: true } : {}),
 		}
 
-		// Reset skip flag after applying (it only affects the immediate next call)
+		// Reset one-shot flags after applying (they only affect the immediate next call)
 		if (this.skipPrevResponseIdOnce) {
 			this.skipPrevResponseIdOnce = false
+		}
+		if (this.forceStatelessNextCallOnce) {
+			this.forceStatelessNextCallOnce = false
+		}
+
+		// Re-entrancy guard: one-shot in-flight guard for the first post-condense/sliding-window call.
+		// If an external second trigger arrives while the first is in-flight, no-op the duplicate.
+		if (this._postCondenseFirstCallScheduled) {
+			if (this._postCondenseFirstCallInFlight && retryAttempt === 0) {
+				// Duplicate external trigger detected - no-op for this call
+				try {
+					this.providerRef
+						.deref()
+						?.log(`[post-condense] suppressing duplicate first-turn trigger (task ${this.taskId})`)
+				} catch {}
+				return
+			}
+			// Acquire the guard for this first-call window
+			this._postCondenseFirstCallInFlight = true
+			try {
+				this.providerRef.deref()?.log(`[post-condense] acquired first-turn guard (task ${this.taskId})`)
+			} catch {}
 		}
 
 		const stream = this.api.createMessage(systemPrompt, cleanConversationHistory, metadata)
@@ -2473,6 +2551,15 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 				// incremented retry count.
 				yield* this.attemptApiRequest(retryAttempt + 1)
 
+				// After the retried call completes, release the post-condense guard
+				this._postCondenseFirstCallScheduled = false
+				this._postCondenseFirstCallInFlight = false
+				try {
+					this.providerRef
+						.deref()
+						?.log(`[post-condense] released first-turn guard after retry completion (task ${this.taskId})`)
+				} catch {}
+
 				return
 			} else {
 				const { response } = await this.ask(
@@ -2490,6 +2577,10 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 
 				// Delegate generator output from the recursive call.
 				yield* this.attemptApiRequest()
+
+				// After the retried call completes, release the post-condense guard
+				this._postCondenseFirstCallScheduled = false
+				this._postCondenseFirstCallInFlight = false
 				return
 			}
 		}
@@ -2503,6 +2594,14 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 		// effectively passes along all subsequent chunks from the original
 		// stream.
 		yield* iterator
+		// Release one-shot post-condense guard after successful stream completion
+		this._postCondenseFirstCallScheduled = false
+		this._postCondenseFirstCallInFlight = false
+		try {
+			this.providerRef
+				.deref()
+				?.log(`[post-condense] released first-turn guard after completion (task ${this.taskId})`)
+		} catch {}
 	}
 
 	// Checkpoints
@@ -2579,6 +2678,14 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 	}
 
 	// Getters
+
+	public get isPostCondenseFirstCallScheduled(): boolean {
+		return !!this._postCondenseFirstCallScheduled
+	}
+
+	public get isPostCondenseFirstCallInFlight(): boolean {
+		return !!this._postCondenseFirstCallInFlight
+	}
 
 	public get cwd() {
 		return this.workspacePath
