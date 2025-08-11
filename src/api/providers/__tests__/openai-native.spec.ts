@@ -1545,7 +1545,11 @@ describe("GPT-5 streaming event coverage (additional)", () => {
 								'data: {"type":"response.output_text.delta","delta":" Mini!"}\n\n',
 							),
 						)
-						controller.enqueue(new TextEncoder().encode('data: {"type":"response.completed"}\n\n'))
+						controller.enqueue(
+							new TextEncoder().encode(
+								'data: {"type":"response.done","response":{"usage":{"prompt_tokens":50,"completion_tokens":10}}}\n\n',
+							),
+						)
 						controller.enqueue(new TextEncoder().encode("data: [DONE]\n\n"))
 						controller.close()
 					},
@@ -1574,18 +1578,19 @@ describe("GPT-5 streaming event coverage (additional)", () => {
 			expect(textChunks).toHaveLength(4)
 			expect(textChunks.map((c) => c.text).join("")).toBe("Hello from Codex Mini!")
 
-			// Verify usage estimation (based on character count)
+			// Verify usage data from API
 			const usageChunks = chunks.filter((c) => c.type === "usage")
 			expect(usageChunks).toHaveLength(1)
 			expect(usageChunks[0]).toMatchObject({
 				type: "usage",
-				inputTokens: expect.any(Number),
-				outputTokens: expect.any(Number),
+				inputTokens: 50,
+				outputTokens: 10,
 				totalCost: expect.any(Number), // Codex Mini has pricing: $1.5/M input, $6/M output
 			})
 
-			// Verify cost is calculated correctly
-			expect(usageChunks[0].totalCost).toBeGreaterThan(0)
+			// Verify cost is calculated correctly based on API usage data
+			const expectedCost = (50 / 1_000_000) * 1.5 + (10 / 1_000_000) * 6
+			expect(usageChunks[0].totalCost).toBeCloseTo(expectedCost, 10)
 
 			// Verify the request was made with correct parameters
 			expect(mockFetch).toHaveBeenCalledWith(
@@ -1677,12 +1682,12 @@ describe("GPT-5 streaming event coverage (additional)", () => {
 
 			const stream = handler.createMessage(systemPrompt, messages)
 
-			// Should throw an error
+			// Should throw an error (using the same error format as GPT-5)
 			await expect(async () => {
 				for await (const chunk of stream) {
 					// consume stream
 				}
-			}).rejects.toThrow("Codex Mini API request failed (429): Rate limit exceeded")
+			}).rejects.toThrow("Rate limit exceeded")
 
 			// Clean up
 			delete (global as any).fetch
@@ -1750,6 +1755,7 @@ describe("GPT-5 streaming event coverage (additional)", () => {
 								'data: {"type":"response.error","error":{"message":"Model overloaded"}}\n\n',
 							),
 						)
+						// The error handler will throw, but we still need to close the stream
 						controller.close()
 					},
 				}),
@@ -1772,7 +1778,7 @@ describe("GPT-5 streaming event coverage (additional)", () => {
 				for await (const chunk of stream) {
 					chunks.push(chunk)
 				}
-			}).rejects.toThrow("Codex Mini stream error: Model overloaded")
+			}).rejects.toThrow("Responses API error: Model overloaded")
 
 			// Clean up
 			delete (global as any).fetch

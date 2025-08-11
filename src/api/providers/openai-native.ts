@@ -893,7 +893,7 @@ export class OpenAiNativeHandler extends BaseProvider implements SingleCompletio
 								// Error event from the API
 								if (parsed.error || parsed.message) {
 									throw new Error(
-										`GPT-5 API error: ${parsed.error?.message || parsed.message || "Unknown error"}`,
+										`Responses API error: ${parsed.error?.message || parsed.message || "Unknown error"}`,
 									)
 								}
 							}
@@ -1000,7 +1000,10 @@ export class OpenAiNativeHandler extends BaseProvider implements SingleCompletio
 								}
 							}
 						} catch (e) {
-							// Silently ignore parsing errors for non-critical SSE data
+							// Only ignore JSON parsing errors, re-throw actual API errors
+							if (!(e instanceof SyntaxError)) {
+								throw e
+							}
 						}
 					}
 					// Also try to parse non-SSE formatted lines
@@ -1148,7 +1151,6 @@ export class OpenAiNativeHandler extends BaseProvider implements SingleCompletio
 		systemPrompt: string,
 		messages: Anthropic.Messages.MessageParam[],
 	): ApiStream {
-		// Convert messages to a simple input format for Codex Mini
 		const input = messages
 			.filter((msg) => msg.role === "user")
 			.map((msg) => {
@@ -1173,130 +1175,7 @@ export class OpenAiNativeHandler extends BaseProvider implements SingleCompletio
 			stream: true,
 		}
 
-		// Use the existing responses API infrastructure
-		const apiKey = this.options.openAiNativeApiKey ?? "not-provided"
-		const baseUrl = this.options.openAiNativeBaseUrl || "https://api.openai.com"
-		const url = `${baseUrl}/v1/responses`
-
-		try {
-			const response = await fetch(url, {
-				method: "POST",
-				headers: {
-					"Content-Type": "application/json",
-					Authorization: `Bearer ${apiKey}`,
-					Accept: "text/event-stream",
-				},
-				body: JSON.stringify(requestBody),
-			})
-
-			if (!response.ok) {
-				const errorText = await response.text()
-				let errorMessage = `Codex Mini API request failed (${response.status})`
-
-				try {
-					const errorJson = JSON.parse(errorText)
-					if (errorJson.error?.message) {
-						errorMessage += `: ${errorJson.error.message}`
-					} else if (errorJson.message) {
-						errorMessage += `: ${errorJson.message}`
-					} else {
-						errorMessage += `: ${errorText}`
-					}
-				} catch {
-					errorMessage += `: ${errorText}`
-				}
-
-				throw new Error(errorMessage)
-			}
-
-			if (!response.body) {
-				throw new Error("Codex Mini Responses API error: No response body")
-			}
-
-			// Handle the streaming response for Codex Mini
-			yield* this.handleCodexMiniStreamResponse(response.body, model, systemPrompt, input)
-		} catch (error) {
-			if (error instanceof Error) {
-				throw error
-			}
-			throw new Error(`Unexpected error connecting to Codex Mini API`)
-		}
-	}
-
-	private async *handleCodexMiniStreamResponse(
-		body: ReadableStream<Uint8Array>,
-		model: OpenAiNativeModel,
-		systemPrompt: string,
-		userInput: string,
-	): ApiStream {
-		const reader = body.getReader()
-		const decoder = new TextDecoder()
-		let buffer = ""
-		let totalText = ""
-
-		try {
-			while (true) {
-				const { done, value } = await reader.read()
-				if (done) break
-
-				buffer += decoder.decode(value, { stream: true })
-				const lines = buffer.split("\n")
-				buffer = lines.pop() || ""
-
-				for (const line of lines) {
-					if (line.trim() === "") continue
-					if (line.startsWith("data: ")) {
-						const data = line.slice(6)
-						if (data === "[DONE]") continue
-
-						try {
-							const event = JSON.parse(data)
-
-							// Handle different event types from responses API
-							if (event.type === "response.output_text.delta") {
-								yield {
-									type: "text",
-									text: event.delta,
-								}
-								totalText += event.delta
-							} else if (event.type === "response.completed" || event.type === "response.done") {
-								// Calculate usage based on text length (approximate)
-								// Estimate tokens: ~1 token per 4 characters
-								const promptTokens = Math.ceil((systemPrompt.length + userInput.length) / 4)
-								const completionTokens = Math.ceil(totalText.length / 4)
-
-								const totalCost = calculateApiCostOpenAI(
-									model.info,
-									promptTokens,
-									completionTokens,
-									0,
-									0,
-								)
-
-								yield {
-									type: "usage",
-									inputTokens: promptTokens,
-									outputTokens: completionTokens,
-									cacheWriteTokens: 0,
-									cacheReadTokens: 0,
-									totalCost,
-								}
-							} else if (event.type === "response.error") {
-								throw new Error(`Codex Mini stream error: ${event.error?.message || "Unknown error"}`)
-							}
-						} catch (e) {
-							if (e instanceof SyntaxError) {
-								console.debug("Codex Mini: Failed to parse SSE data", data)
-							} else {
-								throw e
-							}
-						}
-					}
-				}
-			}
-		} finally {
-			reader.releaseLock()
-		}
+		yield* this.makeGpt5ResponsesAPIRequest(requestBody, model)
 	}
 
 	private async *handleStreamResponse(
