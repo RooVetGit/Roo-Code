@@ -228,7 +228,8 @@ export const openAiNativeModels = {
 		inputPrice: 1.5,
 		outputPrice: 6,
 		cacheReadsPrice: 0,
-		description: "Codex Mini: Optimized coding model using v1/responses endpoint",
+		description:
+			"Codex Mini: Cloud-based software engineering agent powered by codex-1, a version of o3 optimized for coding tasks. Trained with reinforcement learning to generate human-style code, adhere to instructions, and iteratively run tests.",
 	},
 } as const satisfies Record<string, ModelInfo>
 
