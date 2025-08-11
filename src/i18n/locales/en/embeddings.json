@@ -23,6 +23,8 @@
 		"failedToProcessBatchWithError": "Failed to process batch after {{maxRetries}} attempts: {{errorMessage}}"
 	},
 	"vectorStore": {
+		"vectorError": "Error: {{errorMessage}}",
+		"valkeyConnectionFailed": "Failed to connect to Valkey Search. Ensure Valkey is running and accessible at {{valkeyUrl}}. Error: {{errorMessage}}",
 		"qdrantConnectionFailed": "Failed to connect to Qdrant vector database. Please ensure Qdrant is running and accessible at {{qdrantUrl}}. Error: {{errorMessage}}",
 		"vectorDimensionMismatch": "Failed to update vector index for new model. Please try clearing the index and starting again. Details: {{errorMessage}}"
 	},
@@ -50,7 +52,7 @@
 		"invalidEmbedderType": "Invalid embedder type configured: {{embedderProvider}}",
 		"vectorDimensionNotDeterminedOpenAiCompatible": "Could not determine vector dimension for model '{{modelId}}' with provider '{{provider}}'. Please ensure the 'Embedding Dimension' is correctly set in the OpenAI-Compatible provider settings.",
 		"vectorDimensionNotDetermined": "Could not determine vector dimension for model '{{modelId}}' with provider '{{provider}}'. Check model profiles or configuration.",
-		"qdrantUrlMissing": "Qdrant URL missing for vector store creation",
+		"vectorUrlMissing": "URL missing for vector store creation",
 		"codeIndexingNotConfigured": "Cannot create services: Code indexing is not properly configured"
 	},
 	"orchestrator": {

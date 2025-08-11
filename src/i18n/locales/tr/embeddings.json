@@ -23,6 +23,8 @@
 		"failedToProcessBatchWithError": "{{maxRetries}} denemeden sonra toplu işlem başarısız oldu: {{errorMessage}}"
 	},
 	"vectorStore": {
+		"vectorError": "Hata: {{errorMessage}}",
+		"valkeyConnectionFailed": "Valkey Search'e bağlanılamadı. Valkey'nin {{valkeyUrl}} adresinde çalıştığından ve erişilebilir olduğundan emin olun. Hata: {{errorMessage}}",
 		"qdrantConnectionFailed": "Qdrant vektör veritabanına bağlanılamadı. Qdrant'ın çalıştığından ve {{qdrantUrl}} adresinde erişilebilir olduğundan emin olun. Hata: {{errorMessage}}",
 		"vectorDimensionMismatch": "Yeni model için vektör dizini güncellenemedi. Lütfen dizini temizleyip yeniden başlatmayı deneyin. Detaylar: {{errorMessage}}"
 	},
@@ -50,7 +52,7 @@
 		"invalidEmbedderType": "Geçersiz gömücü türü yapılandırıldı: {{embedderProvider}}",
 		"vectorDimensionNotDeterminedOpenAiCompatible": "'{{provider}}' sağlayıcısı ile '{{modelId}}' modeli için vektör boyutu belirlenemedi. OpenAI uyumlu sağlayıcı ayarlarında 'Gömme Boyutu'nun doğru ayarlandığından emin ol.",
 		"vectorDimensionNotDetermined": "'{{provider}}' sağlayıcısı ile '{{modelId}}' modeli için vektör boyutu belirlenemedi. Model profillerini veya yapılandırmayı kontrol et.",
-		"qdrantUrlMissing": "Vektör deposu oluşturmak için Qdrant URL'si eksik",
+		"vectorUrlMissing": "Vektör deposu oluşturma için URL eksik",
 		"codeIndexingNotConfigured": "Hizmetler oluşturulamıyor: Kod indeksleme düzgün yapılandırılmamış"
 	},
 	"orchestrator": {
