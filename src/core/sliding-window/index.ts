@@ -155,6 +155,7 @@ export async function truncateConversationIfNeeded({
 				true, // automatic trigger
 				customCondensingPrompt,
 				condensingApiHandler,
+				undefined, // No abort signal for automatic condensing
 			)
 			if (result.error) {
 				error = result.error

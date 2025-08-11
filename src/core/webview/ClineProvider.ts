@@ -1492,6 +1492,18 @@ export class ClineProvider
 		await this.postMessageToWebview({ type: "condenseTaskContextResponse", text: taskId })
 	}
 
+	/* Cancels the ongoing context condensing operation. */
+	async cancelCondenseContext() {
+		// Find all tasks in the stack and cancel any ongoing condensing operation
+		for (let i = this.clineStack.length - 1; i >= 0; i--) {
+			const task = this.clineStack[i]
+			if ((task as any).isCondensing) {
+				;(task as any).cancelCondenseContext?.()
+				break
+			}
+		}
+	}
+
 	// this function deletes a task from task hidtory, and deletes it's checkpoints and delete the task folder
 	async deleteTaskWithId(id: string) {
 		try {

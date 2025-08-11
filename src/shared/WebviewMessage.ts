@@ -178,6 +178,7 @@ export interface WebviewMessage {
 		| "rooCloudSignIn"
 		| "rooCloudSignOut"
 		| "condenseTaskContextRequest"
+		| "cancelCondenseContext"
 		| "requestIndexingStatus"
 		| "startIndexing"
 		| "clearIndexData"
