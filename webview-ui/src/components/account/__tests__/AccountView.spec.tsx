@@ -11,7 +11,6 @@ vi.mock("@src/i18n/TranslationContext", () => ({
 				"settings:common.done": "Done",
 				"account:signIn": "Connect to Roo Code Cloud",
 				"account:cloudBenefitsTitle": "Connect to Roo Code Cloud",
-				"account:cloudBenefitWalkaway": "Follow and control tasks from anywhere with Roomote Control",
 				"account:cloudBenefitSharing": "Share tasks with others",
 				"account:cloudBenefitHistory": "Access your task history",
 				"account:cloudBenefitMetrics": "Get a holistic view of your token consumption",
@@ -69,7 +68,6 @@ describe("AccountView", () => {
 
 		// Check that the benefits section is displayed
 		expect(screen.getByRole("heading", { name: "Connect to Roo Code Cloud" })).toBeInTheDocument()
-		expect(screen.getByText("Follow and control tasks from anywhere with Roomote Control")).toBeInTheDocument()
 		expect(screen.getByText("Share tasks with others")).toBeInTheDocument()
 		expect(screen.getByText("Access your task history")).toBeInTheDocument()
 		expect(screen.getByText("Get a holistic view of your token consumption")).toBeInTheDocument()

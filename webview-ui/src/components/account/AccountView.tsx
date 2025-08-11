@@ -10,7 +10,7 @@ import { vscode } from "@src/utils/vscode"
 import { telemetryClient } from "@src/utils/TelemetryClient"
 import { ToggleSwitch } from "@/components/ui/toggle-switch"
 
-import { History, PiggyBank, Router, SquareArrowOutUpRightIcon } from "lucide-react"
+import { History, PiggyBank, SquareArrowOutUpRightIcon } from "lucide-react"
 
 type AccountViewProps = {
 	userInfo: CloudUserInfo | null
@@ -108,7 +108,6 @@ export const AccountView = ({ userInfo, isAuthenticated, cloudApiUrl, onDone }: 
 						</div>
 					)}
 
-					{/* Remote Control Toggle - only show if user has extension bridge enabled */}
 					{userInfo?.extensionBridgeEnabled && (
 						<div className="border-t border-vscode-widget-border pt-4 mt-4">
 							<div className="flex items-center gap-3 mb-2">
@@ -161,10 +160,6 @@ export const AccountView = ({ userInfo, isAuthenticated, cloudApiUrl, onDone }: 
 							{t("account:cloudBenefitsTitle")}
 						</h2>
 						<ul className="text-vscode-descriptionForeground space-y-3 mx-auto px-8">
-							<li className="flex items-start text-left gap-4">
-								<Router size="16" className="shrink-0" />
-								<span>{t("account:cloudBenefitWalkaway")}</span>
-							</li>
 							<li className="flex items-start text-left gap-4">
 								<SquareArrowOutUpRightIcon size="16" className="shrink-0" />
 								{t("account:cloudBenefitSharing")}
