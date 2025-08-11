@@ -34,6 +34,7 @@ import {
 	SambaNovaHandler,
 	DoubaoHandler,
 	ZAiHandler,
+	QwenCodeHandler,
 	FireworksHandler,
 } from "./providers"
 
@@ -135,6 +136,8 @@ export function buildApiHandler(configuration: ProviderSettings): ApiHandler {
 			return new SambaNovaHandler(options)
 		case "zai":
 			return new ZAiHandler(options)
+		case "qwen-code":
+			return new QwenCodeHandler(options)
 		case "fireworks":
 			return new FireworksHandler(options)
 		default:

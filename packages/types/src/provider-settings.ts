@@ -43,6 +43,7 @@ export const providerNames = [
 	"sambanova",
 	"zai",
 	"fireworks",
+	"qwen-code",
 ] as const
 
 export const providerNamesSchema = z.enum(providerNames)
@@ -267,6 +268,10 @@ const sambaNovaSchema = apiModelIdProviderModelSchema.extend({
 	sambaNovaApiKey: z.string().optional(),
 })
 
+const qwenCodeSchema = apiModelIdProviderModelSchema.extend({
+	qwenCodeOAuthPath: z.string().optional(),
+})
+
 const zaiSchema = apiModelIdProviderModelSchema.extend({
 	zaiApiKey: z.string().optional(),
 	zaiApiLine: z.union([z.literal("china"), z.literal("international")]).optional(),
@@ -309,6 +314,7 @@ export const providerSettingsSchemaDiscriminated = z.discriminatedUnion("apiProv
 	litellmSchema.merge(z.object({ apiProvider: z.literal("litellm") })),
 	cerebrasSchema.merge(z.object({ apiProvider: z.literal("cerebras") })),
 	sambaNovaSchema.merge(z.object({ apiProvider: z.literal("sambanova") })),
+	qwenCodeSchema.merge(z.object({ apiProvider: z.literal("qwen-code") })),
 	zaiSchema.merge(z.object({ apiProvider: z.literal("zai") })),
 	fireworksSchema.merge(z.object({ apiProvider: z.literal("fireworks") })),
 	defaultSchema,
@@ -344,6 +350,7 @@ export const providerSettingsSchema = z.object({
 	...litellmSchema.shape,
 	...cerebrasSchema.shape,
 	...sambaNovaSchema.shape,
+	...qwenCodeSchema.shape,
 	...zaiSchema.shape,
 	...fireworksSchema.shape,
 	...codebaseIndexProviderSchema.shape,
