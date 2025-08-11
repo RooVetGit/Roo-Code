@@ -100,6 +100,9 @@
 			"genericError": "Error de la API de Cerebras ({{status}}): {{message}}",
 			"noResponseBody": "Error de la API de Cerebras: Sin cuerpo de respuesta",
 			"completionError": "Error de finalización de Cerebras: {{error}}"
+		},
+		"qwenCode": {
+			"oauthLoadFailed": "Error al cargar las credenciales OAuth de QwenCode: {{error}}"
 		}
 	},
 	"warnings": {

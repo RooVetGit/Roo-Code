@@ -100,6 +100,9 @@
 			"genericError": "Cerebras API 오류 ({{status}}): {{message}}",
 			"noResponseBody": "Cerebras API 오류: 응답 본문 없음",
 			"completionError": "Cerebras 완료 오류: {{error}}"
+		},
+		"qwenCode": {
+			"oauthLoadFailed": "QwenCode OAuth 자격 증명 로드 실패: {{error}}"
 		}
 	},
 	"warnings": {

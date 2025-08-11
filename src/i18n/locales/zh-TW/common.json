@@ -100,6 +100,9 @@
 			"noResponseBody": "Cerebras API 錯誤：無回應主體",
 			"completionError": "Cerebras 完成錯誤：{{error}}"
 		},
+		"qwenCode": {
+			"oauthLoadFailed": "載入 QwenCode OAuth 憑證失敗：{{error}}"
+		},
 		"mode_import_failed": "匯入模式失敗：{{error}}"
 	},
 	"warnings": {

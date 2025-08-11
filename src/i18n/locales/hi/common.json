@@ -100,6 +100,9 @@
 			"genericError": "Cerebras API त्रुटि ({{status}}): {{message}}",
 			"noResponseBody": "Cerebras API त्रुटि: कोई प्रतिक्रिया मुख्य भाग नहीं",
 			"completionError": "Cerebras पूर्णता त्रुटि: {{error}}"
+		},
+		"qwenCode": {
+			"oauthLoadFailed": "QwenCode OAuth क्रेडेंशियल लोड करने में विफल: {{error}}"
 		}
 	},
 	"warnings": {
