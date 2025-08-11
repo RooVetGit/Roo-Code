@@ -80,7 +80,7 @@ export class QwenCodeHandler extends BaseProvider implements SingleCompletionHan
 		const remainingContent = this.pendingThinkingContent.slice(lastIndex)
 
 		// Check if we have an incomplete thinking tag
-		const incompleteThinkingMatch = remainingContent.match(/<think>(?![\s\S]*<\/think>)([\s\S]*)$/)
+		const incompleteThinkingMatch = remainingContent.match(/<thinking>(?![\s\S]*<\/thinking>)([\s\S]*)$/)
 		if (incompleteThinkingMatch) {
 			// Keep incomplete thinking content for next chunk
 			this.pendingThinkingContent = remainingContent
