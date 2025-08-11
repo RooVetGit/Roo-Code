@@ -100,6 +100,9 @@
 			"genericError": "Cerebras API-Fehler ({{status}}): {{message}}",
 			"noResponseBody": "Cerebras API-Fehler: Kein Antworttext vorhanden",
 			"completionError": "Cerebras-Vervollständigungsfehler: {{error}}"
+		},
+		"qwenCode": {
+			"oauthLoadFailed": "Fehler beim Laden der QwenCode OAuth-Anmeldedaten: {{error}}"
 		}
 	},
 	"warnings": {

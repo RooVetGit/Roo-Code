@@ -105,6 +105,9 @@
 			"genericError": "Cerebras API 错误 ({{status}})：{{message}}",
 			"noResponseBody": "Cerebras API 错误：无响应主体",
 			"completionError": "Cerebras 完成错误：{{error}}"
+		},
+		"qwenCode": {
+			"oauthLoadFailed": "加载 QwenCode OAuth 凭据失败：{{error}}"
 		}
 	},
 	"warnings": {

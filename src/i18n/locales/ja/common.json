@@ -100,6 +100,9 @@
 			"genericError": "Cerebras APIエラー ({{status}}): {{message}}",
 			"noResponseBody": "Cerebras APIエラー: レスポンスボディなし",
 			"completionError": "Cerebras完了エラー: {{error}}"
+		},
+		"qwenCode": {
+			"oauthLoadFailed": "QwenCode OAuth認証情報の読み込みに失敗しました: {{error}}"
 		}
 	},
 	"warnings": {
