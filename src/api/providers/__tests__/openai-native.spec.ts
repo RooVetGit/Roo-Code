@@ -1609,8 +1609,7 @@ describe("GPT-5 streaming event coverage (additional)", () => {
 			const requestBody = JSON.parse(mockFetch.mock.calls[0][1].body)
 			expect(requestBody).toMatchObject({
 				model: "codex-mini-latest",
-				instructions: systemPrompt,
-				input: "Write a hello world function",
+				input: "Developer: You are a helpful coding assistant.\n\nUser: Write a hello world function",
 				stream: true,
 			})
 
@@ -1619,47 +1618,15 @@ describe("GPT-5 streaming event coverage (additional)", () => {
 		})
 
 		it("should handle codex-mini-latest non-streaming completion", async () => {
-			// Mock fetch for non-streaming response
-			const mockFetch = vitest.fn().mockResolvedValue({
-				ok: true,
-				json: async () => ({
-					output_text: "def hello_world():\n    print('Hello, World!')",
-				}),
-			})
-			global.fetch = mockFetch as any
-
 			handler = new OpenAiNativeHandler({
 				...mockOptions,
 				apiModelId: "codex-mini-latest",
 			})
 
-			const result = await handler.completePrompt("Write a hello world function in Python")
-
-			expect(result).toBe("def hello_world():\n    print('Hello, World!')")
-
-			// Verify the request
-			expect(mockFetch).toHaveBeenCalledWith(
-				"https://api.openai.com/v1/responses",
-				expect.objectContaining({
-					method: "POST",
-					headers: expect.objectContaining({
-						"Content-Type": "application/json",
-						Authorization: "Bearer test-api-key",
-					}),
-					body: expect.any(String),
-				}),
+			// Codex Mini now uses the same Responses API as GPT-5, which doesn't support non-streaming
+			await expect(handler.completePrompt("Write a hello world function in Python")).rejects.toThrow(
+				"completePrompt is not supported for codex-mini-latest. Use createMessage (Responses API) instead.",
 			)
-
-			const requestBody = JSON.parse(mockFetch.mock.calls[0][1].body)
-			expect(requestBody).toMatchObject({
-				model: "codex-mini-latest",
-				instructions: "Complete the following prompt:",
-				input: "Write a hello world function in Python",
-				stream: false,
-			})
-
-			// Clean up
-			delete (global as any).fetch
 		})
 
 		it("should handle codex-mini-latest API errors", async () => {
@@ -1730,10 +1697,12 @@ describe("GPT-5 streaming event coverage (additional)", () => {
 				chunks.push(chunk)
 			}
 
-			// Verify the request body only includes user messages
+			// Verify the request body includes full conversation like GPT-5
 			const requestBody = JSON.parse(mockFetch.mock.calls[0][1].body)
-			expect(requestBody.input).toBe("First question\n\nSecond question")
-			expect(requestBody.input).not.toContain("First answer")
+			expect(requestBody.input).toContain("Developer: You are a helpful assistant")
+			expect(requestBody.input).toContain("User: First question")
+			expect(requestBody.input).toContain("Assistant: First answer")
+			expect(requestBody.input).toContain("User: Second question")
 
 			// Clean up
 			delete (global as any).fetch
