@@ -390,6 +390,13 @@
 				"learnMore": "Dowiedz się więcej o routingu dostawców"
 			}
 		},
+		"qwenCode": {
+			"oauthPath": "Ścieżka poświadczeń OAuth (opcjonalna)",
+			"oauthPathDescription": "Ścieżka do pliku poświadczeń OAuth. Pozostaw puste, aby użyć domyślnej lokalizacji (~/.qwen/oauth_creds.json).",
+			"description": "Ten dostawca używa uwierzytelniania OAuth z usługi Qwen i nie wymaga kluczy API.",
+			"instructions": "Proszę postępować zgodnie z oficjalną dokumentacją, aby uzyskać plik autoryzacji i umieścić go w określonej ścieżce.",
+			"setupLink": "Oficjalna dokumentacja Qwen"
+		},
 		"customModel": {
 			"capabilities": "Skonfiguruj możliwości i ceny swojego niestandardowego modelu zgodnego z OpenAI. Zachowaj ostrożność podczas określania możliwości modelu, ponieważ mogą one wpływać na wydajność Roo Code.",
 			"maxTokens": {

@@ -390,6 +390,13 @@
 				"learnMore": "Mehr über Anbieter-Routing erfahren"
 			}
 		},
+		"qwenCode": {
+			"oauthPath": "OAuth-Anmeldedaten-Pfad (optional)",
+			"oauthPathDescription": "Pfad zur OAuth-Anmeldedatei. Leer lassen, um den Standardspeicherort zu verwenden (~/.qwen/oauth_creds.json).",
+			"description": "Dieser Anbieter verwendet OAuth-Authentifizierung vom Qwen-Dienst und benötigt keine API-Schlüssel.",
+			"instructions": "Bitte folgen Sie der offiziellen Dokumentation, um die Autorisierungsdatei zu erhalten und sie im angegebenen Pfad zu platzieren.",
+			"setupLink": "Qwen Offizielle Dokumentation"
+		},
 		"customModel": {
 			"capabilities": "Konfiguriere die Fähigkeiten und Preise für dein benutzerdefiniertes OpenAI-kompatibles Modell. Sei vorsichtig bei der Angabe der Modellfähigkeiten, da diese beeinflussen können, wie Roo Code funktioniert.",
 			"maxTokens": {

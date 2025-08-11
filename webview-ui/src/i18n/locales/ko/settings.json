@@ -390,6 +390,13 @@
 				"learnMore": "제공자 라우팅에 대해 자세히 알아보기"
 			}
 		},
+		"qwenCode": {
+			"oauthPath": "OAuth 자격 증명 경로 (선택사항)",
+			"oauthPathDescription": "OAuth 자격 증명 파일의 경로입니다. 기본 위치(~/.qwen/oauth_creds.json)를 사용하려면 비워두세요.",
+			"description": "이 공급자는 Qwen 서비스의 OAuth 인증을 사용하며 API 키가 필요하지 않습니다.",
+			"instructions": "공식 문서를 따라 인증 파일을 얻고 지정된 경로에 배치하세요.",
+			"setupLink": "Qwen 공식 문서"
+		},
 		"customModel": {
 			"capabilities": "사용자 정의 OpenAI 호환 모델의 기능과 가격을 구성하세요. 모델 기능이 Roo Code의 성능에 영향을 미칠 수 있으므로 신중하게 지정하세요.",
 			"maxTokens": {

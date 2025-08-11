@@ -390,6 +390,13 @@
 				"learnMore": "プロバイダールーティングについて詳しく知る"
 			}
 		},
+		"qwenCode": {
+			"oauthPath": "OAuth認証情報パス（オプション）",
+			"oauthPathDescription": "OAuth認証情報ファイルへのパス。デフォルトの場所（~/.qwen/oauth_creds.json）を使用する場合は空のままにしてください。",
+			"description": "このプロバイダーはQwenサービスからのOAuth認証を使用し、APIキーは必要ありません。",
+			"instructions": "公式ドキュメントに従って認証ファイルを取得し、指定されたパスに配置してください。",
+			"setupLink": "Qwen公式ドキュメント"
+		},
 		"customModel": {
 			"capabilities": "カスタムOpenAI互換モデルの機能と価格を設定します。モデルの機能はRoo Codeのパフォーマンスに影響を与える可能性があるため、慎重に指定してください。",
 			"maxTokens": {
