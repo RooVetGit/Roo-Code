@@ -4,6 +4,9 @@ import * as path from "path"
 import { listFiles } from "../../services/glob/list-files"
 import { ClineProvider } from "../../core/webview/ClineProvider"
 import { toRelativePath, getWorkspacePath } from "../../utils/path"
+import { RipgrepResultCache, SimpleTreeNode } from "./RipgrepResultCache"
+import { getBinPath } from "../../services/ripgrep"
+import { FileResult } from "../../services/search/file-search"
 
 const MAX_INITIAL_FILES = 1_000
 
@@ -16,12 +19,163 @@ class WorkspaceTracker {
 	private prevWorkSpacePath: string | undefined
 	private resetTimer: NodeJS.Timeout | null = null
 
+	// RipgrepResultCache related properties
+	private ripgrepCache: RipgrepResultCache | null = null
+	private cachedRipgrepPath: string | null = null
+
 	get cwd() {
 		return getWorkspacePath()
 	}
+
 	constructor(provider: ClineProvider) {
 		this.providerRef = new WeakRef(provider)
 		this.registerListeners()
+	}
+
+	private getRipgrepFileLimit(): number {
+		const config = vscode.workspace.getConfiguration("roo-cline")
+		return Math.max(5000, config.get<number>("maximumIndexedFilesForFileSearch", 200000))
+	}
+
+	private DIRS_IGNORED_BY_RIPGREP = ["node_modules", ".git", "out", "dist"]
+	/**
+	 * Get complete ripgrep arguments based on VSCode search configuration
+	 */
+	private getRipgrepArgs(): string[] {
+		const config = vscode.workspace.getConfiguration("search")
+		const args: string[] = ["--files", "--follow", "--hidden"]
+
+		const useIgnoreFiles = config.get<boolean>("useIgnoreFiles", true)
+
+		if (!useIgnoreFiles) {
+			args.push("--no-ignore")
+		} else {
+			const useGlobalIgnoreFiles = config.get<boolean>("useGlobalIgnoreFiles", true)
+			const useParentIgnoreFiles = config.get<boolean>("useParentIgnoreFiles", true)
+
+			if (!useGlobalIgnoreFiles) {
+				args.push("--no-ignore-global")
+			}
+
+			if (!useParentIgnoreFiles) {
+				args.push("--no-ignore-parent")
+			}
+		}
+
+		// Add default exclude patterns
+		for (const dir of this.DIRS_IGNORED_BY_RIPGREP) {
+			args.push("-g", `!**/${dir}/**`)
+		}
+		return args
+	}
+
+	private isPathIgnoredByRipgrep(filePath: string): boolean {
+		const normalizedPath = filePath.replace(/\\/g, "/")
+		for (const dir of this.DIRS_IGNORED_BY_RIPGREP) {
+			// Check if the directory appears in the path
+			if (normalizedPath.includes(`/${dir}/`)) {
+				return true
+			}
+		}
+		return false
+	}
+
+	/**
+	 * Get comprehensive file tree using RipgrepResultCache
+	 * This provides a more complete and efficient file structure than the limited filePaths set
+	 */
+	async getRipgrepFileTree(): Promise<SimpleTreeNode> {
+		const currentWorkspacePath = this.cwd
+
+		if (!currentWorkspacePath) {
+			return {}
+		}
+
+		// Check if we need to recreate the cache
+		await this.ensureRipgrepCache()
+
+		if (!this.ripgrepCache) {
+			return {}
+		}
+
+		try {
+			return await this.ripgrepCache.getTree()
+		} catch (error) {
+			return {}
+		}
+	}
+
+	async getRipgrepFileList(): Promise<FileResult[]> {
+		const tree = await this.getRipgrepFileTree()
+		return this.treeToFileResults(tree)
+	}
+
+	/**
+	 * Convert SimpleTreeNode to FileResult array
+	 */
+	private treeToFileResults(tree: SimpleTreeNode): FileResult[] {
+		const result: FileResult[] = []
+		const stack: [SimpleTreeNode, string][] = [[tree, ""]]
+
+		while (stack.length > 0) {
+			const [node, currentPath] = stack.pop()!
+			for (const key in node) {
+				const value = node[key]
+				const fullPath = currentPath ? `${currentPath}/${key}` : key
+
+				if (value === true) {
+					result.push({ path: fullPath, type: "file" })
+				} else {
+					result.push({ path: fullPath, type: "folder" })
+					stack.push([value as SimpleTreeNode, fullPath])
+				}
+			}
+		}
+
+		return result
+	}
+
+	/**
+	 * Ensure RipgrepResultCache is properly initialized
+	 */
+	private async ensureRipgrepCache(): Promise<void> {
+		const currentWorkspacePath = this.cwd
+		if (!currentWorkspacePath) {
+			return
+		}
+
+		const currentRipgrepPath = await this.getRipgrepPath()
+
+		if (!this.ripgrepCache || this.ripgrepCache.targetPath !== currentWorkspacePath) {
+			this.ripgrepCache = new RipgrepResultCache(
+				currentRipgrepPath,
+				currentWorkspacePath,
+				this.getRipgrepArgs(),
+				this.getRipgrepFileLimit(),
+			)
+		}
+	}
+
+	/**
+	 * Get ripgrep binary path with caching
+	 */
+	private async getRipgrepPath(): Promise<string> {
+		if (!this.cachedRipgrepPath) {
+			const rgPath = await getBinPath(vscode.env.appRoot)
+			if (!rgPath) {
+				throw new Error("Could not find ripgrep binary")
+			}
+			this.cachedRipgrepPath = rgPath
+		}
+		return this.cachedRipgrepPath
+	}
+
+	/**
+	 * Helper method to compare arrays
+	 */
+	private arraysEqual(a: string[] | null, b: string[]): boolean {
+		if (!a) return false
+		return a.length === b.length && a.every((val, i) => val === b[i])
 	}
 
 	async initializeFilePaths() {
@@ -36,6 +190,9 @@ class WorkspaceTracker {
 		}
 		files.slice(0, MAX_INITIAL_FILES).forEach((file) => this.filePaths.add(this.normalizeFilePath(file)))
 		this.workspaceDidUpdate()
+
+		// preheat file tree
+		this.getRipgrepFileTree()
 	}
 
 	private registerListeners() {
@@ -43,7 +200,13 @@ class WorkspaceTracker {
 		this.prevWorkSpacePath = this.cwd
 		this.disposables.push(
 			watcher.onDidCreate(async (uri) => {
-				await this.addFilePath(uri.fsPath)
+				const fsPath = uri.fsPath
+				if (this.ripgrepCache) {
+					if (!this.isPathIgnoredByRipgrep(fsPath)) {
+						this.ripgrepCache.fileAdded(fsPath)
+					}
+				}
+				await this.addFilePath(fsPath)
 				this.workspaceDidUpdate()
 			}),
 		)
@@ -51,7 +214,13 @@ class WorkspaceTracker {
 		// Renaming files triggers a delete and create event
 		this.disposables.push(
 			watcher.onDidDelete(async (uri) => {
-				if (await this.removeFilePath(uri.fsPath)) {
+				const fsPath = uri.fsPath
+				if (this.ripgrepCache) {
+					if (!this.isPathIgnoredByRipgrep(fsPath)) {
+						this.ripgrepCache.fileRemoved(fsPath)
+					}
+				}
+				if (await this.removeFilePath(fsPath)) {
 					this.workspaceDidUpdate()
 				}
 			}),
@@ -68,6 +237,21 @@ class WorkspaceTracker {
 				} else {
 					// Otherwise just update
 					this.workspaceDidUpdate()
+				}
+			}),
+		)
+
+		// Listen for VSCode configuration changes
+		this.disposables.push(
+			vscode.workspace.onDidChangeConfiguration((event: vscode.ConfigurationChangeEvent) => {
+				// Clear cache when search-related configuration changes
+				if (
+					event.affectsConfiguration("search.useIgnoreFiles") ||
+					event.affectsConfiguration("search.useGlobalIgnoreFiles") ||
+					event.affectsConfiguration("search.useParentIgnoreFiles") ||
+					event.affectsConfiguration("roo-cline.maximumIndexedFilesForFileSearch")
+				) {
+					this.ripgrepCache = null
 				}
 			}),
 		)
@@ -97,6 +281,8 @@ class WorkspaceTracker {
 		}
 		this.resetTimer = setTimeout(async () => {
 			if (this.prevWorkSpacePath !== this.cwd) {
+				// Clear cache when workspace changes
+				this.ripgrepCache = null
 				await this.providerRef.deref()?.postMessageToWebview({
 					type: "workspaceUpdated",
 					filePaths: [],

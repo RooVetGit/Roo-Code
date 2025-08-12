@@ -1464,10 +1464,16 @@ export const webviewMessageHandler = async (
 				break
 			}
 			try {
-				// Call file search service with query from message
+				// Get cached file list from WorkspaceTracker
+				const workspaceFiles = provider.workspaceTracker
+					? await provider.workspaceTracker.getRipgrepFileList()
+					: []
+
+				// Call file search service with query and cached files from message
 				const results = await searchWorkspaceFiles(
 					message.query || "",
 					workspacePath,
+					workspaceFiles,
 					20, // Use default limit, as filtering is now done in the backend
 				)
 

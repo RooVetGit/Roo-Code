@@ -36,5 +36,6 @@
 	"settings.customStoragePath.description": "Chemin de stockage personnalisé. Laisser vide pour utiliser l'emplacement par défaut. Prend en charge les chemins absolus (ex: 'D:\\RooCodeStorage')",
 	"settings.enableCodeActions.description": "Activer les correctifs rapides de Roo Code.",
 	"settings.autoImportSettingsPath.description": "Chemin d'accès à un fichier de configuration RooCode à importer automatiquement au démarrage de l'extension. Prend en charge les chemins absolus et les chemins relatifs au répertoire de base (par exemple, '~/Documents/roo-code-settings.json'). Laisser vide pour désactiver l'importation automatique.",
+	"settings.maximumIndexedFilesForFileSearch.description": "Spécifie le nombre maximum de fichiers à indexer lors de la création d'un index pour la fonctionnalité de recherche de fichiers dans la zone de saisie. Un nombre plus élevé offre de meilleurs résultats de recherche dans les grands projets mais peut consommer plus de mémoire.",
 	"settings.useAgentRules.description": "Activer le chargement des fichiers AGENTS.md pour les règles spécifiques à l'agent (voir https://agent-rules.org/)"
 }

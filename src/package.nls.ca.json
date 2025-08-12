@@ -36,5 +36,6 @@
 	"settings.customStoragePath.description": "Ruta d'emmagatzematge personalitzada. Deixeu-la buida per utilitzar la ubicació predeterminada. Admet rutes absolutes (p. ex. 'D:\\RooCodeStorage')",
 	"settings.enableCodeActions.description": "Habilitar correccions ràpides de Roo Code.",
 	"settings.autoImportSettingsPath.description": "Ruta a un fitxer de configuració de RooCode per importar automàticament en iniciar l'extensió. Admet rutes absolutes i rutes relatives al directori d'inici (per exemple, '~/Documents/roo-code-settings.json'). Deixeu-ho en blanc per desactivar la importació automàtica.",
+	"settings.maximumIndexedFilesForFileSearch.description": "Especifica el nombre màxim de fitxers a indexar quan es crea un índex per a la funcionalitat de cerca de fitxers a la caixa d'entrada. Un nombre més gran proporciona millors resultats de cerca en projectes grans però pot consumir més memòria.",
 	"settings.useAgentRules.description": "Activa la càrrega de fitxers AGENTS.md per a regles específiques de l'agent (vegeu https://agent-rules.org/)"
 }

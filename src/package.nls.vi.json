@@ -36,5 +36,6 @@
 	"settings.customStoragePath.description": "Đường dẫn lưu trữ tùy chỉnh. Để trống để sử dụng vị trí mặc định. Hỗ trợ đường dẫn tuyệt đối (ví dụ: 'D:\\RooCodeStorage')",
 	"settings.enableCodeActions.description": "Bật sửa lỗi nhanh Roo Code.",
 	"settings.autoImportSettingsPath.description": "Đường dẫn đến tệp cấu hình RooCode để tự động nhập khi khởi động tiện ích mở rộng. Hỗ trợ đường dẫn tuyệt đối và đường dẫn tương đối đến thư mục chính (ví dụ: '~/Documents/roo-code-settings.json'). Để trống để tắt tính năng tự động nhập.",
+	"settings.maximumIndexedFilesForFileSearch.description": "Chỉ định số lượng tệp tối đa để lập chỉ mục khi tạo chỉ mục cho chức năng tìm kiếm tệp trong hộp nhập. Số lượng lớn hơn cung cấp kết quả tìm kiếm tốt hơn trong các dự án lớn nhưng có thể tiêu thụ nhiều bộ nhớ hơn.",
 	"settings.useAgentRules.description": "Bật tải tệp AGENTS.md cho các quy tắc dành riêng cho tác nhân (xem https://agent-rules.org/)"
 }
