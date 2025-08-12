@@ -10,6 +10,7 @@ import { ApiHandlerOptions } from "../../shared/api"
 import { ApiStream } from "../transform/stream"
 import { convertToOpenAiMessages } from "../transform/openai-format"
 import { addCacheBreakpoints } from "../transform/caching/anthropic"
+import { getModelParams } from "../transform/model-params"
 
 import type { SingleCompletionHandler, ApiHandlerCreateMessageMetadata } from "../index"
 import { RouterProvider } from "./router-provider"
@@ -39,6 +40,13 @@ export class GlamaHandler extends RouterProvider implements SingleCompletionHand
 		metadata?: ApiHandlerCreateMessageMetadata,
 	): ApiStream {
 		const { id: modelId, info } = await this.fetchModel()
+		const params = getModelParams({
+			format: "openai",
+			modelId,
+			model: info,
+			settings: this.options,
+			defaultTemperature: GLAMA_DEFAULT_TEMPERATURE,
+		})
 
 		const openAiMessages: OpenAI.Chat.ChatCompletionMessageParam[] = [
 			{ role: "system", content: systemPrompt },
@@ -49,22 +57,19 @@ export class GlamaHandler extends RouterProvider implements SingleCompletionHand
 			addCacheBreakpoints(systemPrompt, openAiMessages)
 		}
 
-		// Required by Anthropic; other providers default to max tokens allowed.
-		let maxTokens: number | undefined
-
-		if (modelId.startsWith("anthropic/")) {
-			maxTokens = info.maxTokens ?? undefined
-		}
-
 		const requestOptions: OpenAI.Chat.ChatCompletionCreateParams = {
 			model: modelId,
-			max_tokens: maxTokens,
 			messages: openAiMessages,
 			stream: true,
 		}
 
-		if (this.supportsTemperature(modelId)) {
-			requestOptions.temperature = this.options.modelTemperature ?? GLAMA_DEFAULT_TEMPERATURE
+		// Only set max_tokens for Anthropic models
+		if (modelId.startsWith("anthropic/") && typeof params.maxTokens === "number") {
+			requestOptions.max_tokens = params.maxTokens
+		}
+
+		if (typeof params.temperature === "number") {
+			requestOptions.temperature = params.temperature
 		}
 
 		const { data: completion, response } = await this.client.chat.completions
@@ -118,6 +123,13 @@ export class GlamaHandler extends RouterProvider implements SingleCompletionHand
 
 	async completePrompt(prompt: string): Promise<string> {
 		const { id: modelId, info } = await this.fetchModel()
+		const params = getModelParams({
+			format: "openai",
+			modelId,
+			model: info,
+			settings: this.options,
+			defaultTemperature: GLAMA_DEFAULT_TEMPERATURE,
+		})
 
 		try {
 			const requestOptions: OpenAI.Chat.Completions.ChatCompletionCreateParamsNonStreaming = {
@@ -125,12 +137,13 @@ export class GlamaHandler extends RouterProvider implements SingleCompletionHand
 				messages: [{ role: "user", content: prompt }],
 			}
 
-			if (this.supportsTemperature(modelId)) {
-				requestOptions.temperature = this.options.modelTemperature ?? GLAMA_DEFAULT_TEMPERATURE
+			if (typeof params.temperature === "number") {
+				requestOptions.temperature = params.temperature
 			}
 
-			if (modelId.startsWith("anthropic/")) {
-				requestOptions.max_tokens = info.maxTokens
+			// Only set max_tokens for Anthropic models
+			if (modelId.startsWith("anthropic/") && typeof params.maxTokens === "number") {
+				requestOptions.max_tokens = params.maxTokens
 			}
 
 			const response = await this.client.chat.completions.create(requestOptions)

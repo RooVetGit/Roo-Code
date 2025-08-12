@@ -46,6 +46,10 @@ export const modelInfoSchema = z.object({
 	supportsPromptCache: z.boolean(),
 	// Capability flag to indicate whether the model supports an output verbosity parameter
 	supportsVerbosity: z.boolean().optional(),
+	// Indicates whether the model accepts a temperature parameter
+	supportsTemperature: z.boolean().optional(),
+	// Indicates that this model should be called via the Responses API instead of Chat Completions
+	usesResponsesApi: z.boolean().optional(),
 	supportsReasoningBudget: z.boolean().optional(),
 	requiredReasoningBudget: z.boolean().optional(),
 	supportsReasoningEffort: z.boolean().optional(),
