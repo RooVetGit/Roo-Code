@@ -27,6 +27,17 @@ export function MarketplaceListView({ stateManager, allTags, filteredTags, filte
 	const allItems = state.displayItems || []
 	const organizationMcps = state.displayOrganizationMcps || []
 
+	// Update state manager with installed metadata when it changes
+	React.useEffect(() => {
+		if (marketplaceInstalledMetadata && state.installedMetadata !== marketplaceInstalledMetadata) {
+			// Update the state manager's installed metadata
+			manager.transition({
+				type: "UPDATE_FILTERS",
+				payload: { filters: state.filters },
+			})
+		}
+	}, [marketplaceInstalledMetadata, state.installedMetadata, state.filters, manager])
+
 	// Filter items by type if specified
 	const items = filterByType ? allItems.filter((item) => item.type === filterByType) : allItems
 	const orgMcps = filterByType === "mcp" ? organizationMcps : []
@@ -54,6 +65,28 @@ export function MarketplaceListView({ stateManager, allTags, filteredTags, filte
 							})
 						}
 					/>
+				</div>
+				{/* Installed filter toggle */}
+				<div className="mt-2 flex items-center gap-2">
+					<label className="flex items-center gap-2 cursor-pointer">
+						<input
+							type="checkbox"
+							className="rounded border-vscode-input-border"
+							checked={state.filters.installed}
+							onChange={(e) =>
+								manager.transition({
+									type: "UPDATE_FILTERS",
+									payload: { filters: { installed: e.target.checked } },
+								})
+							}
+						/>
+						<span className="text-sm">{t("marketplace:filters.installed.label")}</span>
+					</label>
+					{state.filters.installed && (
+						<span className="text-xs text-vscode-descriptionForeground">
+							({t("marketplace:filters.installed.description")})
+						</span>
+					)}
 				</div>
 				{allTags.length > 0 && (
 					<div className="mt-2">
@@ -187,7 +220,7 @@ export function MarketplaceListView({ stateManager, allTags, filteredTags, filte
 						onClick={() =>
 							manager.transition({
 								type: "UPDATE_FILTERS",
-								payload: { filters: { search: "", type: "", tags: [] } },
+								payload: { filters: { search: "", type: "", tags: [], installed: false } },
 							})
 						}
 						className="mt-4 bg-vscode-button-secondaryBackground text-vscode-button-secondaryForeground hover:bg-vscode-button-secondaryHoverBackground transition-colors">

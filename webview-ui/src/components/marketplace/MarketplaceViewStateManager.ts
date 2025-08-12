@@ -26,7 +26,9 @@ export interface ViewState {
 		type: string
 		search: string
 		tags: string[]
+		installed: boolean // New filter to show only installed items
 	}
+	installedMetadata?: any // Store installed metadata for filtering
 }
 
 type TransitionPayloads = {
@@ -65,6 +67,7 @@ export class MarketplaceViewStateManager {
 				type: "",
 				search: "",
 				tags: [],
+				installed: false,
 			},
 		}
 	}
@@ -189,8 +192,11 @@ export class MarketplaceViewStateManager {
 				let newDisplayItems: MarketplaceItem[]
 				let newDisplayOrganizationMcps: MarketplaceItem[]
 				if (this.isFilterActive()) {
-					newDisplayItems = this.filterItems([...items])
-					newDisplayOrganizationMcps = this.filterItems([...this.state.organizationMcps])
+					newDisplayItems = this.filterItems([...items], this.state.installedMetadata)
+					newDisplayOrganizationMcps = this.filterItems(
+						[...this.state.organizationMcps],
+						this.state.installedMetadata,
+					)
 				} else {
 					// No filters active - show all items
 					newDisplayItems = [...items]
@@ -251,6 +257,7 @@ export class MarketplaceViewStateManager {
 					type: filters.type !== undefined ? filters.type : this.state.filters.type,
 					search: filters.search !== undefined ? filters.search : this.state.filters.search,
 					tags: filters.tags !== undefined ? filters.tags : this.state.filters.tags,
+					installed: filters.installed !== undefined ? filters.installed : this.state.filters.installed,
 				}
 
 				// Update filters first
@@ -260,8 +267,11 @@ export class MarketplaceViewStateManager {
 				}
 
 				// Apply filters to displayItems and displayOrganizationMcps with the updated filters
-				const newDisplayItems = this.filterItems(this.state.allItems)
-				const newDisplayOrganizationMcps = this.filterItems(this.state.organizationMcps)
+				const newDisplayItems = this.filterItems(this.state.allItems, this.state.installedMetadata)
+				const newDisplayOrganizationMcps = this.filterItems(
+					this.state.organizationMcps,
+					this.state.installedMetadata,
+				)
 
 				// Update state with filtered items
 				this.state = {
@@ -284,11 +294,16 @@ export class MarketplaceViewStateManager {
 	}
 
 	public isFilterActive(): boolean {
-		return !!(this.state.filters.type || this.state.filters.search || this.state.filters.tags.length > 0)
+		return !!(
+			this.state.filters.type ||
+			this.state.filters.search ||
+			this.state.filters.tags.length > 0 ||
+			this.state.filters.installed
+		)
 	}
 
-	public filterItems(items: MarketplaceItem[]): MarketplaceItem[] {
-		const { type, search, tags } = this.state.filters
+	public filterItems(items: MarketplaceItem[], installedMetadata?: any): MarketplaceItem[] {
+		const { type, search, tags, installed } = this.state.filters
 
 		return items
 			.map((item) => {
@@ -303,9 +318,20 @@ export class MarketplaceViewStateManager {
 					: false
 				const tagMatch = tags.length > 0 ? item.tags?.some((tag) => tags.includes(tag)) : false
 
+				// Check installed status if filter is active
+				let installedMatch = true
+				if (installed && installedMetadata) {
+					const isInstalledGlobally = !!installedMetadata?.global?.[item.id]
+					const isInstalledInProject = !!installedMetadata?.project?.[item.id]
+					installedMatch = isInstalledGlobally || isInstalledInProject
+				}
+
 				// Determine if the main item matches all filters
 				const mainItemMatches =
-					typeMatch && (!search || nameMatch || descriptionMatch) && (!tags.length || tagMatch)
+					typeMatch &&
+					(!search || nameMatch || descriptionMatch) &&
+					(!tags.length || tagMatch) &&
+					installedMatch
 
 				const hasMatchingSubcomponents = false
 
@@ -343,11 +369,17 @@ export class MarketplaceViewStateManager {
 			// Handle state updates for marketplace items
 			// The state.marketplaceItems come from ClineProvider, see the file src/core/webview/ClineProvider.ts
 			const marketplaceItems = message.state.marketplaceItems
+			const marketplaceInstalledMetadata = message.state.marketplaceInstalledMetadata
 
 			if (marketplaceItems !== undefined) {
 				// Always use the marketplace items from the extension when they're provided
 				// This ensures fresh data is always displayed
 				const items = [...marketplaceItems]
+
+				// Update installed metadata if provided
+				if (marketplaceInstalledMetadata !== undefined) {
+					this.state.installedMetadata = marketplaceInstalledMetadata
+				}
 
 				// Calculate display items based on current filters
 				// If no filters are active, show all items
@@ -355,8 +387,11 @@ export class MarketplaceViewStateManager {
 				let newDisplayItems: MarketplaceItem[]
 				let newDisplayOrganizationMcps: MarketplaceItem[]
 				if (this.isFilterActive()) {
-					newDisplayItems = this.filterItems(items)
-					newDisplayOrganizationMcps = this.filterItems(this.state.organizationMcps)
+					newDisplayItems = this.filterItems(items, this.state.installedMetadata)
+					newDisplayOrganizationMcps = this.filterItems(
+						this.state.organizationMcps,
+						this.state.installedMetadata,
+					)
 				} else {
 					// No filters active - show all items
 					newDisplayItems = items
@@ -370,6 +405,7 @@ export class MarketplaceViewStateManager {
 					allItems: items,
 					displayItems: newDisplayItems,
 					displayOrganizationMcps: newDisplayOrganizationMcps,
+					installedMetadata: marketplaceInstalledMetadata || this.state.installedMetadata,
 				}
 				// Notification is handled below after all state parts are processed
 			}
@@ -411,14 +447,25 @@ export class MarketplaceViewStateManager {
 		if (message.type === "marketplaceData") {
 			const marketplaceItems = message.marketplaceItems
 			const organizationMcps = message.organizationMcps || []
+			const marketplaceInstalledMetadata = message.marketplaceInstalledMetadata
 
 			if (marketplaceItems !== undefined) {
 				// Always use the marketplace items from the extension when they're provided
 				// This ensures fresh data is always displayed
 				const items = [...marketplaceItems]
 				const orgMcps = [...organizationMcps]
-				const newDisplayItems = this.isFilterActive() ? this.filterItems(items) : items
-				const newDisplayOrganizationMcps = this.isFilterActive() ? this.filterItems(orgMcps) : orgMcps
+
+				// Update installed metadata if provided
+				if (marketplaceInstalledMetadata !== undefined) {
+					this.state.installedMetadata = marketplaceInstalledMetadata
+				}
+
+				const newDisplayItems = this.isFilterActive()
+					? this.filterItems(items, this.state.installedMetadata)
+					: items
+				const newDisplayOrganizationMcps = this.isFilterActive()
+					? this.filterItems(orgMcps, this.state.installedMetadata)
+					: orgMcps
 
 				// Update state in a single operation
 				this.state = {
@@ -428,6 +475,7 @@ export class MarketplaceViewStateManager {
 					organizationMcps: orgMcps,
 					displayItems: newDisplayItems,
 					displayOrganizationMcps: newDisplayOrganizationMcps,
+					installedMetadata: marketplaceInstalledMetadata || this.state.installedMetadata,
 				}
 			}
 
