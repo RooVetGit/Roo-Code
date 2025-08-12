@@ -14,5 +14,11 @@
 		"errors": {
 			"policy_restriction": "Politika kısıtlamaları nedeniyle yeni görev oluşturulamadı."
 		}
+	},
+	"agentSelector": {
+		"selectAgent": "Ajan Seç",
+		"currentAgent": "Mevcut Ajan: {{agent}}",
+		"switchAgent": "{{agent}} ajanına geç",
+		"noAgentsAvailable": "Kullanılabilir ajan yok"
 	}
 }

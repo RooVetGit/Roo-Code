@@ -2,7 +2,8 @@
 	"type-group": {
 		"modes": "Modlar",
 		"mcps": "MCP Sunucuları",
-		"match": "eşleşme"
+		"match": "eşleşme",
+		"agents": "Ajanlar"
 	},
 	"item-card": {
 		"type-mode": "Mod",
@@ -14,7 +15,8 @@
 		"filter-by-tag": "Etikete göre filtrele: {{tag}}",
 		"component-details": "Bileşen Detayları",
 		"view": "Görüntüle",
-		"source": "Kaynak"
+		"source": "Kaynak",
+		"type-agent": "Ajan"
 	},
 	"filters": {
 		"search": {
@@ -24,7 +26,8 @@
 			"label": "Tür",
 			"all": "Tüm Türler",
 			"mode": "Mod",
-			"mcpServer": "MCP Sunucusu"
+			"mcpServer": "MCP Sunucusu",
+			"agent": "Ajan"
 		},
 		"sort": {
 			"label": "Sırala",

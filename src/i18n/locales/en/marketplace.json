@@ -1,11 +1,13 @@
 {
 	"type-group": {
 		"modes": "Modes",
+		"agents": "Agents",
 		"mcps": "MCP Servers",
 		"match": "match"
 	},
 	"item-card": {
 		"type-mode": "Mode",
+		"type-agent": "Agent",
 		"type-mcp": "MCP Server",
 		"type-other": "Other",
 		"by-author": "by {{author}}",
@@ -24,6 +26,7 @@
 			"label": "Type",
 			"all": "All Types",
 			"mode": "Mode",
+			"agent": "Agent",
 			"mcpServer": "MCP Server"
 		},
 		"sort": {

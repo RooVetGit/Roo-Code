@@ -2,7 +2,8 @@
 	"type-group": {
 		"modes": "모드",
 		"mcps": "MCP 서버",
-		"match": "일치"
+		"match": "일치",
+		"agents": "에이전트"
 	},
 	"item-card": {
 		"type-mode": "모드",
@@ -14,7 +15,8 @@
 		"filter-by-tag": "태그로 필터링: {{tag}}",
 		"component-details": "컴포넌트 세부사항",
 		"view": "보기",
-		"source": "소스"
+		"source": "소스",
+		"type-agent": "에이전트"
 	},
 	"filters": {
 		"search": {
@@ -24,7 +26,8 @@
 			"label": "유형",
 			"all": "모든 유형",
 			"mode": "모드",
-			"mcpServer": "MCP 서버"
+			"mcpServer": "MCP 서버",
+			"agent": "에이전트"
 		},
 		"sort": {
 			"label": "정렬 기준",

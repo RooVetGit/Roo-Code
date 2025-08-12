@@ -14,5 +14,11 @@
 		"errors": {
 			"policy_restriction": "Nie udało się utworzyć nowego zadania z powodu ograniczeń polityki."
 		}
+	},
+	"agentSelector": {
+		"selectAgent": "Wybierz Agenta",
+		"currentAgent": "Obecny Agent: {{agent}}",
+		"switchAgent": "Przełącz na {{agent}}",
+		"noAgentsAvailable": "Brak dostępnych agentów"
 	}
 }
