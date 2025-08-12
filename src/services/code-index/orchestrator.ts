@@ -236,6 +236,32 @@ export class CodeIndexOrchestrator {
 	}
 
 	/**
+	 * Resumes the indexing process from where it left off after an error.
+	 * This is similar to startIndexing but designed to continue from a failed state.
+	 */
+	public async resumeIndexing(): Promise<void> {
+		if (!this.configManager.isFeatureConfigured) {
+			this.stateManager.setSystemState("Standby", "Missing configuration. Save your settings to start indexing.")
+			console.warn("[CodeIndexOrchestrator] Resume rejected: Missing configuration.")
+			return
+		}
+
+		if (
+			this._isProcessing ||
+			(this.stateManager.state !== "Error" && this.stateManager.state !== "Standby")
+		) {
+			console.warn(
+				`[CodeIndexOrchestrator] Resume rejected: Already processing or not in error/standby state ${this.stateManager.state}.`,
+			)
+			return
+		}
+
+		// For now, resumeIndexing will behave the same as startIndexing
+		// In the future, this could be enhanced to track failed files and only re-process those
+		await this.startIndexing()
+	}
+
+	/**
 	 * Stops the file watcher and cleans up resources.
 	 */
 	public stopWatcher(): void {
