@@ -23,6 +23,9 @@ export async function getCheckpointService(
 	if (!cline.enableCheckpoints) {
 		return undefined
 	}
+	if (cline.checkpointService) {
+		return cline.checkpointService
+	}
 
 	const provider = cline.providerRef.deref()
 
@@ -69,7 +72,7 @@ export async function getCheckpointService(
 				},
 				{ interval, timeout },
 			)
-			if (cline?.checkpointService?.isInitialized !== true) {
+			if (!cline?.checkpointService) {
 				cline.enableCheckpoints = false
 				return undefined
 			}
