@@ -609,20 +609,6 @@ Each file requires its own path, start_line, and diff elements.
 					searchLines = aggressiveSearchLines
 					replaceLines = replaceContent ? replaceContent.split(/\r?\n/) : []
 				} else {
-					// No match found with either method
-					const originalContentSection =
-						startLine !== undefined && endLine !== undefined
-							? `\n\nOriginal Content:\n${addLineNumbers(
-									resultLines
-										.slice(
-											Math.max(0, startLine - 1 - this.bufferLines),
-											Math.min(resultLines.length, endLine + this.bufferLines),
-										)
-										.join("\n"),
-									Math.max(1, startLine - this.bufferLines),
-								)}`
-							: `\n\nOriginal Content:\n${addLineNumbers(resultLines.join("\n"))}`
-
 					const bestMatchSection = bestMatchContent
 						? `\n\nBest Match Found:\n${addLineNumbers(bestMatchContent, matchIndex + 1)}`
 						: `\n\nBest Match Found:\n(no match)`
@@ -639,7 +625,7 @@ Each file requires its own path, start_line, and diff elements.
 							bestMatchScore * 100,
 						)}%\n- Required Threshold: ${Math.floor(this.fuzzyThreshold * 100)}%\n- Search Range: ${
 							startLine ? `starting at line ${startLine}` : "start to end"
-						}\n- Tried both standard and aggressive line number stripping\n- Tip: Use the read_file tool to get the latest content of the file before attempting to use the apply_diff tool again, as the file content may have changed\n\nSearch Content:\n${searchChunk}${bestMatchSection}${originalContentSection}`,
+						}\n- Tried both standard and aggressive line number stripping\n- Tip: Use the read_file tool to get the latest content of the file before attempting to use the apply_diff tool again, as the file content may have changed\n\nSearch Content:\n${bestMatchSection}`,
 					})
 					continue
 				}
