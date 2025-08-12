@@ -253,6 +253,8 @@ export class AnthropicHandler extends BaseProvider implements SingleCompletionHa
 					contextWindow: tier.contextWindow,
 					inputPrice: tier.inputPrice,
 					outputPrice: tier.outputPrice,
+					cacheWritesPrice: tier.cacheWritesPrice,
+					cacheReadsPrice: tier.cacheReadsPrice,
 				}
 			}
 		}

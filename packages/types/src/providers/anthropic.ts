@@ -23,8 +23,8 @@ export const anthropicModels = {
 				contextWindow: 1_000_000, // 1M tokens with beta flag
 				inputPrice: 6.0, // $6 per million input tokens (>200K context)
 				outputPrice: 22.5, // $22.50 per million output tokens (>200K context)
-				cacheWritesPrice: 3.75, // Same cache pricing
-				cacheReadsPrice: 0.3,
+				cacheWritesPrice: 7.5, // $7.50 per million tokens (>200K context)
+				cacheReadsPrice: 0.6, // $0.60 per million tokens (>200K context)
 			},
 		],
 	},

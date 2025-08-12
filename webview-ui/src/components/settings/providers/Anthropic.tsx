@@ -91,10 +91,10 @@ export const Anthropic = ({ apiConfiguration, setApiConfigurationField }: Anthro
 						onChange={(checked: boolean) => {
 							setApiConfigurationField("anthropicBeta1MContext", checked)
 						}}>
-						Enable 1M context window (Beta)
+						{t("settings:providers.anthropic1MContextBetaLabel")}
 					</Checkbox>
 					<div className="text-sm text-vscode-descriptionForeground mt-1 ml-6">
-						Extends context window to 1 million tokens for Claude Sonnet 4
+						{t("settings:providers.anthropic1MContextBetaDescription")}
 					</div>
 				</div>
 			)}

@@ -302,7 +302,13 @@ function getSelectedModel({
 			) {
 				// Type assertion since we know claude-sonnet-4-20250514 has tiers
 				const modelWithTiers = baseInfo as typeof baseInfo & {
-					tiers?: Array<{ contextWindow: number; inputPrice?: number; outputPrice?: number }>
+					tiers?: Array<{
+						contextWindow: number
+						inputPrice?: number
+						outputPrice?: number
+						cacheWritesPrice?: number
+						cacheReadsPrice?: number
+					}>
 				}
 				const tier = modelWithTiers.tiers?.[0]
 				if (tier) {
@@ -312,6 +318,8 @@ function getSelectedModel({
 						contextWindow: tier.contextWindow,
 						inputPrice: tier.inputPrice ?? baseInfo.inputPrice,
 						outputPrice: tier.outputPrice ?? baseInfo.outputPrice,
+						cacheWritesPrice: tier.cacheWritesPrice ?? baseInfo.cacheWritesPrice,
+						cacheReadsPrice: tier.cacheReadsPrice ?? baseInfo.cacheReadsPrice,
 					}
 					return { id, info }
 				}
