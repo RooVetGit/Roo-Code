@@ -53,6 +53,7 @@ vitest.mock("../fetchers/modelCache", () => ({
 				inputPrice: 1,
 				outputPrice: 3,
 				description: "O3 Mini",
+				supportsTemperature: false,
 			},
 		})
 	}),
