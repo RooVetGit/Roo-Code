@@ -40,6 +40,7 @@ import {
 	CodeActionProvider,
 } from "./activate"
 import { initializeI18n } from "./i18n"
+import { performStartupStaleLockRecovery } from "./utils/staleLockRecovery"
 
 /**
  * Built using https://github.com/microsoft/vscode-webview-ui-toolkit
@@ -80,6 +81,18 @@ export async function activate(context: vscode.ExtensionContext) {
 
 	// Initialize i18n for internationalization support.
 	initializeI18n(context.globalState.get("language") ?? formatLanguage(vscode.env.language))
+
+	// Perform stale lock recovery on startup
+	try {
+		await performStartupStaleLockRecovery(context.globalStorageUri.fsPath, {
+			maxLockAge: 10 * 60 * 1000, // 10 minutes
+			autoRecover: true,
+		})
+	} catch (error) {
+		outputChannel.appendLine(
+			`[StaleLockRecovery] Error during startup recovery: ${error instanceof Error ? error.message : String(error)}`,
+		)
+	}
 
 	// Initialize terminal shell execution handlers.
 	TerminalRegistry.initialize()
