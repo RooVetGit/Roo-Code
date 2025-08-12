@@ -78,11 +78,12 @@ export async function showSystemNotification(options: NotificationOptions): Prom
 			throw new Error("Message is required")
 		}
 
+		const escape = (str: string = "") => str.replace(/\\/g, "\\\\").replace(/"/g, '\\"')
 		const escapedOptions = {
 			...options,
-			title: title.replace(/"/g, '\\"'),
-			message: message.replace(/"/g, '\\"'),
-			subtitle: options.subtitle?.replace(/"/g, '\\"') || "",
+			title: escape(title),
+			message: escape(message),
+			subtitle: escape(options.subtitle),
 		}
 
 		switch (platform()) {
