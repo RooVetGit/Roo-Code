@@ -2,16 +2,13 @@
 
 import { OllamaHandler } from "../ollama"
 import { ApiHandlerOptions } from "../../../shared/api"
-import * as vscode from "vscode"
 
-// Mock vscode
-vitest.mock("vscode", () => ({
-	workspace: {
-		getConfiguration: vitest.fn().mockReturnValue({
-			get: vitest.fn(),
-		}),
-	},
+// Mock the timeout config utility
+vitest.mock("../utils/timeout-config", () => ({
+	getApiRequestTimeout: vitest.fn(),
 }))
+
+import { getApiRequestTimeout } from "../utils/timeout-config"
 
 // Mock OpenAI
 const mockOpenAIConstructor = vitest.fn()
@@ -32,18 +29,12 @@ vitest.mock("openai", () => {
 })
 
 describe("OllamaHandler timeout configuration", () => {
-	let mockGetConfig: any
-
 	beforeEach(() => {
 		vitest.clearAllMocks()
-		mockGetConfig = vitest.fn()
-		;(vscode.workspace.getConfiguration as any).mockReturnValue({
-			get: mockGetConfig,
-		})
 	})
 
 	it("should use default timeout of 600 seconds when no configuration is set", () => {
-		mockGetConfig.mockReturnValue(600)
+		;(getApiRequestTimeout as any).mockReturnValue(600000)
 
 		const options: ApiHandlerOptions = {
 			apiModelId: "llama2",
@@ -53,8 +44,7 @@ describe("OllamaHandler timeout configuration", () => {
 
 		new OllamaHandler(options)
 
-		expect(vscode.workspace.getConfiguration).toHaveBeenCalledWith("roo-cline")
-		expect(mockGetConfig).toHaveBeenCalledWith("apiRequestTimeout", 600)
+		expect(getApiRequestTimeout).toHaveBeenCalled()
 		expect(mockOpenAIConstructor).toHaveBeenCalledWith(
 			expect.objectContaining({
 				baseURL: "http://localhost:11434/v1",
@@ -65,7 +55,7 @@ describe("OllamaHandler timeout configuration", () => {
 	})
 
 	it("should use custom timeout when configuration is set", () => {
-		mockGetConfig.mockReturnValue(3600) // 1 hour
+		;(getApiRequestTimeout as any).mockReturnValue(3600000) // 1 hour
 
 		const options: ApiHandlerOptions = {
 			apiModelId: "llama2",
@@ -82,7 +72,7 @@ describe("OllamaHandler timeout configuration", () => {
 	})
 
 	it("should handle zero timeout (no timeout)", () => {
-		mockGetConfig.mockReturnValue(0)
+		;(getApiRequestTimeout as any).mockReturnValue(0)
 
 		const options: ApiHandlerOptions = {
 			apiModelId: "llama2",
@@ -100,7 +90,7 @@ describe("OllamaHandler timeout configuration", () => {
 	})
 
 	it("should use default base URL when not provided", () => {
-		mockGetConfig.mockReturnValue(600)
+		;(getApiRequestTimeout as any).mockReturnValue(600000)
 
 		const options: ApiHandlerOptions = {
 			apiModelId: "llama2",

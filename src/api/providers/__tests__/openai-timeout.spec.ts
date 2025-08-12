@@ -2,16 +2,13 @@
 
 import { OpenAiHandler } from "../openai"
 import { ApiHandlerOptions } from "../../../shared/api"
-import * as vscode from "vscode"
 
-// Mock vscode
-vitest.mock("vscode", () => ({
-	workspace: {
-		getConfiguration: vitest.fn().mockReturnValue({
-			get: vitest.fn(),
-		}),
-	},
+// Mock the timeout config utility
+vitest.mock("../utils/timeout-config", () => ({
+	getApiRequestTimeout: vitest.fn(),
 }))
+
+import { getApiRequestTimeout } from "../utils/timeout-config"
 
 // Mock OpenAI and AzureOpenAI
 const mockOpenAIConstructor = vitest.fn()
@@ -44,18 +41,12 @@ vitest.mock("openai", () => {
 })
 
 describe("OpenAiHandler timeout configuration", () => {
-	let mockGetConfig: any
-
 	beforeEach(() => {
 		vitest.clearAllMocks()
-		mockGetConfig = vitest.fn()
-		;(vscode.workspace.getConfiguration as any).mockReturnValue({
-			get: mockGetConfig,
-		})
 	})
 
 	it("should use default timeout for standard OpenAI", () => {
-		mockGetConfig.mockReturnValue(600)
+		;(getApiRequestTimeout as any).mockReturnValue(600000)
 
 		const options: ApiHandlerOptions = {
 			apiModelId: "gpt-4",
@@ -65,8 +56,7 @@ describe("OpenAiHandler timeout configuration", () => {
 
 		new OpenAiHandler(options)
 
-		expect(vscode.workspace.getConfiguration).toHaveBeenCalledWith("roo-cline")
-		expect(mockGetConfig).toHaveBeenCalledWith("apiRequestTimeout", 600)
+		expect(getApiRequestTimeout).toHaveBeenCalled()
 		expect(mockOpenAIConstructor).toHaveBeenCalledWith(
 			expect.objectContaining({
 				baseURL: "https://api.openai.com/v1",
@@ -77,7 +67,7 @@ describe("OpenAiHandler timeout configuration", () => {
 	})
 
 	it("should use custom timeout for OpenAI-compatible providers", () => {
-		mockGetConfig.mockReturnValue(1800) // 30 minutes
+		;(getApiRequestTimeout as any).mockReturnValue(1800000) // 30 minutes
 
 		const options: ApiHandlerOptions = {
 			apiModelId: "custom-model",
@@ -97,7 +87,7 @@ describe("OpenAiHandler timeout configuration", () => {
 	})
 
 	it("should use timeout for Azure OpenAI", () => {
-		mockGetConfig.mockReturnValue(900) // 15 minutes
+		;(getApiRequestTimeout as any).mockReturnValue(900000) // 15 minutes
 
 		const options: ApiHandlerOptions = {
 			apiModelId: "gpt-4",
@@ -117,7 +107,7 @@ describe("OpenAiHandler timeout configuration", () => {
 	})
 
 	it("should use timeout for Azure AI Inference", () => {
-		mockGetConfig.mockReturnValue(1200) // 20 minutes
+		;(getApiRequestTimeout as any).mockReturnValue(1200000) // 20 minutes
 
 		const options: ApiHandlerOptions = {
 			apiModelId: "deepseek",
@@ -136,7 +126,7 @@ describe("OpenAiHandler timeout configuration", () => {
 	})
 
 	it("should handle zero timeout (no timeout)", () => {
-		mockGetConfig.mockReturnValue(0)
+		;(getApiRequestTimeout as any).mockReturnValue(0)
 
 		const options: ApiHandlerOptions = {
 			apiModelId: "gpt-4",

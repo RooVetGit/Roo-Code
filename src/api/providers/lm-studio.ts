@@ -1,7 +1,6 @@
 import { Anthropic } from "@anthropic-ai/sdk"
 import OpenAI from "openai"
 import axios from "axios"
-import * as vscode from "vscode"
 
 import { type ModelInfo, openAiModelInfoSaneDefaults, LMSTUDIO_DEFAULT_TEMPERATURE } from "@roo-code/types"
 
@@ -15,6 +14,7 @@ import { ApiStream } from "../transform/stream"
 import { BaseProvider } from "./base-provider"
 import type { SingleCompletionHandler, ApiHandlerCreateMessageMetadata } from "../index"
 import { getModels, getModelsFromCache } from "./fetchers/modelCache"
+import { getApiRequestTimeout } from "./utils/timeout-config"
 
 export class LmStudioHandler extends BaseProvider implements SingleCompletionHandler {
 	protected options: ApiHandlerOptions
@@ -23,12 +23,11 @@ export class LmStudioHandler extends BaseProvider implements SingleCompletionHan
 	constructor(options: ApiHandlerOptions) {
 		super()
 		this.options = options
-		const timeoutSeconds = vscode.workspace.getConfiguration("roo-cline").get<number>("apiRequestTimeout", 600)
 
 		this.client = new OpenAI({
 			baseURL: (this.options.lmStudioBaseUrl || "http://localhost:1234") + "/v1",
 			apiKey: "noop",
-			timeout: timeoutSeconds * 1000, // Convert to milliseconds
+			timeout: getApiRequestTimeout(),
 		})
 	}
 

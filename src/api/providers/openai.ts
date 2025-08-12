@@ -1,7 +1,6 @@
 import { Anthropic } from "@anthropic-ai/sdk"
 import OpenAI, { AzureOpenAI } from "openai"
 import axios from "axios"
-import * as vscode from "vscode"
 
 import {
 	type ModelInfo,
@@ -24,6 +23,7 @@ import { getModelParams } from "../transform/model-params"
 import { DEFAULT_HEADERS } from "./constants"
 import { BaseProvider } from "./base-provider"
 import type { SingleCompletionHandler, ApiHandlerCreateMessageMetadata } from "../index"
+import { getApiRequestTimeout } from "./utils/timeout-config"
 
 // TODO: Rename this to OpenAICompatibleHandler. Also, I think the
 // `OpenAINativeHandler` can subclass from this, since it's obviously
@@ -47,8 +47,7 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 			...(this.options.openAiHeaders || {}),
 		}
 
-		const timeoutSeconds = vscode.workspace.getConfiguration("roo-cline").get<number>("apiRequestTimeout", 600)
-		const timeout = timeoutSeconds * 1000 // Convert to milliseconds
+		const timeout = getApiRequestTimeout()
 
 		if (isAzureAiInference) {
 			// Azure AI Inference Service (e.g., for DeepSeek) uses a different path structure
