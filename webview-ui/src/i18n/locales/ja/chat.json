@@ -173,6 +173,10 @@
 		"wantsToInsert": "Rooはこのファイルにコンテンツを挿入したい:",
 		"wantsToInsertWithLineNumber": "Rooはこのファイルの{{lineNumber}}行目にコンテンツを挿入したい:",
 		"wantsToInsertAtEnd": "Rooはこのファイルの末尾にコンテンツを追加したい:",
+		"fileNotFound": "ファイルが見つかりません",
+		"filesNotFound": "ファイルが見つかりません",
+		"fileNotFoundMessage": "要求されたファイルは現在のワークスペースに存在しません。",
+		"filesNotFoundMessage": "要求されたファイルは現在のワークスペースに存在しません。",
 		"wantsToReadAndXMore": "Roo はこのファイルと他に {{count}} 個のファイルを読み込もうとしています:",
 		"wantsToReadMultiple": "Rooは複数のファイルを読み取ろうとしています：",
 		"wantsToApplyBatchChanges": "Rooは複数のファイルに変更を適用したい:"

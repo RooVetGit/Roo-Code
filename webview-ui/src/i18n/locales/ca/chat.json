@@ -173,6 +173,10 @@
 		"wantsToInsert": "Roo vol inserir contingut en aquest fitxer:",
 		"wantsToInsertWithLineNumber": "Roo vol inserir contingut a la línia {{lineNumber}} d'aquest fitxer:",
 		"wantsToInsertAtEnd": "Roo vol afegir contingut al final d'aquest fitxer:",
+		"fileNotFound": "Fitxer no trobat",
+		"filesNotFound": "Fitxers no trobats",
+		"fileNotFoundMessage": "El fitxer sol·licitat no existeix a l'espai de treball actual.",
+		"filesNotFoundMessage": "Els fitxers sol·licitats no existeixen a l'espai de treball actual.",
 		"wantsToReadAndXMore": "En Roo vol llegir aquest fitxer i {{count}} més:",
 		"wantsToReadMultiple": "Roo vol llegir diversos fitxers:",
 		"wantsToApplyBatchChanges": "Roo vol aplicar canvis a múltiples fitxers:"

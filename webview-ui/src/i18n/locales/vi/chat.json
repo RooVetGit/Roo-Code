@@ -173,6 +173,10 @@
 		"wantsToInsert": "Roo muốn chèn nội dung vào tệp này:",
 		"wantsToInsertWithLineNumber": "Roo muốn chèn nội dung vào dòng {{lineNumber}} của tệp này:",
 		"wantsToInsertAtEnd": "Roo muốn thêm nội dung vào cuối tệp này:",
+		"fileNotFound": "Không tìm thấy tệp",
+		"filesNotFound": "Không tìm thấy các tệp",
+		"fileNotFoundMessage": "Tệp được yêu cầu không tồn tại trong không gian làm việc hiện tại.",
+		"filesNotFoundMessage": "Các tệp được yêu cầu không tồn tại trong không gian làm việc hiện tại.",
 		"wantsToReadAndXMore": "Roo muốn đọc tệp này và {{count}} tệp khác:",
 		"wantsToReadMultiple": "Roo muốn đọc nhiều tệp:",
 		"wantsToApplyBatchChanges": "Roo muốn áp dụng thay đổi cho nhiều tệp:"

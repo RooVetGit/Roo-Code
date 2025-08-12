@@ -173,6 +173,10 @@
 		"wantsToInsert": "需要在此文件中插入内容:",
 		"wantsToInsertWithLineNumber": "需要在第 {{lineNumber}} 行插入内容:",
 		"wantsToInsertAtEnd": "需要在文件末尾添加内容:",
+		"fileNotFound": "文件未找到",
+		"filesNotFound": "文件未找到",
+		"fileNotFoundMessage": "请求的文件在当前工作区中不存在。",
+		"filesNotFoundMessage": "请求的文件在当前工作区中不存在。",
 		"wantsToReadAndXMore": "Roo 想读取此文件以及另外 {{count}} 个文件：",
 		"wantsToReadMultiple": "Roo 想要读取多个文件：",
 		"wantsToApplyBatchChanges": "Roo 想要对多个文件应用更改："
