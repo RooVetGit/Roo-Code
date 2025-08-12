@@ -6,10 +6,8 @@ import type { ModelInfo, ProviderSettings, ReasoningEffortWithMinimal } from "@r
 
 import { shouldUseReasoningBudget, shouldUseReasoningEffort } from "../../shared/api"
 
-type ReasoningEffort = "minimal" | "low" | "medium" | "high"
-
 export type OpenRouterReasoningParams = {
-	effort?: ReasoningEffort
+	effort?: ReasoningEffortWithMinimal
 	max_tokens?: number
 	exclude?: boolean
 }
@@ -36,7 +34,7 @@ export const getOpenRouterReasoning = ({
 	shouldUseReasoningBudget({ model, settings })
 		? { max_tokens: reasoningBudget }
 		: shouldUseReasoningEffort({ model, settings })
-			? reasoningEffort
+			? reasoningEffort && reasoningEffort !== "minimal"
 				? { effort: reasoningEffort }
 				: undefined
 			: undefined
