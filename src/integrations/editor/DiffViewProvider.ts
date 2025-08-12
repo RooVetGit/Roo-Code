@@ -7,7 +7,7 @@ import { XMLBuilder } from "fast-xml-parser"
 import delay from "delay"
 
 import { createDirectoriesForFile } from "../../utils/fs"
-import { readFileWithEncodingDetection } from "../../utils/encoding"
+import { readFileWithEncodingDetection, writeFileWithEncodingPreservation } from "../../utils/encoding"
 import { arePathsEqual, getReadablePath } from "../../utils/path"
 import { formatResponse } from "../../core/prompts/responses"
 import { diagnosticsToProblemsString, getNewDiagnostics } from "../diagnostics"
@@ -655,9 +655,9 @@ export class DiffViewProvider {
 		// Get diagnostics before editing the file
 		this.preDiagnostics = vscode.languages.getDiagnostics()
 
-		// Write the content directly to the file
+		// Write the content directly to the file with encoding preservation
 		await createDirectoriesForFile(absolutePath)
-		await fs.writeFile(absolutePath, content, "utf-8")
+		await writeFileWithEncodingPreservation(absolutePath, content)
 
 		// Open the document to ensure diagnostics are loaded
 		// When openFile is false (PREVENT_FOCUS_DISRUPTION enabled), we only open in memory

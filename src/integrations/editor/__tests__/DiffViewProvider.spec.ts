@@ -27,6 +27,12 @@ vi.mock("../../../utils/fs", () => ({
 	createDirectoriesForFile: vi.fn().mockResolvedValue([]),
 }))
 
+// Mock encoding utilities
+vi.mock("../../../utils/encoding", () => ({
+	readFileWithEncodingDetection: vi.fn().mockResolvedValue("file content"),
+	writeFileWithEncodingPreservation: vi.fn().mockResolvedValue(undefined),
+}))
+
 // Mock path
 vi.mock("path", async () => {
 	const actual = await vi.importActual("path");
@@ -382,8 +388,8 @@ describe("DiffViewProvider", () => {
 			const result = await diffViewProvider.saveDirectly("test.ts", "new content", true, true, 2000)
 
 			// Verify file was written
-			const fs = await import("fs/promises")
-			expect(fs.writeFile).toHaveBeenCalledWith(`${mockCwd}/test.ts`, "new content", "utf-8")
+			const { writeFileWithEncodingPreservation } = await import("../../../utils/encoding")
+			expect(writeFileWithEncodingPreservation).toHaveBeenCalledWith(`${mockCwd}/test.ts`, "new content")
 
 			// Verify file was opened without focus
 			expect(vscode.window.showTextDocument).toHaveBeenCalledWith(
@@ -405,8 +411,8 @@ describe("DiffViewProvider", () => {
 			await diffViewProvider.saveDirectly("test.ts", "new content", false, true, 1000)
 
 			// Verify file was written
-			const fs = await import("fs/promises")
-			expect(fs.writeFile).toHaveBeenCalledWith(`${mockCwd}/test.ts`, "new content", "utf-8")
+			const { writeFileWithEncodingPreservation } = await import("../../../utils/encoding")
+			expect(writeFileWithEncodingPreservation).toHaveBeenCalledWith(`${mockCwd}/test.ts`, "new content")
 
 			// Verify file was NOT opened
 			expect(vscode.window.showTextDocument).not.toHaveBeenCalled()
@@ -420,8 +426,8 @@ describe("DiffViewProvider", () => {
 			await diffViewProvider.saveDirectly("test.ts", "new content", true, false, 1000)
 
 			// Verify file was written
-			const fs = await import("fs/promises")
-			expect(fs.writeFile).toHaveBeenCalledWith(`${mockCwd}/test.ts`, "new content", "utf-8")
+			const { writeFileWithEncodingPreservation } = await import("../../../utils/encoding")
+			expect(writeFileWithEncodingPreservation).toHaveBeenCalledWith(`${mockCwd}/test.ts`, "new content")
 
 			// Verify delay was NOT called
 			expect(mockDelay).not.toHaveBeenCalled()
