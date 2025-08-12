@@ -106,6 +106,8 @@ import { AutoApprovalHandler } from "./AutoApprovalHandler"
 
 const MAX_EXPONENTIAL_BACKOFF_SECONDS = 600 // 10 minutes
 const DEFAULT_USAGE_COLLECTION_TIMEOUT_MS = 5000 // 5 seconds
+const FORCED_CONTEXT_REDUCTION_PERCENT = 75 // Force 25% reduction on context window errors
+const MAX_CONTEXT_WINDOW_RETRIES = 3 // Maximum retries for context window errors
 
 export type TaskOptions = {
 	provider: ClineProvider
@@ -2231,6 +2233,13 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 		})()
 	}
 
+	private getCurrentProfileId(state: any): string {
+		return (
+			state?.listApiConfigMeta?.find((profile: any) => profile.name === state?.currentApiConfigName)?.id ??
+			"default"
+		)
+	}
+
 	private async handleContextWindowExceededError(): Promise<void> {
 		const state = await this.providerRef.deref()?.getState()
 		const { profileThresholds = {} } = state ?? {}
@@ -2244,10 +2253,8 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 		})
 		const contextWindow = modelInfo.contextWindow
 
-		// Get the current profile ID the same way as in attemptApiRequest
-		const currentProfileId =
-			state?.listApiConfigMeta?.find((profile: any) => profile.name === state?.currentApiConfigName)?.id ??
-			"default"
+		// Get the current profile ID using the helper method
+		const currentProfileId = this.getCurrentProfileId(state)
 
 		// Force aggressive truncation by removing 25% of the conversation history
 		const truncateResult = await truncateConversationIfNeeded({
@@ -2257,7 +2264,7 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 			contextWindow,
 			apiHandler: this.api,
 			autoCondenseContext: true,
-			autoCondenseContextPercent: 75, // Force 25% reduction
+			autoCondenseContextPercent: FORCED_CONTEXT_REDUCTION_PERCENT,
 			systemPrompt: await this.getSystemPrompt(),
 			taskId: this.taskId,
 			profileThresholds,
@@ -2362,9 +2369,7 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 
 			const contextWindow = modelInfo.contextWindow
 
-			const currentProfileId =
-				state?.listApiConfigMeta.find((profile) => profile.name === state?.currentApiConfigName)?.id ??
-				"default"
+			const currentProfileId = this.getCurrentProfileId(state)
 
 			const truncateResult = await truncateConversationIfNeeded({
 				messages: this.apiConversationHistory,
@@ -2473,8 +2478,11 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 			this.isWaitingForFirstChunk = false
 			const isContextWindowExceededError = checkContextWindowExceededError(error)
 
-			// If it's a context window error and we haven't already retried for this reason
-			if (isContextWindowExceededError && retryAttempt === 0) {
+			// If it's a context window error and we haven't exceeded max retries for this error type
+			if (isContextWindowExceededError && retryAttempt < MAX_CONTEXT_WINDOW_RETRIES) {
+				console.warn(
+					`Context window exceeded for model ${this.api.getModel().id}. Attempting automatic truncation...`,
+				)
 				await this.handleContextWindowExceededError()
 				// Retry the request after handling the context window error
 				yield* this.attemptApiRequest(retryAttempt + 1)
