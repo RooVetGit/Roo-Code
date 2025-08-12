@@ -113,7 +113,11 @@
 		"settings": "Modus Instellingen",
 		"description": "Gespecialiseerde persona's die het gedrag van Roo aanpassen.",
 		"searchPlaceholder": "Zoek modi...",
-		"noResults": "Geen resultaten gevonden"
+		"noResults": "Geen resultaten gevonden",
+		"global": "Globaal",
+		"project": "Project",
+		"globalShort": "G",
+		"projectShort": "P"
 	},
 	"addImages": "Afbeeldingen toevoegen aan bericht",
 	"sendMessage": "Bericht verzenden",
