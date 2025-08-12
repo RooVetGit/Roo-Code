@@ -88,6 +88,7 @@ import { MultiSearchReplaceDiffStrategy } from "../diff/strategies/multi-search-
 import { MultiFileSearchReplaceDiffStrategy } from "../diff/strategies/multi-file-search-replace"
 import { readApiMessages, saveApiMessages, readTaskMessages, saveTaskMessages, taskMetadata } from "../task-persistence"
 import { getEnvironmentDetails } from "../environment/getEnvironmentDetails"
+import { checkContextWindowExceededError } from "../context/context-management/context-error-handling"
 import {
 	type CheckpointDiffOptions,
 	type CheckpointRestoreOptions,
@@ -2230,6 +2231,59 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 		})()
 	}
 
+	private async handleContextWindowExceededError(): Promise<void> {
+		const state = await this.providerRef.deref()?.getState()
+		const { profileThresholds = {} } = state ?? {}
+
+		const { contextTokens } = this.getTokenUsage()
+		const modelInfo = this.api.getModel().info
+		const maxTokens = getModelMaxOutputTokens({
+			modelId: this.api.getModel().id,
+			model: modelInfo,
+			settings: this.apiConfiguration,
+		})
+		const contextWindow = modelInfo.contextWindow
+
+		// Get the current profile ID the same way as in attemptApiRequest
+		const currentProfileId =
+			state?.listApiConfigMeta?.find((profile: any) => profile.name === state?.currentApiConfigName)?.id ??
+			"default"
+
+		// Force aggressive truncation by removing 25% of the conversation history
+		const truncateResult = await truncateConversationIfNeeded({
+			messages: this.apiConversationHistory,
+			totalTokens: contextTokens || 0,
+			maxTokens,
+			contextWindow,
+			apiHandler: this.api,
+			autoCondenseContext: true,
+			autoCondenseContextPercent: 75, // Force 25% reduction
+			systemPrompt: await this.getSystemPrompt(),
+			taskId: this.taskId,
+			profileThresholds,
+			currentProfileId,
+		})
+
+		if (truncateResult.messages !== this.apiConversationHistory) {
+			await this.overwriteApiConversationHistory(truncateResult.messages)
+		}
+
+		if (truncateResult.summary) {
+			const { summary, cost, prevContextTokens, newContextTokens = 0 } = truncateResult
+			const contextCondense: ContextCondense = { summary, cost, newContextTokens, prevContextTokens }
+			await this.say(
+				"condense_context",
+				undefined /* text */,
+				undefined /* images */,
+				false /* partial */,
+				undefined /* checkpoint */,
+				undefined /* progressStatus */,
+				{ isNonInteractive: true } /* options */,
+				contextCondense,
+			)
+		}
+	}
+
 	public async *attemptApiRequest(retryAttempt: number = 0): ApiStream {
 		const state = await this.providerRef.deref()?.getState()
 
@@ -2417,6 +2471,16 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 			this.isWaitingForFirstChunk = false
 		} catch (error) {
 			this.isWaitingForFirstChunk = false
+			const isContextWindowExceededError = checkContextWindowExceededError(error)
+
+			// If it's a context window error and we haven't already retried for this reason
+			if (isContextWindowExceededError && retryAttempt === 0) {
+				await this.handleContextWindowExceededError()
+				// Retry the request after handling the context window error
+				yield* this.attemptApiRequest(retryAttempt + 1)
+				return
+			}
+
 			// note that this api_req_failed ask is unique in that we only present this option if the api hasn't streamed any content yet (ie it fails on the first chunk due), as it would allow them to hit a retry button. However if the api failed mid-stream, it could be in any arbitrary state where some tools may have executed, so that error is handled differently and requires cancelling the task entirely.
 			if (autoApprovalEnabled && alwaysApproveResubmit) {
 				let errorMsg
