@@ -767,6 +767,7 @@
 		"enableR1FormatTips": "Harus diaktifkan saat menggunakan model R1 seperti QWQ untuk mencegah error 400",
 		"useAzure": "Gunakan Azure",
 		"azureApiVersion": "Atur versi API Azure",
+		"azureApiVersionDetected": "Versi API terdeteksi di URL Dasar: <strong>{{version}}</strong><br />Ini akan digunakan secara otomatis. Aktifkan kotak centang di atas untuk menimpa.",
 		"gemini": {
 			"freeRequests": "* Gratis hingga {{count}} permintaan per menit. Setelah itu, penagihan tergantung pada ukuran prompt.",
 			"pricingDetails": "Untuk info lebih lanjut, lihat detail harga.",

@@ -738,6 +738,7 @@
 		"enableR1FormatTips": "使用 QWQ 等 R1 模型時必須啟用，以避免發生 400 錯誤",
 		"useAzure": "使用 Azure",
 		"azureApiVersion": "設定 Azure API 版本",
+		"azureApiVersionDetected": "在基底 URL 中偵測到 API 版本：<strong>{{version}}</strong><br />將自動使用此版本。若要覆寫，請啟用上方的核取方塊。",
 		"gemini": {
 			"freeRequests": "* 每分鐘可免費使用 {{count}} 次請求，超過後將依提示大小計費。",
 			"pricingDetails": "詳細資訊請參閱定價說明。",

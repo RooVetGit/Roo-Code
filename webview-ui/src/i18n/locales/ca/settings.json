@@ -737,6 +737,7 @@
 		"enableR1FormatTips": "S'ha d'activat quan s'utilitzen models R1 com el QWQ per evitar errors 400",
 		"useAzure": "Utilitzar Azure",
 		"azureApiVersion": "Establir versió de l'API d'Azure",
+		"azureApiVersionDetected": "Versió de l'API detectada a l'URL base: <strong>{{version}}</strong><br />Aquesta s'utilitzarà automàticament. Activa la casella de selecció anterior per sobreescriure-la.",
 		"gemini": {
 			"freeRequests": "* Gratuït fins a {{count}} sol·licituds per minut. Després d'això, la facturació depèn de la mida del prompt.",
 			"pricingDetails": "Per a més informació, consulteu els detalls de preus.",

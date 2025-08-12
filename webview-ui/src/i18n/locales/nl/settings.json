@@ -738,6 +738,7 @@
 		"enableR1FormatTips": "Moet ingeschakeld zijn bij gebruik van R1-modellen zoals QWQ om 400-fouten te voorkomen",
 		"useAzure": "Azure gebruiken",
 		"azureApiVersion": "Azure API-versie instellen",
+		"azureApiVersionDetected": "API-versie gedetecteerd in basis-URL: <strong>{{version}}</strong><br />Deze wordt automatisch gebruikt. Schakel het selectievakje hierboven in om te overschrijven.",
 		"gemini": {
 			"freeRequests": "* Gratis tot {{count}} verzoeken per minuut. Daarna is de prijs afhankelijk van de promptgrootte.",
 			"pricingDetails": "Zie prijsdetails voor meer info.",

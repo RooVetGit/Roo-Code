@@ -738,6 +738,7 @@
 		"enableR1FormatTips": "QWQなどのR1モデルを使用する際には、有効にする必要があります。400エラーを防ぐために",
 		"useAzure": "Azureを使用",
 		"azureApiVersion": "Azure APIバージョンを設定",
+		"azureApiVersionDetected": "ベースURLでAPIバージョンが検出されました: <strong>{{version}}</strong><br />これは自動的に使用されます。上書きするには、上のチェックボックスを有効にしてください。",
 		"gemini": {
 			"freeRequests": "* 1分間あたり{{count}}リクエストまで無料。それ以降は、プロンプトサイズに応じて課金されます。",
 			"pricingDetails": "詳細は価格情報をご覧ください。",

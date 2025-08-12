@@ -738,6 +738,7 @@
 		"enableR1FormatTips": "QWQ gibi R1 modelleri kullanıldığında etkinleştirilmelidir, 400 hatası alınmaması için",
 		"useAzure": "Azure kullan",
 		"azureApiVersion": "Azure API sürümünü ayarla",
+		"azureApiVersionDetected": "Temel URL'de API sürümü algılandı: <strong>{{version}}</strong><br />Bu otomatik olarak kullanılacaktır. Geçersiz kılmak için yukarıdaki onay kutusunu etkinleştirin.",
 		"gemini": {
 			"freeRequests": "* Dakikada {{count}} isteğe kadar ücretsiz. Bundan sonra, ücretlendirme istem boyutuna bağlıdır.",
 			"pricingDetails": "Daha fazla bilgi için fiyatlandırma ayrıntılarına bakın.",
