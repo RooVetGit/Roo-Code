@@ -601,14 +601,19 @@ function formatAndCombineResults(files: string[], directories: string[], limit: 
 	const uniquePathsSet = new Set(allPaths)
 	const uniquePaths = Array.from(uniquePathsSet)
 
-	// Sort to ensure directories come first, followed by files
+	// Apply numeric-aware sorting before limiting results
+	// This ensures version-numbered files are properly ordered before truncation
 	uniquePaths.sort((a: string, b: string) => {
 		const aIsDir = a.endsWith("/")
 		const bIsDir = b.endsWith("/")
 
+		// Directories come first
 		if (aIsDir && !bIsDir) return -1
 		if (!aIsDir && bIsDir) return 1
-		return a.localeCompare(b)
+
+		// For same type (both dirs or both files), use numeric-aware comparison
+		// This properly handles version numbers like v3.25.1, v3.25.2, etc.
+		return a.localeCompare(b, undefined, { numeric: true, sensitivity: "base" })
 	})
 
 	const trimmedPaths = uniquePaths.slice(0, limit)
