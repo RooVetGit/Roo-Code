@@ -37,8 +37,8 @@ export const NotificationSettings = ({
 		vscode.postMessage({
 			type: "showSystemNotification",
 			notificationOptions: {
-				title: t("settings.notifications.system.testTitle"),
-				message: t("settings.notifications.system.testMessage"),
+				title: t("settings:notifications.system.testTitle"),
+				message: t("settings:notifications.system.testMessage"),
 				force: true,
 			},
 		})
