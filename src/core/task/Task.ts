@@ -1604,7 +1604,14 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 					lastMessage.partial = false
 					// instead of streaming partialMessage events, we do a save and post like normal to persist to disk
 					console.log("updating partial message", lastMessage)
-					// await this.saveClineMessages()
+
+					// For reasoning messages, preserve the current content
+					if (lastMessage.say === "reasoning" && reasoningMessage) {
+						lastMessage.text = reasoningMessage
+					}
+
+					// Save the updated partial message to preserve current state
+					await this.saveClineMessages()
 				}
 
 				// Let assistant know their response was interrupted for when task is resumed

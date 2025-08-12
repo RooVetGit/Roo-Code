@@ -1223,6 +1223,10 @@ export class ClineProvider
 
 		console.log(`[subtasks] cancelling task ${cline.taskId}.${cline.instanceId}`)
 
+		// Preserve current conversation state before cancellation
+		const currentClineMessages = [...cline.clineMessages]
+		const currentApiHistory = [...cline.apiConversationHistory]
+
 		const { historyItem } = await this.getTaskWithId(cline.taskId)
 		// Preserve parent and root task information for history item.
 		const rootTask = cline.rootTask
@@ -1253,8 +1257,33 @@ export class ClineProvider
 			this.getCurrentCline()!.abandoned = true
 		}
 
-		// Clears task again, so we need to abortTask manually above.
-		await this.initClineWithHistoryItem({ ...historyItem, rootTask, parentTask })
+		// Create new task with preserved conversation state instead of reverting to saved history
+		const newCline = new Task({
+			provider: this,
+			apiConfiguration: cline.apiConfiguration,
+			enableDiff: cline.diffEnabled,
+			enableCheckpoints: cline.enableCheckpoints,
+			fuzzyMatchThreshold: cline.fuzzyMatchThreshold,
+			consecutiveMistakeLimit: cline.consecutiveMistakeLimit,
+			historyItem: historyItem,
+			experiments: (await this.getState()).experiments,
+			startTask: false,
+			rootTask,
+			parentTask,
+			taskNumber: cline.taskNumber,
+			onCreated: (cline) => this.emit("clineCreated", cline),
+		})
+
+		// Restore the current conversation state instead of loading from disk
+		await newCline.overwriteClineMessages(currentClineMessages)
+		await newCline.overwriteApiConversationHistory(currentApiHistory)
+
+		// Mark as initialized and add to stack
+		newCline.isInitialized = true
+		await this.addClineToStack(newCline)
+
+		// Update webview with current state
+		await this.postStateToWebview()
 	}
 
 	async updateCustomInstructions(instructions?: string) {
