@@ -39,6 +39,7 @@ export const NotificationSettings = ({
 			notificationOptions: {
 				title: t("settings.notifications.system.testTitle"),
 				message: t("settings.notifications.system.testMessage"),
+				force: true,
 			},
 		})
 	}

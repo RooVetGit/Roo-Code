@@ -1,10 +1,12 @@
 import { execa } from "execa"
 import { platform } from "os"
+import * as vscode from "vscode"
 
 interface NotificationOptions {
 	title?: string
 	subtitle?: string
 	message: string
+	force?: boolean // Force notification even if the window is focused
 }
 
 async function showMacOSNotification(options: NotificationOptions): Promise<void> {
@@ -65,6 +67,11 @@ async function showLinuxNotification(options: NotificationOptions): Promise<void
 
 export async function showSystemNotification(options: NotificationOptions): Promise<void> {
 	try {
+		if (vscode.window.state.focused && !options.force) {
+			// If the window is focused, do not show a notification
+			return
+		}
+
 		const { title = "Roo Code", message } = options
 
 		if (!message) {
