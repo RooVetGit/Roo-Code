@@ -1,0 +1,35 @@
+{
+	"groups": [
+		{
+			"name": "Hard",
+			"exercises": [
+				"go/connect",
+				"go/robot-simulator",
+				"go/react",
+				"go/forth",
+				"go/bowling",
+				"go/book-store",
+				"go/matrix",
+				"java/transpose",
+				"java/hangman",
+				"java/change",
+				"java/bowling",
+				"javascript/lodash",
+				"javascript/zebra-puzzle",
+				"javascript/connect",
+				"javascript/food-chain",
+				"javascript/go-counting",
+				"javascript/scale-generator",
+				"javascript/transpose",
+				"python/affine-cipher",
+				"python/forth",
+				"python/transpose",
+				"python/wordy",
+				"rust/ocr-numbers",
+				"rust/forth",
+				"rust/doubly-linked-list",
+				"rust/xorcism"
+			]
+		}
+	]
+}
