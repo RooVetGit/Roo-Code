@@ -9,10 +9,16 @@ export function checkContextWindowExceededError(error: unknown): boolean {
 	)
 }
 
-function checkIsOpenRouterContextWindowError(error: any): boolean {
+function checkIsOpenRouterContextWindowError(error: unknown): boolean {
 	try {
-		const status = error?.status ?? error?.code ?? error?.error?.status ?? error?.response?.status
-		const message: string = String(error?.message || error?.error?.message || "")
+		if (!error || typeof error !== "object") {
+			return false
+		}
+
+		// Use Record<string, any> for proper type narrowing
+		const err = error as Record<string, any>
+		const status = err.status ?? err.code ?? err.error?.status ?? err.response?.status
+		const message: string = String(err.message || err.error?.message || "")
 
 		// Known OpenAI/OpenRouter-style signal (code 400 and message includes "context length")
 		const CONTEXT_ERROR_PATTERNS = [
@@ -49,18 +55,49 @@ function checkIsOpenAIContextWindowError(error: unknown): boolean {
 	}
 }
 
-function checkIsAnthropicContextWindowError(response: any): boolean {
+function checkIsAnthropicContextWindowError(response: unknown): boolean {
 	try {
-		return response?.error?.error?.type === "invalid_request_error"
+		// Type guard to safely access properties
+		if (!response || typeof response !== "object") {
+			return false
+		}
+
+		// Use type assertions with proper checks
+		const res = response as Record<string, any>
+
+		// Check for Anthropic-specific error structure
+		if (res.error?.error?.type === "invalid_request_error") {
+			const message: string = String(res.error?.error?.message || "")
+
+			// Check if the message indicates a context window issue
+			const contextWindowPatterns = [
+				/prompt is too long/i,
+				/maximum.*tokens/i,
+				/context.*too.*long/i,
+				/exceeds.*context/i,
+				/token.*limit/i,
+			]
+
+			return contextWindowPatterns.some((pattern) => pattern.test(message))
+		}
+
+		return false
 	} catch {
 		return false
 	}
 }
 
-function checkIsCerebrasContextWindowError(response: any): boolean {
+function checkIsCerebrasContextWindowError(response: unknown): boolean {
 	try {
-		const status = response?.status ?? response?.code ?? response?.error?.status ?? response?.response?.status
-		const message: string = String(response?.message || response?.error?.message || "")
+		// Type guard to safely access properties
+		if (!response || typeof response !== "object") {
+			return false
+		}
+
+		// Use type assertions with proper checks
+		const res = response as Record<string, any>
+		const status = res.status ?? res.code ?? res.error?.status ?? res.response?.status
+		const message: string = String(res.message || res.error?.message || "")
 
 		return String(status) === "400" && message.includes("Please reduce the length of the messages or completion")
 	} catch {
