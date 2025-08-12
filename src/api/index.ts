@@ -52,6 +52,20 @@ export interface ApiHandlerCreateMessageMetadata {
 	 * Used to enforce "skip once" after a condense operation.
 	 */
 	suppressPreviousResponseId?: boolean
+
+	/**
+	 * Force this call to operate statelessly (providers should set store=false and
+	 * suppress any previous_response_id). Intended for the first call after local
+	 * context rewriting (condense or sliding-window).
+	 */
+	forceStateless?: boolean
+
+	/**
+	 * Optional stable cache key for OpenAI Responses API caching.
+	 * When provided, providers that support it should pass it as prompt_cache_key.
+	 * Per-call metadata takes precedence over handler options.
+	 */
+	promptCacheKey?: string
 }
 
 export interface ApiHandler {

@@ -36,12 +36,16 @@ export const ThinkingBudget = ({ apiConfiguration, setApiConfigurationField, mod
 	// Only show minimal for OpenAI Native provider GPT-5 models
 	const isOpenAiNativeProvider = apiConfiguration.apiProvider === "openai-native"
 	const isGpt5Model = isOpenAiNativeProvider && selectedModelId && selectedModelId.startsWith("gpt-5")
-	// Add "minimal" option for GPT-5 models
-	// Spread to convert readonly tuple into a mutable array, then expose as readonly for safety
+	// Build list of efforts:
+	// - If GPT‑5 (OpenAI Native), include "minimal"
+	// - Otherwise hide "minimal"
+	// Also de‑dupe in case the source list already includes "minimal"
 	const baseEfforts = [...reasoningEfforts] as ReasoningEffortWithMinimal[]
+	const withMinimal = Array.from(new Set<ReasoningEffortWithMinimal>(["minimal", ...baseEfforts]))
+	const withoutMinimal = baseEfforts.filter((v) => v !== "minimal") as ReasoningEffortWithMinimal[]
 	const availableReasoningEfforts: ReadonlyArray<ReasoningEffortWithMinimal> = isGpt5Model
-		? (["minimal", ...baseEfforts] as ReasoningEffortWithMinimal[])
-		: baseEfforts
+		? withMinimal
+		: withoutMinimal
 
 	// Default reasoning effort - use model's default if available
 	// GPT-5 models have "medium" as their default in the model configuration

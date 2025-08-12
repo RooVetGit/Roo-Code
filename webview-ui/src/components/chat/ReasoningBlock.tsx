@@ -57,6 +57,8 @@ export const ReasoningBlock = ({ content, elapsed, isCollapsed = false, onToggle
 		processNextTransition()
 	})
 
+	// Update the preview line only when there's a meaningful delta
+	// Restore previous thresholded behavior to keep collapsed header UX (counter) stable.
 	useEffect(() => {
 		if (content.length - cursorRef.current > 160) {
 			setThought("... " + content.slice(cursorRef.current))

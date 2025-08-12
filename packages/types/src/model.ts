@@ -4,7 +4,7 @@ import { z } from "zod"
  * ReasoningEffort
  */
 
-export const reasoningEfforts = ["low", "medium", "high"] as const
+export const reasoningEfforts = ["minimal", "low", "medium", "high"] as const
 
 export const reasoningEffortsSchema = z.enum(reasoningEfforts)
 
@@ -44,11 +44,19 @@ export const modelInfoSchema = z.object({
 	supportsImages: z.boolean().optional(),
 	supportsComputerUse: z.boolean().optional(),
 	supportsPromptCache: z.boolean(),
+	// Whether this model supports temperature. Some Responses models (e.g. o-series) do not.
+	supportsTemperature: z.boolean().optional(),
 	// Capability flag to indicate whether the model supports an output verbosity parameter
 	supportsVerbosity: z.boolean().optional(),
 	supportsReasoningBudget: z.boolean().optional(),
 	requiredReasoningBudget: z.boolean().optional(),
 	supportsReasoningEffort: z.boolean().optional(),
+	// Whether this model supports Responses API reasoning summaries
+	supportsReasoningSummary: z.boolean().optional(),
+	// The role to use for the system prompt ('system' or 'developer')
+	systemPromptRole: z.enum(["system", "developer"]).optional(),
+	// The default temperature for the model
+	defaultTemperature: z.number().optional(),
 	supportedParameters: z.array(modelParametersSchema).optional(),
 	inputPrice: z.number().optional(),
 	outputPrice: z.number().optional(),
