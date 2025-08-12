@@ -42,6 +42,8 @@ interface ParsedFile {
 }
 
 interface ParsedDiff {
+	search?: string
+	replace?: string
 	content: string
 	start_line?: string
 }
@@ -60,15 +62,17 @@ export async function applyDiffTool(
 ) {
 	// Check if MULTI_FILE_APPLY_DIFF experiment is enabled
 	const provider = cline.providerRef.deref()
+	let toolCallEnabled = false
 	if (provider) {
 		const state = await provider.getState()
+		toolCallEnabled = state.apiConfiguration?.toolCallEnabled ?? false
 		const isMultiFileApplyDiffEnabled = experiments.isEnabled(
 			state.experiments ?? {},
 			EXPERIMENT_IDS.MULTI_FILE_APPLY_DIFF,
 		)
 
 		// If experiment is disabled, use legacy tool
-		if (!isMultiFileApplyDiffEnabled) {
+		if (!isMultiFileApplyDiffEnabled && !toolCallEnabled) {
 			return applyDiffToolLegacy(cline, block, askApproval, handleError, pushToolResult, removeClosingTag)
 		}
 	}
@@ -108,10 +112,15 @@ export async function applyDiffTool(
 	if (argsXmlTag) {
 		// Parse file entries from XML (new way)
 		try {
+			let stopNodes = ["file.diff.content"]
+			if (toolCallEnabled) {
+				stopNodes.push("file.diff.search")
+				stopNodes.push("file.diff.replace")
+			}
 			// IMPORTANT: We use parseXmlForDiff here instead of parseXml to prevent HTML entity decoding
 			// This ensures exact character matching when comparing parsed content against original file content
 			// Without this, special characters like & would be decoded to &amp; causing diff mismatches
-			const parsed = parseXmlForDiff(argsXmlTag, ["file.diff.content"]) as ParsedXmlResult
+			const parsed = parseXmlForDiff(argsXmlTag, stopNodes) as ParsedXmlResult
 			const files = Array.isArray(parsed.file) ? parsed.file : [parsed.file].filter(Boolean)
 
 			for (const file of files) {
@@ -135,8 +144,32 @@ export async function applyDiffTool(
 					let diffContent: string
 					let startLine: number | undefined
 
-					// Ensure content is a string before storing it
-					diffContent = typeof diff.content === "string" ? diff.content : ""
+					if (toolCallEnabled === true && !diff.content) {
+						diffContent = ""
+						const hasSearchContent =
+							diff.search && (typeof diff.search === "string" || "#text" in diff.search)
+						if (diff.search) {
+							if (typeof diff.search === "string" || "#text" in diff.search) {
+								const searchContent =
+									typeof diff.search === "string" ? diff.search : diff.search["#text"]
+								diffContent += `<![CDATA[\n<<<<<<< SEARCH\n${searchContent}\n`
+							} else {
+								throw new Error("Invalid search content: " + JSON.stringify(diff.search))
+							}
+						}
+						if (diff.search && hasSearchContent && diff.replace) {
+							if (typeof diff.search === "string" || "#text" in diff.search) {
+								const replaceContent =
+									typeof diff.replace === "string" ? diff.replace : diff.replace["#text"]
+								diffContent += `=======\n${replaceContent}\n>>>>>>> REPLACE\n]]>\n`
+							} else {
+								throw new Error("Invalid replace content: " + JSON.stringify(diff.replace))
+							}
+						}
+					} else {
+						// Ensure content is a string before storing it
+						diffContent = typeof diff.content === "string" ? diff.content : ""
+					}
 					startLine = diff.start_line ? parseInt(diff.start_line) : undefined
 
 					// Only add to operations if we have valid content
