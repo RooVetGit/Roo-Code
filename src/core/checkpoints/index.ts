@@ -69,6 +69,9 @@ export async function getCheckpointService(
 			)
 			return cline.checkpointService
 		}
+		if (!cline.enableCheckpoints) {
+			return undefined
+		}
 		console.log("[Task#getCheckpointService] initializing checkpoints service")
 		cline.checkpointServiceInitializing = true
 		const service = RepoPerTaskCheckpointService.create(options)
@@ -81,8 +84,8 @@ export async function getCheckpointService(
 			return service
 		} catch (err) {
 			// Clean up on failure
-			cline.checkpointServiceInitializing = false
 			cline.enableCheckpoints = false
+			cline.checkpointServiceInitializing = false
 			cline.checkpointService = undefined
 			throw err
 		}
