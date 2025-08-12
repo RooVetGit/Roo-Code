@@ -13,6 +13,10 @@
 			"placeholderMcp": "MCPを検索...",
 			"placeholderMode": "モードを検索..."
 		},
+		"installed": {
+			"label": "インストール済みのみ表示",
+			"description": "インストール済みアイテムでフィルタリング"
+		},
 		"type": {
 			"label": "タイプでフィルター:",
 			"all": "すべてのタイプ",

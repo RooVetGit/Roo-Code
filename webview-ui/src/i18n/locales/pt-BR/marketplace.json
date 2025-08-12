@@ -13,6 +13,10 @@
 			"placeholderMcp": "Buscar MCPs...",
 			"placeholderMode": "Buscar modos..."
 		},
+		"installed": {
+			"label": "Mostrar apenas instalados",
+			"description": "Filtrando por itens instalados"
+		},
 		"type": {
 			"label": "Filtrar por tipo:",
 			"all": "Todos os tipos",

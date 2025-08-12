@@ -13,6 +13,10 @@
 			"placeholderMcp": "MCP 검색...",
 			"placeholderMode": "모드 검색..."
 		},
+		"installed": {
+			"label": "설치된 항목만 표시",
+			"description": "설치된 항목으로 필터링"
+		},
 		"type": {
 			"label": "유형별 필터:",
 			"all": "모든 유형",

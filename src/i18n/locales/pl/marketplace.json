@@ -38,6 +38,10 @@
 			"noResults": "Nie znaleziono tagów.",
 			"selected": "Pokazywanie elementów z dowolnym z wybranych tagów"
 		},
+		"installed": {
+			"label": "Pokaż tylko zainstalowane",
+			"description": "Pokazywanie tylko zainstalowanych elementów"
+		},
 		"title": "Marketplace"
 	},
 	"done": "Gotowe",

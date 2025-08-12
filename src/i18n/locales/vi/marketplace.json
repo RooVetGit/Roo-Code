@@ -38,6 +38,10 @@
 			"noResults": "Không tìm thấy thẻ nào.",
 			"selected": "Hiển thị các mục có bất kỳ thẻ nào được chọn"
 		},
+		"installed": {
+			"label": "Chỉ hiển thị đã cài đặt",
+			"description": "Chỉ hiển thị các mục đã cài đặt"
+		},
 		"title": "Marketplace"
 	},
 	"done": "Hoàn thành",
