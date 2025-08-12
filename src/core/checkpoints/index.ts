@@ -36,6 +36,8 @@ export async function getCheckpointService(
 		}
 	}
 
+	console.log("[Task#getCheckpointService] initializing checkpoints service")
+
 	try {
 		const workspaceDir = getWorkspacePath()
 
@@ -63,35 +65,28 @@ export async function getCheckpointService(
 			await pWaitFor(
 				() => {
 					console.log("[Task#getCheckpointService] waiting for service to initialize")
-					return cline.checkpointService?.isInitialized === true
+					return !!cline.checkpointService && !!cline?.checkpointService?.isInitialized
 				},
 				{ interval, timeout },
 			)
+			if (cline?.checkpointService?.isInitialized !== true) {
+				cline.enableCheckpoints = false
+				return undefined
+			}
 			return cline.checkpointService
 		}
 		if (!cline.enableCheckpoints) {
 			return undefined
 		}
-		console.log("[Task#getCheckpointService] initializing checkpoints service")
-		cline.checkpointServiceInitializing = true
 		const service = RepoPerTaskCheckpointService.create(options)
+		cline.checkpointServiceInitializing = true
+		await checkGitInstallation(cline, service, log, provider)
 		cline.checkpointService = service
-
-		// Check if Git is installed before initializing the service
-		// Only assign the service after successful initialization
-		try {
-			await checkGitInstallation(cline, service, log, provider)
-			return service
-		} catch (err) {
-			// Clean up on failure
-			cline.enableCheckpoints = false
-			cline.checkpointServiceInitializing = false
-			cline.checkpointService = undefined
-			throw err
-		}
+		return service
 	} catch (err) {
 		log(`[Task#getCheckpointService] ${err.message}`)
 		cline.enableCheckpoints = false
+		cline.checkpointServiceInitializing = false
 		return undefined
 	}
 }
@@ -167,13 +162,6 @@ export async function checkpointSave(cline: Task, force = false) {
 	const service = await getCheckpointService(cline)
 
 	if (!service) {
-		return
-	}
-
-	if (!service.isInitialized) {
-		const provider = cline.providerRef.deref()
-		provider?.log("[checkpointSave] checkpoints didn't initialize in time, disabling checkpoints for this task")
-		cline.enableCheckpoints = false
 		return
 	}
 
