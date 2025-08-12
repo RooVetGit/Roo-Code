@@ -1154,7 +1154,7 @@ export class OpenAiNativeHandler extends BaseProvider implements SingleCompletio
 			modelId: id,
 			model: info,
 			settings: this.options,
-			defaultTemperature: info.supportsTemperature ? undefined : OPENAI_NATIVE_DEFAULT_TEMPERATURE,
+			defaultTemperature: info.supportsTemperature ? OPENAI_NATIVE_DEFAULT_TEMPERATURE : undefined,
 		})
 
 		// For models using the Responses API, ensure we support reasoning effort
