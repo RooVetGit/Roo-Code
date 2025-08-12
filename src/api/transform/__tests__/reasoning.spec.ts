@@ -178,12 +178,8 @@ describe("reasoning.ts", () => {
 					reasoningEffort: effort,
 				}
 				const result = getOpenRouterReasoning(options)
-				// "minimal" should return undefined for OpenRouter
-				if (effort === "minimal") {
-					expect(result).toBeUndefined()
-				} else {
-					expect(result).toEqual({ effort })
-				}
+				// All effort values including "minimal" should be passed through
+				expect(result).toEqual({ effort })
 			})
 		})
 
@@ -206,8 +202,8 @@ describe("reasoning.ts", () => {
 
 			const result = getOpenRouterReasoning(options)
 
-			// "minimal" should return undefined for OpenRouter
-			expect(result).toBeUndefined()
+			// "minimal" should be passed through to OpenRouter
+			expect(result).toEqual({ effort: "minimal" })
 		})
 
 		it("should handle minimal reasoning effort from settings", () => {
@@ -229,8 +225,8 @@ describe("reasoning.ts", () => {
 
 			const result = getOpenRouterReasoning(options)
 
-			// "minimal" should return undefined for OpenRouter
-			expect(result).toBeUndefined()
+			// "minimal" should be passed through to OpenRouter
+			expect(result).toEqual({ effort: "minimal" })
 		})
 
 		it("should handle zero reasoningBudget", () => {

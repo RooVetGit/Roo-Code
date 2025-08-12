@@ -34,7 +34,7 @@ export const getOpenRouterReasoning = ({
 	shouldUseReasoningBudget({ model, settings })
 		? { max_tokens: reasoningBudget }
 		: shouldUseReasoningEffort({ model, settings })
-			? reasoningEffort && reasoningEffort !== "minimal"
+			? reasoningEffort
 				? { effort: reasoningEffort }
 				: undefined
 			: undefined
