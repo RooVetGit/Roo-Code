@@ -729,7 +729,7 @@
 		"noComputerUse": "No soporta uso del ordenador",
 		"supportsPromptCache": "Soporta caché de prompts",
 		"noPromptCache": "No soporta caché de prompts",
-		"contextWindow": "Ventana de contexto:",
+		"contextWindow": "Ventana de contexto",
 		"maxOutput": "Salida máxima",
 		"inputPrice": "Precio de entrada",
 		"outputPrice": "Precio de salida",
