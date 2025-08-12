@@ -194,7 +194,7 @@ export const ModelPicker = ({
 											value={model}
 											onSelect={onSelect}
 											data-testid={`model-option-${model}`}>
-											<span className="truncate">{model}</span>
+<span className="truncate" title={model}>{model}</span>
 											<Check
 												className={cn(
 													"size-4 p-0.5 ml-auto",
