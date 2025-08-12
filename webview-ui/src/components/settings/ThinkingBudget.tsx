@@ -32,14 +32,20 @@ export const ThinkingBudget = ({ apiConfiguration, setApiConfigurationField, mod
 	const isGemini25Pro = selectedModelId && selectedModelId.includes("gemini-2.5-pro")
 	const minThinkingTokens = isGemini25Pro ? GEMINI_25_PRO_MIN_THINKING_TOKENS : 1024
 
-	// Check if this is a GPT-5 model to show "minimal" option
-	// Only show minimal for OpenAI Native provider GPT-5 models
+	// Check model capabilities
+	const isReasoningBudgetSupported = !!modelInfo && modelInfo.supportsReasoningBudget
+	const isReasoningBudgetRequired = !!modelInfo && modelInfo.requiredReasoningBudget
+	const isReasoningEffortSupported = !!modelInfo && modelInfo.supportsReasoningEffort
+
+	// Check if this is a GPT-5 model or OpenRouter to show "minimal" option
 	const isOpenAiNativeProvider = apiConfiguration.apiProvider === "openai-native"
+	const isOpenRouterProvider = apiConfiguration.apiProvider === "openrouter"
 	const isGpt5Model = isOpenAiNativeProvider && selectedModelId && selectedModelId.startsWith("gpt-5")
-	// Add "minimal" option for GPT-5 models
+	// Add "minimal" option for GPT-5 models and OpenRouter models that support reasoning effort
 	// Spread to convert readonly tuple into a mutable array, then expose as readonly for safety
 	const baseEfforts = [...reasoningEfforts] as ReasoningEffortWithMinimal[]
-	const availableReasoningEfforts: ReadonlyArray<ReasoningEffortWithMinimal> = isGpt5Model
+	const showMinimalOption = isGpt5Model || (isOpenRouterProvider && isReasoningEffortSupported)
+	const availableReasoningEfforts: ReadonlyArray<ReasoningEffortWithMinimal> = showMinimalOption
 		? (["minimal", ...baseEfforts] as ReasoningEffortWithMinimal[])
 		: baseEfforts
 
@@ -49,10 +55,6 @@ export const ThinkingBudget = ({ apiConfiguration, setApiConfigurationField, mod
 	const defaultReasoningEffort: ReasoningEffortWithMinimal = modelDefaultReasoningEffort || "medium"
 	const currentReasoningEffort: ReasoningEffortWithMinimal =
 		(apiConfiguration.reasoningEffort as ReasoningEffortWithMinimal | undefined) || defaultReasoningEffort
-
-	const isReasoningBudgetSupported = !!modelInfo && modelInfo.supportsReasoningBudget
-	const isReasoningBudgetRequired = !!modelInfo && modelInfo.requiredReasoningBudget
-	const isReasoningEffortSupported = !!modelInfo && modelInfo.supportsReasoningEffort
 
 	// Set default reasoning effort when model supports it and no value is set
 	useEffect(() => {
