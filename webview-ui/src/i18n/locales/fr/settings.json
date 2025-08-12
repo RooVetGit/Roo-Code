@@ -253,6 +253,8 @@
 			"error": "Échec de l'actualisation de la liste des modèles. Veuillez réessayer."
 		},
 		"getRequestyApiKey": "Obtenir la clé API Requesty",
+		"getRequestyBaseUrl": "URL de base",
+		"requestyUseCustomBaseUrl": "Utiliser une URL de base personnalisée",
 		"openRouterTransformsText": "Compresser les prompts et chaînes de messages à la taille du contexte (<a>Transformations OpenRouter</a>)",
 		"anthropicApiKey": "Clé API Anthropic",
 		"getAnthropicApiKey": "Obtenir la clé API Anthropic",
@@ -263,6 +265,9 @@
 		"getChutesApiKey": "Obtenir la clé API Chutes",
 		"fireworksApiKey": "Clé API Fireworks",
 		"getFireworksApiKey": "Obtenir la clé API Fireworks",
+		"ioIntelligenceApiKey": "Clé API IO Intelligence",
+		"ioIntelligenceApiKeyPlaceholder": "Saisissez votre clé d'API IO Intelligence",
+		"getIoIntelligenceApiKey": "Obtenir la clé API IO Intelligence",
 		"deepSeekApiKey": "Clé API DeepSeek",
 		"getDeepSeekApiKey": "Obtenir la clé API DeepSeek",
 		"doubaoApiKey": "Clé API Doubao",

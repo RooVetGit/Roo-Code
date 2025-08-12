@@ -252,6 +252,8 @@
 			"error": "Failed to refresh models list. Please try again."
 		},
 		"getRequestyApiKey": "Get Requesty API Key",
+		"getRequestyBaseUrl": "Base URL",
+		"requestyUseCustomBaseUrl": "Use custom base URL",
 		"openRouterTransformsText": "Compress prompts and message chains to the context size (<a>OpenRouter Transforms</a>)",
 		"anthropicApiKey": "Anthropic API Key",
 		"getAnthropicApiKey": "Get Anthropic API Key",
@@ -262,6 +264,9 @@
 		"getChutesApiKey": "Get Chutes API Key",
 		"fireworksApiKey": "Fireworks API Key",
 		"getFireworksApiKey": "Get Fireworks API Key",
+		"ioIntelligenceApiKey": "IO Intelligence API Key",
+		"ioIntelligenceApiKeyPlaceholder": "Enter your IO Intelligence API key",
+		"getIoIntelligenceApiKey": "Get IO Intelligence API Key",
 		"deepSeekApiKey": "DeepSeek API Key",
 		"getDeepSeekApiKey": "Get DeepSeek API Key",
 		"doubaoApiKey": "Doubao API Key",

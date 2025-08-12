@@ -257,6 +257,8 @@
 			"error": "Gagal merefresh daftar model. Silakan coba lagi."
 		},
 		"getRequestyApiKey": "Dapatkan Requesty API Key",
+		"getRequestyBaseUrl": "Base URL",
+		"requestyUseCustomBaseUrl": "Gunakan URL dasar khusus",
 		"openRouterTransformsText": "Kompres prompt dan rantai pesan ke ukuran konteks (<a>OpenRouter Transforms</a>)",
 		"anthropicApiKey": "Anthropic API Key",
 		"getAnthropicApiKey": "Dapatkan Anthropic API Key",
@@ -267,6 +269,9 @@
 		"getChutesApiKey": "Dapatkan Chutes API Key",
 		"fireworksApiKey": "Fireworks API Key",
 		"getFireworksApiKey": "Dapatkan Fireworks API Key",
+		"ioIntelligenceApiKey": "IO Intelligence API Key",
+		"ioIntelligenceApiKeyPlaceholder": "Masukkan kunci API IO Intelligence Anda",
+		"getIoIntelligenceApiKey": "Dapatkan IO Intelligence API Key",
 		"deepSeekApiKey": "DeepSeek API Key",
 		"getDeepSeekApiKey": "Dapatkan DeepSeek API Key",
 		"doubaoApiKey": "Kunci API Doubao",

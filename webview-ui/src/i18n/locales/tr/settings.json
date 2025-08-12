@@ -253,6 +253,8 @@
 			"error": "Model listesi yenilenemedi. Lütfen tekrar deneyin."
 		},
 		"getRequestyApiKey": "Requesty API Anahtarı Al",
+		"getRequestyBaseUrl": "Temel URL",
+		"requestyUseCustomBaseUrl": "Özel temel URL kullan",
 		"openRouterTransformsText": "İstem ve mesaj zincirlerini bağlam boyutuna sıkıştır (<a>OpenRouter Dönüşümleri</a>)",
 		"anthropicApiKey": "Anthropic API Anahtarı",
 		"getAnthropicApiKey": "Anthropic API Anahtarı Al",
@@ -263,6 +265,9 @@
 		"getChutesApiKey": "Chutes API Anahtarı Al",
 		"fireworksApiKey": "Fireworks API Anahtarı",
 		"getFireworksApiKey": "Fireworks API Anahtarı Al",
+		"ioIntelligenceApiKey": "IO Intelligence API Anahtarı",
+		"ioIntelligenceApiKeyPlaceholder": "IO Intelligence API anahtarınızı girin",
+		"getIoIntelligenceApiKey": "IO Intelligence API Anahtarı Al",
 		"deepSeekApiKey": "DeepSeek API Anahtarı",
 		"getDeepSeekApiKey": "DeepSeek API Anahtarı Al",
 		"doubaoApiKey": "Doubao API Anahtarı",

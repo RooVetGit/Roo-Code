@@ -253,6 +253,8 @@
 			"error": "Không thể làm mới danh sách mô hình. Vui lòng thử lại."
 		},
 		"getRequestyApiKey": "Lấy khóa API Requesty",
+		"getRequestyBaseUrl": "URL cơ sở",
+		"requestyUseCustomBaseUrl": "Sử dụng URL cơ sở tùy chỉnh",
 		"openRouterTransformsText": "Nén lời nhắc và chuỗi tin nhắn theo kích thước ngữ cảnh (<a>OpenRouter Transforms</a>)",
 		"anthropicApiKey": "Khóa API Anthropic",
 		"getAnthropicApiKey": "Lấy khóa API Anthropic",
@@ -263,6 +265,9 @@
 		"getChutesApiKey": "Lấy khóa API Chutes",
 		"fireworksApiKey": "Khóa API Fireworks",
 		"getFireworksApiKey": "Lấy khóa API Fireworks",
+		"ioIntelligenceApiKey": "Khóa API IO Intelligence",
+		"ioIntelligenceApiKeyPlaceholder": "Nhập khóa API IO Intelligence của bạn",
+		"getIoIntelligenceApiKey": "Lấy khóa API IO Intelligence",
 		"deepSeekApiKey": "Khóa API DeepSeek",
 		"getDeepSeekApiKey": "Lấy khóa API DeepSeek",
 		"doubaoApiKey": "Khóa API Doubao",

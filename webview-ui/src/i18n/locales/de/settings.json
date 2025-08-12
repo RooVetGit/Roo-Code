@@ -255,6 +255,8 @@
 			"error": "Fehler beim Aktualisieren der Modellliste. Bitte versuche es erneut."
 		},
 		"getRequestyApiKey": "Requesty API-Schlüssel erhalten",
+		"getRequestyBaseUrl": "Basis-URL",
+		"requestyUseCustomBaseUrl": "Benutzerdefinierte Basis-URL verwenden",
 		"openRouterTransformsText": "Prompts und Nachrichtenketten auf Kontextgröße komprimieren (<a>OpenRouter Transformationen</a>)",
 		"anthropicApiKey": "Anthropic API-Schlüssel",
 		"getAnthropicApiKey": "Anthropic API-Schlüssel erhalten",
@@ -265,6 +267,9 @@
 		"getChutesApiKey": "Chutes API-Schlüssel erhalten",
 		"fireworksApiKey": "Fireworks API-Schlüssel",
 		"getFireworksApiKey": "Fireworks API-Schlüssel erhalten",
+		"ioIntelligenceApiKey": "IO Intelligence API-Schlüssel",
+		"ioIntelligenceApiKeyPlaceholder": "Gib deinen IO Intelligence API-Schlüssel ein",
+		"getIoIntelligenceApiKey": "IO Intelligence API-Schlüssel erhalten",
 		"deepSeekApiKey": "DeepSeek API-Schlüssel",
 		"getDeepSeekApiKey": "DeepSeek API-Schlüssel erhalten",
 		"moonshotApiKey": "Moonshot API-Schlüssel",
