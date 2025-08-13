@@ -62,8 +62,8 @@ interface BedrockPayload {
 	messages: Message[]
 	system?: SystemContentBlock[]
 	inferenceConfig: BedrockInferenceConfig
+	anthropic_version?: string
 	additionalModelRequestFields?: BedrockThinkingConfig & {
-		anthropic_version?: string
 		anthropic_beta?: string[]
 	}
 }
@@ -344,7 +344,6 @@ export class AwsBedrockHandler extends BaseProvider implements SingleCompletionH
 
 		let additionalModelRequestFields:
 			| (BedrockThinkingConfig & {
-					anthropic_version?: string
 					anthropic_beta?: string[]
 			  })
 			| undefined
@@ -388,17 +387,13 @@ export class AwsBedrockHandler extends BaseProvider implements SingleCompletionH
 		const baseModelId = this.parseBaseModelId(modelConfig.id)
 		const is1MContextEnabled = baseModelId === BEDROCK_CLAUDE_SONNET_4_MODEL_ID && this.options.awsBedrock1MContext
 
-		// Build additionalModelRequestFields with all model-specific parameters
-		if (thinkingEnabled || is1MContextEnabled) {
+		// Build additionalModelRequestFields with model-specific parameters
+		// Only add anthropic_beta for 1M context to additionalModelRequestFields
+		if (is1MContextEnabled) {
 			if (!additionalModelRequestFields) {
 				additionalModelRequestFields = {} as any
 			}
-			// Add anthropic_version when using thinking features
-			if (thinkingEnabled && additionalModelRequestFields) {
-				additionalModelRequestFields.anthropic_version = "bedrock-2023-05-31"
-			}
-			// Add anthropic_beta when 1M context is enabled
-			if (is1MContextEnabled && additionalModelRequestFields) {
+			if (additionalModelRequestFields) {
 				additionalModelRequestFields.anthropic_beta = ["context-1m-2025-08-07"]
 			}
 		}
@@ -409,6 +404,8 @@ export class AwsBedrockHandler extends BaseProvider implements SingleCompletionH
 			system: formatted.system,
 			inferenceConfig,
 			...(additionalModelRequestFields && { additionalModelRequestFields }),
+			// Add anthropic_version at top level when using thinking features
+			...(thinkingEnabled && { anthropic_version: "bedrock-2023-05-31" }),
 		}
 
 		// Create AbortController with 10 minute timeout
