@@ -149,6 +149,9 @@ export interface ExtensionStateContextType extends ExtensionState {
 	setMaxDiagnosticMessages: (value: number) => void
 	includeTaskHistoryInEnhance?: boolean
 	setIncludeTaskHistoryInEnhance: (value: boolean) => void
+	dismissedCloudNotifications: Set<string>
+	setDismissedCloudNotifications: (value: Set<string>) => void
+	addDismissedCloudNotification: (taskId: string) => void
 }
 
 export const ExtensionStateContext = createContext<ExtensionStateContextType | undefined>(undefined)
@@ -269,6 +272,7 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 		global: {},
 	})
 	const [includeTaskHistoryInEnhance, setIncludeTaskHistoryInEnhance] = useState(false)
+	const [dismissedCloudNotifications, setDismissedCloudNotifications] = useState<Set<string>>(new Set())
 
 	const setListApiConfigMeta = useCallback(
 		(value: ProviderSettingsEntry[]) => setState((prevState) => ({ ...prevState, listApiConfigMeta: value })),
@@ -522,6 +526,11 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 		},
 		includeTaskHistoryInEnhance,
 		setIncludeTaskHistoryInEnhance,
+		dismissedCloudNotifications,
+		setDismissedCloudNotifications,
+		addDismissedCloudNotification: (taskId: string) => {
+			setDismissedCloudNotifications((prev) => new Set([...Array.from(prev), taskId]))
+		},
 	}
 
 	return <ExtensionStateContext.Provider value={contextValue}>{children}</ExtensionStateContext.Provider>
