@@ -11,6 +11,7 @@ import { serializeError } from "serialize-error"
 
 import {
 	type TaskLike,
+	type TaskMetadata,
 	type TaskEvents,
 	type ProviderSettings,
 	type TokenUsage,
@@ -122,9 +123,11 @@ export type TaskOptions = {
 }
 
 export class Task extends EventEmitter<TaskEvents> implements TaskLike {
-	todoList?: TodoItem[]
 	readonly taskId: string
 	readonly instanceId: string
+	readonly metadata: TaskMetadata
+
+	todoList?: TodoItem[]
 
 	readonly rootTask: Task | undefined = undefined
 	readonly parentTask: Task | undefined = undefined
@@ -284,6 +287,12 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 		}
 
 		this.taskId = historyItem ? historyItem.id : crypto.randomUUID()
+
+		this.metadata = {
+			taskId: this.taskId,
+			task: historyItem ? historyItem.task : task,
+			images: historyItem ? [] : images,
+		}
 
 		// Normal use-case is usually retry similar history task with new workspace.
 		this.workspacePath = parentTask

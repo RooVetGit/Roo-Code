@@ -61,10 +61,17 @@ export type TaskProviderEvents = {
  * TaskLike
  */
 
+export type TaskMetadata = {
+	taskId: string
+	task?: string
+	images?: string[]
+}
+
 export interface TaskLike {
 	readonly taskId: string
 	readonly rootTask?: TaskLike
 	readonly blockingAsk?: BlockingAsk
+	readonly metadata: TaskMetadata
 
 	on<K extends keyof TaskEvents>(event: K, listener: (...args: TaskEvents[K]) => void | Promise<void>): this
 	off<K extends keyof TaskEvents>(event: K, listener: (...args: TaskEvents[K]) => void | Promise<void>): this
