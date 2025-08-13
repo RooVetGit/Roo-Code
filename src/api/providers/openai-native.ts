@@ -35,8 +35,8 @@ export class OpenAiNativeHandler extends BaseProvider implements SingleCompletio
 	private responseIdPromise: Promise<string | undefined> | undefined
 	private responseIdResolver: ((value: string | undefined) => void) | undefined
 
-	// Event types handled by the shared GPT-5 event processor to avoid duplication
-	private readonly gpt5CoreHandledTypes = new Set<string>([
+	// Event types handled by the shared event processor to avoid duplication
+	private readonly coreHandledEventTypes = new Set<string>([
 		"response.text.delta",
 		"response.output_text.delta",
 		"response.reasoning.delta",
@@ -60,7 +60,7 @@ export class OpenAiNativeHandler extends BaseProvider implements SingleCompletio
 		this.client = new OpenAI({ baseURL: this.options.openAiNativeBaseUrl, apiKey })
 	}
 
-	private normalizeGpt5Usage(usage: any, model: OpenAiNativeModel): ApiStreamUsageChunk | undefined {
+	private normalizeUsage(usage: any, model: OpenAiNativeModel): ApiStreamUsageChunk | undefined {
 		if (!usage) return undefined
 
 		const totalInputTokens = usage.input_tokens ?? usage.prompt_tokens ?? 0
@@ -103,114 +103,9 @@ export class OpenAiNativeHandler extends BaseProvider implements SingleCompletio
 		metadata?: ApiHandlerCreateMessageMetadata,
 	): ApiStream {
 		const model = this.getModel()
-		let id: "o3-mini" | "o3" | "o4-mini" | undefined
 
-		if (model.id.startsWith("o3-mini")) {
-			id = "o3-mini"
-		} else if (model.id.startsWith("o3")) {
-			id = "o3"
-		} else if (model.id.startsWith("o4-mini")) {
-			id = "o4-mini"
-		}
-
-		if (id) {
-			yield* this.handleReasonerMessage(model, id, systemPrompt, messages)
-		} else if (model.id.startsWith("o1")) {
-			yield* this.handleO1FamilyMessage(model, systemPrompt, messages)
-		} else if (this.isResponsesApiModel(model.id)) {
-			// Both GPT-5 and Codex Mini use the v1/responses endpoint
-			yield* this.handleResponsesApiMessage(model, systemPrompt, messages, metadata)
-		} else {
-			yield* this.handleDefaultModelMessage(model, systemPrompt, messages)
-		}
-	}
-
-	private async *handleO1FamilyMessage(
-		model: OpenAiNativeModel,
-		systemPrompt: string,
-		messages: Anthropic.Messages.MessageParam[],
-	): ApiStream {
-		// o1 supports developer prompt with formatting
-		// o1-preview and o1-mini only support user messages
-		const isOriginalO1 = model.id === "o1"
-		const { reasoning } = this.getModel()
-
-		const response = await this.client.chat.completions.create({
-			model: model.id,
-			messages: [
-				{
-					role: isOriginalO1 ? "developer" : "user",
-					content: isOriginalO1 ? `Formatting re-enabled\n${systemPrompt}` : systemPrompt,
-				},
-				...convertToOpenAiMessages(messages),
-			],
-			stream: true,
-			stream_options: { include_usage: true },
-			...(reasoning && reasoning),
-		})
-
-		yield* this.handleStreamResponse(response, model)
-	}
-
-	private async *handleReasonerMessage(
-		model: OpenAiNativeModel,
-		family: "o3-mini" | "o3" | "o4-mini",
-		systemPrompt: string,
-		messages: Anthropic.Messages.MessageParam[],
-	): ApiStream {
-		const { reasoning } = this.getModel()
-
-		const stream = await this.client.chat.completions.create({
-			model: family,
-			messages: [
-				{
-					role: "developer",
-					content: `Formatting re-enabled\n${systemPrompt}`,
-				},
-				...convertToOpenAiMessages(messages),
-			],
-			stream: true,
-			stream_options: { include_usage: true },
-			...(reasoning && reasoning),
-		})
-
-		yield* this.handleStreamResponse(stream, model)
-	}
-
-	private async *handleDefaultModelMessage(
-		model: OpenAiNativeModel,
-		systemPrompt: string,
-		messages: Anthropic.Messages.MessageParam[],
-	): ApiStream {
-		const { reasoning, verbosity } = this.getModel()
-
-		// Prepare the request parameters
-		const params: any = {
-			model: model.id,
-			temperature: this.options.modelTemperature ?? OPENAI_NATIVE_DEFAULT_TEMPERATURE,
-			messages: [{ role: "system", content: systemPrompt }, ...convertToOpenAiMessages(messages)],
-			stream: true,
-			stream_options: { include_usage: true },
-			...(reasoning && reasoning),
-		}
-
-		// Add verbosity only if the model supports it
-		if (verbosity && model.info.supportsVerbosity) {
-			params.verbosity = verbosity
-		}
-
-		const stream = await this.client.chat.completions.create(params)
-
-		if (typeof (stream as any)[Symbol.asyncIterator] !== "function") {
-			throw new Error(
-				"OpenAI SDK did not return an AsyncIterable for streaming response. Please check SDK version and usage.",
-			)
-		}
-
-		yield* this.handleStreamResponse(
-			stream as unknown as AsyncIterable<OpenAI.Chat.Completions.ChatCompletionChunk>,
-			model,
-		)
+		// Use Responses API for ALL models
+		yield* this.handleResponsesApiMessage(model, systemPrompt, messages, metadata)
 	}
 
 	private async *handleResponsesApiMessage(
@@ -219,13 +114,11 @@ export class OpenAiNativeHandler extends BaseProvider implements SingleCompletio
 		messages: Anthropic.Messages.MessageParam[],
 		metadata?: ApiHandlerCreateMessageMetadata,
 	): ApiStream {
-		// Prefer the official SDK Responses API with streaming; fall back to fetch-based SSE if needed.
-		const { verbosity } = this.getModel()
+		// Use Responses API for ALL models
+		const { verbosity, reasoning } = this.getModel()
 
-		// Both GPT-5 and Codex Mini use the same v1/responses endpoint format
-
-		// Resolve reasoning effort (supports "minimal" for GPT‑5)
-		const reasoningEffort = this.getGpt5ReasoningEffort(model)
+		// Resolve reasoning effort for models that support it
+		const reasoningEffort = this.getReasoningEffort(model)
 
 		// Wait for any pending response ID from a previous request to be available
 		// This handles the race condition with fast nano model responses
@@ -256,7 +149,7 @@ export class OpenAiNativeHandler extends BaseProvider implements SingleCompletio
 		}
 
 		// Format input and capture continuity id
-		const { formattedInput, previousResponseId } = this.prepareGpt5Input(systemPrompt, messages, metadata)
+		const { formattedInput, previousResponseId } = this.prepareStructuredInput(systemPrompt, messages, metadata)
 		const requestPreviousResponseId = effectivePreviousResponseId ?? previousResponseId
 
 		// Create a new promise for this request's response ID
@@ -289,8 +182,13 @@ export class OpenAiNativeHandler extends BaseProvider implements SingleCompletio
 				},
 			}),
 			text: { verbosity: (verbosity || "medium") as VerbosityLevel },
-			temperature: this.options.modelTemperature ?? GPT5_DEFAULT_TEMPERATURE,
-			// Explicitly include the calculated max output tokens for GPT‑5.
+			// Only include temperature if the model supports it
+			...(model.info.supportsTemperature !== false && {
+				temperature:
+					this.options.modelTemperature ??
+					(model.id.startsWith("gpt-5") ? GPT5_DEFAULT_TEMPERATURE : OPENAI_NATIVE_DEFAULT_TEMPERATURE),
+			}),
+			// Explicitly include the calculated max output tokens.
 			// Use the per-request reserved output computed by Roo (params.maxTokens from getModelParams).
 			...(model.maxTokens ? { max_output_tokens: model.maxTokens } : {}),
 			...(requestPreviousResponseId && { previous_response_id: requestPreviousResponseId }),
@@ -307,7 +205,7 @@ export class OpenAiNativeHandler extends BaseProvider implements SingleCompletio
 			}
 
 			for await (const event of stream) {
-				for await (const outChunk of this.processGpt5Event(event, model)) {
+				for await (const outChunk of this.processEvent(event, model)) {
 					yield outChunk
 				}
 			}
@@ -344,7 +242,7 @@ export class OpenAiNativeHandler extends BaseProvider implements SingleCompletio
 					}
 
 					for await (const event of retryStream) {
-						for await (const outChunk of this.processGpt5Event(event, model)) {
+						for await (const outChunk of this.processEvent(event, model)) {
 							yield outChunk
 						}
 					}
@@ -361,52 +259,66 @@ export class OpenAiNativeHandler extends BaseProvider implements SingleCompletio
 		}
 	}
 
-	private formatInputForResponsesAPI(systemPrompt: string, messages: Anthropic.Messages.MessageParam[]): string {
-		// Format the conversation for the Responses API input field
-		// Use Developer role format for GPT-5 (aligning with o1/o3 Developer role usage per GPT-5 Responses guidance)
-		// This ensures consistent instruction handling across reasoning models
-		let formattedInput = `Developer: ${systemPrompt}\n\n`
+	private formatStructuredInput(systemPrompt: string, messages: Anthropic.Messages.MessageParam[]): any[] {
+		// Format the conversation for the Responses API using structured format
+		const formattedMessages: any[] = []
 
+		// Add system prompt as developer message
+		formattedMessages.push({
+			role: "developer",
+			content: [{ type: "input_text", text: systemPrompt }],
+		})
+
+		// Process each message
 		for (const message of messages) {
-			const role = message.role === "user" ? "User" : "Assistant"
+			const role = message.role === "user" ? "user" : "assistant"
+			const content: any[] = []
 
-			// Handle text content
 			if (typeof message.content === "string") {
-				formattedInput += `${role}: ${message.content}\n\n`
+				// Simple text content
+				content.push({ type: "input_text", text: message.content })
 			} else if (Array.isArray(message.content)) {
-				// Handle content blocks
-				const textContent = message.content
-					.filter((block) => block.type === "text")
-					.map((block) => (block as any).text)
-					.join("\n")
-				if (textContent) {
-					formattedInput += `${role}: ${textContent}\n\n`
+				// Process content blocks
+				for (const block of message.content) {
+					if (block.type === "text") {
+						content.push({ type: "input_text", text: (block as any).text })
+					} else if (block.type === "image") {
+						const image = block as Anthropic.Messages.ImageBlockParam
+						// Format image with proper data URL
+						const imageUrl = `data:${image.source.media_type};base64,${image.source.data}`
+						content.push({ type: "input_image", image_url: imageUrl })
+					}
+				}
+			}
+
+			if (content.length > 0) {
+				formattedMessages.push({ role, content })
+			}
+		}
+
+		return formattedMessages
+	}
+
+	private formatSingleStructuredMessage(message: Anthropic.Messages.MessageParam): any {
+		// Format a single message for the Responses API when using previous_response_id
+		const role = message.role === "user" ? "user" : "assistant"
+		const content: any[] = []
+
+		if (typeof message.content === "string") {
+			content.push({ type: "input_text", text: message.content })
+		} else if (Array.isArray(message.content)) {
+			for (const block of message.content) {
+				if (block.type === "text") {
+					content.push({ type: "input_text", text: (block as any).text })
+				} else if (block.type === "image") {
+					const image = block as Anthropic.Messages.ImageBlockParam
+					const imageUrl = `data:${image.source.media_type};base64,${image.source.data}`
+					content.push({ type: "input_image", image_url: imageUrl })
 				}
 			}
 		}
 
-		return formattedInput.trim()
-	}
-
-	private formatSingleMessageForResponsesAPI(message: Anthropic.Messages.MessageParam): string {
-		// Format a single message for the Responses API when using previous_response_id
-		const role = message.role === "user" ? "User" : "Assistant"
-
-		// Handle text content
-		if (typeof message.content === "string") {
-			return `${role}: ${message.content}`
-		} else if (Array.isArray(message.content)) {
-			// Handle content blocks
-			const textContent = message.content
-				.filter((block) => block.type === "text")
-				.map((block) => (block as any).text)
-				.join("\n")
-			if (textContent) {
-				return `${role}: ${textContent}`
-			}
-		}
-
-		return ""
+		return content.length > 0 ? { role, content } : null
 	}
 
 	private async *makeGpt5ResponsesAPIRequest(
@@ -457,7 +369,7 @@ export class OpenAiNativeHandler extends BaseProvider implements SingleCompletio
 				if (response.status === 400 && requestBody.previous_response_id && isPreviousResponseError) {
 					// Log the error and retry without the previous_response_id
 					console.warn(
-						`[GPT-5 SSE] Previous response ID not found (${requestBody.previous_response_id}), retrying without it`,
+						`[Responses API] Previous response ID not found (${requestBody.previous_response_id}), retrying without it`,
 					)
 
 					// Remove the problematic previous_response_id and retry
@@ -482,32 +394,32 @@ export class OpenAiNativeHandler extends BaseProvider implements SingleCompletio
 
 					if (!retryResponse.ok) {
 						// If retry also fails, throw the original error
-						throw new Error(`GPT-5 API retry failed (${retryResponse.status})`)
+						throw new Error(`Responses API retry failed (${retryResponse.status})`)
 					}
 
 					if (!retryResponse.body) {
-						throw new Error("GPT-5 Responses API error: No response body from retry request")
+						throw new Error("Responses API error: No response body from retry request")
 					}
 
 					// Handle the successful retry response
-					yield* this.handleGpt5StreamResponse(retryResponse.body, model)
+					yield* this.handleStreamResponse(retryResponse.body, model)
 					return
 				}
 
 				// Provide user-friendly error messages based on status code
 				switch (response.status) {
 					case 400:
-						errorMessage = "Invalid request to GPT-5 API. Please check your input parameters."
+						errorMessage = "Invalid request to Responses API. Please check your input parameters."
 						break
 					case 401:
 						errorMessage = "Authentication failed. Please check your OpenAI API key."
 						break
 					case 403:
-						errorMessage = "Access denied. Your API key may not have access to GPT-5 models."
+						errorMessage = "Access denied. Your API key may not have access to this endpoint."
 						break
 					case 404:
 						errorMessage =
-							"GPT-5 API endpoint not found. The model may not be available yet or requires a different configuration."
+							"Responses API endpoint not found. The endpoint may not be available yet or requires a different configuration."
 						break
 					case 429:
 						errorMessage = "Rate limit exceeded. Please try again later."
@@ -518,7 +430,7 @@ export class OpenAiNativeHandler extends BaseProvider implements SingleCompletio
 						errorMessage = "OpenAI service error. Please try again later."
 						break
 					default:
-						errorMessage = `GPT-5 API error (${response.status})`
+						errorMessage = `Responses API error (${response.status})`
 				}
 
 				// Append details if available
@@ -530,40 +442,40 @@ export class OpenAiNativeHandler extends BaseProvider implements SingleCompletio
 			}
 
 			if (!response.body) {
-				throw new Error("GPT-5 Responses API error: No response body")
+				throw new Error("Responses API error: No response body")
 			}
 
 			// Handle streaming response
-			yield* this.handleGpt5StreamResponse(response.body, model)
+			yield* this.handleStreamResponse(response.body, model)
 		} catch (error) {
 			if (error instanceof Error) {
 				// Re-throw with the original error message if it's already formatted
-				if (error.message.includes("GPT-5")) {
+				if (error.message.includes("Responses API")) {
 					throw error
 				}
 				// Otherwise, wrap it with context
-				throw new Error(`Failed to connect to GPT-5 API: ${error.message}`)
+				throw new Error(`Failed to connect to Responses API: ${error.message}`)
 			}
 			// Handle non-Error objects
-			throw new Error(`Unexpected error connecting to GPT-5 API`)
+			throw new Error(`Unexpected error connecting to Responses API`)
 		}
 	}
 
 	/**
-	 * Prepares the input and conversation continuity parameters for a GPT-5 API call.
+	 * Prepares the structured input and conversation continuity parameters for a Responses API call.
 	 *
 	 * - If a `previousResponseId` is available (either from metadata or the handler's state),
 	 *   it formats only the most recent user message for the input and returns the response ID
 	 *   to maintain conversation context.
 	 * - Otherwise, it formats the entire conversation history (system prompt + messages) for the input.
 	 *
-	 * @returns An object containing the formatted input string and the previous response ID (if used).
+	 * @returns An object containing the formatted input and the previous response ID (if used).
 	 */
-	private prepareGpt5Input(
+	private prepareStructuredInput(
 		systemPrompt: string,
 		messages: Anthropic.Messages.MessageParam[],
 		metadata?: ApiHandlerCreateMessageMetadata,
-	): { formattedInput: string; previousResponseId?: string } {
+	): { formattedInput: any; previousResponseId?: string } {
 		// Respect explicit suppression signal for continuity (e.g. immediately after condense)
 		const isFirstMessage = messages.length === 1 && messages[0].role === "user"
 		const allowFallback = !metadata?.suppressPreviousResponseId
@@ -572,31 +484,28 @@ export class OpenAiNativeHandler extends BaseProvider implements SingleCompletio
 			metadata?.previousResponseId ?? (allowFallback && !isFirstMessage ? this.lastResponseId : undefined)
 
 		if (previousResponseId) {
+			// When using previous_response_id, only send the latest user message
 			const lastUserMessage = [...messages].reverse().find((msg) => msg.role === "user")
-			const formattedInput = lastUserMessage ? this.formatSingleMessageForResponsesAPI(lastUserMessage) : ""
-			return { formattedInput, previousResponseId }
+			if (lastUserMessage) {
+				const formattedMessage = this.formatSingleStructuredMessage(lastUserMessage)
+				return { formattedInput: formattedMessage ? [formattedMessage] : [], previousResponseId }
+			}
+			return { formattedInput: [], previousResponseId }
 		} else {
-			const formattedInput = this.formatInputForResponsesAPI(systemPrompt, messages)
+			// Format full conversation history
+			const formattedInput = this.formatStructuredInput(systemPrompt, messages)
 			return { formattedInput }
 		}
 	}
 
 	/**
-	 * Handles the streaming response from the GPT-5 Responses API.
+	 * Handles the streaming response from the Responses API.
 	 *
 	 * This function iterates through the Server-Sent Events (SSE) stream, parses each event,
 	 * and yields structured data chunks (`ApiStream`). It handles a wide variety of event types,
 	 * including text deltas, reasoning, usage data, and various status/tool events.
-	 *
-	 * The following event types are intentionally ignored as they are not currently consumed
-	 * by the client application:
-	 * - Audio events (`response.audio.*`)
-	 * - Most tool call events (e.g., `response.function_call_arguments.*`, `response.mcp_call.*`, etc.)
-	 *   as the client does not yet support rendering these tool interactions.
-	 * - Status events (`response.created`, `response.in_progress`, etc.) as they are informational
-	 *   and do not affect the final output.
 	 */
-	private async *handleGpt5StreamResponse(body: ReadableStream<Uint8Array>, model: OpenAiNativeModel): ApiStream {
+	private async *handleStreamResponse(body: ReadableStream<Uint8Array>, model: OpenAiNativeModel): ApiStream {
 		const reader = body.getReader()
 		const decoder = new TextDecoder()
 		let buffer = ""
@@ -629,8 +538,8 @@ export class OpenAiNativeHandler extends BaseProvider implements SingleCompletio
 							}
 
 							// Delegate standard event types to the shared processor to avoid duplication
-							if (parsed?.type && this.gpt5CoreHandledTypes.has(parsed.type)) {
-								for await (const outChunk of this.processGpt5Event(parsed, model)) {
+							if (parsed?.type && this.coreHandledEventTypes.has(parsed.type)) {
+								for await (const outChunk of this.processEvent(parsed, model)) {
 									// Track whether we've emitted any content so fallback handling can decide appropriately
 									if (outChunk.type === "text" || outChunk.type === "reasoning") {
 										hasContent = true
@@ -670,7 +579,7 @@ export class OpenAiNativeHandler extends BaseProvider implements SingleCompletio
 								}
 								// Check for usage in the complete response
 								if (parsed.response.usage) {
-									const usageData = this.normalizeGpt5Usage(parsed.response.usage, model)
+									const usageData = this.normalizeUsage(parsed.response.usage, model)
 									if (usageData) {
 										yield usageData
 									}
@@ -910,7 +819,7 @@ export class OpenAiNativeHandler extends BaseProvider implements SingleCompletio
 								// Response failed
 								if (parsed.error || parsed.message) {
 									throw new Error(
-										`GPT-5 response failed: ${parsed.error?.message || parsed.message || "Unknown failure"}`,
+										`Response failed: ${parsed.error?.message || parsed.message || "Unknown failure"}`,
 									)
 								}
 							} else if (parsed.type === "response.completed" || parsed.type === "response.done") {
@@ -990,7 +899,7 @@ export class OpenAiNativeHandler extends BaseProvider implements SingleCompletio
 								}
 							} else if (parsed.usage) {
 								// Handle usage if it arrives in a separate, non-completed event
-								const usageData = this.normalizeGpt5Usage(parsed.usage, model)
+								const usageData = this.normalizeUsage(parsed.usage, model)
 								if (usageData) {
 									yield usageData
 								}
@@ -1026,19 +935,18 @@ export class OpenAiNativeHandler extends BaseProvider implements SingleCompletio
 			// This can happen in certain edge cases and shouldn't break the flow
 		} catch (error) {
 			if (error instanceof Error) {
-				throw new Error(`Error processing GPT-5 response stream: ${error.message}`)
+				throw new Error(`Error processing response stream: ${error.message}`)
 			}
-			throw new Error("Unexpected error processing GPT-5 response stream")
+			throw new Error("Unexpected error processing response stream")
 		} finally {
 			reader.releaseLock()
 		}
 	}
 
 	/**
-	 * Shared processor for GPT‑5 Responses API events.
-	 * Used by both the official SDK streaming path and (optionally) by the SSE fallback.
+	 * Shared processor for Responses API events.
 	 */
-	private async *processGpt5Event(event: any, model: OpenAiNativeModel): ApiStream {
+	private async *processEvent(event: any, model: OpenAiNativeModel): ApiStream {
 		// Persist response id for conversation continuity when available
 		if (event?.response?.id) {
 			this.resolveResponseId(event.response.id)
@@ -1096,7 +1004,7 @@ export class OpenAiNativeHandler extends BaseProvider implements SingleCompletio
 		// Completion events that may carry usage
 		if (event?.type === "response.done" || event?.type === "response.completed") {
 			const usage = event?.response?.usage || event?.usage || undefined
-			const usageData = this.normalizeGpt5Usage(usage, model)
+			const usageData = this.normalizeUsage(usage, model)
 			if (usageData) {
 				yield usageData
 			}
@@ -1110,86 +1018,32 @@ export class OpenAiNativeHandler extends BaseProvider implements SingleCompletio
 		}
 
 		if (event?.usage) {
-			const usageData = this.normalizeGpt5Usage(event.usage, model)
+			const usageData = this.normalizeUsage(event.usage, model)
 			if (usageData) {
 				yield usageData
 			}
 		}
 	}
 
-	private getGpt5ReasoningEffort(model: OpenAiNativeModel): ReasoningEffortWithMinimal | undefined {
+	private getReasoningEffort(model: OpenAiNativeModel): ReasoningEffortWithMinimal | undefined {
 		const { reasoning, info } = model
 
 		// Check if reasoning effort is configured
 		if (reasoning && "reasoning_effort" in reasoning) {
 			const effort = reasoning.reasoning_effort as string
-			// Support all effort levels including "minimal" for GPT-5
+			// Support all effort levels
 			if (effort === "minimal" || effort === "low" || effort === "medium" || effort === "high") {
 				return effort as ReasoningEffortWithMinimal
 			}
 		}
 
-		// Centralize default: use the model's default from types if available; otherwise undefined
+		// Use the model's default from types if available
 		return info.reasoningEffort as ReasoningEffortWithMinimal | undefined
 	}
 
-	private isGpt5Model(modelId: string): boolean {
-		return modelId.startsWith("gpt-5")
-	}
-
 	private isResponsesApiModel(modelId: string): boolean {
-		// Both GPT-5 and Codex Mini use the v1/responses endpoint
-		return modelId.startsWith("gpt-5") || modelId === "codex-mini-latest"
-	}
-
-	private async *handleStreamResponse(
-		stream: AsyncIterable<OpenAI.Chat.Completions.ChatCompletionChunk>,
-		model: OpenAiNativeModel,
-	): ApiStream {
-		for await (const chunk of stream) {
-			const delta = chunk.choices[0]?.delta
-
-			if (delta?.content) {
-				yield {
-					type: "text",
-					text: delta.content,
-				}
-			}
-
-			if (chunk.usage) {
-				yield* this.yieldUsage(model.info, chunk.usage)
-			}
-		}
-	}
-
-	private async *yieldUsage(info: ModelInfo, usage: OpenAI.Completions.CompletionUsage | undefined): ApiStream {
-		const inputTokens = usage?.prompt_tokens || 0
-		const outputTokens = usage?.completion_tokens || 0
-
-		// Extract cache tokens from prompt_tokens_details
-		// According to OpenAI API, cached_tokens represents tokens read from cache
-		const cacheReadTokens = usage?.prompt_tokens_details?.cached_tokens || undefined
-
-		// Cache write tokens are not typically reported in the standard streaming response
-		// They would be in cache_creation_input_tokens if available
-		const cacheWriteTokens = (usage as any)?.cache_creation_input_tokens || undefined
-
-		const totalCost = calculateApiCostOpenAI(
-			info,
-			inputTokens,
-			outputTokens,
-			cacheWriteTokens || 0,
-			cacheReadTokens || 0,
-		)
-
-		yield {
-			type: "usage",
-			inputTokens: inputTokens,
-			outputTokens: outputTokens,
-			cacheWriteTokens: cacheWriteTokens,
-			cacheReadTokens: cacheReadTokens,
-			totalCost: totalCost,
-		}
+		// ALL models now use the Responses API
+		return true
 	}
 
 	override getModel() {
@@ -1205,7 +1059,7 @@ export class OpenAiNativeHandler extends BaseProvider implements SingleCompletio
 			modelId: id,
 			model: info,
 			settings: this.options,
-			defaultTemperature: this.isGpt5Model(id) ? GPT5_DEFAULT_TEMPERATURE : OPENAI_NATIVE_DEFAULT_TEMPERATURE,
+			defaultTemperature: id.startsWith("gpt-5") ? GPT5_DEFAULT_TEMPERATURE : OPENAI_NATIVE_DEFAULT_TEMPERATURE,
 		})
 
 		// For models using the Responses API (GPT-5 and Codex Mini), ensure we support reasoning effort
@@ -1225,7 +1079,7 @@ export class OpenAiNativeHandler extends BaseProvider implements SingleCompletio
 	}
 
 	/**
-	 * Gets the last GPT-5 response ID captured from the Responses API stream.
+	 * Gets the last response ID captured from the Responses API stream.
 	 * Used for maintaining conversation continuity across requests.
 	 * @returns The response ID, or undefined if not available yet
 	 */
@@ -1234,46 +1088,16 @@ export class OpenAiNativeHandler extends BaseProvider implements SingleCompletio
 	}
 
 	/**
-	 * Sets the last GPT-5 response ID for conversation continuity.
+	 * Sets the last response ID for conversation continuity.
 	 * Typically only used in tests or special flows.
-	 * @param responseId The GPT-5 response ID to store
+	 * @param responseId The response ID to store
 	 */
 	setResponseId(responseId: string): void {
 		this.lastResponseId = responseId
 	}
 
 	async completePrompt(prompt: string): Promise<string> {
-		try {
-			const { id, temperature, reasoning, verbosity } = this.getModel()
-			const isResponsesApi = this.isResponsesApiModel(id)
-
-			if (isResponsesApi) {
-				// Models that use the Responses API (GPT-5 and Codex Mini) don't support non-streaming completion
-				throw new Error(`completePrompt is not supported for ${id}. Use createMessage (Responses API) instead.`)
-			}
-
-			const params: any = {
-				model: id,
-				messages: [{ role: "user", content: prompt }],
-			}
-
-			// Add temperature if supported
-			if (temperature !== undefined) {
-				params.temperature = temperature
-			}
-
-			// Add reasoning parameters for models that support them
-			if (reasoning) {
-				Object.assign(params, reasoning)
-			}
-
-			const response = await this.client.chat.completions.create(params)
-			return response.choices[0]?.message.content || ""
-		} catch (error) {
-			if (error instanceof Error) {
-				throw new Error(`OpenAI Native completion error: ${error.message}`)
-			}
-			throw error
-		}
+		// ALL models now use the Responses API which doesn't support non-streaming completion
+		throw new Error(`completePrompt is not supported. Use createMessage (Responses API) instead.`)
 	}
 }
