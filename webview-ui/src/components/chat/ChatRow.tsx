@@ -118,6 +118,8 @@ export const ChatRowContent = ({
 	const [reasoningCollapsed, setReasoningCollapsed] = useState(true)
 	const [isDiffErrorExpanded, setIsDiffErrorExpanded] = useState(false)
 	const [showCopySuccess, setShowCopySuccess] = useState(false)
+	const [isErrorExpanded, setIsErrorExpanded] = useState(false)
+	const [showErrorCopySuccess, setShowErrorCopySuccess] = useState(false)
 	const [isEditing, setIsEditing] = useState(false)
 	const [editedContent, setEditedContent] = useState("")
 	const [editMode, setEditMode] = useState<Mode>(mode || "code")
@@ -1132,15 +1134,96 @@ export const ChatRowContent = ({
 					)
 				case "error":
 					return (
-						<>
-							{title && (
-								<div style={headerStyle}>
-									{icon}
-									{title}
+						<div>
+							<div
+								style={{
+									marginTop: "0px",
+									overflow: "hidden",
+									marginBottom: "8px",
+								}}>
+								<div
+									style={{
+										borderBottom: isErrorExpanded
+											? "1px solid var(--vscode-editorGroup-border)"
+											: "none",
+										fontWeight: "normal",
+										fontSize: "var(--vscode-font-size)",
+										color: "var(--vscode-editor-foreground)",
+										display: "flex",
+										alignItems: "center",
+										justifyContent: "space-between",
+										cursor: "pointer",
+									}}
+									onClick={() => setIsErrorExpanded(!isErrorExpanded)}>
+									<div
+										style={{
+											display: "flex",
+											alignItems: "center",
+											gap: "10px",
+											flexGrow: 1,
+										}}>
+										<span
+											className="codicon codicon-error"
+											style={{
+												color: "var(--vscode-errorForeground)",
+												opacity: 0.8,
+												fontSize: 16,
+												marginBottom: "-1.5px",
+											}}></span>
+										<span style={{ fontWeight: "bold", color: "var(--vscode-errorForeground)" }}>
+											{t("chat:error")}
+										</span>
+									</div>
+									<div style={{ display: "flex", alignItems: "center" }}>
+										<VSCodeButton
+											appearance="icon"
+											style={{
+												padding: "3px",
+												height: "24px",
+												marginRight: "4px",
+												color: "var(--vscode-editor-foreground)",
+												display: "flex",
+												alignItems: "center",
+												justifyContent: "center",
+												background: "transparent",
+											}}
+											onClick={(e) => {
+												e.stopPropagation()
+
+												// Call copyWithFeedback and handle the Promise
+												copyWithFeedback(message.text || "").then((success) => {
+													if (success) {
+														// Show checkmark
+														setShowErrorCopySuccess(true)
+
+														// Reset after a brief delay
+														setTimeout(() => {
+															setShowErrorCopySuccess(false)
+														}, 1000)
+													}
+												})
+											}}>
+											<span
+												className={`codicon codicon-${showErrorCopySuccess ? "check" : "copy"}`}></span>
+										</VSCodeButton>
+										<span
+											className={`codicon codicon-chevron-${isErrorExpanded ? "up" : "down"}`}></span>
+									</div>
 								</div>
-							)}
-							<p style={{ ...pStyle, color: "var(--vscode-errorForeground)" }}>{message.text}</p>
-						</>
+								{isErrorExpanded && (
+									<div
+										style={{
+											padding: "8px",
+											backgroundColor: "var(--vscode-editor-background)",
+											borderTop: "none",
+										}}>
+										<p style={{ ...pStyle, color: "var(--vscode-errorForeground)" }}>
+											{message.text}
+										</p>
+									</div>
+								)}
+							</div>
+						</div>
 					)
 				case "completion_result":
 					return (
