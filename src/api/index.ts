@@ -52,6 +52,11 @@ export interface ApiHandlerCreateMessageMetadata {
 	 * Used to enforce "skip once" after a condense operation.
 	 */
 	suppressPreviousResponseId?: boolean
+	/**
+	 * Controls whether the response should be stored for 30 days (OpenAI Responses API).
+	 * Defaults to true if not specified.
+	 */
+	store?: boolean
 }
 
 export interface ApiHandler {

@@ -911,6 +911,11 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 			return
 		}
 		await this.overwriteApiConversationHistory(messages)
+
+		// Set flag to skip previous_response_id on the next API call after manual condense
+		this.skipPrevResponseIdOnce = true
+		console.log(`[Task#${this.taskId}] Manual condense completed - will skip previous_response_id on next API call`)
+
 		const contextCondense: ContextCondense = { summary, cost, newContextTokens, prevContextTokens }
 		await this.say(
 			"condense_context",
@@ -1117,6 +1122,8 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 	}
 
 	private async resumeTaskFromHistory() {
+		console.log(`[Task#${this.taskId}] Resuming task from history`)
+
 		if (this.enableTaskBridge) {
 			try {
 				this.bridgeService = this.bridgeService || ExtensionBridgeService.getInstance()
@@ -1132,6 +1139,19 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 		}
 
 		const modifiedClineMessages = await this.getSavedClineMessages()
+
+		// Check for any stored GPT-5 response IDs in the message history
+		const gpt5Messages = modifiedClineMessages.filter(
+			(m) => m.type === "say" && (m as any).say === "text" && (m as any).metadata?.gpt5?.previous_response_id,
+		)
+		if (gpt5Messages.length > 0) {
+			const lastGpt5Message = gpt5Messages[gpt5Messages.length - 1] as any
+			console.log(
+				`[Task#${this.taskId}] Found ${gpt5Messages.length} messages with GPT-5 response IDs. Last ID: ${lastGpt5Message.metadata.gpt5.previous_response_id}`,
+			)
+		} else {
+			console.log(`[Task#${this.taskId}] No GPT-5 response IDs found in message history`)
+		}
 
 		// Remove any resume messages that may have been added before
 		const lastRelevantMessageIndex = findLastIndex(
@@ -2387,16 +2407,27 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 					// Use the previous_response_id from the last assistant message for this request
 					previousResponseId = ((this.clineMessages[idx] as any).metadata.gpt5.previous_response_id ||
 						undefined) as string | undefined
+					console.log(
+						`[Task#${this.taskId}] Retrieved stored GPT-5 response ID from message history: ${previousResponseId}`,
+					)
+				} else {
+					console.log(`[Task#${this.taskId}] No stored GPT-5 response ID found in message history`)
 				}
+			} else if (this.skipPrevResponseIdOnce) {
+				console.log(
+					`[Task#${this.taskId}] Skipping previous_response_id due to recent condense operation - will send full conversation context`,
+				)
 			}
-		} catch {
+		} catch (error) {
+			console.error(`[Task#${this.taskId}] Error retrieving GPT-5 response ID:`, error)
 			// non-fatal
 		}
 
 		const metadata: ApiHandlerCreateMessageMetadata = {
 			mode: mode,
 			taskId: this.taskId,
-			...(previousResponseId ? { previousResponseId } : {}),
+			// Only include previousResponseId if we're NOT suppressing it
+			...(previousResponseId && !this.skipPrevResponseIdOnce ? { previousResponseId } : {}),
 			// If a condense just occurred, explicitly suppress continuity fallback for the next call
 			...(this.skipPrevResponseIdOnce ? { suppressPreviousResponseId: true } : {}),
 		}
@@ -2572,8 +2603,10 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 					instructions: this.lastUsedInstructions,
 					reasoning_summary: (reasoningMessage ?? "").trim() || undefined,
 				}
+				console.log(`[Task#${this.taskId}] Persisted GPT-5 response ID to message metadata: ${lastResponseId}`)
 			}
-		} catch {
+		} catch (error) {
+			console.error(`[Task#${this.taskId}] Error persisting GPT-5 metadata:`, error)
 			// Non-fatal error in metadata persistence
 		}
 	}

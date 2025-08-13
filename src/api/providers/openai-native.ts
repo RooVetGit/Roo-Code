@@ -89,6 +89,7 @@ export class OpenAiNativeHandler extends BaseProvider implements SingleCompletio
 	private resolveResponseId(responseId: string | undefined): void {
 		if (responseId) {
 			this.lastResponseId = responseId
+			console.log(`[OpenAI-Native] Stored response ID: ${responseId}`)
 		}
 		// Resolve the promise so the next request can use this ID
 		if (this.responseIdResolver) {
@@ -124,8 +125,21 @@ export class OpenAiNativeHandler extends BaseProvider implements SingleCompletio
 		// This handles the race condition with fast nano model responses
 		let effectivePreviousResponseId = metadata?.previousResponseId
 
-		// Only allow fallback to pending/last response id when not explicitly suppressed
-		if (!metadata?.suppressPreviousResponseId) {
+		if (metadata?.previousResponseId) {
+			console.log(`[OpenAI-Native] Using previous_response_id from metadata: ${metadata.previousResponseId}`)
+		}
+
+		// Check if we should suppress previous response ID (e.g., after condense or message edit)
+		if (metadata?.suppressPreviousResponseId) {
+			console.log(
+				`[OpenAI-Native] Suppressing previous_response_id due to suppressPreviousResponseId flag (likely after condense or edit)`,
+			)
+			// Clear the stored lastResponseId to prevent it from being used in future requests
+			this.lastResponseId = undefined
+			effectivePreviousResponseId = undefined
+		} else {
+			// Only try to get fallback response IDs if not suppressing
+
 			// If we have a pending response ID promise, wait for it to resolve
 			if (!effectivePreviousResponseId && this.responseIdPromise) {
 				try {
@@ -136,6 +150,7 @@ export class OpenAiNativeHandler extends BaseProvider implements SingleCompletio
 					])
 					if (resolvedId) {
 						effectivePreviousResponseId = resolvedId
+						console.log(`[OpenAI-Native] Using previous_response_id from pending promise: ${resolvedId}`)
 					}
 				} catch {
 					// Non-fatal if promise fails
@@ -143,20 +158,52 @@ export class OpenAiNativeHandler extends BaseProvider implements SingleCompletio
 			}
 
 			// Fall back to the last known response ID if still not available
-			if (!effectivePreviousResponseId) {
+			if (!effectivePreviousResponseId && this.lastResponseId) {
 				effectivePreviousResponseId = this.lastResponseId
+				console.log(`[OpenAI-Native] Using previous_response_id from lastResponseId: ${this.lastResponseId}`)
 			}
 		}
 
 		// Format input and capture continuity id
 		const { formattedInput, previousResponseId } = this.prepareStructuredInput(systemPrompt, messages, metadata)
-		const requestPreviousResponseId = effectivePreviousResponseId ?? previousResponseId
+		const requestPreviousResponseId = effectivePreviousResponseId || previousResponseId
+
+		if (requestPreviousResponseId) {
+			console.log(`[OpenAI-Native] Making request with previous_response_id: ${requestPreviousResponseId}`)
+			console.log(`[OpenAI-Native] Including updated instructions (system prompt) to ensure consistency`)
+		} else {
+			console.log(`[OpenAI-Native] Making request without previous_response_id (full conversation context)`)
+		}
 
 		// Create a new promise for this request's response ID
 		this.responseIdPromise = new Promise<string | undefined>((resolve) => {
 			this.responseIdResolver = resolve
 		})
 
+		// Build request body
+		const requestBody = this.buildRequestBody(
+			model,
+			formattedInput,
+			requestPreviousResponseId,
+			systemPrompt,
+			verbosity,
+			reasoningEffort,
+			metadata,
+		)
+
+		// Make the request
+		yield* this.executeRequest(requestBody, model, metadata)
+	}
+
+	private buildRequestBody(
+		model: OpenAiNativeModel,
+		formattedInput: any,
+		requestPreviousResponseId: string | undefined,
+		systemPrompt: string,
+		verbosity: any,
+		reasoningEffort: ReasoningEffortWithMinimal | undefined,
+		metadata?: ApiHandlerCreateMessageMetadata,
+	): any {
 		// Build a request body (also used for fallback)
 		// Ensure we explicitly pass max_output_tokens for GPT‑5 based on Roo's reserved model response calculation
 		// so requests do not default to very large limits (e.g., 120k).
@@ -169,12 +216,18 @@ export class OpenAiNativeHandler extends BaseProvider implements SingleCompletio
 			temperature?: number
 			max_output_tokens?: number
 			previous_response_id?: string
+			store?: boolean
+			instructions?: string
 		}
 
-		const requestBody: Gpt5RequestBody = {
+		return {
 			model: model.id,
 			input: formattedInput,
 			stream: true,
+			store: metadata?.store !== false, // Default to true unless explicitly set to false
+			// Always include instructions (system prompt) when using previous_response_id
+			// This ensures the system prompt stays up-to-date even if it changes (e.g., mode switch)
+			...(requestPreviousResponseId && { instructions: systemPrompt }),
 			...(reasoningEffort && {
 				reasoning: {
 					effort: reasoningEffort,
@@ -193,7 +246,13 @@ export class OpenAiNativeHandler extends BaseProvider implements SingleCompletio
 			...(model.maxTokens ? { max_output_tokens: model.maxTokens } : {}),
 			...(requestPreviousResponseId && { previous_response_id: requestPreviousResponseId }),
 		}
+	}
 
+	private async *executeRequest(
+		requestBody: any,
+		model: OpenAiNativeModel,
+		metadata?: ApiHandlerCreateMessageMetadata,
+	): ApiStream {
 		try {
 			// Use the official SDK
 			const stream = (await (this.client as any).responses.create(requestBody)) as AsyncIterable<any>
@@ -259,8 +318,9 @@ export class OpenAiNativeHandler extends BaseProvider implements SingleCompletio
 		}
 	}
 
-	private formatStructuredInput(systemPrompt: string, messages: Anthropic.Messages.MessageParam[]): any[] {
+	private formatStructuredInput(systemPrompt: string, messages: Anthropic.Messages.MessageParam[]): any {
 		// Format the conversation for the Responses API using structured format
+		// This supports both text and images
 		const formattedMessages: any[] = []
 
 		// Add system prompt as developer message
@@ -275,16 +335,25 @@ export class OpenAiNativeHandler extends BaseProvider implements SingleCompletio
 			const content: any[] = []
 
 			if (typeof message.content === "string") {
-				// Simple text content
-				content.push({ type: "input_text", text: message.content })
+				// For user messages, use input_text; for assistant messages, use output_text
+				if (role === "user") {
+					content.push({ type: "input_text", text: message.content })
+				} else {
+					content.push({ type: "output_text", text: message.content })
+				}
 			} else if (Array.isArray(message.content)) {
-				// Process content blocks
+				// For array content with potential images, format properly
 				for (const block of message.content) {
 					if (block.type === "text") {
-						content.push({ type: "input_text", text: (block as any).text })
+						// For user messages, use input_text; for assistant messages, use output_text
+						if (role === "user") {
+							content.push({ type: "input_text", text: (block as any).text })
+						} else {
+							content.push({ type: "output_text", text: (block as any).text })
+						}
 					} else if (block.type === "image") {
 						const image = block as Anthropic.Messages.ImageBlockParam
-						// Format image with proper data URL
+						// Format image with proper data URL - images are always input_image
 						const imageUrl = `data:${image.source.media_type};base64,${image.source.data}`
 						content.push({ type: "input_image", image_url: imageUrl })
 					}
@@ -301,14 +370,22 @@ export class OpenAiNativeHandler extends BaseProvider implements SingleCompletio
 
 	private formatSingleStructuredMessage(message: Anthropic.Messages.MessageParam): any {
 		// Format a single message for the Responses API when using previous_response_id
+		// When using previous_response_id, we only send the latest user message
 		const role = message.role === "user" ? "user" : "assistant"
-		const content: any[] = []
 
 		if (typeof message.content === "string") {
-			content.push({ type: "input_text", text: message.content })
+			// For simple string content, return structured format with proper type
+			return {
+				role,
+				content: [{ type: "input_text", text: message.content }],
+			}
 		} else if (Array.isArray(message.content)) {
+			// Extract text and image content from blocks
+			const content: any[] = []
+
 			for (const block of message.content) {
 				if (block.type === "text") {
+					// User messages use input_text
 					content.push({ type: "input_text", text: (block as any).text })
 				} else if (block.type === "image") {
 					const image = block as Anthropic.Messages.ImageBlockParam
@@ -316,9 +393,13 @@ export class OpenAiNativeHandler extends BaseProvider implements SingleCompletio
 					content.push({ type: "input_image", image_url: imageUrl })
 				}
 			}
+
+			if (content.length > 0) {
+				return { role, content }
+			}
 		}
 
-		return content.length > 0 ? { role, content } : null
+		return null
 	}
 
 	private async *makeGpt5ResponsesAPIRequest(
@@ -476,23 +557,26 @@ export class OpenAiNativeHandler extends BaseProvider implements SingleCompletio
 		messages: Anthropic.Messages.MessageParam[],
 		metadata?: ApiHandlerCreateMessageMetadata,
 	): { formattedInput: any; previousResponseId?: string } {
-		// Respect explicit suppression signal for continuity (e.g. immediately after condense)
-		const isFirstMessage = messages.length === 1 && messages[0].role === "user"
-		const allowFallback = !metadata?.suppressPreviousResponseId
+		// Note: suppressPreviousResponseId is handled in handleResponsesApiMessage
+		// This method now only handles formatting based on whether we have a previous response ID
 
-		const previousResponseId =
-			metadata?.previousResponseId ?? (allowFallback && !isFirstMessage ? this.lastResponseId : undefined)
+		// Check for previous response ID from metadata or fallback to lastResponseId
+		const isFirstMessage = messages.length === 1 && messages[0].role === "user"
+		const previousResponseId = metadata?.previousResponseId ?? (!isFirstMessage ? this.lastResponseId : undefined)
 
 		if (previousResponseId) {
 			// When using previous_response_id, only send the latest user message
 			const lastUserMessage = [...messages].reverse().find((msg) => msg.role === "user")
 			if (lastUserMessage) {
 				const formattedMessage = this.formatSingleStructuredMessage(lastUserMessage)
-				return { formattedInput: formattedMessage ? [formattedMessage] : [], previousResponseId }
+				// formatSingleStructuredMessage now always returns an object with role and content
+				if (formattedMessage) {
+					return { formattedInput: [formattedMessage], previousResponseId }
+				}
 			}
 			return { formattedInput: [], previousResponseId }
 		} else {
-			// Format full conversation history
+			// Format full conversation history (returns an array of structured messages)
 			const formattedInput = this.formatStructuredInput(systemPrompt, messages)
 			return { formattedInput }
 		}
@@ -534,6 +618,7 @@ export class OpenAiNativeHandler extends BaseProvider implements SingleCompletio
 
 							// Store response ID for conversation continuity
 							if (parsed.response?.id) {
+								console.log(`[OpenAI-Native] Received response ID from stream: ${parsed.response.id}`)
 								this.resolveResponseId(parsed.response.id)
 							}
 
@@ -825,6 +910,9 @@ export class OpenAiNativeHandler extends BaseProvider implements SingleCompletio
 							} else if (parsed.type === "response.completed" || parsed.type === "response.done") {
 								// Store response ID for conversation continuity
 								if (parsed.response?.id) {
+									console.log(
+										`[OpenAI-Native] Received response ID from done event: ${parsed.response.id}`,
+									)
 									this.resolveResponseId(parsed.response.id)
 								}
 
@@ -949,6 +1037,7 @@ export class OpenAiNativeHandler extends BaseProvider implements SingleCompletio
 	private async *processEvent(event: any, model: OpenAiNativeModel): ApiStream {
 		// Persist response id for conversation continuity when available
 		if (event?.response?.id) {
+			console.log(`[OpenAI-Native] Received response ID from SDK event: ${event.response.id}`)
 			this.resolveResponseId(event.response.id)
 		}
 
