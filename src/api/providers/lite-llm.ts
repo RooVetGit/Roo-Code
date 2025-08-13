@@ -9,6 +9,7 @@ import { ApiHandlerOptions } from "../../shared/api"
 
 import { ApiStream, ApiStreamUsageChunk } from "../transform/stream"
 import { convertToOpenAiMessages } from "../transform/openai-format"
+import { getModelParams } from "../transform/model-params"
 
 import type { SingleCompletionHandler, ApiHandlerCreateMessageMetadata } from "../index"
 import { RouterProvider } from "./router-provider"
@@ -38,6 +39,7 @@ export class LiteLLMHandler extends RouterProvider implements SingleCompletionHa
 		metadata?: ApiHandlerCreateMessageMetadata,
 	): ApiStream {
 		const { id: modelId, info } = await this.fetchModel()
+		const params = getModelParams({ format: "openai", modelId, model: info, settings: this.options })
 
 		const openAiMessages = convertToOpenAiMessages(messages)
 
@@ -105,7 +107,7 @@ export class LiteLLMHandler extends RouterProvider implements SingleCompletionHa
 		}
 
 		// Required by some providers; others default to max tokens allowed
-		let maxTokens: number | undefined = info.maxTokens ?? undefined
+		let maxTokens: number | undefined = params.maxTokens ?? undefined
 
 		const requestOptions: OpenAI.Chat.Completions.ChatCompletionCreateParamsStreaming = {
 			model: modelId,
@@ -117,8 +119,8 @@ export class LiteLLMHandler extends RouterProvider implements SingleCompletionHa
 			},
 		}
 
-		if (this.supportsTemperature(modelId)) {
-			requestOptions.temperature = this.options.modelTemperature ?? 0
+		if (typeof params.temperature === "number") {
+			requestOptions.temperature = params.temperature
 		}
 
 		try {
@@ -178,6 +180,7 @@ export class LiteLLMHandler extends RouterProvider implements SingleCompletionHa
 
 	async completePrompt(prompt: string): Promise<string> {
 		const { id: modelId, info } = await this.fetchModel()
+		const params = getModelParams({ format: "openai", modelId, model: info, settings: this.options })
 
 		try {
 			const requestOptions: OpenAI.Chat.Completions.ChatCompletionCreateParamsNonStreaming = {
@@ -185,11 +188,13 @@ export class LiteLLMHandler extends RouterProvider implements SingleCompletionHa
 				messages: [{ role: "user", content: prompt }],
 			}
 
-			if (this.supportsTemperature(modelId)) {
-				requestOptions.temperature = this.options.modelTemperature ?? 0
+			if (typeof params.temperature === "number") {
+				requestOptions.temperature = params.temperature
 			}
 
-			requestOptions.max_tokens = info.maxTokens
+			if (typeof params.maxTokens === "number") {
+				requestOptions.max_tokens = params.maxTokens
+			}
 
 			const response = await this.client.chat.completions.create(requestOptions)
 			return response.choices[0]?.message.content || ""

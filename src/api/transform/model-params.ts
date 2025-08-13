@@ -3,11 +3,9 @@ import {
 	type ProviderSettings,
 	type VerbosityLevel,
 	type ReasoningEffortWithMinimal,
-	ANTHROPIC_DEFAULT_MAX_TOKENS,
 } from "@roo-code/types"
 
 import {
-	DEFAULT_HYBRID_REASONING_MODEL_MAX_TOKENS,
 	DEFAULT_HYBRID_REASONING_MODEL_THINKING_TOKENS,
 	GEMINI_25_PRO_MIN_THINKING_TOKENS,
 	shouldUseReasoningBudget,
@@ -94,7 +92,7 @@ export function getModelParams({
 		format,
 	})
 
-	let temperature = customTemperature ?? defaultTemperature
+	let temperature: number | undefined = customTemperature ?? defaultTemperature
 	let reasoningBudget: ModelParams["reasoningBudget"] = undefined
 	let reasoningEffort: ModelParams["reasoningEffort"] = undefined
 	let verbosity: VerbosityLevel | undefined = customVerbosity
@@ -133,6 +131,16 @@ export function getModelParams({
 		reasoningEffort = effort as ReasoningEffortWithMinimal
 	}
 
+	// Capability gating
+	// - If the model does not support temperature, drop it from params
+	if (model.supportsTemperature === false) {
+		temperature = undefined
+	}
+
+	// Do not gate verbosity here; preserve user's setting. Providers will gate
+	// support at request-build time (e.g., only send to APIs that support it).
+	// Check the openai-native.ts file for more details.
+
 	const params: BaseModelParams = { maxTokens, temperature, reasoningEffort, reasoningBudget, verbosity }
 
 	if (format === "anthropic") {
@@ -142,12 +150,6 @@ export function getModelParams({
 			reasoning: getAnthropicReasoning({ model, reasoningBudget, reasoningEffort, settings }),
 		}
 	} else if (format === "openai") {
-		// Special case for o1 and o3-mini, which don't support temperature.
-		// TODO: Add a `supportsTemperature` field to the model info.
-		if (modelId.startsWith("o1") || modelId.startsWith("o3-mini")) {
-			params.temperature = undefined
-		}
-
 		return {
 			format,
 			...params,
@@ -160,15 +162,6 @@ export function getModelParams({
 			reasoning: getGeminiReasoning({ model, reasoningBudget, reasoningEffort, settings }),
 		}
 	} else {
-		// Special case for o1-pro, which doesn't support temperature.
-		// Note that OpenRouter's `supported_parameters` field includes
-		// `temperature`, which is probably a bug.
-		// TODO: Add a `supportsTemperature` field to the model info and populate
-		// it appropriately in the OpenRouter fetcher.
-		if (modelId === "openai/o1-pro") {
-			params.temperature = undefined
-		}
-
 		return {
 			format,
 			...params,

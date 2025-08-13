@@ -67,8 +67,4 @@ export abstract class RouterProvider extends BaseProvider {
 			? { id, info: this.models[id] }
 			: { id: this.defaultModelId, info: this.defaultModelInfo }
 	}
-
-	protected supportsTemperature(modelId: string): boolean {
-		return !modelId.startsWith("openai/o3-mini")
-	}
 }

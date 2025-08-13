@@ -10,6 +10,7 @@ import { convertToOpenAiMessages } from "../transform/openai-format"
 import { addCacheBreakpoints as addAnthropicCacheBreakpoints } from "../transform/caching/anthropic"
 import { addCacheBreakpoints as addGeminiCacheBreakpoints } from "../transform/caching/gemini"
 import { addCacheBreakpoints as addVertexCacheBreakpoints } from "../transform/caching/vertex"
+import { getModelParams } from "../transform/model-params"
 
 import type { SingleCompletionHandler, ApiHandlerCreateMessageMetadata } from "../index"
 import { RouterProvider } from "./router-provider"
@@ -58,6 +59,7 @@ export class UnboundHandler extends RouterProvider implements SingleCompletionHa
 		metadata?: ApiHandlerCreateMessageMetadata,
 	): ApiStream {
 		const { id: modelId, info } = await this.fetchModel()
+		const params = getModelParams({ format: "openai", modelId, model: info, settings: this.options })
 
 		const openAiMessages: OpenAI.Chat.ChatCompletionMessageParam[] = [
 			{ role: "system", content: systemPrompt },
@@ -76,16 +78,8 @@ export class UnboundHandler extends RouterProvider implements SingleCompletionHa
 			addVertexCacheBreakpoints(messages)
 		}
 
-		// Required by Anthropic; other providers default to max tokens allowed.
-		let maxTokens: number | undefined
-
-		if (modelId.startsWith("anthropic/")) {
-			maxTokens = info.maxTokens ?? undefined
-		}
-
 		const requestOptions: UnboundChatCompletionCreateParamsStreaming = {
 			model: modelId.split("/")[1],
-			max_tokens: maxTokens,
 			messages: openAiMessages,
 			stream: true,
 			unbound_metadata: {
@@ -95,8 +89,13 @@ export class UnboundHandler extends RouterProvider implements SingleCompletionHa
 			},
 		}
 
-		if (this.supportsTemperature(modelId)) {
-			requestOptions.temperature = this.options.modelTemperature ?? 0
+		// Only set max_tokens for Anthropic models
+		if (modelId.startsWith("anthropic/") && typeof params.maxTokens === "number") {
+			requestOptions.max_tokens = params.maxTokens
+		}
+
+		if (typeof params.temperature === "number") {
+			requestOptions.temperature = params.temperature
 		}
 
 		const { data: completion } = await this.client.chat.completions
@@ -134,6 +133,7 @@ export class UnboundHandler extends RouterProvider implements SingleCompletionHa
 
 	async completePrompt(prompt: string): Promise<string> {
 		const { id: modelId, info } = await this.fetchModel()
+		const params = getModelParams({ format: "openai", modelId, model: info, settings: this.options })
 
 		try {
 			const requestOptions: UnboundChatCompletionCreateParamsNonStreaming = {
@@ -144,12 +144,13 @@ export class UnboundHandler extends RouterProvider implements SingleCompletionHa
 				},
 			}
 
-			if (this.supportsTemperature(modelId)) {
-				requestOptions.temperature = this.options.modelTemperature ?? 0
+			if (typeof params.temperature === "number") {
+				requestOptions.temperature = params.temperature
 			}
 
-			if (modelId.startsWith("anthropic/")) {
-				requestOptions.max_tokens = info.maxTokens
+			// Only set max_tokens for Anthropic models
+			if (modelId.startsWith("anthropic/") && typeof params.maxTokens === "number") {
+				requestOptions.max_tokens = params.maxTokens
 			}
 
 			const response = await this.client.chat.completions.create(requestOptions, { headers: DEFAULT_HEADERS })

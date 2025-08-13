@@ -36,7 +36,13 @@ export class XAIHandler extends BaseProvider implements SingleCompletionHandler 
 				: xaiDefaultModelId
 
 		const info = xaiModels[id]
-		const params = getModelParams({ format: "openai", modelId: id, model: info, settings: this.options })
+		const params = getModelParams({
+			format: "openai",
+			modelId: id,
+			model: info,
+			settings: this.options,
+			defaultTemperature: XAI_DEFAULT_TEMPERATURE,
+		})
 		return { id, info, ...params }
 	}
 
@@ -45,13 +51,13 @@ export class XAIHandler extends BaseProvider implements SingleCompletionHandler 
 		messages: Anthropic.Messages.MessageParam[],
 		metadata?: ApiHandlerCreateMessageMetadata,
 	): ApiStream {
-		const { id: modelId, info: modelInfo, reasoning } = this.getModel()
+		const { id: modelId, info: modelInfo, reasoning, temperature, maxTokens } = this.getModel()
 
 		// Use the OpenAI-compatible API.
 		const stream = await this.client.chat.completions.create({
 			model: modelId,
-			max_tokens: modelInfo.maxTokens,
-			temperature: this.options.modelTemperature ?? XAI_DEFAULT_TEMPERATURE,
+			max_tokens: typeof maxTokens === "number" ? maxTokens : modelInfo.maxTokens,
+			...(typeof temperature === "number" ? { temperature } : {}),
 			messages: [{ role: "system", content: systemPrompt }, ...convertToOpenAiMessages(messages)],
 			stream: true,
 			stream_options: { include_usage: true },
@@ -78,12 +84,15 @@ export class XAIHandler extends BaseProvider implements SingleCompletionHandler 
 			if (chunk.usage) {
 				// Extract detailed token information if available
 				// First check for prompt_tokens_details structure (real API response)
-				const promptDetails = "prompt_tokens_details" in chunk.usage ? chunk.usage.prompt_tokens_details : null;
-				const cachedTokens = promptDetails && "cached_tokens" in promptDetails ? promptDetails.cached_tokens : 0;
+				const promptDetails = "prompt_tokens_details" in chunk.usage ? chunk.usage.prompt_tokens_details : null
+				const cachedTokens = promptDetails && "cached_tokens" in promptDetails ? promptDetails.cached_tokens : 0
 
 				// Fall back to direct fields in usage (used in test mocks)
-				const readTokens = cachedTokens || ("cache_read_input_tokens" in chunk.usage ? (chunk.usage as any).cache_read_input_tokens : 0);
-				const writeTokens = "cache_creation_input_tokens" in chunk.usage ? (chunk.usage as any).cache_creation_input_tokens : 0;
+				const readTokens =
+					cachedTokens ||
+					("cache_read_input_tokens" in chunk.usage ? (chunk.usage as any).cache_read_input_tokens : 0)
+				const writeTokens =
+					"cache_creation_input_tokens" in chunk.usage ? (chunk.usage as any).cache_creation_input_tokens : 0
 
 				yield {
 					type: "usage",
