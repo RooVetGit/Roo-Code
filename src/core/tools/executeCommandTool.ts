@@ -4,7 +4,7 @@ import * as vscode from "vscode"
 
 import delay from "delay"
 
-import { CommandExecutionStatus, DEFAULT_TERMINAL_OUTPUT_CHARACTER_LIMIT } from "@roo-code/types"
+import { CommandExecutionStatus, DEFAULT_TERMINAL_OUTPUT_CHARACTER_LIMIT, RooCodeEventName } from "@roo-code/types"
 import { TelemetryService } from "@roo-code/telemetry"
 
 import { Task } from "../task/Task"
@@ -143,6 +143,26 @@ export type ExecuteCommandOptions = {
 	commandExecutionTimeout?: number
 }
 
+/**
+ * Helper function to emit taskCommandExecuted event with consistent payload
+ */
+function emitCommandExecutedEvent(
+	task: Task,
+	command: string,
+	exitCode: number | undefined,
+	output: string,
+	succeeded: boolean,
+	failureReason?: string,
+) {
+	task.emit(RooCodeEventName.TaskCommandExecuted, task.taskId, {
+		command,
+		exitCode,
+		output,
+		succeeded,
+		failureReason,
+	})
+}
+
 export async function executeCommand(
 	task: Task,
 	{
@@ -274,6 +294,16 @@ export async function executeCommand(
 				await task.say("error", t("common:errors:command_timeout", { seconds: commandExecutionTimeoutSeconds }))
 				task.terminalProcess = undefined
 
+				// Emit taskCommandExecuted event for timeout
+				emitCommandExecutedEvent(
+					task,
+					command,
+					undefined,
+					accumulatedOutput,
+					false,
+					`Command timed out after ${commandExecutionTimeoutSeconds}s`,
+				)
+
 				return [
 					false,
 					`The command was terminated after exceeding a user-configured ${commandExecutionTimeoutSeconds}s timeout. Do not try to re-run the command.`,
@@ -311,6 +341,16 @@ export async function executeCommand(
 		const { text, images } = message
 		await task.say("user_feedback", text, images)
 
+		// Emit taskCommandExecuted event for running command with user feedback
+		emitCommandExecutedEvent(
+			task,
+			command,
+			undefined,
+			accumulatedOutput,
+			false,
+			"Command is still running (user provided feedback)",
+		)
+
 		return [
 			true,
 			formatResponse.toolResult(
@@ -325,6 +365,7 @@ export async function executeCommand(
 		]
 	} else if (completed || exitDetails) {
 		let exitStatus: string = ""
+		let exitCode: number | undefined = exitDetails?.exitCode
 
 		if (exitDetails !== undefined) {
 			if (exitDetails.signalName) {
@@ -349,6 +390,10 @@ export async function executeCommand(
 		}
 
 		let workingDirInfo = ` within working directory '${terminal.getCurrentWorkingDirectory().toPosix()}'`
+
+		// Emit taskCommandExecuted event
+		const succeeded = exitCode === 0
+		emitCommandExecutedEvent(task, command, exitCode, result, succeeded, succeeded ? undefined : exitStatus)
 
 		return [false, `Command executed in terminal ${workingDirInfo}. ${exitStatus}\nOutput:\n${result}`]
 	} else {

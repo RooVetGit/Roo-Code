@@ -103,6 +103,30 @@ import { AutoApprovalHandler } from "./AutoApprovalHandler"
 
 const MAX_EXPONENTIAL_BACKOFF_SECONDS = 600 // 10 minutes
 
+export type ClineEvents = {
+	message: [{ action: "created" | "updated"; message: ClineMessage }]
+	taskStarted: []
+	taskModeSwitched: [taskId: string, mode: string]
+	taskPaused: []
+	taskUnpaused: []
+	taskAskResponded: []
+	taskAborted: []
+	taskSpawned: [taskId: string]
+	taskCompleted: [taskId: string, tokenUsage: TokenUsage, toolUsage: ToolUsage]
+	taskTokenUsageUpdated: [taskId: string, tokenUsage: TokenUsage]
+	taskToolFailed: [taskId: string, tool: ToolName, error: string]
+	[RooCodeEventName.TaskCommandExecuted]: [
+		taskId: string,
+		details: {
+			command: string
+			exitCode: number | undefined
+			output: string
+			succeeded: boolean
+			failureReason?: string
+		},
+	]
+}
+
 export type TaskOptions = {
 	provider: ClineProvider
 	apiConfiguration: ProviderSettings
