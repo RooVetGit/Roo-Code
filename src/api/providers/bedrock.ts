@@ -47,12 +47,14 @@ interface BedrockInferenceConfig {
 	topP?: number
 }
 
-// Define interface for Bedrock thinking configuration
-interface BedrockThinkingConfig {
-	thinking: {
+// Define interface for Bedrock additional model request fields
+// This includes thinking configuration, 1M context beta, and other model-specific parameters
+interface BedrockAdditionalModelFields {
+	thinking?: {
 		type: "enabled"
 		budget_tokens: number
 	}
+	anthropic_beta?: string[]
 	[key: string]: any // Add index signature to be compatible with DocumentType
 }
 
@@ -63,9 +65,7 @@ interface BedrockPayload {
 	system?: SystemContentBlock[]
 	inferenceConfig: BedrockInferenceConfig
 	anthropic_version?: string
-	additionalModelRequestFields?: BedrockThinkingConfig & {
-		anthropic_beta?: string[]
-	}
+	additionalModelRequestFields?: BedrockAdditionalModelFields
 }
 
 // Define specific types for content block events to avoid 'as any' usage
@@ -342,11 +342,7 @@ export class AwsBedrockHandler extends BaseProvider implements SingleCompletionH
 			conversationId,
 		)
 
-		let additionalModelRequestFields:
-			| (BedrockThinkingConfig & {
-					anthropic_beta?: string[]
-			  })
-			| undefined
+		let additionalModelRequestFields: BedrockAdditionalModelFields | undefined
 		let thinkingEnabled = false
 
 		// Determine if thinking should be enabled
@@ -387,15 +383,12 @@ export class AwsBedrockHandler extends BaseProvider implements SingleCompletionH
 		const baseModelId = this.parseBaseModelId(modelConfig.id)
 		const is1MContextEnabled = baseModelId === BEDROCK_CLAUDE_SONNET_4_MODEL_ID && this.options.awsBedrock1MContext
 
-		// Build additionalModelRequestFields with model-specific parameters
-		// Only add anthropic_beta for 1M context to additionalModelRequestFields
+		// Add anthropic_beta for 1M context to additionalModelRequestFields
 		if (is1MContextEnabled) {
 			if (!additionalModelRequestFields) {
-				additionalModelRequestFields = {} as any
+				additionalModelRequestFields = {}
 			}
-			if (additionalModelRequestFields) {
-				additionalModelRequestFields.anthropic_beta = ["context-1m-2025-08-07"]
-			}
+			additionalModelRequestFields.anthropic_beta = ["context-1m-2025-08-07"]
 		}
 
 		const payload: BedrockPayload = {
