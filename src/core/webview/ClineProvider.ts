@@ -1228,6 +1228,10 @@ export class ClineProvider
 		const rootTask = cline.rootTask
 		const parentTask = cline.parentTask
 
+		// Set the abort flag immediately to signal cancellation
+		cline.abort = true
+
+		// Then call abortTask to handle cleanup
 		cline.abortTask()
 
 		await pWaitFor(
@@ -1243,7 +1247,7 @@ export class ClineProvider
 				timeout: 3_000,
 			},
 		).catch(() => {
-			console.error("Failed to abort task")
+			console.error("Failed to abort task gracefully")
 		})
 
 		if (this.getCurrentCline()) {

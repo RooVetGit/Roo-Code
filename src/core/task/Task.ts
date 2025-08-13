@@ -1663,6 +1663,26 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 				const iterator = stream[Symbol.asyncIterator]()
 				let item = await iterator.next()
 				while (!item.done) {
+					// Check abort flag BEFORE processing the chunk
+					if (this.abort) {
+						console.log(`aborting stream (early check), this.abandoned = ${this.abandoned}`)
+
+						if (!this.abandoned) {
+							// Only need to gracefully abort if this instance
+							// isn't abandoned (sometimes OpenRouter stream
+							// hangs, in which case this would affect future
+							// instances of Cline).
+							await abortStream("user_cancelled")
+						}
+
+						// Clean up the iterator if it has a return method
+						if (iterator.return) {
+							await iterator.return(undefined).catch(() => {})
+						}
+
+						break // Aborts the stream.
+					}
+
 					const chunk = item.value
 					item = await iterator.next()
 					if (!chunk) {
@@ -1707,8 +1727,9 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 						}
 					}
 
+					// Check abort flag AFTER processing the chunk as well
 					if (this.abort) {
-						console.log(`aborting stream, this.abandoned = ${this.abandoned}`)
+						console.log(`aborting stream (after chunk), this.abandoned = ${this.abandoned}`)
 
 						if (!this.abandoned) {
 							// Only need to gracefully abort if this instance
@@ -1716,6 +1737,11 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 							// hangs, in which case this would affect future
 							// instances of Cline).
 							await abortStream("user_cancelled")
+						}
+
+						// Clean up the iterator if it has a return method
+						if (iterator.return) {
+							await iterator.return(undefined).catch(() => {})
 						}
 
 						break // Aborts the stream.
