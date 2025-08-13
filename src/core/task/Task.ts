@@ -1307,6 +1307,13 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 	public dispose(): void {
 		console.log(`[Task] disposing task ${this.taskId}.${this.instanceId}`)
 
+		// Remove all event listeners to prevent memory leaks
+		try {
+			this.removeAllListeners()
+		} catch (error) {
+			console.error("Error removing event listeners:", error)
+		}
+
 		// Stop waiting for child task completion.
 		if (this.pauseInterval) {
 			clearInterval(this.pauseInterval)
