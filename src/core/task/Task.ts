@@ -1446,26 +1446,10 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 		}
 	}
 
-	/**
-	 * Iteratively processes Cline requests using a stack-based approach to avoid recursion.
-	 * This method handles the main request-response loop with the AI assistant, processing
-	 * user content, making API calls, and handling tool usage responses.
-	 *
-	 * @param userContent - The content blocks to send to the AI assistant
-	 * @param includeFileDetails - Whether to include detailed file information in the first request
-	 * @returns Promise<boolean> - Returns true if the loop should end, false to continue
-	 *
-	 * @remarks
-	 * This method was converted from a recursive implementation to an iterative one using
-	 * a stack data structure to eliminate potential stack overflow issues and improve
-	 * performance while maintaining exact same functionality and behavior.
-	 */
 	public async recursivelyMakeClineRequests(
 		userContent: Anthropic.Messages.ContentBlockParam[],
 		includeFileDetails: boolean = false,
 	): Promise<boolean> {
-		// Use a stack to manage the iterative processing to eliminate recursion
-		// Each stack item contains the user content and whether to include file details
 		interface StackItem {
 			userContent: Anthropic.Messages.ContentBlockParam[]
 			includeFileDetails: boolean
@@ -2058,13 +2042,14 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 						this.consecutiveMistakeCount++
 					}
 
-					// ITERATIVE CHANGE: Instead of recursive call, push to stack for next iteration
-					// This replaces: const recDidEndLoop = await this.recursivelyMakeClineRequests(this.userMessageContent)
 					if (this.userMessageContent.length > 0) {
 						stack.push({
 							userContent: [...this.userMessageContent], // Create a copy to avoid mutation issues
 							includeFileDetails: false, // Subsequent iterations don't need file details
 						})
+
+						// Add periodic yielding to prevent blocking
+						await new Promise((resolve) => setImmediate(resolve))
 					}
 					// Continue to next iteration instead of setting didEndLoop from recursive call
 					continue
