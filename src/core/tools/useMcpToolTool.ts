@@ -4,6 +4,7 @@ import { formatResponse } from "../prompts/responses"
 import { ClineAskUseMcpServer } from "../../shared/ExtensionMessage"
 import { McpExecutionStatus } from "@roo-code/types"
 import { t } from "../../i18n"
+import { defaultMcpResponseHandler } from "../../utils/mcpResponseHandler"
 
 interface McpToolParams {
 	server_name?: string
@@ -135,13 +136,18 @@ async function executeToolAndProcessResult(
 		const outputText = processToolContent(toolResult)
 
 		if (outputText) {
+			// Check if response is large and should be saved to file
+			const processedResponse = await defaultMcpResponseHandler.processResponse(outputText, serverName, toolName)
+
 			await sendExecutionStatus(cline, {
 				executionId,
 				status: "output",
-				response: outputText,
+				response: processedResponse.savedToFile
+					? `Response saved to file: ${processedResponse.filePath}`
+					: outputText,
 			})
 
-			toolResultPretty = (toolResult.isError ? "Error:\n" : "") + outputText
+			toolResultPretty = (toolResult.isError ? "Error:\n" : "") + processedResponse.content
 		}
 
 		// Send completion status

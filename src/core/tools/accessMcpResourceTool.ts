@@ -2,6 +2,7 @@ import { ClineAskUseMcpServer } from "../../shared/ExtensionMessage"
 import { ToolUse, RemoveClosingTag, AskApproval, HandleError, PushToolResult } from "../../shared/tools"
 import { Task } from "../task/Task"
 import { formatResponse } from "../prompts/responses"
+import { defaultMcpResponseHandler } from "../../utils/mcpResponseHandler"
 
 export async function accessMcpResourceTool(
 	cline: Task,
@@ -57,7 +58,7 @@ export async function accessMcpResourceTool(
 			await cline.say("mcp_server_request_started")
 			const resourceResult = await cline.providerRef.deref()?.getMcpHub()?.readResource(server_name, uri)
 
-			const resourceResultPretty =
+			const resourceResultText =
 				resourceResult?.contents
 					.map((item) => {
 						if (item.text) {
@@ -80,6 +81,16 @@ export async function accessMcpResourceTool(
 					}
 				}
 			})
+
+			// Check if response is large and should be saved to file
+			const processedResponse = await defaultMcpResponseHandler.processResponse(
+				resourceResultText,
+				server_name,
+				uri,
+			)
+
+			// Use the processed content (either original or file reference)
+			const resourceResultPretty = processedResponse.content
 
 			await cline.say("mcp_server_response", resourceResultPretty, images)
 			pushToolResult(formatResponse.toolResult(resourceResultPretty, images))

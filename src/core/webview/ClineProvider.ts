@@ -1701,6 +1701,7 @@ export class ClineProvider
 			maxDiagnosticMessages,
 			includeTaskHistoryInEnhance,
 			remoteControlEnabled,
+			mcpResponseSizeThreshold,
 		} = await this.getState()
 
 		const telemetryKey = process.env.POSTHOG_API_KEY
@@ -1829,6 +1830,7 @@ export class ClineProvider
 			maxDiagnosticMessages: maxDiagnosticMessages ?? 50,
 			includeTaskHistoryInEnhance: includeTaskHistoryInEnhance ?? false,
 			remoteControlEnabled: remoteControlEnabled ?? false,
+			mcpResponseSizeThreshold: mcpResponseSizeThreshold ?? 50000,
 		}
 	}
 
@@ -2018,6 +2020,8 @@ export class ClineProvider
 			includeTaskHistoryInEnhance: stateValues.includeTaskHistoryInEnhance ?? false,
 			// Add remoteControlEnabled setting
 			remoteControlEnabled: stateValues.remoteControlEnabled ?? false,
+			// Add MCP response size threshold setting
+			mcpResponseSizeThreshold: stateValues.mcpResponseSizeThreshold ?? 50000,
 		}
 	}
 
