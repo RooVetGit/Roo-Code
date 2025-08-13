@@ -167,15 +167,7 @@ export type UsageType = {
 export class AwsBedrockHandler extends BaseProvider implements SingleCompletionHandler {
 	protected options: ProviderSettings
 	private client: BedrockRuntimeClient
-	private arnInfo: {
-		isValid: boolean
-		region?: string
-		modelType?: string
-		modelId?: string
-		errorMessage?: string
-		crossRegionInference?: boolean
-		awsUseCrossRegionInference?: boolean
-	} = { isValid: false }
+	private arnInfo: any
 
 	constructor(options: ProviderSettings) {
 		super()
@@ -202,7 +194,7 @@ export class AwsBedrockHandler extends BaseProvider implements SingleCompletionH
 				throw new Error("INVALID_ARN_FORMAT:" + errorMessage)
 			}
 
-			if (this.arnInfo.region && this.arnInfo.region !== this.options.awsRegion && this.arnInfo.errorMessage) {
+			if (this.arnInfo.region && this.arnInfo.region !== this.options.awsRegion) {
 				// Log  if there's a region mismatch between the ARN and the region selected by the user
 				// We will use the ARNs region, so execution can continue, but log an info statement.
 				// Log a warning if there's a region mismatch between the ARN and the region selected by the user
@@ -732,7 +724,7 @@ export class AwsBedrockHandler extends BaseProvider implements SingleCompletionH
 		anthropicMessages: Anthropic.Messages.MessageParam[] | { role: string; content: string }[],
 		systemMessage?: string,
 		usePromptCache: boolean = false,
-		modelInfo?: ModelInfo,
+		modelInfo?: any,
 		conversationId?: string, // Optional conversation ID to track cache points across messages
 	): { system: SystemContentBlock[]; messages: Message[] } {
 		// First convert messages using shared converter for proper image handling
@@ -753,7 +745,7 @@ export class AwsBedrockHandler extends BaseProvider implements SingleCompletionH
 			supportsPromptCache: modelInfo?.supportsPromptCache || false,
 			maxCachePoints: modelInfo?.maxCachePoints || 0,
 			minTokensPerCachePoint: modelInfo?.minTokensPerCachePoint || 50,
-			cachableFields: (modelInfo as any)?.cachableFields || [],
+			cachableFields: modelInfo?.cachableFields || [],
 		}
 
 		// Get previous cache point placements for this conversation if available
@@ -965,7 +957,7 @@ export class AwsBedrockHandler extends BaseProvider implements SingleCompletionH
 
 		// If custom ARN is provided, use it
 		if (this.options.awsCustomArn) {
-			modelConfig = this.getModelById(this.arnInfo.modelId || "", this.arnInfo.modelType)
+			modelConfig = this.getModelById(this.arnInfo.modelId, this.arnInfo.modelType)
 
 			//If the user entered an ARN for a foundation-model they've done the same thing as picking from our list of options.
 			//We leave the model data matching the same as if a drop-down input method was used by not overwriting the model ID with the user input ARN
@@ -1039,12 +1031,12 @@ export class AwsBedrockHandler extends BaseProvider implements SingleCompletionH
 	/**
 	 * Removes any existing cachePoint nodes from content blocks
 	 */
-	private removeCachePoints(content: ContentBlock[] | undefined): ContentBlock[] | undefined {
+	private removeCachePoints(content: any): any {
 		if (Array.isArray(content)) {
 			return content.map((block) => {
 				// Use destructuring to remove cachePoint property
 				const { cachePoint: _, ...rest } = block
-				return rest as ContentBlock
+				return rest
 			})
 		}
 
