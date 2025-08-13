@@ -563,4 +563,132 @@ describe("ClaudeCodeHandler", () => {
 
 		consoleSpy.mockRestore()
 	})
+
+	test("should convert escaped newlines to actual newlines in string chunks", async () => {
+		const systemPrompt = "You are a helpful assistant"
+		const messages = [{ role: "user" as const, content: "Hello" }]
+
+		// Mock async generator that yields string chunks with escaped newlines
+		const mockGenerator = async function* (): AsyncGenerator<ClaudeCodeMessage | string> {
+			yield "Line 1\\nLine 2\\nLine 3"
+			yield "Another chunk\\nwith newlines"
+		}
+
+		mockRunClaudeCode.mockReturnValue(mockGenerator())
+
+		const stream = handler.createMessage(systemPrompt, messages)
+		const results = []
+
+		for await (const chunk of stream) {
+			results.push(chunk)
+		}
+
+		expect(results).toHaveLength(2)
+		expect(results[0]).toEqual({
+			type: "text",
+			text: "Line 1\nLine 2\nLine 3",
+		})
+		expect(results[1]).toEqual({
+			type: "text",
+			text: "Another chunk\nwith newlines",
+		})
+	})
+
+	test("should convert escaped newlines in text content from assistant messages", async () => {
+		const systemPrompt = "You are a helpful assistant"
+		const messages = [{ role: "user" as const, content: "Hello" }]
+
+		// Mock async generator that yields assistant message with escaped newlines
+		const mockGenerator = async function* (): AsyncGenerator<ClaudeCodeMessage | string> {
+			yield {
+				type: "assistant" as const,
+				message: {
+					id: "msg_123",
+					type: "message",
+					role: "assistant",
+					model: "claude-3-5-sonnet-20241022",
+					content: [
+						{
+							type: "text",
+							text: "# Claude Chat History\\n\\n## 2025-08-05\\n\\nHello there!",
+						},
+					],
+					stop_reason: null,
+					stop_sequence: null,
+					usage: {
+						input_tokens: 10,
+						output_tokens: 20,
+					},
+				} as any,
+				session_id: "session_123",
+			}
+		}
+
+		mockRunClaudeCode.mockReturnValue(mockGenerator())
+
+		const stream = handler.createMessage(systemPrompt, messages)
+		const results = []
+
+		for await (const chunk of stream) {
+			results.push(chunk)
+		}
+
+		expect(results).toHaveLength(1)
+		expect(results[0]).toEqual({
+			type: "text",
+			text: "# Claude Chat History\n\n## 2025-08-05\n\nHello there!",
+		})
+	})
+
+	test("should handle mixed escaped sequences correctly", async () => {
+		const systemPrompt = "You are a helpful assistant"
+		const messages = [{ role: "user" as const, content: "Hello" }]
+
+		// Mock async generator that yields text with various escape sequences
+		const mockGenerator = async function* (): AsyncGenerator<ClaudeCodeMessage | string> {
+			yield "Text with\\nnewlines and\\ttabs"
+			yield {
+				type: "assistant" as const,
+				message: {
+					id: "msg_123",
+					type: "message",
+					role: "assistant",
+					model: "claude-3-5-sonnet-20241022",
+					content: [
+						{
+							type: "text",
+							text: "More text\\nwith\\\\backslashes\\nand newlines",
+						},
+					],
+					stop_reason: null,
+					stop_sequence: null,
+					usage: {
+						input_tokens: 10,
+						output_tokens: 20,
+					},
+				} as any,
+				session_id: "session_123",
+			}
+		}
+
+		mockRunClaudeCode.mockReturnValue(mockGenerator())
+
+		const stream = handler.createMessage(systemPrompt, messages)
+		const results = []
+
+		for await (const chunk of stream) {
+			results.push(chunk)
+		}
+
+		expect(results).toHaveLength(2)
+		// Only \n should be converted, not \t or \\
+		expect(results[0]).toEqual({
+			type: "text",
+			text: "Text with\nnewlines and\\ttabs",
+		})
+		expect(results[1]).toEqual({
+			type: "text",
+			text: "More text\nwith\\\\backslashes\nand newlines",
+		})
+	})
 })
