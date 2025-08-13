@@ -540,6 +540,7 @@ const ApiOptions = ({
 					setApiConfigurationField={setApiConfigurationField}
 					organizationAllowList={organizationAllowList}
 					modelValidationError={modelValidationError}
+					uriScheme={uriScheme}
 				/>
 			)}
 

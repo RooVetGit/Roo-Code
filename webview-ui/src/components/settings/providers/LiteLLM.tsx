@@ -10,6 +10,8 @@ import { vscode } from "@src/utils/vscode"
 import { useExtensionState } from "@src/context/ExtensionStateContext"
 import { useAppTranslation } from "@src/i18n/TranslationContext"
 import { Button } from "@src/components/ui"
+import { getLiteLLMAuthUrl } from "@src/oauth/urls"
+import { VSCodeButtonLink } from "@src/components/common/VSCodeButtonLink"
 
 import { inputEventTransform } from "../transforms"
 import { ModelPicker } from "../ModelPicker"
@@ -19,6 +21,7 @@ type LiteLLMProps = {
 	setApiConfigurationField: (field: keyof ProviderSettings, value: ProviderSettings[keyof ProviderSettings]) => void
 	organizationAllowList: OrganizationAllowList
 	modelValidationError?: string
+	uriScheme?: string
 }
 
 export const LiteLLM = ({
@@ -26,6 +29,7 @@ export const LiteLLM = ({
 	setApiConfigurationField,
 	organizationAllowList,
 	modelValidationError,
+	uriScheme,
 }: LiteLLMProps) => {
 	const { t } = useAppTranslation()
 	const { routerModels } = useExtensionState()
@@ -110,6 +114,17 @@ export const LiteLLM = ({
 			<div className="text-sm text-vscode-descriptionForeground -mt-2">
 				{t("settings:providers.apiKeyStorageNotice")}
 			</div>
+
+			{(() => {
+				if (!apiConfiguration?.litellmBaseUrl || apiConfiguration?.litellmApiKey) return null
+				const authUrl = getLiteLLMAuthUrl(apiConfiguration.litellmBaseUrl, uriScheme)
+				if (!authUrl) return null
+				return (
+					<VSCodeButtonLink href={authUrl} style={{ width: "100%" }} appearance="primary">
+						{t("settings:providers.getLiteLLMApiKey")}
+					</VSCodeButtonLink>
+				)
+			})()}
 
 			<Button
 				variant="outline"

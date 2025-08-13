@@ -15,3 +15,15 @@ export function getOpenRouterAuthUrl(uriScheme?: string) {
 export function getRequestyAuthUrl(uriScheme?: string) {
 	return `https://app.requesty.ai/oauth/authorize?callback_url=${getCallbackUrl("requesty", uriScheme)}`
 }
+
+export function getLiteLLMAuthUrl(baseUrl: string, uriScheme?: string) {
+	// Validate URL format to avoid malformed links
+	try {
+		// Throws on invalid URL
+		new URL(baseUrl)
+	} catch {
+		return ""
+	}
+	const cleanBaseUrl = baseUrl.replace(/\/+$/, "")
+	return `${cleanBaseUrl}/sso/key/generate?response_type=oauth_token&redirect_uri=${getCallbackUrl("litellm", uriScheme)}`
+}
