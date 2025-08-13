@@ -12,7 +12,7 @@ try {
 	console.warn("Failed to load environment variables:", e)
 }
 
-import { CloudService, UnifiedBridgeService } from "@roo-code/cloud"
+import { CloudService, ExtensionBridgeService } from "@roo-code/cloud"
 import { TelemetryService, PostHogTelemetryClient } from "@roo-code/telemetry"
 
 import "./utils/path" // Necessary to have access to String.prototype.toPosix.
@@ -141,7 +141,7 @@ export async function activate(context: vscode.ExtensionContext) {
 			return
 		}
 
-		UnifiedBridgeService.handleRemoteControlState(
+		ExtensionBridgeService.handleRemoteControlState(
 			userInfo,
 			contextProxy.getValue("remoteControlEnabled"),
 			{ ...bridgeConfig, provider },
@@ -280,7 +280,7 @@ export async function activate(context: vscode.ExtensionContext) {
 export async function deactivate() {
 	outputChannel.appendLine(`${Package.name} extension deactivated`)
 
-	const bridgeService = UnifiedBridgeService.getInstance()
+	const bridgeService = ExtensionBridgeService.getInstance()
 
 	if (bridgeService) {
 		await bridgeService.disconnect()

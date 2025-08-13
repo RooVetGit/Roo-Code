@@ -32,7 +32,7 @@ import {
 	isBlockingAsk,
 } from "@roo-code/types"
 import { TelemetryService } from "@roo-code/telemetry"
-import { CloudService, UnifiedBridgeService } from "@roo-code/cloud"
+import { CloudService, ExtensionBridgeService } from "@roo-code/cloud"
 
 // api
 import { ApiHandler, ApiHandlerCreateMessageMetadata, buildApiHandler } from "../../api"
@@ -240,7 +240,7 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 
 	// Task Bridge
 	enableTaskBridge: boolean
-	bridgeService: UnifiedBridgeService | null = null
+	bridgeService: ExtensionBridgeService | null = null
 
 	// Streaming
 	isWaitingForFirstChunk = false
@@ -981,7 +981,7 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 	private async startTask(task?: string, images?: string[]): Promise<void> {
 		if (this.enableTaskBridge) {
 			try {
-				this.bridgeService = this.bridgeService || UnifiedBridgeService.getInstance()
+				this.bridgeService = this.bridgeService || ExtensionBridgeService.getInstance()
 
 				if (this.bridgeService) {
 					await this.bridgeService.subscribeToTask(this)
@@ -1046,7 +1046,7 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 	private async resumeTaskFromHistory() {
 		if (this.enableTaskBridge) {
 			try {
-				this.bridgeService = this.bridgeService || UnifiedBridgeService.getInstance()
+				this.bridgeService = this.bridgeService || ExtensionBridgeService.getInstance()
 
 				if (this.bridgeService) {
 					await this.bridgeService.subscribeToTask(this)
