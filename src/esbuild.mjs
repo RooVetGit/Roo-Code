@@ -59,6 +59,14 @@ async function main() {
 						srcDir,
 						buildDir,
 					)
+					// Copy built-in commands to dist directory
+					copyPaths(
+						[
+							["assets/built-in-commands", "assets/built-in-commands"],
+						],
+						srcDir,
+						distDir,
+					)
 				})
 			},
 		},
