@@ -18,10 +18,8 @@ import { safeWriteJson } from "../../../utils/safeWriteJson"
 
 import { ClineProvider } from "../ClineProvider"
 
-// Mock setup must come before imports
+// Mock setup must come before imports.
 vi.mock("../../prompts/sections/custom-instructions")
-
-vi.mock("vscode")
 
 vi.mock("p-wait-for", () => ({
 	__esModule: true,
@@ -96,7 +94,7 @@ vi.mock("../../../services/browser/browserDiscovery", () => ({
 	testBrowserConnection: vi.fn(),
 }))
 
-// Remove duplicate mock - it's already defined below
+// Remove duplicate mock - it's already defined below.
 
 const mockAddCustomInstructions = vi.fn().mockResolvedValue("Combined instructions")
 
@@ -229,7 +227,6 @@ vi.mock("../../../integrations/misc/extract-text", () => ({
 	}),
 }))
 
-// Mock getModels for router model tests
 vi.mock("../../../api/providers/fetchers/modelCache", () => ({
 	getModels: vi.fn().mockResolvedValue({}),
 	flushModels: vi.fn(),
@@ -325,6 +322,10 @@ vi.mock("@roo-code/cloud", () => ({
 		},
 	},
 	getRooCodeApiUrl: vi.fn().mockReturnValue("https://app.roocode.com"),
+	ORGANIZATION_ALLOW_ALL: {
+		allowAll: true,
+		providers: {},
+	},
 }))
 
 afterAll(() => {
