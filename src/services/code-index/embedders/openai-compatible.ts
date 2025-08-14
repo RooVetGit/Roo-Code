@@ -82,7 +82,11 @@ export class OpenAICompatibleEmbedder implements IEmbedder {
 	 * @param model Optional model identifier
 	 * @returns Promise resolving to embedding response
 	 */
-	async createEmbeddings(texts: string[], model?: string): Promise<EmbeddingResponse> {
+	async createEmbeddings(
+		texts: string[],
+		model?: string,
+		options?: { dimension?: number },
+	): Promise<EmbeddingResponse> {
 		const modelToUse = model || this.defaultModelId
 
 		// Apply model-specific query prefix if required
@@ -150,7 +154,7 @@ export class OpenAICompatibleEmbedder implements IEmbedder {
 			}
 
 			if (currentBatch.length > 0) {
-				const batchResult = await this._embedBatchWithRetries(currentBatch, modelToUse)
+				const batchResult = await this._embedBatchWithRetries(currentBatch, modelToUse, options)
 				allEmbeddings.push(...batchResult.embeddings)
 				usage.promptTokens += batchResult.usage.promptTokens
 				usage.totalTokens += batchResult.usage.totalTokens
@@ -194,7 +198,18 @@ export class OpenAICompatibleEmbedder implements IEmbedder {
 		url: string,
 		batchTexts: string[],
 		model: string,
+		options?: { dimension?: number },
 	): Promise<OpenAIEmbeddingResponse> {
+		const body: Record<string, any> = {
+			input: batchTexts,
+			model: model,
+			encoding_format: "base64",
+		}
+
+		if (options?.dimension) {
+			body.dimensions = options.dimension
+		}
+
 		const response = await fetch(url, {
 			method: "POST",
 			headers: {
@@ -204,11 +219,7 @@ export class OpenAICompatibleEmbedder implements IEmbedder {
 				"api-key": this.apiKey,
 				Authorization: `Bearer ${this.apiKey}`,
 			},
-			body: JSON.stringify({
-				input: batchTexts,
-				model: model,
-				encoding_format: "base64",
-			}),
+			body: JSON.stringify(body),
 		})
 
 		if (!response || !response.ok) {
@@ -247,6 +258,7 @@ export class OpenAICompatibleEmbedder implements IEmbedder {
 	private async _embedBatchWithRetries(
 		batchTexts: string[],
 		model: string,
+		options?: { dimension?: number },
 	): Promise<{ embeddings: number[][]; usage: { promptTokens: number; totalTokens: number } }> {
 		// Use cached value for performance
 		const isFullUrl = this.isFullUrl
@@ -260,7 +272,7 @@ export class OpenAICompatibleEmbedder implements IEmbedder {
 
 				if (isFullUrl) {
 					// Use direct HTTP request for full endpoint URLs
-					response = await this.makeDirectEmbeddingRequest(this.baseUrl, batchTexts, model)
+					response = await this.makeDirectEmbeddingRequest(this.baseUrl, batchTexts, model, options)
 				} else {
 					// Use OpenAI SDK for base URLs
 					response = (await this.embeddingsClient.embeddings.create({
@@ -270,6 +282,7 @@ export class OpenAICompatibleEmbedder implements IEmbedder {
 						// when processing numeric arrays, which breaks compatibility with models using larger dimensions.
 						// By requesting base64 encoding, we bypass the package's parser and handle decoding ourselves.
 						encoding_format: "base64",
+						...(options?.dimension && { dimensions: options.dimension }),
 					})) as OpenAIEmbeddingResponse
 				}
 

@@ -9,7 +9,7 @@ export interface IEmbedder {
 	 * @param model Optional model ID to use for embeddings
 	 * @returns Promise resolving to an EmbeddingResponse
 	 */
-	createEmbeddings(texts: string[], model?: string): Promise<EmbeddingResponse>
+	createEmbeddings(texts: string[], model?: string, options?: { dimension?: number }): Promise<EmbeddingResponse>
 
 	/**
 	 * Validates the embedder configuration by testing connectivity and credentials.

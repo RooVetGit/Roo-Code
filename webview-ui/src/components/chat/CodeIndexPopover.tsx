@@ -73,7 +73,7 @@ interface LocalCodeIndexSettings {
 }
 
 // Validation schema for codebase index settings
-const createValidationSchema = (provider: EmbedderProvider, t: any) => {
+const createValidationSchema = (provider: EmbedderProvider, t: any, models: any) => {
 	const baseSchema = z.object({
 		codebaseIndexEnabled: z.boolean(),
 		codebaseIndexQdrantUrl: z
@@ -121,12 +121,52 @@ const createValidationSchema = (provider: EmbedderProvider, t: any) => {
 			})
 
 		case "gemini":
-			return baseSchema.extend({
-				codebaseIndexGeminiApiKey: z.string().min(1, t("settings:codeIndex.validation.geminiApiKeyRequired")),
-				codebaseIndexEmbedderModelId: z
-					.string()
-					.min(1, t("settings:codeIndex.validation.modelSelectionRequired")),
-			})
+			return baseSchema
+				.extend({
+					codebaseIndexGeminiApiKey: z
+						.string()
+						.min(1, t("settings:codeIndex.validation.geminiApiKeyRequired")),
+					codebaseIndexEmbedderModelId: z
+						.string()
+						.min(1, t("settings:codeIndex.validation.modelSelectionRequired")),
+					codebaseIndexEmbedderModelDimension: z.number().optional(),
+				})
+				.refine(
+					(data) => {
+						const model = models?.gemini?.[data.codebaseIndexEmbedderModelId || ""]
+						// If the model supports variable dimensions, a dimension must be provided.
+						if (model?.minDimension && !data.codebaseIndexEmbedderModelDimension) {
+							return false // Fails validation if dimension is required but not provided
+						}
+						return true
+					},
+					{
+						message: t("settings:codeIndex.validation.modelDimensionRequired"),
+						path: ["codebaseIndexEmbedderModelDimension"],
+					},
+				)
+				.refine(
+					(data) => {
+						const model = models?.gemini?.[data.codebaseIndexEmbedderModelId || ""]
+						if (model?.minDimension && model?.maxDimension && data.codebaseIndexEmbedderModelDimension) {
+							return (
+								data.codebaseIndexEmbedderModelDimension >= model.minDimension &&
+								data.codebaseIndexEmbedderModelDimension <= model.maxDimension
+							)
+						}
+						return true
+					},
+					(data) => {
+						const model = models?.gemini?.[data.codebaseIndexEmbedderModelId || ""]
+						return {
+							message: t("settings:codeIndex.validation.invalidDimension", {
+								min: model?.minDimension,
+								max: model?.maxDimension,
+							}),
+							path: ["codebaseIndexEmbedderModelDimension"],
+						}
+					},
+				)
 
 		case "mistral":
 			return baseSchema.extend({
@@ -193,21 +233,28 @@ export const CodeIndexPopover: React.FC<CodeIndexPopoverProps> = ({
 		setIndexingStatus(externalIndexingStatus)
 	}, [externalIndexingStatus])
 
-	// Initialize settings from global state
+	// Initializes the settings from the global state when it changes
 	useEffect(() => {
 		if (codebaseIndexConfig) {
+			const provider = codebaseIndexConfig.codebaseIndexEmbedderProvider || "openai"
+			const modelId = codebaseIndexConfig.codebaseIndexEmbedderModelId || ""
+			const modelProfile = codebaseIndexModels?.[provider]?.[modelId]
+
 			const settings = {
 				codebaseIndexEnabled: codebaseIndexConfig.codebaseIndexEnabled ?? true,
 				codebaseIndexQdrantUrl: codebaseIndexConfig.codebaseIndexQdrantUrl || "",
-				codebaseIndexEmbedderProvider: codebaseIndexConfig.codebaseIndexEmbedderProvider || "openai",
+				codebaseIndexEmbedderProvider: provider,
 				codebaseIndexEmbedderBaseUrl: codebaseIndexConfig.codebaseIndexEmbedderBaseUrl || "",
-				codebaseIndexEmbedderModelId: codebaseIndexConfig.codebaseIndexEmbedderModelId || "",
+				codebaseIndexEmbedderModelId: modelId,
+				// Determines the dimension exclusively from the global configuration and model profiles.
+				// The local 'currentSettings' state is no longer read here.
 				codebaseIndexEmbedderModelDimension:
-					codebaseIndexConfig.codebaseIndexEmbedderModelDimension || undefined,
+					codebaseIndexConfig.codebaseIndexEmbedderModelDimension || modelProfile?.defaultDimension,
 				codebaseIndexSearchMaxResults:
 					codebaseIndexConfig.codebaseIndexSearchMaxResults ?? CODEBASE_INDEX_DEFAULTS.DEFAULT_SEARCH_RESULTS,
 				codebaseIndexSearchMinScore:
 					codebaseIndexConfig.codebaseIndexSearchMinScore ?? CODEBASE_INDEX_DEFAULTS.DEFAULT_SEARCH_MIN_SCORE,
+				// Keys are initially set to empty and populated by a separate effect.
 				codeIndexOpenAiKey: "",
 				codeIndexQdrantApiKey: "",
 				codebaseIndexOpenAiCompatibleBaseUrl: codebaseIndexConfig.codebaseIndexOpenAiCompatibleBaseUrl || "",
@@ -218,10 +265,10 @@ export const CodeIndexPopover: React.FC<CodeIndexPopoverProps> = ({
 			setInitialSettings(settings)
 			setCurrentSettings(settings)
 
-			// Request secret status to check if secrets exist
+			// Requests the status of the secrets to display placeholders correctly.
 			vscode.postMessage({ type: "requestCodeIndexSecretStatus" })
 		}
-	}, [codebaseIndexConfig])
+	}, [codebaseIndexConfig, codebaseIndexModels]) // Dependencies are now correct and complete.
 
 	// Request initial indexing status
 	useEffect(() => {
@@ -380,9 +427,30 @@ export const CodeIndexPopover: React.FC<CodeIndexPopoverProps> = ({
 		}
 	}
 
+	// Handles model changes, ensuring dimension is reset correctly
+	const handleModelChange = (newModelId: string) => {
+		const provider = currentSettings.codebaseIndexEmbedderProvider
+		const modelProfile = codebaseIndexModels?.[provider]?.[newModelId]
+		const defaultDimension = modelProfile?.defaultDimension
+
+		setCurrentSettings((prev) => ({
+			...prev,
+			codebaseIndexEmbedderModelId: newModelId,
+			codebaseIndexEmbedderModelDimension: defaultDimension,
+		}))
+
+		// Clear validation errors for model and dimension
+		setFormErrors((prev) => {
+			const newErrors = { ...prev }
+			delete newErrors.codebaseIndexEmbedderModelId
+			delete newErrors.codebaseIndexEmbedderModelDimension
+			return newErrors
+		})
+	}
+
 	// Validation function
 	const validateSettings = (): boolean => {
-		const schema = createValidationSchema(currentSettings.codebaseIndexEmbedderProvider, t)
+		const schema = createValidationSchema(currentSettings.codebaseIndexEmbedderProvider, t, codebaseIndexModels)
 
 		// Prepare data for validation
 		const dataToValidate: any = {}
@@ -934,9 +1002,7 @@ export const CodeIndexPopover: React.FC<CodeIndexPopoverProps> = ({
 												</label>
 												<VSCodeDropdown
 													value={currentSettings.codebaseIndexEmbedderModelId}
-													onChange={(e: any) =>
-														updateSetting("codebaseIndexEmbedderModelId", e.target.value)
-													}
+													onChange={(e: any) => handleModelChange(e.target.value)}
 													className={cn("w-full", {
 														"border-red-500": formErrors.codebaseIndexEmbedderModelId,
 													})}>
@@ -966,6 +1032,51 @@ export const CodeIndexPopover: React.FC<CodeIndexPopoverProps> = ({
 													</p>
 												)}
 											</div>
+											{(() => {
+												const selectedModelProfile =
+													codebaseIndexModels?.gemini?.[
+														currentSettings.codebaseIndexEmbedderModelId
+													]
+
+												if (
+													selectedModelProfile?.minDimension &&
+													selectedModelProfile?.maxDimension
+												) {
+													return (
+														<div className="space-y-2">
+															<label htmlFor="gemini-dimension" className="text-sm">
+																{t("settings:codeIndex.modelDimensionLabel")}{" "}
+																{t("settings:codeIndex.dimensionRange", {
+																	min: selectedModelProfile.minDimension,
+																	max: selectedModelProfile.maxDimension,
+																})}
+															</label>
+															<VSCodeTextField
+																id="gemini-dimension"
+																value={
+																	currentSettings.codebaseIndexEmbedderModelDimension?.toString() ||
+																	""
+																}
+																onInput={(e: any) =>
+																	updateSetting(
+																		"codebaseIndexEmbedderModelDimension",
+																		e.target.value
+																			? parseInt(e.target.value, 10)
+																			: undefined,
+																	)
+																}
+																className="w-full"
+															/>
+															{formErrors.codebaseIndexEmbedderModelDimension && (
+																<p className="text-xs text-vscode-errorForeground mt-1 mb-0">
+																	{formErrors.codebaseIndexEmbedderModelDimension}
+																</p>
+															)}
+														</div>
+													)
+												}
+												return null
+											})()}
 										</>
 									)}
 
