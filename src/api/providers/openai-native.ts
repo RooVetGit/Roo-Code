@@ -28,6 +28,9 @@ export type OpenAiNativeModel = ReturnType<OpenAiNativeHandler["getModel"]>
 
 // GPT-5 specific types
 
+// Constants for model identification
+const GPT5_MODEL_PREFIX = "gpt-5"
+
 export class OpenAiNativeHandler extends BaseProvider implements SingleCompletionHandler {
 	protected options: ApiHandlerOptions
 	private client: OpenAI
@@ -155,7 +158,7 @@ export class OpenAiNativeHandler extends BaseProvider implements SingleCompletio
 		}
 
 		// Format input and capture continuity id
-		const { formattedInput, previousResponseId } = this.prepareStructuredInput(systemPrompt, messages, metadata)
+		const { formattedInput, previousResponseId } = this.prepareResponsesApiInput(systemPrompt, messages, metadata)
 		const requestPreviousResponseId = effectivePreviousResponseId || previousResponseId
 
 		// Create a new promise for this request's response ID
@@ -222,7 +225,9 @@ export class OpenAiNativeHandler extends BaseProvider implements SingleCompletio
 			...(model.info.supportsTemperature !== false && {
 				temperature:
 					this.options.modelTemperature ??
-					(model.id.startsWith("gpt-5") ? GPT5_DEFAULT_TEMPERATURE : OPENAI_NATIVE_DEFAULT_TEMPERATURE),
+					(model.id.startsWith(GPT5_MODEL_PREFIX)
+						? GPT5_DEFAULT_TEMPERATURE
+						: OPENAI_NATIVE_DEFAULT_TEMPERATURE),
 			}),
 			// Explicitly include the calculated max output tokens.
 			// Use the per-request reserved output computed by Roo (params.maxTokens from getModelParams).
@@ -261,7 +266,7 @@ export class OpenAiNativeHandler extends BaseProvider implements SingleCompletio
 			if (is400Error && requestBody.previous_response_id && isPreviousResponseError) {
 				// Log the error and retry without the previous_response_id
 				console.warn(
-					`[GPT-5] Previous response ID not found (${requestBody.previous_response_id}), retrying without it`,
+					`[Responses API] Previous response ID not found (${requestBody.previous_response_id}), retrying without it`,
 				)
 
 				// Remove the problematic previous_response_id and retry
@@ -301,8 +306,8 @@ export class OpenAiNativeHandler extends BaseProvider implements SingleCompletio
 		}
 	}
 
-	private formatStructuredInput(systemPrompt: string, messages: Anthropic.Messages.MessageParam[]): any {
-		// Format the conversation for the Responses API using structured format
+	private formatFullConversation(systemPrompt: string, messages: Anthropic.Messages.MessageParam[]): any {
+		// Format the entire conversation history for the Responses API using structured format
 		// This supports both text and images
 		const formattedMessages: any[] = []
 
@@ -526,7 +531,8 @@ export class OpenAiNativeHandler extends BaseProvider implements SingleCompletio
 	}
 
 	/**
-	 * Prepares the structured input and conversation continuity parameters for a Responses API call.
+	 * Prepares the input and conversation continuity parameters for a Responses API call.
+	 * Decides whether to send full conversation or just the latest message based on previousResponseId.
 	 *
 	 * - If a `previousResponseId` is available (either from metadata or the handler's state),
 	 *   it formats only the most recent user message for the input and returns the response ID
@@ -535,7 +541,7 @@ export class OpenAiNativeHandler extends BaseProvider implements SingleCompletio
 	 *
 	 * @returns An object containing the formatted input and the previous response ID (if used).
 	 */
-	private prepareStructuredInput(
+	private prepareResponsesApiInput(
 		systemPrompt: string,
 		messages: Anthropic.Messages.MessageParam[],
 		metadata?: ApiHandlerCreateMessageMetadata,
@@ -560,7 +566,7 @@ export class OpenAiNativeHandler extends BaseProvider implements SingleCompletio
 			return { formattedInput: [], previousResponseId }
 		} else {
 			// Format full conversation history (returns an array of structured messages)
-			const formattedInput = this.formatStructuredInput(systemPrompt, messages)
+			const formattedInput = this.formatFullConversation(systemPrompt, messages)
 			return { formattedInput }
 		}
 	}
@@ -1108,10 +1114,7 @@ export class OpenAiNativeHandler extends BaseProvider implements SingleCompletio
 		return info.reasoningEffort as ReasoningEffortWithMinimal | undefined
 	}
 
-	private isResponsesApiModel(modelId: string): boolean {
-		// ALL models now use the Responses API
-		return true
-	}
+	// Removed isResponsesApiModel method as ALL models now use the Responses API
 
 	override getModel() {
 		const modelId = this.options.apiModelId
@@ -1126,18 +1129,18 @@ export class OpenAiNativeHandler extends BaseProvider implements SingleCompletio
 			modelId: id,
 			model: info,
 			settings: this.options,
-			defaultTemperature: id.startsWith("gpt-5") ? GPT5_DEFAULT_TEMPERATURE : OPENAI_NATIVE_DEFAULT_TEMPERATURE,
+			defaultTemperature: id.startsWith(GPT5_MODEL_PREFIX)
+				? GPT5_DEFAULT_TEMPERATURE
+				: OPENAI_NATIVE_DEFAULT_TEMPERATURE,
 		})
 
-		// For models using the Responses API (GPT-5 and Codex Mini), ensure we support reasoning effort
-		if (this.isResponsesApiModel(id)) {
-			const effort =
-				(this.options.reasoningEffort as ReasoningEffortWithMinimal | undefined) ??
-				(info.reasoningEffort as ReasoningEffortWithMinimal | undefined)
+		// For models using the Responses API, ensure we support reasoning effort
+		const effort =
+			(this.options.reasoningEffort as ReasoningEffortWithMinimal | undefined) ??
+			(info.reasoningEffort as ReasoningEffortWithMinimal | undefined)
 
-			if (effort) {
-				;(params.reasoning as any) = { reasoning_effort: effort }
-			}
+		if (effort) {
+			;(params.reasoning as any) = { reasoning_effort: effort }
 		}
 
 		// The o3 models are named like "o3-mini-[reasoning-effort]", which are

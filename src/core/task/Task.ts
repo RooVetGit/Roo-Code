@@ -102,6 +102,7 @@ import { getMessagesSinceLastSummary, summarizeConversation } from "../condense"
 import { maybeRemoveImageBlocks } from "../../api/transform/image-cleaning"
 import { restoreTodoListForTask } from "../tools/updateTodoListTool"
 import { AutoApprovalHandler } from "./AutoApprovalHandler"
+import { Gpt5Metadata, ClineMessageWithMetadata } from "./types"
 
 const MAX_EXPONENTIAL_BACKOFF_SECONDS = 600 // 10 minutes
 const DEFAULT_USAGE_COLLECTION_TIMEOUT_MS = 5000 // 5 seconds
@@ -773,13 +774,8 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 			}
 		}
 
-		console.log(
-			`[Task#${this.taskId}] pWaitFor askResponse(${type}) -> blocking (isStatusMutable = ${isStatusMutable}, statusMutationTimeouts = ${statusMutationTimeouts.length})`,
-		)
-
+		// Wait for askResponse to be set
 		await pWaitFor(() => this.askResponse !== undefined || this.lastMessageTs !== askTs, { interval: 100 })
-
-		console.log(`[Task#${this.taskId}] pWaitFor askResponse(${type}) -> unblocked (${this.askResponse})`)
 
 		if (this.lastMessageTs !== askTs) {
 			// Could happen if we send multiple asks in a row i.e. with
@@ -1086,7 +1082,7 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 
 		let imageBlocks: Anthropic.ImageBlockParam[] = formatResponse.imageBlocks(images)
 
-		console.log(`[subtasks] task ${this.taskId}.${this.instanceId} starting`)
+		// Task starting
 
 		await this.initiateTaskLoop([
 			{
@@ -1121,7 +1117,7 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 	}
 
 	private async resumeTaskFromHistory() {
-		console.log(`[Task#${this.taskId}] Resuming task from history`)
+		// Resuming task from history
 
 		if (this.enableTaskBridge) {
 			try {
@@ -1141,10 +1137,13 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 
 		// Check for any stored GPT-5 response IDs in the message history
 		const gpt5Messages = modifiedClineMessages.filter(
-			(m) => m.type === "say" && (m as any).say === "text" && (m as any).metadata?.gpt5?.previous_response_id,
+			(m) =>
+				m.type === "say" &&
+				m.say === "text" &&
+				(m as ClineMessageWithMetadata).metadata?.gpt5?.previous_response_id,
 		)
 		if (gpt5Messages.length > 0) {
-			const lastGpt5Message = gpt5Messages[gpt5Messages.length - 1] as any
+			const lastGpt5Message = gpt5Messages[gpt5Messages.length - 1] as ClineMessage & ClineMessageWithMetadata
 		}
 
 		// Remove any resume messages that may have been added before
@@ -1376,13 +1375,13 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 
 		await this.overwriteApiConversationHistory(modifiedApiConversationHistory)
 
-		console.log(`[subtasks] task ${this.taskId}.${this.instanceId} resuming from history item`)
+		// Task resuming from history item
 
 		await this.initiateTaskLoop(newUserContent)
 	}
 
 	public dispose(): void {
-		console.log(`[Task] disposing task ${this.taskId}.${this.instanceId}`)
+		// Disposing task
 
 		// Remove all event listeners to prevent memory leaks
 		try {
@@ -1452,7 +1451,7 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 	}
 
 	public async abortTask(isAbandoned = false) {
-		console.log(`[subtasks] aborting task ${this.taskId}.${this.instanceId}`)
+		// Aborting task
 
 		// Will stop any autonomously running promises.
 		if (isAbandoned) {
@@ -2394,18 +2393,16 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 					this.clineMessages,
 					(m) =>
 						m.type === "say" &&
-						(m as any).say === "text" &&
-						(m as any).metadata?.gpt5?.previous_response_id,
+						m.say === "text" &&
+						!!(m as ClineMessageWithMetadata).metadata?.gpt5?.previous_response_id,
 				)
 				if (idx !== -1) {
 					// Use the previous_response_id from the last assistant message for this request
-					previousResponseId = ((this.clineMessages[idx] as any).metadata.gpt5.previous_response_id ||
-						undefined) as string | undefined
+					const message = this.clineMessages[idx] as ClineMessage & ClineMessageWithMetadata
+					previousResponseId = message.metadata?.gpt5?.previous_response_id
 				}
 			} else if (this.skipPrevResponseIdOnce) {
-				console.log(
-					`[Task#${this.taskId}] Skipping previous_response_id due to recent condense operation - will send full conversation context`,
-				)
+				// Skipping previous_response_id due to recent condense operation - will send full conversation context
 			}
 		} catch (error) {
 			console.error(`[Task#${this.taskId}] Error retrieving GPT-5 response ID:`, error)
@@ -2581,17 +2578,20 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 			const lastResponseId: string | undefined = (this.api as any)?.getLastResponseId?.()
 			const idx = findLastIndex(
 				this.clineMessages,
-				(m) => m.type === "say" && (m as any).say === "text" && m.partial !== true,
+				(m) => m.type === "say" && m.say === "text" && m.partial !== true,
 			)
 			if (idx !== -1) {
-				const msg = this.clineMessages[idx] as any
-				msg.metadata = msg.metadata ?? {}
-				msg.metadata.gpt5 = {
+				const msg = this.clineMessages[idx] as ClineMessage & ClineMessageWithMetadata
+				if (!msg.metadata) {
+					msg.metadata = {}
+				}
+				const gpt5Metadata: Gpt5Metadata = {
 					...(msg.metadata.gpt5 ?? {}),
 					previous_response_id: lastResponseId,
 					instructions: this.lastUsedInstructions,
 					reasoning_summary: (reasoningMessage ?? "").trim() || undefined,
 				}
+				msg.metadata.gpt5 = gpt5Metadata
 			}
 		} catch (error) {
 			console.error(`[Task#${this.taskId}] Error persisting GPT-5 metadata:`, error)
