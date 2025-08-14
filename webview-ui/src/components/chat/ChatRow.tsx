@@ -479,13 +479,13 @@ export const ChatRowContent = ({
 							{tool.path ? (
 								<Trans
 									i18nKey="chat:codebaseSearch.wantsToSearchWithPath"
-									components={{ code: <code></code> }}
+									components={{ code: <code /> }}
 									values={{ query: tool.query, path: tool.path }}
 								/>
 							) : (
 								<Trans
 									i18nKey="chat:codebaseSearch.wantsToSearch"
-									components={{ code: <code></code> }}
+									components={{ code: <code /> }}
 									values={{ query: tool.query }}
 								/>
 							)}
@@ -696,7 +696,7 @@ export const ChatRowContent = ({
 												? "chat:directoryOperations.wantsToSearchOutsideWorkspace"
 												: "chat:directoryOperations.wantsToSearch"
 										}
-										components={{ code: <code>{tool.regex}</code> }}
+										components={{ code: <code /> }}
 										values={{ regex: tool.regex }}
 									/>
 								) : (
@@ -706,7 +706,7 @@ export const ChatRowContent = ({
 												? "chat:directoryOperations.didSearchOutsideWorkspace"
 												: "chat:directoryOperations.didSearch"
 										}
-										components={{ code: <code>{tool.regex}</code> }}
+										components={{ code: <code /> }}
 										values={{ regex: tool.regex }}
 									/>
 								)}
@@ -732,13 +732,13 @@ export const ChatRowContent = ({
 										{tool.reason ? (
 											<Trans
 												i18nKey="chat:modes.wantsToSwitchWithReason"
-												components={{ code: <code>{tool.mode}</code> }}
+												components={{ code: <code /> }}
 												values={{ mode: tool.mode, reason: tool.reason }}
 											/>
 										) : (
 											<Trans
 												i18nKey="chat:modes.wantsToSwitch"
-												components={{ code: <code>{tool.mode}</code> }}
+												components={{ code: <code /> }}
 												values={{ mode: tool.mode }}
 											/>
 										)}
@@ -748,13 +748,13 @@ export const ChatRowContent = ({
 										{tool.reason ? (
 											<Trans
 												i18nKey="chat:modes.didSwitchWithReason"
-												components={{ code: <code>{tool.mode}</code> }}
+												components={{ code: <code /> }}
 												values={{ mode: tool.mode, reason: tool.reason }}
 											/>
 										) : (
 											<Trans
 												i18nKey="chat:modes.didSwitch"
-												components={{ code: <code>{tool.mode}</code> }}
+												components={{ code: <code /> }}
 												values={{ mode: tool.mode }}
 											/>
 										)}
@@ -772,7 +772,7 @@ export const ChatRowContent = ({
 							<span style={{ fontWeight: "bold" }}>
 								<Trans
 									i18nKey="chat:subtasks.wantsToCreate"
-									components={{ code: <code>{tool.mode}</code> }}
+									components={{ code: <code /> }}
 									values={{ mode: tool.mode }}
 								/>
 							</span>
