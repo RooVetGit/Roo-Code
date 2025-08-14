@@ -132,13 +132,17 @@ export async function applyDiffTool(
 					let diffContent: string
 					let startLine: number | undefined
 
-					diffContent = diff.content
+					// Ensure content is a string before storing it
+					diffContent = typeof diff.content === "string" ? diff.content : ""
 					startLine = diff.start_line ? parseInt(diff.start_line) : undefined
 
-					operationsMap[filePath].diff.push({
-						content: diffContent,
-						startLine,
-					})
+					// Only add to operations if we have valid content
+					if (diffContent) {
+						operationsMap[filePath].diff.push({
+							content: diffContent,
+							startLine,
+						})
+					}
 				}
 			}
 		} catch (error) {
@@ -656,11 +660,9 @@ ${errorDetails ? `\nTechnical details:\n${errorDetails}\n` : ""}
 		let totalSearchBlocks = 0
 		for (const operation of operations) {
 			for (const diffItem of operation.diff) {
-				// Ensure content is a string before calling match
-				if (typeof diffItem.content === "string") {
-					const searchBlocks = (diffItem.content.match(/<<<<<<< SEARCH/g) || []).length
-					totalSearchBlocks += searchBlocks
-				}
+				// Content is guaranteed to be a string due to early validation
+				const searchBlocks = (diffItem.content.match(/<<<<<<< SEARCH/g) || []).length
+				totalSearchBlocks += searchBlocks
 			}
 		}
 

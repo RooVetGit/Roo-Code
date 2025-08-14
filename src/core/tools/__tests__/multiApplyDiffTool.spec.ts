@@ -91,6 +91,56 @@ describe("multiApplyDiffTool", () => {
 		;(pathUtils.getReadablePath as any).mockImplementation((cwd: string, path: string) => path)
 	})
 
+	describe("Early content validation", () => {
+		it("should filter out non-string content at parse time", async () => {
+			mockBlock = {
+				params: {
+					args: `<file>
+						<path>test.ts</path>
+						<diff>
+							<content>valid string content</content>
+						</diff>
+					</file>`,
+				},
+				partial: false,
+			}
+
+			// Mock parseXml to return mixed content types
+			const parseXml = await import("../../../utils/xml")
+			;(parseXml.parseXml as any).mockReturnValue({
+				file: {
+					path: "test.ts",
+					diff: [
+						{ content: "<<<<<<< SEARCH\ntest\n=======\nreplaced\n>>>>>>> REPLACE" },
+						{ content: null },
+						{ content: undefined },
+						{ content: 42 },
+						{ content: "" }, // Empty string should also be filtered
+						{ content: "<<<<<<< SEARCH\nmore\n=======\nchanges\n>>>>>>> REPLACE" },
+					],
+				},
+			})
+
+			await applyDiffTool(
+				mockCline,
+				mockBlock,
+				mockAskApproval,
+				mockHandleError,
+				mockPushToolResult,
+				mockRemoveClosingTag,
+			)
+
+			// Should complete without error and only process valid string content
+			expect(mockPushToolResult).toHaveBeenCalled()
+			expect(mockHandleError).not.toHaveBeenCalled()
+
+			// Verify that only valid diffs were processed
+			const resultCall = mockPushToolResult.mock.calls[0][0]
+			// Should not include the single block notice since we have 2 valid blocks
+			expect(resultCall).not.toContain("Making multiple related changes")
+		})
+	})
+
 	describe("SEARCH block counting with non-string content", () => {
 		it("should handle diffItem.content being undefined", async () => {
 			mockBlock = {
