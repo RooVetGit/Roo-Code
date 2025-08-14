@@ -22,6 +22,15 @@ import { getCommand, type Command } from "../../services/command/commands"
 
 import { t } from "../../i18n"
 
+import {
+	isSupportedImageFormat,
+	validateImageForProcessing,
+	processImageFile,
+	ImageMemoryTracker,
+	DEFAULT_MAX_IMAGE_FILE_SIZE_MB,
+	DEFAULT_MAX_TOTAL_IMAGE_SIZE_MB,
+} from "../tools/helpers/imageHelpers"
+
 function getUrlErrorMessage(error: unknown): string {
 	const errorMessage = error instanceof Error ? error.message : String(error)
 
@@ -87,9 +96,14 @@ export async function parseMentions(
 	includeDiagnosticMessages: boolean = true,
 	maxDiagnosticMessages: number = 50,
 	maxReadFileLine?: number,
-): Promise<string> {
+	supportsImages: boolean = false,
+	maxImageFileSize: number = DEFAULT_MAX_IMAGE_FILE_SIZE_MB,
+	maxTotalImageSize: number = DEFAULT_MAX_TOTAL_IMAGE_SIZE_MB,
+): Promise<string | { text: string; images: string[] }> {
 	const mentions: Set<string> = new Set()
 	const validCommands: Map<string, Command> = new Map()
+	const imageDataUrls: string[] = []
+	const imageMemoryTracker = new ImageMemoryTracker()
 
 	// First pass: check which command mentions exist and cache the results
 	const commandMatches = Array.from(text.matchAll(commandRegexGlobal))
@@ -129,6 +143,11 @@ export async function parseMentions(
 			return `'${mention}' (see below for site content)`
 		} else if (mention.startsWith("/")) {
 			const mentionPath = mention.slice(1)
+			// Check if it's an image file
+			const fileExtension = path.extname(mentionPath).toLowerCase()
+			if (isSupportedImageFormat(fileExtension)) {
+				return `'${mentionPath}' (see below for image)`
+			}
 			return mentionPath.endsWith("/")
 				? `'${mentionPath}' (see below for folder content)`
 				: `'${mentionPath}' (see below for file content)`
@@ -187,27 +206,72 @@ export async function parseMentions(
 			parsedText += `\n\n<url_content url="${mention}">\n${result}\n</url_content>`
 		} else if (mention.startsWith("/")) {
 			const mentionPath = mention.slice(1)
-			try {
-				const content = await getFileOrFolderContent(
-					mentionPath,
-					cwd,
-					rooIgnoreController,
-					showRooIgnoredFiles,
-					maxReadFileLine,
-				)
-				if (mention.endsWith("/")) {
-					parsedText += `\n\n<folder_content path="${mentionPath}">\n${content}\n</folder_content>`
-				} else {
-					parsedText += `\n\n<file_content path="${mentionPath}">\n${content}\n</file_content>`
-					if (fileContextTracker) {
-						await fileContextTracker.trackFileContext(mentionPath, "file_mentioned")
+			const fileExtension = path.extname(mentionPath).toLowerCase()
+
+			// Check if it's an image file
+			if (isSupportedImageFormat(fileExtension)) {
+				try {
+					const unescapedPath = unescapeSpaces(mentionPath)
+					const absPath = path.resolve(cwd, unescapedPath)
+
+					// Validate access
+					if (rooIgnoreController && !rooIgnoreController.validateAccess(absPath)) {
+						parsedText += `\n\n<image_content path="${mentionPath}">\n(Image ${mentionPath} is ignored by .rooignore)\n</image_content>`
+					} else {
+						// Validate image for processing
+						const validationResult = await validateImageForProcessing(
+							absPath,
+							supportsImages,
+							maxImageFileSize,
+							maxTotalImageSize,
+							imageMemoryTracker.getTotalMemoryUsed(),
+						)
+
+						if (!validationResult.isValid) {
+							parsedText += `\n\n<image_content path="${mentionPath}">\n${validationResult.notice}\n</image_content>`
+						} else {
+							// Process the image
+							const imageResult = await processImageFile(absPath)
+							imageMemoryTracker.addMemoryUsage(imageResult.sizeInMB)
+
+							// Add image data URL to the array
+							imageDataUrls.push(imageResult.dataUrl)
+
+							// Add reference in text
+							parsedText += `\n\n<image_content path="${mentionPath}">\n${imageResult.notice}\n</image_content>`
+
+							if (fileContextTracker) {
+								await fileContextTracker.trackFileContext(mentionPath, "file_mentioned")
+							}
+						}
 					}
+				} catch (error) {
+					parsedText += `\n\n<image_content path="${mentionPath}">\nError fetching image: ${error.message}\n</image_content>`
 				}
-			} catch (error) {
-				if (mention.endsWith("/")) {
-					parsedText += `\n\n<folder_content path="${mentionPath}">\nError fetching content: ${error.message}\n</folder_content>`
-				} else {
-					parsedText += `\n\n<file_content path="${mentionPath}">\nError fetching content: ${error.message}\n</file_content>`
+			} else {
+				// Handle regular files and folders
+				try {
+					const content = await getFileOrFolderContent(
+						mentionPath,
+						cwd,
+						rooIgnoreController,
+						showRooIgnoredFiles,
+						maxReadFileLine,
+					)
+					if (mention.endsWith("/")) {
+						parsedText += `\n\n<folder_content path="${mentionPath}">\n${content}\n</folder_content>`
+					} else {
+						parsedText += `\n\n<file_content path="${mentionPath}">\n${content}\n</file_content>`
+						if (fileContextTracker) {
+							await fileContextTracker.trackFileContext(mentionPath, "file_mentioned")
+						}
+					}
+				} catch (error) {
+					if (mention.endsWith("/")) {
+						parsedText += `\n\n<folder_content path="${mentionPath}">\nError fetching content: ${error.message}\n</folder_content>`
+					} else {
+						parsedText += `\n\n<file_content path="${mentionPath}">\nError fetching content: ${error.message}\n</file_content>`
+					}
 				}
 			}
 		} else if (mention === "problems") {
@@ -263,7 +327,12 @@ export async function parseMentions(
 		}
 	}
 
-	return parsedText
+	// Maintain backward compatibility: if no images were found, return just the string
+	// Otherwise, return the new format with text and images
+	if (imageDataUrls.length === 0) {
+		return parsedText
+	}
+	return { text: parsedText, images: imageDataUrls }
 }
 
 async function getFileOrFolderContent(

@@ -73,14 +73,25 @@ export interface ImageProcessingResult {
  * Reads an image file and returns both the data URL and buffer
  */
 export async function readImageAsDataUrlWithBuffer(filePath: string): Promise<{ dataUrl: string; buffer: Buffer }> {
-	const fileBuffer = await fs.readFile(filePath)
-	const base64 = fileBuffer.toString("base64")
-	const ext = path.extname(filePath).toLowerCase()
+	try {
+		const fileBuffer = await fs.readFile(filePath)
 
-	const mimeType = IMAGE_MIME_TYPES[ext] || "image/png"
-	const dataUrl = `data:${mimeType};base64,${base64}`
+		// Basic validation to check if the buffer is not empty
+		if (!fileBuffer || fileBuffer.length === 0) {
+			throw new Error("Image file is empty or corrupted")
+		}
 
-	return { dataUrl, buffer: fileBuffer }
+		const base64 = fileBuffer.toString("base64")
+		const ext = path.extname(filePath).toLowerCase()
+
+		const mimeType = IMAGE_MIME_TYPES[ext] || "image/png"
+		const dataUrl = `data:${mimeType};base64,${base64}`
+
+		return { dataUrl, buffer: fileBuffer }
+	} catch (error) {
+		// Re-throw with more context
+		throw new Error(`Failed to read image file: ${error.message}`)
+	}
 }
 
 /**
@@ -133,7 +144,11 @@ export async function validateImageForProcessing(
 		return {
 			isValid: false,
 			reason: "memory_limit",
-			notice: `Image skipped to avoid size limit (${maxTotalImageSize}MB). Current: ${currentMemoryFormatted} + this file: ${fileMemoryFormatted}. Try fewer or smaller images.`,
+			notice: t("tools:readFile.imageTotalSizeExceeded", {
+				maxTotal: maxTotalImageSize,
+				current: currentMemoryFormatted,
+				fileSize: fileMemoryFormatted,
+			}),
 			sizeInMB: imageSizeInMB,
 		}
 	}
@@ -148,18 +163,47 @@ export async function validateImageForProcessing(
  * Processes an image file and returns the result
  */
 export async function processImageFile(fullPath: string): Promise<ImageProcessingResult> {
-	const imageStats = await fs.stat(fullPath)
-	const { dataUrl, buffer } = await readImageAsDataUrlWithBuffer(fullPath)
-	const imageSizeInKB = Math.round(imageStats.size / 1024)
-	const imageSizeInMB = imageStats.size / (1024 * 1024)
-	const noticeText = t("tools:readFile.imageWithSize", { size: imageSizeInKB })
+	try {
+		const imageStats = await fs.stat(fullPath)
 
-	return {
-		dataUrl,
-		buffer,
-		sizeInKB: imageSizeInKB,
-		sizeInMB: imageSizeInMB,
-		notice: noticeText,
+		// Validate file exists and is not empty
+		if (!imageStats.isFile()) {
+			throw new Error("Path does not point to a file")
+		}
+
+		if (imageStats.size === 0) {
+			throw new Error("Image file is empty")
+		}
+
+		const { dataUrl, buffer } = await readImageAsDataUrlWithBuffer(fullPath)
+
+		// Additional validation on the buffer
+		if (!buffer || buffer.length === 0) {
+			throw new Error("Failed to read image data")
+		}
+
+		const imageSizeInKB = Math.round(imageStats.size / 1024)
+		const imageSizeInMB = imageStats.size / (1024 * 1024)
+		const noticeText = t("tools:readFile.imageWithSize", { size: imageSizeInKB })
+
+		return {
+			dataUrl,
+			buffer,
+			sizeInKB: imageSizeInKB,
+			sizeInMB: imageSizeInMB,
+			notice: noticeText,
+		}
+	} catch (error) {
+		// Provide more context about the error
+		if (error.code === "ENOENT") {
+			throw new Error(`Image file not found: ${fullPath}`)
+		} else if (error.code === "EACCES") {
+			throw new Error(`Permission denied accessing image file: ${fullPath}`)
+		} else if (error.message.includes("corrupted")) {
+			throw new Error(`Image file appears to be corrupted: ${fullPath}`)
+		}
+		// Re-throw with original message if not a known error
+		throw error
 	}
 }
 
