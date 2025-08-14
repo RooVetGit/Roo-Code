@@ -1,8 +1,8 @@
 import { spawn, execSync, type ChildProcess } from "child_process"
 import * as path from "path"
 import * as fs from "fs"
-import { watch, type FSWatcher } from "fs"
 import { fileURLToPath } from "url"
+import { glob } from "glob"
 
 // @ts-expect-error - TS1470: We only run this script with tsx so it will never
 // compile to CJS and it's safe to ignore this tsc error.
@@ -13,8 +13,13 @@ interface PackageConfig {
 	readonly name: string
 	readonly sourcePath: string
 	readonly targetPaths: readonly string[]
+	readonly replacePath?: string
 	readonly npmPath: string
 	readonly watchCommand?: string
+	readonly watchOutput?: {
+		readonly start: string[]
+		readonly stop: string[]
+	}
 }
 
 interface Config {
@@ -23,7 +28,6 @@ interface Config {
 
 interface WatcherResult {
 	child: ChildProcess
-	watcher: FSWatcher | null
 }
 
 interface NpmPackage {
@@ -52,9 +56,14 @@ const config: Config = {
 		{
 			name: "@roo-code/cloud",
 			sourcePath: "../Roo-Code-Cloud/packages/sdk",
-			targetPaths: ["src/node_modules/@roo-code/cloud"],
+			targetPaths: ["src/node_modules/@roo-code/cloud"] as const,
+			replacePath: "node_modules/.pnpm/@roo-code+cloud*",
 			npmPath: "npm",
 			watchCommand: "pnpm build:development:watch",
+			watchOutput: {
+				start: ["CLI Building", "CLI Change detected"],
+				stop: ["DTS ⚡️ Build success"],
+			},
 		},
 	],
 } as const
@@ -177,7 +186,6 @@ function linkPackage(pkg: PackageConfig): void {
 
 		const linkSource = pkg.npmPath ? path.join(sourcePath, pkg.npmPath) : sourcePath
 		copyRecursiveSync(linkSource, targetPath)
-		console.log(`📦 Copied ${pkg.name} → ${currentTargetPath}`)
 	}
 }
 
@@ -187,9 +195,7 @@ function unlinkPackage(pkg: PackageConfig): void {
 
 		if (pathExists(targetPath)) {
 			fs.rmSync(targetPath, { recursive: true, force: true })
-			const shortPath = currentTargetPath.replace(/node_modules\/@roo-code\/types$/, "")
-
-			console.log(`🗑️  Removed ${pkg.name} from ${shortPath}`)
+			console.log(`🗑️  Removed ${pkg.name} from ${currentTargetPath}`)
 		}
 	}
 }
@@ -206,7 +212,7 @@ function startWatch(pkg: PackageConfig): WatcherResult {
 		throw new Error(`Invalid watch command for ${pkg.name}`)
 	}
 
-	console.log(`🔨 Building ${pkg.name}...`)
+	console.log(`Watching for changes to ${pkg.sourcePath} with ${cmd} ${args.join(" ")}`)
 
 	const child = spawn(cmd, args, {
 		cwd: path.resolve(__dirname, "..", pkg.sourcePath),
@@ -214,89 +220,58 @@ function startWatch(pkg: PackageConfig): WatcherResult {
 		shell: true,
 	})
 
-	let buildStartTime = Date.now()
-	let isFirstBuild = true
+	let debounceTimer: NodeJS.Timeout | null = null
+
+	const DEBOUNCE_DELAY = 500
 
 	if (child.stdout) {
 		child.stdout.on("data", (data: Buffer) => {
 			const output = data.toString()
 
-			if (
-				output.includes("built successfully") ||
-				output.includes("Build completed") ||
-				output.includes("✅") ||
-				output.includes("Watching for file changes")
-			) {
-				const buildTime = ((Date.now() - buildStartTime) / 1000).toFixed(1)
+			const isStarting = pkg.watchOutput?.start.some((start) => output.includes(start))
 
-				if (isFirstBuild) {
-					console.log(`✅ Initial build complete (${buildTime}s)`)
-					isFirstBuild = false
-				} else {
-					console.log(`✅ Rebuild complete (${buildTime}s)`)
+			const isDone = pkg.watchOutput?.stop.some((stop) => output.includes(stop))
+
+			if (isStarting) {
+				console.log(`🔨 Building ${pkg.name}...`)
+
+				if (debounceTimer) {
+					clearTimeout(debounceTimer)
+					debounceTimer = null
 				}
 			}
 
-			if (output.includes("Building") || output.includes("Rebuilding")) {
-				buildStartTime = Date.now()
+			if (isDone) {
+				console.log(`✅ Built ${pkg.name}`)
 
-				if (!isFirstBuild) {
-					console.log(`🔨 Rebuilding ${pkg.name}...`)
+				if (debounceTimer) {
+					clearTimeout(debounceTimer)
 				}
+
+				debounceTimer = setTimeout(() => {
+					linkPackage(pkg)
+
+					console.log(`📋 Copied ${pkg.name} to ${pkg.targetPaths.length} paths\n`)
+
+					debounceTimer = null
+				}, DEBOUNCE_DELAY)
 			}
 		})
 	}
 
 	if (child.stderr) {
 		child.stderr.on("data", (data: Buffer) => {
-			const error = data.toString()
-
-			if (error.includes("error") || error.includes("Error")) {
-				console.error(`❌ Build error in ${pkg.name}:`, error)
-			}
+			console.log(`❌ "${data.toString()}"`)
 		})
 	}
 
-	const sourcePath = path.resolve(__dirname, "..", pkg.sourcePath)
-
-	const watchPath = pkg.npmPath ? path.join(sourcePath, pkg.npmPath, "dist") : path.join(sourcePath, "dist")
-
-	let debounceTimer: ReturnType<typeof setTimeout> | null = null
-
-	const watcher: FSWatcher | null = pathExists(watchPath)
-		? watch(watchPath, { recursive: true }, (_eventType, _filename) => {
-				if (debounceTimer) {
-					clearTimeout(debounceTimer)
-				}
-
-				// Wait 500ms after last change before copying.
-				debounceTimer = setTimeout(() => linkPackage(pkg), 500)
-			})
-		: null
-
-	if (!watcher && !pathExists(watchPath)) {
-		console.log(`⏳ Waiting for initial build output...`)
-
-		const checkInterval = setInterval(() => {
-			if (pathExists(watchPath)) {
-				clearInterval(checkInterval)
-				console.log(`✅ Build output ready, watching for changes`)
-				return startWatch(pkg)
-			}
-		}, 1000)
-	}
-
-	return { child, watcher }
+	return { child }
 }
 
 function main(): void {
 	if (unlink) {
 		packages.forEach(unlinkPackage)
-	} else {
-		packages.forEach((pkg) => linkPackage(pkg))
-	}
 
-	if (unlink && packages.length > 0) {
 		console.log("\n📦 Restoring npm packages...")
 
 		try {
@@ -307,33 +282,57 @@ function main(): void {
 
 			console.log("   Run 'pnpm install' manually if needed")
 		}
-	}
+	} else {
+		packages.forEach((pkg) => {
+			linkPackage(pkg)
 
-	if (!unlink && watchMode) {
-		const packagesWithWatch = packages.filter(
-			(pkg): pkg is PackageConfig & { watchCommand: string } => pkg.watchCommand !== undefined,
-		)
+			if (pkg.replacePath) {
+				const replacePattern = path.resolve(__dirname, "..", pkg.replacePath)
 
-		const watchers = packagesWithWatch.map(startWatch)
+				try {
+					const matchedPaths = glob.sync(replacePattern)
 
-		if (watchers.length > 0) {
-			process.on("SIGINT", () => {
-				console.log("\n👋 Stopping watchers...")
-
-				watchers.forEach((w) => {
-					if (w.child) {
-						w.child.kill()
+					if (matchedPaths.length > 0) {
+						matchedPaths.forEach((matchedPath: string) => {
+							if (pathExists(matchedPath)) {
+								fs.rmSync(matchedPath, { recursive: true, force: true })
+								console.log(`🗑️  Removed ${pkg.name} from ${matchedPath}`)
+							}
+						})
+					} else {
+						if (pathExists(replacePattern)) {
+							fs.rmSync(replacePattern, { recursive: true, force: true })
+							console.log(`🗑️  Removed ${pkg.name} from ${replacePattern}`)
+						}
 					}
+				} catch (error) {
+					console.error(
+						`❌ Error processing replace path: ${error instanceof Error ? error.message : String(error)}`,
+					)
+				}
+			}
+		})
 
-					if (w.watcher) {
-						w.watcher.close()
-					}
+		if (watchMode) {
+			const packagesWithWatch = packages.filter(
+				(pkg): pkg is PackageConfig & { watchCommand: string } => pkg.watchCommand !== undefined,
+			)
+
+			const watchers = packagesWithWatch.map(startWatch)
+
+			if (watchers.length > 0) {
+				process.on("SIGINT", () => {
+					console.log("\n👋 Stopping watchers...")
+
+					watchers.forEach((w) => {
+						if (w.child) {
+							w.child.kill()
+						}
+					})
+
+					process.exit(0)
 				})
-
-				process.exit(0)
-			})
-
-			console.log("\n👀 Watching for changes (Ctrl+C to stop)\n")
+			}
 		}
 	}
 }
