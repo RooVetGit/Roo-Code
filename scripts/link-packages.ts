@@ -13,7 +13,7 @@ interface PackageConfig {
 	readonly name: string
 	readonly sourcePath: string
 	readonly targetPaths: readonly string[]
-	readonly npmPath?: string
+	readonly npmPath: string
 	readonly watchCommand?: string
 }
 
@@ -107,57 +107,55 @@ function copyRecursiveSync(src: string, dest: string): void {
 	}
 }
 
-function generateNpmPackageJson(sourcePath: string, npmPath: string): void {
+function generateNpmPackageJson(sourcePath: string, npmPath: string): string {
 	const npmDir = path.join(sourcePath, npmPath)
 	const npmPackagePath = path.join(npmDir, "package.json")
 	const npmMetadataPath = path.join(npmDir, "package.metadata.json")
 	const monorepoPackagePath = path.join(sourcePath, "package.json")
 
 	if (pathExists(npmPackagePath)) {
-		return
+		return npmPackagePath
 	}
 
 	if (!pathExists(npmMetadataPath)) {
-		return
+		throw new Error(`No package.metadata.json found in ${npmDir}`)
 	}
 
-	try {
-		const monorepoPackageContent = fs.readFileSync(monorepoPackagePath, "utf8")
-		const monorepoPackage = JSON.parse(monorepoPackageContent) as {
-			dependencies?: Record<string, string>
-		}
+	const monorepoPackageContent = fs.readFileSync(monorepoPackagePath, "utf8")
 
-		const npmMetadataContent = fs.readFileSync(npmMetadataPath, "utf8")
-		const npmMetadata = JSON.parse(npmMetadataContent) as Partial<NpmPackage>
+	const monorepoPackage = JSON.parse(monorepoPackageContent) as {
+		dependencies?: Record<string, string>
+	}
 
-		const npmPackage: NpmPackage = {
-			...npmMetadata,
-			type: "module",
-			dependencies: monorepoPackage.dependencies || {},
-			main: "./dist/index.cjs",
-			module: "./dist/index.js",
-			types: "./dist/index.d.ts",
-			exports: {
-				".": {
-					types: "./dist/index.d.ts",
-					import: "./dist/index.js",
-					require: {
-						types: "./dist/index.d.cts",
-						default: "./dist/index.cjs",
-					},
+	const npmMetadataContent = fs.readFileSync(npmMetadataPath, "utf8")
+	const npmMetadata = JSON.parse(npmMetadataContent) as Partial<NpmPackage>
+
+	const npmPackage: NpmPackage = {
+		...npmMetadata,
+		type: "module",
+		dependencies: monorepoPackage.dependencies || {},
+		main: "./dist/index.cjs",
+		module: "./dist/index.js",
+		types: "./dist/index.d.ts",
+		exports: {
+			".": {
+				types: "./dist/index.d.ts",
+				import: "./dist/index.js",
+				require: {
+					types: "./dist/index.d.cts",
+					default: "./dist/index.cjs",
 				},
 			},
-			files: ["dist"],
-		}
-
-		fs.writeFileSync(npmPackagePath, JSON.stringify(npmPackage, null, 2) + "\n")
-	} catch (error) {
-		const errorMessage = error instanceof Error ? error.message : String(error)
-		console.error(`❌ Failed to generate npm/package.json: ${errorMessage}`)
+		},
+		files: ["dist"],
 	}
+
+	fs.writeFileSync(npmPackagePath, JSON.stringify(npmPackage, null, 2) + "\n")
+
+	return npmPackagePath
 }
 
-function linkPackage(pkg: PackageConfig, silent = false): void {
+function linkPackage(pkg: PackageConfig): void {
 	const sourcePath = path.resolve(__dirname, "..", pkg.sourcePath)
 
 	if (!pathExists(sourcePath)) {
@@ -165,9 +163,7 @@ function linkPackage(pkg: PackageConfig, silent = false): void {
 		process.exit(1)
 	}
 
-	if (pkg.npmPath) {
-		generateNpmPackageJson(sourcePath, pkg.npmPath)
-	}
+	generateNpmPackageJson(sourcePath, pkg.npmPath)
 
 	for (const currentTargetPath of pkg.targetPaths) {
 		const targetPath = path.resolve(__dirname, "..", currentTargetPath)
@@ -180,46 +176,8 @@ function linkPackage(pkg: PackageConfig, silent = false): void {
 		fs.mkdirSync(parentDir, { recursive: true })
 
 		const linkSource = pkg.npmPath ? path.join(sourcePath, pkg.npmPath) : sourcePath
-
 		copyRecursiveSync(linkSource, targetPath)
-
-		const indexDtsPath = path.join(targetPath, "index.d.ts")
-		const distIndexDtsPath = path.join(targetPath, "dist", "index.d.ts")
-
-		if (!pathExists(indexDtsPath) && pathExists(distIndexDtsPath)) {
-			fs.writeFileSync(indexDtsPath, "export * from './dist/index';\n")
-		} else if (pathExists(indexDtsPath)) {
-			const content = fs.readFileSync(indexDtsPath, "utf8")
-
-			const fixedContent = content.replace(/export \* from '\/[^']+'/g, "export * from './dist/index'")
-
-			if (content !== fixedContent) {
-				fs.writeFileSync(indexDtsPath, fixedContent)
-			}
-		}
-
-		const packageJsonPath = path.join(targetPath, "package.json")
-
-		if (pathExists(packageJsonPath)) {
-			const packageContent = fs.readFileSync(packageJsonPath, "utf8")
-			const packageJson = JSON.parse(packageContent)
-
-			if (!pathExists(path.join(targetPath, packageJson.types || ""))) {
-				if (pathExists(distIndexDtsPath)) {
-					packageJson.types = "./dist/index.d.ts"
-				} else if (pathExists(indexDtsPath)) {
-					packageJson.types = "./index.d.ts"
-				}
-
-				fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2) + "\n")
-			}
-		}
-
-		if (!silent) {
-			const shortPath = currentTargetPath.replace(/node_modules\/@roo-code\/types$/, "")
-
-			console.log(`📦 Copied ${pkg.name} → ${shortPath}`)
-		}
+		console.log(`📦 Copied ${pkg.name} → ${currentTargetPath}`)
 	}
 }
 
@@ -311,10 +269,8 @@ function startWatch(pkg: PackageConfig): WatcherResult {
 					clearTimeout(debounceTimer)
 				}
 
-				debounceTimer = setTimeout(() => {
-					linkPackage(pkg, true) // Silent copy
-					console.log(`📋 Copied updated ${pkg.name} files`)
-				}, 500) // Wait 500ms after last change before copying.
+				// Wait 500ms after last change before copying.
+				debounceTimer = setTimeout(() => linkPackage(pkg), 500)
 			})
 		: null
 
@@ -337,7 +293,7 @@ function main(): void {
 	if (unlink) {
 		packages.forEach(unlinkPackage)
 	} else {
-		packages.forEach((pkg) => linkPackage(pkg, false))
+		packages.forEach((pkg) => linkPackage(pkg))
 	}
 
 	if (unlink && packages.length > 0) {
@@ -347,8 +303,8 @@ function main(): void {
 			execSync("pnpm install", { cwd: __dirname, stdio: "ignore" })
 			console.log("✅ npm packages restored")
 		} catch (error) {
-			const errorMessage = error instanceof Error ? error.message : String(error)
-			console.error(`❌ Failed to restore packages: ${errorMessage}`)
+			console.error(`❌ Failed to restore packages: ${error instanceof Error ? error.message : String(error)}`)
+
 			console.log("   Run 'pnpm install' manually if needed")
 		}
 	}
