@@ -1,5 +1,7 @@
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://roocode.com"
+
 export const SEO = {
-	url: "https://roocode.com",
+	url: SITE_URL,
 	name: "Roo Code",
 	title: "Roo Code – Your AI-Powered Dev Team in VS Code",
 	description:
