@@ -11,6 +11,19 @@ import { ApiStream } from "../transform/stream"
 import { BaseProvider } from "./base-provider"
 import type { SingleCompletionHandler, ApiHandlerCreateMessageMetadata } from "../index"
 
+// Define TypeScript interfaces for Mistral content types
+interface MistralTextContent {
+	type: "text"
+	text: string
+}
+
+interface MistralThinkingContent {
+	type: "thinking"
+	text: string
+}
+
+type MistralContent = MistralTextContent | MistralThinkingContent | string
+
 export class MistralHandler extends BaseProvider implements SingleCompletionHandler {
 	protected options: ApiHandlerOptions
 	private client: Mistral
@@ -52,15 +65,23 @@ export class MistralHandler extends BaseProvider implements SingleCompletionHand
 			const delta = chunk.data.choices[0]?.delta
 
 			if (delta?.content) {
-				let content: string = ""
-
 				if (typeof delta.content === "string") {
-					content = delta.content
+					// Handle string content as text
+					yield { type: "text", text: delta.content }
 				} else if (Array.isArray(delta.content)) {
-					content = delta.content.map((c) => (c.type === "text" ? c.text : "")).join("")
+					// Handle array of content blocks
+					for (const c of delta.content as MistralContent[]) {
+						if (typeof c === "object" && c !== null) {
+							if (c.type === "thinking" && c.text) {
+								// Handle thinking content as reasoning chunks
+								yield { type: "reasoning", text: c.text }
+							} else if (c.type === "text" && c.text) {
+								// Handle text content normally
+								yield { type: "text", text: c.text }
+							}
+						}
+					}
 				}
-
-				yield { type: "text", text: content }
 			}
 
 			if (chunk.data.usage) {
@@ -97,7 +118,11 @@ export class MistralHandler extends BaseProvider implements SingleCompletionHand
 			const content = response.choices?.[0]?.message.content
 
 			if (Array.isArray(content)) {
-				return content.map((c) => (c.type === "text" ? c.text : "")).join("")
+				// Only return text content, filter out thinking content for non-streaming
+				return content
+					.filter((c: MistralContent) => typeof c === "object" && c.type === "text")
+					.map((c: MistralContent) => (c as MistralTextContent).text || "")
+					.join("")
 			}
 
 			return content || ""
