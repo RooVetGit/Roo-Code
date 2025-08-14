@@ -660,7 +660,6 @@ ${errorDetails ? `\nTechnical details:\n${errorDetails}\n` : ""}
 		let totalSearchBlocks = 0
 		for (const operation of operations) {
 			for (const diffItem of operation.diff) {
-				// Content is guaranteed to be a string due to early validation
 				const searchBlocks = (diffItem.content.match(/<<<<<<< SEARCH/g) || []).length
 				totalSearchBlocks += searchBlocks
 			}
