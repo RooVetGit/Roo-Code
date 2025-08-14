@@ -10,9 +10,9 @@ export interface AutoApprovalResult {
 }
 
 export class AutoApprovalHandler {
+	private lastResetMessageIndex: number = 0
 	private consecutiveAutoApprovedRequestsCount: number = 0
 	private consecutiveAutoApprovedCost: number = 0
-	private costResetMessageIndex: number = 0
 
 	/**
 	 * Check if auto-approval limits have been reached and handle user approval if needed
@@ -26,7 +26,7 @@ export class AutoApprovalHandler {
 		) => Promise<{ response: ClineAskResponse; text?: string; images?: string[] }>,
 	): Promise<AutoApprovalResult> {
 		// Check request count limit
-		const requestResult = await this.checkRequestLimit(state, askForApproval)
+		const requestResult = await this.checkRequestLimit(state, messages, askForApproval)
 		if (!requestResult.shouldProceed || requestResult.requiresApproval) {
 			return requestResult
 		}
@@ -37,10 +37,11 @@ export class AutoApprovalHandler {
 	}
 
 	/**
-	 * Increment the request counter and check if limit is exceeded
+	 * Calculate request count and check if limit is exceeded
 	 */
 	private async checkRequestLimit(
 		state: GlobalState | undefined,
+		messages: ClineMessage[],
 		askForApproval: (
 			type: ClineAsk,
 			data: string,
@@ -48,8 +49,11 @@ export class AutoApprovalHandler {
 	): Promise<AutoApprovalResult> {
 		const maxRequests = state?.allowedMaxRequests || Infinity
 
-		// Increment the counter for each new API request
-		this.consecutiveAutoApprovedRequestsCount++
+		// Calculate request count from messages after the last reset point
+		const messagesAfterReset = messages.slice(this.lastResetMessageIndex)
+		// Count API request messages (simplified - you may need to adjust based on your message structure)
+		this.consecutiveAutoApprovedRequestsCount =
+			messagesAfterReset.filter((msg) => msg.type === "say" && msg.say === "api_req_started").length + 1 // +1 for the current request being checked
 
 		if (this.consecutiveAutoApprovedRequestsCount > maxRequests) {
 			const { response } = await askForApproval(
@@ -59,7 +63,8 @@ export class AutoApprovalHandler {
 
 			// If we get past the promise, it means the user approved and did not start a new task
 			if (response === "yesButtonClicked") {
-				this.consecutiveAutoApprovedRequestsCount = 0
+				// Reset tracking by recording the current message count
+				this.lastResetMessageIndex = messages.length
 				return {
 					shouldProceed: true,
 					requiresApproval: true,
@@ -93,7 +98,7 @@ export class AutoApprovalHandler {
 		const maxCost = state?.allowedMaxCost || Infinity
 
 		// Calculate total cost from messages after the last reset point
-		const messagesAfterReset = messages.slice(this.costResetMessageIndex)
+		const messagesAfterReset = messages.slice(this.lastResetMessageIndex)
 		this.consecutiveAutoApprovedCost = getApiMetrics(messagesAfterReset).totalCost
 
 		// Use epsilon for floating-point comparison to avoid precision issues
@@ -106,9 +111,9 @@ export class AutoApprovalHandler {
 
 			// If we get past the promise, it means the user approved and did not start a new task
 			if (response === "yesButtonClicked") {
-				// Reset the cost tracking by recording the current message count
-				// Future cost calculations will only include messages after this point
-				this.costResetMessageIndex = messages.length
+				// Reset tracking by recording the current message count
+				// Future calculations will only include messages after this point
+				this.lastResetMessageIndex = messages.length
 				return {
 					shouldProceed: true,
 					requiresApproval: true,
@@ -129,11 +134,12 @@ export class AutoApprovalHandler {
 	}
 
 	/**
-	 * Reset the request counter and cost tracking (typically called when starting a new task)
+	 * Reset the tracking (typically called when starting a new task)
 	 */
 	resetRequestCount(): void {
+		this.lastResetMessageIndex = 0
 		this.consecutiveAutoApprovedRequestsCount = 0
-		this.costResetMessageIndex = 0
+		this.consecutiveAutoApprovedCost = 0
 	}
 
 	/**
