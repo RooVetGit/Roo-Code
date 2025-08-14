@@ -89,7 +89,6 @@ export class OpenAiNativeHandler extends BaseProvider implements SingleCompletio
 	private resolveResponseId(responseId: string | undefined): void {
 		if (responseId) {
 			this.lastResponseId = responseId
-			console.log(`[OpenAI-Native] Stored response ID: ${responseId}`)
 		}
 		// Resolve the promise so the next request can use this ID
 		if (this.responseIdResolver) {
@@ -125,15 +124,8 @@ export class OpenAiNativeHandler extends BaseProvider implements SingleCompletio
 		// This handles the race condition with fast nano model responses
 		let effectivePreviousResponseId = metadata?.previousResponseId
 
-		if (metadata?.previousResponseId) {
-			console.log(`[OpenAI-Native] Using previous_response_id from metadata: ${metadata.previousResponseId}`)
-		}
-
 		// Check if we should suppress previous response ID (e.g., after condense or message edit)
 		if (metadata?.suppressPreviousResponseId) {
-			console.log(
-				`[OpenAI-Native] Suppressing previous_response_id due to suppressPreviousResponseId flag (likely after condense or edit)`,
-			)
 			// Clear the stored lastResponseId to prevent it from being used in future requests
 			this.lastResponseId = undefined
 			effectivePreviousResponseId = undefined
@@ -150,7 +142,6 @@ export class OpenAiNativeHandler extends BaseProvider implements SingleCompletio
 					])
 					if (resolvedId) {
 						effectivePreviousResponseId = resolvedId
-						console.log(`[OpenAI-Native] Using previous_response_id from pending promise: ${resolvedId}`)
 					}
 				} catch {
 					// Non-fatal if promise fails
@@ -160,20 +151,12 @@ export class OpenAiNativeHandler extends BaseProvider implements SingleCompletio
 			// Fall back to the last known response ID if still not available
 			if (!effectivePreviousResponseId && this.lastResponseId) {
 				effectivePreviousResponseId = this.lastResponseId
-				console.log(`[OpenAI-Native] Using previous_response_id from lastResponseId: ${this.lastResponseId}`)
 			}
 		}
 
 		// Format input and capture continuity id
 		const { formattedInput, previousResponseId } = this.prepareStructuredInput(systemPrompt, messages, metadata)
 		const requestPreviousResponseId = effectivePreviousResponseId || previousResponseId
-
-		if (requestPreviousResponseId) {
-			console.log(`[OpenAI-Native] Making request with previous_response_id: ${requestPreviousResponseId}`)
-			console.log(`[OpenAI-Native] Including updated instructions (system prompt) to ensure consistency`)
-		} else {
-			console.log(`[OpenAI-Native] Making request without previous_response_id (full conversation context)`)
-		}
 
 		// Create a new promise for this request's response ID
 		this.responseIdPromise = new Promise<string | undefined>((resolve) => {
@@ -618,7 +601,6 @@ export class OpenAiNativeHandler extends BaseProvider implements SingleCompletio
 
 							// Store response ID for conversation continuity
 							if (parsed.response?.id) {
-								console.log(`[OpenAI-Native] Received response ID from stream: ${parsed.response.id}`)
 								this.resolveResponseId(parsed.response.id)
 							}
 
@@ -910,9 +892,6 @@ export class OpenAiNativeHandler extends BaseProvider implements SingleCompletio
 							} else if (parsed.type === "response.completed" || parsed.type === "response.done") {
 								// Store response ID for conversation continuity
 								if (parsed.response?.id) {
-									console.log(
-										`[OpenAI-Native] Received response ID from done event: ${parsed.response.id}`,
-									)
 									this.resolveResponseId(parsed.response.id)
 								}
 
@@ -1037,7 +1016,6 @@ export class OpenAiNativeHandler extends BaseProvider implements SingleCompletio
 	private async *processEvent(event: any, model: OpenAiNativeModel): ApiStream {
 		// Persist response id for conversation continuity when available
 		if (event?.response?.id) {
-			console.log(`[OpenAI-Native] Received response ID from SDK event: ${event.response.id}`)
 			this.resolveResponseId(event.response.id)
 		}
 
