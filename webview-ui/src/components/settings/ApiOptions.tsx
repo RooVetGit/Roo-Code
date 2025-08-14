@@ -105,7 +105,11 @@ import { buildDocLink } from "@src/utils/docLinks"
 export interface ApiOptionsProps {
 	uriScheme: string | undefined
 	apiConfiguration: ProviderSettings
-	setApiConfigurationField: <K extends keyof ProviderSettings>(field: K, value: ProviderSettings[K]) => void
+	setApiConfigurationField: <K extends keyof ProviderSettings>(
+		field: K,
+		value: ProviderSettings[K],
+		isUserAction?: boolean,
+	) => void
 	fromWelcomeView?: boolean
 	errorMessage: string | undefined
 	setErrorMessage: React.Dispatch<React.SetStateAction<string | undefined>>
@@ -186,7 +190,7 @@ const ApiOptions = ({
 	// Update `apiModelId` whenever `selectedModelId` changes.
 	useEffect(() => {
 		if (selectedModelId && apiConfiguration.apiModelId !== selectedModelId) {
-			setApiConfigurationField("apiModelId", selectedModelId)
+			setApiConfigurationField("apiModelId", selectedModelId, false)
 		}
 	}, [selectedModelId, setApiConfigurationField, apiConfiguration.apiModelId])
 
@@ -280,7 +284,7 @@ const ApiOptions = ({
 				const shouldSetDefault = !modelId
 
 				if (shouldSetDefault) {
-					setApiConfigurationField(field, defaultValue)
+					setApiConfigurationField(field, defaultValue, false)
 				}
 			}
 
