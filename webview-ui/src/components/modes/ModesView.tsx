@@ -1166,6 +1166,15 @@ const ModesView = ({ onDone }: ModesViewProps) => {
 											}}
 										/>
 									),
+									"0": (
+										<VSCodeLink
+											href={buildDocLink(
+												"features/custom-instructions#global-custom-instructions",
+												"prompts_mode_custom_instructions_global",
+											)}
+											style={{ display: "inline" }}
+										/>
+									),
 								}}
 							/>
 						</div>
@@ -1350,6 +1359,15 @@ const ModesView = ({ onDone }: ModesViewProps) => {
 												},
 											})
 										}
+									/>
+								),
+								"0": (
+									<VSCodeLink
+										href={buildDocLink(
+											"features/custom-instructions#global-custom-instructions",
+											"prompts_global_custom_instructions_global",
+										)}
+										style={{ display: "inline" }}
 									/>
 								),
 							}}
