@@ -100,7 +100,8 @@
 			"genericError": "Ошибка Cerebras API ({{status}}): {{message}}",
 			"noResponseBody": "Ошибка Cerebras API: Нет тела ответа",
 			"completionError": "Ошибка завершения Cerebras: {{error}}"
-		}
+		},
+		"task_corrupt_deleted": "The selected task could not be loaded and has been removed from history. This usually happens when the task files are corrupted or missing."
 	},
 	"warnings": {
 		"no_terminal_content": "Не выбрано содержимое терминала",

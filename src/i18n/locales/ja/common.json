@@ -100,7 +100,8 @@
 			"genericError": "Cerebras APIエラー ({{status}}): {{message}}",
 			"noResponseBody": "Cerebras APIエラー: レスポンスボディなし",
 			"completionError": "Cerebras完了エラー: {{error}}"
-		}
+		},
+		"task_corrupt_deleted": "The selected task could not be loaded and has been removed from history. This usually happens when the task files are corrupted or missing."
 	},
 	"warnings": {
 		"no_terminal_content": "選択されたターミナルコンテンツがありません",

@@ -100,7 +100,8 @@
 			"genericError": "Cerebras API Hatası ({{status}}): {{message}}",
 			"noResponseBody": "Cerebras API Hatası: Yanıt gövdesi yok",
 			"completionError": "Cerebras tamamlama hatası: {{error}}"
-		}
+		},
+		"task_corrupt_deleted": "The selected task could not be loaded and has been removed from history. This usually happens when the task files are corrupted or missing."
 	},
 	"warnings": {
 		"no_terminal_content": "Seçili terminal içeriği yok",

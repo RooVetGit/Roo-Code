@@ -100,7 +100,8 @@
 			"genericError": "Lỗi API Cerebras ({{status}}): {{message}}",
 			"noResponseBody": "Lỗi API Cerebras: Không có nội dung phản hồi",
 			"completionError": "Lỗi hoàn thành Cerebras: {{error}}"
-		}
+		},
+		"task_corrupt_deleted": "The selected task could not be loaded and has been removed from history. This usually happens when the task files are corrupted or missing."
 	},
 	"warnings": {
 		"no_terminal_content": "Không có nội dung terminal được chọn",

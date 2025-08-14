@@ -100,7 +100,8 @@
 			"genericError": "Cerebras API त्रुटि ({{status}}): {{message}}",
 			"noResponseBody": "Cerebras API त्रुटि: कोई प्रतिक्रिया मुख्य भाग नहीं",
 			"completionError": "Cerebras पूर्णता त्रुटि: {{error}}"
-		}
+		},
+		"task_corrupt_deleted": "The selected task could not be loaded and has been removed from history. This usually happens when the task files are corrupted or missing."
 	},
 	"warnings": {
 		"no_terminal_content": "कोई टर्मिनल सामग्री चयनित नहीं",

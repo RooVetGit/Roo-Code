@@ -104,7 +104,8 @@
 			"noResponseBody": "Error de l'API de Cerebras: No hi ha cos de resposta",
 			"completionError": "Error de finalització de Cerebras: {{error}}"
 		},
-		"mode_import_failed": "Ha fallat la importació del mode: {{error}}"
+		"mode_import_failed": "Ha fallat la importació del mode: {{error}}",
+		"task_corrupt_deleted": "La tasca seleccionada no s'ha pogut carregar i s'ha eliminat de l'historial. Això sol passar quan els fitxers de la tasca estan corruptes o falten."
 	},
 	"warnings": {
 		"no_terminal_content": "No s'ha seleccionat contingut de terminal",
