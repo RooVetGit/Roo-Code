@@ -1,3 +1,5 @@
+import { z } from "zod"
+
 import { RooCodeEventName } from "./events.js"
 import { type ClineMessage, type BlockingAsk, type TokenUsage } from "./message.js"
 import { type ToolUsage, type ToolName } from "./tool.js"
@@ -61,11 +63,13 @@ export type TaskProviderEvents = {
  * TaskLike
  */
 
-export type TaskMetadata = {
-	taskId: string
-	task?: string
-	images?: string[]
-}
+export const taskMetadataSchema = z.object({
+	taskId: z.string(),
+	task: z.string().optional(),
+	images: z.array(z.string()).optional(),
+})
+
+export type TaskMetadata = z.infer<typeof taskMetadataSchema>
 
 export interface TaskLike {
 	readonly taskId: string
