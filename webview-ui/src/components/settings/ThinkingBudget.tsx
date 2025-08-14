@@ -86,6 +86,15 @@ export const ThinkingBudget = ({ apiConfiguration, setApiConfigurationField, mod
 		? Math.min(modelInfo.maxThinkingTokens, Math.floor(0.8 * customMaxOutputTokens))
 		: Math.floor(0.8 * customMaxOutputTokens)
 
+	// Ensure enableReasoningEffort has a default value of false to prevent initial sync issues.
+	// This fixes the save button not enabling when user first checks the reasoning checkbox,
+	// by converting undefined to false so the change detection logic works correctly.
+	useEffect(() => {
+		if (isReasoningBudgetSupported && enableReasoningEffort === undefined) {
+			setApiConfigurationField("enableReasoningEffort", false)
+		}
+	}, [isReasoningBudgetSupported, enableReasoningEffort, setApiConfigurationField])
+
 	// If the custom max thinking tokens are going to exceed it's limit due
 	// to the custom max output tokens being reduced then we need to shrink it
 	// appropriately.
