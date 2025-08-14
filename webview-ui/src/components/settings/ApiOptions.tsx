@@ -190,7 +190,7 @@ const ApiOptions = ({
 	// Update `apiModelId` whenever `selectedModelId` changes.
 	useEffect(() => {
 		if (selectedModelId && apiConfiguration.apiModelId !== selectedModelId) {
-			setApiConfigurationField("apiModelId", selectedModelId, false)
+			setApiConfigurationField("apiModelId", selectedModelId)
 		}
 	}, [selectedModelId, setApiConfigurationField, apiConfiguration.apiModelId])
 
