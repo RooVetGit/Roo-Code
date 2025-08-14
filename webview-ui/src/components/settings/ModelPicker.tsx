@@ -3,7 +3,9 @@ import { VSCodeLink } from "@vscode/webview-ui-toolkit/react"
 import { Trans } from "react-i18next"
 import { ChevronsUpDown, Check, X } from "lucide-react"
 
-import type { ProviderSettings, ModelInfo, OrganizationAllowList } from "@roo-code/types"
+import type { ProviderSettings, ModelInfo } from "@roo-code/types"
+
+import type { OrganizationAllowList } from "@roo/cloud"
 
 import { useAppTranslation } from "@src/i18n/TranslationContext"
 import { useSelectedModel } from "@/components/ui/hooks/useSelectedModel"
@@ -28,7 +30,13 @@ import { ApiErrorMessage } from "./ApiErrorMessage"
 
 type ModelIdKey = keyof Pick<
 	ProviderSettings,
-	"glamaModelId" | "openRouterModelId" | "unboundModelId" | "requestyModelId" | "openAiModelId" | "litellmModelId"
+	| "glamaModelId"
+	| "openRouterModelId"
+	| "unboundModelId"
+	| "requestyModelId"
+	| "openAiModelId"
+	| "litellmModelId"
+	| "ioIntelligenceModelId"
 >
 
 interface ModelPickerProps {
@@ -149,7 +157,7 @@ export const ModelPicker = ({
 							aria-expanded={open}
 							className="w-full justify-between"
 							data-testid="model-picker-button">
-							<div>{selectedModelId ?? t("settings:common.select")}</div>
+							<div className="truncate">{selectedModelId ?? t("settings:common.select")}</div>
 							<ChevronsUpDown className="opacity-50" />
 						</Button>
 					</PopoverTrigger>
@@ -188,7 +196,9 @@ export const ModelPicker = ({
 											value={model}
 											onSelect={onSelect}
 											data-testid={`model-option-${model}`}>
-											{model}
+											<span className="truncate" title={model}>
+												{model}
+											</span>
 											<Check
 												className={cn(
 													"size-4 p-0.5 ml-auto",

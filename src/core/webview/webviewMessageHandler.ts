@@ -548,6 +548,15 @@ export const webviewMessageHandler = async (
 				{ key: "unbound", options: { provider: "unbound", apiKey: apiConfiguration.unboundApiKey } },
 			]
 
+			// Add IO Intelligence if API key is provided
+			const ioIntelligenceApiKey = apiConfiguration.ioIntelligenceApiKey
+			if (ioIntelligenceApiKey) {
+				modelFetchPromises.push({
+					key: "io-intelligence",
+					options: { provider: "io-intelligence", apiKey: ioIntelligenceApiKey },
+				})
+			}
+
 			// Don't fetch Ollama and LM Studio models by default anymore
 			// They have their own specific handlers: requestOllamaModels and requestLmStudioModels
 
@@ -900,25 +909,23 @@ export const webviewMessageHandler = async (
 		}
 		case "mcpEnabled":
 			const mcpEnabled = message.bool ?? true
-			const currentMcpEnabled = getGlobalState("mcpEnabled") ?? true
-
-			// Always update the state to ensure consistency
 			await updateGlobalState("mcpEnabled", mcpEnabled)
 
-			// Only refresh MCP connections if the value actually changed
-			// This prevents expensive MCP server refresh operations when saving unrelated settings
-			if (currentMcpEnabled !== mcpEnabled) {
-				// Delegate MCP enable/disable logic to McpHub
-				const mcpHubInstance = provider.getMcpHub()
-				if (mcpHubInstance) {
-					await mcpHubInstance.handleMcpEnabledChange(mcpEnabled)
-				}
+			// Delegate MCP enable/disable logic to McpHub
+			const mcpHubInstance = provider.getMcpHub()
+			if (mcpHubInstance) {
+				await mcpHubInstance.handleMcpEnabledChange(mcpEnabled)
 			}
 
 			await provider.postStateToWebview()
 			break
 		case "enableMcpServerCreation":
 			await updateGlobalState("enableMcpServerCreation", message.bool ?? true)
+			await provider.postStateToWebview()
+			break
+		case "remoteControlEnabled":
+			await updateGlobalState("remoteControlEnabled", message.bool ?? false)
+			await provider.handleRemoteControlToggle(message.bool ?? false)
 			await provider.postStateToWebview()
 			break
 		case "refreshAllMcpServers": {

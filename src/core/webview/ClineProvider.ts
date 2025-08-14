@@ -17,7 +17,6 @@ import {
 	type ProviderSettings,
 	type RooCodeSettings,
 	type ProviderSettingsEntry,
-	type ProviderSettingsWithId,
 	type TelemetryProperties,
 	type TelemetryPropertiesProvider,
 	type CodeActionId,
@@ -25,17 +24,15 @@ import {
 	type TerminalActionId,
 	type TerminalActionPromptType,
 	type HistoryItem,
-	type CloudUserInfo,
 	RooCodeEventName,
 	requestyDefaultModelId,
 	openRouterDefaultModelId,
 	glamaDefaultModelId,
-	ORGANIZATION_ALLOW_ALL,
 	DEFAULT_TERMINAL_OUTPUT_CHARACTER_LIMIT,
 	DEFAULT_WRITE_DELAY_MS,
 } from "@roo-code/types"
 import { TelemetryService } from "@roo-code/telemetry"
-import { CloudService, getRooCodeApiUrl } from "@roo-code/cloud"
+import { type CloudUserInfo, CloudService, ORGANIZATION_ALLOW_ALL, getRooCodeApiUrl } from "@roo-code/cloud"
 
 import { Package } from "../../shared/package"
 import { findLast } from "../../shared/array"
@@ -66,6 +63,7 @@ import { fileExistsAtPath } from "../../utils/fs"
 import { setTtsEnabled, setTtsSpeed } from "../../utils/tts"
 import { getWorkspaceGitInfo } from "../../utils/git"
 import { getWorkspacePath } from "../../utils/path"
+import { isRemoteControlEnabled } from "../../utils/remoteControl"
 
 import { setPanel } from "../../activate/registerCommands"
 
@@ -112,6 +110,8 @@ export class ClineProvider
 	protected mcpHub?: McpHub // Change from private to protected
 	private marketplaceManager: MarketplaceManager
 	private mdmService?: MdmService
+	private taskCreationCallback: (task: Task) => void
+	private taskEventListeners: WeakMap<Task, Array<() => void>> = new WeakMap()
 
 	public isViewLaunched = false
 	public settingsImportedAt?: number
@@ -161,10 +161,64 @@ export class ClineProvider
 
 		this.marketplaceManager = new MarketplaceManager(this.context, this.customModesManager)
 
+		this.taskCreationCallback = (instance: Task) => {
+			this.emit(RooCodeEventName.TaskCreated, instance)
+
+			// Create named listener functions so we can remove them later.
+			const onTaskStarted = () => this.emit(RooCodeEventName.TaskStarted, instance.taskId)
+			const onTaskCompleted = (taskId: string, tokenUsage: any, toolUsage: any) =>
+				this.emit(RooCodeEventName.TaskCompleted, taskId, tokenUsage, toolUsage)
+			const onTaskAborted = () => this.emit(RooCodeEventName.TaskAborted, instance.taskId)
+			const onTaskFocused = () => this.emit(RooCodeEventName.TaskFocused, instance.taskId)
+			const onTaskUnfocused = () => this.emit(RooCodeEventName.TaskUnfocused, instance.taskId)
+			const onTaskActive = (taskId: string) => this.emit(RooCodeEventName.TaskActive, taskId)
+			const onTaskIdle = (taskId: string) => this.emit(RooCodeEventName.TaskIdle, taskId)
+
+			// Attach the listeners.
+			instance.on(RooCodeEventName.TaskStarted, onTaskStarted)
+			instance.on(RooCodeEventName.TaskCompleted, onTaskCompleted)
+			instance.on(RooCodeEventName.TaskAborted, onTaskAborted)
+			instance.on(RooCodeEventName.TaskFocused, onTaskFocused)
+			instance.on(RooCodeEventName.TaskUnfocused, onTaskUnfocused)
+			instance.on(RooCodeEventName.TaskActive, onTaskActive)
+			instance.on(RooCodeEventName.TaskIdle, onTaskIdle)
+
+			// Store the cleanup functions for later removal.
+			this.taskEventListeners.set(instance, [
+				() => instance.off(RooCodeEventName.TaskStarted, onTaskStarted),
+				() => instance.off(RooCodeEventName.TaskCompleted, onTaskCompleted),
+				() => instance.off(RooCodeEventName.TaskAborted, onTaskAborted),
+				() => instance.off(RooCodeEventName.TaskFocused, onTaskFocused),
+				() => instance.off(RooCodeEventName.TaskUnfocused, onTaskUnfocused),
+				() => instance.off(RooCodeEventName.TaskActive, onTaskActive),
+				() => instance.off(RooCodeEventName.TaskIdle, onTaskIdle),
+			])
+		}
+
 		// Initialize Roo Code Cloud profile sync.
 		this.initializeCloudProfileSync().catch((error) => {
 			this.log(`Failed to initialize cloud profile sync: ${error}`)
 		})
+	}
+
+	/**
+	 * Override EventEmitter's on method to match TaskProviderLike interface
+	 */
+	override on<K extends keyof TaskProviderEvents>(
+		event: K,
+		listener: (...args: TaskProviderEvents[K]) => void | Promise<void>,
+	): this {
+		return super.on(event, listener as any)
+	}
+
+	/**
+	 * Override EventEmitter's off method to match TaskProviderLike interface
+	 */
+	override off<K extends keyof TaskProviderEvents>(
+		event: K,
+		listener: (...args: TaskProviderEvents[K]) => void | Promise<void>,
+	): this {
+		return super.off(event, listener as any)
 	}
 
 	/**
@@ -295,6 +349,14 @@ export class ClineProvider
 			}
 
 			task.emit(RooCodeEventName.TaskUnfocused)
+
+			// Remove event listeners before clearing the reference.
+			const cleanupFunctions = this.taskEventListeners.get(task)
+
+			if (cleanupFunctions) {
+				cleanupFunctions.forEach((cleanup) => cleanup())
+				this.taskEventListeners.delete(task)
+			}
 
 			// Make sure no reference kept, once promises end it will be
 			// garbage collected.
@@ -498,18 +560,16 @@ export class ClineProvider
 		this.log("Resolving webview view")
 
 		this.view = webviewView
-
-		// Set panel reference according to webview type
 		const inTabMode = "onDidChangeViewState" in webviewView
+
 		if (inTabMode) {
-			// Tag page type
 			setPanel(webviewView, "tab")
 		} else if ("onDidChangeVisibility" in webviewView) {
-			// Sidebar Type
 			setPanel(webviewView, "sidebar")
 		}
 
-		// Initialize out-of-scope variables that need to receive persistent global state values
+		// Initialize out-of-scope variables that need to receive persistent
+		// global state values.
 		this.getState().then(
 			({
 				terminalShellIntegrationTimeout = Terminal.defaultShellIntegrationTimeout,
@@ -532,18 +592,15 @@ export class ClineProvider
 			},
 		)
 
-		// Initialize tts enabled state
 		this.getState().then(({ ttsEnabled }) => {
 			setTtsEnabled(ttsEnabled ?? false)
 		})
 
-		// Initialize tts speed state
 		this.getState().then(({ ttsSpeed }) => {
 			setTtsSpeed(ttsSpeed ?? 1)
 		})
 
 		webviewView.webview.options = {
-			// Allow scripts in the webview
 			enableScripts: true,
 			localResourceRoots: [this.contextProxy.extensionUri],
 		}
@@ -554,32 +611,31 @@ export class ClineProvider
 				: this.getHtmlContent(webviewView.webview)
 
 		// Sets up an event listener to listen for messages passed from the webview view context
-		// and executes code based on the message that is received
+		// and executes code based on the message that is received.
 		this.setWebviewMessageListener(webviewView.webview)
 
-		// Initialize code index status subscription for the current workspace
+		// Initialize code index status subscription for the current workspace.
 		this.updateCodeIndexStatusSubscription()
 
-		// Listen for active editor changes to update code index status for the current workspace
+		// Listen for active editor changes to update code index status for the
+		// current workspace.
 		const activeEditorSubscription = vscode.window.onDidChangeActiveTextEditor(() => {
-			// Update subscription when workspace might have changed
+			// Update subscription when workspace might have changed.
 			this.updateCodeIndexStatusSubscription()
 		})
 		this.webviewDisposables.push(activeEditorSubscription)
 
-		// Logs show up in bottom panel > Debug Console
-		//console.log("registering listener")
-
-		// Listen for when the panel becomes visible
+		// Listen for when the panel becomes visible.
 		// https://github.com/microsoft/vscode-discussions/discussions/840
 		if ("onDidChangeViewState" in webviewView) {
-			// WebviewView and WebviewPanel have all the same properties except for this visibility listener
-			// panel
+			// WebviewView and WebviewPanel have all the same properties except
+			// for this visibility listener panel.
 			const viewStateDisposable = webviewView.onDidChangeViewState(() => {
 				if (this.view?.visible) {
 					this.postMessageToWebview({ type: "action", action: "didBecomeVisible" })
 				}
 			})
+
 			this.webviewDisposables.push(viewStateDisposable)
 		} else if ("onDidChangeVisibility" in webviewView) {
 			// sidebar
@@ -588,6 +644,7 @@ export class ClineProvider
 					this.postMessageToWebview({ type: "action", action: "didBecomeVisible" })
 				}
 			})
+
 			this.webviewDisposables.push(visibilityDisposable)
 		}
 
@@ -652,6 +709,8 @@ export class ClineProvider
 			enableCheckpoints,
 			fuzzyMatchThreshold,
 			experiments,
+			cloudUserInfo,
+			remoteControlEnabled,
 		} = await this.getState()
 
 		if (!ProfileValidator.isProfileAllowed(apiConfiguration, organizationAllowList)) {
@@ -671,7 +730,8 @@ export class ClineProvider
 			rootTask: this.clineStack.length > 0 ? this.clineStack[0] : undefined,
 			parentTask,
 			taskNumber: this.clineStack.length + 1,
-			onCreated: (instance) => this.emit(RooCodeEventName.TaskCreated, instance),
+			onCreated: this.taskCreationCallback,
+			enableTaskBridge: isRemoteControlEnabled(cloudUserInfo, remoteControlEnabled),
 			...options,
 		})
 
@@ -736,7 +796,12 @@ export class ClineProvider
 			enableCheckpoints,
 			fuzzyMatchThreshold,
 			experiments,
+			cloudUserInfo,
+			remoteControlEnabled,
 		} = await this.getState()
+
+		// Determine if TaskBridge should be enabled
+		const enableTaskBridge = isRemoteControlEnabled(cloudUserInfo, remoteControlEnabled)
 
 		const task = new Task({
 			provider: this,
@@ -750,7 +815,8 @@ export class ClineProvider
 			rootTask: historyItem.rootTask,
 			parentTask: historyItem.parentTask,
 			taskNumber: historyItem.number,
-			onCreated: (instance) => this.emit(RooCodeEventName.TaskCreated, instance),
+			onCreated: this.taskCreationCallback,
+			enableTaskBridge,
 		})
 
 		await this.addClineToStack(task)
@@ -767,8 +833,8 @@ export class ClineProvider
 	}
 
 	private async getHMRHtmlContent(webview: vscode.Webview): Promise<string> {
-		// Try to read the port from the file
-		let localPort = "5173" // Default fallback
+		let localPort = "5173"
+
 		try {
 			const fs = require("fs")
 			const path = require("path")
@@ -784,7 +850,6 @@ export class ClineProvider
 			}
 		} catch (err) {
 			console.error("[ClineProvider:Vite] Failed to read Vite port file:", err)
-			// Continue with default port if file reading fails
 		}
 
 		const localServerUrl = `localhost:${localPort}`
@@ -794,7 +859,6 @@ export class ClineProvider
 			await axios.get(`http://${localServerUrl}`)
 		} catch (error) {
 			vscode.window.showErrorMessage(t("common:errors.hmr_not_running"))
-
 			return this.getHtmlContent(webview)
 		}
 
@@ -1629,6 +1693,7 @@ export class ClineProvider
 			includeDiagnosticMessages,
 			maxDiagnosticMessages,
 			includeTaskHistoryInEnhance,
+			remoteControlEnabled,
 		} = await this.getState()
 
 		const telemetryKey = process.env.POSTHOG_API_KEY
@@ -1756,6 +1821,7 @@ export class ClineProvider
 			includeDiagnosticMessages: includeDiagnosticMessages ?? true,
 			maxDiagnosticMessages: maxDiagnosticMessages ?? 50,
 			includeTaskHistoryInEnhance: includeTaskHistoryInEnhance ?? false,
+			remoteControlEnabled: remoteControlEnabled ?? false,
 		}
 	}
 
@@ -1943,6 +2009,8 @@ export class ClineProvider
 			maxDiagnosticMessages: stateValues.maxDiagnosticMessages ?? 50,
 			// Add includeTaskHistoryInEnhance setting
 			includeTaskHistoryInEnhance: stateValues.includeTaskHistoryInEnhance ?? false,
+			// Add remoteControlEnabled setting
+			remoteControlEnabled: stateValues.remoteControlEnabled ?? false,
 		}
 	}
 
@@ -2053,6 +2121,59 @@ export class ClineProvider
 		}
 
 		return true
+	}
+
+	public async handleRemoteControlToggle(enabled: boolean) {
+		const { CloudService: CloudServiceImport, ExtensionBridgeService } = await import("@roo-code/cloud")
+
+		const userInfo = CloudServiceImport.instance.getUserInfo()
+
+		const bridgeConfig = await CloudServiceImport.instance.cloudAPI?.bridgeConfig().catch(() => undefined)
+
+		if (!bridgeConfig) {
+			this.log("[ClineProvider#handleRemoteControlToggle] Failed to get bridge config")
+			return
+		}
+
+		await ExtensionBridgeService.handleRemoteControlState(
+			userInfo,
+			enabled,
+			{ ...bridgeConfig, provider: this, sessionId: vscode.env.sessionId },
+			(message: string) => this.log(message),
+		)
+
+		if (isRemoteControlEnabled(userInfo, enabled)) {
+			const currentTask = this.getCurrentCline()
+
+			if (currentTask && !currentTask.bridgeService) {
+				try {
+					currentTask.bridgeService = ExtensionBridgeService.getInstance()
+
+					if (currentTask.bridgeService) {
+						await currentTask.bridgeService.subscribeToTask(currentTask)
+					}
+				} catch (error) {
+					const message = `[ClineProvider#handleRemoteControlToggle] subscribeToTask failed - ${error instanceof Error ? error.message : String(error)}`
+					this.log(message)
+					console.error(message)
+				}
+			}
+		} else {
+			for (const task of this.clineStack) {
+				if (task.bridgeService) {
+					try {
+						await task.bridgeService.unsubscribeFromTask(task.taskId)
+						task.bridgeService = null
+					} catch (error) {
+						const message = `[ClineProvider#handleRemoteControlToggle] unsubscribeFromTask failed - ${error instanceof Error ? error.message : String(error)}`
+						this.log(message)
+						console.error(message)
+					}
+				}
+			}
+
+			ExtensionBridgeService.resetInstance()
+		}
 	}
 
 	/**

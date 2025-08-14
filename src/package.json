@@ -3,7 +3,7 @@
 	"displayName": "%extension.displayName%",
 	"description": "%extension.description%",
 	"publisher": "RooVeterinaryInc",
-	"version": "3.25.9",
+	"version": "3.25.14",
 	"icon": "assets/icons/icon.png",
 	"galleryBanner": {
 		"color": "#617A91",
@@ -102,7 +102,7 @@
 			},
 			{
 				"command": "roo-cline.accountButtonClicked",
-				"title": "Account",
+				"title": "%command.account.title%",
 				"icon": "$(account)"
 			},
 			{
@@ -391,6 +391,13 @@
 					"type": "boolean",
 					"default": true,
 					"description": "%settings.useAgentRules.description%"
+				},
+				"roo-cline.apiRequestTimeout": {
+					"type": "number",
+					"default": 600,
+					"minimum": 0,
+					"maximum": 3600,
+					"description": "%settings.apiRequestTimeout.description%"
 				}
 			}
 		}
@@ -420,7 +427,7 @@
 		"@mistralai/mistralai": "^1.3.6",
 		"@modelcontextprotocol/sdk": "^1.9.0",
 		"@qdrant/js-client-rest": "^1.14.0",
-		"@roo-code/cloud": "^0.5.0",
+		"@roo-code/cloud": "^0.14.0",
 		"@roo-code/ipc": "workspace:^",
 		"@roo-code/telemetry": "workspace:^",
 		"@roo-code/types": "workspace:^",
@@ -467,6 +474,7 @@
 		"say": "^0.16.0",
 		"serialize-error": "^12.0.0",
 		"simple-git": "^3.27.0",
+		"socket.io-client": "^4.8.1",
 		"sound-play": "^1.1.0",
 		"stream-json": "^1.8.0",
 		"string-similarity": "^4.0.4",
