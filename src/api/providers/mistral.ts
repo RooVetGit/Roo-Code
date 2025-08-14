@@ -120,8 +120,8 @@ export class MistralHandler extends BaseProvider implements SingleCompletionHand
 			if (Array.isArray(content)) {
 				// Only return text content, filter out thinking content for non-streaming
 				return content
-					.filter((c: MistralContent) => typeof c === "object" && c.type === "text")
-					.map((c: MistralContent) => (c as MistralTextContent).text || "")
+					.filter((c: any) => typeof c === "object" && c !== null && c.type === "text")
+					.map((c: any) => c.text || "")
 					.join("")
 			}
 
