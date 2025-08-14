@@ -144,7 +144,7 @@ export async function activate(context: vscode.ExtensionContext) {
 		ExtensionBridgeService.handleRemoteControlState(
 			userInfo,
 			contextProxy.getValue("remoteControlEnabled"),
-			{ ...bridgeConfig, provider },
+			{ ...bridgeConfig, provider, sessionId: vscode.env.sessionId },
 			(message: string) => outputChannel.appendLine(message),
 		)
 	})
