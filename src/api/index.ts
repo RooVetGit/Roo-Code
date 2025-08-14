@@ -53,8 +53,11 @@ export interface ApiHandlerCreateMessageMetadata {
 	 */
 	suppressPreviousResponseId?: boolean
 	/**
-	 * Controls whether the response should be stored for 30 days (OpenAI Responses API).
-	 * Defaults to true if not specified.
+	 * Controls whether the response should be stored for 30 days in OpenAI's Responses API.
+	 * When true (default), responses are stored and can be referenced in future requests
+	 * using the previous_response_id for efficient conversation continuity.
+	 * Set to false to opt out of response storage for privacy or compliance reasons.
+	 * @default true
 	 */
 	store?: boolean
 }
