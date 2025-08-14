@@ -20,9 +20,18 @@ vi.mock("../../../api", () => ({
 vi.mock("../../task/Task", () => ({
 	Task: vi.fn().mockImplementation(function (this: any, options: any) {
 		this.api = options.apiConfiguration ? buildApiHandler(options.apiConfiguration) : null
-		this.apiConfiguration = options.apiConfiguration
+		this._apiConfiguration = options.apiConfiguration
 		this.taskId = "test-task-id"
 		this.providerRef = { deref: () => options.provider }
+		this.updateApiConfiguration = vi.fn((newConfig) => {
+			this._apiConfiguration = newConfig
+		})
+		Object.defineProperty(this, "apiConfiguration", {
+			get: function () {
+				return this._apiConfiguration
+			},
+			configurable: true,
+		})
 	}),
 }))
 
@@ -186,7 +195,7 @@ describe("ClineProvider - Gemini API Key Update", () => {
 
 		// Verify that the task's API handler was updated
 		expect(mockTask.api).toBeDefined()
-		expect(mockTask.apiConfiguration).toEqual(newProviderSettings)
+		expect(mockTask.updateApiConfiguration).toHaveBeenCalledWith(newProviderSettings)
 
 		// Verify that context proxy was updated with new settings
 		expect(mockContextProxy.setProviderSettings).toHaveBeenCalledWith(newProviderSettings)
@@ -228,7 +237,7 @@ describe("ClineProvider - Gemini API Key Update", () => {
 
 		// Verify that the task's API handler and configuration were updated
 		expect(mockTask.api).toBeDefined()
-		expect(mockTask.apiConfiguration).toEqual(newProviderSettings)
+		expect(mockTask.updateApiConfiguration).toHaveBeenCalledWith(newProviderSettings)
 
 		// Verify that context proxy was updated
 		expect(mockContextProxy.setProviderSettings).toHaveBeenCalledWith(newProviderSettings)
@@ -247,7 +256,6 @@ describe("ClineProvider - Gemini API Key Update", () => {
 		}) as any
 
 		const originalApi = mockTask.api
-		const originalConfig = mockTask.apiConfiguration
 
 		// Add the task to the provider's stack
 		provider["clineStack"] = [mockTask]
@@ -264,7 +272,7 @@ describe("ClineProvider - Gemini API Key Update", () => {
 
 		// Verify that the task's API handler was NOT updated
 		expect(mockTask.api).toBe(originalApi)
-		expect(mockTask.apiConfiguration).toBe(originalConfig)
+		expect(mockTask.updateApiConfiguration).not.toHaveBeenCalled()
 
 		// Verify that context proxy was NOT updated
 		expect(mockContextProxy.setProviderSettings).not.toHaveBeenCalled()
@@ -321,7 +329,7 @@ describe("ClineProvider - Gemini API Key Update", () => {
 		await provider.upsertProviderProfile("test-profile", newProviderSettings, true)
 
 		// Verify that all settings are preserved except the API key
-		expect(mockTask.apiConfiguration).toEqual({
+		expect(mockTask.updateApiConfiguration).toHaveBeenCalledWith({
 			apiProvider: "gemini",
 			geminiApiKey: "new-key",
 			apiModelId: "gemini-1.5-pro",

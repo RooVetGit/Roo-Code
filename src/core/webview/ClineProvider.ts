@@ -1144,7 +1144,7 @@ export class ClineProvider
 
 				if (task) {
 					task.api = buildApiHandler(providerSettings)
-					task.apiConfiguration = providerSettings
+					task.updateApiConfiguration(providerSettings)
 				}
 			} else {
 				await this.updateGlobalState("listApiConfigMeta", await this.providerSettingsManager.listConfig())
@@ -1206,7 +1206,7 @@ export class ClineProvider
 
 		if (task) {
 			task.api = buildApiHandler(providerSettings)
-			task.apiConfiguration = providerSettings
+			task.updateApiConfiguration(providerSettings)
 		}
 
 		await this.postStateToWebview()

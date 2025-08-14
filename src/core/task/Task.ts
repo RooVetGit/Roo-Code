@@ -187,10 +187,22 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 	private pauseInterval: NodeJS.Timeout | undefined
 
 	// API
-	readonly apiConfiguration: ProviderSettings
+	private _apiConfiguration: ProviderSettings
 	api: ApiHandler
 	private static lastGlobalApiRequestTime?: number
 	private autoApprovalHandler: AutoApprovalHandler
+
+	get apiConfiguration(): ProviderSettings {
+		return this._apiConfiguration
+	}
+
+	/**
+	 * Updates the API configuration and ensures consistency
+	 * This is used when the provider settings change (e.g., API key update)
+	 */
+	public updateApiConfiguration(newConfiguration: ProviderSettings): void {
+		this._apiConfiguration = newConfiguration
+	}
 
 	/**
 	 * Reset the global API request timestamp. This should only be used for testing.
@@ -301,7 +313,7 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 			console.error("Failed to initialize RooIgnoreController:", error)
 		})
 
-		this.apiConfiguration = apiConfiguration
+		this._apiConfiguration = apiConfiguration
 		this.api = buildApiHandler(apiConfiguration)
 		this.autoApprovalHandler = new AutoApprovalHandler()
 
