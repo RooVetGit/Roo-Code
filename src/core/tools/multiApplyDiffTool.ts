@@ -108,6 +108,9 @@ export async function applyDiffTool(
 	if (argsXmlTag) {
 		// Parse file entries from XML (new way)
 		try {
+			// IMPORTANT: We use parseXmlForDiff here instead of parseXml to prevent HTML entity decoding
+			// This ensures exact character matching when comparing parsed content against original file content
+			// Without this, special characters like & would be decoded to &amp; causing diff mismatches
 			const parsed = parseXmlForDiff(argsXmlTag, ["file.diff.content"]) as ParsedXmlResult
 			const files = Array.isArray(parsed.file) ? parsed.file : [parsed.file].filter(Boolean)
 
