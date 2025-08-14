@@ -41,6 +41,8 @@ import { searchCommits } from "../../utils/git"
 import { exportSettings, importSettingsWithFeedback } from "../config/importExport"
 import { getOpenAiModels } from "../../api/providers/openai"
 import { getVsCodeLmModels } from "../../api/providers/vscode-lm"
+import { getCopilotModels } from "../../api/providers/fetchers/copilot"
+import { CopilotAuthenticator } from "../../api/providers/fetchers/copilot"
 import { openMention } from "../mentions"
 import { TelemetrySetting } from "../../shared/TelemetrySetting"
 import { getWorkspacePath } from "../../utils/path"
@@ -527,6 +529,7 @@ export const webviewMessageHandler = async (
 				litellm: {},
 				ollama: {},
 				lmstudio: {},
+				copilot: {},
 			}
 
 			const safeGetModels = async (options: GetModelsOptions): Promise<ModelRecord> => {
@@ -568,6 +571,7 @@ export const webviewMessageHandler = async (
 					options: { provider: "litellm", apiKey: litellmApiKey, baseUrl: litellmBaseUrl },
 				})
 			}
+			modelFetchPromises.push({ key: "copilot", options: { provider: "copilot" } })
 
 			const results = await Promise.allSettled(
 				modelFetchPromises.map(async ({ key, options }) => {
@@ -688,6 +692,97 @@ export const webviewMessageHandler = async (
 			// TODO: Cache like we do for OpenRouter, etc?
 			provider.postMessageToWebview({ type: "vsCodeLmModels", vsCodeLmModels })
 			break
+		case "requestCopilotModels": {
+			// Get Copilot using device code authentication
+			try {
+				const copilotModels = await getCopilotModels()
+				provider.postMessageToWebview({
+					type: "copilotModels",
+					copilotModels,
+				})
+			} catch (error) {
+				console.error("Failed to fetch Copilot models:", error)
+				provider.postMessageToWebview({
+					type: "copilotModels",
+					copilotModels: {},
+				})
+			}
+			break
+		}
+		case "authenticateCopilot": {
+			// Start device code authentication for Copilot
+			try {
+				const authenticator = CopilotAuthenticator.getInstance()
+
+				// Set up callbacks
+				authenticator.setDeviceCodeCallback((deviceInfo) => {
+					provider.postMessageToWebview({
+						type: "copilotDeviceCode",
+						copilotDeviceCode: {
+							user_code: deviceInfo.user_code,
+							verification_uri: deviceInfo.verification_uri,
+							expires_in: deviceInfo.expires_in,
+						},
+					})
+				})
+
+				authenticator.setAuthTimeoutCallback((error) => {
+					provider.postMessageToWebview({
+						type: "copilotAuthError",
+						error: error,
+					})
+				})
+
+				await authenticator.getApiKey() // This will trigger the device code flow
+				provider.postMessageToWebview({
+					type: "copilotAuthStatus",
+					copilotAuthenticated: true,
+				})
+			} catch (error) {
+				console.error("Failed to authenticate with Copilot:", error)
+				provider.postMessageToWebview({
+					type: "copilotAuthError",
+					error: error instanceof Error ? error.message : "Authentication failed",
+				})
+			}
+			break
+		}
+		case "clearCopilotAuth": {
+			// Clear Copilottication
+			try {
+				const authenticator = CopilotAuthenticator.getInstance()
+				await authenticator.clearAuth()
+				provider.postMessageToWebview({
+					type: "copilotAuthStatus",
+					copilotAuthenticated: false,
+				})
+			} catch (error) {
+				console.error("Failed to clear Copilot authentication:", error)
+				provider.postMessageToWebview({
+					type: "copilotAuthError",
+					error: error instanceof Error ? error.message : "Failed to clear authentication",
+				})
+			}
+			break
+		}
+		case "checkCopilotAuth": {
+			// Check Copilot authentication status
+			try {
+				const authenticator = CopilotAuthenticator.getInstance()
+				const isAuthenticated = await authenticator.isAuthenticated()
+				provider.postMessageToWebview({
+					type: "copilotAuthStatus",
+					copilotAuthenticated: isAuthenticated,
+				})
+			} catch (error) {
+				console.error("Failed to check Copilot authentication:", error)
+				provider.postMessageToWebview({
+					type: "copilotAuthStatus",
+					copilotAuthenticated: false,
+				})
+			}
+			break
+		}
 		case "requestHuggingFaceModels":
 			try {
 				const { getHuggingFaceModelsWithMetadata } = await import("../../api/providers/fetchers/huggingface")

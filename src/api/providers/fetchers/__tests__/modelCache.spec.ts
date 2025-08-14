@@ -25,6 +25,7 @@ vi.mock("../requesty")
 vi.mock("../glama")
 vi.mock("../unbound")
 vi.mock("../io-intelligence")
+vi.mock("../copilot")
 
 // Then imports
 import type { Mock } from "vitest"
@@ -35,6 +36,7 @@ import { getRequestyModels } from "../requesty"
 import { getGlamaModels } from "../glama"
 import { getUnboundModels } from "../unbound"
 import { getIOIntelligenceModels } from "../io-intelligence"
+import { getCopilotModels } from "../copilot"
 
 const mockGetLiteLLMModels = getLiteLLMModels as Mock<typeof getLiteLLMModels>
 const mockGetOpenRouterModels = getOpenRouterModels as Mock<typeof getOpenRouterModels>
@@ -42,6 +44,7 @@ const mockGetRequestyModels = getRequestyModels as Mock<typeof getRequestyModels
 const mockGetGlamaModels = getGlamaModels as Mock<typeof getGlamaModels>
 const mockGetUnboundModels = getUnboundModels as Mock<typeof getUnboundModels>
 const mockGetIOIntelligenceModels = getIOIntelligenceModels as Mock<typeof getIOIntelligenceModels>
+const mockGetCopilotModels = getCopilotModels as Mock<typeof getCopilotModels>
 
 const DUMMY_REQUESTY_KEY = "requesty-key-for-testing"
 const DUMMY_UNBOUND_KEY = "unbound-key-for-testing"
@@ -155,6 +158,23 @@ describe("getModels with new GetModelsOptions", () => {
 		const result = await getModels({ provider: "io-intelligence", apiKey: DUMMY_IOINTELLIGENCE_KEY })
 
 		expect(mockGetIOIntelligenceModels).toHaveBeenCalled()
+		expect(result).toEqual(mockModels)
+	})
+
+	it("calls getCopilotModels for copilot provider", async () => {
+		const mockModels = {
+			"copilot/model": {
+				maxTokens: 4096,
+				contextWindow: 8192,
+				supportsPromptCache: true,
+				description: "Copilot model",
+			},
+		}
+		mockGetCopilotModels.mockResolvedValue(mockModels)
+
+		const result = await getModels({ provider: "copilot" })
+
+		expect(mockGetCopilotModels).toHaveBeenCalled()
 		expect(result).toEqual(mockModels)
 	})
 

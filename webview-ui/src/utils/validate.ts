@@ -194,6 +194,8 @@ function getModelIdForProvider(apiConfiguration: ProviderSettings, provider: str
 			return apiConfiguration.huggingFaceModelId
 		case "io-intelligence":
 			return apiConfiguration.ioIntelligenceModelId
+		case "copilot":
+			return apiConfiguration.copilotModelId
 		default:
 			return apiConfiguration.apiModelId
 	}
@@ -266,6 +268,9 @@ export function validateModelId(apiConfiguration: ProviderSettings, routerModels
 			break
 		case "io-intelligence":
 			modelId = apiConfiguration.ioIntelligenceModelId
+			break
+		case "copilot":
+			modelId = apiConfiguration.copilotModelId
 			break
 	}
 

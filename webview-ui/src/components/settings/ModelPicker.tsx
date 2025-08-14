@@ -35,6 +35,7 @@ type ModelIdKey = keyof Pick<
 	| "unboundModelId"
 	| "requestyModelId"
 	| "openAiModelId"
+	| "copilotModelId"
 	| "litellmModelId"
 	| "ioIntelligenceModelId"
 >

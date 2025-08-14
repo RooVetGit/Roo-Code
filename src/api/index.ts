@@ -36,6 +36,7 @@ import {
 	DoubaoHandler,
 	ZAiHandler,
 	FireworksHandler,
+	CopilotHandler,
 } from "./providers"
 
 export interface SingleCompletionHandler {
@@ -140,6 +141,8 @@ export function buildApiHandler(configuration: ProviderSettings): ApiHandler {
 			return new FireworksHandler(options)
 		case "io-intelligence":
 			return new IOIntelligenceHandler(options)
+		case "copilot":
+			return new CopilotHandler(options)
 		default:
 			apiProvider satisfies "gemini-cli" | undefined
 			return new AnthropicHandler(options)

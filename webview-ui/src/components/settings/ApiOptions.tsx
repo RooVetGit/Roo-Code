@@ -32,6 +32,7 @@ import {
 	mainlandZAiDefaultModelId,
 	fireworksDefaultModelId,
 	ioIntelligenceDefaultModelId,
+	copilotDefaultModelId,
 } from "@roo-code/types"
 
 import { vscode } from "@src/utils/vscode"
@@ -83,6 +84,7 @@ import {
 	Unbound,
 	Vertex,
 	VSCodeLM,
+	Copilot,
 	XAI,
 	ZAi,
 	Fireworks,
@@ -326,6 +328,7 @@ const ApiOptions = ({
 				openai: { field: "openAiModelId" },
 				ollama: { field: "ollamaModelId" },
 				lmstudio: { field: "lmStudioModelId" },
+				copilot: { field: "copilotModelId", default: copilotDefaultModelId },
 			}
 
 			const config = PROVIDER_MODEL_CONFIG[value]
@@ -508,6 +511,15 @@ const ApiOptions = ({
 
 			{selectedProvider === "vscode-lm" && (
 				<VSCodeLM apiConfiguration={apiConfiguration} setApiConfigurationField={setApiConfigurationField} />
+			)}
+
+			{selectedProvider === "copilot" && (
+				<Copilot
+					apiConfiguration={apiConfiguration}
+					setApiConfigurationField={setApiConfigurationField}
+					organizationAllowList={organizationAllowList}
+					modelValidationError={modelValidationError}
+				/>
 			)}
 
 			{selectedProvider === "ollama" && (
