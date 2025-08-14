@@ -20,6 +20,7 @@ vi.mock("@roo-code/telemetry", () => ({
 			return {
 				trackEvent: vi.fn(),
 				trackError: vi.fn(),
+				captureDiffApplicationError: vi.fn(),
 			}
 		},
 	},
