@@ -1300,6 +1300,7 @@ describe("CodeIndexConfigManager", () => {
 				qdrantApiKey: "test-qdrant-key",
 				searchMinScore: 0.4,
 				searchMaxResults: 50,
+				vectorStoreProvider: "qdrant",
 			})
 		})
 
