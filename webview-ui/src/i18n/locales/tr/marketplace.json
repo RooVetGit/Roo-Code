@@ -13,6 +13,10 @@
 			"placeholderMcp": "MCP'leri ara...",
 			"placeholderMode": "Modları ara..."
 		},
+		"installed": {
+			"label": "Sadece yüklüleri göster",
+			"description": "Yüklü öğelere göre filtreleme"
+		},
 		"type": {
 			"label": "Türe göre filtrele:",
 			"all": "Tüm türler",

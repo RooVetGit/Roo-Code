@@ -78,6 +78,7 @@ describe("MarketplaceItemCard", () => {
 			type: "",
 			search: "",
 			tags: [],
+			installed: false,
 		},
 		setFilters: vi.fn(),
 		installed: {
@@ -158,7 +159,7 @@ describe("MarketplaceItemCard", () => {
 			renderWithProviders(
 				<MarketplaceItemCard
 					item={item}
-					filters={{ type: "", search: "", tags: [] }}
+					filters={{ type: "", search: "", tags: [], installed: false }}
 					setFilters={setFilters}
 					installed={{
 						project: undefined,

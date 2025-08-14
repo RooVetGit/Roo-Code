@@ -13,6 +13,10 @@
 			"placeholderMcp": "MCP's zoeken...",
 			"placeholderMode": "Modi zoeken..."
 		},
+		"installed": {
+			"label": "Alleen geïnstalleerde tonen",
+			"description": "Filteren op geïnstalleerde items"
+		},
 		"type": {
 			"label": "Filteren op type:",
 			"all": "Alle types",

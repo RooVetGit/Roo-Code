@@ -13,6 +13,10 @@
 			"placeholderMcp": "Cari MCP...",
 			"placeholderMode": "Cari Mode..."
 		},
+		"installed": {
+			"label": "Tampilkan hanya yang terinstal",
+			"description": "Memfilter berdasarkan item yang terinstal"
+		},
 		"type": {
 			"label": "Filter berdasarkan tipe:",
 			"all": "Semua tipe",

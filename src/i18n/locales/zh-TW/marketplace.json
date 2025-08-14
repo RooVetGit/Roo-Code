@@ -38,6 +38,10 @@
 			"noResults": "找不到標籤。",
 			"selected": "顯示包含任一選取標籤的項目"
 		},
+		"installed": {
+			"label": "僅顯示已安裝",
+			"description": "僅顯示已安裝的項目"
+		},
 		"title": "Marketplace"
 	},
 	"done": "完成",

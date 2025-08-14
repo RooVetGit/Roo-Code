@@ -38,6 +38,10 @@
 			"noResults": "No s'han trobat etiquetes.",
 			"selected": "Mostrant elements amb qualsevol de les etiquetes seleccionades"
 		},
+		"installed": {
+			"label": "Mostrar només instal·lats",
+			"description": "Mostrant només elements instal·lats"
+		},
 		"title": "Marketplace"
 	},
 	"done": "Fet",

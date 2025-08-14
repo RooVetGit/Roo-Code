@@ -38,6 +38,10 @@
 			"noResults": "Aucune étiquette trouvée.",
 			"selected": "Affichage des éléments avec l'une des étiquettes sélectionnées"
 		},
+		"installed": {
+			"label": "Afficher uniquement les installés",
+			"description": "Affichage uniquement des éléments installés"
+		},
 		"title": "Marketplace"
 	},
 	"done": "Terminé",

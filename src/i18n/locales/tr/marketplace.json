@@ -38,6 +38,10 @@
 			"noResults": "Etiket bulunamadı.",
 			"selected": "Seçilen etiketlerden herhangi birine sahip öğeleri göster"
 		},
+		"installed": {
+			"label": "Sadece yüklüleri göster",
+			"description": "Sadece yüklü öğeler gösteriliyor"
+		},
 		"title": "Marketplace"
 	},
 	"done": "Tamam",
