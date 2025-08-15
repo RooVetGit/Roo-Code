@@ -107,6 +107,7 @@ export enum ContextMenuOptionType {
 	Git = "git",
 	NoResults = "noResults",
 	Mode = "mode", // Add mode type
+	Rules = "rules", // Add rules type
 	Command = "command", // Add command type
 	SectionHeader = "sectionHeader", // Add section header type
 }
@@ -136,7 +137,24 @@ export function getContextMenuOptions(
 		const slashQuery = query.slice(1)
 		const results: ContextMenuQueryItem[] = []
 
-		// Add command suggestions first (prioritize commands at the top)
+		// Check if it's the make-rules command
+		const lowerSlashQuery = slashQuery.toLowerCase()
+		if (lowerSlashQuery === "" || "make-rules".startsWith(lowerSlashQuery)) {
+			const rulesCommand: ContextMenuQueryItem = {
+				type: ContextMenuOptionType.Rules,
+				value: "make-rules",
+				label: "Make Rules",
+				description: "Generate AI rules for your project",
+				icon: "$(book)",
+			}
+
+			// Add rules command if it matches
+			if (lowerSlashQuery === "" || "make-rules".startsWith(lowerSlashQuery)) {
+				results.push(rulesCommand)
+			}
+		}
+
+		// Add command suggestions (prioritize commands at the top)
 		if (commands?.length) {
 			// Create searchable strings array for fzf
 			const searchableCommands = commands.map((command) => ({
