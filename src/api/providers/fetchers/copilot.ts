@@ -173,12 +173,6 @@ export class CopilotAuthenticator {
 				expires_in: deviceData.expires_in,
 				interval: deviceData.interval || 5,
 			})
-		} else {
-			// Fallback to console logging
-			console.log(`\n🔐 Copilot Authentication Required`)
-			console.log(`Please visit: ${deviceData.verification_uri}`)
-			console.log(`Enter code: ${deviceData.user_code}`)
-			console.log(`Waiting for authentication...\n`)
 		}
 
 		// Step 3: Poll for access token

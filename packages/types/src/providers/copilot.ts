@@ -1,4 +1,4 @@
-export const copilotDefaultModelId = "claude-sonnet-4"
+export const copilotDefaultModelId = "gpt-4.1"
 
 export const GITHUB_CLIENT_ID = "Iv1.b507a08c87ecfe98"
 export const GITHUB_DEVICE_CODE_URL = "https://github.com/login/device/code"

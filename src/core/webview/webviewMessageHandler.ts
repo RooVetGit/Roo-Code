@@ -4,15 +4,8 @@ import * as os from "os"
 import * as fs from "fs/promises"
 import pWaitFor from "p-wait-for"
 import * as vscode from "vscode"
-import * as yaml from "yaml"
 
-import {
-	type Language,
-	type ProviderSettings,
-	type GlobalState,
-	type ClineMessage,
-	TelemetryEventName,
-} from "@roo-code/types"
+import { type Language, type GlobalState, type ClineMessage, TelemetryEventName } from "@roo-code/types"
 import { CloudService } from "@roo-code/cloud"
 import { TelemetryService } from "@roo-code/telemetry"
 import { type ApiMessage } from "../task-persistence/apiMessages"
@@ -21,7 +14,6 @@ import { ClineProvider } from "./ClineProvider"
 import { changeLanguage, t } from "../../i18n"
 import { Package } from "../../shared/package"
 import { RouterName, toRouterName, ModelRecord } from "../../shared/api"
-import { supportPrompt } from "../../shared/support-prompt"
 import { MessageEnhancer } from "./messageEnhancer"
 
 import { checkoutDiffPayloadSchema, checkoutRestorePayloadSchema, WebviewMessage } from "../../shared/WebviewMessage"
@@ -29,7 +21,6 @@ import { checkExistKey } from "../../shared/checkExistApiConfig"
 import { experimentDefault } from "../../shared/experiments"
 import { Terminal } from "../../integrations/terminal/Terminal"
 import { openFile } from "../../integrations/misc/open-file"
-import { CodeIndexManager } from "../../services/code-index/manager"
 import { openImage, saveImage } from "../../integrations/misc/image-handler"
 import { selectImages } from "../../integrations/misc/process-images"
 import { getTheme } from "../../integrations/theme/getTheme"
@@ -41,17 +32,15 @@ import { searchCommits } from "../../utils/git"
 import { exportSettings, importSettingsWithFeedback } from "../config/importExport"
 import { getOpenAiModels } from "../../api/providers/openai"
 import { getVsCodeLmModels } from "../../api/providers/vscode-lm"
-import { getCopilotModels } from "../../api/providers/fetchers/copilot"
-import { CopilotAuthenticator } from "../../api/providers/fetchers/copilot"
 import { openMention } from "../mentions"
 import { TelemetrySetting } from "../../shared/TelemetrySetting"
 import { getWorkspacePath } from "../../utils/path"
-import { ensureSettingsDirectoryExists } from "../../utils/globalContext"
 import { Mode, defaultModeSlug } from "../../shared/modes"
 import { getModels, flushModels } from "../../api/providers/fetchers/modelCache"
 import { GetModelsOptions } from "../../shared/api"
 import { generateSystemPrompt } from "./generateSystemPrompt"
 import { getCommand } from "../../utils/commands"
+import { DefaultMessageHandlerRegistry } from "./message-handle"
 
 const ALLOWED_VSCODE_SETTINGS = new Set(["terminal.integrated.inheritEnv"])
 
@@ -67,7 +56,7 @@ export const webviewMessageHandler = async (
 	const getGlobalState = <K extends keyof GlobalState>(key: K) => provider.contextProxy.getValue(key)
 	const updateGlobalState = async <K extends keyof GlobalState>(key: K, value: GlobalState[K]) =>
 		await provider.contextProxy.setValue(key, value)
-
+	const messageHandler = DefaultMessageHandlerRegistry.getInstance()
 	/**
 	 * Shared utility to find message indices based on timestamp
 	 */
@@ -692,97 +681,6 @@ export const webviewMessageHandler = async (
 			// TODO: Cache like we do for OpenRouter, etc?
 			provider.postMessageToWebview({ type: "vsCodeLmModels", vsCodeLmModels })
 			break
-		case "requestCopilotModels": {
-			// Get Copilot using device code authentication
-			try {
-				const copilotModels = await getCopilotModels()
-				provider.postMessageToWebview({
-					type: "copilotModels",
-					copilotModels,
-				})
-			} catch (error) {
-				console.error("Failed to fetch Copilot models:", error)
-				provider.postMessageToWebview({
-					type: "copilotModels",
-					copilotModels: {},
-				})
-			}
-			break
-		}
-		case "authenticateCopilot": {
-			// Start device code authentication for Copilot
-			try {
-				const authenticator = CopilotAuthenticator.getInstance()
-
-				// Set up callbacks
-				authenticator.setDeviceCodeCallback((deviceInfo) => {
-					provider.postMessageToWebview({
-						type: "copilotDeviceCode",
-						copilotDeviceCode: {
-							user_code: deviceInfo.user_code,
-							verification_uri: deviceInfo.verification_uri,
-							expires_in: deviceInfo.expires_in,
-						},
-					})
-				})
-
-				authenticator.setAuthTimeoutCallback((error) => {
-					provider.postMessageToWebview({
-						type: "copilotAuthError",
-						error: error,
-					})
-				})
-
-				await authenticator.getApiKey() // This will trigger the device code flow
-				provider.postMessageToWebview({
-					type: "copilotAuthStatus",
-					copilotAuthenticated: true,
-				})
-			} catch (error) {
-				console.error("Failed to authenticate with Copilot:", error)
-				provider.postMessageToWebview({
-					type: "copilotAuthError",
-					error: error instanceof Error ? error.message : "Authentication failed",
-				})
-			}
-			break
-		}
-		case "clearCopilotAuth": {
-			// Clear Copilottication
-			try {
-				const authenticator = CopilotAuthenticator.getInstance()
-				await authenticator.clearAuth()
-				provider.postMessageToWebview({
-					type: "copilotAuthStatus",
-					copilotAuthenticated: false,
-				})
-			} catch (error) {
-				console.error("Failed to clear Copilot authentication:", error)
-				provider.postMessageToWebview({
-					type: "copilotAuthError",
-					error: error instanceof Error ? error.message : "Failed to clear authentication",
-				})
-			}
-			break
-		}
-		case "checkCopilotAuth": {
-			// Check Copilot authentication status
-			try {
-				const authenticator = CopilotAuthenticator.getInstance()
-				const isAuthenticated = await authenticator.isAuthenticated()
-				provider.postMessageToWebview({
-					type: "copilotAuthStatus",
-					copilotAuthenticated: isAuthenticated,
-				})
-			} catch (error) {
-				console.error("Failed to check Copilot authentication:", error)
-				provider.postMessageToWebview({
-					type: "copilotAuthStatus",
-					copilotAuthenticated: false,
-				})
-			}
-			break
-		}
 		case "requestHuggingFaceModels":
 			try {
 				const { getHuggingFaceModelsWithMetadata } = await import("../../api/providers/fetchers/huggingface")
@@ -2704,6 +2602,18 @@ export const webviewMessageHandler = async (
 					text: text,
 				})
 			}
+			break
+		}
+		default: {
+			// Try to handle the message using the strategy pattern
+			const handler = await messageHandler.getStrategy(message.type)
+			if (handler) {
+				await handler.handle({ provider, message, marketplaceManager })
+				break
+			}
+
+			// Message type not recognized
+			console.warn(`Unhandled message type: ${message.type}`)
 			break
 		}
 	}
