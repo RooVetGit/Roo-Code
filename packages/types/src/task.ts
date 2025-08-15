@@ -77,7 +77,8 @@ export interface TaskLike {
 	on<K extends keyof TaskEvents>(event: K, listener: (...args: TaskEvents[K]) => void | Promise<void>): this
 	off<K extends keyof TaskEvents>(event: K, listener: (...args: TaskEvents[K]) => void | Promise<void>): this
 
-	setMessageResponse(text: string, images?: string[]): void
+	approveAsk(options?: { text?: string; images?: string[] }): void
+	denyAsk(options?: { text?: string; images?: string[] }): void
 	submitUserMessage(text: string, images?: string[]): void
 }
 
