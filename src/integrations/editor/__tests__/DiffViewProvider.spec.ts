@@ -362,6 +362,8 @@ describe("DiffViewProvider", () => {
 			// Mock vscode functions
 			vi.mocked(vscode.window.showTextDocument).mockResolvedValue({} as any)
 			vi.mocked(vscode.languages.getDiagnostics).mockReturnValue([])
+			// Mock activeTextEditor as null by default
+			vi.mocked(vscode.window).activeTextEditor = null as any
 		})
 
 		it("should write content directly to file without opening diff view", async () => {
@@ -388,6 +390,26 @@ describe("DiffViewProvider", () => {
 			expect(result.newProblemsMessage).toBe("")
 			expect(result.userEdits).toBeUndefined()
 			expect(result.finalContent).toBe("new content")
+		})
+
+		it("should not call showTextDocument when file is already active editor", async () => {
+			// Mock active editor with the same file
+			vi.mocked(vscode.window).activeTextEditor = {
+				document: {
+					uri: { fsPath: `${mockCwd}/test.ts` },
+				},
+			} as any
+
+			vi.mocked(vscode.window.showTextDocument).mockClear()
+
+			await diffViewProvider.saveDirectly("test.ts", "new content", true, true, 1000)
+
+			// Verify file was written
+			const fs = await import("fs/promises")
+			expect(fs.writeFile).toHaveBeenCalledWith(`${mockCwd}/test.ts`, "new content", "utf-8")
+
+			// Verify showTextDocument was NOT called since file is already active
+			expect(vscode.window.showTextDocument).not.toHaveBeenCalled()
 		})
 
 		it("should not open file when openWithoutFocus is false", async () => {
@@ -456,6 +478,8 @@ describe("DiffViewProvider", () => {
 			// Mock vscode functions
 			vi.mocked(vscode.window.showTextDocument).mockResolvedValue({} as any)
 			vi.mocked(vscode.languages.getDiagnostics).mockReturnValue([])
+			// Mock activeTextEditor as null by default
+			vi.mocked(vscode.window).activeTextEditor = null as any
 		})
 
 		it("should apply diagnostic delay when diagnosticsEnabled is true", async () => {
@@ -515,6 +539,49 @@ describe("DiffViewProvider", () => {
 			// Verify custom delay was used
 			expect(mockDelay).toHaveBeenCalledWith(5000)
 			expect(vscode.languages.getDiagnostics).toHaveBeenCalled()
+		})
+
+		it("should not call showTextDocument when file is already active editor", async () => {
+			// Mock active editor with the same file
+			vi.mocked(vscode.window).activeTextEditor = {
+				document: {
+					uri: { fsPath: `${mockCwd}/test.ts` },
+				},
+			} as any
+
+			// Mock closeAllDiffViews
+			;(diffViewProvider as any).closeAllDiffViews = vi.fn().mockResolvedValue(undefined)
+
+			vi.mocked(vscode.window.showTextDocument).mockClear()
+
+			await diffViewProvider.saveChanges(true, 1000)
+
+			// Verify showTextDocument was NOT called since file is already active
+			expect(vscode.window.showTextDocument).not.toHaveBeenCalled()
+			// Verify closeAllDiffViews was still called
+			expect((diffViewProvider as any).closeAllDiffViews).toHaveBeenCalled()
+		})
+
+		it("should call showTextDocument when active editor is different file", async () => {
+			// Mock active editor with a different file
+			vi.mocked(vscode.window).activeTextEditor = {
+				document: {
+					uri: { fsPath: `${mockCwd}/different.ts` },
+				},
+			} as any
+
+			// Mock closeAllDiffViews
+			;(diffViewProvider as any).closeAllDiffViews = vi.fn().mockResolvedValue(undefined)
+
+			vi.mocked(vscode.window.showTextDocument).mockClear()
+
+			await diffViewProvider.saveChanges(true, 1000)
+
+			// Verify showTextDocument WAS called since active editor is different file
+			expect(vscode.window.showTextDocument).toHaveBeenCalledWith(
+				expect.objectContaining({ fsPath: `${mockCwd}/test.ts` }),
+				{ preview: false, preserveFocus: true },
+			)
 		})
 	})
 })
