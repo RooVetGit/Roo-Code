@@ -2,7 +2,7 @@ import fs from "fs/promises"
 import * as path from "path"
 
 import * as vscode from "vscode"
-import { isBinaryFile } from "isbinaryfile"
+import { isBinaryFileWithEncodingDetection } from "../../utils/encoding"
 
 import { mentionRegexGlobal, commandRegexGlobal, unescapeSpaces } from "../../shared/context-mentions"
 
@@ -320,7 +320,7 @@ async function getFileOrFolderContent(
 						fileContentPromises.push(
 							(async () => {
 								try {
-									const isBinary = await isBinaryFile(absoluteFilePath).catch(() => false)
+									const isBinary = await isBinaryFileWithEncodingDetection(absoluteFilePath)
 									if (isBinary) {
 										return undefined
 									}

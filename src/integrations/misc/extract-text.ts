@@ -3,11 +3,10 @@ import * as path from "path"
 import pdf from "pdf-parse/lib/pdf-parse"
 import mammoth from "mammoth"
 import fs from "fs/promises"
-import { isBinaryFile } from "isbinaryfile"
 import { extractTextFromXLSX } from "./extract-text-from-xlsx"
 import { countFileLines } from "./line-counter"
 import { readLines } from "./read-lines"
-import { readFileWithEncodingDetection } from "../../utils/encoding"
+import { readFileWithEncodingDetection, isBinaryFileWithEncodingDetection } from "../../utils/encoding"
 
 async function extractTextFromPDF(filePath: string): Promise<string> {
 	const dataBuffer = await fs.readFile(filePath)
@@ -85,9 +84,8 @@ export async function extractTextFromFile(filePath: string, maxReadFileLine?: nu
 	if (extractor) {
 		return extractor(filePath)
 	}
-
-	// Handle other files
-	const isBinary = await isBinaryFile(filePath).catch(() => false)
+	// Handle other files - use unified binary file detection
+	const isBinary = await isBinaryFileWithEncodingDetection(filePath)
 
 	if (!isBinary) {
 		// Check if we need to apply line limit

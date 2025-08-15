@@ -9,34 +9,35 @@ import {
 	readFileWithEncodingDetection,
 	detectFileEncoding,
 	writeFileWithEncodingPreservation,
+	isBinaryFileWithEncodingDetection,
 } from "../encoding"
 
 // Mock dependencies
 vi.mock("jschardet", () => ({
-	detect: vi.fn()
+	detect: vi.fn(),
 }))
 
 vi.mock("iconv-lite", () => ({
 	encodingExists: vi.fn(),
 	decode: vi.fn(),
-	encode: vi.fn()
+	encode: vi.fn(),
 }))
 
 vi.mock("isbinaryfile", () => ({
-	isBinaryFile: vi.fn()
+	isBinaryFile: vi.fn(),
 }))
 
 vi.mock("fs/promises", () => ({
 	default: {
 		readFile: vi.fn(),
-		writeFile: vi.fn()
-	}
+		writeFile: vi.fn(),
+	},
 }))
 
 vi.mock("path", () => ({
 	default: {
-		extname: vi.fn()
-	}
+		extname: vi.fn(),
+	},
 }))
 
 const mockJschardet = vi.mocked(jschardet)
@@ -64,9 +65,7 @@ describe("encoding", () => {
 			const buffer = Buffer.from("binary content")
 			mockIsBinaryFile.mockResolvedValue(true)
 
-			await expect(detectEncoding(buffer, ".exe")).rejects.toThrow(
-				"Cannot read text for file type: .exe"
-			)
+			await expect(detectEncoding(buffer, ".exe")).rejects.toThrow("Cannot read text for file type: .exe")
 		})
 
 		it("should handle string detection result from jschardet", async () => {
@@ -74,7 +73,7 @@ describe("encoding", () => {
 			mockIsBinaryFile.mockResolvedValue(false)
 			mockJschardet.detect.mockReturnValue({
 				encoding: "utf8",
-				confidence: 0.9
+				confidence: 0.9,
 			})
 
 			const result = await detectEncoding(buffer, ".txt")
@@ -124,16 +123,14 @@ describe("encoding", () => {
 			mockIsBinaryFile.mockResolvedValue(false)
 			mockJschardet.detect.mockReturnValue({
 				encoding: "",
-				confidence: 0
+				confidence: 0,
 			})
 
 			const consoleSpy = vi.spyOn(console, "warn").mockImplementation(() => {})
 			const result = await detectEncoding(buffer, ".txt")
 
 			expect(result).toBe("utf8")
-			expect(consoleSpy).toHaveBeenCalledWith(
-				"No encoding detected, falling back to utf8"
-			)
+			expect(consoleSpy).toHaveBeenCalledWith("No encoding detected, falling back to utf8")
 		})
 
 		it("should handle very small file (1 byte)", async () => {
@@ -141,16 +138,14 @@ describe("encoding", () => {
 			mockIsBinaryFile.mockResolvedValue(false)
 			mockJschardet.detect.mockReturnValue({
 				encoding: "",
-				confidence: 0
+				confidence: 0,
 			})
 
 			const consoleSpy = vi.spyOn(console, "warn").mockImplementation(() => {})
 			const result = await detectEncoding(buffer, ".txt")
 
 			expect(result).toBe("utf8")
-			expect(consoleSpy).toHaveBeenCalledWith(
-				"No encoding detected, falling back to utf8"
-			)
+			expect(consoleSpy).toHaveBeenCalledWith("No encoding detected, falling back to utf8")
 		})
 
 		it("should handle very small file (2 bytes)", async () => {
@@ -158,7 +153,7 @@ describe("encoding", () => {
 			mockIsBinaryFile.mockResolvedValue(false)
 			mockJschardet.detect.mockReturnValue({
 				encoding: "utf8",
-				confidence: 0.3
+				confidence: 0.3,
 			})
 
 			const consoleSpy = vi.spyOn(console, "warn").mockImplementation(() => {})
@@ -166,7 +161,7 @@ describe("encoding", () => {
 
 			expect(result).toBe("utf8")
 			expect(consoleSpy).toHaveBeenCalledWith(
-				"Low confidence encoding detection: utf8 (confidence: 0.3), falling back to utf8"
+				"Low confidence encoding detection: utf8 (confidence: 0.3), falling back to utf8",
 			)
 		})
 
@@ -183,7 +178,7 @@ describe("encoding", () => {
 
 			expect(result).toBe("utf8")
 			expect(consoleSpy).toHaveBeenCalledWith(
-				"Low confidence encoding detection: gbk (confidence: 0.5), falling back to utf8"
+				"Low confidence encoding detection: gbk (confidence: 0.5), falling back to utf8",
 			)
 		})
 
@@ -192,16 +187,14 @@ describe("encoding", () => {
 			mockIsBinaryFile.mockResolvedValue(false)
 			mockJschardet.detect.mockReturnValue({
 				encoding: "",
-				confidence: 0
+				confidence: 0,
 			})
 
 			const consoleSpy = vi.spyOn(console, "warn").mockImplementation(() => {})
 			const result = await detectEncoding(buffer, ".txt")
 
 			expect(result).toBe("utf8")
-			expect(consoleSpy).toHaveBeenCalledWith(
-				"No encoding detected, falling back to utf8"
-			)
+			expect(consoleSpy).toHaveBeenCalledWith("No encoding detected, falling back to utf8")
 		})
 
 		it("should fallback to utf8 for unsupported encodings", async () => {
@@ -218,7 +211,7 @@ describe("encoding", () => {
 
 			expect(result).toBe("utf8")
 			expect(consoleSpy).toHaveBeenCalledWith(
-				"Unsupported encoding detected: unsupported-encoding, falling back to utf8"
+				"Unsupported encoding detected: unsupported-encoding, falling back to utf8",
 			)
 		})
 
@@ -235,7 +228,7 @@ describe("encoding", () => {
 			await detectEncoding(buffer, ".txt")
 
 			expect(consoleSpy).toHaveBeenCalledWith(
-				"Unsupported encoding detected: unsupported-encoding, falling back to utf8"
+				"Unsupported encoding detected: unsupported-encoding, falling back to utf8",
 			)
 		})
 
@@ -256,7 +249,7 @@ describe("encoding", () => {
 			mockIsBinaryFile.mockResolvedValue(false)
 			mockJschardet.detect.mockReturnValue({
 				encoding: "utf8",
-				confidence: 0.9
+				confidence: 0.9,
 			})
 
 			const result = await readFileWithEncodingDetection(filePath)
@@ -275,7 +268,7 @@ describe("encoding", () => {
 			mockPath.extname.mockReturnValue(".exe")
 
 			await expect(readFileWithEncodingDetection(filePath)).rejects.toThrow(
-				"Cannot read text for file type: .exe"
+				"Cannot read text for file type: .exe",
 			)
 		})
 	})
@@ -288,7 +281,7 @@ describe("encoding", () => {
 			mockIsBinaryFile.mockResolvedValue(false)
 			mockJschardet.detect.mockReturnValue({
 				encoding: "gbk",
-				confidence: 0.9
+				confidence: 0.9,
 			})
 
 			const result = await detectFileEncoding(filePath)
@@ -323,7 +316,7 @@ describe("encoding", () => {
 			mockIsBinaryFile.mockResolvedValue(false)
 			mockJschardet.detect.mockReturnValue({
 				encoding: "utf8",
-				confidence: 0.9
+				confidence: 0.9,
 			})
 
 			await writeFileWithEncodingPreservation(filePath, content)
@@ -337,7 +330,7 @@ describe("encoding", () => {
 			mockIsBinaryFile.mockResolvedValue(false)
 			mockJschardet.detect.mockReturnValue({
 				encoding: "gbk",
-				confidence: 0.9
+				confidence: 0.9,
 			})
 
 			await writeFileWithEncodingPreservation(filePath, content)
@@ -356,4 +349,62 @@ describe("encoding", () => {
 			expect(mockFs.writeFile).toHaveBeenCalledWith(filePath, content, "utf8")
 		})
 	})
-}) 
+
+	describe("isBinaryFileWithEncodingDetection", () => {
+		it("should return false for text files that can be encoded", async () => {
+			const filePath = "/path/to/file.txt"
+			const buffer = Buffer.from("text content")
+			mockFs.readFile.mockResolvedValue(buffer)
+			mockPath.extname.mockReturnValue(".txt")
+			mockJschardet.detect.mockReturnValue({
+				encoding: "utf8",
+				confidence: 0.9,
+			})
+
+			const result = await isBinaryFileWithEncodingDetection(filePath)
+
+			expect(result).toBe(false)
+			expect(mockFs.readFile).toHaveBeenCalledWith(filePath)
+		})
+
+		it("should return true for files that fail encoding detection and are binary", async () => {
+			const filePath = "/path/to/file.exe"
+			const buffer = Buffer.from("binary content")
+			mockFs.readFile.mockResolvedValue(buffer)
+			mockPath.extname.mockReturnValue(".exe")
+			mockJschardet.detect.mockReturnValue({
+				encoding: "",
+				confidence: 0,
+			})
+			mockIsBinaryFile.mockResolvedValue(true)
+
+			const result = await isBinaryFileWithEncodingDetection(filePath)
+
+			expect(result).toBe(true)
+		})
+
+		it("should return true for file read errors", async () => {
+			const filePath = "/path/to/nonexistent.txt"
+			mockFs.readFile.mockRejectedValue(new Error("File not found"))
+
+			const result = await isBinaryFileWithEncodingDetection(filePath)
+
+			expect(result).toBe(true)
+		})
+
+		it("should return false when encoding detection succeeds even with low confidence", async () => {
+			const filePath = "/path/to/file.txt"
+			const buffer = Buffer.from("text content")
+			mockFs.readFile.mockResolvedValue(buffer)
+			mockPath.extname.mockReturnValue(".txt")
+			mockJschardet.detect.mockReturnValue({
+				encoding: "utf8",
+				confidence: 0.3,
+			})
+
+			const result = await isBinaryFileWithEncodingDetection(filePath)
+
+			expect(result).toBe(false)
+		})
+	})
+})
