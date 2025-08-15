@@ -1497,8 +1497,8 @@ export class ClineProvider
 		// Find all tasks in the stack and cancel any ongoing condensing operation
 		for (let i = this.clineStack.length - 1; i >= 0; i--) {
 			const task = this.clineStack[i]
-			if ((task as any).isCondensing) {
-				;(task as any).cancelCondenseContext?.()
+			if (task.isCondensing) {
+				task.cancelCondenseContext?.()
 				break
 			}
 		}

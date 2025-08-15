@@ -871,17 +871,15 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 			const systemPrompt = await this.getSystemPrompt()
 
 			// Get condensing configuration
-			// Using type assertion to handle the case where Phase 1 hasn't been implemented yet
 			const state = await this.providerRef.deref()?.getState()
-			const customCondensingPrompt = state ? (state as any).customCondensingPrompt : undefined
-			const condensingApiConfigId = state ? (state as any).condensingApiConfigId : undefined
-			const listApiConfigMeta = state ? (state as any).listApiConfigMeta : undefined
+			const customCondensingPrompt = state?.customCondensingPrompt
+			const condensingApiConfigId = state?.condensingApiConfigId
+			const listApiConfigMeta = state?.listApiConfigMeta
 
 			// Determine API handler to use
 			let condensingApiHandler: ApiHandler | undefined
 			if (condensingApiConfigId && listApiConfigMeta && Array.isArray(listApiConfigMeta)) {
-				// Using type assertion for the id property to avoid implicit any
-				const matchingConfig = listApiConfigMeta.find((config: any) => config.id === condensingApiConfigId)
+				const matchingConfig = listApiConfigMeta.find((config) => config.id === condensingApiConfigId)
 				if (matchingConfig) {
 					const profile = await this.providerRef.deref()?.providerSettingsManager.getProfile({
 						id: condensingApiConfigId,
@@ -2284,8 +2282,7 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 		let condensingApiHandler: ApiHandler | undefined
 
 		if (condensingApiConfigId && listApiConfigMeta && Array.isArray(listApiConfigMeta)) {
-			// Using type assertion for the id property to avoid implicit any.
-			const matchingConfig = listApiConfigMeta.find((config: any) => config.id === condensingApiConfigId)
+			const matchingConfig = listApiConfigMeta.find((config) => config.id === condensingApiConfigId)
 
 			if (matchingConfig) {
 				const profile = await this.providerRef.deref()?.providerSettingsManager.getProfile({
