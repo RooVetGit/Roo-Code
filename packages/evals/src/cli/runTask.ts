@@ -302,14 +302,58 @@ export const runTask = async ({ run, task, publish, logger }: RunTaskOptions) =>
 		isClientDisconnected = true
 	})
 
+	// Build configuration with proper precedence:
+	// 1. Base EVALS_SETTINGS (without hardcoded apiProvider)
+	// 2. Environment-based API keys for backward compatibility
+	// 3. run.settings override everything (including apiProvider and keys)
+	const configuration: Record<string, unknown> = {
+		...EVALS_SETTINGS,
+	}
+
+	// Add environment API keys based on the provider if not overridden
+	if (!run.settings?.apiProvider) {
+		// Default to openrouter for backward compatibility if no provider specified
+		configuration.apiProvider = "openrouter"
+		configuration.openRouterApiKey = process.env.OPENROUTER_API_KEY
+	} else {
+		// Set API keys from environment based on the selected provider
+		const provider = run.settings.apiProvider
+		switch (provider) {
+			case "openrouter":
+				configuration.openRouterApiKey = process.env.OPENROUTER_API_KEY
+				break
+			case "anthropic":
+				configuration.apiKey = process.env.ANTHROPIC_API_KEY
+				break
+			case "openai":
+				configuration.openAiApiKey = process.env.OPENAI_API_KEY
+				break
+			case "gemini":
+				configuration.geminiApiKey = process.env.GEMINI_API_KEY
+				break
+			case "deepseek":
+				configuration.deepSeekApiKey = process.env.DEEPSEEK_API_KEY
+				break
+			case "mistral":
+				configuration.mistralApiKey = process.env.MISTRAL_API_KEY
+				break
+			case "groq":
+				configuration.groqApiKey = process.env.GROQ_API_KEY
+				break
+			case "litellm":
+				configuration.litellmApiKey = process.env.LITELLM_API_KEY
+				break
+			// Add more providers as needed
+		}
+	}
+
+	// Override with run.settings (highest priority)
+	Object.assign(configuration, run.settings)
+
 	client.sendCommand({
 		commandName: TaskCommandName.StartNewTask,
 		data: {
-			configuration: {
-				...EVALS_SETTINGS,
-				openRouterApiKey: process.env.OPENROUTER_API_KEY,
-				...run.settings, // Allow the provided settings to override `openRouterApiKey`.
-			},
+			configuration,
 			text: prompt,
 		},
 	})
