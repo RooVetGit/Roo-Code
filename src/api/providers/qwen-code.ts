@@ -112,7 +112,6 @@ export class QwenCodeHandler extends BaseProvider implements SingleCompletionHan
 
 		const filePath = getQwenCachedCredentialPath()
 		await fs.writeFile(filePath, JSON.stringify(newCredentials, null, 2))
-		// console.log("Successfully refreshed and cached new credentials.")
 
 		return newCredentials
 	}
@@ -152,7 +151,6 @@ export class QwenCodeHandler extends BaseProvider implements SingleCompletionHan
 			return await apiCall()
 		} catch (error: any) {
 			if (error.status === 401) {
-				// console.log("Authentication failed. Forcing token refresh and retrying...")
 				this.credentials = await this.refreshAccessToken(this.credentials!)
 				// Just update the key, don't re-create the client
 				this.client.apiKey = this.credentials.access_token
@@ -192,7 +190,6 @@ export class QwenCodeHandler extends BaseProvider implements SingleCompletionHan
 
 		const stream = await this.callApiWithRetry(() => this.client!.chat.completions.create(requestOptions))
 
-		// XmlMatcher
 		const matcher = new XmlMatcher(
 			"think",
 			(chunk) =>
@@ -216,7 +213,6 @@ export class QwenCodeHandler extends BaseProvider implements SingleCompletionHan
 				fullContent = delta.content
 
 				if (newText) {
-					// this.options.log?.(`[qwen-code] chunk: ${newText}`)
 					for (const processedChunk of matcher.update(newText)) {
 						yield processedChunk
 					}
