@@ -1,7 +1,7 @@
 import { z } from "zod"
 
 import { RooCodeEventName } from "./events.js"
-import { type ClineMessage, type BlockingAsk, type TokenUsage, type ClineAsk } from "./message.js"
+import { type ClineMessage, type IdleAsk, type TokenUsage } from "./message.js"
 import { type ToolUsage, type ToolName } from "./tool.js"
 import type { StaticAppProperties, GitProperties, TelemetryProperties } from "./telemetry.js"
 
@@ -71,7 +71,7 @@ export type TaskMetadata = z.infer<typeof taskMetadataSchema>
 export interface TaskLike {
 	readonly taskId: string
 	readonly rootTask?: TaskLike
-	readonly blockingAsk?: BlockingAsk
+	readonly blockingAsk?: IdleAsk
 	readonly metadata: TaskMetadata
 
 	on<K extends keyof TaskEvents>(event: K, listener: (...args: TaskEvents[K]) => void | Promise<void>): this
@@ -101,7 +101,7 @@ export type TaskEvents = {
 	[RooCodeEventName.Message]: [{ action: "created" | "updated"; message: ClineMessage }]
 	[RooCodeEventName.TaskModeSwitched]: [taskId: string, mode: string]
 	[RooCodeEventName.TaskAskResponded]: []
-	[RooCodeEventName.TaskAskRequiresInteraction]: [taskId: string, askType: ClineAsk]
+	[RooCodeEventName.TaskAskRequiresInteraction]: [taskId: string, askMessage: ClineMessage]
 
 	// Task Analytics
 	[RooCodeEventName.TaskToolFailed]: [taskId: string, tool: ToolName, error: string]

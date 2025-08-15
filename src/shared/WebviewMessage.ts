@@ -6,6 +6,7 @@ import {
 	type ModeConfig,
 	type InstallMarketplaceItemOptions,
 	type MarketplaceItem,
+	type ClineMessage,
 	marketplaceItemSchema,
 } from "@roo-code/types"
 import type { ShareVisibility } from "@roo-code/cloud"
@@ -49,7 +50,6 @@ export interface WebviewMessage {
 		| "webviewDidLaunch"
 		| "newTask"
 		| "askResponse"
-		| "askRequiresInteraction"
 		| "terminalOperation"
 		| "clearTask"
 		| "didShowAnnouncement"
@@ -218,8 +218,8 @@ export interface WebviewMessage {
 	disabled?: boolean
 	context?: string
 	dataUri?: string
+	askMessage?: ClineMessage
 	askResponse?: ClineAskResponse
-	askType?: string
 	apiConfiguration?: ProviderSettings
 	images?: string[]
 	bool?: boolean

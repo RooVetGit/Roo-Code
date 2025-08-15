@@ -45,10 +45,12 @@ export const clineAskSchema = z.enum(clineAsks)
 export type ClineAsk = z.infer<typeof clineAskSchema>
 
 /**
- * BlockingAsk
+ * IdleAsk
+ *
+ * Asks that put the task into an "idle" state.
  */
 
-export const blockingAsks: ClineAsk[] = [
+export const idleAsks: ClineAsk[] = [
 	"api_req_failed",
 	"mistake_limit_reached",
 	"completion_result",
@@ -58,10 +60,24 @@ export const blockingAsks: ClineAsk[] = [
 	"auto_approval_max_req_reached",
 ] as const
 
-export type BlockingAsk = (typeof blockingAsks)[number]
+export type IdleAsk = (typeof idleAsks)[number]
 
-export function isBlockingAsk(ask: ClineAsk): ask is BlockingAsk {
-	return blockingAsks.includes(ask)
+export function isIdleAsk(ask: ClineAsk): ask is IdleAsk {
+	return idleAsks.includes(ask)
+}
+
+/**
+ * InteractiveAsk
+ *
+ * Asks that put the task into an "user interaction required" state.
+ */
+
+export const interactiveAsks: ClineAsk[] = ["command"] as const
+
+export type InteractiveAsk = (typeof interactiveAsks)[number]
+
+export function isInteractiveAsk(ask: ClineAsk): ask is InteractiveAsk {
+	return interactiveAsks.includes(ask)
 }
 
 /**

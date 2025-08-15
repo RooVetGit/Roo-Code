@@ -21,16 +21,18 @@ import {
 	type ClineMessage,
 	type ClineSay,
 	type ClineAsk,
-	type BlockingAsk,
+	type IdleAsk,
+	type InteractiveAsk,
 	type ToolProgressStatus,
 	type HistoryItem,
 	RooCodeEventName,
 	TelemetryEventName,
 	TodoItem,
+	DEFAULT_CONSECUTIVE_MISTAKE_LIMIT,
 	getApiProtocol,
 	getModelId,
-	DEFAULT_CONSECUTIVE_MISTAKE_LIMIT,
-	isBlockingAsk,
+	isIdleAsk,
+	isInteractiveAsk,
 } from "@roo-code/types"
 import { TelemetryService } from "@roo-code/telemetry"
 import { CloudService, ExtensionBridgeService } from "@roo-code/cloud"
@@ -182,7 +184,8 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 	providerRef: WeakRef<ClineProvider>
 	private readonly globalStoragePath: string
 	abort: boolean = false
-	blockingAsk?: BlockingAsk
+	idleAsk?: IdleAsk
+	interactiveAsk?: InteractiveAsk
 	didFinishAbortingStream = false
 	abandoned = false
 	isInitialized = false
@@ -713,12 +716,29 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 			await this.addToClineMessages({ ts: askTs, type: "ask", ask: type, text, isProtected })
 		}
 
-		// Detect if the task will enter an idle state.
-		const isReady = this.askResponse !== undefined || this.lastMessageTs !== askTs
+		// The state is mutable if the message is complete and the task will
+		// block (via the `pWaitFor`).
+		const isBlocking = !(this.askResponse !== undefined || this.lastMessageTs !== askTs)
+		const isStateMutable = !partial && isBlocking
 
-		if (!partial && !isReady && isBlockingAsk(type)) {
-			this.blockingAsk = type
-			this.emit(RooCodeEventName.TaskIdle, this.taskId)
+		// The task will enter an idle state.
+		let goIdleTimeout: NodeJS.Timeout | undefined
+
+		if (isStateMutable && isIdleAsk(type)) {
+			goIdleTimeout = setTimeout(() => {
+				this.idleAsk = undefined
+				this.emit(RooCodeEventName.TaskActive, this.taskId)
+			}, 1000)
+		}
+
+		// The task will enter a "user interaction required" state.
+		let goInteractiveTimeout: NodeJS.Timeout | undefined
+
+		if (isStateMutable && !isInteractiveAsk(type)) {
+			goInteractiveTimeout = setTimeout(() => {
+				this.interactiveAsk = undefined
+				this.emit(RooCodeEventName.TaskActive, this.taskId)
+			}, 1000)
 		}
 
 		console.log(`[Task#${this.taskId}] pWaitFor askResponse(${type}) -> blocking`)
@@ -737,9 +757,22 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 		this.askResponseText = undefined
 		this.askResponseImages = undefined
 
+		// Cancel the timeouts if they are still running.
+		if (goIdleTimeout) {
+			clearTimeout(goIdleTimeout)
+		}
+
+		if (goInteractiveTimeout) {
+			clearTimeout(goInteractiveTimeout)
+		}
+
+		goIdleTimeout = undefined
+		goInteractiveTimeout = undefined
+
 		// Switch back to an active state.
-		if (this.blockingAsk) {
-			this.blockingAsk = undefined
+		if (this.idleAsk || this.interactiveAsk) {
+			this.idleAsk = undefined
+			this.interactiveAsk = undefined
 			this.emit(RooCodeEventName.TaskActive, this.taskId)
 		}
 

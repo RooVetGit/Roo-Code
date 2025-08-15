@@ -265,9 +265,11 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 		if (lastMessage) {
 			switch (lastMessage.type) {
 				case "ask":
-					// Reset user response flag when a new ask arrives to allow auto-approval
+					// Reset user response flag when a new ask arrives to allow
+					// auto-approval.
 					userRespondedRef.current = false
 					const isPartial = lastMessage.partial === true
+
 					switch (lastMessage.ask) {
 						case "api_req_failed":
 							playSound("progress_loop")
@@ -555,6 +557,7 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 			clearTimeout(autoApproveTimeoutRef.current)
 			autoApproveTimeoutRef.current = null
 		}
+
 		// Reset user response flag for new message
 		userRespondedRef.current = false
 
@@ -591,7 +594,8 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 						return
 					}
 
-					// Mark that user has responded - this prevents any pending auto-approvals
+					// Mark that user has responded - this prevents any pending
+					// auto-approvals.
 					userRespondedRef.current = true
 
 					if (messagesRef.current.length === 0) {
@@ -1593,7 +1597,7 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 			return
 		}
 
-		// Exit early if user has already responded
+		// Exit early if user has already responded.
 		if (userRespondedRef.current) {
 			return
 		}
@@ -1671,9 +1675,6 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 				setSendingDisabled(true)
 				setClineAsk(undefined)
 				setEnableButtons(false)
-			} else if (lastMessage?.ask) {
-				// Notify the extension host that this ask requires user interaction.
-				vscode.postMessage({ type: "askRequiresInteraction", askType: lastMessage.ask })
 			}
 		}
 

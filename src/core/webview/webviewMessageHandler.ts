@@ -349,13 +349,6 @@ export const webviewMessageHandler = async (
 		case "askResponse":
 			provider.getCurrentTask()?.handleWebviewAskResponse(message.askResponse!, message.text, message.images)
 			break
-		case "askRequiresInteraction":
-			if (message.askType) {
-				const task = provider.getCurrentTask()
-				task?.emit(RooCodeEventName.TaskAskRequiresInteraction, task.taskId, message.askType as ClineAsk)
-			}
-
-			break
 		case "autoCondenseContext":
 			await updateGlobalState("autoCondenseContext", message.bool)
 			await provider.postStateToWebview()
