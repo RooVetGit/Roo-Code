@@ -3,6 +3,7 @@
 		"linesRange": " (righe {{start}}-{{end}})",
 		"definitionsOnly": " (solo definizioni)",
 		"maxLines": " (max {{max}} righe)",
+		"showingOnlyLines": "Mostrando solo {{shown}} di {{total}} righe totali. Usa line_range se hai bisogno di leggere più righe",
 		"imageTooLarge": "Il file immagine è troppo grande ({{size}} MB). La dimensione massima consentita è {{max}} MB.",
 		"imageWithSize": "File immagine ({{size}} KB)"
 	},

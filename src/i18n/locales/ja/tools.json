@@ -3,6 +3,7 @@
 		"linesRange": " ({{start}}-{{end}}行目)",
 		"definitionsOnly": " (定義のみ)",
 		"maxLines": " (最大{{max}}行)",
+		"showingOnlyLines": "全{{total}}行中{{shown}}行のみ表示しています。より多くの行を読む必要がある場合はline_rangeを使用してください",
 		"imageTooLarge": "画像ファイルが大きすぎます（{{size}} MB）。最大許可サイズは {{max}} MB です。",
 		"imageWithSize": "画像ファイル（{{size}} KB）"
 	},

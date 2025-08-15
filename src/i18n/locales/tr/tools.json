@@ -3,6 +3,7 @@
 		"linesRange": " (satır {{start}}-{{end}})",
 		"definitionsOnly": " (sadece tanımlar)",
 		"maxLines": " (maks. {{max}} satır)",
+		"showingOnlyLines": "Toplam {{total}} satırdan sadece {{shown}} tanesi gösteriliyor. Daha fazla satır okumak için line_range kullan",
 		"imageTooLarge": "Görüntü dosyası çok büyük ({{size}} MB). İzin verilen maksimum boyut {{max}} MB.",
 		"imageWithSize": "Görüntü dosyası ({{size}} KB)"
 	},
