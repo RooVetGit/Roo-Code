@@ -1139,8 +1139,7 @@ export class OpenAiNativeHandler extends BaseProvider implements SingleCompletio
 
 	private isResponsesApiModel(modelId: string): boolean {
 		// Both GPT-5 and Codex Mini use the v1/responses endpoint
-		// gpt-5-chat-latest also uses the Responses API
-		return modelId.startsWith("gpt-5") || modelId === "codex-mini-latest" || modelId === "gpt-5-chat-latest"
+		return modelId.startsWith("gpt-5") || modelId === "codex-mini-latest"
 	}
 
 	private async *handleStreamResponse(
