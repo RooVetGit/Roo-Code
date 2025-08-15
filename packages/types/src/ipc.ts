@@ -58,6 +58,7 @@ export const taskCommandSchema = z.discriminatedUnion("commandName", [
 			text: z.string(),
 			images: z.array(z.string()).optional(),
 			newTab: z.boolean().optional(),
+			taskId: z.string().optional(), // Optional taskId for resuming existing tasks
 		}),
 	}),
 	z.object({
