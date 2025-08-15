@@ -150,7 +150,8 @@ export class CodeIndexServiceFactory {
 		parser: ICodeParser,
 		ignoreInstance: Ignore,
 	): DirectoryScanner {
-		return new DirectoryScanner(embedder, vectorStore, parser, this.cacheManager, ignoreInstance)
+		const batchSize = this.configManager.currentEmbeddingBatchSize
+		return new DirectoryScanner(embedder, vectorStore, parser, this.cacheManager, ignoreInstance, batchSize)
 	}
 
 	/**
@@ -164,6 +165,7 @@ export class CodeIndexServiceFactory {
 		ignoreInstance: Ignore,
 		rooIgnoreController?: RooIgnoreController,
 	): IFileWatcher {
+		const batchSize = this.configManager.currentEmbeddingBatchSize
 		return new FileWatcher(
 			this.workspacePath,
 			context,
@@ -172,6 +174,7 @@ export class CodeIndexServiceFactory {
 			vectorStore,
 			ignoreInstance,
 			rooIgnoreController,
+			batchSize,
 		)
 	}
 

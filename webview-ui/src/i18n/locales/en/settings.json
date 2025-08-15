@@ -82,6 +82,8 @@
 		"searchMinScoreResetTooltip": "Reset to default value (0.4)",
 		"searchMaxResultsLabel": "Maximum Search Results",
 		"searchMaxResultsDescription": "Maximum number of search results to return when querying the codebase index. Higher values provide more context but may include less relevant results.",
+		"embeddingBatchSize": "Embedding Batch Size",
+		"embeddingBatchSizeDescription": "Number of code segments to batch for embedding requests. Lower values may be needed for some embedding services with request size limits.",
 		"resetToDefault": "Reset to default",
 		"startIndexingButton": "Start Indexing",
 		"clearIndexDataButton": "Clear Index Data",

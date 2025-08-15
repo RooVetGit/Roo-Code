@@ -78,6 +78,7 @@ export class FileWatcher implements IFileWatcher {
 		private vectorStore?: IVectorStore,
 		ignoreInstance?: Ignore,
 		ignoreController?: RooIgnoreController,
+		private readonly batchSegmentThreshold: number = BATCH_SEGMENT_THRESHOLD,
 	) {
 		this.ignoreController = ignoreController || new RooIgnoreController(workspacePath)
 		if (ignoreInstance) {
@@ -341,8 +342,8 @@ export class FileWatcher implements IFileWatcher {
 	): Promise<Error | undefined> {
 		if (pointsForBatchUpsert.length > 0 && this.vectorStore && !overallBatchError) {
 			try {
-				for (let i = 0; i < pointsForBatchUpsert.length; i += BATCH_SEGMENT_THRESHOLD) {
-					const batch = pointsForBatchUpsert.slice(i, i + BATCH_SEGMENT_THRESHOLD)
+				for (let i = 0; i < pointsForBatchUpsert.length; i += this.batchSegmentThreshold) {
+					const batch = pointsForBatchUpsert.slice(i, i + this.batchSegmentThreshold)
 					let retryCount = 0
 					let upsertError: Error | undefined
 

@@ -37,6 +37,7 @@ export class DirectoryScanner implements IDirectoryScanner {
 		private readonly codeParser: ICodeParser,
 		private readonly cacheManager: CacheManager,
 		private readonly ignoreInstance: Ignore,
+		private readonly batchSegmentThreshold: number = BATCH_SEGMENT_THRESHOLD,
 	) {}
 
 	/**
@@ -153,7 +154,7 @@ export class DirectoryScanner implements IDirectoryScanner {
 									addedBlocksFromFile = true
 
 									// Check if batch threshold is met
-									if (currentBatchBlocks.length >= BATCH_SEGMENT_THRESHOLD) {
+									if (currentBatchBlocks.length >= this.batchSegmentThreshold) {
 										// Wait if we've reached the maximum pending batches
 										while (pendingBatchCount >= MAX_PENDING_BATCHES) {
 											// Wait for at least one batch to complete

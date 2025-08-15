@@ -18,6 +18,7 @@ export interface CodeIndexConfig {
 	qdrantApiKey?: string
 	searchMinScore?: number
 	searchMaxResults?: number
+	embeddingBatchSize?: number
 }
 
 /**

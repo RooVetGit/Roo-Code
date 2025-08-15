@@ -104,11 +104,16 @@ describe("CodeIndexConfigManager", () => {
 				isConfigured: false,
 				embedderProvider: "openai",
 				modelId: undefined,
+				modelDimension: undefined,
 				openAiOptions: { openAiNativeApiKey: "" },
 				ollamaOptions: { ollamaBaseUrl: "" },
+				openAiCompatibleOptions: undefined,
+				geminiOptions: undefined,
+				mistralOptions: undefined,
 				qdrantUrl: "http://localhost:6333",
 				qdrantApiKey: "",
 				searchMinScore: 0.4,
+				embeddingBatchSize: 60,
 			})
 			expect(result.requiresRestart).toBe(false)
 		})
@@ -135,11 +140,16 @@ describe("CodeIndexConfigManager", () => {
 				isConfigured: true,
 				embedderProvider: "openai",
 				modelId: "text-embedding-3-large",
+				modelDimension: undefined,
 				openAiOptions: { openAiNativeApiKey: "test-openai-key" },
 				ollamaOptions: { ollamaBaseUrl: "" },
+				openAiCompatibleOptions: undefined,
+				geminiOptions: undefined,
+				mistralOptions: undefined,
 				qdrantUrl: "http://qdrant.local",
 				qdrantApiKey: "test-qdrant-key",
 				searchMinScore: 0.4,
+				embeddingBatchSize: 60,
 			})
 		})
 
@@ -167,6 +177,10 @@ describe("CodeIndexConfigManager", () => {
 			expect(result.currentConfig).toEqual({
 				isConfigured: true,
 				embedderProvider: "openai-compatible",
+				embeddingBatchSize: 60,
+				geminiOptions: undefined,
+				mistralOptions: undefined,
+				modelDimension: undefined,
 				modelId: "text-embedding-3-large",
 				openAiOptions: { openAiNativeApiKey: "" },
 				ollamaOptions: { ollamaBaseUrl: "" },
@@ -204,6 +218,9 @@ describe("CodeIndexConfigManager", () => {
 			expect(result.currentConfig).toEqual({
 				isConfigured: true,
 				embedderProvider: "openai-compatible",
+				embeddingBatchSize: 60,
+				geminiOptions: undefined,
+				mistralOptions: undefined,
 				modelId: "custom-model",
 				modelDimension: 1024,
 				openAiOptions: { openAiNativeApiKey: "" },
@@ -242,6 +259,10 @@ describe("CodeIndexConfigManager", () => {
 			expect(result.currentConfig).toEqual({
 				isConfigured: true,
 				embedderProvider: "openai-compatible",
+				embeddingBatchSize: 60,
+				geminiOptions: undefined,
+				mistralOptions: undefined,
+				modelDimension: undefined,
 				modelId: "custom-model",
 				openAiOptions: { openAiNativeApiKey: "" },
 				ollamaOptions: { ollamaBaseUrl: "" },
@@ -280,6 +301,7 @@ describe("CodeIndexConfigManager", () => {
 			expect(result.currentConfig).toEqual({
 				isConfigured: true,
 				embedderProvider: "openai-compatible",
+				embeddingBatchSize: 60,
 				modelId: "custom-model",
 				modelDimension: undefined, // Invalid dimension is converted to undefined
 				openAiOptions: { openAiNativeApiKey: "" },
@@ -289,6 +311,7 @@ describe("CodeIndexConfigManager", () => {
 					apiKey: "test-openai-compatible-key",
 				},
 				geminiOptions: undefined,
+				mistralOptions: undefined,
 				qdrantUrl: "http://qdrant.local",
 				qdrantApiKey: "test-qdrant-key",
 				searchMinScore: 0.4,
@@ -1291,10 +1314,13 @@ describe("CodeIndexConfigManager", () => {
 			expect(config).toEqual({
 				isConfigured: true,
 				embedderProvider: "openai",
+				embeddingBatchSize: 60,
+				geminiOptions: undefined,
+				mistralOptions: undefined,
+				modelDimension: undefined,
 				modelId: "text-embedding-3-large",
 				openAiOptions: { openAiNativeApiKey: "test-openai-key" },
 				ollamaOptions: { ollamaBaseUrl: undefined },
-				geminiOptions: undefined,
 				openAiCompatibleOptions: undefined,
 				qdrantUrl: "http://qdrant.local",
 				qdrantApiKey: "test-qdrant-key",
