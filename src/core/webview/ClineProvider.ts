@@ -744,6 +744,71 @@ export class ClineProvider
 		return task
 	}
 
+	/**
+	 * Handles starting a task with optional resumption support.
+	 * This method is called by the ExtensionBridgeService when receiving StartTask commands from the web UI.
+	 *
+	 * @param payload - The task payload containing text, images, and optional taskId for resumption
+	 */
+	public async handleStartTask(payload: { text: string; images?: string[]; taskId?: string }): Promise<void> {
+		if (payload.taskId) {
+			// Attempt to resume existing task
+			try {
+				const { historyItem } = await this.getTaskWithId(payload.taskId)
+				if (historyItem) {
+					this.log(`Resuming task ${payload.taskId} from web UI`)
+
+					// Clear any current tasks and restore the specific task
+					await this.initClineWithHistoryItem(historyItem)
+
+					// Ensure the webview shows the chat interface
+					await this.postMessageToWebview({ type: "action", action: "chatButtonClicked" })
+
+					// Update state to reflect the new current task
+					await this.postStateToWebview()
+
+					// Ensure bridge service is connected to the resumed task
+					const resumedTask = this.getCurrentCline()
+					if (resumedTask) {
+						try {
+							const { ExtensionBridgeService } = await import("@roo-code/cloud")
+							const bridgeService = ExtensionBridgeService.getInstance()
+							if (bridgeService && !resumedTask.bridgeService) {
+								resumedTask.bridgeService = bridgeService
+								await bridgeService.subscribeToTask(resumedTask)
+								this.log(`Bridge service connected to resumed task ${payload.taskId}`)
+							}
+						} catch (error) {
+							this.log(`Failed to connect bridge service to resumed task: ${error}`)
+						}
+					}
+
+					// The user's new message (payload.text) will be sent through the normal message flow
+					// after the task is restored and ready
+					if (payload.text) {
+						// Give a small delay to ensure the task is fully restored
+						setTimeout(async () => {
+							await this.postMessageToWebview({
+								type: "invoke",
+								invoke: "sendMessage",
+								text: payload.text,
+								images: payload.images,
+							})
+						}, 200)
+					}
+
+					this.log(`Task ${payload.taskId} successfully resumed and is now active`)
+					return
+				}
+			} catch (error) {
+				this.log(`Failed to resume task ${payload.taskId}: ${error}. Creating new task instead.`)
+			}
+		}
+
+		// Create new task (normal flow)
+		await this.initClineWithTask(payload.text, payload.images)
+	}
+
 	public async initClineWithHistoryItem(historyItem: HistoryItem & { rootTask?: Task; parentTask?: Task }) {
 		await this.removeClineFromStack()
 

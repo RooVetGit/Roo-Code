@@ -97,12 +97,25 @@ export class API extends EventEmitter<RooCodeEvents> implements RooCodeAPI {
 		text,
 		images,
 		newTab,
+		taskId,
 	}: {
 		configuration: RooCodeSettings
 		text?: string
 		images?: string[]
 		newTab?: boolean
+		taskId?: string
 	}) {
+		// If taskId is provided, attempt to resume the task
+		if (taskId) {
+			const isInHistory = await this.isTaskInHistory(taskId)
+			if (isInHistory) {
+				await this.resumeTask(taskId)
+				return taskId
+			}
+			// If task is not found in history, continue with creating a new task
+			this.log(`[API] Task ${taskId} not found in history, creating new task`)
+		}
+
 		let provider: ClineProvider
 
 		if (newTab) {
