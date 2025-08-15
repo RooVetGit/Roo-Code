@@ -49,6 +49,7 @@ export interface WebviewMessage {
 		| "webviewDidLaunch"
 		| "newTask"
 		| "askResponse"
+		| "askRequiresInteraction"
 		| "terminalOperation"
 		| "clearTask"
 		| "didShowAnnouncement"
@@ -218,6 +219,8 @@ export interface WebviewMessage {
 	context?: string
 	dataUri?: string
 	askResponse?: ClineAskResponse
+	askType?: string
+	reason?: string
 	apiConfiguration?: ProviderSettings
 	images?: string[]
 	bool?: boolean

@@ -1,7 +1,7 @@
 import { z } from "zod"
 
 import { RooCodeEventName } from "./events.js"
-import { type ClineMessage, type BlockingAsk, type TokenUsage } from "./message.js"
+import { type ClineMessage, type BlockingAsk, type TokenUsage, type ClineAsk } from "./message.js"
 import { type ToolUsage, type ToolName } from "./tool.js"
 import type { StaticAppProperties, GitProperties, TelemetryProperties } from "./telemetry.js"
 
@@ -100,6 +100,7 @@ export type TaskEvents = {
 	[RooCodeEventName.Message]: [{ action: "created" | "updated"; message: ClineMessage }]
 	[RooCodeEventName.TaskModeSwitched]: [taskId: string, mode: string]
 	[RooCodeEventName.TaskAskResponded]: []
+	[RooCodeEventName.TaskAskRequiresInteraction]: [taskId: string, askType: ClineAsk, reason: string]
 
 	// Task Analytics
 	[RooCodeEventName.TaskToolFailed]: [taskId: string, tool: ToolName, error: string]

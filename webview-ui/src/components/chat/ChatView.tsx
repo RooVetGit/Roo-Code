@@ -77,13 +77,16 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 	ref,
 ) => {
 	const isMountedRef = useRef(true)
+
 	const [audioBaseUri] = useState(() => {
 		const w = window as any
 		return w.AUDIO_BASE_URI || ""
 	})
+
 	const { t } = useAppTranslation()
 	const { t: tSettings } = useTranslation("settings")
 	const modeShortcutText = `${isMac ? "⌘" : "Ctrl"} + . ${t("chat:forNextMode")}, ${isMac ? "⌘" : "Ctrl"} + Shift + . ${t("chat:forPreviousMode")}`
+
 	const {
 		clineMessages: messages,
 		currentTaskItem,
@@ -1612,12 +1615,13 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 				return
 			}
 
-			// Then check for auto-approve
+			// Then check for auto-approve.
 			if (lastMessage?.ask && isAutoApproved(lastMessage)) {
-				// Special handling for follow-up questions
+				// Special handling for follow-up questions.
 				if (lastMessage.ask === "followup") {
-					// Handle invalid JSON
+					// Handle invalid JSON.
 					let followUpData: FollowUpData = {}
+
 					try {
 						followUpData = JSON.parse(lastMessage.text || "{}") as FollowUpData
 					} catch (error) {
@@ -1626,7 +1630,7 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 					}
 
 					if (followUpData && followUpData.suggest && followUpData.suggest.length > 0) {
-						// Wait for the configured timeout before auto-selecting the first suggestion
+						// Wait for the configured timeout before auto-selecting the first suggestion.
 						await new Promise<void>((resolve) => {
 							autoApproveTimeoutRef.current = setTimeout(() => {
 								autoApproveTimeoutRef.current = null
@@ -1634,19 +1638,22 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 							}, followupAutoApproveTimeoutMs)
 						})
 
-						// Check if user responded manually
+						// Check if user responded manually.
 						if (userRespondedRef.current) {
 							return
 						}
 
-						// Get the first suggestion
+						// Get the first suggestion.
 						const firstSuggestion = followUpData.suggest[0]
 
-						// Handle the suggestion click
+						// Handle the suggestion click.
 						handleSuggestionClickInRow(firstSuggestion)
 						return
 					}
 				} else if (lastMessage.ask === "tool" && isWriteToolAction(lastMessage)) {
+					// When auto-approval is enabled for write operations, there
+					// is a configurable delay (writeDelayMs) before automatically
+					// approving these changes.
 					await new Promise<void>((resolve) => {
 						autoApproveTimeoutRef.current = setTimeout(() => {
 							autoApproveTimeoutRef.current = null
@@ -1660,8 +1667,43 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 				setSendingDisabled(true)
 				setClineAsk(undefined)
 				setEnableButtons(false)
+			} else if (lastMessage?.ask) {
+				// Ask requires user interaction - not auto-approved or auto-rejected.
+				const reason = (() => {
+					if (autoApprovalEnabled !== true) {
+						return "auto_approval_disabled"
+					}
+
+					// Determine more specific reasons based on the ask type.
+					switch (lastMessage.ask) {
+						case "command":
+							return "command_requires_manual_approval"
+						case "tool":
+							return "tool_requires_manual_approval"
+						case "browser_action_launch":
+							return "browser_action_requires_manual_approval"
+						case "use_mcp_server":
+							return "mcp_requires_manual_approval"
+						case "followup":
+							return "followup_requires_manual_response"
+						case "completion_result":
+							return "completion_requires_manual_confirmation"
+						case "api_req_failed":
+							return "api_failure_requires_manual_decision"
+						case "mistake_limit_reached":
+							return "mistake_limit_requires_manual_guidance"
+						case "auto_approval_max_req_reached":
+							return "approval_limit_reached"
+						default:
+							return "manual_approval_required"
+					}
+				})()
+
+				// Notify the extension host that this ask requires user interaction.
+				vscode.postMessage({ type: "askRequiresInteraction", askType: lastMessage.ask, reason: reason })
 			}
 		}
+
 		autoApproveOrReject()
 
 		return () => {
@@ -1686,6 +1728,7 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 		allowedCommands,
 		deniedCommands,
 		mcpServers,
+		autoApprovalEnabled,
 		isAutoApproved,
 		lastMessage,
 		writeDelayMs,

@@ -8,10 +8,11 @@ import * as yaml from "yaml"
 
 import {
 	type Language,
-	type ProviderSettings,
 	type GlobalState,
 	type ClineMessage,
+	type ClineAsk,
 	TelemetryEventName,
+	RooCodeEventName,
 } from "@roo-code/types"
 import { CloudService } from "@roo-code/cloud"
 import { TelemetryService } from "@roo-code/telemetry"
@@ -347,6 +348,19 @@ export const webviewMessageHandler = async (
 			break
 		case "askResponse":
 			provider.getCurrentTask()?.handleWebviewAskResponse(message.askResponse!, message.text, message.images)
+			break
+		case "askRequiresInteraction":
+			if (message.askType && message.reason) {
+				const task = provider.getCurrentTask()
+
+				task?.emit(
+					RooCodeEventName.TaskAskRequiresInteraction,
+					task.taskId,
+					message.askType as ClineAsk,
+					message.reason,
+				)
+			}
+
 			break
 		case "autoCondenseContext":
 			await updateGlobalState("autoCondenseContext", message.bool)
