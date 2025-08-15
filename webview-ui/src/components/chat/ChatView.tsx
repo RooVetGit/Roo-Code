@@ -1591,21 +1591,17 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 		}
 
 		const autoApproveOrReject = async () => {
-			// Check for auto-reject first (commands that should be denied)
+			// Check for auto-reject first (commands that should be denied).
 			if (lastMessage?.ask === "command" && isDeniedCommand(lastMessage)) {
-				// Get the denied prefix for the localized message
+				// Get the denied prefix for the localized message.
 				const deniedPrefix = getDeniedPrefix(lastMessage.text || "")
-				if (deniedPrefix) {
-					// Create the localized auto-deny message and send it with the rejection
-					const autoDenyMessage = tSettings("autoApprove.execute.autoDenied", { prefix: deniedPrefix })
 
-					vscode.postMessage({
-						type: "askResponse",
-						askResponse: "noButtonClicked",
-						text: autoDenyMessage,
-					})
+				if (deniedPrefix) {
+					// Create the localized auto-deny message and send it with the rejection.
+					const autoDenyMessage = tSettings("autoApprove.execute.autoDenied", { prefix: deniedPrefix })
+					vscode.postMessage({ type: "askResponse", askResponse: "noButtonClicked", text: autoDenyMessage })
 				} else {
-					// Auto-reject denied commands immediately if no prefix found
+					// Auto-reject denied commands immediately if no prefix found.
 					vscode.postMessage({ type: "askResponse", askResponse: "noButtonClicked" })
 				}
 
@@ -1668,39 +1664,8 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 				setClineAsk(undefined)
 				setEnableButtons(false)
 			} else if (lastMessage?.ask) {
-				// Ask requires user interaction - not auto-approved or auto-rejected.
-				const reason = (() => {
-					if (autoApprovalEnabled !== true) {
-						return "auto_approval_disabled"
-					}
-
-					// Determine more specific reasons based on the ask type.
-					switch (lastMessage.ask) {
-						case "command":
-							return "command_requires_manual_approval"
-						case "tool":
-							return "tool_requires_manual_approval"
-						case "browser_action_launch":
-							return "browser_action_requires_manual_approval"
-						case "use_mcp_server":
-							return "mcp_requires_manual_approval"
-						case "followup":
-							return "followup_requires_manual_response"
-						case "completion_result":
-							return "completion_requires_manual_confirmation"
-						case "api_req_failed":
-							return "api_failure_requires_manual_decision"
-						case "mistake_limit_reached":
-							return "mistake_limit_requires_manual_guidance"
-						case "auto_approval_max_req_reached":
-							return "approval_limit_reached"
-						default:
-							return "manual_approval_required"
-					}
-				})()
-
 				// Notify the extension host that this ask requires user interaction.
-				vscode.postMessage({ type: "askRequiresInteraction", askType: lastMessage.ask, reason: reason })
+				vscode.postMessage({ type: "askRequiresInteraction", askType: lastMessage.ask })
 			}
 		}
 

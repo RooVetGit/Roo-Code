@@ -75,7 +75,7 @@ export const rooCodeEventsSchema = z.object({
 	]),
 	[RooCodeEventName.TaskModeSwitched]: z.tuple([z.string(), z.string()]),
 	[RooCodeEventName.TaskAskResponded]: z.tuple([z.string()]),
-	[RooCodeEventName.TaskAskRequiresInteraction]: z.tuple([z.string(), clineAskSchema, z.string()]),
+	[RooCodeEventName.TaskAskRequiresInteraction]: z.tuple([z.string(), clineAskSchema]),
 
 	[RooCodeEventName.TaskToolFailed]: z.tuple([z.string(), toolNamesSchema, z.string()]),
 	[RooCodeEventName.TaskTokenUsageUpdated]: z.tuple([z.string(), tokenUsageSchema]),

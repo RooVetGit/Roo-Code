@@ -101,7 +101,7 @@ export type TaskEvents = {
 	[RooCodeEventName.Message]: [{ action: "created" | "updated"; message: ClineMessage }]
 	[RooCodeEventName.TaskModeSwitched]: [taskId: string, mode: string]
 	[RooCodeEventName.TaskAskResponded]: []
-	[RooCodeEventName.TaskAskRequiresInteraction]: [taskId: string, askType: ClineAsk, reason: string]
+	[RooCodeEventName.TaskAskRequiresInteraction]: [taskId: string, askType: ClineAsk]
 
 	// Task Analytics
 	[RooCodeEventName.TaskToolFailed]: [taskId: string, tool: ToolName, error: string]

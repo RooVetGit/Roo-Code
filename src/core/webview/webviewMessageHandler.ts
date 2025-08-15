@@ -350,15 +350,9 @@ export const webviewMessageHandler = async (
 			provider.getCurrentTask()?.handleWebviewAskResponse(message.askResponse!, message.text, message.images)
 			break
 		case "askRequiresInteraction":
-			if (message.askType && message.reason) {
+			if (message.askType) {
 				const task = provider.getCurrentTask()
-
-				task?.emit(
-					RooCodeEventName.TaskAskRequiresInteraction,
-					task.taskId,
-					message.askType as ClineAsk,
-					message.reason,
-				)
+				task?.emit(RooCodeEventName.TaskAskRequiresInteraction, task.taskId, message.askType as ClineAsk)
 			}
 
 			break

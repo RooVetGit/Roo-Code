@@ -220,7 +220,6 @@ export interface WebviewMessage {
 	dataUri?: string
 	askResponse?: ClineAskResponse
 	askType?: string
-	reason?: string
 	apiConfiguration?: ProviderSettings
 	images?: string[]
 	bool?: boolean
