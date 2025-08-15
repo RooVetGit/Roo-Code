@@ -41,6 +41,11 @@ Resumes a task from history.
 
 - `data`: Task ID to resume (string)
 
+**Error Handling:**
+
+- If the task ID is not found in history, the command will fail gracefully without crashing the IPC server
+- Errors are logged for debugging purposes but do not propagate to the client
+
 ## Usage Example
 
 ```typescript

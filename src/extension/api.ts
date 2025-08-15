@@ -80,7 +80,14 @@ export class API extends EventEmitter<RooCodeEvents> implements RooCodeAPI {
 						break
 					case TaskCommandName.ResumeTask:
 						this.log(`[API] ResumeTask -> ${data}`)
-						await this.resumeTask(data)
+						try {
+							await this.resumeTask(data)
+						} catch (error) {
+							const errorMessage = error instanceof Error ? error.message : String(error)
+							this.log(`[API] ResumeTask failed for taskId ${data}: ${errorMessage}`)
+							// Don't rethrow - we want to prevent IPC server crashes
+							// The error is logged for debugging purposes
+						}
 						break
 				}
 			})

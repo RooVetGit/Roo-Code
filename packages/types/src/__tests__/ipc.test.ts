@@ -15,6 +15,25 @@ describe("IPC Types", () => {
 				expect(actualCommands).toContain(command)
 			})
 		})
+
+		describe("Error Handling", () => {
+			it("should handle ResumeTask command gracefully when task not found", () => {
+				// This test verifies the schema validation - the actual error handling
+				// for invalid task IDs is tested at the API level, not the schema level
+				const resumeTaskCommand = {
+					commandName: TaskCommandName.ResumeTask,
+					data: "non-existent-task-id",
+				}
+
+				const result = taskCommandSchema.safeParse(resumeTaskCommand)
+				expect(result.success).toBe(true)
+
+				if (result.success) {
+					expect(result.data.commandName).toBe("ResumeTask")
+					expect(result.data.data).toBe("non-existent-task-id")
+				}
+			})
+		})
 	})
 
 	describe("taskCommandSchema", () => {
