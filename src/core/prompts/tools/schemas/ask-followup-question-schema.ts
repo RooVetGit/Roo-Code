@@ -25,23 +25,9 @@ export function generateAskFollowupQuestionSchema(args: ToolArgs): BaseToolSchem
 				required: true,
 				items: {
 					name: "suggest",
-					type: "object",
+					type: "string",
 					description: "A suggested answer for the follow-up question.",
 					required: true,
-					properties: {
-						text: {
-							name: "text",
-							type: "string",
-							description: "The suggested answer text.",
-							required: true,
-						},
-						mode: {
-							name: "mode",
-							type: "string",
-							description: "Optional mode slug to switch to when this suggestion is selected.",
-							required: false,
-						},
-					},
 				},
 			},
 		],

@@ -364,7 +364,7 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 					EXPERIMENT_IDS.MULTI_FILE_APPLY_DIFF,
 				)
 
-				if (isMultiFileApplyDiffEnabled) {
+				if (isMultiFileApplyDiffEnabled || this.apiConfiguration?.toolCallEnabled === true) {
 					this.diffStrategy = new MultiFileSearchReplaceDiffStrategy(this.fuzzyMatchThreshold)
 				}
 			})
@@ -1455,7 +1455,9 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 				// the user hits max requests and denies resetting the count.
 				break
 			} else {
-				nextUserContent = [{ type: "text", text: formatResponse.noToolsUsed() }]
+				nextUserContent = [
+					{ type: "text", text: formatResponse.noToolsUsed(this.apiConfiguration?.toolCallEnabled ?? false) },
+				]
 				this.consecutiveMistakeCount++
 			}
 		}
@@ -2069,7 +2071,10 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 					const didToolUse = this.assistantMessageContent.some((block) => block.type === "tool_use")
 
 					if (!didToolUse) {
-						this.userMessageContent.push({ type: "text", text: formatResponse.noToolsUsed() })
+						this.userMessageContent.push({
+							type: "text",
+							text: formatResponse.noToolsUsed(this.apiConfiguration?.toolCallEnabled ?? false),
+						})
 						this.consecutiveMistakeCount++
 					}
 

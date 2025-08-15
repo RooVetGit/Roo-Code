@@ -161,7 +161,7 @@ export async function applyDiffTool(
 							if (typeof diff.search === "string" || "#text" in diff.search) {
 								const replaceContent =
 									typeof diff.replace === "string" ? diff.replace : diff.replace["#text"]
-								diffContent += `=======\n${replaceContent}\n>>>>>>> REPLACE\n]]>\n`
+								diffContent += `=======\n${replaceContent}\n>>>>>>> REPLACE\n]]>`
 							} else {
 								throw new Error("Invalid replace content: " + JSON.stringify(diff.replace))
 							}

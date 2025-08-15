@@ -139,6 +139,7 @@ export class OpenRouterHandler extends BaseProvider implements SingleCompletionH
 		}
 		if (toolCallEnabled) {
 			completionParams.tools = toolRegistry.generateFunctionCallSchemas(metadata.tools!, metadata.toolArgs!)
+			completionParams.tool_choice = "required"
 		}
 
 		const stream = await this.client.chat.completions.create(completionParams)

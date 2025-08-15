@@ -19,7 +19,7 @@ import { generateUpdateTodoListSchema } from "./update-todo-list-schema"
 import { generateUseMcpToolSchema } from "./use-mcp-tool-schema"
 import { generateWriteToFileSchema } from "./write-to-file-schema"
 import { ToolArgs } from "../types"
-import type { ToolName } from "@roo-code/types"
+import { type ToolName } from "@roo-code/types"
 
 /**
  * Registry of tools that support native function calling
@@ -32,7 +32,7 @@ export class ToolRegistry {
 		// Register supported tools
 		this.registerTool("access_mcp_resource", generateAccessMcpResourceSchema)
 		this.registerTool("apply_diff", generateApplyDiffSchema)
-		// this.registerTool("ask_followup_question", generateAskFollowupQuestionSchema)
+		this.registerTool("ask_followup_question", generateAskFollowupQuestionSchema)
 		this.registerTool("attempt_completion", generateAttemptCompletionSchema)
 		this.registerTool("browser_action", generateBrowserActionSchema)
 		this.registerTool("codebase_search", generateCodebaseSearchSchema)

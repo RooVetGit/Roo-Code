@@ -98,6 +98,7 @@ export class LmStudioHandler extends BaseProvider implements SingleCompletionHan
 			}
 			if (toolCallEnabled) {
 				params.tools = toolRegistry.generateFunctionCallSchemas(metadata.tools!, metadata.toolArgs)
+				params.tool_choice = "required"
 			}
 
 			if (this.options.lmStudioSpeculativeDecodingEnabled && this.options.lmStudioDraftModelId) {

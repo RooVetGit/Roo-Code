@@ -169,6 +169,7 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 			}
 			if (toolCallEnabled) {
 				requestOptions.tools = toolRegistry.generateFunctionCallSchemas(metadata.tools!, metadata.toolArgs)
+				requestOptions.tool_choice = "required"
 			}
 
 			// Add max_tokens if needed

@@ -84,6 +84,10 @@ export function getToolDescriptionsForMode(
 
 	const { xmlTools } = getToolAvailability(toolAvailabilityArgs)
 
+	if (xmlTools.length === 0) {
+		return ""
+	}
+
 	// Map tool descriptions for XML tools only
 	const descriptions = xmlTools.map((toolName) => {
 		const descriptionFn = toolDescriptionMap[toolName]
