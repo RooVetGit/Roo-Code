@@ -23,13 +23,26 @@ export function getGroupName(group: GroupEntry): ToolGroup {
 	if (typeof group === "string") {
 		return group
 	}
-
-	return group[0]
+	if (Array.isArray(group)) {
+		return group[0]
+	}
+	// Handle direct MCP object format
+	if (typeof group === "object" && "mcp" in group) {
+		return "mcp" as ToolGroup
+	}
+	return group as ToolGroup
 }
 
 // Helper to get group options if they exist
 function getGroupOptions(group: GroupEntry): GroupOptions | undefined {
-	return Array.isArray(group) ? group[1] : undefined
+	if (Array.isArray(group)) {
+		return group[1]
+	}
+	// Handle direct MCP object format - return the object itself as options
+	if (typeof group === "object" && "mcp" in group) {
+		return group as GroupOptions
+	}
+	return undefined
 }
 
 // Helper to check if a file path matches a regex pattern

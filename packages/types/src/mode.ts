@@ -26,6 +26,12 @@ export const groupOptionsSchema = z.object({
 			{ message: "Invalid regular expression pattern" },
 		),
 	description: z.string().optional(),
+	mcp: z
+		.object({
+			included: z.array(z.string()),
+			description: z.string().optional(),
+		})
+		.optional(),
 })
 
 export type GroupOptions = z.infer<typeof groupOptionsSchema>
@@ -34,7 +40,17 @@ export type GroupOptions = z.infer<typeof groupOptionsSchema>
  * GroupEntry
  */
 
-export const groupEntrySchema = z.union([toolGroupsSchema, z.tuple([toolGroupsSchema, groupOptionsSchema])])
+export const groupEntrySchema = z.union([
+	toolGroupsSchema,
+	z.tuple([toolGroupsSchema, groupOptionsSchema]),
+	// Allow direct mcp configuration object
+	z.object({
+		mcp: z.object({
+			included: z.array(z.string()),
+			description: z.string().optional(),
+		}),
+	}),
+])
 
 export type GroupEntry = z.infer<typeof groupEntrySchema>
 
