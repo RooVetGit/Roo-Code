@@ -78,6 +78,10 @@ export class API extends EventEmitter<RooCodeEvents> implements RooCodeAPI {
 						await vscode.commands.executeCommand("workbench.action.files.saveFiles")
 						await vscode.commands.executeCommand("workbench.action.closeWindow")
 						break
+					case TaskCommandName.ResumeTask:
+						this.log(`[API] ResumeTask -> ${data}`)
+						await this.resumeTask(data)
+						break
 				}
 			})
 		}
