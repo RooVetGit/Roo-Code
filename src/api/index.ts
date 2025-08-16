@@ -13,7 +13,6 @@ import {
 	VertexHandler,
 	AnthropicVertexHandler,
 	OpenAiHandler,
-	// OllamaHandler, // Replaced with NativeOllamaHandler
 	LmStudioHandler,
 	GeminiHandler,
 	OpenAiNativeHandler,

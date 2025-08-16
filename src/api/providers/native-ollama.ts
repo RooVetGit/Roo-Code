@@ -5,7 +5,6 @@ import { ApiStream } from "../transform/stream"
 import { BaseProvider } from "./base-provider"
 import type { ApiHandlerOptions } from "../../shared/api"
 import { getOllamaModels } from "./fetchers/ollama"
-import { getApiRequestTimeout } from "./utils/timeout-config"
 import { XmlMatcher } from "../../utils/xml-matcher"
 import type { SingleCompletionHandler, ApiHandlerCreateMessageMetadata } from "../index"
 
@@ -49,10 +48,9 @@ function convertToOllamaMessages(anthropicMessages: Anthropic.Messages.MessagePa
 								?.map((part) => {
 									if (part.type === "image") {
 										// Handle base64 images only (Anthropic SDK uses base64)
+										// Ollama expects raw base64 strings, not data URLs
 										if ("source" in part && part.source.type === "base64") {
-											toolResultImages.push(
-												`data:${part.source.media_type};base64,${part.source.data}`,
-											)
+											toolResultImages.push(part.source.data)
 										}
 										return "(see following user message for image)"
 									}
@@ -69,20 +67,24 @@ function convertToOllamaMessages(anthropicMessages: Anthropic.Messages.MessagePa
 
 				// Process non-tool messages
 				if (nonToolMessages.length > 0) {
+					// Separate text and images for Ollama
+					const textContent = nonToolMessages
+						.filter((part) => part.type === "text")
+						.map((part) => part.text)
+						.join("\n")
+
+					const imageData: string[] = []
+					nonToolMessages.forEach((part) => {
+						if (part.type === "image" && "source" in part && part.source.type === "base64") {
+							// Ollama expects raw base64 strings, not data URLs
+							imageData.push(part.source.data)
+						}
+					})
+
 					ollamaMessages.push({
 						role: "user",
-						content: nonToolMessages
-							.map((part) => {
-								if (part.type === "image") {
-									// Handle base64 images only (Anthropic SDK uses base64)
-									if ("source" in part && part.source.type === "base64") {
-										return `data:${part.source.media_type};base64,${part.source.data}`
-									}
-									return ""
-								}
-								return part.text
-							})
-							.join("\n"),
+						content: textContent,
+						images: imageData.length > 0 ? imageData : undefined,
 					})
 				}
 			} else if (anthropicMessage.role === "assistant") {
@@ -125,8 +127,6 @@ function convertToOllamaMessages(anthropicMessages: Anthropic.Messages.MessagePa
 	return ollamaMessages
 }
 
-const OLLAMA_TIMEOUT_MS = 3_600_000
-
 export class NativeOllamaHandler extends BaseProvider implements SingleCompletionHandler {
 	protected options: ApiHandlerOptions
 	private client: Ollama | undefined
@@ -157,7 +157,7 @@ export class NativeOllamaHandler extends BaseProvider implements SingleCompletio
 		metadata?: ApiHandlerCreateMessageMetadata,
 	): ApiStream {
 		const client = this.ensureClient()
-		const modelId = this.getModel().id
+		const { id: modelId, info: modelInfo } = await this.fetchModel()
 		const useR1Format = modelId.toLowerCase().includes("deepseek-r1")
 
 		const ollamaMessages: Message[] = [
@@ -176,13 +176,12 @@ export class NativeOllamaHandler extends BaseProvider implements SingleCompletio
 
 		try {
 			// Create the actual API request promise
-			const model = this.getModel()
 			const stream = await client.chat({
-				model: model.id,
+				model: modelId,
 				messages: ollamaMessages,
 				stream: true,
 				options: {
-					num_ctx: model.info.contextWindow,
+					num_ctx: modelInfo.contextWindow,
 					temperature: this.options.modelTemperature ?? (useR1Format ? DEEP_SEEK_DEFAULT_TEMPERATURE : 0),
 				},
 			})
@@ -263,7 +262,7 @@ export class NativeOllamaHandler extends BaseProvider implements SingleCompletio
 	async completePrompt(prompt: string): Promise<string> {
 		try {
 			const client = this.ensureClient()
-			const modelId = this.getModel().id
+			const { id: modelId } = await this.fetchModel()
 			const useR1Format = modelId.toLowerCase().includes("deepseek-r1")
 
 			const response = await client.chat({
