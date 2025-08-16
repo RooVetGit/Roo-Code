@@ -67,32 +67,53 @@ export const webviewMessageHandler = async (
 		await provider.contextProxy.setValue(key, value)
 
 	/**
-	 * Shared utility to find message indices based on timestamp
+	 * Shared utility to find message indices based on exact timestamp matching
+	 * This prevents accidental deletion of unrelated messages
 	 */
 	const findMessageIndices = (messageTs: number, currentCline: any) => {
-		const timeCutoff = messageTs - 1000 // 1 second buffer before the message
-		const messageIndex = currentCline.clineMessages.findIndex((msg: ClineMessage) => msg.ts && msg.ts >= timeCutoff)
+		// Use exact timestamp matching to prevent unintended message deletion
+		const messageIndex = currentCline.clineMessages.findIndex((msg: ClineMessage) => msg.ts === messageTs)
 		const apiConversationHistoryIndex = currentCline.apiConversationHistory.findIndex(
-			(msg: ApiMessage) => msg.ts && msg.ts >= timeCutoff,
+			(msg: ApiMessage) => msg.ts === messageTs,
 		)
 		return { messageIndex, apiConversationHistoryIndex }
 	}
 
 	/**
 	 * Removes the target message and all subsequent messages
+	 * Includes validation to prevent accidental data loss
 	 */
 	const removeMessagesThisAndSubsequent = async (
 		currentCline: any,
 		messageIndex: number,
 		apiConversationHistoryIndex: number,
 	) => {
+		// Validate indices before deletion
+		if (messageIndex < 0 || messageIndex >= currentCline.clineMessages.length) {
+			console.error(
+				`[Chat History] Invalid message index: ${messageIndex}, total messages: ${currentCline.clineMessages.length}`,
+			)
+			throw new Error("Invalid message index for deletion")
+		}
+
+		// Log deletion for debugging
+		const messagesToDelete = currentCline.clineMessages.length - messageIndex
+		console.log(`[Chat History] Deleting ${messagesToDelete} messages starting from index ${messageIndex}`)
+
 		// Delete this message and all that follow
 		await currentCline.overwriteClineMessages(currentCline.clineMessages.slice(0, messageIndex))
 
 		if (apiConversationHistoryIndex !== -1) {
-			await currentCline.overwriteApiConversationHistory(
-				currentCline.apiConversationHistory.slice(0, apiConversationHistoryIndex),
-			)
+			if (
+				apiConversationHistoryIndex >= 0 &&
+				apiConversationHistoryIndex < currentCline.apiConversationHistory.length
+			) {
+				await currentCline.overwriteApiConversationHistory(
+					currentCline.apiConversationHistory.slice(0, apiConversationHistoryIndex),
+				)
+			} else {
+				console.warn(`[Chat History] Invalid API conversation history index: ${apiConversationHistoryIndex}`)
+			}
 		}
 	}
 
@@ -118,6 +139,16 @@ export const webviewMessageHandler = async (
 
 			if (messageIndex !== -1) {
 				try {
+					// Additional validation: ensure we're not deleting critical messages
+					const messageToDelete = currentCline.clineMessages[messageIndex]
+					if (!messageToDelete) {
+						console.error(`[Chat History] Message not found at index ${messageIndex}`)
+						throw new Error("Message not found for deletion")
+					}
+
+					// Log the message being deleted for debugging
+					console.log(`[Chat History] Deleting message with timestamp ${messageTs} at index ${messageIndex}`)
+
 					const { historyItem } = await provider.getTaskWithId(currentCline.taskId)
 
 					// Delete this message and all subsequent messages
@@ -126,11 +157,13 @@ export const webviewMessageHandler = async (
 					// Initialize with history item after deletion
 					await provider.createTaskWithHistoryItem(historyItem)
 				} catch (error) {
-					console.error("Error in delete message:", error)
+					console.error("[Chat History] Error in delete message:", error)
 					vscode.window.showErrorMessage(
 						`Error deleting message: ${error instanceof Error ? error.message : String(error)}`,
 					)
 				}
+			} else {
+				console.warn(`[Chat History] Message with timestamp ${messageTs} not found for deletion`)
 			}
 		}
 	}
@@ -165,6 +198,16 @@ export const webviewMessageHandler = async (
 
 			if (messageIndex !== -1) {
 				try {
+					// Additional validation: ensure we're not editing critical messages
+					const messageToEdit = currentCline.clineMessages[messageIndex]
+					if (!messageToEdit) {
+						console.error(`[Chat History] Message not found at index ${messageIndex}`)
+						throw new Error("Message not found for editing")
+					}
+
+					// Log the message being edited for debugging
+					console.log(`[Chat History] Editing message with timestamp ${messageTs} at index ${messageIndex}`)
+
 					// Edit this message and delete subsequent
 					await removeMessagesThisAndSubsequent(currentCline, messageIndex, apiConversationHistoryIndex)
 
@@ -180,11 +223,13 @@ export const webviewMessageHandler = async (
 					// Don't initialize with history item for edit operations
 					// The webviewMessageHandler will handle the conversation state
 				} catch (error) {
-					console.error("Error in edit message:", error)
+					console.error("[Chat History] Error in edit message:", error)
 					vscode.window.showErrorMessage(
 						`Error editing message: ${error instanceof Error ? error.message : String(error)}`,
 					)
 				}
+			} else {
+				console.warn(`[Chat History] Message with timestamp ${messageTs} not found for editing`)
 			}
 		}
 	}

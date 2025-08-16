@@ -1222,12 +1222,19 @@ describe("ClineProvider", () => {
 			await messageHandler({ type: "deleteMessageConfirm", messageTs: 4000 })
 
 			// Verify only messages before the deleted message were kept
-			expect(mockCline.overwriteClineMessages).toHaveBeenCalledWith([mockMessages[0], mockMessages[1]])
+			// With exact timestamp matching, we find the message at index 3 (ts: 4000)
+			// and keep messages 0, 1, and 2 (all before timestamp 4000)
+			expect(mockCline.overwriteClineMessages).toHaveBeenCalledWith([
+				mockMessages[0],
+				mockMessages[1],
+				mockMessages[2],
+			])
 
 			// Verify only API messages before the deleted message were kept
 			expect(mockCline.overwriteApiConversationHistory).toHaveBeenCalledWith([
 				mockApiHistory[0],
 				mockApiHistory[1],
+				mockApiHistory[2],
 			])
 
 			// Verify createTaskWithHistoryItem was called
@@ -1319,12 +1326,19 @@ describe("ClineProvider", () => {
 			})
 
 			// Verify correct messages were kept (only messages before the edited one)
-			expect(mockCline.overwriteClineMessages).toHaveBeenCalledWith([mockMessages[0], mockMessages[1]])
+			// With exact timestamp matching, we find the message at index 3 (ts: 4000)
+			// and keep messages 0, 1, and 2 (all before timestamp 4000)
+			expect(mockCline.overwriteClineMessages).toHaveBeenCalledWith([
+				mockMessages[0],
+				mockMessages[1],
+				mockMessages[2],
+			])
 
 			// Verify correct API messages were kept (only messages before the edited one)
 			expect(mockCline.overwriteApiConversationHistory).toHaveBeenCalledWith([
 				mockApiHistory[0],
 				mockApiHistory[1],
+				mockApiHistory[2],
 			])
 
 			// The new flow calls webviewMessageHandler recursively with askResponse
@@ -3016,9 +3030,11 @@ describe("ClineProvider - Comprehensive Edit/Delete Edge Cases", () => {
 				text: "Edited message with preserved images",
 			})
 
-			// Verify messages were edited correctly - only the first message should remain
-			expect(mockCline.overwriteClineMessages).toHaveBeenCalledWith([mockMessages[0]])
-			expect(mockCline.overwriteApiConversationHistory).toHaveBeenCalledWith([{ ts: 1000 }])
+			// Verify messages were edited correctly
+			// With exact timestamp matching, we find the message at index 2 (ts: 3000)
+			// and keep messages 0 and 1 (all before timestamp 3000)
+			expect(mockCline.overwriteClineMessages).toHaveBeenCalledWith([mockMessages[0], mockMessages[1]])
+			expect(mockCline.overwriteApiConversationHistory).toHaveBeenCalledWith([{ ts: 1000 }, { ts: 2000 }])
 		})
 
 		test("handles editing messages with file attachments", async () => {
@@ -3632,8 +3648,10 @@ describe("ClineProvider - Comprehensive Edit/Delete Edge Cases", () => {
 				await messageHandler({ type: "deleteMessageConfirm", messageTs: 3000 })
 
 				// Should handle large payloads without issues
-				expect(mockCline.overwriteClineMessages).toHaveBeenCalledWith([mockMessages[0]])
-				expect(mockCline.overwriteApiConversationHistory).toHaveBeenCalledWith([{ ts: 1000 }])
+				// With exact timestamp matching, we find the message at index 2 (ts: 3000)
+				// and keep messages 0 and 1 (all before timestamp 3000)
+				expect(mockCline.overwriteClineMessages).toHaveBeenCalledWith([mockMessages[0], mockMessages[1]])
+				expect(mockCline.overwriteApiConversationHistory).toHaveBeenCalledWith([{ ts: 1000 }, { ts: 2000 }])
 			})
 		})
 
