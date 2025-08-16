@@ -107,14 +107,24 @@ export class LiteLLMHandler extends RouterProvider implements SingleCompletionHa
 		// Required by some providers; others default to max tokens allowed
 		let maxTokens: number | undefined = info.maxTokens ?? undefined
 
+		// Check if this is a GPT-5 model that requires max_completion_tokens instead of max_tokens
+		const isGPT5Model = modelId.toLowerCase().includes("gpt-5") || modelId.toLowerCase().includes("gpt5")
+
 		const requestOptions: OpenAI.Chat.Completions.ChatCompletionCreateParamsStreaming = {
 			model: modelId,
-			max_tokens: maxTokens,
 			messages: [systemMessage, ...enhancedMessages],
 			stream: true,
 			stream_options: {
 				include_usage: true,
 			},
+		}
+
+		// GPT-5 models require max_completion_tokens instead of the deprecated max_tokens parameter
+		if (isGPT5Model && maxTokens) {
+			// @ts-ignore - max_completion_tokens is not in the OpenAI types yet but is supported
+			requestOptions.max_completion_tokens = maxTokens
+		} else if (maxTokens) {
+			requestOptions.max_tokens = maxTokens
 		}
 
 		if (this.supportsTemperature(modelId)) {
@@ -179,6 +189,9 @@ export class LiteLLMHandler extends RouterProvider implements SingleCompletionHa
 	async completePrompt(prompt: string): Promise<string> {
 		const { id: modelId, info } = await this.fetchModel()
 
+		// Check if this is a GPT-5 model that requires max_completion_tokens instead of max_tokens
+		const isGPT5Model = modelId.toLowerCase().includes("gpt-5") || modelId.toLowerCase().includes("gpt5")
+
 		try {
 			const requestOptions: OpenAI.Chat.Completions.ChatCompletionCreateParamsNonStreaming = {
 				model: modelId,
@@ -189,7 +202,13 @@ export class LiteLLMHandler extends RouterProvider implements SingleCompletionHa
 				requestOptions.temperature = this.options.modelTemperature ?? 0
 			}
 
-			requestOptions.max_tokens = info.maxTokens
+			// GPT-5 models require max_completion_tokens instead of the deprecated max_tokens parameter
+			if (isGPT5Model && info.maxTokens) {
+				// @ts-ignore - max_completion_tokens is not in the OpenAI types yet but is supported
+				requestOptions.max_completion_tokens = info.maxTokens
+			} else if (info.maxTokens) {
+				requestOptions.max_tokens = info.maxTokens
+			}
 
 			const response = await this.client.chat.completions.create(requestOptions)
 			return response.choices[0]?.message.content || ""
