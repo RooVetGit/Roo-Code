@@ -15,6 +15,7 @@
 	"command.settings.title": "Settings",
 	"command.documentation.title": "Documentation",
 	"command.openInNewTab.title": "Open In New Tab",
+	"command.openInThisTab.title": "Open In This Tab",
 	"command.explainCode.title": "Explain Code",
 	"command.fixCode.title": "Fix Code",
 	"command.improveCode.title": "Improve Code",

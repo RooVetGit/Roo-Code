@@ -7,6 +7,7 @@
 	"command.improveCode.title": "Kodu İyileştir",
 	"command.addToContext.title": "Bağlama Ekle",
 	"command.openInNewTab.title": "Yeni Sekmede Aç",
+	"command.openInThisTab.title": "Bu Sekmede Aç",
 	"command.focusInput.title": "Giriş Alanına Odaklan",
 	"command.setCustomStoragePath.title": "Özel Depolama Yolunu Ayarla",
 	"command.importSettings.title": "Ayarları İçe Aktar",

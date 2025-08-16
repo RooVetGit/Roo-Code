@@ -7,6 +7,7 @@
 	"command.improveCode.title": "改进代码",
 	"command.addToContext.title": "添加到上下文",
 	"command.openInNewTab.title": "在新标签页中打开",
+	"command.openInThisTab.title": "在此标签页中打开",
 	"command.focusInput.title": "聚焦输入框",
 	"command.setCustomStoragePath.title": "设置自定义存储路径",
 	"command.importSettings.title": "导入设置",

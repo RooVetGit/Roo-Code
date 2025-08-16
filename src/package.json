@@ -116,6 +116,11 @@
 				"category": "%configuration.title%"
 			},
 			{
+				"command": "roo-cline.openInThisTab",
+				"title": "%command.openInThisTab.title%",
+				"category": "%configuration.title%"
+			},
+			{
 				"command": "roo-cline.explainCode",
 				"title": "%command.explainCode.title%",
 				"category": "%configuration.title%"

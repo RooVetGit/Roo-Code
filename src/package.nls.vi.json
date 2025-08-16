@@ -7,6 +7,7 @@
 	"command.improveCode.title": "Cải Thiện Mã",
 	"command.addToContext.title": "Thêm vào Ngữ Cảnh",
 	"command.openInNewTab.title": "Mở trong Tab Mới",
+	"command.openInThisTab.title": "Mở trong Tab Này",
 	"command.focusInput.title": "Tập Trung vào Trường Nhập",
 	"command.setCustomStoragePath.title": "Đặt Đường Dẫn Lưu Trữ Tùy Chỉnh",
 	"command.importSettings.title": "Nhập Cài Đặt",
