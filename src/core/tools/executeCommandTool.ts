@@ -17,6 +17,7 @@ import { TerminalRegistry } from "../../integrations/terminal/TerminalRegistry"
 import { Terminal } from "../../integrations/terminal/Terminal"
 import { Package } from "../../shared/package"
 import { t } from "../../i18n"
+import { convertMultilineToSingleLine, shouldConvertCommand } from "../../utils/multilineCommandConverter"
 
 class ShellIntegrationError extends Error {}
 
@@ -54,10 +55,36 @@ export async function executeCommandTool(
 			task.consecutiveMistakeCount = 0
 
 			command = unescapeHtmlEntities(command) // Unescape HTML entities.
+
+			// Convert multiline commands to single line if enabled and applicable
+			const multilineConversionEnabled = vscode.workspace
+				.getConfiguration(Package.name)
+				.get<boolean>("multilineCommandConversion", true)
+
+			let originalCommand = command
+			let conversionApplied = false
+
+			if (multilineConversionEnabled && shouldConvertCommand(command)) {
+				const conversionResult = convertMultilineToSingleLine(command)
+				if (conversionResult.success) {
+					command = conversionResult.command
+					conversionApplied = true
+				} else {
+					// Log conversion failure but continue with original command
+					console.log(`[executeCommandTool] Multiline conversion failed: ${conversionResult.reason}`)
+				}
+			}
+
+			// Show the command that will be executed (converted or original)
 			const didApprove = await askApproval("command", command)
 
 			if (!didApprove) {
 				return
+			}
+
+			// If conversion was applied, log it (don't notify user to avoid disruption)
+			if (conversionApplied) {
+				console.log(`[executeCommandTool] Multiline command converted to single-line for execution`)
 			}
 
 			const executionId = task.lastMessageTs?.toString() ?? Date.now().toString()
