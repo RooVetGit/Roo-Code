@@ -26,6 +26,7 @@ describe("PostHogTelemetryClient", () => {
 	}
 
 	let mockPostHogClient: any
+	let mockContext: any
 
 	beforeEach(() => {
 		vi.clearAllMocks()
@@ -35,8 +36,17 @@ describe("PostHogTelemetryClient", () => {
 			optIn: vi.fn(),
 			optOut: vi.fn(),
 			shutdown: vi.fn().mockResolvedValue(undefined),
+			flush: vi.fn().mockResolvedValue(undefined),
+			on: vi.fn(),
 		}
 		;(PostHog as any).mockImplementation(() => mockPostHogClient)
+
+		// Mock VSCode extension context
+		mockContext = {
+			globalStorageUri: { fsPath: "/test/global/storage" },
+			storageUri: { fsPath: "/test/workspace/storage" },
+			extensionPath: "/test/extension",
+		}
 
 		// @ts-expect-error - Accessing private static property for testing
 		PostHogTelemetryClient._instance = undefined
@@ -47,7 +57,7 @@ describe("PostHogTelemetryClient", () => {
 
 	describe("isEventCapturable", () => {
 		it("should return true for events not in exclude list", () => {
-			const client = new PostHogTelemetryClient()
+			const client = new PostHogTelemetryClient(mockContext)
 
 			const isEventCapturable = getPrivateProperty<(eventName: TelemetryEventName) => boolean>(
 				client,
@@ -59,7 +69,7 @@ describe("PostHogTelemetryClient", () => {
 		})
 
 		it("should return false for events in exclude list", () => {
-			const client = new PostHogTelemetryClient()
+			const client = new PostHogTelemetryClient(mockContext)
 
 			const isEventCapturable = getPrivateProperty<(eventName: TelemetryEventName) => boolean>(
 				client,
@@ -72,7 +82,7 @@ describe("PostHogTelemetryClient", () => {
 
 	describe("isPropertyCapturable", () => {
 		it("should filter out git repository properties", () => {
-			const client = new PostHogTelemetryClient()
+			const client = new PostHogTelemetryClient(mockContext)
 
 			const isPropertyCapturable = getPrivateProperty<(propertyName: string) => boolean>(
 				client,
@@ -95,7 +105,7 @@ describe("PostHogTelemetryClient", () => {
 
 	describe("getEventProperties", () => {
 		it("should merge provider properties with event properties", async () => {
-			const client = new PostHogTelemetryClient()
+			const client = new PostHogTelemetryClient(mockContext)
 
 			const mockProvider: TelemetryPropertiesProvider = {
 				getTelemetryProperties: vi.fn().mockResolvedValue({
@@ -136,7 +146,7 @@ describe("PostHogTelemetryClient", () => {
 		})
 
 		it("should filter out git repository properties", async () => {
-			const client = new PostHogTelemetryClient()
+			const client = new PostHogTelemetryClient(mockContext)
 
 			const mockProvider: TelemetryPropertiesProvider = {
 				getTelemetryProperties: vi.fn().mockResolvedValue({
@@ -184,7 +194,7 @@ describe("PostHogTelemetryClient", () => {
 		})
 
 		it("should handle errors from provider gracefully", async () => {
-			const client = new PostHogTelemetryClient()
+			const client = new PostHogTelemetryClient(mockContext)
 
 			const mockProvider: TelemetryPropertiesProvider = {
 				getTelemetryProperties: vi.fn().mockRejectedValue(new Error("Provider error")),
@@ -211,7 +221,7 @@ describe("PostHogTelemetryClient", () => {
 		})
 
 		it("should return event properties when no provider is set", async () => {
-			const client = new PostHogTelemetryClient()
+			const client = new PostHogTelemetryClient(mockContext)
 
 			const getEventProperties = getPrivateProperty<
 				(event: { event: TelemetryEventName; properties?: Record<string, any> }) => Promise<Record<string, any>>
@@ -228,7 +238,7 @@ describe("PostHogTelemetryClient", () => {
 
 	describe("capture", () => {
 		it("should not capture events when telemetry is disabled", async () => {
-			const client = new PostHogTelemetryClient()
+			const client = new PostHogTelemetryClient(mockContext)
 			client.updateTelemetryState(false)
 
 			await client.capture({
@@ -240,7 +250,7 @@ describe("PostHogTelemetryClient", () => {
 		})
 
 		it("should not capture events that are not capturable", async () => {
-			const client = new PostHogTelemetryClient()
+			const client = new PostHogTelemetryClient(mockContext)
 			client.updateTelemetryState(true)
 
 			await client.capture({
@@ -252,7 +262,7 @@ describe("PostHogTelemetryClient", () => {
 		})
 
 		it("should capture events when telemetry is enabled and event is capturable", async () => {
-			const client = new PostHogTelemetryClient()
+			const client = new PostHogTelemetryClient(mockContext)
 			client.updateTelemetryState(true)
 
 			const mockProvider: TelemetryPropertiesProvider = {
@@ -284,7 +294,7 @@ describe("PostHogTelemetryClient", () => {
 		})
 
 		it("should filter out git repository properties when capturing events", async () => {
-			const client = new PostHogTelemetryClient()
+			const client = new PostHogTelemetryClient(mockContext)
 			client.updateTelemetryState(true)
 
 			const mockProvider: TelemetryPropertiesProvider = {
@@ -328,7 +338,7 @@ describe("PostHogTelemetryClient", () => {
 
 	describe("updateTelemetryState", () => {
 		it("should enable telemetry when user opts in and global telemetry is enabled", () => {
-			const client = new PostHogTelemetryClient()
+			const client = new PostHogTelemetryClient(mockContext)
 
 			;(vscode.workspace.getConfiguration as any).mockReturnValue({
 				get: vi.fn().mockReturnValue("all"),
@@ -341,7 +351,7 @@ describe("PostHogTelemetryClient", () => {
 		})
 
 		it("should disable telemetry when user opts out", () => {
-			const client = new PostHogTelemetryClient()
+			const client = new PostHogTelemetryClient(mockContext)
 
 			;(vscode.workspace.getConfiguration as any).mockReturnValue({
 				get: vi.fn().mockReturnValue("all"),
@@ -354,7 +364,7 @@ describe("PostHogTelemetryClient", () => {
 		})
 
 		it("should disable telemetry when global telemetry is disabled, regardless of user opt-in", () => {
-			const client = new PostHogTelemetryClient()
+			const client = new PostHogTelemetryClient(mockContext)
 
 			;(vscode.workspace.getConfiguration as any).mockReturnValue({
 				get: vi.fn().mockReturnValue("off"),
@@ -368,7 +378,7 @@ describe("PostHogTelemetryClient", () => {
 
 	describe("shutdown", () => {
 		it("should call shutdown on the PostHog client", async () => {
-			const client = new PostHogTelemetryClient()
+			const client = new PostHogTelemetryClient(mockContext)
 			await client.shutdown()
 			expect(mockPostHogClient.shutdown).toHaveBeenCalled()
 		})

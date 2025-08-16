@@ -67,7 +67,9 @@ export async function activate(context: vscode.ExtensionContext) {
 	const telemetryService = TelemetryService.createInstance()
 
 	try {
-		telemetryService.register(new PostHogTelemetryClient())
+		// Enable debug mode for telemetry during development
+		const debugTelemetry = process.env.DEBUG_TELEMETRY === "true" || process.env.NODE_ENV === "development"
+		telemetryService.register(new PostHogTelemetryClient(context, debugTelemetry))
 	} catch (error) {
 		console.warn("Failed to register PostHogTelemetryClient:", error)
 	}
@@ -288,5 +290,11 @@ export async function deactivate() {
 
 	await McpServerManager.cleanup(extensionContext)
 	TelemetryService.instance.shutdown()
+
+	// Clean up the telemetry queue manager singleton to prevent memory leaks
+	// and stale data when switching workspaces
+	const { TelemetryQueueManager } = await import("@roo-code/telemetry")
+	TelemetryQueueManager.resetInstance()
+
 	TerminalRegistry.cleanup()
 }
