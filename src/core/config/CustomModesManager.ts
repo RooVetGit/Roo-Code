@@ -148,35 +148,151 @@ export class CustomModesManager {
 		let cleanedContent = stripBom(content)
 		cleanedContent = this.cleanInvisibleCharacters(cleanedContent)
 
+		// First attempt: Try parsing as YAML with lenient options
 		try {
-			const parsed = yaml.parse(cleanedContent)
+			const parsed = yaml.parse(cleanedContent, {
+				strict: false, // Be more lenient with duplicate keys and other issues
+				uniqueKeys: false, // Allow duplicate keys (last one wins)
+			})
 			// Ensure we never return null or undefined
 			return parsed ?? {}
 		} catch (yamlError) {
-			// For .roomodes files, try JSON as fallback
+			// For .roomodes files, try multiple fallback strategies
 			if (filePath.endsWith(ROOMODES_FILENAME)) {
+				// Strategy 1: Try JSON parsing
 				try {
-					// Try parsing the original content as JSON (not the cleaned content)
-					return JSON.parse(content)
+					const jsonParsed = JSON.parse(content)
+					console.log(`[CustomModesManager] Successfully parsed ${filePath} as JSON`)
+					return jsonParsed
 				} catch (jsonError) {
-					// JSON also failed, show the original YAML error
-					const errorMsg = yamlError instanceof Error ? yamlError.message : String(yamlError)
-					console.error(`[CustomModesManager] Failed to parse YAML from ${filePath}:`, errorMsg)
+					// JSON failed, continue to next strategy
+				}
 
-					const lineMatch = errorMsg.match(/at line (\d+)/)
-					const line = lineMatch ? lineMatch[1] : "unknown"
-					vscode.window.showErrorMessage(t("common:customModes.errors.yamlParseError", { line }))
+				// Strategy 2: Try parsing original content without cleaning (some users might have specific formatting)
+				try {
+					const parsed = yaml.parse(content, {
+						strict: false,
+						uniqueKeys: false,
+					})
+					console.log(`[CustomModesManager] Successfully parsed ${filePath} with original content`)
+					return parsed ?? {}
+				} catch (originalError) {
+					// Continue to next strategy
+				}
 
-					// Return empty object to prevent duplicate error handling
-					return {}
+				// Strategy 3: Try to extract valid modes even from partially corrupted YAML
+				const partialModes = this.extractPartialModes(content)
+				if (partialModes && partialModes.customModes && partialModes.customModes.length > 0) {
+					console.log(
+						`[CustomModesManager] Extracted ${partialModes.customModes.length} modes from partially corrupted YAML`,
+					)
+					return partialModes
+				}
+
+				// All strategies failed, show helpful error
+				const errorMsg = yamlError instanceof Error ? yamlError.message : String(yamlError)
+				console.error(`[CustomModesManager] Failed to parse ${filePath}:`, errorMsg)
+
+				const lineMatch = errorMsg.match(/at line (\d+)/)
+				const line = lineMatch ? lineMatch[1] : "unknown"
+
+				// Provide more helpful error message with recovery suggestions
+				const errorMessage =
+					t("common:customModes.errors.yamlParseError", { line }) || `YAML parse error at line ${line}`
+				const helpfulMessage =
+					errorMessage +
+					" Try checking for: missing quotes, incorrect indentation, or invalid special characters."
+
+				vscode.window.showErrorMessage(helpfulMessage)
+
+				// Return structure with empty modes array to prevent crashes
+				return { customModes: [] }
+			}
+
+			// For non-.roomodes files, just log and return empty structure
+			const errorMsg = yamlError instanceof Error ? yamlError.message : String(yamlError)
+			console.error(`[CustomModesManager] Failed to parse YAML from ${filePath}:`, errorMsg)
+			return { customModes: [] }
+		}
+	}
+
+	/**
+	 * Attempt to extract valid mode configurations from partially corrupted YAML
+	 * This is a best-effort recovery mechanism
+	 */
+	private extractPartialModes(content: string): any {
+		try {
+			const modes: any[] = []
+			const lines = content.split("\n")
+			let currentMode: any = null
+			let inMode = false
+
+			for (const line of lines) {
+				const trimmed = line.trim()
+
+				// Detect start of a new mode
+				if (trimmed.startsWith("- slug:") || trimmed.match(/^-\s+slug:/)) {
+					if (currentMode && this.isValidPartialMode(currentMode)) {
+						modes.push(currentMode)
+					}
+					currentMode = {}
+					inMode = true
+					const slugMatch = trimmed.match(/slug:\s*["']?([^"'\s]+)["']?/)
+					if (slugMatch) {
+						currentMode.slug = slugMatch[1]
+					}
+				} else if (inMode && currentMode) {
+					// Extract other mode properties
+					if (trimmed.startsWith("name:")) {
+						const nameMatch = trimmed.match(/name:\s*["']?(.+?)["']?\s*$/)
+						if (nameMatch) {
+							currentMode.name = nameMatch[1].trim()
+						}
+					} else if (trimmed.startsWith("roleDefinition:")) {
+						const roleMatch = trimmed.match(/roleDefinition:\s*["']?(.+?)["']?\s*$/)
+						if (roleMatch) {
+							currentMode.roleDefinition = roleMatch[1].trim()
+						}
+					} else if (trimmed.startsWith("groups:")) {
+						// Simple group extraction - just get basic groups
+						const groupsMatch = trimmed.match(/groups:\s*\[(.+)\]/)
+						if (groupsMatch) {
+							currentMode.groups = groupsMatch[1]
+								.split(",")
+								.map((g) => g.trim().replace(/["']/g, ""))
+								.filter((g) => ["read", "edit", "browser", "terminal", "mcp"].includes(g))
+						} else {
+							// Default to read-only if groups parsing fails
+							currentMode.groups = ["read"]
+						}
+					}
 				}
 			}
 
-			// For non-.roomodes files, just log and return empty object
-			const errorMsg = yamlError instanceof Error ? yamlError.message : String(yamlError)
-			console.error(`[CustomModesManager] Failed to parse YAML from ${filePath}:`, errorMsg)
-			return {}
+			// Don't forget the last mode
+			if (currentMode && this.isValidPartialMode(currentMode)) {
+				modes.push(currentMode)
+			}
+
+			return modes.length > 0 ? { customModes: modes } : null
+		} catch (error) {
+			console.error("[CustomModesManager] Failed to extract partial modes:", error)
+			return null
 		}
+	}
+
+	/**
+	 * Check if a partially extracted mode has minimum required fields
+	 */
+	private isValidPartialMode(mode: any): boolean {
+		return !!(
+			mode.slug &&
+			mode.name &&
+			mode.roleDefinition &&
+			mode.groups &&
+			Array.isArray(mode.groups) &&
+			mode.groups.length > 0
+		)
 	}
 
 	private async loadModesFromFile(filePath: string): Promise<ModeConfig[]> {
@@ -189,21 +305,49 @@ export class CustomModesManager {
 				return []
 			}
 
-			const result = customModesSettingsSchema.safeParse(settings)
-
-			if (!result.success) {
-				console.error(`[CustomModesManager] Schema validation failed for ${filePath}:`, result.error)
-
-				// Show user-friendly error for .roomodes files
-				if (filePath.endsWith(ROOMODES_FILENAME)) {
-					const issues = result.error.issues
-						.map((issue) => `• ${issue.path.join(".")}: ${issue.message}`)
-						.join("\n")
-
-					vscode.window.showErrorMessage(t("common:customModes.errors.schemaValidationError", { issues }))
+			// If customModes is not an array, try to recover
+			if (!Array.isArray(settings.customModes)) {
+				console.warn(`[CustomModesManager] customModes is not an array in ${filePath}, attempting recovery`)
+				// If it's a single mode object, wrap it in an array
+				if (typeof settings.customModes === "object" && settings.customModes.slug) {
+					settings.customModes = [settings.customModes]
+				} else {
+					return []
 				}
+			}
 
-				return []
+			// Attempt lenient validation with recovery
+			const validModes: ModeConfig[] = []
+			const invalidModes: string[] = []
+
+			for (const mode of settings.customModes) {
+				// Try to fix common issues before validation
+				const fixedMode = this.fixCommonModeIssues(mode)
+
+				const modeResult = modeConfigSchema.safeParse(fixedMode)
+				if (modeResult.success) {
+					validModes.push(modeResult.data)
+				} else {
+					// Try minimal recovery for invalid modes
+					const recoveredMode = this.recoverInvalidMode(fixedMode)
+					if (recoveredMode) {
+						validModes.push(recoveredMode)
+						console.warn(`[CustomModesManager] Recovered mode '${recoveredMode.slug}' with defaults`)
+					} else {
+						invalidModes.push(fixedMode.slug || "unknown")
+						console.error(`[CustomModesManager] Failed to recover mode:`, modeResult.error.issues)
+					}
+				}
+			}
+
+			// Show warning for invalid modes but don't fail completely
+			if (invalidModes.length > 0 && filePath.endsWith(ROOMODES_FILENAME)) {
+				vscode.window.showWarningMessage(
+					t("common:customModes.warnings.someModesInvalid", {
+						count: invalidModes.length,
+						modes: invalidModes.join(", "),
+					}) || `Some modes could not be loaded: ${invalidModes.join(", ")}`,
+				)
 			}
 
 			// Determine source based on file path
@@ -211,7 +355,7 @@ export class CustomModesManager {
 			const source = isRoomodes ? ("project" as const) : ("global" as const)
 
 			// Add source to each mode
-			return result.data.customModes.map((mode) => ({ ...mode, source }))
+			return validModes.map((mode) => ({ ...mode, source }))
 		} catch (error) {
 			// Only log if the error wasn't already handled in parseYamlSafely
 			if (!(error as any).alreadyHandled) {
@@ -219,6 +363,108 @@ export class CustomModesManager {
 				console.error(`[CustomModesManager] ${errorMsg}`)
 			}
 			return []
+		}
+	}
+
+	/**
+	 * Fix common issues in mode configuration before validation
+	 */
+	private fixCommonModeIssues(mode: any): any {
+		if (!mode || typeof mode !== "object") {
+			return mode
+		}
+
+		const fixed = { ...mode }
+
+		// Ensure groups is an array
+		if (fixed.groups && !Array.isArray(fixed.groups)) {
+			if (typeof fixed.groups === "string") {
+				// Handle comma-separated string
+				fixed.groups = fixed.groups.split(",").map((g: string) => g.trim())
+			} else {
+				fixed.groups = ["read"] // Default to read-only
+			}
+		}
+
+		// Filter out invalid group names and ensure at least one valid group
+		if (Array.isArray(fixed.groups)) {
+			const validGroups = ["read", "edit", "browser", "terminal", "mcp", "command", "modes"]
+			const processedGroups: any[] = []
+
+			for (const g of fixed.groups) {
+				// Handle complex group syntax (arrays with fileRegex)
+				if (Array.isArray(g) && g.length >= 1) {
+					// Keep complex groups if the base group is valid
+					if (validGroups.includes(g[0])) {
+						processedGroups.push(g)
+					}
+				} else if (typeof g === "string" && validGroups.includes(g)) {
+					processedGroups.push(g)
+				}
+			}
+
+			fixed.groups = processedGroups
+
+			// Ensure at least read permission
+			if (fixed.groups.length === 0) {
+				fixed.groups = ["read"]
+			}
+		}
+
+		// Trim string fields
+		if (typeof fixed.slug === "string") fixed.slug = fixed.slug.trim()
+		if (typeof fixed.name === "string") fixed.name = fixed.name.trim()
+		if (typeof fixed.roleDefinition === "string") fixed.roleDefinition = fixed.roleDefinition.trim()
+		if (typeof fixed.customInstructions === "string") fixed.customInstructions = fixed.customInstructions.trim()
+		if (typeof fixed.description === "string") fixed.description = fixed.description.trim()
+		if (typeof fixed.whenToUse === "string") fixed.whenToUse = fixed.whenToUse.trim()
+
+		// Remove empty optional fields
+		if (fixed.customInstructions === "") delete fixed.customInstructions
+		if (fixed.description === "") delete fixed.description
+		if (fixed.whenToUse === "") delete fixed.whenToUse
+
+		return fixed
+	}
+
+	/**
+	 * Attempt to recover an invalid mode by providing defaults for missing required fields
+	 */
+	private recoverInvalidMode(mode: any): ModeConfig | null {
+		if (!mode || typeof mode !== "object") {
+			return null
+		}
+
+		// Must have at least a slug to recover
+		if (!mode.slug || typeof mode.slug !== "string") {
+			return null
+		}
+
+		try {
+			const recovered: ModeConfig = {
+				slug: mode.slug,
+				name: mode.name || mode.slug.replace(/-/g, " ").replace(/\b\w/g, (l: string) => l.toUpperCase()),
+				roleDefinition: mode.roleDefinition || `Custom mode for ${mode.name || mode.slug}`,
+				groups: Array.isArray(mode.groups) && mode.groups.length > 0 ? mode.groups : ["read"],
+			}
+
+			// Add optional fields if present and valid
+			if (mode.customInstructions && typeof mode.customInstructions === "string") {
+				recovered.customInstructions = mode.customInstructions
+			}
+			if (mode.description && typeof mode.description === "string") {
+				recovered.description = mode.description
+			}
+			if (mode.whenToUse && typeof mode.whenToUse === "string") {
+				recovered.whenToUse = mode.whenToUse
+			}
+
+			// Validate the recovered mode
+			const result = modeConfigSchema.safeParse(recovered)
+			return result.success ? result.data : null
+		} catch (error) {
+			console.error(`[CustomModesManager] Failed to recover mode ${mode.slug}:`, error)
+			return null
 		}
 	}
 
