@@ -141,3 +141,12 @@ export type GetModelsOptions =
 	| { provider: "ollama"; baseUrl?: string }
 	| { provider: "lmstudio"; baseUrl?: string }
 	| { provider: "io-intelligence"; apiKey: string }
+
+export const supportToolCall = (provider: string | null | undefined) => {
+	if (provider === null || provider === undefined) {
+		return false
+	}
+	return ["openrouter", "openai", "deepseek", "lmstudio"].includes(provider)
+}
+
+export type ToolCallProviderType = "openai" | "anthropic" | "vscode-lm"

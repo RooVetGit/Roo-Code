@@ -1,6 +1,6 @@
 import { Anthropic } from "@anthropic-ai/sdk"
 
-import type { ProviderSettings, ModelInfo } from "@roo-code/types"
+import type { ProviderSettings, ModelInfo, ToolName } from "@roo-code/types"
 
 import { ApiStream } from "./transform/stream"
 
@@ -37,6 +37,7 @@ import {
 	ZAiHandler,
 	FireworksHandler,
 } from "./providers"
+import { ToolArgs } from "../core/prompts/tools/types"
 
 export interface SingleCompletionHandler {
 	completePrompt(prompt: string): Promise<string>
@@ -52,6 +53,14 @@ export interface ApiHandlerCreateMessageMetadata {
 	 * Used to enforce "skip once" after a condense operation.
 	 */
 	suppressPreviousResponseId?: boolean
+	/**
+	 * tool call
+	 */
+	tools?: ToolName[]
+	/**
+	 * tool call args
+	 */
+	toolArgs?: ToolArgs
 }
 
 export interface ApiHandler {

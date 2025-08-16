@@ -18,10 +18,10 @@ export const formatResponse = {
 	rooIgnoreError: (path: string) =>
 		`Access to ${path} is blocked by the .rooignore file settings. You must try to continue in the task without using this file, or ask the user to update the .rooignore file.`,
 
-	noToolsUsed: () =>
+	noToolsUsed: (toolCallEnabled: boolean) =>
 		`[ERROR] You did not use a tool in your previous response! Please retry with a tool use.
 
-${toolUseInstructionsReminder}
+${toolCallEnabled ? "" : toolUseInstructionsReminder}
 
 # Next Steps
 
