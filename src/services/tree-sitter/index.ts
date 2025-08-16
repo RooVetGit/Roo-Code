@@ -6,6 +6,7 @@ import { fileExistsAtPath } from "../../utils/fs"
 import { parseMarkdown } from "./markdownParser"
 import { RooIgnoreController } from "../../core/ignore/RooIgnoreController"
 import { QueryCapture } from "web-tree-sitter"
+import { readFileWithEncodingDetection } from "../../utils/encoding"
 
 // Private constant
 const DEFAULT_MIN_COMPONENT_LINES_VALUE = 4
@@ -120,7 +121,7 @@ export async function parseSourceCodeDefinitionsForFile(
 		}
 
 		// Read file content
-		const fileContent = await fs.readFile(filePath, "utf8")
+		const fileContent = await readFileWithEncodingDetection(filePath)
 
 		// Split the file content into individual lines
 		const lines = fileContent.split("\n")
@@ -196,7 +197,7 @@ export async function parseSourceCodeForDefinitionsTopLevel(
 
 		try {
 			// Read file content
-			const fileContent = await fs.readFile(file, "utf8")
+			const fileContent = await readFileWithEncodingDetection(file)
 
 			// Split the file content into individual lines
 			const lines = fileContent.split("\n")
@@ -386,7 +387,7 @@ async function parseFile(
 	}
 
 	// Read file content
-	const fileContent = await fs.readFile(filePath, "utf8")
+	const fileContent = await readFileWithEncodingDetection(filePath)
 	const extLang = path.extname(filePath).toLowerCase().slice(1)
 
 	// Check if we have a parser for this file type
