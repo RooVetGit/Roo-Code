@@ -1,6 +1,6 @@
 import { z } from "zod"
 
-import { clineMessageSchema, clineAskSchema, tokenUsageSchema } from "./message.js"
+import { clineMessageSchema, tokenUsageSchema } from "./message.js"
 import { toolNamesSchema, toolUsageSchema } from "./tool.js"
 
 /**
@@ -61,7 +61,7 @@ export const rooCodeEventsSchema = z.object({
 	[RooCodeEventName.TaskFocused]: z.tuple([z.string()]),
 	[RooCodeEventName.TaskUnfocused]: z.tuple([z.string()]),
 	[RooCodeEventName.TaskActive]: z.tuple([z.string()]),
-	[RooCodeEventName.TaskInteractive]: z.tuple([z.string(), clineAskSchema, z.number()]),
+	[RooCodeEventName.TaskInteractive]: z.tuple([z.string()]),
 	[RooCodeEventName.TaskResumable]: z.tuple([z.string()]),
 	[RooCodeEventName.TaskIdle]: z.tuple([z.string()]),
 

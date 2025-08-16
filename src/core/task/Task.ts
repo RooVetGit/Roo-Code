@@ -734,7 +734,7 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 				stateMutationTimeouts.push(
 					setTimeout(() => {
 						this.interactiveAsk = type
-						this.emit(RooCodeEventName.TaskInteractive, this.taskId, type, askTs)
+						this.emit(RooCodeEventName.TaskInteractive, this.taskId)
 					}, 1_000),
 				)
 			} else if (isResumableAsk(type)) {

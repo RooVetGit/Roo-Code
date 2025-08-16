@@ -54,7 +54,7 @@ export type TaskProviderEvents = {
 	[RooCodeEventName.TaskFocused]: [taskId: string]
 	[RooCodeEventName.TaskUnfocused]: [taskId: string]
 	[RooCodeEventName.TaskActive]: [taskId: string]
-	[RooCodeEventName.TaskInteractive]: [taskId: string, ask: ClineAsk, askTs: number]
+	[RooCodeEventName.TaskInteractive]: [taskId: string]
 	[RooCodeEventName.TaskResumable]: [taskId: string]
 	[RooCodeEventName.TaskIdle]: [taskId: string]
 }
@@ -102,7 +102,7 @@ export type TaskEvents = {
 	[RooCodeEventName.TaskFocused]: []
 	[RooCodeEventName.TaskUnfocused]: []
 	[RooCodeEventName.TaskActive]: [taskId: string]
-	[RooCodeEventName.TaskInteractive]: [taskId: string, ask: ClineAsk, askTs: number]
+	[RooCodeEventName.TaskInteractive]: [taskId: string]
 	[RooCodeEventName.TaskResumable]: [taskId: string]
 	[RooCodeEventName.TaskIdle]: [taskId: string]
 

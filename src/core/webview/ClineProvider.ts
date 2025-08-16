@@ -177,8 +177,7 @@ export class ClineProvider
 			const onTaskFocused = () => this.emit(RooCodeEventName.TaskFocused, instance.taskId)
 			const onTaskUnfocused = () => this.emit(RooCodeEventName.TaskUnfocused, instance.taskId)
 			const onTaskActive = (taskId: string) => this.emit(RooCodeEventName.TaskActive, taskId)
-			const onTaskInteractive = (taskId: string, ask: ClineAsk, askTs: number) =>
-				this.emit(RooCodeEventName.TaskInteractive, taskId, ask, askTs)
+			const onTaskInteractive = (taskId: string) => this.emit(RooCodeEventName.TaskInteractive, taskId)
 			const onTaskResumable = (taskId: string) => this.emit(RooCodeEventName.TaskResumable, taskId)
 			const onTaskIdle = (taskId: string) => this.emit(RooCodeEventName.TaskIdle, taskId)
 
