@@ -22,6 +22,7 @@ import { Package } from "./shared/package"
 import { formatLanguage } from "./shared/language"
 import { ContextProxy } from "./core/config/ContextProxy"
 import { ClineProvider } from "./core/webview/ClineProvider"
+import { getAllModesInfo } from "./shared/modes"
 import { DIFF_VIEW_URI_SCHEME } from "./integrations/editor/DiffViewProvider"
 import { TerminalRegistry } from "./integrations/terminal/TerminalRegistry"
 import { McpServerManager } from "./services/mcp/McpServerManager"
@@ -147,6 +148,16 @@ export async function activate(context: vscode.ExtensionContext) {
 			{ ...bridgeConfig, provider, sessionId: vscode.env.sessionId },
 			(message: string) => outputChannel.appendLine(message),
 		)
+
+		// Send available modes to the bridge
+		const bridgeInstance = ExtensionBridgeService.getInstance()
+		if (bridgeInstance && provider) {
+			const customModes = await provider.customModesManager.getCustomModes()
+			const modesInfo = getAllModesInfo(customModes)
+
+			await bridgeInstance.setAvailableModes(modesInfo)
+			outputChannel.appendLine(`[CloudService] Sent ${modesInfo.length} modes to bridge`)
+		}
 	})
 
 	// Add to subscriptions for proper cleanup on deactivate.

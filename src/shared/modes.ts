@@ -109,6 +109,12 @@ export function getAllModes(customModes?: ModeConfig[]): ModeConfig[] {
 	return allModes
 }
 
+// Get all mode slugs and display names (in the same precedence order as getAllModes).
+// Custom modes override built-in modes when slugs collide.
+export function getAllModesInfo(customModes?: ModeConfig[]): Array<{ slug: string; name: string }> {
+	return getAllModes(customModes).map((m) => ({ slug: m.slug, name: m.name }))
+}
+
 // Check if a mode is custom or an override
 export function isCustomMode(slug: string, customModes?: ModeConfig[]): boolean {
 	return !!customModes?.some((mode) => mode.slug === slug)
