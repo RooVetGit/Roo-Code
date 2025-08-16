@@ -1469,17 +1469,9 @@ describe("ChatView - Message Queueing Tests", () => {
 	it("shows sending is enabled when no task is active", async () => {
 		const { getByTestId } = renderChatView()
 
-		// Hydrate state with completed task
+		// Hydrate state with no active task (empty messages)
 		mockPostMessage({
-			clineMessages: [
-				{
-					type: "ask",
-					ask: "completion_result",
-					ts: Date.now(),
-					text: "Task completed",
-					partial: false,
-				},
-			],
+			clineMessages: [],
 		})
 
 		// Wait for state to be updated
@@ -1491,5 +1483,149 @@ describe("ChatView - Message Queueing Tests", () => {
 		const chatTextArea = getByTestId("chat-textarea")
 		const input = chatTextArea.querySelector("input")!
 		expect(input.getAttribute("data-sending-disabled")).toBe("false")
+	})
+
+	it("keeps sending disabled during completion_result streaming to prevent message loss", async () => {
+		const { getByTestId } = renderChatView()
+
+		// Hydrate state with initial task
+		mockPostMessage({
+			clineMessages: [
+				{
+					type: "say",
+					say: "task",
+					ts: Date.now() - 2000,
+					text: "Initial task",
+				},
+			],
+		})
+
+		// Add completion_result that is not partial (streaming finished)
+		mockPostMessage({
+			clineMessages: [
+				{
+					type: "say",
+					say: "task",
+					ts: Date.now() - 2000,
+					text: "Initial task",
+				},
+				{
+					type: "ask",
+					ask: "completion_result",
+					ts: Date.now(),
+					text: "Task completed successfully",
+					partial: false, // Not partial, streaming is done
+				},
+			],
+		})
+
+		// Wait for state to be updated
+		await waitFor(() => {
+			const chatTextArea = getByTestId("chat-textarea")
+			const input = chatTextArea.querySelector("input")!
+			// Should remain disabled during completion_result to prevent message loss
+			expect(input.getAttribute("data-sending-disabled")).toBe("true")
+		})
+	})
+
+	it("keeps sending disabled during completion_result to queue messages properly", async () => {
+		const { getByTestId } = renderChatView()
+
+		// Hydrate state with completion_result
+		mockPostMessage({
+			clineMessages: [
+				{
+					type: "say",
+					say: "task",
+					ts: Date.now() - 2000,
+					text: "Initial task",
+				},
+				{
+					type: "ask",
+					ask: "completion_result",
+					ts: Date.now() - 1000,
+					text: "Task completed",
+					partial: false,
+				},
+			],
+		})
+
+		// Wait for state to be updated
+		await waitFor(() => {
+			const chatTextArea = getByTestId("chat-textarea")
+			const input = chatTextArea.querySelector("input")!
+			// Verify that sending is disabled during completion_result
+			// This ensures messages will be queued instead of lost
+			expect(input.getAttribute("data-sending-disabled")).toBe("true")
+		})
+
+		// Clear any initial calls
+		vi.mocked(vscode.postMessage).mockClear()
+
+		// Simulate user typing a message while completion_result is active
+		// This would queue the message since sending is disabled
+		const chatTextArea = getByTestId("chat-textarea")
+		const input = chatTextArea.querySelector("input")!
+
+		// Trigger the onChange handler which calls onSend
+		act(() => {
+			const event = new Event("change", { bubbles: true })
+			Object.defineProperty(event, "target", { value: { value: "New task message" }, writable: false })
+			input.dispatchEvent(event)
+		})
+
+		// The message should be queued (not sent immediately) because sending is disabled
+		expect(vscode.postMessage).not.toHaveBeenCalledWith({
+			type: "newTask",
+			text: "New task message",
+			images: [],
+		})
+	})
+
+	it("does not process queue during API errors", async () => {
+		const { getByTestId } = renderChatView()
+
+		// Hydrate state with API error
+		mockPostMessage({
+			clineMessages: [
+				{
+					type: "say",
+					say: "task",
+					ts: Date.now() - 2000,
+					text: "Initial task",
+				},
+				{
+					type: "ask",
+					ask: "api_req_failed",
+					ts: Date.now(),
+					text: "API request failed",
+					partial: false,
+				},
+			],
+		})
+
+		// Clear any initial calls
+		vi.mocked(vscode.postMessage).mockClear()
+
+		// Try to send a message - it should be queued but not processed
+		const chatTextArea = getByTestId("chat-textarea")
+		const input = chatTextArea.querySelector("input")!
+
+		act(() => {
+			const event = new Event("change", { bubbles: true })
+			Object.defineProperty(event, "target", { value: { value: "Message during API error" }, writable: false })
+			input.dispatchEvent(event)
+		})
+
+		// Wait a bit to ensure no processing happens
+		await new Promise((resolve) => setTimeout(resolve, 200))
+
+		// Message should not be sent during API error
+		expect(vscode.postMessage).not.toHaveBeenCalledWith({
+			type: "askResponse",
+			askResponse: "messageResponse",
+			text: "Message during API error",
+			images: [],
+		})
 	})
 })
