@@ -171,8 +171,10 @@ export const SYSTEM_PROMPT = async (
 	// Get full mode config from custom modes or fall back to built-in modes
 	const currentMode = getModeBySlug(mode, customModes) || modes.find((m) => m.slug === mode) || modes[0]
 
+	const isOnlyChatMode = currentMode.slug === "onlychat"
+
 	// If a file-based custom system prompt exists, use it
-	if (fileCustomSystemPrompt) {
+	if (fileCustomSystemPrompt || isOnlyChatMode) {
 		const { roleDefinition, baseInstructions: baseInstructionsForFile } = getModeSelection(
 			mode,
 			promptComponent,
@@ -194,7 +196,7 @@ export const SYSTEM_PROMPT = async (
 		// For file-based prompts, don't include the tool sections
 		return `${roleDefinition}
 
-${fileCustomSystemPrompt}
+${fileCustomSystemPrompt || ""}
 
 ${customInstructions}`
 	}

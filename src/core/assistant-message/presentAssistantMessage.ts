@@ -5,7 +5,7 @@ import type { ToolName, ClineAsk, ToolProgressStatus } from "@roo-code/types"
 import { TelemetryService } from "@roo-code/telemetry"
 
 import { defaultModeSlug, getModeBySlug } from "../../shared/modes"
-import type { ToolParamName, ToolResponse } from "../../shared/tools"
+import type { ToolParamName, ToolResponse, ToolUse } from "../../shared/tools"
 
 import { fetchInstructionsTool } from "../tools/fetchInstructionsTool"
 import { listFilesTool } from "../tools/listFilesTool"
@@ -79,6 +79,33 @@ export async function presentAssistantMessage(cline: Task) {
 
 	const block = cloneDeep(cline.assistantMessageContent[cline.currentStreamingContentIndex]) // need to create copy bc while stream is updating the array, it could be updating the reference block properties too
 
+	// If block is partial, remove partial closing tag so its not
+	// presented to user.
+	const removeClosingTag = (tag: ToolParamName, text?: string): string => {
+		if (!block.partial) {
+			return text || ""
+		}
+
+		if (!text) {
+			return ""
+		}
+
+		// This regex dynamically constructs a pattern to match the
+		// closing tag:
+		// - Optionally matches whitespace before the tag.
+		// - Matches '<' or '</' optionally followed by any subset of
+		//   characters from the tag name.
+		const tagRegex = new RegExp(
+			`\\s?<\/?${tag
+				.split("")
+				.map((char) => `(?:${char})?`)
+				.join("")}$`,
+			"g",
+		)
+
+		return text.replace(tagRegex, "")
+	}
+
 	switch (block.type) {
 		case "text": {
 			if (cline.didRejectTool || cline.didAlreadyUseTool) {
@@ -145,7 +172,27 @@ export async function presentAssistantMessage(cline: Task) {
 					}
 				}
 			}
-
+			const { mode } = (await cline.providerRef.deref()?.getState()) ?? {}
+			if (mode === "onlychat") {
+				await attemptCompletionTool(
+					cline,
+					{
+						type: "tool_use",
+						name: "attempt_completion",
+						params: {
+							result: content,
+						},
+						partial: block.partial,
+					} as ToolUse,
+					undefined as any,
+					undefined as any,
+					undefined as any,
+					removeClosingTag,
+					undefined as any,
+					undefined as any,
+				)
+				break
+			}
 			await cline.say("text", content, undefined, block.partial)
 			break
 		}
@@ -312,33 +359,6 @@ export async function presentAssistantMessage(cline: Task) {
 				)
 
 				pushToolResult(formatResponse.toolError(errorString))
-			}
-
-			// If block is partial, remove partial closing tag so its not
-			// presented to user.
-			const removeClosingTag = (tag: ToolParamName, text?: string): string => {
-				if (!block.partial) {
-					return text || ""
-				}
-
-				if (!text) {
-					return ""
-				}
-
-				// This regex dynamically constructs a pattern to match the
-				// closing tag:
-				// - Optionally matches whitespace before the tag.
-				// - Matches '<' or '</' optionally followed by any subset of
-				//   characters from the tag name.
-				const tagRegex = new RegExp(
-					`\\s?<\/?${tag
-						.split("")
-						.map((char) => `(?:${char})?`)
-						.join("")}$`,
-					"g",
-				)
-
-				return text.replace(tagRegex, "")
 			}
 
 			if (block.name !== "browser_action") {
