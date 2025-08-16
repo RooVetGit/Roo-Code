@@ -584,8 +584,8 @@ importers:
         specifier: ^1.14.0
         version: 1.14.0(typescript@5.8.3)
       '@roo-code/cloud':
-        specifier: ^0.15.0
-        version: 0.15.0
+        specifier: ^0.16.0
+        version: 0.16.0
       '@roo-code/ipc':
         specifier: workspace:^
         version: link:../packages/ipc
@@ -676,6 +676,9 @@ importers:
       node-ipc:
         specifier: ^12.0.0
         version: 12.0.0
+      ollama:
+        specifier: ^0.5.17
+        version: 0.5.17
       openai:
         specifier: ^5.0.0
         version: 5.5.1(ws@8.18.3)(zod@3.25.61)
@@ -3103,11 +3106,11 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@roo-code/cloud@0.15.0':
-    resolution: {integrity: sha512-0DivOP5uUS9U6UKSxzoxZ4NxMCYUxA7wG72y3PBP91JhGzHaTqxi9WrvF61bo134dCnCktU9oTKIAD9AvFigzg==}
+  '@roo-code/cloud@0.16.0':
+    resolution: {integrity: sha512-AMHjPFK6lSZeutELzdYgxs4r7tUW8NEffRkM3NagtGKK5KY/pCRwctdP0TDCJGwLCRu5JI21Ww9uYCgAQ4MM3Q==}
 
-  '@roo-code/types@1.49.0':
-    resolution: {integrity: sha512-h7gbjfIxBN+fgFecQiZs3W+vjdUhZOvtjh4OqcpPGG1w8B1DlXPDV4L/+ARUeNzZxSOK5S5rNPy57jC35EaD/w==}
+  '@roo-code/types@1.51.0':
+    resolution: {integrity: sha512-h+wihwF9iuKfb7xycS5yXgDzGGypjiZF4Sy4tu6vdkhzVcE8ExFtCwGn1w535p9KaLE1QCV/G5NddgajqRyPAQ==}
 
   '@sec-ant/readable-stream@0.4.1':
     resolution: {integrity: sha512-831qok9r2t8AlxLko40y2ebgSDhenenCatLVeW/uBtnHPyhHOvG0C7TvfgecV+wHzIm5KUICgzmVpWS+IMEAeg==}
@@ -7645,6 +7648,9 @@ packages:
     resolution: {integrity: sha512-gXah6aZrcUxjWg2zR2MwouP2eHlCBzdV4pygudehaKXSGW4v2AsRQUK+lwwXhii6KFZcunEnmSUoYp5CXibxtA==}
     engines: {node: '>= 0.4'}
 
+  ollama@0.5.17:
+    resolution: {integrity: sha512-q5LmPtk6GLFouS+3aURIVl+qcAOPC4+Msmx7uBb3pd+fxI55WnGjmLZ0yijI/CYy79x0QPGx3BwC3u5zv9fBvQ==}
+
   on-finished@2.4.1:
     resolution: {integrity: sha512-oVlzkg3ENAhCk2zdv7IJwd/QUD4z2RxRwpkcGY8psCVcCYZNq4wYnVWALHM+brtuJjePWiYF/ClmuDr8Ch5+kg==}
     engines: {node: '>= 0.8'}
@@ -9654,6 +9660,9 @@ packages:
   whatwg-encoding@3.1.1:
     resolution: {integrity: sha512-6qN4hJdMwfYBtE3YBTTHhoeuUrDBPZmbQaxWAqSALV/MeEnR5z1xd8UKud2RAkFoPkmB+hli1TZSnyi84xz1vQ==}
     engines: {node: '>=18'}
+
+  whatwg-fetch@3.6.20:
+    resolution: {integrity: sha512-EqhiFU6daOA8kpjOWTL0olhVOF3i7OrFzSYiGsEMB8GcXS+RrzauAERX65xMeNWVqxA6HXH2m69Z9LaKKdisfg==}
 
   whatwg-mimetype@4.0.0:
     resolution: {integrity: sha512-QaKxh0eNIi2mE9p2vEdzfagOKHCcj1pJ56EEHGQOVxp8r9/iszLUUV7v89x9O1p/T+NlTM5W7jW6+cz4Fq1YVg==}
@@ -12305,9 +12314,9 @@ snapshots:
   '@rollup/rollup-win32-x64-msvc@4.40.2':
     optional: true
 
-  '@roo-code/cloud@0.15.0':
+  '@roo-code/cloud@0.16.0':
     dependencies:
-      '@roo-code/types': 1.49.0
+      '@roo-code/types': 1.51.0
       ioredis: 5.6.1
       p-wait-for: 5.0.2
       socket.io-client: 4.8.1
@@ -12317,7 +12326,7 @@ snapshots:
       - supports-color
       - utf-8-validate
 
-  '@roo-code/types@1.49.0':
+  '@roo-code/types@1.51.0':
     dependencies:
       zod: 3.25.76
 
@@ -13546,7 +13555,7 @@ snapshots:
       sirv: 3.0.1
       tinyglobby: 0.2.14
       tinyrainbow: 2.0.0
-      vitest: 3.2.4(@types/debug@4.1.12)(@types/node@24.2.1)(@vitest/ui@3.2.4)(jiti@2.4.2)(jsdom@26.1.0)(lightningcss@1.30.1)(tsx@4.19.4)(yaml@2.8.0)
+      vitest: 3.2.4(@types/debug@4.1.12)(@types/node@20.17.50)(@vitest/ui@3.2.4)(jiti@2.4.2)(jsdom@26.1.0)(lightningcss@1.30.1)(tsx@4.19.4)(yaml@2.8.0)
 
   '@vitest/utils@3.2.4':
     dependencies:
@@ -14176,7 +14185,7 @@ snapshots:
     dependencies:
       devtools-protocol: 0.0.1452169
       mitt: 3.0.1
-      zod: 3.25.61
+      zod: 3.25.76
 
   ci-info@2.0.0: {}
 
@@ -17683,6 +17692,10 @@ snapshots:
       define-properties: 1.2.1
       es-object-atoms: 1.1.1
 
+  ollama@0.5.17:
+    dependencies:
+      whatwg-fetch: 3.6.20
+
   on-finished@2.4.1:
     dependencies:
       ee-first: 1.1.1
@@ -20154,6 +20167,8 @@ snapshots:
   whatwg-encoding@3.1.1:
     dependencies:
       iconv-lite: 0.6.3
+
+  whatwg-fetch@3.6.20: {}
 
   whatwg-mimetype@4.0.0: {}
 
