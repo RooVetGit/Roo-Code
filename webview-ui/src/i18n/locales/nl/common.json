@@ -83,5 +83,9 @@
 		"months_ago": "{{count}} maanden geleden",
 		"year_ago": "een jaar geleden",
 		"years_ago": "{{count}} jaar geleden"
+	},
+	"errors": {
+		"invalid_line_limit": "Ongeldige regellimiet opgegeven",
+		"invalid_character_limit": "Ongeldige tekenlimiet opgegeven"
 	}
 }

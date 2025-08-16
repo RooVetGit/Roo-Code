@@ -61,5 +61,8 @@
 		"failedDuringInitialScan": "Mislukt tijdens initiële scan: {{errorMessage}}",
 		"unknownError": "Onbekende fout",
 		"indexingRequiresWorkspace": "Indexering vereist een geopende workspace map"
+	},
+	"openai": {
+		"invalidResponseFormat": "Ongeldig antwoordformaat van OpenAI API"
 	}
 }

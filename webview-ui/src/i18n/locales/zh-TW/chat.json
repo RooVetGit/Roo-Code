@@ -24,7 +24,9 @@
 		"connectToCloudDescription": "登入 Roo Code Cloud 以分享工作",
 		"sharingDisabledByOrganization": "組織已停用分享功能",
 		"shareSuccessOrganization": "組織連結已複製到剪貼簿",
-		"shareSuccessPublic": "公開連結已複製到剪貼簿"
+		"shareSuccessPublic": "公開連結已複製到剪貼簿",
+		"collapse": "Collapse task",
+		"expand": "Expand task"
 	},
 	"unpin": "取消釘選",
 	"pin": "釘選",
@@ -212,7 +214,8 @@
 		"wantsToSearchWithPath": "Roo 想要在 <code>{{path}}</code> 中搜尋程式碼庫：<code>{{query}}</code>",
 		"didSearch_one": "找到 1 個結果",
 		"didSearch_other": "找到 {{count}} 個結果",
-		"resultTooltip": "相似度評分：{{score}} (點選開啟檔案)"
+		"resultTooltip": "相似度評分：{{score}} (點選開啟檔案)",
+		"didSearch": "已搜尋程式碼庫"
 	},
 	"commandOutput": "命令輸出",
 	"commandExecution": {

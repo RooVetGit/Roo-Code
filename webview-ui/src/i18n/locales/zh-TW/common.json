@@ -83,5 +83,9 @@
 		"months_ago": "{{count}} 個月前",
 		"year_ago": "1 年前",
 		"years_ago": "{{count}} 年前"
+	},
+	"errors": {
+		"invalid_line_limit": "指定的行限制無效",
+		"invalid_character_limit": "指定的字符限制無效"
 	}
 }

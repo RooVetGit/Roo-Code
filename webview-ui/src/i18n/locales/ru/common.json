@@ -83,5 +83,9 @@
 		"months_ago": "{{count}} месяцев назад",
 		"year_ago": "год назад",
 		"years_ago": "{{count}} лет назад"
+	},
+	"errors": {
+		"invalid_line_limit": "Указан недопустимый лимит строк",
+		"invalid_character_limit": "Указан недопустимый лимит символов"
 	}
 }

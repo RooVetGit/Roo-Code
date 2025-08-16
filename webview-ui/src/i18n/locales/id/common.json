@@ -83,5 +83,9 @@
 		"months_ago": "{{count}} bulan yang lalu",
 		"year_ago": "satu tahun yang lalu",
 		"years_ago": "{{count}} tahun yang lalu"
+	},
+	"errors": {
+		"invalid_line_limit": "Batas baris yang ditentukan tidak valid",
+		"invalid_character_limit": "Batas karakter yang ditentukan tidak valid"
 	}
 }

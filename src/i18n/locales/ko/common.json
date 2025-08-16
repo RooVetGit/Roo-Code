@@ -85,7 +85,7 @@
 			"processExitedWithError": "Claude Code 프로세스가 코드 {{exitCode}}로 종료되었습니다. 오류 출력: {{output}}",
 			"stoppedWithReason": "Claude Code가 다음 이유로 중지되었습니다: {{reason}}",
 			"apiKeyModelPlanMismatch": "API keys and subscription plans allow different models. Make sure the selected model is included in your plan.",
-			"notFound": "Claude Code executable '{{claudePath}}' not found.\n\nPlease install Claude Code CLI:\n1. Visit {{installationUrl}} to download Claude Code\n2. Follow the installation instructions for your operating system\n3. Ensure the 'claude' command is available in your PATH\n4. Alternatively, configure a custom path in Roo settings under 'Claude Code Path'\n\nOriginal error: {{originalError}}"
+			"notFound": "Claude Code 실행 파일 '{{claudePath}}'을(를) 찾을 수 없습니다.\n\nClaude Code CLI를 설치하세요:\n1. {{installationUrl}}을 방문하여 Claude Code를 다운로드하세요\n2. 운영 체제에 맞는 설치 지침을 따르세요\n3. 'claude' 명령이 PATH에서 사용 가능한지 확인하세요\n4. 또는 Roo 설정의 'Claude Code 경로'에서 사용자 정의 경로를 구성하세요\n\n원본 오류: {{originalError}}"
 		},
 		"gemini": {
 			"generate_stream": "Gemini 생성 컨텍스트 스트림 오류: {{error}}",

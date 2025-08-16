@@ -61,5 +61,8 @@
 		"failedDuringInitialScan": "Ошибка во время первоначального сканирования: {{errorMessage}}",
 		"unknownError": "Неизвестная ошибка",
 		"indexingRequiresWorkspace": "Для индексации требуется открытая папка рабочего пространства"
+	},
+	"openai": {
+		"invalidResponseFormat": "Недопустимый формат ответа от API OpenAI"
 	}
 }

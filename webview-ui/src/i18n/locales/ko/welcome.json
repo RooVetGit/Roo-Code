@@ -23,5 +23,10 @@
 		"allow": "허용",
 		"deny": "거부"
 	},
-	"importSettings": "설정 가져오기"
+	"importSettings": "설정 가져오기",
+	"rooCloudCTA": {
+		"title": "Join Roo Cloud",
+		"description": "Get access to cloud features and enhanced capabilities",
+		"joinWaitlist": "Join Waitlist"
+	}
 }

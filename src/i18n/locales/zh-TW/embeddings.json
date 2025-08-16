@@ -61,5 +61,8 @@
 		"failedDuringInitialScan": "初始掃描失敗：{{errorMessage}}",
 		"unknownError": "未知錯誤",
 		"indexingRequiresWorkspace": "索引需要開啟的工作區資料夾"
+	},
+	"openai": {
+		"invalidResponseFormat": "OpenAI API 回應格式無效"
 	}
 }

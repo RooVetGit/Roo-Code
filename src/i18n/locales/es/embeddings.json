@@ -61,5 +61,8 @@
 		"failedDuringInitialScan": "Falló durante el escaneo inicial: {{errorMessage}}",
 		"unknownError": "Error desconocido",
 		"indexingRequiresWorkspace": "La indexación requiere una carpeta de workspace abierta"
+	},
+	"openai": {
+		"invalidResponseFormat": "Formato de respuesta no válido de la API de OpenAI"
 	}
 }

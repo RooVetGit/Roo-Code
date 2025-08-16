@@ -85,7 +85,7 @@
 			"processExitedWithError": "Claude Code işlemi {{exitCode}} koduyla çıktı. Hata çıktısı: {{output}}",
 			"stoppedWithReason": "Claude Code şu nedenle durdu: {{reason}}",
 			"apiKeyModelPlanMismatch": "API keys and subscription plans allow different models. Make sure the selected model is included in your plan.",
-			"notFound": "Claude Code executable '{{claudePath}}' not found.\n\nPlease install Claude Code CLI:\n1. Visit {{installationUrl}} to download Claude Code\n2. Follow the installation instructions for your operating system\n3. Ensure the 'claude' command is available in your PATH\n4. Alternatively, configure a custom path in Roo settings under 'Claude Code Path'\n\nOriginal error: {{originalError}}"
+			"notFound": "Claude Code çalıştırılabilir dosyası '{{claudePath}}' bulunamadı.\n\nLütfen Claude Code CLI'yi yükleyin:\n1. Claude Code'u indirmek için {{installationUrl}} adresini ziyaret edin\n2. İşletim sisteminiz için kurulum talimatlarını izleyin\n3. 'claude' komutunun PATH'inizde mevcut olduğundan emin olun\n4. Alternatif olarak, Roo ayarlarında 'Claude Code Yolu' altında özel bir yol yapılandırın\n\nOrijinal hata: {{originalError}}"
 		},
 		"gemini": {
 			"generate_stream": "Gemini oluşturma bağlam akışı hatası: {{error}}",

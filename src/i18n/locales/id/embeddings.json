@@ -61,5 +61,8 @@
 		"failedDuringInitialScan": "Gagal selama pemindaian awal: {{errorMessage}}",
 		"unknownError": "Kesalahan tidak diketahui",
 		"indexingRequiresWorkspace": "Pengindeksan memerlukan folder workspace yang terbuka"
+	},
+	"openai": {
+		"invalidResponseFormat": "Format respons tidak valid dari API OpenAI"
 	}
 }

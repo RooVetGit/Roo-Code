@@ -90,7 +90,7 @@
 			"processExitedWithError": "Claude Code 进程退出，退出码：{{exitCode}}。错误输出：{{output}}",
 			"stoppedWithReason": "Claude Code 停止，原因：{{reason}}",
 			"apiKeyModelPlanMismatch": "API keys and subscription plans allow different models. Make sure the selected model is included in your plan.",
-			"notFound": "Claude Code executable '{{claudePath}}' not found.\n\nPlease install Claude Code CLI:\n1. Visit {{installationUrl}} to download Claude Code\n2. Follow the installation instructions for your operating system\n3. Ensure the 'claude' command is available in your PATH\n4. Alternatively, configure a custom path in Roo settings under 'Claude Code Path'\n\nOriginal error: {{originalError}}"
+			"notFound": "找不到 Claude Code 可执行文件 '{{claudePath}}'。\n\n请安装 Claude Code CLI：\n1. 访问 {{installationUrl}} 下载 Claude Code\n2. 按照您操作系统的安装说明进行操作\n3. 确保 'claude' 命令在您的 PATH 中可用\n4. 或者，在 Roo 设置中的 'Claude Code 路径' 下配置自定义路径\n\n原始错误：{{originalError}}"
 		},
 		"gemini": {
 			"generate_stream": "Gemini 生成上下文流错误：{{error}}",

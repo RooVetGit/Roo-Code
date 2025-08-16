@@ -1,0 +1,7 @@
+{
+	"errors": {
+		"cloud_auth_required": "Cloud authentication required",
+		"organization_mismatch": "Organization mismatch detected",
+		"verification_failed": "Verifikasi gagal"
+	}
+}
