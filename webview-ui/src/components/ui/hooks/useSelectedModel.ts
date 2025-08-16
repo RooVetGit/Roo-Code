@@ -296,6 +296,11 @@ function getSelectedModel({
 				routerModels["io-intelligence"]?.[id] ?? ioIntelligenceModels[id as keyof typeof ioIntelligenceModels]
 			return { id, info }
 		}
+		case "copilot": {
+			const id = apiConfiguration.copilotModelId ?? "gpt-4.1"
+			const info = routerModels.copilot[id]
+			return { id, info }
+		}
 		// case "anthropic":
 		// case "human-relay":
 		// case "fake-ai":
