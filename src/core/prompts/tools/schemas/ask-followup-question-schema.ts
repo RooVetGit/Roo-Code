@@ -15,7 +15,7 @@ export function generateAskFollowupQuestionSchema(args: ToolArgs): BaseToolSchem
 			},
 			{
 				name: "follow_up",
-				type: "array",
+				type: "string",
 				description: `A list of 2-4 suggested answers that logically follow from the question, ordered by priority or logical sequence. Each suggestion must:
 1. Be provided in its own <suggest> tag
 2. Be specific, actionable, and directly related to the completed task
@@ -23,12 +23,6 @@ export function generateAskFollowupQuestionSchema(args: ToolArgs): BaseToolSchem
 4. Optionally include a mode attribute to switch to a specific mode when the suggestion is selected: <suggest mode="mode-slug">suggestion text</suggest>
    - When using the mode attribute, focus the suggestion text on the action to be taken rather than mentioning the mode switch, as the mode change is handled automatically and indicated by a visual badge`,
 				required: true,
-				items: {
-					name: "suggest",
-					type: "string",
-					description: "A suggested answer for the follow-up question.",
-					required: true,
-				},
 			},
 		],
 		systemPropmt: `## ask_followup_question
