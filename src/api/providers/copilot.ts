@@ -122,55 +122,32 @@ export class CopilotHandler extends BaseProvider implements SingleCompletionHand
 			"X-Initiator": initiator,
 		}
 
-		if (this.options.openAiStreamingEnabled ?? true) {
-			const requestOptions: OpenAI.Chat.Completions.ChatCompletionCreateParamsStreaming = {
-				model: modelId,
-				temperature: this.options.modelTemperature ?? 0,
-				messages: convertedMessages,
-				stream: true as const,
-				stream_options: { include_usage: true },
-			}
+		const requestOptions: OpenAI.Chat.Completions.ChatCompletionCreateParamsStreaming = {
+			model: modelId,
+			temperature: this.options.modelTemperature ?? 0,
+			messages: convertedMessages,
+			stream: true as const,
+			stream_options: { include_usage: true },
+			max_completion_tokens: modelInfo.maxTokens,
+		}
 
-			// Add max_tokens if needed
-			this.addMaxTokensIfNeeded(requestOptions, modelInfo)
+		const stream = await this.client.chat.completions.create(requestOptions, {
+			headers,
+		})
 
-			const stream = await this.client.chat.completions.create(requestOptions, {
-				headers,
-			})
-
-			for await (const chunk of stream) {
-				const delta = chunk.choices?.[0]?.delta
-				if (delta?.content) {
-					yield {
-						type: "text",
-						text: delta.content,
-					}
-				}
-
-				// Handle usage information
-				if (chunk.usage) {
-					yield this.processUsageMetrics(chunk.usage)
+		for await (const chunk of stream) {
+			const delta = chunk.choices?.[0]?.delta
+			if (delta?.content) {
+				yield {
+					type: "text",
+					text: delta.content,
 				}
 			}
-		} else {
-			// Non-streaming implementation
-			const requestOptions: OpenAI.Chat.Completions.ChatCompletionCreateParamsNonStreaming = {
-				model: modelId,
-				temperature: this.options.modelTemperature ?? 0,
-				messages: convertedMessages,
+
+			// Handle usage information
+			if (chunk.usage) {
+				yield this.processUsageMetrics(chunk.usage)
 			}
-
-			this.addMaxTokensIfNeeded(requestOptions, modelInfo)
-
-			const response = await this.client.chat.completions.create(requestOptions, {
-				headers,
-			})
-
-			yield {
-				type: "text",
-				text: response.choices[0]?.message.content || "",
-			}
-			yield this.processUsageMetrics(response.usage)
 		}
 	}
 

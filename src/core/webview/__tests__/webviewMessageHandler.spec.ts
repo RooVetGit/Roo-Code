@@ -6,13 +6,14 @@ vi.mock("../../../api/providers/fetchers/copilot")
 
 import { webviewMessageHandler } from "../webviewMessageHandler"
 import type { ClineProvider } from "../ClineProvider"
-import { getModels } from "../../../api/providers/fetchers/modelCache"
+import { flushModels, getModels } from "../../../api/providers/fetchers/modelCache"
 import { getCopilotModels, CopilotAuthenticator } from "../../../api/providers/fetchers/copilot"
 import type { ModelRecord } from "../../../shared/api"
 
 const mockGetModels = getModels as Mock<typeof getModels>
 const mockGetCopilotModels = getCopilotModels as Mock<typeof getCopilotModels>
 const mockCopilotAuthenticator = CopilotAuthenticator as any
+const mockFlushModels = flushModels as Mock<typeof flushModels>
 
 // Mock ClineProvider
 const mockClineProvider = {
@@ -560,13 +561,14 @@ describe("webviewMessageHandler - requestCopilotModels", () => {
 		}
 
 		// Mock getCopilotModels to return mock models
-		mockGetCopilotModels.mockResolvedValue(mockCopilotModels)
+		mockGetModels.mockResolvedValue(mockCopilotModels)
 
 		await webviewMessageHandler(mockClineProvider, {
 			type: "requestCopilotModels",
 		})
 
-		expect(mockGetCopilotModels).toHaveBeenCalledTimes(1)
+		expect(mockFlushModels).toHaveBeenCalledTimes(1)
+		expect(mockGetModels).toHaveBeenCalledTimes(1)
 		expect(mockClineProvider.postMessageToWebview).toHaveBeenCalledWith({
 			type: "copilotModels",
 			copilotModels: mockCopilotModels,
@@ -574,7 +576,7 @@ describe("webviewMessageHandler - requestCopilotModels", () => {
 	})
 
 	it("handles errors when fetching Copilot models", async () => {
-		mockGetCopilotModels.mockRejectedValue(new Error("Authentication failed"))
+		mockGetModels.mockRejectedValue(new Error("Authentication failed"))
 
 		// Spy on console.error
 		const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {})
@@ -583,7 +585,8 @@ describe("webviewMessageHandler - requestCopilotModels", () => {
 			type: "requestCopilotModels",
 		})
 
-		expect(mockGetCopilotModels).toHaveBeenCalledTimes(1)
+		expect(mockFlushModels).toHaveBeenCalledTimes(1)
+		expect(mockGetModels).toHaveBeenCalledTimes(1)
 		expect(consoleSpy).toHaveBeenCalledWith("Failed to fetch Copilot models:", expect.any(Error))
 		expect(mockClineProvider.postMessageToWebview).toHaveBeenCalledWith({
 			type: "copilotModels",

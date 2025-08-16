@@ -1,6 +1,6 @@
 import { MessageHandlerStrategy, MessageHandlerContext } from "../types"
-import { getCopilotModels } from "../../../../api/providers/fetchers/copilot"
 import { ModelRecord } from "../../../../shared/api"
+import { flushModels, getModels } from "../../../../api/providers/fetchers/modelCache"
 
 /**
  * Strategy for handling requestCopilotModels message
@@ -10,7 +10,11 @@ export class RequestCopilotModelsStrategy implements MessageHandlerStrategy {
 		const { provider } = context
 
 		try {
-			const copilotModels = await getCopilotModels()
+			await flushModels("copilot")
+
+			const copilotModels = await getModels({
+				provider: "copilot",
+			})
 			provider.postMessageToWebview({
 				type: "copilotModels",
 				copilotModels,

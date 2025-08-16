@@ -106,7 +106,6 @@ describe("CopilotHandler", () => {
 		mockOptions = {
 			copilotModelId: "gpt-4",
 			apiModelId: "gpt-4",
-			openAiStreamingEnabled: true,
 		}
 
 		// Mock successful authentication
@@ -342,47 +341,6 @@ describe("CopilotHandler", () => {
 			const chunk = usageChunks[0]
 			expect(chunk.cacheWriteTokens).toBe(8)
 			expect(chunk.cacheReadTokens).toBe(2)
-		})
-
-		it("should handle non-streaming requests", async () => {
-			const nonStreamingHandler = new CopilotHandler({
-				...mockOptions,
-				openAiStreamingEnabled: false,
-			})
-
-			const stream = nonStreamingHandler.createMessage(systemPrompt, messages)
-			const chunks: any[] = []
-			for await (const chunk of stream) {
-				chunks.push(chunk)
-			}
-
-			const textChunks = chunks.filter((chunk) => chunk.type === "text")
-			expect(textChunks).toHaveLength(1)
-			expect(textChunks[0].text).toBe("Test Copilot response")
-
-			const usageChunks = chunks.filter((chunk) => chunk.type === "usage")
-			expect(usageChunks).toHaveLength(1)
-		})
-
-		it("should add max_tokens when includeMaxTokens is enabled", async () => {
-			const handlerWithMaxTokens = new CopilotHandler({
-				...mockOptions,
-				includeMaxTokens: true,
-				modelMaxTokens: 4096,
-			})
-
-			const stream = handlerWithMaxTokens.createMessage(systemPrompt, messages)
-			const chunks: any[] = []
-			for await (const chunk of stream) {
-				chunks.push(chunk)
-			}
-
-			expect(mockCreate).toHaveBeenCalledWith(
-				expect.objectContaining({
-					max_completion_tokens: 4096,
-				}),
-				expect.any(Object),
-			)
 		})
 
 		it("should handle authentication failures gracefully", async () => {
