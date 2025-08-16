@@ -8,11 +8,10 @@ import * as yaml from "yaml"
 
 import {
 	type Language,
+	type ProviderSettings,
 	type GlobalState,
 	type ClineMessage,
-	type ClineAsk,
 	TelemetryEventName,
-	RooCodeEventName,
 } from "@roo-code/types"
 import { CloudService } from "@roo-code/cloud"
 import { TelemetryService } from "@roo-code/telemetry"

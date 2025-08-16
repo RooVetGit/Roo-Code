@@ -52,7 +52,7 @@ const QueuedMessages: React.FC<QueuedMessagesProps> = ({ queue, onRemove, onUpda
 										<textarea
 											ref={(textarea) => {
 												if (textarea) {
-													// Set cursor at the end.
+													// Set cursor at the end
 													textarea.setSelectionRange(
 														textarea.value.length,
 														textarea.value.length,

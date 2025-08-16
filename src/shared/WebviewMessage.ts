@@ -6,7 +6,6 @@ import {
 	type ModeConfig,
 	type InstallMarketplaceItemOptions,
 	type MarketplaceItem,
-	type ClineMessage,
 	marketplaceItemSchema,
 } from "@roo-code/types"
 import type { ShareVisibility } from "@roo-code/cloud"
@@ -218,7 +217,6 @@ export interface WebviewMessage {
 	disabled?: boolean
 	context?: string
 	dataUri?: string
-	askMessage?: ClineMessage
 	askResponse?: ClineAskResponse
 	apiConfiguration?: ProviderSettings
 	images?: string[]

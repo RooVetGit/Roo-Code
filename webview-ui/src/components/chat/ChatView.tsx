@@ -6,12 +6,11 @@ import removeMd from "remove-markdown"
 import { VSCodeButton } from "@vscode/webview-ui-toolkit/react"
 import useSound from "use-sound"
 import { LRUCache } from "lru-cache"
-import { useTranslation } from "react-i18next"
 
 import { useDebounceEffect } from "@src/utils/useDebounceEffect"
 import { appendImages } from "@src/utils/imageUtils"
 
-import type { ClineAsk, ClineMessage, QueuedMessage } from "@roo-code/types"
+import type { ClineAsk, ClineMessage } from "@roo-code/types"
 
 import { ClineSayBrowserAction, ClineSayTool, ExtensionMessage } from "@roo/ExtensionMessage"
 import { McpServer, McpTool } from "@roo/mcp"
@@ -23,7 +22,6 @@ import { getApiMetrics } from "@roo/getApiMetrics"
 import { AudioType } from "@roo/WebviewMessage"
 import { getAllModes } from "@roo/modes"
 import { ProfileValidator } from "@roo/ProfileValidator"
-import { getLatestTodo } from "@roo/todo"
 
 import { vscode } from "@src/utils/vscode"
 import {
@@ -32,15 +30,16 @@ import {
 	findLongestPrefixMatch,
 	parseCommand,
 } from "@src/utils/command-validation"
+import { useTranslation } from "react-i18next"
 import { useAppTranslation } from "@src/i18n/TranslationContext"
 import { useExtensionState } from "@src/context/ExtensionStateContext"
-import { useAutoApprovalState } from "@src/hooks/useAutoApprovalState"
-import { useAutoApprovalToggles } from "@src/hooks/useAutoApprovalToggles"
 import { useSelectedModel } from "@src/components/ui/hooks/useSelectedModel"
 import RooHero from "@src/components/welcome/RooHero"
 import RooTips from "@src/components/welcome/RooTips"
 import RooCloudCTA from "@src/components/welcome/RooCloudCTA"
 import { StandardTooltip } from "@src/components/ui"
+import { useAutoApprovalState } from "@src/hooks/useAutoApprovalState"
+import { useAutoApprovalToggles } from "@src/hooks/useAutoApprovalToggles"
 
 import TelemetryBanner from "../common/TelemetryBanner"
 import VersionIndicator from "../common/VersionIndicator"
@@ -56,6 +55,8 @@ import SystemPromptWarning from "./SystemPromptWarning"
 import ProfileViolationWarning from "./ProfileViolationWarning"
 import { CheckpointWarning } from "./CheckpointWarning"
 import QueuedMessages from "./QueuedMessages"
+import { getLatestTodo } from "@roo/todo"
+import { QueuedMessage } from "@roo-code/types"
 
 export interface ChatViewProps {
 	isHidden: boolean
@@ -76,16 +77,13 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 	ref,
 ) => {
 	const isMountedRef = useRef(true)
-
 	const [audioBaseUri] = useState(() => {
 		const w = window as any
 		return w.AUDIO_BASE_URI || ""
 	})
-
 	const { t } = useAppTranslation()
 	const { t: tSettings } = useTranslation("settings")
 	const modeShortcutText = `${isMac ? "⌘" : "Ctrl"} + . ${t("chat:forNextMode")}, ${isMac ? "⌘" : "Ctrl"} + Shift + . ${t("chat:forPreviousMode")}`
-
 	const {
 		clineMessages: messages,
 		currentTaskItem,
@@ -163,10 +161,7 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 	const retryCountRef = useRef<Map<string, number>>(new Map())
 	const MAX_RETRY_ATTEMPTS = 3
 
-	// We need to hold on to the ask because useEffect > lastMessage will always
-	// let us know when an ask comes in and handle it, but by the time
-	// handleMessage is called, the last message might not be the ask anymore
-	// (it could be a say that followed).
+	// we need to hold on to the ask because useEffect > lastMessage will always let us know when an ask comes in and handle it, but by the time handleMessage is called, the last message might not be the ask anymore (it could be a say that followed)
 	const [clineAsk, setClineAsk] = useState<ClineAsk | undefined>(undefined)
 	const [enableButtons, setEnableButtons] = useState<boolean>(false)
 	const [primaryButtonText, setPrimaryButtonText] = useState<string | undefined>(undefined)
@@ -211,16 +206,13 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 		[apiConfiguration, organizationAllowList],
 	)
 
-	// UI layout depends on the last 2 messages (since it relies on the content
-	// of these messages, we are deep comparing. i.e. the button state after
-	// hitting button sets enableButtons to false, and this effect otherwise
-	// would have to true again even if messages didn't change.
+	// UI layout depends on the last 2 messages
+	// (since it relies on the content of these messages, we are deep comparing. i.e. the button state after hitting button sets enableButtons to false, and this effect otherwise would have to true again even if messages didn't change
 	const lastMessage = useMemo(() => messages.at(-1), [messages])
 	const secondLastMessage = useMemo(() => messages.at(-2), [messages])
 
-	// Setup sound hooks with use-sound.
+	// Setup sound hooks with use-sound
 	const volume = typeof soundVolume === "number" ? soundVolume : 0.5
-
 	const soundConfig = {
 		volume,
 		// useSound expects 'disabled' property, not 'soundEnabled'
@@ -265,11 +257,9 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 		if (lastMessage) {
 			switch (lastMessage.type) {
 				case "ask":
-					// Reset user response flag when a new ask arrives to allow
-					// auto-approval.
+					// Reset user response flag when a new ask arrives to allow auto-approval
 					userRespondedRef.current = false
 					const isPartial = lastMessage.partial === true
-
 					switch (lastMessage.ask) {
 						case "api_req_failed":
 							playSound("progress_loop")
@@ -456,13 +446,11 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 			clearTimeout(autoApproveTimeoutRef.current)
 			autoApproveTimeoutRef.current = null
 		}
-
 		// Reset user response flag for new task
 		userRespondedRef.current = false
 
 		// Clear message queue when starting a new task
 		setMessageQueue([])
-
 		// Clear retry counts
 		retryCountRef.current.clear()
 	}, [task?.ts])
@@ -557,7 +545,6 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 			clearTimeout(autoApproveTimeoutRef.current)
 			autoApproveTimeoutRef.current = null
 		}
-
 		// Reset user response flag for new message
 		userRespondedRef.current = false
 
@@ -593,9 +580,7 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 						setSelectedImages([])
 						return
 					}
-
-					// Mark that user has responded - this prevents any pending
-					// auto-approvals.
+					// Mark that user has responded - this prevents any pending auto-approvals
 					userRespondedRef.current = true
 
 					if (messagesRef.current.length === 0) {
@@ -1597,23 +1582,27 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 			return
 		}
 
-		// Exit early if user has already responded.
+		// Exit early if user has already responded
 		if (userRespondedRef.current) {
 			return
 		}
 
 		const autoApproveOrReject = async () => {
-			// Check for auto-reject first (commands that should be denied).
+			// Check for auto-reject first (commands that should be denied)
 			if (lastMessage?.ask === "command" && isDeniedCommand(lastMessage)) {
-				// Get the denied prefix for the localized message.
+				// Get the denied prefix for the localized message
 				const deniedPrefix = getDeniedPrefix(lastMessage.text || "")
-
 				if (deniedPrefix) {
-					// Create the localized auto-deny message and send it with the rejection.
+					// Create the localized auto-deny message and send it with the rejection
 					const autoDenyMessage = tSettings("autoApprove.execute.autoDenied", { prefix: deniedPrefix })
-					vscode.postMessage({ type: "askResponse", askResponse: "noButtonClicked", text: autoDenyMessage })
+
+					vscode.postMessage({
+						type: "askResponse",
+						askResponse: "noButtonClicked",
+						text: autoDenyMessage,
+					})
 				} else {
-					// Auto-reject denied commands immediately if no prefix found.
+					// Auto-reject denied commands immediately if no prefix found
 					vscode.postMessage({ type: "askResponse", askResponse: "noButtonClicked" })
 				}
 
@@ -1623,13 +1612,12 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 				return
 			}
 
-			// Then check for auto-approve.
+			// Then check for auto-approve
 			if (lastMessage?.ask && isAutoApproved(lastMessage)) {
-				// Special handling for follow-up questions.
+				// Special handling for follow-up questions
 				if (lastMessage.ask === "followup") {
-					// Handle invalid JSON.
+					// Handle invalid JSON
 					let followUpData: FollowUpData = {}
-
 					try {
 						followUpData = JSON.parse(lastMessage.text || "{}") as FollowUpData
 					} catch (error) {
@@ -1638,7 +1626,7 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 					}
 
 					if (followUpData && followUpData.suggest && followUpData.suggest.length > 0) {
-						// Wait for the configured timeout before auto-selecting the first suggestion.
+						// Wait for the configured timeout before auto-selecting the first suggestion
 						await new Promise<void>((resolve) => {
 							autoApproveTimeoutRef.current = setTimeout(() => {
 								autoApproveTimeoutRef.current = null
@@ -1646,22 +1634,19 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 							}, followupAutoApproveTimeoutMs)
 						})
 
-						// Check if user responded manually.
+						// Check if user responded manually
 						if (userRespondedRef.current) {
 							return
 						}
 
-						// Get the first suggestion.
+						// Get the first suggestion
 						const firstSuggestion = followUpData.suggest[0]
 
-						// Handle the suggestion click.
+						// Handle the suggestion click
 						handleSuggestionClickInRow(firstSuggestion)
 						return
 					}
 				} else if (lastMessage.ask === "tool" && isWriteToolAction(lastMessage)) {
-					// When auto-approval is enabled for write operations, there
-					// is a configurable delay (writeDelayMs) before automatically
-					// approving these changes.
 					await new Promise<void>((resolve) => {
 						autoApproveTimeoutRef.current = setTimeout(() => {
 							autoApproveTimeoutRef.current = null
@@ -1677,7 +1662,6 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 				setEnableButtons(false)
 			}
 		}
-
 		autoApproveOrReject()
 
 		return () => {
@@ -1702,7 +1686,6 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 		allowedCommands,
 		deniedCommands,
 		mcpServers,
-		autoApprovalEnabled,
 		isAutoApproved,
 		lastMessage,
 		writeDelayMs,
