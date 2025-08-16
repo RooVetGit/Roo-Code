@@ -107,8 +107,8 @@ export type TaskEvents = {
 	[RooCodeEventName.TaskIdle]: [taskId: string]
 
 	// Subtask Lifecycle
-	[RooCodeEventName.TaskPaused]: [taskId: string]
-	[RooCodeEventName.TaskUnpaused]: [taskId: string]
+	[RooCodeEventName.TaskPaused]: []
+	[RooCodeEventName.TaskUnpaused]: []
 	[RooCodeEventName.TaskSpawned]: [taskId: string]
 
 	// Task Execution

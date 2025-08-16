@@ -1076,7 +1076,7 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 
 	public async resumePausedTask(lastMessage: string) {
 		this.isPaused = false
-		this.emit(RooCodeEventName.TaskUnpaused, this.taskId)
+		this.emit(RooCodeEventName.TaskUnpaused)
 
 		// Fake an answer from the subtask that it has completed running and
 		// this is the result of what it has done add the message to the chat
