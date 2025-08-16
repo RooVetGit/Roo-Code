@@ -15,6 +15,7 @@
 		"export": "Eksportuj historię zadań",
 		"delete": "Usuń zadanie (Shift + Kliknięcie, aby pominąć potwierdzenie)",
 		"condenseContext": "Inteligentnie skondensuj kontekst",
+		"cancelCondense": "Anuluj kompresję",
 		"share": "Udostępnij zadanie",
 		"shareWithOrganization": "Udostępnij organizacji",
 		"shareWithOrganizationDescription": "Tylko członkowie twojej organizacji mogą uzyskać dostęp",

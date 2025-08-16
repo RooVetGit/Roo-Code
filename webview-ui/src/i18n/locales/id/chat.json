@@ -11,6 +11,7 @@
 		"apiCost": "Biaya API",
 		"size": "Ukuran",
 		"condenseContext": "Kondensasi konteks secara cerdas",
+		"cancelCondense": "Batalkan kompresi",
 		"contextWindow": "Panjang Konteks",
 		"closeAndStart": "Tutup tugas dan mulai yang baru",
 		"export": "Ekspor riwayat tugas",

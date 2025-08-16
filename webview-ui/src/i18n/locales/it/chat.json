@@ -15,6 +15,7 @@
 		"export": "Esporta cronologia attività",
 		"delete": "Elimina attività (Shift + Clic per saltare la conferma)",
 		"condenseContext": "Condensa contesto in modo intelligente",
+		"cancelCondense": "Annulla compressione",
 		"share": "Condividi attività",
 		"shareWithOrganization": "Condividi con l'organizzazione",
 		"shareWithOrganizationDescription": "Solo i membri della tua organizzazione possono accedere",

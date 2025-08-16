@@ -80,6 +80,7 @@ export type SummarizeResponse = {
  * @param {boolean} isAutomaticTrigger - Whether the summarization is triggered automatically
  * @param {string} customCondensingPrompt - Optional custom prompt to use for condensing
  * @param {ApiHandler} condensingApiHandler - Optional specific API handler to use for condensing
+ * @param {AbortSignal} abortSignal - Optional abort signal to cancel the operation
  * @returns {SummarizeResponse} - The result of the summarization operation (see above)
  */
 export async function summarizeConversation(
@@ -91,6 +92,7 @@ export async function summarizeConversation(
 	isAutomaticTrigger?: boolean,
 	customCondensingPrompt?: string,
 	condensingApiHandler?: ApiHandler,
+	abortSignal?: AbortSignal,
 ): Promise<SummarizeResponse> {
 	TelemetryService.instance.captureContextCondensed(
 		taskId,
@@ -160,14 +162,30 @@ export async function summarizeConversation(
 	let cost = 0
 	let outputTokens = 0
 
-	for await (const chunk of stream) {
-		if (chunk.type === "text") {
-			summary += chunk.text
-		} else if (chunk.type === "usage") {
-			// Record final usage chunk only
-			cost = chunk.totalCost ?? 0
-			outputTokens = chunk.outputTokens ?? 0
+	try {
+		for await (const chunk of stream) {
+			// Check if operation was cancelled
+			if (abortSignal?.aborted) {
+				const error = t("common:errors.condense_cancelled")
+				return { ...response, error }
+			}
+
+			if (chunk.type === "text") {
+				summary += chunk.text
+			} else if (chunk.type === "usage") {
+				// Record final usage chunk only
+				cost = chunk.totalCost ?? 0
+				outputTokens = chunk.outputTokens ?? 0
+			}
 		}
+	} catch (error) {
+		// If the stream was aborted, return a cancelled error
+		if (abortSignal?.aborted) {
+			const cancelError = t("common:errors.condense_cancelled")
+			return { ...response, error: cancelError }
+		}
+		// Otherwise, re-throw the error
+		throw error
 	}
 
 	summary = summary.trim()

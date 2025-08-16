@@ -15,6 +15,7 @@
 		"export": "タスク履歴をエクスポート",
 		"delete": "タスクを削除（Shift + クリックで確認をスキップ）",
 		"condenseContext": "コンテキストをインテリジェントに圧縮",
+		"cancelCondense": "圧縮をキャンセル",
 		"share": "タスクを共有",
 		"shareWithOrganization": "組織と共有",
 		"shareWithOrganizationDescription": "組織のメンバーのみがアクセスできます",

@@ -11,6 +11,7 @@
 		"apiCost": "API Cost",
 		"size": "Size",
 		"condenseContext": "Intelligently condense context",
+		"cancelCondense": "Cancel compression",
 		"contextWindow": "Context Length",
 		"closeAndStart": "Close task and start a new one",
 		"export": "Export task history",

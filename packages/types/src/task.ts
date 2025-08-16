@@ -86,6 +86,10 @@ export interface TaskLike {
 
 	readonly rootTask?: TaskLike
 
+	// Context condensing state
+	isCondensing?: boolean
+	cancelCondenseContext?(): void
+
 	on<K extends keyof TaskEvents>(event: K, listener: (...args: TaskEvents[K]) => void | Promise<void>): this
 	off<K extends keyof TaskEvents>(event: K, listener: (...args: TaskEvents[K]) => void | Promise<void>): this
 

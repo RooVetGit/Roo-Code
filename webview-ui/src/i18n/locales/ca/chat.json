@@ -15,6 +15,7 @@
 		"export": "Exportar historial de tasques",
 		"delete": "Eliminar tasca (Shift + Clic per ometre confirmació)",
 		"condenseContext": "Condensar context de forma intel·ligent",
+		"cancelCondense": "Cancel·lar compressió",
 		"share": "Compartir tasca",
 		"shareWithOrganization": "Compartir amb l'organització",
 		"shareWithOrganizationDescription": "Només els membres de la teva organització poden accedir",

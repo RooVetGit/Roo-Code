@@ -1763,6 +1763,16 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 		vscode.postMessage({ type: "condenseTaskContextRequest", text: taskId })
 	}
 
+	const handleCancelCondense = useCallback(() => {
+		if (!isCondensing) {
+			return
+		}
+		setIsCondensing(false)
+		setSendingDisabled(false)
+		// Send cancel message to extension
+		vscode.postMessage({ type: "cancelCondenseContext" })
+	}, [isCondensing])
+
 	const areButtonsVisible = showScrollToBottom || primaryButtonText || secondaryButtonText || isStreaming
 
 	return (
@@ -1793,6 +1803,8 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 						contextTokens={apiMetrics.contextTokens}
 						buttonsDisabled={sendingDisabled}
 						handleCondenseContext={handleCondenseContext}
+						isCondensing={isCondensing}
+						handleCancelCondense={handleCancelCondense}
 						todos={latestTodos}
 					/>
 

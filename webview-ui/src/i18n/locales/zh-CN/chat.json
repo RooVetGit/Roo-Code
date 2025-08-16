@@ -16,6 +16,7 @@
 		"delete": "删除任务（Shift + 点击跳过确认）",
 		"share": "分享任务",
 		"condenseContext": "智能压缩上下文",
+		"cancelCondense": "取消压缩",
 		"shareWithOrganization": "与组织分享",
 		"shareWithOrganizationDescription": "仅组织成员可访问",
 		"sharePublicly": "公开分享",

@@ -16,6 +16,7 @@
 		"delete": "Aufgabe löschen (Shift + Klick zum Überspringen der Bestätigung)",
 		"share": "Aufgabe teilen",
 		"condenseContext": "Kontext intelligent komprimieren",
+		"cancelCondense": "Komprimierung abbrechen",
 		"shareWithOrganization": "Mit Organisation teilen",
 		"shareWithOrganizationDescription": "Nur Mitglieder deiner Organisation können zugreifen",
 		"sharePublicly": "Öffentlich teilen",

@@ -15,6 +15,7 @@
 		"export": "Exporter l'historique des tâches",
 		"delete": "Supprimer la tâche (Shift + Clic pour ignorer la confirmation)",
 		"condenseContext": "Condenser intelligemment le contexte",
+		"cancelCondense": "Annuler la compression",
 		"share": "Partager la tâche",
 		"shareWithOrganization": "Partager avec l'organisation",
 		"shareWithOrganizationDescription": "Seuls les membres de ton organisation peuvent accéder",
