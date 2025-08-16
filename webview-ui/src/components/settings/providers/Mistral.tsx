@@ -1,14 +1,14 @@
 import { useCallback } from "react"
 import { VSCodeTextField } from "@vscode/webview-ui-toolkit/react"
 
-import { type ProviderSettings, mistralDefaultModelId } from "@roo-code/types"
+import { type ProviderSettings, mistralDefaultModelId, API_KEYS } from "@roo-code/types"
 
 import type { RouterModels } from "@roo/api"
 
 import { useAppTranslation } from "@src/i18n/TranslationContext"
-import { VSCodeButtonLink } from "@src/components/common/VSCodeButtonLink"
 
 import { inputEventTransform } from "../transforms"
+import { ApiKey } from "../ApiKey"
 
 type MistralProps = {
 	apiConfiguration: ProviderSettings
@@ -32,22 +32,16 @@ export const Mistral = ({ apiConfiguration, setApiConfigurationField }: MistralP
 
 	return (
 		<>
-			<VSCodeTextField
-				value={apiConfiguration?.mistralApiKey || ""}
-				type="password"
-				onInput={handleInputChange("mistralApiKey")}
-				placeholder={t("settings:placeholders.apiKey")}
-				className="w-full">
-				<span className="font-medium">{t("settings:providers.mistralApiKey")}</span>
-			</VSCodeTextField>
-			<div className="text-sm text-vscode-descriptionForeground -mt-2">
-				{t("settings:providers.apiKeyStorageNotice")}
-			</div>
-			{!apiConfiguration?.mistralApiKey && (
-				<VSCodeButtonLink href="https://console.mistral.ai/" appearance="secondary">
-					{t("settings:providers.getMistralApiKey")}
-				</VSCodeButtonLink>
-			)}
+			<ApiKey
+				apiKey={apiConfiguration?.mistralApiKey || ""}
+				apiKeyEnvVar={API_KEYS.MISTRAL}
+				configUseEnvVars={!!apiConfiguration?.mistralConfigUseEnvVars}
+				setApiKey={(value: string) => setApiConfigurationField("mistralApiKey", value)}
+				setConfigUseEnvVars={(value: boolean) => setApiConfigurationField("mistralConfigUseEnvVars", value)}
+				apiKeyLabel={t("settings:providers.mistralApiKey")}
+				getApiKeyUrl="https://console.mistral.ai/"
+				getApiKeyLabel={t("settings:providers.getMistralApiKey")}
+			/>
 			{(apiConfiguration?.apiModelId?.startsWith("codestral-") ||
 				(!apiConfiguration?.apiModelId && mistralDefaultModelId.startsWith("codestral-"))) && (
 				<>

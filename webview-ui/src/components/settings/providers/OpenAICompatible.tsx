@@ -9,6 +9,7 @@ import {
 	type ReasoningEffort,
 	azureOpenAiDefaultApiVersion,
 	openAiModelInfoSaneDefaults,
+	API_KEYS,
 } from "@roo-code/types"
 
 import type { OrganizationAllowList } from "@roo/cloud"
@@ -22,6 +23,7 @@ import { inputEventTransform, noTransform } from "../transforms"
 import { ModelPicker } from "../ModelPicker"
 import { R1FormatSetting } from "../R1FormatSetting"
 import { ThinkingBudget } from "../ThinkingBudget"
+import { ApiKey } from "../ApiKey"
 
 type OpenAICompatibleProps = {
 	apiConfiguration: ProviderSettings
@@ -129,14 +131,14 @@ export const OpenAICompatible = ({
 				className="w-full">
 				<label className="block font-medium mb-1">{t("settings:providers.openAiBaseUrl")}</label>
 			</VSCodeTextField>
-			<VSCodeTextField
-				value={apiConfiguration?.openAiApiKey || ""}
-				type="password"
-				onInput={handleInputChange("openAiApiKey")}
-				placeholder={t("settings:placeholders.apiKey")}
-				className="w-full">
-				<label className="block font-medium mb-1">{t("settings:providers.apiKey")}</label>
-			</VSCodeTextField>
+			<ApiKey
+				apiKey={apiConfiguration?.openAiApiKey || ""}
+				apiKeyEnvVar={API_KEYS.OPENAI}
+				configUseEnvVars={!!apiConfiguration?.openAiConfigUseEnvVars}
+				setApiKey={(value: string) => setApiConfigurationField("openAiApiKey", value)}
+				setConfigUseEnvVars={(value: boolean) => setApiConfigurationField("openAiConfigUseEnvVars", value)}
+				apiKeyLabel={t("settings:providers.openAiApiKey")}
+			/>
 			<ModelPicker
 				apiConfiguration={apiConfiguration}
 				setApiConfigurationField={setApiConfigurationField}
