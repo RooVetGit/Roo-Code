@@ -65,7 +65,7 @@ export function isIdleAsk(ask: ClineAsk): ask is IdleAsk {
 }
 
 /**
- * IdleAsk
+ * ResumableAsk
  *
  * Asks that put the task into an "resumable" state.
  */
