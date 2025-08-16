@@ -71,24 +71,15 @@ export async function getLMStudioModels(baseUrl = "http://localhost:1234"): Prom
 
 		const client = new LMStudioClient({ baseUrl: lmsUrl })
 
-		// First, try to get all downloaded models
-		try {
-			const downloadedModels = await client.system.listDownloadedModels("llm")
-			for (const model of downloadedModels) {
-				// Use the model path as the key since that's what users select
-				models[model.path] = parseLMStudioModel(model)
-			}
-		} catch (error) {
-			console.warn("Failed to list downloaded models, falling back to loaded models only")
-		}
-		// We want to list loaded models *anyway* since they provide valuable extra info (context size)
+		// Only get loaded models - these are the only ones that can actually process requests
 		const loadedModels = (await client.llm.listLoaded().then((models: LLM[]) => {
 			return Promise.all(models.map((m) => m.getModelInfo()))
 		})) as Array<LLMInstanceInfo>
 
 		for (const lmstudioModel of loadedModels) {
-			models[lmstudioModel.modelKey] = parseLMStudioModel(lmstudioModel)
-			modelsWithLoadedDetails.add(lmstudioModel.modelKey)
+			// Use model.path as the consistent key to prevent duplicates
+			models[lmstudioModel.path] = parseLMStudioModel(lmstudioModel)
+			modelsWithLoadedDetails.add(lmstudioModel.path)
 		}
 	} catch (error) {
 		if (error.code === "ECONNREFUSED") {
