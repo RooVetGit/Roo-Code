@@ -57,6 +57,25 @@ export async function newTaskTool(
 				return
 			}
 
+			// Track subtask context for the same mode
+			// This helps when Orchestrator calls the same mode multiple times
+			if (!cline.subtaskContextByMode) {
+				cline.subtaskContextByMode = new Map()
+			}
+
+			// Get previous context for this mode if it exists
+			const previousContext = cline.subtaskContextByMode.get(mode)
+			let enhancedMessage = unescapedMessage
+
+			// If there's previous context for this mode, prepend it to the message
+			if (previousContext && previousContext.length > 0) {
+				const contextSummary = previousContext
+					.map((ctx, index) => `Previous ${targetMode.name} subtask ${index + 1} result: ${ctx}`)
+					.join("\n")
+
+				enhancedMessage = `[Context from previous ${targetMode.name} subtasks]\n${contextSummary}\n\n[Current task]\n${unescapedMessage}`
+			}
+
 			const toolMessage = JSON.stringify({
 				tool: "newTask",
 				mode: targetMode.name,
@@ -82,13 +101,16 @@ export async function newTaskTool(
 			// Preserve the current mode so we can resume with it later.
 			cline.pausedModeSlug = (await provider.getState()).mode ?? defaultModeSlug
 
-			// Create new task instance first (this preserves parent's current mode in its history)
-			const newCline = await provider.createTask(unescapedMessage, undefined, cline)
+			// Create new task instance with enhanced message that includes context
+			const newCline = await provider.createTask(enhancedMessage, undefined, cline)
 
 			if (!newCline) {
 				pushToolResult(t("tools:newTask.errors.policy_restriction"))
 				return
 			}
+
+			// Store the new task reference so we can track its result later
+			cline.currentSubtaskMode = mode
 
 			// Now switch the newly created task to the desired mode
 			await provider.handleModeSwitch(mode)
@@ -98,7 +120,7 @@ export async function newTaskTool(
 
 			cline.emit(RooCodeEventName.TaskSpawned, newCline.taskId)
 
-			pushToolResult(`Successfully created new task in ${targetMode.name} mode with message: ${unescapedMessage}`)
+			pushToolResult(`Successfully created new task in ${targetMode.name} mode with message: ${enhancedMessage}`)
 
 			// Set the isPaused flag to true so the parent
 			// task can wait for the sub-task to finish.

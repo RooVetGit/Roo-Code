@@ -199,6 +199,8 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 	isPaused: boolean = false
 	pausedModeSlug: string = defaultModeSlug
 	private pauseInterval: NodeJS.Timeout | undefined
+	subtaskContextByMode?: Map<string, string[]>
+	currentSubtaskMode?: string
 
 	// API
 	readonly apiConfiguration: ProviderSettings
@@ -1099,6 +1101,25 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 	public async resumePausedTask(lastMessage: string) {
 		this.isPaused = false
 		this.emit(RooCodeEventName.TaskUnpaused)
+
+		// Store the subtask result as context for future calls to the same mode
+		if (this.currentSubtaskMode && lastMessage) {
+			if (!this.subtaskContextByMode) {
+				this.subtaskContextByMode = new Map()
+			}
+			if (!this.subtaskContextByMode.has(this.currentSubtaskMode)) {
+				this.subtaskContextByMode.set(this.currentSubtaskMode, [])
+			}
+			const contexts = this.subtaskContextByMode.get(this.currentSubtaskMode)!
+			// Keep only the last 3 contexts to avoid overwhelming the model
+			if (contexts.length >= 3) {
+				contexts.shift()
+			}
+			// Extract a concise summary from the result message
+			const summary = lastMessage.length > 200 ? lastMessage.substring(0, 200) + "..." : lastMessage
+			contexts.push(summary)
+			this.currentSubtaskMode = undefined // Reset for next subtask
+		}
 
 		// Fake an answer from the subtask that it has completed running and
 		// this is the result of what it has done add the message to the chat
