@@ -1540,6 +1540,7 @@ export class ClineProvider
 
 	async refreshWorkspace() {
 		this.currentWorkspacePath = getWorkspacePath()
+		await this.postStateToWebview()
 	}
 
 	async postStateToWebview() {
