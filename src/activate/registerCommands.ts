@@ -96,7 +96,6 @@ const getCommandsMap = ({ context, outputChannel, provider }: RegisterCommandOpt
 
 		await visibleProvider.removeClineFromStack()
 		await visibleProvider.refreshWorkspace()
-		await visibleProvider.postStateToWebview()
 		await visibleProvider.postMessageToWebview({ type: "action", action: "chatButtonClicked" })
 		// Send focusInput action immediately after chatButtonClicked
 		// This ensures the focus happens after the view has switched
