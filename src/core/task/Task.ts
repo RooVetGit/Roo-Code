@@ -863,6 +863,19 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 	}
 
 	public async condenseContext(): Promise<void> {
+		// Prevent concurrent condensing operations
+		if (this.isCondensing) {
+			console.warn("Context condensing is already in progress")
+			return
+		}
+
+		// Wait a bit if there was a recent abort to ensure cleanup is complete
+		if (this.condensingAbortController && this.condensingAbortController.signal.aborted) {
+			console.warn("Waiting for previous condensing operation to fully clean up")
+			// Give the previous operation time to clean up
+			await new Promise((resolve) => setTimeout(resolve, 100))
+		}
+
 		// Mark as condensing
 		this.isCondensing = true
 		this.condensingAbortController = new AbortController()
