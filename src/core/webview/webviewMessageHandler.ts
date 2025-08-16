@@ -70,10 +70,10 @@ export const webviewMessageHandler = async (
 	 * Shared utility to find message indices based on timestamp
 	 */
 	const findMessageIndices = (messageTs: number, currentCline: any) => {
-		const timeCutoff = messageTs - 1000 // 1 second buffer before the message
-		const messageIndex = currentCline.clineMessages.findIndex((msg: ClineMessage) => msg.ts && msg.ts >= timeCutoff)
+		// Use exact timestamp matching to prevent unintended deletion of unrelated messages
+		const messageIndex = currentCline.clineMessages.findIndex((msg: ClineMessage) => msg.ts === messageTs)
 		const apiConversationHistoryIndex = currentCline.apiConversationHistory.findIndex(
-			(msg: ApiMessage) => msg.ts && msg.ts >= timeCutoff,
+			(msg: ApiMessage) => msg.ts === messageTs,
 		)
 		return { messageIndex, apiConversationHistoryIndex }
 	}
@@ -86,6 +86,25 @@ export const webviewMessageHandler = async (
 		messageIndex: number,
 		apiConversationHistoryIndex: number,
 	) => {
+		// Validate indices before deletion to prevent accidental data loss
+		if (messageIndex < 0 || messageIndex >= currentCline.clineMessages.length) {
+			console.error(
+				`[Chat History Protection] Invalid message index ${messageIndex} for clineMessages array of length ${currentCline.clineMessages.length}`,
+			)
+			throw new Error("Invalid message index for deletion")
+		}
+
+		// Log the deletion for debugging
+		const messagesToDelete = currentCline.clineMessages.length - messageIndex
+		const apiMessagesToDelete =
+			apiConversationHistoryIndex !== -1
+				? currentCline.apiConversationHistory.length - apiConversationHistoryIndex
+				: 0
+
+		console.log(
+			`[Chat History] Deleting ${messagesToDelete} UI messages and ${apiMessagesToDelete} API messages from index ${messageIndex}`,
+		)
+
 		// Delete this message and all that follow
 		await currentCline.overwriteClineMessages(currentCline.clineMessages.slice(0, messageIndex))
 
@@ -118,6 +137,11 @@ export const webviewMessageHandler = async (
 
 			if (messageIndex !== -1) {
 				try {
+					// Log the operation for debugging
+					console.log(
+						`[Chat History] Delete operation requested for message at timestamp ${messageTs}, found at index ${messageIndex}`,
+					)
+
 					const { historyItem } = await provider.getTaskWithId(currentCline.taskId)
 
 					// Delete this message and all subsequent messages
@@ -131,6 +155,10 @@ export const webviewMessageHandler = async (
 						`Error deleting message: ${error instanceof Error ? error.message : String(error)}`,
 					)
 				}
+			} else {
+				console.warn(
+					`[Chat History] Message with timestamp ${messageTs} not found for deletion. Total messages: ${currentCline.clineMessages.length}`,
+				)
 			}
 		}
 	}
@@ -165,6 +193,11 @@ export const webviewMessageHandler = async (
 
 			if (messageIndex !== -1) {
 				try {
+					// Log the operation for debugging
+					console.log(
+						`[Chat History] Edit operation requested for message at timestamp ${messageTs}, found at index ${messageIndex}`,
+					)
+
 					// Edit this message and delete subsequent
 					await removeMessagesThisAndSubsequent(currentCline, messageIndex, apiConversationHistoryIndex)
 
@@ -185,6 +218,10 @@ export const webviewMessageHandler = async (
 						`Error editing message: ${error instanceof Error ? error.message : String(error)}`,
 					)
 				}
+			} else {
+				console.warn(
+					`[Chat History] Message with timestamp ${messageTs} not found for editing. Total messages: ${currentCline.clineMessages.length}`,
+				)
 			}
 		}
 	}

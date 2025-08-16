@@ -77,7 +77,43 @@ export async function saveApiMessages({
 	taskId: string
 	globalStoragePath: string
 }) {
+	// Validate messages before saving to prevent data corruption
+	if (!Array.isArray(messages)) {
+		console.error(
+			`[Roo-Debug] saveApiMessages: Invalid messages format - expected array, got ${typeof messages}. TaskId: ${taskId}`,
+		)
+		throw new Error("Invalid messages format for saving")
+	}
+
+	// Log warning for unusually large conversations
+	if (messages.length > 1000) {
+		console.warn(
+			`[Roo-Debug] saveApiMessages: Saving large conversation with ${messages.length} messages. TaskId: ${taskId}`,
+		)
+	}
+
+	// Validate message structure
+	for (let i = 0; i < messages.length; i++) {
+		const msg = messages[i]
+		if (!msg || typeof msg !== "object") {
+			console.error(
+				`[Roo-Debug] saveApiMessages: Invalid message at index ${i} - expected object, got ${typeof msg}. TaskId: ${taskId}`,
+			)
+			throw new Error(`Invalid message structure at index ${i}`)
+		}
+		if (!msg.role || (msg.role !== "user" && msg.role !== "assistant")) {
+			console.error(
+				`[Roo-Debug] saveApiMessages: Invalid message role at index ${i} - got "${msg.role}". TaskId: ${taskId}`,
+			)
+			throw new Error(`Invalid message role at index ${i}`)
+		}
+	}
+
 	const taskDir = await getTaskDirectoryPath(globalStoragePath, taskId)
 	const filePath = path.join(taskDir, GlobalFileNames.apiConversationHistory)
+
+	// Log the save operation for debugging
+	console.log(`[Roo-Debug] saveApiMessages: Saving ${messages.length} messages to ${filePath}. TaskId: ${taskId}`)
+
 	await safeWriteJson(filePath, messages)
 }
