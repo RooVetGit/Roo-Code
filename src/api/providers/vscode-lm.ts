@@ -1,5 +1,6 @@
 import { Anthropic } from "@anthropic-ai/sdk"
 import * as vscode from "vscode"
+import * as crypto from "crypto"
 
 import { type ModelInfo, openAiModelInfoSaneDefaults } from "@roo-code/types"
 
@@ -44,6 +45,8 @@ export class VsCodeLmHandler extends BaseProvider implements SingleCompletionHan
 	private client: vscode.LanguageModelChat | null
 	private disposable: vscode.Disposable | null
 	private currentRequestCancellation: vscode.CancellationTokenSource | null
+	private sessionMessageCount: Map<string, number> = new Map()
+	private currentSessionId: string | null = null
 
 	constructor(options: ApiHandlerOptions) {
 		super()
@@ -51,6 +54,8 @@ export class VsCodeLmHandler extends BaseProvider implements SingleCompletionHan
 		this.client = null
 		this.disposable = null
 		this.currentRequestCancellation = null
+		this.sessionMessageCount = new Map()
+		this.currentSessionId = null
 
 		try {
 			// Listen for model changes and reset client
@@ -165,6 +170,9 @@ export class VsCodeLmHandler extends BaseProvider implements SingleCompletionHan
 	 * Tool calls handling is currently a work in progress.
 	 */
 	dispose(): void {
+		// End any active session
+		this.endSession()
+
 		if (this.disposable) {
 			this.disposable.dispose()
 		}
@@ -330,6 +338,52 @@ export class VsCodeLmHandler extends BaseProvider implements SingleCompletionHan
 		return content
 	}
 
+	/**
+	 * Start a new conversation session
+	 * @param sessionId - Optional session ID, will generate one if not provided
+	 * @returns The session ID being used
+	 */
+	public startSession(sessionId?: string): string {
+		const id = sessionId || crypto.randomUUID()
+		this.currentSessionId = id
+		this.sessionMessageCount.set(id, 0)
+		console.debug(`Roo Code <Language Model API>: Started new session ${id}`)
+		return id
+	}
+
+	/**
+	 * End the current conversation session
+	 */
+	public endSession(): void {
+		if (this.currentSessionId) {
+			const messageCount = this.sessionMessageCount.get(this.currentSessionId) || 0
+			console.debug(
+				`Roo Code <Language Model API>: Ended session ${this.currentSessionId} with ${messageCount} messages`,
+			)
+			this.sessionMessageCount.delete(this.currentSessionId)
+			this.currentSessionId = null
+		}
+	}
+
+	/**
+	 * Get the current message count for the active session
+	 * @returns The number of messages in the current session, or 0 if no session
+	 */
+	public getSessionMessageCount(): number {
+		if (!this.currentSessionId) {
+			return 0
+		}
+		return this.sessionMessageCount.get(this.currentSessionId) || 0
+	}
+
+	/**
+	 * Check if this is the first message in the current session
+	 * @returns true if this is the first message or no session exists
+	 */
+	private isFirstMessage(): boolean {
+		return this.getSessionMessageCount() === 0
+	}
+
 	override async *createMessage(
 		systemPrompt: string,
 		messages: Anthropic.Messages.MessageParam[],
@@ -338,6 +392,26 @@ export class VsCodeLmHandler extends BaseProvider implements SingleCompletionHan
 		// Ensure clean state before starting a new request
 		this.ensureCleanState()
 		const client: vscode.LanguageModelChat = await this.getClient()
+
+		// Track session from metadata if available
+		if (metadata?.taskId) {
+			// Use taskId as session identifier
+			if (!this.currentSessionId || this.currentSessionId !== metadata.taskId) {
+				this.startSession(metadata.taskId)
+			}
+		}
+
+		// Increment message count for the current session
+		if (this.currentSessionId) {
+			const currentCount = this.sessionMessageCount.get(this.currentSessionId) || 0
+			this.sessionMessageCount.set(this.currentSessionId, currentCount + 1)
+
+			// Log session tracking for debugging
+			const isFirst = currentCount === 0
+			console.debug(
+				`Roo Code <Language Model API>: Session ${this.currentSessionId} - Message ${currentCount + 1} (First: ${isFirst})`,
+			)
+		}
 
 		// Process messages
 		const cleanedMessages = messages.map((msg) => ({
@@ -366,8 +440,9 @@ export class VsCodeLmHandler extends BaseProvider implements SingleCompletionHan
 				justification: `Roo Code would like to use '${client.name}' from '${client.vendor}', Click 'Allow' to proceed.`,
 			}
 
-			// Note: Tool support is currently provided by the VSCode Language Model API directly
-			// Extensions can register tools using vscode.lm.registerTool()
+			// Note: While we can't directly set X-Initiator headers through the VS Code API,
+			// we track session state to understand usage patterns. The VS Code extension
+			// host manages the actual GitHub Copilot API communication internally.
 
 			const response: vscode.LanguageModelChatResponse = await client.sendRequest(
 				vsCodeLmMessages,

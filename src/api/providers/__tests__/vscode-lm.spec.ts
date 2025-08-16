@@ -300,4 +300,157 @@ describe("VsCodeLmHandler", () => {
 			await expect(promise).rejects.toThrow("VSCode LM completion error: Completion failed")
 		})
 	})
+
+	describe("session tracking", () => {
+		it("should start a new session", () => {
+			const sessionId = handler.startSession()
+			expect(sessionId).toBeDefined()
+			expect(handler.getSessionMessageCount()).toBe(0)
+		})
+
+		it("should use provided session ID", () => {
+			const customSessionId = "custom-session-123"
+			const sessionId = handler.startSession(customSessionId)
+			expect(sessionId).toBe(customSessionId)
+			expect(handler["currentSessionId"]).toBe(customSessionId)
+		})
+
+		it("should track message count in session", async () => {
+			const mockModel = { ...mockLanguageModelChat }
+			;(vscode.lm.selectChatModels as Mock).mockResolvedValueOnce([mockModel])
+			handler["client"] = mockLanguageModelChat
+			mockLanguageModelChat.countTokens.mockResolvedValue(10)
+
+			const sessionId = handler.startSession()
+			expect(handler.getSessionMessageCount()).toBe(0)
+
+			// Mock the sendRequest to return a simple stream
+			mockLanguageModelChat.sendRequest.mockResolvedValueOnce({
+				stream: (async function* () {
+					yield new vscode.LanguageModelTextPart("Response 1")
+					return
+				})(),
+				text: (async function* () {
+					yield "Response 1"
+					return
+				})(),
+			})
+
+			// First message
+			const stream1 = handler.createMessage("System prompt", [{ role: "user" as const, content: "Message 1" }], {
+				taskId: sessionId,
+			})
+			for await (const _chunk of stream1) {
+				// Consume stream
+			}
+			expect(handler.getSessionMessageCount()).toBe(1)
+
+			// Mock the sendRequest for second message
+			mockLanguageModelChat.sendRequest.mockResolvedValueOnce({
+				stream: (async function* () {
+					yield new vscode.LanguageModelTextPart("Response 2")
+					return
+				})(),
+				text: (async function* () {
+					yield "Response 2"
+					return
+				})(),
+			})
+
+			// Second message
+			const stream2 = handler.createMessage("System prompt", [{ role: "user" as const, content: "Message 2" }], {
+				taskId: sessionId,
+			})
+			for await (const _chunk of stream2) {
+				// Consume stream
+			}
+			expect(handler.getSessionMessageCount()).toBe(2)
+		})
+
+		it("should end session and clear message count", () => {
+			const sessionId = handler.startSession()
+
+			// Simulate some messages
+			handler["sessionMessageCount"].set(sessionId, 5)
+			handler["currentSessionId"] = sessionId
+
+			handler.endSession()
+
+			expect(handler["currentSessionId"]).toBeNull()
+			expect(handler["sessionMessageCount"].has(sessionId)).toBe(false)
+			expect(handler.getSessionMessageCount()).toBe(0)
+		})
+
+		it("should track different sessions independently", async () => {
+			const mockModel = { ...mockLanguageModelChat }
+			;(vscode.lm.selectChatModels as Mock).mockResolvedValueOnce([mockModel])
+			handler["client"] = mockLanguageModelChat
+			mockLanguageModelChat.countTokens.mockResolvedValue(10)
+
+			// Start first session
+			const session1 = "session-1"
+			handler.startSession(session1)
+
+			// Mock the sendRequest
+			mockLanguageModelChat.sendRequest.mockResolvedValueOnce({
+				stream: (async function* () {
+					yield new vscode.LanguageModelTextPart("Response")
+					return
+				})(),
+				text: (async function* () {
+					yield "Response"
+					return
+				})(),
+			})
+
+			// Send message in first session
+			const stream1 = handler.createMessage("System prompt", [{ role: "user" as const, content: "Message" }], {
+				taskId: session1,
+			})
+			for await (const _chunk of stream1) {
+				// Consume stream
+			}
+			expect(handler.getSessionMessageCount()).toBe(1)
+
+			// Switch to second session
+			const session2 = "session-2"
+			handler.startSession(session2)
+			expect(handler.getSessionMessageCount()).toBe(0) // New session starts at 0
+
+			// Mock the sendRequest for second session
+			mockLanguageModelChat.sendRequest.mockResolvedValueOnce({
+				stream: (async function* () {
+					yield new vscode.LanguageModelTextPart("Response")
+					return
+				})(),
+				text: (async function* () {
+					yield "Response"
+					return
+				})(),
+			})
+
+			// Send message in second session
+			const stream2 = handler.createMessage("System prompt", [{ role: "user" as const, content: "Message" }], {
+				taskId: session2,
+			})
+			for await (const _chunk of stream2) {
+				// Consume stream
+			}
+			expect(handler.getSessionMessageCount()).toBe(1)
+
+			// Verify first session still has its count
+			handler["currentSessionId"] = session1
+			expect(handler.getSessionMessageCount()).toBe(1)
+		})
+
+		it("should clean up sessions on dispose", () => {
+			const sessionId = handler.startSession()
+			handler["sessionMessageCount"].set(sessionId, 3)
+
+			handler.dispose()
+
+			expect(handler["currentSessionId"]).toBeNull()
+			expect(handler["sessionMessageCount"].size).toBe(0)
+		})
+	})
 })
