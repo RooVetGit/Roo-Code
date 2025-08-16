@@ -103,7 +103,7 @@ export async function newTaskTool(
 			// Set the isPaused flag to true so the parent
 			// task can wait for the sub-task to finish.
 			cline.isPaused = true
-			cline.emit(RooCodeEventName.TaskPaused)
+			cline.emit(RooCodeEventName.TaskPaused, cline.taskId)
 
 			return
 		}

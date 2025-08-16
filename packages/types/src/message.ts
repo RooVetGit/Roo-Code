@@ -50,20 +50,32 @@ export type ClineAsk = z.infer<typeof clineAskSchema>
  * Asks that put the task into an "idle" state.
  */
 
-export const idleAsks: ClineAsk[] = [
+export const idleAsks = [
 	"api_req_failed",
-	"mistake_limit_reached",
-	"completion_result",
-	"resume_task",
-	"resume_completed_task",
-	"command_output",
 	"auto_approval_max_req_reached",
-] as const
+	"mistake_limit_reached",
+	"command_output", // Not sure about this one.
+	"completion_result",
+] as const satisfies readonly ClineAsk[]
 
 export type IdleAsk = (typeof idleAsks)[number]
 
 export function isIdleAsk(ask: ClineAsk): ask is IdleAsk {
-	return idleAsks.includes(ask)
+	return (idleAsks as readonly ClineAsk[]).includes(ask)
+}
+
+/**
+ * IdleAsk
+ *
+ * Asks that put the task into an "resumable" state.
+ */
+
+export const resumableAsks = ["resume_task", "resume_completed_task"] as const satisfies readonly ClineAsk[]
+
+export type ResumableAsk = (typeof resumableAsks)[number]
+
+export function isResumableAsk(ask: ClineAsk): ask is ResumableAsk {
+	return (resumableAsks as readonly ClineAsk[]).includes(ask)
 }
 
 /**
@@ -72,12 +84,12 @@ export function isIdleAsk(ask: ClineAsk): ask is IdleAsk {
  * Asks that put the task into an "user interaction required" state.
  */
 
-export const interactiveAsks: ClineAsk[] = ["command"] as const
+export const interactiveAsks = ["command"] as const satisfies readonly ClineAsk[]
 
 export type InteractiveAsk = (typeof interactiveAsks)[number]
 
 export function isInteractiveAsk(ask: ClineAsk): ask is InteractiveAsk {
-	return interactiveAsks.includes(ask)
+	return (interactiveAsks as readonly ClineAsk[]).includes(ask)
 }
 
 /**

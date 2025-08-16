@@ -1,6 +1,6 @@
 import { z } from "zod"
 
-import { clineMessageSchema, tokenUsageSchema } from "./message.js"
+import { clineMessageSchema, clineAskSchema, tokenUsageSchema } from "./message.js"
 import { toolNamesSchema, toolUsageSchema } from "./tool.js"
 
 /**
@@ -18,6 +18,8 @@ export enum RooCodeEventName {
 	TaskFocused = "taskFocused",
 	TaskUnfocused = "taskUnfocused",
 	TaskActive = "taskActive",
+	TaskInteractive = "taskInteractive",
+	TaskResumable = "taskResumable",
 	TaskIdle = "taskIdle",
 
 	// Subtask Lifecycle
@@ -29,7 +31,6 @@ export enum RooCodeEventName {
 	Message = "message",
 	TaskModeSwitched = "taskModeSwitched",
 	TaskAskResponded = "taskAskResponded",
-	TaskAskRequiresInteraction = "taskAskRequiresInteraction",
 
 	// Task Analytics
 	TaskTokenUsageUpdated = "taskTokenUsageUpdated",
@@ -60,6 +61,8 @@ export const rooCodeEventsSchema = z.object({
 	[RooCodeEventName.TaskFocused]: z.tuple([z.string()]),
 	[RooCodeEventName.TaskUnfocused]: z.tuple([z.string()]),
 	[RooCodeEventName.TaskActive]: z.tuple([z.string()]),
+	[RooCodeEventName.TaskInteractive]: z.tuple([z.string(), clineAskSchema, z.number()]),
+	[RooCodeEventName.TaskResumable]: z.tuple([z.string()]),
 	[RooCodeEventName.TaskIdle]: z.tuple([z.string()]),
 
 	[RooCodeEventName.TaskPaused]: z.tuple([z.string()]),
@@ -75,7 +78,6 @@ export const rooCodeEventsSchema = z.object({
 	]),
 	[RooCodeEventName.TaskModeSwitched]: z.tuple([z.string(), z.string()]),
 	[RooCodeEventName.TaskAskResponded]: z.tuple([z.string()]),
-	[RooCodeEventName.TaskAskRequiresInteraction]: z.tuple([z.string(), clineMessageSchema]),
 
 	[RooCodeEventName.TaskToolFailed]: z.tuple([z.string(), toolNamesSchema, z.string()]),
 	[RooCodeEventName.TaskTokenUsageUpdated]: z.tuple([z.string(), tokenUsageSchema]),
@@ -127,6 +129,16 @@ export const taskEventSchema = z.discriminatedUnion("eventName", [
 		taskId: z.number().optional(),
 	}),
 	z.object({
+		eventName: z.literal(RooCodeEventName.TaskInteractive),
+		payload: rooCodeEventsSchema.shape[RooCodeEventName.TaskInteractive],
+		taskId: z.number().optional(),
+	}),
+	z.object({
+		eventName: z.literal(RooCodeEventName.TaskResumable),
+		payload: rooCodeEventsSchema.shape[RooCodeEventName.TaskResumable],
+		taskId: z.number().optional(),
+	}),
+	z.object({
 		eventName: z.literal(RooCodeEventName.TaskIdle),
 		payload: rooCodeEventsSchema.shape[RooCodeEventName.TaskIdle],
 		taskId: z.number().optional(),
@@ -163,11 +175,6 @@ export const taskEventSchema = z.discriminatedUnion("eventName", [
 	z.object({
 		eventName: z.literal(RooCodeEventName.TaskAskResponded),
 		payload: rooCodeEventsSchema.shape[RooCodeEventName.TaskAskResponded],
-		taskId: z.number().optional(),
-	}),
-	z.object({
-		eventName: z.literal(RooCodeEventName.TaskAskRequiresInteraction),
-		payload: rooCodeEventsSchema.shape[RooCodeEventName.TaskAskRequiresInteraction],
 		taskId: z.number().optional(),
 	}),
 

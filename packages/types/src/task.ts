@@ -1,7 +1,7 @@
 import { z } from "zod"
 
 import { RooCodeEventName } from "./events.js"
-import { type ClineMessage, type IdleAsk, type TokenUsage } from "./message.js"
+import { type ClineMessage, type ClineAsk, type TokenUsage } from "./message.js"
 import { type ToolUsage, type ToolName } from "./tool.js"
 import type { StaticAppProperties, GitProperties, TelemetryProperties } from "./telemetry.js"
 
@@ -53,6 +53,8 @@ export type TaskProviderEvents = {
 	[RooCodeEventName.TaskFocused]: [taskId: string]
 	[RooCodeEventName.TaskUnfocused]: [taskId: string]
 	[RooCodeEventName.TaskActive]: [taskId: string]
+	[RooCodeEventName.TaskInteractive]: [taskId: string, ask: ClineAsk, askTs: number]
+	[RooCodeEventName.TaskResumable]: [taskId: string]
 	[RooCodeEventName.TaskIdle]: [taskId: string]
 }
 
@@ -60,8 +62,15 @@ export type TaskProviderEvents = {
  * TaskLike
  */
 
+export enum TaskStatus {
+	Running = "running",
+	Interactive = "interactive",
+	Resumable = "resumable",
+	Idle = "idle",
+	None = "none",
+}
+
 export const taskMetadataSchema = z.object({
-	taskId: z.string(),
 	task: z.string().optional(),
 	images: z.array(z.string()).optional(),
 })
@@ -70,9 +79,11 @@ export type TaskMetadata = z.infer<typeof taskMetadataSchema>
 
 export interface TaskLike {
 	readonly taskId: string
-	readonly rootTask?: TaskLike
-	readonly blockingAsk?: IdleAsk
+	readonly taskStatus: TaskStatus
+	readonly taskAsk: ClineAsk | undefined
 	readonly metadata: TaskMetadata
+
+	readonly rootTask?: TaskLike
 
 	on<K extends keyof TaskEvents>(event: K, listener: (...args: TaskEvents[K]) => void | Promise<void>): this
 	off<K extends keyof TaskEvents>(event: K, listener: (...args: TaskEvents[K]) => void | Promise<void>): this
@@ -90,18 +101,19 @@ export type TaskEvents = {
 	[RooCodeEventName.TaskFocused]: []
 	[RooCodeEventName.TaskUnfocused]: []
 	[RooCodeEventName.TaskActive]: [taskId: string]
+	[RooCodeEventName.TaskInteractive]: [taskId: string, ask: ClineAsk, askTs: number]
+	[RooCodeEventName.TaskResumable]: [taskId: string]
 	[RooCodeEventName.TaskIdle]: [taskId: string]
 
 	// Subtask Lifecycle
-	[RooCodeEventName.TaskPaused]: []
-	[RooCodeEventName.TaskUnpaused]: []
+	[RooCodeEventName.TaskPaused]: [taskId: string]
+	[RooCodeEventName.TaskUnpaused]: [taskId: string]
 	[RooCodeEventName.TaskSpawned]: [taskId: string]
 
 	// Task Execution
 	[RooCodeEventName.Message]: [{ action: "created" | "updated"; message: ClineMessage }]
 	[RooCodeEventName.TaskModeSwitched]: [taskId: string, mode: string]
 	[RooCodeEventName.TaskAskResponded]: []
-	[RooCodeEventName.TaskAskRequiresInteraction]: [taskId: string, askMessage: ClineMessage]
 
 	// Task Analytics
 	[RooCodeEventName.TaskToolFailed]: [taskId: string, tool: ToolName, error: string]

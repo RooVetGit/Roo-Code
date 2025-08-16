@@ -22,17 +22,20 @@ import {
 	type ClineSay,
 	type ClineAsk,
 	type IdleAsk,
+	type ResumableAsk,
 	type InteractiveAsk,
 	type ToolProgressStatus,
 	type HistoryItem,
 	RooCodeEventName,
 	TelemetryEventName,
+	TaskStatus,
 	TodoItem,
 	DEFAULT_CONSECUTIVE_MISTAKE_LIMIT,
 	getApiProtocol,
 	getModelId,
 	isIdleAsk,
 	isInteractiveAsk,
+	isResumableAsk,
 } from "@roo-code/types"
 import { TelemetryService } from "@roo-code/telemetry"
 import { CloudService, ExtensionBridgeService } from "@roo-code/cloud"
@@ -184,8 +187,12 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 	providerRef: WeakRef<ClineProvider>
 	private readonly globalStoragePath: string
 	abort: boolean = false
+
+	// TaskStatus
 	idleAsk?: IdleAsk
+	resumableAsk?: ResumableAsk
 	interactiveAsk?: InteractiveAsk
+
 	didFinishAbortingStream = false
 	abandoned = false
 	isInitialized = false
@@ -293,7 +300,6 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 		this.taskId = historyItem ? historyItem.id : crypto.randomUUID()
 
 		this.metadata = {
-			taskId: this.taskId,
 			task: historyItem ? historyItem.task : task,
 			images: historyItem ? [] : images,
 		}
@@ -500,6 +506,7 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 		if (this._taskMode === undefined) {
 			throw new Error("Task mode accessed before initialization. Use getTaskMode() or wait for taskModeReady.")
 		}
+
 		return this._taskMode
 	}
 
@@ -720,29 +727,39 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 		// block (via the `pWaitFor`).
 		const isBlocking = !(this.askResponse !== undefined || this.lastMessageTs !== askTs)
 		const isStateMutable = !partial && isBlocking
+		let stateMutationTimeouts: NodeJS.Timeout[] = []
 
-		// The task will enter an idle state.
-		let goIdleTimeout: NodeJS.Timeout | undefined
-
-		if (isStateMutable && isIdleAsk(type)) {
-			goIdleTimeout = setTimeout(() => {
-				this.idleAsk = undefined
-				this.emit(RooCodeEventName.TaskActive, this.taskId)
-			}, 1000)
+		if (isStateMutable) {
+			if (isInteractiveAsk(type)) {
+				stateMutationTimeouts.push(
+					setTimeout(() => {
+						this.interactiveAsk = type
+						this.emit(RooCodeEventName.TaskInteractive, this.taskId, type, askTs)
+					}, 1_000),
+				)
+			} else if (isResumableAsk(type)) {
+				stateMutationTimeouts.push(
+					setTimeout(() => {
+						this.resumableAsk = type
+						this.emit(RooCodeEventName.TaskResumable, this.taskId)
+					}, 1_000),
+				)
+			} else if (isIdleAsk(type)) {
+				stateMutationTimeouts.push(
+					setTimeout(() => {
+						this.idleAsk = type
+						this.emit(RooCodeEventName.TaskIdle, this.taskId)
+					}, 1_000),
+				)
+			}
 		}
 
-		// The task will enter a "user interaction required" state.
-		let goInteractiveTimeout: NodeJS.Timeout | undefined
+		console.log(
+			`[Task#${this.taskId}] pWaitFor askResponse(${type}) -> blocking (isStateMutable = ${isStateMutable}, stateMutationTimeouts = ${stateMutationTimeouts.length})`,
+		)
 
-		if (isStateMutable && !isInteractiveAsk(type)) {
-			goInteractiveTimeout = setTimeout(() => {
-				this.interactiveAsk = undefined
-				this.emit(RooCodeEventName.TaskActive, this.taskId)
-			}, 1000)
-		}
-
-		console.log(`[Task#${this.taskId}] pWaitFor askResponse(${type}) -> blocking`)
 		await pWaitFor(() => this.askResponse !== undefined || this.lastMessageTs !== askTs, { interval: 100 })
+
 		console.log(`[Task#${this.taskId}] pWaitFor askResponse(${type}) -> unblocked (${this.askResponse})`)
 
 		if (this.lastMessageTs !== askTs) {
@@ -758,20 +775,12 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 		this.askResponseImages = undefined
 
 		// Cancel the timeouts if they are still running.
-		if (goIdleTimeout) {
-			clearTimeout(goIdleTimeout)
-		}
-
-		if (goInteractiveTimeout) {
-			clearTimeout(goInteractiveTimeout)
-		}
-
-		goIdleTimeout = undefined
-		goInteractiveTimeout = undefined
+		stateMutationTimeouts.forEach((timeout) => clearTimeout(timeout))
 
 		// Switch back to an active state.
-		if (this.idleAsk || this.interactiveAsk) {
+		if (this.idleAsk || this.resumableAsk || this.interactiveAsk) {
 			this.idleAsk = undefined
+			this.resumableAsk = undefined
 			this.interactiveAsk = undefined
 			this.emit(RooCodeEventName.TaskActive, this.taskId)
 		}
@@ -1066,12 +1075,11 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 	}
 
 	public async resumePausedTask(lastMessage: string) {
-		// Release this Cline instance from paused state.
 		this.isPaused = false
-		this.emit(RooCodeEventName.TaskUnpaused)
+		this.emit(RooCodeEventName.TaskUnpaused, this.taskId)
 
 		// Fake an answer from the subtask that it has completed running and
-		// this is the result of what it has done  add the message to the chat
+		// this is the result of what it has done add the message to the chat
 		// history and to the webview ui.
 		try {
 			await this.say("subtask_result", lastMessage)
@@ -2555,5 +2563,25 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 
 	public get cwd() {
 		return this.workspacePath
+	}
+
+	public get taskStatus(): TaskStatus {
+		if (this.interactiveAsk) {
+			return TaskStatus.Interactive
+		}
+
+		if (this.resumableAsk) {
+			return TaskStatus.Resumable
+		}
+
+		if (this.idleAsk) {
+			return TaskStatus.Idle
+		}
+
+		return TaskStatus.Running
+	}
+
+	public get taskAsk(): ClineAsk | undefined {
+		return this.idleAsk || this.resumableAsk || this.interactiveAsk
 	}
 }
