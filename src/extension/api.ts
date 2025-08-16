@@ -108,11 +108,13 @@ export class API extends EventEmitter<RooCodeEvents> implements RooCodeAPI {
 		text,
 		images,
 		newTab,
+		modeSlug,
 	}: {
 		configuration: RooCodeSettings
 		text?: string
 		images?: string[]
 		newTab?: boolean
+		modeSlug?: string
 	}) {
 		let provider: ClineProvider
 
@@ -161,6 +163,7 @@ export class API extends EventEmitter<RooCodeEvents> implements RooCodeAPI {
 
 		const cline = await provider.createTask(text, images, undefined, {
 			consecutiveMistakeLimit: Number.MAX_SAFE_INTEGER,
+			modeSlug,
 		})
 
 		if (!cline) {

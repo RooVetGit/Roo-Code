@@ -2208,6 +2208,84 @@ describe("ClineProvider", () => {
 		})
 	})
 })
+describe("Bridge modeSlug handling", () => {
+	let provider: ClineProvider
+	let mockContext: vscode.ExtensionContext
+	let mockOutputChannel: vscode.OutputChannel
+	let mockWebviewView: vscode.WebviewView
+
+	beforeEach(() => {
+		vi.clearAllMocks()
+
+		mockContext = {
+			extensionPath: "/test/path",
+			extensionUri: {} as vscode.Uri,
+			globalState: {
+				get: vi.fn(),
+				update: vi.fn(),
+				keys: vi.fn().mockReturnValue([]),
+			},
+			secrets: {
+				get: vi.fn(),
+				store: vi.fn(),
+				delete: vi.fn(),
+			},
+			subscriptions: [],
+			extension: {
+				packageJSON: { version: "1.0.0" },
+			},
+			globalStorageUri: {
+				fsPath: "/test/storage/path",
+			},
+		} as unknown as vscode.ExtensionContext
+
+		mockOutputChannel = {
+			appendLine: vi.fn(),
+			clear: vi.fn(),
+			dispose: vi.fn(),
+		} as unknown as vscode.OutputChannel
+
+		mockWebviewView = {
+			webview: {
+				postMessage: vi.fn(),
+				html: "",
+				options: {},
+				onDidReceiveMessage: vi.fn(),
+				asWebviewUri: vi.fn(),
+				cspSource: "vscode-webview://test-csp-source",
+			},
+			visible: true,
+			onDidDispose: vi.fn(),
+			onDidChangeVisibility: vi.fn(),
+		} as unknown as vscode.WebviewView
+
+		provider = new ClineProvider(mockContext, mockOutputChannel, "sidebar", new ContextProxy(mockContext))
+	})
+
+	it("applies modeSlug from bridge options when starting task", async () => {
+		await provider.resolveWebviewView(mockWebviewView)
+
+		// Spy on handleModeSwitch to ensure it's invoked with the bridge-provided mode
+		const handleModeSwitchSpy = vi.spyOn(provider, "handleModeSwitch").mockResolvedValue(undefined as any)
+
+		// Ensure getModeBySlug returns a valid mode for the provided slug
+		const { getModeBySlug } = await import("../../../shared/modes")
+		vi.mocked(getModeBySlug).mockReturnValueOnce({
+			slug: "architect",
+			name: "Architect Mode",
+			roleDefinition: "You are an architect",
+			groups: ["read", "edit"] as any,
+		} as any)
+
+		// Pass modeSlug through the options object (as provided by the bridge package)
+		await provider.createTask("Started from bridge", undefined, undefined, {
+			experiments: {},
+			modeSlug: "architect",
+		} as any)
+
+		expect(handleModeSwitchSpy).toHaveBeenCalledWith("architect")
+	})
+})
 
 describe("Project MCP Settings", () => {
 	let provider: ClineProvider
