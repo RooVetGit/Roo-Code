@@ -151,13 +151,21 @@ export class Terminal extends BaseTerminal {
 	}
 
 	public static getEnv(): Record<string, string> {
-		const env: Record<string, string> = {
-			PAGER: process.platform === "win32" ? "" : "cat",
-
-			// VTE must be disabled because it prevents the prompt command from executing
-			// See https://wiki.gnome.org/Apps/Terminal/VTE
-			VTE_VERSION: "0",
+		// Start with the current process environment to inherit user's PATH and other customizations
+		// Filter out undefined values to satisfy the return type
+		const env: Record<string, string> = {}
+		for (const [key, value] of Object.entries(process.env)) {
+			if (value !== undefined) {
+				env[key] = value
+			}
 		}
+
+		// Apply Roo-specific overrides
+		env.PAGER = process.platform === "win32" ? "" : "cat"
+
+		// VTE must be disabled because it prevents the prompt command from executing
+		// See https://wiki.gnome.org/Apps/Terminal/VTE
+		env.VTE_VERSION = "0"
 
 		// Set Oh My Zsh shell integration if enabled
 		if (Terminal.getTerminalZshOhMy()) {

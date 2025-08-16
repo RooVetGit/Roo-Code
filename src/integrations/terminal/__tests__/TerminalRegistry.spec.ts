@@ -44,11 +44,11 @@ describe("TerminalRegistry", () => {
 				cwd: "/test/path",
 				name: "Roo Code",
 				iconPath: expect.any(Object),
-				env: {
+				env: expect.objectContaining({
 					PAGER,
 					VTE_VERSION: "0",
 					PROMPT_EOL_MARK: "",
-				},
+				}),
 			})
 		})
 
@@ -64,12 +64,12 @@ describe("TerminalRegistry", () => {
 					cwd: "/test/path",
 					name: "Roo Code",
 					iconPath: expect.any(Object),
-					env: {
+					env: expect.objectContaining({
 						PAGER,
 						PROMPT_COMMAND: "sleep 0.05",
 						VTE_VERSION: "0",
 						PROMPT_EOL_MARK: "",
-					},
+					}),
 				})
 			} finally {
 				// Restore original delay
@@ -86,12 +86,12 @@ describe("TerminalRegistry", () => {
 					cwd: "/test/path",
 					name: "Roo Code",
 					iconPath: expect.any(Object),
-					env: {
+					env: expect.objectContaining({
 						PAGER,
 						VTE_VERSION: "0",
 						PROMPT_EOL_MARK: "",
 						ITERM_SHELL_INTEGRATION_INSTALLED: "Yes",
-					},
+					}),
 				})
 			} finally {
 				Terminal.setTerminalZshOhMy(false)
@@ -107,12 +107,12 @@ describe("TerminalRegistry", () => {
 					cwd: "/test/path",
 					name: "Roo Code",
 					iconPath: expect.any(Object),
-					env: {
+					env: expect.objectContaining({
 						PAGER,
 						VTE_VERSION: "0",
 						PROMPT_EOL_MARK: "",
 						POWERLEVEL9K_TERM_SHELL_INTEGRATION: "true",
-					},
+					}),
 				})
 			} finally {
 				Terminal.setTerminalZshP10k(false)
