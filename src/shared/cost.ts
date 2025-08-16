@@ -40,13 +40,18 @@ export function calculateApiCostOpenAI(
 	outputTokens: number,
 	cacheCreationInputTokens?: number,
 	cacheReadInputTokens?: number,
+	serviceTier?: "auto" | "default" | "flex",
 ): number {
 	const cacheCreationInputTokensNum = cacheCreationInputTokens || 0
 	const cacheReadInputTokensNum = cacheReadInputTokens || 0
 	const nonCachedInputTokens = Math.max(0, inputTokens - cacheCreationInputTokensNum - cacheReadInputTokensNum)
 
+	// If flex tier selected and model exposes flexPrice, override pricing fields.
+	const pricingInfo =
+		serviceTier === "flex" && modelInfo.flexPrice ? { ...modelInfo, ...modelInfo.flexPrice } : modelInfo
+
 	return calculateApiCostInternal(
-		modelInfo,
+		pricingInfo,
 		nonCachedInputTokens,
 		outputTokens,
 		cacheCreationInputTokensNum,

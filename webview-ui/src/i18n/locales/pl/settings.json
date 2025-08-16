@@ -384,6 +384,13 @@
 				"learnMore": "Dowiedz się więcej o routingu dostawców"
 			}
 		},
+		"serviceTier": {
+			"label": "Poziom usługi",
+			"auto": "Auto",
+			"default": "Domyślny",
+			"flex": "Elastyczny",
+			"description": "Wybierz poziom cen. Elastyczny wykorzystuje obniżone stawki, ale zwiększa liczbę błędów, jeśli serwer jest zajęty."
+		},
 		"customModel": {
 			"capabilities": "Skonfiguruj możliwości i ceny swojego niestandardowego modelu zgodnego z OpenAI. Zachowaj ostrożność podczas określania możliwości modelu, ponieważ mogą one wpływać na wydajność Roo Code.",
 			"maxTokens": {

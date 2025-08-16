@@ -384,6 +384,13 @@
 				"learnMore": "Meer informatie over providerroutering"
 			}
 		},
+		"serviceTier": {
+			"label": "Serviceniveau",
+			"auto": "Auto",
+			"default": "Standaard",
+			"flex": "Flex",
+			"description": "Selecteer prijscategorie. Flex gebruikt gereduceerde tarieven, maar verhoogde fouten als de server bezet is."
+		},
 		"customModel": {
 			"capabilities": "Stel de mogelijkheden en prijzen in voor je aangepaste OpenAI-compatibele model. Wees voorzichtig met het opgeven van de modelmogelijkheden, want deze kunnen de prestaties van Roo Code beïnvloeden.",
 			"maxTokens": {

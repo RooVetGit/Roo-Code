@@ -384,6 +384,13 @@
 				"learnMore": "了解更多關於供應商路由的資訊"
 			}
 		},
+		"serviceTier": {
+			"label": "服務層級",
+			"auto": "自動",
+			"default": "預設",
+			"flex": "彈性",
+			"description": "選擇定價層級。彈性使用折扣費率，但伺服器忙碌時錯誤率會升高。"
+		},
 		"customModel": {
 			"capabilities": "設定自訂 OpenAI 相容模型的功能和定價。請謹慎設定模型功能，因為這會影響 Roo Code 的運作方式。",
 			"maxTokens": {

@@ -54,6 +54,15 @@ export const modelInfoSchema = z.object({
 	outputPrice: z.number().optional(),
 	cacheWritesPrice: z.number().optional(),
 	cacheReadsPrice: z.number().optional(),
+	// Optional discounted pricing for flex service tier
+	flexPrice: z
+		.object({
+			inputPrice: z.number().optional(),
+			outputPrice: z.number().optional(),
+			cacheWritesPrice: z.number().optional(),
+			cacheReadsPrice: z.number().optional(),
+		})
+		.optional(),
 	description: z.string().optional(),
 	reasoningEffort: reasoningEffortsSchema.optional(),
 	minTokensPerCachePoint: z.number().optional(),

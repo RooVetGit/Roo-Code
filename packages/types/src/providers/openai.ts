@@ -28,6 +28,11 @@ export const openAiNativeModels = {
 		inputPrice: 1.25,
 		outputPrice: 10.0,
 		cacheReadsPrice: 0.13,
+		flexPrice: {
+			inputPrice: 0.625,
+			outputPrice: 5.0,
+			cacheReadsPrice: 0.063,
+		},
 		description: "GPT-5: The best model for coding and agentic tasks across domains",
 		// supportsVerbosity is a new capability; ensure ModelInfo includes it
 		supportsVerbosity: true,
@@ -42,6 +47,11 @@ export const openAiNativeModels = {
 		inputPrice: 0.25,
 		outputPrice: 2.0,
 		cacheReadsPrice: 0.03,
+		flexPrice: {
+			inputPrice: 0.125,
+			outputPrice: 1.0,
+			cacheReadsPrice: 0.013,
+		},
 		description: "GPT-5 Mini: A faster, more cost-efficient version of GPT-5 for well-defined tasks",
 		supportsVerbosity: true,
 	},
@@ -55,6 +65,11 @@ export const openAiNativeModels = {
 		inputPrice: 0.05,
 		outputPrice: 0.4,
 		cacheReadsPrice: 0.01,
+		flexPrice: {
+			inputPrice: 0.025,
+			outputPrice: 0.2,
+			cacheReadsPrice: 0.003,
+		},
 		description: "GPT-5 Nano: Fastest, most cost-efficient version of GPT-5",
 		supportsVerbosity: true,
 	},
@@ -93,6 +108,11 @@ export const openAiNativeModels = {
 		inputPrice: 2.0,
 		outputPrice: 8.0,
 		cacheReadsPrice: 0.5,
+		flexPrice: {
+			inputPrice: 1.0,
+			outputPrice: 4.0,
+			cacheReadsPrice: 0.25,
+		},
 		supportsReasoningEffort: true,
 		reasoningEffort: "medium",
 	},
@@ -104,6 +124,11 @@ export const openAiNativeModels = {
 		inputPrice: 2.0,
 		outputPrice: 8.0,
 		cacheReadsPrice: 0.5,
+		flexPrice: {
+			inputPrice: 1.0,
+			outputPrice: 4.0,
+			cacheReadsPrice: 0.25,
+		},
 		reasoningEffort: "high",
 	},
 	"o3-low": {
@@ -114,6 +139,11 @@ export const openAiNativeModels = {
 		inputPrice: 2.0,
 		outputPrice: 8.0,
 		cacheReadsPrice: 0.5,
+		flexPrice: {
+			inputPrice: 1.0,
+			outputPrice: 4.0,
+			cacheReadsPrice: 0.25,
+		},
 		reasoningEffort: "low",
 	},
 	"o4-mini": {
@@ -124,6 +154,11 @@ export const openAiNativeModels = {
 		inputPrice: 1.1,
 		outputPrice: 4.4,
 		cacheReadsPrice: 0.275,
+		flexPrice: {
+			inputPrice: 0.55,
+			outputPrice: 2.2,
+			cacheReadsPrice: 0.138,
+		},
 		supportsReasoningEffort: true,
 		reasoningEffort: "medium",
 	},
@@ -135,6 +170,11 @@ export const openAiNativeModels = {
 		inputPrice: 1.1,
 		outputPrice: 4.4,
 		cacheReadsPrice: 0.275,
+		flexPrice: {
+			inputPrice: 0.55,
+			outputPrice: 2.2,
+			cacheReadsPrice: 0.138,
+		},
 		reasoningEffort: "high",
 	},
 	"o4-mini-low": {
@@ -145,6 +185,11 @@ export const openAiNativeModels = {
 		inputPrice: 1.1,
 		outputPrice: 4.4,
 		cacheReadsPrice: 0.275,
+		flexPrice: {
+			inputPrice: 0.55,
+			outputPrice: 2.2,
+			cacheReadsPrice: 0.138,
+		},
 		reasoningEffort: "low",
 	},
 	"o3-mini": {

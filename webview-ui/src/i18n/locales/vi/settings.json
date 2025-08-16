@@ -384,6 +384,13 @@
 				"learnMore": "Tìm hiểu thêm về định tuyến nhà cung cấp"
 			}
 		},
+		"serviceTier": {
+			"label": "Tầng dịch vụ",
+			"auto": "Tự động",
+			"default": "Mặc định",
+			"flex": "Linh hoạt",
+			"description": "Chọn tầng giá. Linh hoạt sử dụng mức giá chiết khấu nhưng lỗi tăng cao nếu máy chủ bận."
+		},
 		"customModel": {
 			"capabilities": "Cấu hình các khả năng và giá cả cho mô hình tương thích OpenAI tùy chỉnh của bạn. Hãy cẩn thận khi chỉ định khả năng của mô hình, vì chúng có thể ảnh hưởng đến cách Roo Code hoạt động.",
 			"maxTokens": {

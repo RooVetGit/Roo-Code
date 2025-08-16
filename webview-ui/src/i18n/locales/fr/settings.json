@@ -384,6 +384,13 @@
 				"learnMore": "En savoir plus sur le routage des fournisseurs"
 			}
 		},
+		"serviceTier": {
+			"label": "Niveau de service",
+			"auto": "Auto",
+			"default": "Par défaut",
+			"flex": "Flex",
+			"description": "Sélectionnez le niveau de tarification. Flex utilise des tarifs réduits mais des erreurs élevées si le serveur est occupé."
+		},
 		"customModel": {
 			"capabilities": "Configurez les capacités et les prix pour votre modèle personnalisé compatible OpenAI. Soyez prudent lors de la spécification des capacités du modèle, car elles peuvent affecter le fonctionnement de Roo Code.",
 			"maxTokens": {

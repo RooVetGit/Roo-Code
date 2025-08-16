@@ -91,6 +91,9 @@ const baseProviderSettingsSchema = z.object({
 
 	// Model verbosity.
 	verbosity: verbosityLevelsSchema.optional(),
+
+	// Service tier selection for providers that support tiered pricing (e.g. OpenAI flex tier)
+	serviceTier: z.enum(["auto", "default", "flex"]).optional(),
 })
 
 // Several of the providers share common model config properties.

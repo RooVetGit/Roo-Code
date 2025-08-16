@@ -384,6 +384,13 @@
 				"learnMore": "Saiba mais sobre roteamento de provedores"
 			}
 		},
+		"serviceTier": {
+			"label": "Nível de Serviço",
+			"auto": "Automático",
+			"default": "Padrão",
+			"flex": "Flex",
+			"description": "Selecione o nível de preço. Flex usa taxas com desconto, mas erros elevados se o servidor estiver ocupado."
+		},
 		"customModel": {
 			"capabilities": "Configure as capacidades e preços para seu modelo personalizado compatível com OpenAI. Tenha cuidado ao especificar as capacidades do modelo, pois elas podem afetar como o Roo Code funciona.",
 			"maxTokens": {

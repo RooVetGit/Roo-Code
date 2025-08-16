@@ -384,6 +384,13 @@
 				"learnMore": "Més informació sobre l'encaminament de proveïdors"
 			}
 		},
+		"serviceTier": {
+			"label": "Nivell de servei",
+			"auto": "Automàtic",
+			"default": "Per defecte",
+			"flex": "Flexible",
+			"description": "Seleccioneu el nivell de preus. Flexible utilitza tarifes amb descompte però errors elevats si el servidor està ocupat."
+		},
 		"customModel": {
 			"capabilities": "Configureu les capacitats i preus per al vostre model personalitzat compatible amb OpenAI. Tingueu cura en especificar les capacitats del model, ja que poden afectar com funciona Roo Code.",
 			"maxTokens": {

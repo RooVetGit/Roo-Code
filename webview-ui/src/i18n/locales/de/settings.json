@@ -384,6 +384,13 @@
 				"learnMore": "Mehr über Anbieter-Routing erfahren"
 			}
 		},
+		"serviceTier": {
+			"label": "Dienststufe",
+			"auto": "Auto",
+			"default": "Standard",
+			"flex": "Flex",
+			"description": "Preiskategorie auswählen. Flex verwendet ermäßigte Tarife, aber erhöhte Fehler, wenn der Server ausgelastet ist."
+		},
 		"customModel": {
 			"capabilities": "Konfiguriere die Fähigkeiten und Preise für dein benutzerdefiniertes OpenAI-kompatibles Modell. Sei vorsichtig bei der Angabe der Modellfähigkeiten, da diese beeinflussen können, wie Roo Code funktioniert.",
 			"maxTokens": {

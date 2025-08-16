@@ -384,6 +384,13 @@
 				"learnMore": "제공자 라우팅에 대해 자세히 알아보기"
 			}
 		},
+		"serviceTier": {
+			"label": "서비스 등급",
+			"auto": "자동",
+			"default": "기본",
+			"flex": "플렉스",
+			"description": "가격 책정 등급을 선택합니다. 플렉스는 할인된 요금을 사용하지만 서버가 바쁜 경우 오류가 증가합니다."
+		},
 		"customModel": {
 			"capabilities": "사용자 정의 OpenAI 호환 모델의 기능과 가격을 구성하세요. 모델 기능이 Roo Code의 성능에 영향을 미칠 수 있으므로 신중하게 지정하세요.",
 			"maxTokens": {

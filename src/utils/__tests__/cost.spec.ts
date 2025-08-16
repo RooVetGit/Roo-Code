@@ -107,6 +107,12 @@ describe("Cost Utility", () => {
 			outputPrice: 15.0, // $15 per million tokens
 			cacheWritesPrice: 3.75, // $3.75 per million tokens
 			cacheReadsPrice: 0.3, // $0.30 per million tokens
+			flexPrice: {
+				inputPrice: 1.5,
+				outputPrice: 7.5,
+				cacheWritesPrice: 1.875,
+				cacheReadsPrice: 0.15,
+			},
 		}
 
 		it("should calculate basic input/output costs correctly", () => {
@@ -188,6 +194,22 @@ describe("Cost Utility", () => {
 			// Output cost: (15.0 / 1_000_000) * 500 = 0.0075
 			// Total: 0.003 + 0.0075 = 0.0105
 			expect(cost).toBe(0.0105)
+		})
+
+		it("should apply flex pricing when serviceTier=flex and flexPrice present", () => {
+			const costDefault = calculateApiCostOpenAI(mockModelInfo, 1000, 500, undefined, undefined, "default")
+			const costFlex = calculateApiCostOpenAI(mockModelInfo, 1000, 500, undefined, undefined, "flex")
+
+			// Default pricing: input (3 / 1e6 * 1000) + output (15 /1e6 * 500) = 0.0105
+			// Flex pricing: input (1.5 /1e6 * 1000) + output (7.5 /1e6 * 500) = 0.00525
+			expect(costDefault).toBeCloseTo(0.0105, 6)
+			expect(costFlex).toBeCloseTo(0.00525, 6)
+		})
+
+		it("should fall back to standard pricing if flex selected but no flexPrice", () => {
+			const noFlexModel: ModelInfo = { ...mockModelInfo, flexPrice: undefined }
+			const cost = calculateApiCostOpenAI(noFlexModel, 1000, 500, undefined, undefined, "flex")
+			expect(cost).toBeCloseTo(0.0105, 6)
 		})
 	})
 })

@@ -383,6 +383,13 @@
 				"learnMore": "Learn more about provider routing"
 			}
 		},
+		"serviceTier": {
+			"label": "Service Tier",
+			"auto": "Auto",
+			"default": "Default",
+			"flex": "Flex",
+			"description": "Select pricing tier. Flex uses discounted rates but elevated errors if server is busy."
+		},
 		"customModel": {
 			"capabilities": "Configure the capabilities and pricing for your custom OpenAI-compatible model. Be careful when specifying the model capabilities, as they can affect how Roo Code performs.",
 			"maxTokens": {

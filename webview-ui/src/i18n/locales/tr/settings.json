@@ -384,6 +384,13 @@
 				"learnMore": "Sağlayıcı yönlendirmesi hakkında daha fazla bilgi edinin"
 			}
 		},
+		"serviceTier": {
+			"label": "Hizmet Katmanı",
+			"auto": "Otomatik",
+			"default": "Varsayılan",
+			"flex": "Esnek",
+			"description": "Fiyatlandırma katmanını seçin. Esnek, indirimli oranlar kullanır ancak sunucu meşgul olduğunda hatalar artar."
+		},
 		"customModel": {
 			"capabilities": "Özel OpenAI uyumlu modelinizin yeteneklerini ve fiyatlandırmasını yapılandırın. Model yeteneklerini belirtirken dikkatli olun, çünkü bunlar Roo Code'un performansını etkileyebilir.",
 			"maxTokens": {

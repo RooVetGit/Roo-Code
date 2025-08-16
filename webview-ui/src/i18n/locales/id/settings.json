@@ -388,6 +388,13 @@
 				"learnMore": "Pelajari lebih lanjut tentang provider routing"
 			}
 		},
+		"serviceTier": {
+			"label": "Tingkat Layanan",
+			"auto": "Otomatis",
+			"default": "Default",
+			"flex": "Fleksibel",
+			"description": "Pilih tingkat harga. Fleksibel menggunakan tarif diskon tetapi error meningkat jika server sibuk."
+		},
 		"customModel": {
 			"capabilities": "Konfigurasi kemampuan dan harga untuk model kustom yang kompatibel dengan OpenAI. Hati-hati saat menentukan kemampuan model, karena dapat mempengaruhi performa Roo Code.",
 			"maxTokens": {
