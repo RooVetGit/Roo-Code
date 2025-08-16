@@ -189,9 +189,9 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 	abort: boolean = false
 
 	// TaskStatus
-	idleAsk?: IdleAsk
-	resumableAsk?: ResumableAsk
-	interactiveAsk?: InteractiveAsk
+	idleAsk?: ClineMessage
+	resumableAsk?: ClineMessage
+	interactiveAsk?: ClineMessage
 
 	didFinishAbortingStream = false
 	abandoned = false
@@ -625,6 +625,16 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 		}
 	}
 
+	private findMessageByTimestamp(ts: number): ClineMessage | undefined {
+		for (let i = this.clineMessages.length - 1; i >= 0; i--) {
+			if (this.clineMessages[i].ts === ts) {
+				return this.clineMessages[i]
+			}
+		}
+
+		return undefined
+	}
+
 	// Note that `partial` has three valid states true (partial message),
 	// false (completion of partial message), undefined (individual complete
 	// message).
@@ -726,36 +736,48 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 		// The state is mutable if the message is complete and the task will
 		// block (via the `pWaitFor`).
 		const isBlocking = !(this.askResponse !== undefined || this.lastMessageTs !== askTs)
-		const isStateMutable = !partial && isBlocking
-		let stateMutationTimeouts: NodeJS.Timeout[] = []
+		const isStatusMutable = !partial && isBlocking
+		let statusMutationTimeouts: NodeJS.Timeout[] = []
 
-		if (isStateMutable) {
+		if (isStatusMutable) {
 			if (isInteractiveAsk(type)) {
-				stateMutationTimeouts.push(
+				statusMutationTimeouts.push(
 					setTimeout(() => {
-						this.interactiveAsk = type
-						this.emit(RooCodeEventName.TaskInteractive, this.taskId)
+						const message = this.findMessageByTimestamp(askTs)
+
+						if (message) {
+							this.interactiveAsk = message
+							this.emit(RooCodeEventName.TaskInteractive, this.taskId)
+						}
 					}, 1_000),
 				)
 			} else if (isResumableAsk(type)) {
-				stateMutationTimeouts.push(
+				statusMutationTimeouts.push(
 					setTimeout(() => {
-						this.resumableAsk = type
-						this.emit(RooCodeEventName.TaskResumable, this.taskId)
+						const message = this.findMessageByTimestamp(askTs)
+
+						if (message) {
+							this.resumableAsk = message
+							this.emit(RooCodeEventName.TaskResumable, this.taskId)
+						}
 					}, 1_000),
 				)
 			} else if (isIdleAsk(type)) {
-				stateMutationTimeouts.push(
+				statusMutationTimeouts.push(
 					setTimeout(() => {
-						this.idleAsk = type
-						this.emit(RooCodeEventName.TaskIdle, this.taskId)
+						const message = this.findMessageByTimestamp(askTs)
+
+						if (message) {
+							this.idleAsk = message
+							this.emit(RooCodeEventName.TaskIdle, this.taskId)
+						}
 					}, 1_000),
 				)
 			}
 		}
 
 		console.log(
-			`[Task#${this.taskId}] pWaitFor askResponse(${type}) -> blocking (isStateMutable = ${isStateMutable}, stateMutationTimeouts = ${stateMutationTimeouts.length})`,
+			`[Task#${this.taskId}] pWaitFor askResponse(${type}) -> blocking (isStatusMutable = ${isStatusMutable}, statusMutationTimeouts = ${statusMutationTimeouts.length})`,
 		)
 
 		await pWaitFor(() => this.askResponse !== undefined || this.lastMessageTs !== askTs, { interval: 100 })
@@ -775,7 +797,7 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 		this.askResponseImages = undefined
 
 		// Cancel the timeouts if they are still running.
-		stateMutationTimeouts.forEach((timeout) => clearTimeout(timeout))
+		statusMutationTimeouts.forEach((timeout) => clearTimeout(timeout))
 
 		// Switch back to an active state.
 		if (this.idleAsk || this.resumableAsk || this.interactiveAsk) {
@@ -2581,7 +2603,7 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 		return TaskStatus.Running
 	}
 
-	public get taskAsk(): ClineAsk | undefined {
+	public get taskAsk(): ClineMessage | undefined {
 		return this.idleAsk || this.resumableAsk || this.interactiveAsk
 	}
 }

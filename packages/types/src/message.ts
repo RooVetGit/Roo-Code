@@ -44,6 +44,10 @@ export const clineAskSchema = z.enum(clineAsks)
 
 export type ClineAsk = z.infer<typeof clineAskSchema>
 
+// Needs classification:
+// - `followup`
+// - `command_output
+
 /**
  * IdleAsk
  *
@@ -51,11 +55,11 @@ export type ClineAsk = z.infer<typeof clineAskSchema>
  */
 
 export const idleAsks = [
-	"api_req_failed",
-	"auto_approval_max_req_reached",
-	"mistake_limit_reached",
-	"command_output", // Not sure about this one.
 	"completion_result",
+	"api_req_failed",
+	"resume_completed_task",
+	"mistake_limit_reached",
+	"auto_approval_max_req_reached",
 ] as const satisfies readonly ClineAsk[]
 
 export type IdleAsk = (typeof idleAsks)[number]
@@ -70,7 +74,7 @@ export function isIdleAsk(ask: ClineAsk): ask is IdleAsk {
  * Asks that put the task into an "resumable" state.
  */
 
-export const resumableAsks = ["resume_task", "resume_completed_task"] as const satisfies readonly ClineAsk[]
+export const resumableAsks = ["resume_task"] as const satisfies readonly ClineAsk[]
 
 export type ResumableAsk = (typeof resumableAsks)[number]
 
@@ -84,7 +88,12 @@ export function isResumableAsk(ask: ClineAsk): ask is ResumableAsk {
  * Asks that put the task into an "user interaction required" state.
  */
 
-export const interactiveAsks = ["command"] as const satisfies readonly ClineAsk[]
+export const interactiveAsks = [
+	"command",
+	"tool",
+	"browser_action_launch",
+	"use_mcp_server",
+] as const satisfies readonly ClineAsk[]
 
 export type InteractiveAsk = (typeof interactiveAsks)[number]
 

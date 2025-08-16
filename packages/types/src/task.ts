@@ -1,7 +1,7 @@
 import { z } from "zod"
 
 import { RooCodeEventName } from "./events.js"
-import { type ClineMessage, type ClineAsk, type TokenUsage } from "./message.js"
+import { type ClineMessage, type TokenUsage } from "./message.js"
 import { type ToolUsage, type ToolName } from "./tool.js"
 import type { StaticAppProperties, GitProperties, TelemetryProperties } from "./telemetry.js"
 
@@ -81,7 +81,7 @@ export type TaskMetadata = z.infer<typeof taskMetadataSchema>
 export interface TaskLike {
 	readonly taskId: string
 	readonly taskStatus: TaskStatus
-	readonly taskAsk: ClineAsk | undefined
+	readonly taskAsk: ClineMessage | undefined
 	readonly metadata: TaskMetadata
 
 	readonly rootTask?: TaskLike
