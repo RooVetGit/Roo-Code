@@ -327,7 +327,7 @@ function getSelectedModel({
 		}
 		case "io-intelligence": {
 			const id = apiConfiguration.ioIntelligenceModelId ?? ioIntelligenceDefaultModelId
-			const info = routerModels["io-intelligence"]?.[id] ?? ioIntelligenceModels[id as keyof typeof ioIntelligenceModels
+			const info = routerModels["io-intelligence"]?.[id] ?? ioIntelligenceModels[id as keyof typeof ioIntelligenceModels]
 			return { id, info }
 		}		
 		// case "anthropic":
