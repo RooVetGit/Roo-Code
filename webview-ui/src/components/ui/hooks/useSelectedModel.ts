@@ -55,6 +55,9 @@ import {
 	BEDROCK_CLAUDE_SONNET_4_MODEL_ID,
 	qwenCodeModels,
 	qwenCodeDefaultModelId,
+	ioIntelligenceDefaultModelId,
+	ioIntelligenceModels,
+	BEDROCK_CLAUDE_SONNET_4_MODEL_ID,
 } from "@roo-code/types"
 
 import type { ModelRecord, RouterModels } from "@roo/api"
@@ -322,6 +325,11 @@ function getSelectedModel({
 			const info = qwenCodeModels[id as keyof typeof qwenCodeModels]
 			return { id, info }
 		}
+		case "io-intelligence": {
+			const id = apiConfiguration.ioIntelligenceModelId ?? ioIntelligenceDefaultModelId
+			const info = routerModels["io-intelligence"]?.[id] ?? ioIntelligenceModels[id as keyof typeof ioIntelligenceModels
+			return { id, info }
+		}		
 		// case "anthropic":
 		// case "human-relay":
 		// case "fake-ai":
