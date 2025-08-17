@@ -13,7 +13,7 @@ import { getWorkspacePath } from "../../utils/path"
 import { getGlobalRooDirectory } from "../../services/roo-config"
 import { logger } from "../../utils/logging"
 import { GlobalFileNames } from "../../shared/globalFileNames"
-import { ensureSettingsDirectoryExists } from "../../utils/globalContext"
+import { getSettingsDirectoryPath } from "../../utils/storage"
 import { t } from "../../i18n"
 
 const ROOMODES_FILENAME = ".roomodes"
@@ -246,7 +246,7 @@ export class CustomModesManager {
 	}
 
 	public async getCustomModesFilePath(): Promise<string> {
-		const settingsDir = await ensureSettingsDirectoryExists(this.context)
+		const settingsDir = await getSettingsDirectoryPath(this.context.globalStorageUri.fsPath)
 		const filePath = path.join(settingsDir, GlobalFileNames.customModes)
 		const fileExists = await fileExistsAtPath(filePath)
 
