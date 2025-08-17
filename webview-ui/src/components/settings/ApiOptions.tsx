@@ -35,6 +35,7 @@ import {
 	ioIntelligenceDefaultModelId,
 	rooDefaultModelId,
 	qwenCodeDefaultModelId,
+	ioIntelligenceDefaultModelId,
 } from "@roo-code/types"
 
 import { vscode } from "@src/utils/vscode"
