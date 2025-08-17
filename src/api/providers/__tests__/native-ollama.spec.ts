@@ -122,6 +122,69 @@ describe("NativeOllamaHandler", () => {
 		})
 	})
 
+	describe("num_ctx handling", () => {
+		it("should not override num_ctx in createMessage", async () => {
+			// Mock the chat response
+			mockChat.mockImplementation(async function* () {
+				yield {
+					message: { content: "Test response" },
+					eval_count: 1,
+					prompt_eval_count: 1,
+				}
+			})
+
+			const systemPrompt = "You are a helpful assistant"
+			const messages = [{ role: "user" as const, content: "Test" }]
+
+			const stream = handler.createMessage(systemPrompt, messages)
+
+			// Consume the stream
+			for await (const _ of stream) {
+				// Just consume
+			}
+
+			// Verify that num_ctx was NOT set in the options
+			expect(mockChat).toHaveBeenCalledWith(
+				expect.objectContaining({
+					model: "llama2",
+					messages: expect.any(Array),
+					stream: true,
+					options: expect.objectContaining({
+						temperature: 0,
+					}),
+				}),
+			)
+
+			// Specifically check that num_ctx is not in the options
+			const callArgs = mockChat.mock.calls[0][0]
+			expect(callArgs.options).not.toHaveProperty("num_ctx")
+		})
+
+		it("should not override num_ctx in completePrompt", async () => {
+			mockChat.mockResolvedValue({
+				message: { content: "Test response" },
+			})
+
+			await handler.completePrompt("Test prompt")
+
+			// Verify that num_ctx was NOT set in the options
+			expect(mockChat).toHaveBeenCalledWith(
+				expect.objectContaining({
+					model: "llama2",
+					messages: expect.any(Array),
+					stream: false,
+					options: expect.objectContaining({
+						temperature: 0,
+					}),
+				}),
+			)
+
+			// Specifically check that num_ctx is not in the options
+			const callArgs = mockChat.mock.calls[0][0]
+			expect(callArgs.options).not.toHaveProperty("num_ctx")
+		})
+	})
+
 	describe("error handling", () => {
 		it("should handle connection refused errors", async () => {
 			const error = new Error("ECONNREFUSED") as any
