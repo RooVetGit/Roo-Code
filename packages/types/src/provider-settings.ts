@@ -65,7 +65,6 @@ export const providerNames = [
 	"io-intelligence",
 	"roo",
 	"qwen-code",
-	"io-intelligence",
 ] as const
 
 export const providerNamesSchema = z.enum(providerNames)
