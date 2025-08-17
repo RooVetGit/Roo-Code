@@ -131,7 +131,7 @@ export async function promptForCustomStoragePath(): Promise<void> {
 				try {
 					// Test if path is accessible
 					await fs.mkdir(result, { recursive: true })
-					await fs.access(result, fsConstants.W_OK | fsConstants.X_OK)
+					await fs.access(result, fsConstants.R_OK | fsConstants.W_OK | fsConstants.X_OK)
 					vscode.window.showInformationMessage(t("common:info.custom_storage_path_set", { path: result }))
 				} catch (error) {
 					vscode.window.showErrorMessage(
