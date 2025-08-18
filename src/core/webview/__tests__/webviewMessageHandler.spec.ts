@@ -308,6 +308,129 @@ describe("webviewMessageHandler - requestRouterModels", () => {
 			type: "requestRouterModels",
 		})
 
+		describe("webviewMessageHandler - importMode", () => {
+			beforeEach(() => {
+				vi.clearAllMocks()
+				// Add handleModeSwitch to the mock
+				mockClineProvider.handleModeSwitch = vi.fn()
+				// Mock customModesManager.importModeWithRules
+				mockClineProvider.customModesManager.importModeWithRules = vi.fn()
+			})
+
+			it("should switch to imported mode on successful import", async () => {
+				const mockImportResult = {
+					success: true,
+					importedModes: ["imported-mode"],
+				}
+
+				vi.mocked(mockClineProvider.customModesManager.importModeWithRules).mockResolvedValue(mockImportResult)
+				vi.mocked(mockClineProvider.customModesManager.getCustomModes).mockResolvedValue([
+					{
+						slug: "imported-mode",
+						name: "Imported Mode",
+						roleDefinition: "Imported Role",
+						groups: ["read"],
+					},
+				])
+
+				// Mock vscode.window.showOpenDialog
+				const vscode = await import("vscode")
+				vi.mocked(vscode.window.showOpenDialog).mockResolvedValue([{ fsPath: "/path/to/mode.yaml" }] as any)
+
+				// Mock fs.readFile
+				const fs = await import("fs/promises")
+				vi.mocked(fs.readFile).mockResolvedValue("yaml content")
+
+				await webviewMessageHandler(mockClineProvider, {
+					type: "importMode",
+					source: "project",
+				})
+
+				// Should switch to the imported mode
+				expect(mockClineProvider.handleModeSwitch).toHaveBeenCalledWith("imported-mode")
+
+				// Should send success message with imported modes
+				expect(mockClineProvider.postMessageToWebview).toHaveBeenCalledWith({
+					type: "importModeResult",
+					success: true,
+					payload: { importedModes: ["imported-mode"] },
+				})
+			})
+
+			it("should switch to first mode when multiple modes are imported", async () => {
+				const mockImportResult = {
+					success: true,
+					importedModes: ["mode-one", "mode-two"],
+				}
+
+				vi.mocked(mockClineProvider.customModesManager.importModeWithRules).mockResolvedValue(mockImportResult)
+				vi.mocked(mockClineProvider.customModesManager.getCustomModes).mockResolvedValue([
+					{
+						slug: "mode-one",
+						name: "Mode One",
+						roleDefinition: "Role One",
+						groups: ["read"],
+					},
+					{
+						slug: "mode-two",
+						name: "Mode Two",
+						roleDefinition: "Role Two",
+						groups: ["edit"],
+					},
+				])
+
+				// Mock vscode.window.showOpenDialog
+				const vscode = await import("vscode")
+				vi.mocked(vscode.window.showOpenDialog).mockResolvedValue([{ fsPath: "/path/to/mode.yaml" }] as any)
+
+				// Mock fs.readFile
+				const fs = await import("fs/promises")
+				vi.mocked(fs.readFile).mockResolvedValue("yaml content")
+
+				await webviewMessageHandler(mockClineProvider, {
+					type: "importMode",
+					source: "project",
+				})
+
+				// Should switch to the first mode only
+				expect(mockClineProvider.handleModeSwitch).toHaveBeenCalledWith("mode-one")
+				expect(mockClineProvider.handleModeSwitch).toHaveBeenCalledTimes(1)
+			})
+
+			it("should handle invalid mode slug gracefully", async () => {
+				const mockImportResult = {
+					success: true,
+					importedModes: ["invalid-mode-that-does-not-exist"],
+				}
+
+				vi.mocked(mockClineProvider.customModesManager.importModeWithRules).mockResolvedValue(mockImportResult)
+				vi.mocked(mockClineProvider.customModesManager.getCustomModes).mockResolvedValue([])
+
+				// Mock vscode.window.showOpenDialog
+				const vscode = await import("vscode")
+				vi.mocked(vscode.window.showOpenDialog).mockResolvedValue([{ fsPath: "/path/to/mode.yaml" }] as any)
+
+				// Mock fs.readFile
+				const fs = await import("fs/promises")
+				vi.mocked(fs.readFile).mockResolvedValue("yaml content")
+
+				await webviewMessageHandler(mockClineProvider, {
+					type: "importMode",
+					source: "project",
+				})
+
+				// Should not call handleModeSwitch with invalid mode
+				expect(mockClineProvider.handleModeSwitch).not.toHaveBeenCalled()
+
+				// Should still send success message
+				expect(mockClineProvider.postMessageToWebview).toHaveBeenCalledWith({
+					type: "importModeResult",
+					success: true,
+					payload: { importedModes: ["invalid-mode-that-does-not-exist"] },
+				})
+			})
+		})
+
 		// Verify successful providers are included
 		expect(mockClineProvider.postMessageToWebview).toHaveBeenCalledWith({
 			type: "routerModels",
