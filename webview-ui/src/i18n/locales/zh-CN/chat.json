@@ -121,7 +121,11 @@
 		"settings": "模式设置",
 		"description": "专门定制Roo行为的角色。",
 		"searchPlaceholder": "搜索模式...",
-		"noResults": "未找到结果"
+		"noResults": "未找到结果",
+		"global": "全局",
+		"project": "项目",
+		"globalShort": "G",
+		"projectShort": "P"
 	},
 	"errorReadingFile": "读取文件时出错:",
 	"noValidImages": "没有处理有效图片",

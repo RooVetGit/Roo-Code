@@ -121,7 +121,11 @@
 		"settings": "Mod Ayarları",
 		"description": "Roo'nun davranışını özelleştiren uzmanlaşmış kişilikler.",
 		"searchPlaceholder": "Modları ara...",
-		"noResults": "Sonuç bulunamadı"
+		"noResults": "Sonuç bulunamadı",
+		"global": "Genel",
+		"project": "Proje",
+		"globalShort": "G",
+		"projectShort": "P"
 	},
 	"errorReadingFile": "Dosya okuma hatası:",
 	"noValidImages": "Hiçbir geçerli resim işlenmedi",

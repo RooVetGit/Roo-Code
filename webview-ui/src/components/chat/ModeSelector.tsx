@@ -46,6 +46,22 @@ export const ModeSelector = ({
 	const { hasOpenedModeSelector, setHasOpenedModeSelector } = useExtensionState()
 	const { t } = useAppTranslation()
 
+	// Helper to determine if a mode is custom and get its source
+	const getModeSource = (mode: ModeConfig): string | null => {
+		const isCustom = customModes?.some((m) => m.slug === mode.slug)
+		if (!isCustom) return null
+		return mode.source || "global" // Default to global if source is undefined
+	}
+
+	// Helper to get display text for source
+	const getSourceDisplayText = (source: string | null, isShort: boolean = false): string => {
+		if (!source) return ""
+		if (isShort) {
+			return source === "global" ? t("chat:modeSelector.globalShort") : t("chat:modeSelector.projectShort")
+		}
+		return source === "global" ? t("chat:modeSelector.global") : t("chat:modeSelector.project")
+	}
+
 	const trackModeSelectorOpened = React.useCallback(() => {
 		// Track telemetry every time the mode selector is opened
 		telemetryClient.capture(TelemetryEventName.MODE_SELECTOR_OPENED)
@@ -159,6 +175,13 @@ export const ModeSelector = ({
 	// Combine instruction text for tooltip
 	const instructionText = `${t("chat:modeSelector.description")} ${modeShortcutText}`
 
+	// Helper function to render source indicator
+	const renderSourceIndicator = (mode: ModeConfig, isShort: boolean = false) => {
+		const source = getModeSource(mode)
+		if (!source) return null
+		return <span className="ml-1 text-vscode-descriptionForeground">({getSourceDisplayText(source, isShort)})</span>
+	}
+
 	const trigger = (
 		<PopoverTrigger
 			disabled={disabled}
@@ -176,7 +199,10 @@ export const ModeSelector = ({
 					: null,
 			)}>
 			<ChevronUp className="pointer-events-none opacity-80 flex-shrink-0 size-3" />
-			<span className="truncate">{selectedMode?.name || ""}</span>
+			<span className="truncate">
+				{selectedMode?.name || ""}
+				{selectedMode && renderSourceIndicator(selectedMode, false)}
+			</span>
 		</PopoverTrigger>
 	)
 
@@ -238,7 +264,10 @@ export const ModeSelector = ({
 										)}
 										data-testid="mode-selector-item">
 										<div className="flex-1 min-w-0">
-											<div className="font-bold truncate">{mode.name}</div>
+											<div className="font-bold truncate">
+												{mode.name}
+												{renderSourceIndicator(mode, true)}
+											</div>
 											{mode.description && (
 												<div className="text-xs text-vscode-descriptionForeground truncate">
 													{mode.description}
