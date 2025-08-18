@@ -9,6 +9,11 @@ import { GeminiHandler } from "../gemini"
 
 const GEMINI_20_FLASH_THINKING_NAME = "gemini-2.0-flash-thinking-exp-1219"
 
+// Mock delay module
+vitest.mock("delay", () => ({
+	default: vitest.fn(() => Promise.resolve()),
+}))
+
 describe("GeminiHandler", () => {
 	let handler: GeminiHandler
 
@@ -102,6 +107,107 @@ describe("GeminiHandler", () => {
 				}
 			}).rejects.toThrow()
 		})
+
+		it("should retry on rate limit errors", async () => {
+			const mockError = new Error("Rate limit exceeded")
+			// @ts-ignore - adding status property to error
+			mockError.status = 429
+
+			const mockStream = {
+				[Symbol.asyncIterator]: async function* () {
+					yield {
+						candidates: [
+							{
+								content: {
+									parts: [{ text: "Success after retry" }],
+								},
+							},
+						],
+					}
+				},
+			}
+
+			const generateContentStreamMock = handler["client"].models.generateContentStream as any
+			generateContentStreamMock.mockRejectedValueOnce(mockError).mockResolvedValueOnce(mockStream)
+
+			const chunks: any[] = []
+			for await (const chunk of handler.createMessage(systemPrompt, mockMessages)) {
+				chunks.push(chunk)
+			}
+
+			expect(generateContentStreamMock).toHaveBeenCalledTimes(2)
+			expect(chunks[0]).toEqual({ type: "text", text: "Success after retry" })
+		})
+
+		it("should handle blank responses", async () => {
+			const mockStream = {
+				[Symbol.asyncIterator]: async function* () {
+					// Yield empty chunks
+					yield {}
+					yield { candidates: [] }
+				},
+			}
+
+			;(handler["client"].models.generateContentStream as any).mockResolvedValue(mockStream)
+
+			const stream = handler.createMessage(systemPrompt, mockMessages)
+
+			await expect(async () => {
+				for await (const _chunk of stream) {
+					// Should throw due to blank response
+				}
+			}).rejects.toThrow(
+				t("common:errors.gemini.generate_stream", { error: "Received blank response from Gemini API" }),
+			)
+		})
+
+		it("should retry on server errors", async () => {
+			const mockError = new Error("Internal server error")
+			// @ts-ignore - adding status property to error
+			mockError.status = 500
+
+			const mockStream = {
+				[Symbol.asyncIterator]: async function* () {
+					yield {
+						candidates: [
+							{
+								content: {
+									parts: [{ text: "Success after server error" }],
+								},
+							},
+						],
+					}
+				},
+			}
+
+			const generateContentStreamMock = handler["client"].models.generateContentStream as any
+			generateContentStreamMock.mockRejectedValueOnce(mockError).mockResolvedValueOnce(mockStream)
+
+			const chunks: any[] = []
+			for await (const chunk of handler.createMessage(systemPrompt, mockMessages)) {
+				chunks.push(chunk)
+			}
+
+			expect(generateContentStreamMock).toHaveBeenCalledTimes(2)
+			expect(chunks[0]).toEqual({ type: "text", text: "Success after server error" })
+		})
+
+		it("should not retry on authentication errors", async () => {
+			const mockError = new Error("Invalid API key")
+			// @ts-ignore - adding status property to error
+			mockError.status = 401
+			;(handler["client"].models.generateContentStream as any).mockRejectedValue(mockError)
+
+			const stream = handler.createMessage(systemPrompt, mockMessages)
+
+			await expect(async () => {
+				for await (const _chunk of stream) {
+					// Should throw without retrying
+				}
+			}).rejects.toThrow()
+
+			expect(handler["client"].models.generateContentStream).toHaveBeenCalledTimes(1)
+		})
 	})
 
 	describe("completePrompt", () => {
@@ -134,14 +240,77 @@ describe("GeminiHandler", () => {
 			)
 		})
 
-		it("should handle empty response", async () => {
+		it("should handle empty response with error", async () => {
 			// Mock the response with empty text
 			;(handler["client"].models.generateContent as any).mockResolvedValue({
 				text: "",
 			})
 
+			await expect(handler.completePrompt("Test prompt")).rejects.toThrow(
+				t("common:errors.gemini.generate_complete_prompt", {
+					error: "Received blank response from Gemini API",
+				}),
+			)
+		})
+
+		it("should retry on rate limit and succeed", async () => {
+			const mockError = new Error("Rate limit exceeded")
+			// @ts-ignore - adding status property to error
+			mockError.status = 429
+
+			const mockResponse = {
+				text: "Success after rate limit",
+				candidates: [],
+			}
+
+			const generateContentMock = handler["client"].models.generateContent as any
+			generateContentMock.mockRejectedValueOnce(mockError).mockResolvedValueOnce(mockResponse)
+
 			const result = await handler.completePrompt("Test prompt")
-			expect(result).toBe("")
+
+			expect(generateContentMock).toHaveBeenCalledTimes(2)
+			expect(result).toBe("Success after rate limit")
+		})
+
+		it("should handle network errors with retry", async () => {
+			const mockError = new Error("Network timeout")
+
+			const mockResponse = {
+				text: "Success after network error",
+				candidates: [],
+			}
+
+			const generateContentMock = handler["client"].models.generateContent as any
+			generateContentMock.mockRejectedValueOnce(mockError).mockResolvedValueOnce(mockResponse)
+
+			const result = await handler.completePrompt("Test prompt")
+
+			expect(generateContentMock).toHaveBeenCalledTimes(2)
+			expect(result).toBe("Success after network error")
+		})
+
+		it("should respect retry delay from error details", async () => {
+			const mockError: any = new Error("Rate limit exceeded")
+			mockError.status = 429
+			mockError.errorDetails = [
+				{
+					"@type": "type.googleapis.com/google.rpc.RetryInfo",
+					retryDelay: "5s",
+				},
+			]
+
+			const mockResponse = {
+				text: "Success with custom retry delay",
+				candidates: [],
+			}
+
+			const generateContentMock = handler["client"].models.generateContent as any
+			generateContentMock.mockRejectedValueOnce(mockError).mockResolvedValueOnce(mockResponse)
+
+			const result = await handler.completePrompt("Test prompt")
+
+			expect(generateContentMock).toHaveBeenCalledTimes(2)
+			expect(result).toBe("Success with custom retry delay")
 		})
 	})
 

@@ -7,6 +7,7 @@ import {
 	type GroundingMetadata,
 } from "@google/genai"
 import type { JWTInput } from "google-auth-library"
+import delay from "delay"
 
 import { type ModelInfo, type GeminiModelId, geminiDefaultModelId, geminiModels } from "@roo-code/types"
 
@@ -23,6 +24,22 @@ import { BaseProvider } from "./base-provider"
 
 type GeminiHandlerOptions = ApiHandlerOptions & {
 	isVertex?: boolean
+}
+
+// Constants for retry logic
+const MAX_RETRIES = 3
+const INITIAL_RETRY_DELAY = 1000 // 1 second
+const MAX_RETRY_DELAY = 30000 // 30 seconds
+const RETRY_DELAY_MULTIPLIER = 2
+
+// Error classification
+enum GeminiErrorType {
+	RateLimit = "RATE_LIMIT",
+	ServerError = "SERVER_ERROR",
+	NetworkError = "NETWORK_ERROR",
+	InvalidRequest = "INVALID_REQUEST",
+	AuthError = "AUTH_ERROR",
+	Unknown = "UNKNOWN",
 }
 
 export class GeminiHandler extends BaseProvider implements SingleCompletionHandler {
@@ -60,6 +77,130 @@ export class GeminiHandler extends BaseProvider implements SingleCompletionHandl
 					: new GoogleGenAI({ apiKey })
 	}
 
+	private classifyError(error: any): GeminiErrorType {
+		if (!error) return GeminiErrorType.Unknown
+
+		const errorMessage = error.message?.toLowerCase() || ""
+		const statusCode = error.status || error.statusCode
+
+		// Check for rate limiting (429 status or rate limit messages)
+		if (statusCode === 429 || errorMessage.includes("rate limit") || errorMessage.includes("quota")) {
+			return GeminiErrorType.RateLimit
+		}
+
+		// Check for server errors (5xx status codes)
+		if (statusCode >= 500 && statusCode < 600) {
+			return GeminiErrorType.ServerError
+		}
+
+		// Check for authentication errors
+		if (
+			statusCode === 401 ||
+			statusCode === 403 ||
+			errorMessage.includes("auth") ||
+			errorMessage.includes("permission")
+		) {
+			return GeminiErrorType.AuthError
+		}
+
+		// Check for invalid request errors
+		if (statusCode === 400 || errorMessage.includes("invalid") || errorMessage.includes("bad request")) {
+			return GeminiErrorType.InvalidRequest
+		}
+
+		// Check for network errors
+		if (
+			errorMessage.includes("network") ||
+			errorMessage.includes("timeout") ||
+			errorMessage.includes("connection")
+		) {
+			return GeminiErrorType.NetworkError
+		}
+
+		return GeminiErrorType.Unknown
+	}
+
+	private shouldRetry(errorType: GeminiErrorType, attempt: number): boolean {
+		if (attempt >= MAX_RETRIES) return false
+
+		// Retry on rate limits, server errors, and network errors
+		return [GeminiErrorType.RateLimit, GeminiErrorType.ServerError, GeminiErrorType.NetworkError].includes(
+			errorType,
+		)
+	}
+
+	private calculateRetryDelay(attempt: number, error: any): number {
+		// Check if error has specific retry delay (for rate limiting)
+		const geminiRetryDetails = error.errorDetails?.find(
+			(detail: any) => detail["@type"] === "type.googleapis.com/google.rpc.RetryInfo",
+		)
+		if (geminiRetryDetails?.retryDelay) {
+			const match = geminiRetryDetails.retryDelay.match(/^(\d+)s$/)
+			if (match) {
+				return Number(match[1]) * 1000 // Convert seconds to milliseconds
+			}
+		}
+
+		// Use exponential backoff
+		const baseDelay = INITIAL_RETRY_DELAY * Math.pow(RETRY_DELAY_MULTIPLIER, attempt)
+		return Math.min(baseDelay, MAX_RETRY_DELAY)
+	}
+
+	private async retryWithBackoff<T>(operation: () => Promise<T>, operationName: string): Promise<T> {
+		let lastError: any
+
+		for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+			try {
+				const result = await operation()
+
+				// Check for blank/empty responses
+				if (operationName === "generateContent" && !result) {
+					throw new Error("Received blank response from Gemini API")
+				}
+
+				return result
+			} catch (error) {
+				lastError = error
+				const errorType = this.classifyError(error)
+
+				console.warn(`[GeminiHandler] ${operationName} attempt ${attempt + 1} failed:`, {
+					errorType,
+					message: error.message,
+					status: error.status || error.statusCode,
+				})
+
+				if (!this.shouldRetry(errorType, attempt)) {
+					break
+				}
+
+				const retryDelay = this.calculateRetryDelay(attempt, error)
+				console.log(`[GeminiHandler] Retrying ${operationName} in ${retryDelay}ms...`)
+				await delay(retryDelay)
+			}
+		}
+
+		// Enhance error message based on error type
+		const errorType = this.classifyError(lastError)
+		let enhancedMessage = lastError.message || "Unknown error"
+
+		switch (errorType) {
+			case GeminiErrorType.RateLimit:
+				enhancedMessage = `Gemini API rate limit exceeded. Please try again later. ${enhancedMessage}`
+				break
+			case GeminiErrorType.ServerError:
+				enhancedMessage = `Gemini API server error (500). The service may be temporarily unavailable. ${enhancedMessage}`
+				break
+			case GeminiErrorType.NetworkError:
+				enhancedMessage = `Network error connecting to Gemini API. Please check your connection. ${enhancedMessage}`
+				break
+			case GeminiErrorType.AuthError:
+				enhancedMessage = `Gemini API authentication failed. Please check your API key. ${enhancedMessage}`
+				break
+		}
+
+		throw new Error(enhancedMessage)
+	}
+
 	async *createMessage(
 		systemInstruction: string,
 		messages: Anthropic.Messages.MessageParam[],
@@ -90,10 +231,14 @@ export class GeminiHandler extends BaseProvider implements SingleCompletionHandl
 		const params: GenerateContentParameters = { model, contents, config }
 
 		try {
-			const result = await this.client.models.generateContentStream(params)
+			const result = await this.retryWithBackoff(
+				() => this.client.models.generateContentStream(params),
+				"generateContentStream",
+			)
 
 			let lastUsageMetadata: GenerateContentResponseUsageMetadata | undefined
 			let pendingGroundingMetadata: GroundingMetadata | undefined
+			let hasContent = false
 
 			for await (const chunk of result) {
 				// Process candidates and their parts to separate thoughts from content
@@ -109,11 +254,13 @@ export class GeminiHandler extends BaseProvider implements SingleCompletionHandl
 							if (part.thought) {
 								// This is a thinking/reasoning part
 								if (part.text) {
+									hasContent = true
 									yield { type: "reasoning", text: part.text }
 								}
 							} else {
 								// This is regular content
 								if (part.text) {
+									hasContent = true
 									yield { type: "text", text: part.text }
 								}
 							}
@@ -123,12 +270,19 @@ export class GeminiHandler extends BaseProvider implements SingleCompletionHandl
 
 				// Fallback to the original text property if no candidates structure
 				else if (chunk.text) {
+					hasContent = true
 					yield { type: "text", text: chunk.text }
 				}
 
 				if (chunk.usageMetadata) {
 					lastUsageMetadata = chunk.usageMetadata
 				}
+			}
+
+			// Check for blank response
+			if (!hasContent) {
+				console.warn("[GeminiHandler] Received blank response from API, retrying...")
+				throw new Error("Received blank response from Gemini API")
 			}
 
 			if (pendingGroundingMetadata) {
@@ -218,13 +372,23 @@ export class GeminiHandler extends BaseProvider implements SingleCompletionHandl
 				...(tools.length > 0 ? { tools } : {}),
 			}
 
-			const result = await this.client.models.generateContent({
-				model,
-				contents: [{ role: "user", parts: [{ text: prompt }] }],
-				config: promptConfig,
-			})
+			const result = await this.retryWithBackoff(
+				() =>
+					this.client.models.generateContent({
+						model,
+						contents: [{ role: "user", parts: [{ text: prompt }] }],
+						config: promptConfig,
+					}),
+				"generateContent",
+			)
 
 			let text = result.text ?? ""
+
+			// Check for blank response
+			if (!text || text.trim().length === 0) {
+				console.warn("[GeminiHandler] Received blank response from completePrompt")
+				throw new Error("Received blank response from Gemini API")
+			}
 
 			const candidate = result.candidates?.[0]
 			if (candidate?.groundingMetadata) {
