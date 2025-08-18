@@ -32,8 +32,9 @@ export async function getStorageBasePath(defaultPath: string): Promise<string> {
 		// Ensure custom path exists
 		await fs.mkdir(customStoragePath, { recursive: true })
 
-		// Test if path is writable
-		const testFile = path.join(customStoragePath, ".write_test")
+		// Test if path is writable (use unique filename to avoid race conditions)
+		const uniqueSuffix = `${Date.now()}-${Math.random().toString(36).slice(2, 11)}`
+		const testFile = path.join(customStoragePath, `.write_test_${uniqueSuffix}`)
 		await fs.writeFile(testFile, "test")
 		await fs.rm(testFile)
 
