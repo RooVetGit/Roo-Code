@@ -46,7 +46,6 @@ import { CommandExecutionError } from "./CommandExecutionError"
 import { AutoApprovedRequestLimitWarning } from "./AutoApprovedRequestLimitWarning"
 import { CondenseContextErrorRow, CondensingContextRow, ContextCondenseRow } from "./ContextCondenseRow"
 import CodebaseSearchResultsDisplay from "./CodebaseSearchResultsDisplay"
-import { FileNotFoundError } from "./FileNotFoundError"
 
 interface ChatRowProps {
 	message: ClineMessage
@@ -1059,11 +1058,6 @@ export const ChatRowContent = ({
 							<Markdown markdown={message.text} partial={message.partial} />
 						</div>
 					)
-				case "file_not_found_error":
-					const errorData = safeJsonParse<{ filePath?: string; filePaths?: string[]; error: string }>(
-						message.text || "{}",
-					)
-					return <FileNotFoundError filePaths={errorData?.filePaths || errorData?.filePath || ""} />
 				case "user_feedback":
 					return (
 						<div className="bg-vscode-editor-background border rounded-xs p-1 overflow-hidden whitespace-pre-wrap">

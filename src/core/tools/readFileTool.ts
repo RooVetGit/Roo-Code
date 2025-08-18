@@ -648,7 +648,7 @@ export async function readFileTool(
 		// Emit a unified file not found error message if any files were not found
 		if (notFoundFiles.length > 0) {
 			await cline.say(
-				"file_not_found_error",
+				"error",
 				JSON.stringify({
 					filePaths: notFoundFiles,
 					error: "The requested files do not exist in the current workspace.",
@@ -769,7 +769,7 @@ export async function readFileTool(
 		// Emit a unified file not found error message if any files were not found
 		if (notFoundFiles.length > 0) {
 			await cline.say(
-				"file_not_found_error",
+				"error",
 				JSON.stringify({
 					filePaths: notFoundFiles,
 					error: "The requested files do not exist in the current workspace.",
