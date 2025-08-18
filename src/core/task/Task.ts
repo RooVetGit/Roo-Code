@@ -1388,6 +1388,7 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 
 	public dispose(): void {
 		// Disposing task
+		console.log(`[Task] disposing task ${this.taskId}.${this.instanceId}`)
 
 		// Remove all event listeners to prevent memory leaks
 		try {
