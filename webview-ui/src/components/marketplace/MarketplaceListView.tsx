@@ -28,16 +28,8 @@ export function MarketplaceListView({ stateManager, allTags, filteredTags, filte
 	const allItems = state.displayItems || []
 	const organizationMcps = state.displayOrganizationMcps || []
 
-	// Update state manager with installed metadata when it changes
-	React.useEffect(() => {
-		if (marketplaceInstalledMetadata && state.installedMetadata !== marketplaceInstalledMetadata) {
-			// Update the state manager's installed metadata
-			manager.transition({
-				type: "UPDATE_FILTERS",
-				payload: { filters: state.filters },
-			})
-		}
-	}, [marketplaceInstalledMetadata, state.installedMetadata, state.filters, manager])
+	// NOTE: installed metadata is already synchronized into the state manager via handleMessage("state"/"marketplaceData")
+	// in MarketplaceViewStateManager; avoid dispatching UPDATE_FILTERS here to prevent render loops.
 
 	// Filter items by type if specified
 	const items = filterByType ? allItems.filter((item) => item.type === filterByType) : allItems
