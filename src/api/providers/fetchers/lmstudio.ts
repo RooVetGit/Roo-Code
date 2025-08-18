@@ -81,13 +81,37 @@ export async function getLMStudioModels(baseUrl = "http://localhost:1234"): Prom
 		} catch (error) {
 			console.warn("Failed to list downloaded models, falling back to loaded models only")
 		}
-		// We want to list loaded models *anyway* since they provide valuable extra info (context size)
+
+		// Get loaded models for their runtime info (context size)
 		const loadedModels = (await client.llm.listLoaded().then((models: LLM[]) => {
 			return Promise.all(models.map((m) => m.getModelInfo()))
 		})) as Array<LLMInstanceInfo>
 
+		// Deduplicate loaded models - only add if no existing key contains the model's identifier (case-insensitive)
 		for (const lmstudioModel of loadedModels) {
-			models[lmstudioModel.modelKey] = parseLMStudioModel(lmstudioModel)
+			const modelIdentifier = lmstudioModel.modelKey.toLowerCase()
+
+			// Check if any existing model key contains this loaded model's identifier
+			const isDuplicate = Object.keys(models).some(
+				(existingKey) =>
+					existingKey.toLowerCase().includes(modelIdentifier) ||
+					modelIdentifier.includes(existingKey.toLowerCase()),
+			)
+
+			if (!isDuplicate) {
+				// Use modelKey for loaded models to maintain consistency
+				models[lmstudioModel.modelKey] = parseLMStudioModel(lmstudioModel)
+			} else {
+				// If it's a duplicate, update the existing entry with loaded model info for better context data
+				const existingKey = Object.keys(models).find(
+					(key) => key.toLowerCase().includes(modelIdentifier) || modelIdentifier.includes(key.toLowerCase()),
+				)
+				if (existingKey) {
+					// Update with loaded model data which has more accurate runtime info
+					models[existingKey] = parseLMStudioModel(lmstudioModel)
+				}
+			}
+
 			modelsWithLoadedDetails.add(lmstudioModel.modelKey)
 		}
 	} catch (error) {

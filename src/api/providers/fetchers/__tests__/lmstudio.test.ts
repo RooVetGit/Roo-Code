@@ -143,6 +143,50 @@ describe("LMStudio Fetcher", () => {
 			expect(result).toEqual({ [mockRawModel.modelKey]: expectedParsedModel })
 		})
 
+		it("should deduplicate models when both downloaded and loaded", async () => {
+			const mockDownloadedModel: LLMInfo = {
+				type: "llm" as const,
+				modelKey: "mistralai/devstral-small-2505",
+				format: "safetensors",
+				displayName: "Devstral Small 2505",
+				path: "mistralai/devstral-small-2505",
+				sizeBytes: 13277565112,
+				architecture: "mistral",
+				vision: false,
+				trainedForToolUse: false,
+				maxContextLength: 131072,
+			}
+
+			const mockLoadedModel: LLMInstanceInfo = {
+				type: "llm",
+				modelKey: "devstral-small-2505", // Different key but should match case-insensitively
+				format: "safetensors",
+				displayName: "Devstral Small 2505",
+				path: "mistralai/devstral-small-2505",
+				sizeBytes: 13277565112,
+				architecture: "mistral",
+				identifier: "mistralai/devstral-small-2505",
+				instanceReference: "RAP5qbeHVjJgBiGFQ6STCuTJ",
+				vision: false,
+				trainedForToolUse: false,
+				maxContextLength: 131072,
+				contextLength: 7161, // Runtime context info
+			}
+
+			mockedAxios.get.mockResolvedValueOnce({ data: { status: "ok" } })
+			mockListDownloadedModels.mockResolvedValueOnce([mockDownloadedModel])
+			mockListLoaded.mockResolvedValueOnce([{ getModelInfo: vi.fn().mockResolvedValueOnce(mockLoadedModel) }])
+
+			const result = await getLMStudioModels(baseUrl)
+
+			// Should only have one model, with the loaded model's runtime info taking precedence
+			expect(Object.keys(result)).toHaveLength(1)
+
+			// The downloaded model's path should be the key, but with loaded model's data
+			const expectedParsedModel = parseLMStudioModel(mockLoadedModel)
+			expect(result[mockDownloadedModel.path]).toEqual(expectedParsedModel)
+		})
+
 		it("should use default baseUrl if an empty string is provided", async () => {
 			const defaultBaseUrl = "http://localhost:1234"
 			const defaultLmsUrl = "ws://localhost:1234"
