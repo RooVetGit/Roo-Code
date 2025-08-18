@@ -1667,3 +1667,89 @@ describe("read_file tool with image support", () => {
 		})
 	})
 })
+
+// Additional coverage for unified FILE_NOT_FOUND handling
+describe("read_file tool - FILE_NOT_FOUND unified error", () => {
+	it("emits structured FILE_NOT_FOUND and suppresses per-file XML for ENOENT", async () => {
+		// Reuse shared mocks/utilities from this spec file
+		const mockedCountFileLines = vi.mocked(countFileLines)
+		const mockedIsBinaryFile = vi.mocked(isBinaryFile)
+		const mockedPathResolve = vi.mocked(path.resolve)
+		const mockedExtractTextFromFile = vi.mocked(extractTextFromFile)
+
+		// Create a fresh cline
+		const { mockCline, mockProvider } = (global as any).createMockCline
+			? (global as any).createMockCline()
+			: (function () {
+					// fallback: if hoisted reference isn't globally accessible for some reason
+					const provider = { getState: vi.fn(), deref: vi.fn().mockReturnThis() }
+					const cline: any = {
+						cwd: "/",
+						task: "Test",
+						providerRef: provider,
+						rooIgnoreController: { validateAccess: vi.fn().mockReturnValue(true) },
+						say: vi.fn().mockResolvedValue(undefined),
+						ask: vi.fn().mockResolvedValue({ response: "yesButtonClicked" }),
+						presentAssistantMessage: vi.fn(),
+						handleError: vi.fn().mockResolvedValue(undefined),
+						pushToolResult: vi.fn(),
+						removeClosingTag: vi.fn((tag: string, content?: string) => content ?? ""),
+						fileContextTracker: { trackFileContext: vi.fn().mockResolvedValue(undefined) },
+						recordToolUsage: vi.fn().mockReturnValue(undefined),
+						recordToolError: vi.fn().mockReturnValue(undefined),
+						api: { getModel: vi.fn().mockReturnValue({ info: { supportsImages: false } }) },
+					}
+					return { mockCline: cline, mockProvider: provider }
+				})()
+
+		// Configure state to allow full read path
+		mockProvider.getState.mockResolvedValue({ maxReadFileLine: -1, maxImageFileSize: 20, maxTotalImageSize: 20 })
+
+		// Basic path/line setup
+		const relPath = "test/file.txt"
+		const absPath = "/test/file.txt"
+		mockedPathResolve.mockReturnValue(absPath)
+		mockedIsBinaryFile.mockResolvedValue(false)
+		mockedCountFileLines.mockResolvedValue(5)
+
+		// Cause ENOENT on actual read
+		const enoent = new Error("ENOENT: no such file or directory") as any
+		enoent.code = "ENOENT"
+		mockedExtractTextFromFile.mockRejectedValueOnce(enoent)
+
+		// Build tool_use call (single-file via args)
+		const argsContent = `<file><path>${relPath}</path></file>`
+		let pushed: ToolResponse | undefined
+		await readFileTool(
+			mockCline,
+			{
+				type: "tool_use",
+				name: "read_file",
+				params: { args: argsContent },
+				partial: false,
+			} as any,
+			mockCline.ask,
+			vi.fn(), // handleError (should not be called for ENOENT in unified mode)
+			(result: ToolResponse) => {
+				pushed = result
+			},
+			(_: ToolParamName, content?: string) => content ?? "",
+		)
+
+		// Assert unified error was emitted with structured payload
+		const sayCalls = mockCline.say.mock.calls
+		const errorCall = sayCalls.find((c: any[]) => c[0] === "error")
+		expect(errorCall).toBeDefined()
+		const payload = JSON.parse(errorCall?.[1] || "{}")
+		expect(payload.code).toBe("FILE_NOT_FOUND")
+		expect(Array.isArray(payload.filePaths)).toBe(true)
+		expect(payload.filePaths).toContain(relPath)
+
+		// Assert per-file XML error was suppressed for ENOENT (no <error> block for this file)
+		expect(typeof pushed).toBe("string")
+		const xml = String(pushed)
+		expect(xml).toContain("<files>")
+		// no per-file error tags for the not-found case
+		expect(xml).not.toMatch(/<error>.*File not found.*<\/error>/i)
+	})
+})
