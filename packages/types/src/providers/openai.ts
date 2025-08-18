@@ -28,7 +28,7 @@ export const openAiNativeModels = {
 		inputPrice: 1.25,
 		outputPrice: 10.0,
 		cacheReadsPrice: 0.13,
-		description: "GPT-5: The best model for coding and agentic tasks across domains",
+		description: "GPT-5 (2025-08-07): Latest snapshot of GPT-5 model",
 		// supportsVerbosity is a new capability; ensure ModelInfo includes it
 		supportsVerbosity: true,
 		// GPT-5 supports Responses API reasoning summaries
@@ -64,7 +64,7 @@ export const openAiNativeModels = {
 		inputPrice: 0.25,
 		outputPrice: 2.0,
 		cacheReadsPrice: 0.03,
-		description: "GPT-5 Mini: A faster, more cost-efficient version of GPT-5 for well-defined tasks",
+		description: "GPT-5 Mini (2025-08-07): Latest snapshot of GPT-5 Mini model",
 		supportsVerbosity: true,
 		// GPT-5 supports Responses API reasoning summaries
 		supportsReasoningSummary: true,
@@ -98,7 +98,7 @@ export const openAiNativeModels = {
 		inputPrice: 0.05,
 		outputPrice: 0.4,
 		cacheReadsPrice: 0.01,
-		description: "GPT-5 Nano: Fastest, most cost-efficient version of GPT-5",
+		description: "GPT-5 Nano (2025-08-07): Latest snapshot of GPT-5 Nano model",
 		supportsVerbosity: true,
 		// GPT-5 supports Responses API reasoning summaries
 		supportsReasoningSummary: true,

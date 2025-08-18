@@ -132,6 +132,9 @@ export class OpenAiNativeHandler extends BaseProvider implements SingleCompletio
 
 			// Defensive guard: if prev-id is present, we should never send more than one input item.
 			if (Array.isArray(newMessages) && newMessages.length !== 1) {
+				console.warn(
+					`Warning: When using previous_response_id, only one input item should be sent. Got ${newMessages.length} items.`,
+				)
 			}
 
 			requestBody.input =
