@@ -27,7 +27,7 @@ export interface ViewState {
 		type: string
 		search: string
 		tags: string[]
-		installed: boolean // New filter to show only installed items
+		installed: "all" | "installed" | "not_installed" // Filter by installation status
 	}
 	installedMetadata?: MarketplaceInstalledMetadata // Store installed metadata for filtering
 }
@@ -68,7 +68,7 @@ export class MarketplaceViewStateManager {
 				type: "",
 				search: "",
 				tags: [],
-				installed: false,
+				installed: "all",
 			},
 		}
 	}
@@ -299,7 +299,7 @@ export class MarketplaceViewStateManager {
 			this.state.filters.type ||
 			this.state.filters.search ||
 			this.state.filters.tags.length > 0 ||
-			this.state.filters.installed
+			this.state.filters.installed !== "all"
 		)
 	}
 
@@ -328,10 +328,15 @@ export class MarketplaceViewStateManager {
 			}
 
 			// Check installed status if filter is active
-			if (installed && installedMetadata) {
+			if (installed !== "all" && installedMetadata) {
 				const isInstalledGlobally = !!installedMetadata?.global?.[item.id]
 				const isInstalledInProject = !!installedMetadata?.project?.[item.id]
-				if (!isInstalledGlobally && !isInstalledInProject) {
+				const isInstalled = isInstalledGlobally || isInstalledInProject
+
+				if (installed === "installed" && !isInstalled) {
+					return false
+				}
+				if (installed === "not_installed" && isInstalled) {
 					return false
 				}
 			}

@@ -64,7 +64,7 @@ describe("MarketplaceViewStateManager", () => {
 				type: "",
 				search: "",
 				tags: [],
-				installed: false,
+				installed: "all",
 			})
 		})
 

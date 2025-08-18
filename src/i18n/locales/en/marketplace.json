@@ -39,8 +39,10 @@
 			"selected": "Showing items with any of the selected tags"
 		},
 		"installed": {
-			"label": "Show installed only",
-			"description": "Showing only installed items"
+			"label": "Filter by status",
+			"all": "All Items",
+			"installed": "Installed Only",
+			"notInstalled": "Not Installed"
 		},
 		"title": "Marketplace"
 	},

@@ -27,7 +27,7 @@ const mockState: ViewState = {
 		type: "",
 		search: "",
 		tags: [],
-		installed: false,
+		installed: "all",
 	},
 }
 

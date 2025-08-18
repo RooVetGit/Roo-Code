@@ -14,8 +14,10 @@
 			"placeholderMode": "Search Modes..."
 		},
 		"installed": {
-			"label": "Show installed only",
-			"description": "Filtering by installed items"
+			"label": "Filter by status",
+			"all": "All Items",
+			"installed": "Installed Only",
+			"notInstalled": "Not Installed"
 		},
 		"type": {
 			"label": "Filter by type:",

@@ -1,7 +1,7 @@
 import * as React from "react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { Checkbox } from "@/components/ui/checkbox"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command"
 import { X, ChevronsUpDown } from "lucide-react"
@@ -48,7 +48,7 @@ export function MarketplaceListView({ stateManager, allTags, filteredTags, filte
 	return (
 		<>
 			<div className="mb-4">
-				<div className="relative">
+				<div className="flex gap-2">
 					<Input
 						type="text"
 						placeholder={
@@ -65,30 +65,27 @@ export function MarketplaceListView({ stateManager, allTags, filteredTags, filte
 								payload: { filters: { search: e.target.value } },
 							})
 						}
+						className="flex-1"
 					/>
-				</div>
-				{/* Installed filter toggle */}
-				<div className="mt-2 flex items-center gap-2">
-					<div className="flex items-center gap-2">
-						<Checkbox
-							id="installed-filter"
-							checked={state.filters.installed}
-							onCheckedChange={(checked) =>
-								manager.transition({
-									type: "UPDATE_FILTERS",
-									payload: { filters: { installed: checked === true } },
-								})
-							}
-						/>
-						<label htmlFor="installed-filter" className="text-sm cursor-pointer">
-							{t("marketplace:filters.installed.label")}
-						</label>
-					</div>
-					{state.filters.installed && (
-						<span className="text-xs text-vscode-descriptionForeground">
-							({t("marketplace:filters.installed.description")})
-						</span>
-					)}
+					<Select
+						value={state.filters.installed}
+						onValueChange={(value: "all" | "installed" | "not_installed") =>
+							manager.transition({
+								type: "UPDATE_FILTERS",
+								payload: { filters: { installed: value } },
+							})
+						}>
+						<SelectTrigger className="w-[180px]">
+							<SelectValue />
+						</SelectTrigger>
+						<SelectContent>
+							<SelectItem value="all">{t("marketplace:filters.installed.all")}</SelectItem>
+							<SelectItem value="installed">{t("marketplace:filters.installed.installed")}</SelectItem>
+							<SelectItem value="not_installed">
+								{t("marketplace:filters.installed.notInstalled")}
+							</SelectItem>
+						</SelectContent>
+					</Select>
 				</div>
 				{allTags.length > 0 && (
 					<div className="mt-2">
@@ -222,7 +219,7 @@ export function MarketplaceListView({ stateManager, allTags, filteredTags, filte
 						onClick={() =>
 							manager.transition({
 								type: "UPDATE_FILTERS",
-								payload: { filters: { search: "", type: "", tags: [], installed: false } },
+								payload: { filters: { search: "", type: "", tags: [], installed: "all" } },
 							})
 						}
 						className="mt-4 bg-vscode-button-secondaryBackground text-vscode-button-secondaryForeground hover:bg-vscode-button-secondaryHoverBackground transition-colors">
