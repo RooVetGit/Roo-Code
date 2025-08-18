@@ -39,8 +39,10 @@
 			"selected": "Hiển thị các mục có bất kỳ thẻ nào được chọn"
 		},
 		"installed": {
-			"label": "Chỉ hiển thị đã cài đặt",
-			"description": "Chỉ hiển thị các mục đã cài đặt"
+			"label": "Lọc theo trạng thái",
+			"all": "Tất cả các mục",
+			"installed": "Chỉ đã cài đặt",
+			"notInstalled": "Chưa cài đặt"
 		},
 		"title": "Marketplace"
 	},

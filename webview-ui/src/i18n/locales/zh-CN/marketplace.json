@@ -14,8 +14,10 @@
 			"placeholderMode": "搜索模式..."
 		},
 		"installed": {
-			"label": "仅显示已安装",
-			"description": "按已安装项目筛选"
+			"label": "按状态筛选",
+			"all": "所有项目",
+			"installed": "仅已安装",
+			"notInstalled": "未安装"
 		},
 		"type": {
 			"label": "按类型筛选：",

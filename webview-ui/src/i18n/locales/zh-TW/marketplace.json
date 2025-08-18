@@ -14,8 +14,10 @@
 			"placeholderMode": "搜尋模式..."
 		},
 		"installed": {
-			"label": "僅顯示已安裝",
-			"description": "按已安裝項目篩選"
+			"label": "按狀態篩選",
+			"all": "所有項目",
+			"installed": "僅已安裝",
+			"notInstalled": "未安裝"
 		},
 		"type": {
 			"label": "依類型篩選：",

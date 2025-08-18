@@ -14,8 +14,10 @@
 			"placeholderMode": "Cercar modes..."
 		},
 		"installed": {
-			"label": "Mostrar només instal·lats",
-			"description": "Filtrant per elements instal·lats"
+			"label": "Filtra per estat",
+			"all": "Tots els articles",
+			"installed": "Només instal·lats",
+			"notInstalled": "No instal·lats"
 		},
 		"type": {
 			"label": "Filtrar per tipus:",

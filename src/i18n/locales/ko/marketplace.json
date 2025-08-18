@@ -39,8 +39,10 @@
 			"selected": "선택된 태그 중 하나를 가진 항목 표시"
 		},
 		"installed": {
-			"label": "설치된 항목만 표시",
-			"description": "설치된 항목만 표시 중"
+			"label": "상태별로 필터링",
+			"all": "모든 항목",
+			"installed": "설치된 항목만",
+			"notInstalled": "설치되지 않음"
 		},
 		"title": "마켓플레이스"
 	},

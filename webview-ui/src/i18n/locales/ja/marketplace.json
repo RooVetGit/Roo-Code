@@ -14,8 +14,10 @@
 			"placeholderMode": "モードを検索..."
 		},
 		"installed": {
-			"label": "インストール済みのみ表示",
-			"description": "インストール済みアイテムでフィルタリング"
+			"label": "ステータスで絞り込む",
+			"all": "すべてのアイテム",
+			"installed": "インストール済みのみ",
+			"notInstalled": "未インストール"
 		},
 		"type": {
 			"label": "タイプでフィルター:",

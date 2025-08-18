@@ -39,8 +39,10 @@
 			"selected": "Menampilkan item dengan salah satu tag yang dipilih"
 		},
 		"installed": {
-			"label": "Tampilkan hanya yang terinstal",
-			"description": "Menampilkan hanya item yang terinstal"
+			"label": "Filter berdasarkan status",
+			"all": "Semua Item",
+			"installed": "Hanya yang Terpasang",
+			"notInstalled": "Tidak Terpasang"
 		},
 		"title": "Marketplace"
 	},

@@ -14,8 +14,10 @@
 			"placeholderMode": "Modları ara..."
 		},
 		"installed": {
-			"label": "Sadece yüklüleri göster",
-			"description": "Yüklü öğelere göre filtreleme"
+			"label": "Duruma göre filtrele",
+			"all": "Tüm Öğeler",
+			"installed": "Yalnızca Yüklü Olanlar",
+			"notInstalled": "Yüklü Değil"
 		},
 		"type": {
 			"label": "Türe göre filtrele:",

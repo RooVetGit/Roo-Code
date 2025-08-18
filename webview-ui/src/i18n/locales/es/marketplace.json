@@ -14,8 +14,10 @@
 			"placeholderMode": "Buscar modos..."
 		},
 		"installed": {
-			"label": "Mostrar solo instalados",
-			"description": "Filtrando por elementos instalados"
+			"label": "Filtrar por estado",
+			"all": "Todos los artículos",
+			"installed": "Solo instalados",
+			"notInstalled": "No instalados"
 		},
 		"type": {
 			"label": "Filtrar por tipo:",

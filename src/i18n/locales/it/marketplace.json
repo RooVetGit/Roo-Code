@@ -39,8 +39,10 @@
 			"selected": "Mostrando elementi con uno qualsiasi dei tag selezionati"
 		},
 		"installed": {
-			"label": "Mostra solo installati",
-			"description": "Mostrando solo elementi installati"
+			"label": "Filtra per stato",
+			"all": "Tutti gli articoli",
+			"installed": "Solo installati",
+			"notInstalled": "Non installati"
 		},
 		"title": "Marketplace"
 	},

@@ -39,8 +39,10 @@
 			"selected": "Seçilen etiketlerden herhangi birine sahip öğeleri göster"
 		},
 		"installed": {
-			"label": "Sadece yüklüleri göster",
-			"description": "Sadece yüklü öğeler gösteriliyor"
+			"label": "Duruma göre filtrele",
+			"all": "Tüm Öğeler",
+			"installed": "Yalnızca Yüklü Olanlar",
+			"notInstalled": "Yüklü Değil"
 		},
 		"title": "Marketplace"
 	},

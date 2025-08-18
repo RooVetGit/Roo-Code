@@ -39,8 +39,10 @@
 			"selected": "Items tonen met een van de geselecteerde tags"
 		},
 		"installed": {
-			"label": "Alleen geïnstalleerde tonen",
-			"description": "Alleen geïnstalleerde items tonen"
+			"label": "Filteren op status",
+			"all": "Alle items",
+			"installed": "Alleen geïnstalleerd",
+			"notInstalled": "Niet geïnstalleerd"
 		},
 		"title": "Marketplace"
 	},

@@ -39,8 +39,10 @@
 			"selected": "Mostrant elements amb qualsevol de les etiquetes seleccionades"
 		},
 		"installed": {
-			"label": "Mostrar només instal·lats",
-			"description": "Mostrant només elements instal·lats"
+			"label": "Filtra per estat",
+			"all": "Tots els articles",
+			"installed": "Només instal·lats",
+			"notInstalled": "No instal·lats"
 		},
 		"title": "Marketplace"
 	},

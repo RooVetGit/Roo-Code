@@ -14,8 +14,10 @@
 			"placeholderMode": "Modi zoeken..."
 		},
 		"installed": {
-			"label": "Alleen geïnstalleerde tonen",
-			"description": "Filteren op geïnstalleerde items"
+			"label": "Filteren op status",
+			"all": "Alle items",
+			"installed": "Alleen geïnstalleerd",
+			"notInstalled": "Niet geïnstalleerd"
 		},
 		"type": {
 			"label": "Filteren op type:",

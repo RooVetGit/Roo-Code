@@ -14,8 +14,10 @@
 			"placeholderMode": "Cari Mode..."
 		},
 		"installed": {
-			"label": "Tampilkan hanya yang terinstal",
-			"description": "Memfilter berdasarkan item yang terinstal"
+			"label": "Filter berdasarkan status",
+			"all": "Semua Item",
+			"installed": "Hanya yang Terpasang",
+			"notInstalled": "Tidak Terpasang"
 		},
 		"type": {
 			"label": "Filter berdasarkan tipe:",

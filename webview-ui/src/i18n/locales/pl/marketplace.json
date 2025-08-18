@@ -14,8 +14,10 @@
 			"placeholderMode": "Szukaj trybów..."
 		},
 		"installed": {
-			"label": "Pokaż tylko zainstalowane",
-			"description": "Filtrowanie według zainstalowanych elementów"
+			"label": "Filtruj według statusu",
+			"all": "Wszystkie elementy",
+			"installed": "Tylko zainstalowane",
+			"notInstalled": "Niezainstalowane"
 		},
 		"type": {
 			"label": "Filtruj według typu:",
