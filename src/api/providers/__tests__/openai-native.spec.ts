@@ -928,14 +928,10 @@ describe("OpenAiNativeHandler", () => {
 
 			// Test with metadata that has previousResponseId
 			// @ts-expect-error - private method
-			const { formattedInput, previousResponseId } = gpt5Handler.prepareResponsesApiInput(
-				systemPrompt,
-				messages,
-				{
-					taskId: "task1",
-					previousResponseId: "resp_123",
-				},
-			)
+			const { formattedInput, previousResponseId } = gpt5Handler.prepareStructuredInput(systemPrompt, messages, {
+				taskId: "task1",
+				previousResponseId: "resp_123",
+			})
 
 			expect(previousResponseId).toBe("resp_123")
 			expect(formattedInput).toEqual([

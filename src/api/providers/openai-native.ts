@@ -31,6 +31,9 @@ export type OpenAiNativeModel = ReturnType<OpenAiNativeHandler["getModel"]>
 // Constants for model identification
 const GPT5_MODEL_PREFIX = "gpt-5"
 
+// Debug flag for logging (can be controlled via environment variable or config)
+const DEBUG_RESPONSES_API = process.env.DEBUG_RESPONSES_API === "true"
+
 export class OpenAiNativeHandler extends BaseProvider implements SingleCompletionHandler {
 	protected options: ApiHandlerOptions
 	private client: OpenAI
@@ -158,7 +161,7 @@ export class OpenAiNativeHandler extends BaseProvider implements SingleCompletio
 		}
 
 		// Format input and capture continuity id
-		const { formattedInput, previousResponseId } = this.prepareResponsesApiInput(systemPrompt, messages, metadata)
+		const { formattedInput, previousResponseId } = this.prepareStructuredInput(systemPrompt, messages, metadata)
 		const requestPreviousResponseId = effectivePreviousResponseId || previousResponseId
 
 		// Create a new promise for this request's response ID
@@ -265,9 +268,11 @@ export class OpenAiNativeHandler extends BaseProvider implements SingleCompletio
 
 			if (is400Error && requestBody.previous_response_id && isPreviousResponseError) {
 				// Log the error and retry without the previous_response_id
-				console.warn(
-					`[Responses API] Previous response ID not found (${requestBody.previous_response_id}), retrying without it`,
-				)
+				if (DEBUG_RESPONSES_API) {
+					console.debug(
+						`[Responses API] Previous response ID not found (${requestBody.previous_response_id}), retrying without it`,
+					)
+				}
 
 				// Remove the problematic previous_response_id and retry
 				const retryRequestBody = { ...requestBody }
@@ -437,9 +442,11 @@ export class OpenAiNativeHandler extends BaseProvider implements SingleCompletio
 
 				if (response.status === 400 && requestBody.previous_response_id && isPreviousResponseError) {
 					// Log the error and retry without the previous_response_id
-					console.warn(
-						`[Responses API] Previous response ID not found (${requestBody.previous_response_id}), retrying without it`,
-					)
+					if (DEBUG_RESPONSES_API) {
+						console.debug(
+							`[Responses API] Previous response ID not found (${requestBody.previous_response_id}), retrying without it`,
+						)
+					}
 
 					// Remove the problematic previous_response_id and retry
 					const retryRequestBody = { ...requestBody }
@@ -541,7 +548,7 @@ export class OpenAiNativeHandler extends BaseProvider implements SingleCompletio
 	 *
 	 * @returns An object containing the formatted input and the previous response ID (if used).
 	 */
-	private prepareResponsesApiInput(
+	private prepareStructuredInput(
 		systemPrompt: string,
 		messages: Anthropic.Messages.MessageParam[],
 		metadata?: ApiHandlerCreateMessageMetadata,

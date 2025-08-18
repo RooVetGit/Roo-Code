@@ -855,17 +855,17 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 		const systemPrompt = await this.getSystemPrompt()
 
 		// Get condensing configuration
-		// Using type assertion to handle the case where Phase 1 hasn't been implemented yet
 		const state = await this.providerRef.deref()?.getState()
-		const customCondensingPrompt = state ? (state as any).customCondensingPrompt : undefined
-		const condensingApiConfigId = state ? (state as any).condensingApiConfigId : undefined
-		const listApiConfigMeta = state ? (state as any).listApiConfigMeta : undefined
+		// These properties may not exist in the state type yet, but are used for condensing configuration
+		const customCondensingPrompt = state?.customCondensingPrompt
+		const condensingApiConfigId = state?.condensingApiConfigId
+		const listApiConfigMeta = state?.listApiConfigMeta
 
 		// Determine API handler to use
 		let condensingApiHandler: ApiHandler | undefined
 		if (condensingApiConfigId && listApiConfigMeta && Array.isArray(listApiConfigMeta)) {
-			// Using type assertion for the id property to avoid implicit any
-			const matchingConfig = listApiConfigMeta.find((config: any) => config.id === condensingApiConfigId)
+			// Find matching config by ID
+			const matchingConfig = listApiConfigMeta.find((config) => config.id === condensingApiConfigId)
 			if (matchingConfig) {
 				const profile = await this.providerRef.deref()?.providerSettingsManager.getProfile({
 					id: condensingApiConfigId,
@@ -988,7 +988,12 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 					lastMessage.partial = false
 					lastMessage.progressStatus = progressStatus
 					if (options.metadata) {
-						;(lastMessage as any).metadata = options.metadata
+						// Add metadata to the message
+						const messageWithMetadata = lastMessage as ClineMessage & ClineMessageWithMetadata
+						if (!messageWithMetadata.metadata) {
+							messageWithMetadata.metadata = {}
+						}
+						Object.assign(messageWithMetadata.metadata, options.metadata)
 					}
 
 					// Instead of streaming partialMessage events, we do a save
@@ -1137,13 +1142,14 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 
 		// Check for any stored GPT-5 response IDs in the message history
 		const gpt5Messages = modifiedClineMessages.filter(
-			(m) =>
+			(m): m is ClineMessage & ClineMessageWithMetadata =>
 				m.type === "say" &&
 				m.say === "text" &&
-				(m as ClineMessageWithMetadata).metadata?.gpt5?.previous_response_id,
+				!!(m as ClineMessageWithMetadata).metadata?.gpt5?.previous_response_id,
 		)
 		if (gpt5Messages.length > 0) {
-			const lastGpt5Message = gpt5Messages[gpt5Messages.length - 1] as ClineMessage & ClineMessageWithMetadata
+			const lastGpt5Message = gpt5Messages[gpt5Messages.length - 1]
+			// The lastGpt5Message contains the previous_response_id that can be used for continuity
 		}
 
 		// Remove any resume messages that may have been added before
@@ -1400,7 +1406,7 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 		if (this.bridgeService) {
 			this.bridgeService
 				.unsubscribeFromTask(this.taskId)
-				.catch((error) => console.error("Error unsubscribing from task bridge:", error))
+				.catch((error: unknown) => console.error("Error unsubscribing from task bridge:", error))
 			this.bridgeService = null
 		}
 
@@ -2266,8 +2272,8 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 		let condensingApiHandler: ApiHandler | undefined
 
 		if (condensingApiConfigId && listApiConfigMeta && Array.isArray(listApiConfigMeta)) {
-			// Using type assertion for the id property to avoid implicit any.
-			const matchingConfig = listApiConfigMeta.find((config: any) => config.id === condensingApiConfigId)
+			// Find matching config by ID
+			const matchingConfig = listApiConfigMeta.find((config) => config.id === condensingApiConfigId)
 
 			if (matchingConfig) {
 				const profile = await this.providerRef.deref()?.providerSettingsManager.getProfile({
@@ -2391,7 +2397,7 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 				// Find the last assistant message that has a previous_response_id stored
 				const idx = findLastIndex(
 					this.clineMessages,
-					(m) =>
+					(m): m is ClineMessage & ClineMessageWithMetadata =>
 						m.type === "say" &&
 						m.say === "text" &&
 						!!(m as ClineMessageWithMetadata).metadata?.gpt5?.previous_response_id,
@@ -2575,7 +2581,9 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 			const modelId = this.api.getModel().id
 			if (!modelId || !modelId.startsWith("gpt-5")) return
 
-			const lastResponseId: string | undefined = (this.api as any)?.getLastResponseId?.()
+			// Check if the API handler has a getLastResponseId method (OpenAiNativeHandler specific)
+			const handler = this.api as ApiHandler & { getLastResponseId?: () => string | undefined }
+			const lastResponseId = handler.getLastResponseId?.()
 			const idx = findLastIndex(
 				this.clineMessages,
 				(m) => m.type === "say" && m.say === "text" && m.partial !== true,
