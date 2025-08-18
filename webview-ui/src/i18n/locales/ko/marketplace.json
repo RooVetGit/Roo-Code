@@ -16,7 +16,7 @@
 		"installed": {
 			"label": "상태별로 필터링",
 			"all": "모든 항목",
-			"installed": "설치된 항목만",
+			"installed": "설치됨",
 			"notInstalled": "설치되지 않음"
 		},
 		"type": {

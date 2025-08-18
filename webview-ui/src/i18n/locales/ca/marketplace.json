@@ -16,7 +16,7 @@
 		"installed": {
 			"label": "Filtra per estat",
 			"all": "Tots els articles",
-			"installed": "Només instal·lats",
+			"installed": "Instal·lats",
 			"notInstalled": "No instal·lats"
 		},
 		"type": {

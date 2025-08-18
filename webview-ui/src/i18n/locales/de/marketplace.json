@@ -16,7 +16,7 @@
 		"installed": {
 			"label": "Nach Status filtern",
 			"all": "Alle Artikel",
-			"installed": "Nur Installierte",
+			"installed": "Installierte",
 			"notInstalled": "Nicht installiert"
 		},
 		"type": {

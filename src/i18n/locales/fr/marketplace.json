@@ -41,7 +41,7 @@
 		"installed": {
 			"label": "Filtrer par statut",
 			"all": "Tous les articles",
-			"installed": "Installés uniquement",
+			"installed": "Installés",
 			"notInstalled": "Non installés"
 		},
 		"title": "Marketplace"

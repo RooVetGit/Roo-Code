@@ -41,7 +41,7 @@
 		"installed": {
 			"label": "Filter by status",
 			"all": "All Items",
-			"installed": "Installed Only",
+			"installed": "Installed",
 			"notInstalled": "Not Installed"
 		},
 		"title": "Marketplace"

@@ -16,7 +16,7 @@
 		"installed": {
 			"label": "Duruma göre filtrele",
 			"all": "Tüm Öğeler",
-			"installed": "Yalnızca Yüklü Olanlar",
+			"installed": "Yüklü",
 			"notInstalled": "Yüklü Değil"
 		},
 		"type": {

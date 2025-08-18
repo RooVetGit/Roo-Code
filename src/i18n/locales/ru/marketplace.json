@@ -41,7 +41,7 @@
 		"installed": {
 			"label": "Фильтр по статусу",
 			"all": "Все элементы",
-			"installed": "Только установленные",
+			"installed": "Установленные",
 			"notInstalled": "Не установленные"
 		},
 		"title": "Marketplace"

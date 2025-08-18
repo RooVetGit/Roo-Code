@@ -16,7 +16,7 @@
 		"installed": {
 			"label": "Filtra per stato",
 			"all": "Tutti gli articoli",
-			"installed": "Solo installati",
+			"installed": "Installati",
 			"notInstalled": "Non installati"
 		},
 		"type": {

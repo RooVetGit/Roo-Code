@@ -41,7 +41,7 @@
 		"installed": {
 			"label": "ステータスで絞り込む",
 			"all": "すべてのアイテム",
-			"installed": "インストール済みのみ",
+			"installed": "インストール済み",
 			"notInstalled": "未インストール"
 		},
 		"title": "マーケットプレイス"

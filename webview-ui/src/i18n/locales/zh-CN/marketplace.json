@@ -16,7 +16,7 @@
 		"installed": {
 			"label": "按状态筛选",
 			"all": "所有项目",
-			"installed": "仅已安装",
+			"installed": "已安装",
 			"notInstalled": "未安装"
 		},
 		"type": {

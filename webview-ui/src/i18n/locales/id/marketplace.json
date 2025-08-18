@@ -16,7 +16,7 @@
 		"installed": {
 			"label": "Filter berdasarkan status",
 			"all": "Semua Item",
-			"installed": "Hanya yang Terpasang",
+			"installed": "Terpasang",
 			"notInstalled": "Tidak Terpasang"
 		},
 		"type": {

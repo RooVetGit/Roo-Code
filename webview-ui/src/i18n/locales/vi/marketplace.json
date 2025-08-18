@@ -16,7 +16,7 @@
 		"installed": {
 			"label": "Lọc theo trạng thái",
 			"all": "Tất cả các mục",
-			"installed": "Chỉ đã cài đặt",
+			"installed": "Đã cài đặt",
 			"notInstalled": "Chưa cài đặt"
 		},
 		"type": {
