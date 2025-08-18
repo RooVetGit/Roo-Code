@@ -1,6 +1,7 @@
 import * as React from "react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
+import { Checkbox } from "@/components/ui/checkbox"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command"
 import { X, ChevronsUpDown } from "lucide-react"
@@ -68,20 +69,21 @@ export function MarketplaceListView({ stateManager, allTags, filteredTags, filte
 				</div>
 				{/* Installed filter toggle */}
 				<div className="mt-2 flex items-center gap-2">
-					<label className="flex items-center gap-2 cursor-pointer">
-						<input
-							type="checkbox"
-							className="rounded border-vscode-input-border"
+					<div className="flex items-center gap-2">
+						<Checkbox
+							id="installed-filter"
 							checked={state.filters.installed}
-							onChange={(e) =>
+							onCheckedChange={(checked) =>
 								manager.transition({
 									type: "UPDATE_FILTERS",
-									payload: { filters: { installed: e.target.checked } },
+									payload: { filters: { installed: checked === true } },
 								})
 							}
 						/>
-						<span className="text-sm">{t("marketplace:filters.installed.label")}</span>
-					</label>
+						<label htmlFor="installed-filter" className="text-sm cursor-pointer">
+							{t("marketplace:filters.installed.label")}
+						</label>
+					</div>
 					{state.filters.installed && (
 						<span className="text-xs text-vscode-descriptionForeground">
 							({t("marketplace:filters.installed.description")})

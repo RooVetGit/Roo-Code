@@ -14,6 +14,7 @@
 import { MarketplaceItem } from "@roo-code/types"
 import { vscode } from "../../utils/vscode"
 import { WebviewMessage } from "../../../../src/shared/WebviewMessage"
+import type { MarketplaceInstalledMetadata } from "../../../../src/shared/ExtensionMessage"
 
 export interface ViewState {
 	allItems: MarketplaceItem[]
@@ -28,7 +29,7 @@ export interface ViewState {
 		tags: string[]
 		installed: boolean // New filter to show only installed items
 	}
-	installedMetadata?: any // Store installed metadata for filtering
+	installedMetadata?: MarketplaceInstalledMetadata // Store installed metadata for filtering
 }
 
 type TransitionPayloads = {
@@ -302,47 +303,41 @@ export class MarketplaceViewStateManager {
 		)
 	}
 
-	public filterItems(items: MarketplaceItem[], installedMetadata?: any): MarketplaceItem[] {
+	public filterItems(items: MarketplaceItem[], installedMetadata?: MarketplaceInstalledMetadata): MarketplaceItem[] {
 		const { type, search, tags, installed } = this.state.filters
+		const searchLower = search?.toLowerCase()
 
-		return items
-			.map((item) => {
-				// Create a copy of the item to modify
-				const itemCopy = { ...item }
+		return items.filter((item) => {
+			// Check type match
+			if (type && item.type !== type) {
+				return false
+			}
 
-				// Check specific match conditions for the main item
-				const typeMatch = !type || item.type === type
-				const nameMatch = search ? item.name.toLowerCase().includes(search.toLowerCase()) : false
-				const descriptionMatch = search
-					? (item.description || "").toLowerCase().includes(search.toLowerCase())
-					: false
-				const tagMatch = tags.length > 0 ? item.tags?.some((tag) => tags.includes(tag)) : false
-
-				// Check installed status if filter is active
-				let installedMatch = true
-				if (installed && installedMetadata) {
-					const isInstalledGlobally = !!installedMetadata?.global?.[item.id]
-					const isInstalledInProject = !!installedMetadata?.project?.[item.id]
-					installedMatch = isInstalledGlobally || isInstalledInProject
+			// Check search match
+			if (searchLower) {
+				const nameMatch = item.name.toLowerCase().includes(searchLower)
+				const descriptionMatch = (item.description || "").toLowerCase().includes(searchLower)
+				if (!nameMatch && !descriptionMatch) {
+					return false
 				}
+			}
 
-				// Determine if the main item matches all filters
-				const mainItemMatches =
-					typeMatch &&
-					(!search || nameMatch || descriptionMatch) &&
-					(!tags.length || tagMatch) &&
-					installedMatch
+			// Check tag match
+			if (tags.length > 0 && !item.tags?.some((tag) => tags.includes(tag))) {
+				return false
+			}
 
-				const hasMatchingSubcomponents = false
-
-				// Return the item if it matches or has matching subcomponents
-				if (mainItemMatches || Boolean(hasMatchingSubcomponents)) {
-					return itemCopy
+			// Check installed status if filter is active
+			if (installed && installedMetadata) {
+				const isInstalledGlobally = !!installedMetadata?.global?.[item.id]
+				const isInstalledInProject = !!installedMetadata?.project?.[item.id]
+				if (!isInstalledGlobally && !isInstalledInProject) {
+					return false
 				}
+			}
 
-				return null
-			})
-			.filter((item): item is MarketplaceItem => item !== null)
+			return true
+		})
 	}
 
 	public async handleMessage(message: any): Promise<void> {
