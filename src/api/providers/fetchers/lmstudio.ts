@@ -87,13 +87,25 @@ export async function getLMStudioModels(baseUrl = "http://localhost:1234"): Prom
 			return Promise.all(models.map((m) => m.getModelInfo()))
 		})) as Array<LLMInstanceInfo>
 
-		// Deduplicate: For each loaded model, check if any existing model contains its ID (case-insensitive)
-		// If found, remove the downloaded version and add the loaded model (prefer loaded over downloaded)
+		// Deduplicate: For each loaded model, check if any downloaded model path contains the loaded model's key
+		// This handles cases like loaded "llama-3.1" matching downloaded "Meta/Llama-3.1/Something"
+		// If found, remove the downloaded version and add the loaded model (prefer loaded over downloaded for accurate runtime info)
 		for (const lmstudioModel of loadedModels) {
 			const loadedModelId = lmstudioModel.modelKey.toLowerCase()
 
-			// Find if any existing model key includes the loaded model's ID
-			const existingKey = Object.keys(models).find((key) => key.toLowerCase().includes(loadedModelId))
+			// Find if any downloaded model path contains the loaded model's key as a path segment
+			// Use word boundaries or path separators to avoid false matches like "llama" matching "codellama"
+			const existingKey = Object.keys(models).find((key) => {
+				const keyLower = key.toLowerCase()
+				// Check if the loaded model ID appears as a distinct segment in the path
+				// This matches "llama-3.1" in "Meta/Llama-3.1/Something" but not "llama" in "codellama"
+				return (
+					keyLower.includes(`/${loadedModelId}/`) ||
+					keyLower.includes(`/${loadedModelId}`) ||
+					keyLower.startsWith(`${loadedModelId}/`) ||
+					keyLower === loadedModelId
+				)
+			})
 
 			if (existingKey) {
 				// Remove the downloaded version
