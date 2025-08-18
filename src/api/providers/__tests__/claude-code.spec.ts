@@ -1,7 +1,26 @@
-import { describe, test, expect, vi, beforeEach } from "vitest"
+import { describe, test, expect, vi, beforeEach, afterEach } from "vitest"
+import * as vscode from "vscode"
 import { ClaudeCodeHandler } from "../claude-code"
 import { ApiHandlerOptions } from "../../../shared/api"
 import { ClaudeCodeMessage } from "../../../integrations/claude-code/types"
+
+// Mock vscode module
+vi.mock("vscode", () => ({
+	window: {
+		showWarningMessage: vi.fn(() => Promise.resolve(undefined)),
+	},
+	env: {
+		openExternal: vi.fn(),
+	},
+	Uri: {
+		parse: vi.fn((url: string) => ({ url })),
+	},
+}))
+
+// Mock i18n
+vi.mock("../../../i18n", () => ({
+	t: vi.fn((key: string) => key),
+}))
 
 // Mock the runClaudeCode function
 vi.mock("../../../integrations/claude-code/run", () => ({
@@ -20,14 +39,25 @@ const mockFilterMessages = vi.mocked(filterMessagesForClaudeCode)
 
 describe("ClaudeCodeHandler", () => {
 	let handler: ClaudeCodeHandler
+	let originalEnv: NodeJS.ProcessEnv
 
 	beforeEach(() => {
 		vi.clearAllMocks()
+		// Save original environment
+		originalEnv = { ...process.env }
+		// Reset the static flag
+		;(ClaudeCodeHandler as any).hasShownApiKeyWarning = false
+
 		const options: ApiHandlerOptions = {
 			claudeCodePath: "claude",
 			apiModelId: "claude-3-5-sonnet-20241022",
 		}
 		handler = new ClaudeCodeHandler(options)
+	})
+
+	afterEach(() => {
+		// Restore original environment
+		process.env = originalEnv
 	})
 
 	test("should create handler with correct model configuration", () => {
@@ -562,5 +592,123 @@ describe("ClaudeCodeHandler", () => {
 		expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining("tool_use is not supported yet"))
 
 		consoleSpy.mockRestore()
+	})
+
+	describe("ANTHROPIC_API_KEY environment variable detection", () => {
+		test("should show warning when ANTHROPIC_API_KEY is set", async () => {
+			// Set the environment variable
+			process.env.ANTHROPIC_API_KEY = "sk-ant-test-key"
+
+			// Reset the static flag to allow warning to show
+			;(ClaudeCodeHandler as any).hasShownApiKeyWarning = false
+
+			// Create a new handler instance
+			const options: ApiHandlerOptions = {
+				claudeCodePath: "claude",
+				apiModelId: "claude-3-5-sonnet-20241022",
+			}
+			new ClaudeCodeHandler(options)
+
+			// Verify warning was shown
+			expect(vscode.window.showWarningMessage).toHaveBeenCalledWith(
+				"common:warnings.anthropic_api_key_conflict",
+				"common:actions.learn_more",
+			)
+		})
+
+		test("should not show warning when ANTHROPIC_API_KEY is not set", async () => {
+			// Ensure the environment variable is not set
+			delete process.env.ANTHROPIC_API_KEY
+
+			// Reset the static flag
+			;(ClaudeCodeHandler as any).hasShownApiKeyWarning = false
+
+			// Create a new handler instance
+			const options: ApiHandlerOptions = {
+				claudeCodePath: "claude",
+				apiModelId: "claude-3-5-sonnet-20241022",
+			}
+			new ClaudeCodeHandler(options)
+
+			// Verify warning was not shown
+			expect(vscode.window.showWarningMessage).not.toHaveBeenCalled()
+		})
+
+		test("should only show warning once per session", async () => {
+			// Set the environment variable
+			process.env.ANTHROPIC_API_KEY = "sk-ant-test-key"
+
+			// Reset the static flag
+			;(ClaudeCodeHandler as any).hasShownApiKeyWarning = false
+
+			// Create first handler instance
+			const options: ApiHandlerOptions = {
+				claudeCodePath: "claude",
+				apiModelId: "claude-3-5-sonnet-20241022",
+			}
+			new ClaudeCodeHandler(options)
+
+			// Clear mock calls
+			vi.clearAllMocks()
+
+			// Create second handler instance
+			new ClaudeCodeHandler(options)
+
+			// Verify warning was not shown the second time
+			expect(vscode.window.showWarningMessage).not.toHaveBeenCalled()
+		})
+
+		test("should open external link when Learn More is clicked", async () => {
+			// Set the environment variable
+			process.env.ANTHROPIC_API_KEY = "sk-ant-test-key"
+
+			// Reset the static flag
+			;(ClaudeCodeHandler as any).hasShownApiKeyWarning = false
+
+			// Mock the showWarningMessage to simulate clicking "Learn More"
+			vi.mocked(vscode.window.showWarningMessage).mockResolvedValue("common:actions.learn_more" as any)
+
+			// Create a new handler instance
+			const options: ApiHandlerOptions = {
+				claudeCodePath: "claude",
+				apiModelId: "claude-3-5-sonnet-20241022",
+			}
+			new ClaudeCodeHandler(options)
+
+			// Wait for the promise to resolve
+			await new Promise((resolve) => setTimeout(resolve, 0))
+
+			// Verify external link was opened
+			expect(vscode.Uri.parse).toHaveBeenCalledWith(
+				"https://docs.anthropic.com/en/docs/claude-code/setup#authentication",
+			)
+			expect(vscode.env.openExternal).toHaveBeenCalledWith({
+				url: "https://docs.anthropic.com/en/docs/claude-code/setup#authentication",
+			})
+		})
+
+		test("should handle when user dismisses the warning", async () => {
+			// Set the environment variable
+			process.env.ANTHROPIC_API_KEY = "sk-ant-test-key"
+
+			// Reset the static flag
+			;(ClaudeCodeHandler as any).hasShownApiKeyWarning = false
+
+			// Mock the showWarningMessage to simulate dismissing
+			vi.mocked(vscode.window.showWarningMessage).mockResolvedValue(undefined as any)
+
+			// Create a new handler instance
+			const options: ApiHandlerOptions = {
+				claudeCodePath: "claude",
+				apiModelId: "claude-3-5-sonnet-20241022",
+			}
+			new ClaudeCodeHandler(options)
+
+			// Wait for the promise to resolve
+			await new Promise((resolve) => setTimeout(resolve, 0))
+
+			// Verify external link was not opened
+			expect(vscode.env.openExternal).not.toHaveBeenCalled()
+		})
 	})
 })

@@ -105,7 +105,8 @@
 	"warnings": {
 		"no_terminal_content": "No terminal content selected",
 		"missing_task_files": "This task's files are missing. Would you like to remove it from the task list?",
-		"auto_import_failed": "Failed to auto-import RooCode settings: {{error}}"
+		"auto_import_failed": "Failed to auto-import RooCode settings: {{error}}",
+		"anthropic_api_key_conflict": "An ANTHROPIC_API_KEY environment variable was detected. This may conflict with your Claude Max/Pro subscription login and cause authentication errors. Please unset this environment variable to ensure your subscription plan is used correctly."
 	},
 	"info": {
 		"no_changes": "No changes found.",
@@ -132,6 +133,9 @@
 	"buttons": {
 		"save": "Save",
 		"edit": "Edit",
+		"learn_more": "Learn More"
+	},
+	"actions": {
 		"learn_more": "Learn More"
 	},
 	"tasks": {

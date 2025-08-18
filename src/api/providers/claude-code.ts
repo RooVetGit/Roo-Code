@@ -1,4 +1,5 @@
 import type { Anthropic } from "@anthropic-ai/sdk"
+import * as vscode from "vscode"
 import {
 	claudeCodeDefaultModelId,
 	type ClaudeCodeModelId,
@@ -16,10 +17,35 @@ import { ApiHandlerOptions } from "../../shared/api"
 
 export class ClaudeCodeHandler extends BaseProvider implements ApiHandler {
 	private options: ApiHandlerOptions
+	private static hasShownApiKeyWarning = false
 
 	constructor(options: ApiHandlerOptions) {
 		super()
 		this.options = options
+		this.checkForAnthropicApiKey()
+	}
+
+	private async checkForAnthropicApiKey() {
+		// Only check and warn once per session to avoid annoying the user
+		if (!ClaudeCodeHandler.hasShownApiKeyWarning && process.env.ANTHROPIC_API_KEY) {
+			ClaudeCodeHandler.hasShownApiKeyWarning = true
+
+			try {
+				// Show warning notification to the user
+				const selection = await vscode.window.showWarningMessage(
+					t("common:warnings.anthropic_api_key_conflict"),
+					t("common:actions.learn_more"),
+				)
+
+				if (selection === t("common:actions.learn_more")) {
+					vscode.env.openExternal(
+						vscode.Uri.parse("https://docs.anthropic.com/en/docs/claude-code/setup#authentication"),
+					)
+				}
+			} catch {
+				// Silently ignore any errors from the warning dialog
+			}
+		}
 	}
 
 	override async *createMessage(systemPrompt: string, messages: Anthropic.Messages.MessageParam[]): ApiStream {
