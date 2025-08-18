@@ -160,6 +160,17 @@ const openAiSchema = baseProviderSettingsSchema.extend({
 	openAiStreamingEnabled: z.boolean().optional(),
 	openAiHostHeader: z.string().optional(), // Keep temporarily for backward compatibility during migration.
 	openAiHeaders: z.record(z.string(), z.string()).optional(),
+	// Azure AI Search fields
+	azureAiSearchEnabled: z.boolean().optional(),
+	azureAiSearchEndpoint: z.string().optional(),
+	azureAiSearchIndexName: z.string().optional(),
+	azureAiSearchApiKey: z.string().optional(),
+	azureAiSearchSemanticConfiguration: z.string().optional(),
+	azureAiSearchQueryType: z.string().optional(),
+	azureAiSearchEmbeddingEndpoint: z.string().optional(),
+	azureAiSearchEmbeddingApiKey: z.string().optional(),
+	azureAiSearchTopNDocuments: z.number().optional(),
+	azureAiSearchStrictness: z.number().optional(),
 })
 
 const ollamaSchema = baseProviderSettingsSchema.extend({

@@ -40,6 +40,7 @@ export const OpenAICompatible = ({
 
 	const [azureApiVersionSelected, setAzureApiVersionSelected] = useState(!!apiConfiguration?.azureApiVersion)
 	const [openAiLegacyFormatSelected, setOpenAiLegacyFormatSelected] = useState(!!apiConfiguration?.openAiLegacyFormat)
+	const [azureAiSearchEnabled, setAzureAiSearchEnabled] = useState(!!apiConfiguration?.azureAiSearchEnabled)
 
 	const [openAiModels, setOpenAiModels] = useState<Record<string, ModelInfo> | null>(null)
 
@@ -201,6 +202,138 @@ export const OpenAICompatible = ({
 						placeholder={`Default: ${azureOpenAiDefaultApiVersion}`}
 						className="w-full mt-1"
 					/>
+				)}
+			</div>
+
+			{/* Azure AI Search UI */}
+			<div>
+				<Checkbox
+					checked={azureAiSearchEnabled}
+					onChange={(checked: boolean) => {
+						setAzureAiSearchEnabled(checked)
+						setApiConfigurationField("azureAiSearchEnabled", checked)
+					}}>
+					{t("settings:providers.azureAiSearch.enable")}
+				</Checkbox>
+				<div className="text-sm text-vscode-descriptionForeground ml-6">
+					{t("settings:providers.azureAiSearch.enableDescription")}
+				</div>
+				{azureAiSearchEnabled && (
+					<div className="ml-6 mt-2 space-y-3">
+						<VSCodeTextField
+							value={apiConfiguration?.azureAiSearchEndpoint || ""}
+							onInput={handleInputChange("azureAiSearchEndpoint")}
+							placeholder={t("settings:providers.azureAiSearch.endpointPlaceholder")}
+							className="w-full">
+							<label className="block font-medium mb-1">
+								{t("settings:providers.azureAiSearch.endpoint")}
+							</label>
+						</VSCodeTextField>
+						<VSCodeTextField
+							value={apiConfiguration?.azureAiSearchIndexName || ""}
+							onInput={handleInputChange("azureAiSearchIndexName")}
+							placeholder={t("settings:providers.azureAiSearch.indexNamePlaceholder")}
+							className="w-full">
+							<label className="block font-medium mb-1">
+								{t("settings:providers.azureAiSearch.indexName")}
+							</label>
+						</VSCodeTextField>
+						<VSCodeTextField
+							value={apiConfiguration?.azureAiSearchApiKey || ""}
+							type="password"
+							onInput={handleInputChange("azureAiSearchApiKey")}
+							placeholder={t("settings:providers.azureAiSearch.apiKeyPlaceholder")}
+							className="w-full">
+							<label className="block font-medium mb-1">
+								{t("settings:providers.azureAiSearch.apiKey")}
+							</label>
+						</VSCodeTextField>
+						<VSCodeTextField
+							value={apiConfiguration?.azureAiSearchSemanticConfiguration || "azureml-default"}
+							onInput={handleInputChange("azureAiSearchSemanticConfiguration")}
+							placeholder={t("settings:providers.azureAiSearch.semanticConfigurationPlaceholder")}
+							className="w-full">
+							<label className="block font-medium mb-1">
+								{t("settings:providers.azureAiSearch.semanticConfiguration")}
+							</label>
+						</VSCodeTextField>
+						<div>
+							<label className="block font-medium mb-1">
+								{t("settings:providers.azureAiSearch.queryType")}
+							</label>
+							<select
+								value={apiConfiguration?.azureAiSearchQueryType || "vector_simple_hybrid"}
+								onChange={(e) => setApiConfigurationField("azureAiSearchQueryType", e.target.value)}
+								className="w-full p-2 bg-vscode-input-background text-vscode-input-foreground border border-vscode-input-border rounded">
+								<option value="simple">
+									{t("settings:providers.azureAiSearch.queryTypeOptions.simple")}
+								</option>
+								<option value="semantic">
+									{t("settings:providers.azureAiSearch.queryTypeOptions.semantic")}
+								</option>
+								<option value="vector">
+									{t("settings:providers.azureAiSearch.queryTypeOptions.vector")}
+								</option>
+								<option value="vector_simple_hybrid">
+									{t("settings:providers.azureAiSearch.queryTypeOptions.vectorSimpleHybrid")}
+								</option>
+								<option value="vector_semantic_hybrid">
+									{t("settings:providers.azureAiSearch.queryTypeOptions.vectorSemanticHybrid")}
+								</option>
+							</select>
+						</div>
+						<VSCodeTextField
+							value={apiConfiguration?.azureAiSearchEmbeddingEndpoint || ""}
+							onInput={handleInputChange("azureAiSearchEmbeddingEndpoint")}
+							placeholder={t("settings:providers.azureAiSearch.embeddingEndpointPlaceholder")}
+							className="w-full">
+							<label className="block font-medium mb-1">
+								{t("settings:providers.azureAiSearch.embeddingEndpoint")}
+							</label>
+						</VSCodeTextField>
+						<VSCodeTextField
+							value={apiConfiguration?.azureAiSearchEmbeddingApiKey || ""}
+							type="password"
+							onInput={handleInputChange("azureAiSearchEmbeddingApiKey")}
+							placeholder={t("settings:providers.azureAiSearch.embeddingApiKeyPlaceholder")}
+							className="w-full">
+							<label className="block font-medium mb-1">
+								{t("settings:providers.azureAiSearch.embeddingApiKey")}
+							</label>
+						</VSCodeTextField>
+						<div>
+							<VSCodeTextField
+								value={apiConfiguration?.azureAiSearchTopNDocuments?.toString() || "5"}
+								onInput={handleInputChange("azureAiSearchTopNDocuments", (e) => {
+									const value = parseInt((e.target as HTMLInputElement).value)
+									return isNaN(value) ? 5 : value
+								})}
+								className="w-full">
+								<label className="block font-medium mb-1">
+									{t("settings:providers.azureAiSearch.topNDocuments")}
+								</label>
+							</VSCodeTextField>
+							<div className="text-sm text-vscode-descriptionForeground">
+								{t("settings:providers.azureAiSearch.topNDocumentsDescription")}
+							</div>
+						</div>
+						<div>
+							<VSCodeTextField
+								value={apiConfiguration?.azureAiSearchStrictness?.toString() || "3"}
+								onInput={handleInputChange("azureAiSearchStrictness", (e) => {
+									const value = parseInt((e.target as HTMLInputElement).value)
+									return isNaN(value) ? 3 : value
+								})}
+								className="w-full">
+								<label className="block font-medium mb-1">
+									{t("settings:providers.azureAiSearch.strictness")}
+								</label>
+							</VSCodeTextField>
+							<div className="text-sm text-vscode-descriptionForeground">
+								{t("settings:providers.azureAiSearch.strictnessDescription")}
+							</div>
+						</div>
+					</div>
 				)}
 			</div>
 

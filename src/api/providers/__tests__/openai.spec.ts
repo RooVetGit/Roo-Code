@@ -12,19 +12,43 @@ const mockCreate = vitest.fn()
 
 vitest.mock("openai", () => {
 	const mockConstructor = vitest.fn()
-	return {
-		__esModule: true,
-		default: mockConstructor.mockImplementation(() => ({
-			chat: {
-				completions: {
-					create: mockCreate.mockImplementation(async (options) => {
-						if (!options.stream) {
-							return {
-								id: "test-completion",
+	const mockImplementation = () => ({
+		chat: {
+			completions: {
+				create: mockCreate.mockImplementation(async (options) => {
+					if (!options.stream) {
+						return {
+							id: "test-completion",
+							choices: [
+								{
+									message: { role: "assistant", content: "Test response", refusal: null },
+									finish_reason: "stop",
+									index: 0,
+								},
+							],
+							usage: {
+								prompt_tokens: 10,
+								completion_tokens: 5,
+								total_tokens: 15,
+							},
+						}
+					}
+
+					return {
+						[Symbol.asyncIterator]: async function* () {
+							yield {
 								choices: [
 									{
-										message: { role: "assistant", content: "Test response", refusal: null },
-										finish_reason: "stop",
+										delta: { content: "Test response" },
+										index: 0,
+									},
+								],
+								usage: null,
+							}
+							yield {
+								choices: [
+									{
+										delta: {},
 										index: 0,
 									},
 								],
@@ -34,38 +58,16 @@ vitest.mock("openai", () => {
 									total_tokens: 15,
 								},
 							}
-						}
-
-						return {
-							[Symbol.asyncIterator]: async function* () {
-								yield {
-									choices: [
-										{
-											delta: { content: "Test response" },
-											index: 0,
-										},
-									],
-									usage: null,
-								}
-								yield {
-									choices: [
-										{
-											delta: {},
-											index: 0,
-										},
-									],
-									usage: {
-										prompt_tokens: 10,
-										completion_tokens: 5,
-										total_tokens: 15,
-									},
-								}
-							},
-						}
-					}),
-				},
+						},
+					}
+				}),
 			},
-		})),
+		},
+	})
+	return {
+		__esModule: true,
+		default: mockConstructor.mockImplementation(mockImplementation),
+		AzureOpenAI: mockConstructor.mockImplementation(mockImplementation),
 	}
 })
 
@@ -782,6 +784,225 @@ describe("OpenAiHandler", () => {
 				}),
 				{ path: "/models/chat/completions" },
 			)
+		})
+	})
+
+	describe("Azure AI Search", () => {
+		const azureSearchOptions = {
+			...mockOptions,
+			openAiUseAzure: true,
+			azureAiSearchEnabled: true,
+			azureAiSearchEndpoint: "https://test-search.search.windows.net/",
+			azureAiSearchIndexName: "test-index",
+			azureAiSearchApiKey: "test-search-api-key",
+			azureAiSearchSemanticConfiguration: "azureml-default",
+			azureAiSearchQueryType: "vector_simple_hybrid",
+			azureAiSearchEmbeddingEndpoint:
+				"https://test-embedding.openai.azure.com/openai/deployments/text-embedding-ada-002/embeddings?api-version=2023-07-01-preview",
+			azureAiSearchEmbeddingApiKey: "test-embedding-api-key",
+			azureAiSearchTopNDocuments: 5,
+			azureAiSearchStrictness: 3,
+		}
+
+		it("should include data_sources when Azure AI Search is enabled", async () => {
+			const azureSearchHandler = new OpenAiHandler(azureSearchOptions)
+			const systemPrompt = "You are a helpful assistant."
+			const messages: Anthropic.Messages.MessageParam[] = [
+				{
+					role: "user",
+					content: "Hello!",
+				},
+			]
+
+			const stream = azureSearchHandler.createMessage(systemPrompt, messages)
+			// Consume the stream to trigger the API call
+			for await (const _chunk of stream) {
+			}
+
+			expect(mockCreate).toHaveBeenCalled()
+			const callArgs = mockCreate.mock.calls[0][0]
+			expect(callArgs).toHaveProperty("data_sources")
+			expect(callArgs.data_sources).toHaveLength(1)
+
+			const dataSource = callArgs.data_sources[0]
+			expect(dataSource.type).toBe("azure_search")
+			expect(dataSource.parameters).toMatchObject({
+				endpoint: azureSearchOptions.azureAiSearchEndpoint,
+				index_name: azureSearchOptions.azureAiSearchIndexName,
+				semantic_configuration: azureSearchOptions.azureAiSearchSemanticConfiguration,
+				query_type: azureSearchOptions.azureAiSearchQueryType,
+				in_scope: true,
+				role_information: "You are an AI assistant that helps people find information.",
+				strictness: azureSearchOptions.azureAiSearchStrictness,
+				top_n_documents: azureSearchOptions.azureAiSearchTopNDocuments,
+				authentication: {
+					type: "api_key",
+					key: azureSearchOptions.azureAiSearchApiKey,
+				},
+				embedding_dependency: {
+					type: "endpoint",
+					endpoint: azureSearchOptions.azureAiSearchEmbeddingEndpoint,
+					authentication: {
+						type: "api_key",
+						key: azureSearchOptions.azureAiSearchEmbeddingApiKey,
+					},
+				},
+				fields_mapping: {
+					content_fields: ["content"],
+					filepath_field: "filepath",
+					title_field: "title",
+					url_field: "url",
+					content_fields_separator: "\n",
+					vector_fields: ["contentVector"],
+				},
+			})
+		})
+
+		it("should not include data_sources when Azure AI Search is disabled", async () => {
+			const noSearchHandler = new OpenAiHandler({
+				...azureSearchOptions,
+				azureAiSearchEnabled: false,
+			})
+			const systemPrompt = "You are a helpful assistant."
+			const messages: Anthropic.Messages.MessageParam[] = [
+				{
+					role: "user",
+					content: "Hello!",
+				},
+			]
+
+			const stream = noSearchHandler.createMessage(systemPrompt, messages)
+			// Consume the stream to trigger the API call
+			for await (const _chunk of stream) {
+			}
+
+			expect(mockCreate).toHaveBeenCalled()
+			const callArgs = mockCreate.mock.calls[0][0]
+			expect(callArgs).not.toHaveProperty("data_sources")
+		})
+
+		it("should not include data_sources when not using Azure OpenAI", async () => {
+			const nonAzureHandler = new OpenAiHandler({
+				...azureSearchOptions,
+				openAiUseAzure: false,
+			})
+			const systemPrompt = "You are a helpful assistant."
+			const messages: Anthropic.Messages.MessageParam[] = [
+				{
+					role: "user",
+					content: "Hello!",
+				},
+			]
+
+			const stream = nonAzureHandler.createMessage(systemPrompt, messages)
+			// Consume the stream to trigger the API call
+			for await (const _chunk of stream) {
+			}
+
+			expect(mockCreate).toHaveBeenCalled()
+			const callArgs = mockCreate.mock.calls[0][0]
+			expect(callArgs).not.toHaveProperty("data_sources")
+		})
+
+		it("should handle Azure AI Search without embedding configuration", async () => {
+			const searchWithoutEmbeddingHandler = new OpenAiHandler({
+				...azureSearchOptions,
+				azureAiSearchEmbeddingEndpoint: undefined,
+				azureAiSearchEmbeddingApiKey: undefined,
+			})
+			const systemPrompt = "You are a helpful assistant."
+			const messages: Anthropic.Messages.MessageParam[] = [
+				{
+					role: "user",
+					content: "Hello!",
+				},
+			]
+
+			const stream = searchWithoutEmbeddingHandler.createMessage(systemPrompt, messages)
+			// Consume the stream to trigger the API call
+			for await (const _chunk of stream) {
+			}
+
+			expect(mockCreate).toHaveBeenCalled()
+			const callArgs = mockCreate.mock.calls[0][0]
+			expect(callArgs).toHaveProperty("data_sources")
+
+			const dataSource = callArgs.data_sources[0]
+			expect(dataSource.parameters).not.toHaveProperty("embedding_dependency")
+		})
+
+		it("should not include fields_mapping for non-vector query types", async () => {
+			const simpleSearchHandler = new OpenAiHandler({
+				...azureSearchOptions,
+				azureAiSearchQueryType: "simple",
+			})
+			const systemPrompt = "You are a helpful assistant."
+			const messages: Anthropic.Messages.MessageParam[] = [
+				{
+					role: "user",
+					content: "Hello!",
+				},
+			]
+
+			const stream = simpleSearchHandler.createMessage(systemPrompt, messages)
+			// Consume the stream to trigger the API call
+			for await (const _chunk of stream) {
+			}
+
+			expect(mockCreate).toHaveBeenCalled()
+			const callArgs = mockCreate.mock.calls[0][0]
+			expect(callArgs).toHaveProperty("data_sources")
+
+			const dataSource = callArgs.data_sources[0]
+			expect(dataSource.parameters).not.toHaveProperty("fields_mapping")
+		})
+
+		it("should include data_sources in non-streaming mode", async () => {
+			const nonStreamingHandler = new OpenAiHandler({
+				...azureSearchOptions,
+				openAiStreamingEnabled: false,
+			})
+			const systemPrompt = "You are a helpful assistant."
+			const messages: Anthropic.Messages.MessageParam[] = [
+				{
+					role: "user",
+					content: "Hello!",
+				},
+			]
+
+			const stream = nonStreamingHandler.createMessage(systemPrompt, messages)
+			// Consume the stream to trigger the API call
+			for await (const _chunk of stream) {
+			}
+
+			expect(mockCreate).toHaveBeenCalled()
+			const callArgs = mockCreate.mock.calls[0][0]
+			expect(callArgs).toHaveProperty("data_sources")
+			expect(callArgs.data_sources).toHaveLength(1)
+			expect(callArgs.data_sources[0].type).toBe("azure_search")
+		})
+
+		it("should not include data_sources when endpoint or index name is missing", async () => {
+			const incompleteHandler = new OpenAiHandler({
+				...azureSearchOptions,
+				azureAiSearchEndpoint: undefined,
+			})
+			const systemPrompt = "You are a helpful assistant."
+			const messages: Anthropic.Messages.MessageParam[] = [
+				{
+					role: "user",
+					content: "Hello!",
+				},
+			]
+
+			const stream = incompleteHandler.createMessage(systemPrompt, messages)
+			// Consume the stream to trigger the API call
+			for await (const _chunk of stream) {
+			}
+
+			expect(mockCreate).toHaveBeenCalled()
+			const callArgs = mockCreate.mock.calls[0][0]
+			expect(callArgs).not.toHaveProperty("data_sources")
 		})
 	})
 })

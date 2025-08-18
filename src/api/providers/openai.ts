@@ -164,6 +164,14 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 				...(reasoning && reasoning),
 			}
 
+			// Add Azure AI Search data sources if enabled
+			if (this.options.azureAiSearchEnabled && this.options.openAiUseAzure) {
+				const dataSources = this.buildAzureAiSearchDataSources()
+				if (dataSources) {
+					;(requestOptions as any).data_sources = dataSources
+				}
+			}
+
 			// Add max_tokens if needed
 			this.addMaxTokensIfNeeded(requestOptions, modelInfo)
 
@@ -228,6 +236,14 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 
 			// Add max_tokens if needed
 			this.addMaxTokensIfNeeded(requestOptions, modelInfo)
+
+			// Add Azure AI Search data sources if enabled
+			if (this.options.azureAiSearchEnabled && this.options.openAiUseAzure) {
+				const dataSources = this.buildAzureAiSearchDataSources()
+				if (dataSources) {
+					;(requestOptions as any).data_sources = dataSources
+				}
+			}
 
 			const response = await this.client.chat.completions.create(
 				requestOptions,
@@ -413,6 +429,64 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 			// Using max_completion_tokens as max_tokens is deprecated
 			requestOptions.max_completion_tokens = this.options.modelMaxTokens || modelInfo.maxTokens
 		}
+	}
+
+	private buildAzureAiSearchDataSources(): any[] | null {
+		if (!this.options.azureAiSearchEndpoint || !this.options.azureAiSearchIndexName) {
+			return null
+		}
+
+		const dataSource: any = {
+			type: "azure_search",
+			parameters: {
+				filter: null,
+				endpoint: this.options.azureAiSearchEndpoint,
+				index_name: this.options.azureAiSearchIndexName,
+				semantic_configuration: this.options.azureAiSearchSemanticConfiguration || "azureml-default",
+				query_type: this.options.azureAiSearchQueryType || "vector_simple_hybrid",
+				in_scope: true,
+				role_information: "You are an AI assistant that helps people find information.",
+				strictness: this.options.azureAiSearchStrictness || 3,
+				top_n_documents: this.options.azureAiSearchTopNDocuments || 5,
+			},
+		}
+
+		// Add authentication if API key is provided
+		if (this.options.azureAiSearchApiKey) {
+			dataSource.parameters.authentication = {
+				type: "api_key",
+				key: this.options.azureAiSearchApiKey,
+			}
+		}
+
+		// Add embedding dependency if configured
+		if (this.options.azureAiSearchEmbeddingEndpoint) {
+			dataSource.parameters.embedding_dependency = {
+				type: "endpoint",
+				endpoint: this.options.azureAiSearchEmbeddingEndpoint,
+			}
+
+			if (this.options.azureAiSearchEmbeddingApiKey) {
+				dataSource.parameters.embedding_dependency.authentication = {
+					type: "api_key",
+					key: this.options.azureAiSearchEmbeddingApiKey,
+				}
+			}
+		}
+
+		// Add fields mapping for vector search
+		if (this.options.azureAiSearchQueryType?.includes("vector")) {
+			dataSource.parameters.fields_mapping = {
+				content_fields: ["content"],
+				filepath_field: "filepath",
+				title_field: "title",
+				url_field: "url",
+				content_fields_separator: "\n",
+				vector_fields: ["contentVector"],
+			}
+		}
+
+		return [dataSource]
 	}
 }
 
