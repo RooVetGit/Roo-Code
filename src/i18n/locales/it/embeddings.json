@@ -23,6 +23,8 @@
 		"failedToProcessBatchWithError": "Elaborazione del batch fallita dopo {{maxRetries}} tentativi: {{errorMessage}}"
 	},
 	"vectorStore": {
+		"vectorError": "Errore: {{errorMessage}}",
+		"valkeyConnectionFailed": "Connessione a Valkey Search non riuscita. Assicurarsi che Valkey sia in esecuzione e accessibile all'indirizzo {{valkeyUrl}}. Errore: {{errorMessage}}",
 		"qdrantConnectionFailed": "Impossibile connettersi al database vettoriale Qdrant. Assicurati che Qdrant sia in esecuzione e accessibile su {{qdrantUrl}}. Errore: {{errorMessage}}",
 		"vectorDimensionMismatch": "Impossibile aggiornare l'indice vettoriale per il nuovo modello. Prova a cancellare l'indice e a ricominciare. Dettagli: {{errorMessage}}"
 	},
@@ -50,7 +52,7 @@
 		"invalidEmbedderType": "Tipo di embedder configurato non valido: {{embedderProvider}}",
 		"vectorDimensionNotDeterminedOpenAiCompatible": "Impossibile determinare la dimensione del vettore per il modello '{{modelId}}' con il provider '{{provider}}'. Assicurati che la 'Dimensione di embedding' sia impostata correttamente nelle impostazioni del provider compatibile con OpenAI.",
 		"vectorDimensionNotDetermined": "Impossibile determinare la dimensione del vettore per il modello '{{modelId}}' con il provider '{{provider}}'. Controlla i profili del modello o la configurazione.",
-		"qdrantUrlMissing": "URL Qdrant mancante per la creazione dello storage vettoriale",
+		"vectorUrlMissing": "URL mancante per la creazione dello storage vettoriale",
 		"codeIndexingNotConfigured": "Impossibile creare i servizi: L'indicizzazione del codice non è configurata correttamente"
 	},
 	"orchestrator": {

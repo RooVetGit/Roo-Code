@@ -46,6 +46,10 @@ import { CODEBASE_INDEX_DEFAULTS } from "@roo-code/types"
 // Default URLs for providers
 const DEFAULT_QDRANT_URL = "http://localhost:6333"
 const DEFAULT_OLLAMA_URL = "http://localhost:11434"
+const DEFAULT_VALKEY_HOST_NAME = "localhost"
+const DEFAULT_VALKEY_PORT = 6379
+
+type SearchProvider = "qdrant" | "valkey" | ""
 
 interface CodeIndexPopoverProps {
 	children: React.ReactNode
@@ -56,6 +60,8 @@ interface LocalCodeIndexSettings {
 	// Global state settings
 	codebaseIndexEnabled: boolean
 	codebaseIndexQdrantUrl: string
+	codebaseIndexValkeyHostname: string
+	codebaseIndexValkeyPort: number
 	codebaseIndexEmbedderProvider: EmbedderProvider
 	codebaseIndexEmbedderBaseUrl?: string
 	codebaseIndexEmbedderModelId: string
@@ -66,39 +72,54 @@ interface LocalCodeIndexSettings {
 	// Secret settings (start empty, will be loaded separately)
 	codeIndexOpenAiKey?: string
 	codeIndexQdrantApiKey?: string
+	codeIndexValkeyPassword?: string
 	codebaseIndexOpenAiCompatibleBaseUrl?: string
 	codebaseIndexOpenAiCompatibleApiKey?: string
 	codebaseIndexGeminiApiKey?: string
 	codebaseIndexMistralApiKey?: string
+	codebaseIndexValkeyUsername?: string
+	codebaseIndexValkeyUseSsl: boolean
+	searchProvider?: string
 }
 
 // Validation schema for codebase index settings
-const createValidationSchema = (provider: EmbedderProvider, t: any) => {
+const createValidationSchema = (provider: EmbedderProvider, searchProvider: SearchProvider, t: any) => {
 	const baseSchema = z.object({
 		codebaseIndexEnabled: z.boolean(),
 		codebaseIndexQdrantUrl: z
 			.string()
-			.min(1, t("settings:codeIndex.validation.qdrantUrlRequired"))
-			.url(t("settings:codeIndex.validation.invalidQdrantUrl")),
+			.min(1, t("settings:codeIndex.qdrantUrlRequired"))
+			.url(t("settings:codeIndex.invalidQdrantUrl"))
+			.optional(),
 		codeIndexQdrantApiKey: z.string().optional(),
+		codebaseIndexValkeyHostname:
+			searchProvider === "valkey"
+				? z.string().min(1, t("settings:codeIndex.valkeyHostName"))
+				: z.string().optional(),
+		codebaseIndexValkeyPort:
+			searchProvider === "valkey"
+				? z.number().min(1, t("settings:codeIndex.valkeyPortRequired"))
+				: z.number().optional(),
+		codebaseIndexValkeyUsername: z.string().optional(),
+		codeIndexValkeyPassword: z.string().optional(),
+		codebaseIndexValkeyUseSsl: z.boolean().optional(),
+		searchProvider: z.string().optional(),
 	})
 
 	switch (provider) {
 		case "openai":
 			return baseSchema.extend({
-				codeIndexOpenAiKey: z.string().min(1, t("settings:codeIndex.validation.openaiApiKeyRequired")),
-				codebaseIndexEmbedderModelId: z
-					.string()
-					.min(1, t("settings:codeIndex.validation.modelSelectionRequired")),
+				codeIndexOpenAiKey: z.string().min(1, t("settings:codeIndex.openaiApiKeyRequired")),
+				codebaseIndexEmbedderModelId: z.string().min(1, t("settings:codeIndex.modelSelectionRequired")),
 			})
 
 		case "ollama":
 			return baseSchema.extend({
 				codebaseIndexEmbedderBaseUrl: z
 					.string()
-					.min(1, t("settings:codeIndex.validation.ollamaBaseUrlRequired"))
-					.url(t("settings:codeIndex.validation.invalidOllamaUrl")),
-				codebaseIndexEmbedderModelId: z.string().min(1, t("settings:codeIndex.validation.modelIdRequired")),
+					.min(1, t("settings:codeIndex.ollamaBaseUrlRequired"))
+					.url(t("settings:codeIndex.invalidOllamaUrl")),
+				codebaseIndexEmbedderModelId: z.string().min(1, t("settings:codeIndex.modelIdRequired")),
 				codebaseIndexEmbedderModelDimension: z
 					.number()
 					.min(1, t("settings:codeIndex.validation.modelDimensionRequired"))
@@ -109,23 +130,17 @@ const createValidationSchema = (provider: EmbedderProvider, t: any) => {
 			return baseSchema.extend({
 				codebaseIndexOpenAiCompatibleBaseUrl: z
 					.string()
-					.min(1, t("settings:codeIndex.validation.baseUrlRequired"))
-					.url(t("settings:codeIndex.validation.invalidBaseUrl")),
-				codebaseIndexOpenAiCompatibleApiKey: z
-					.string()
-					.min(1, t("settings:codeIndex.validation.apiKeyRequired")),
-				codebaseIndexEmbedderModelId: z.string().min(1, t("settings:codeIndex.validation.modelIdRequired")),
-				codebaseIndexEmbedderModelDimension: z
-					.number()
-					.min(1, t("settings:codeIndex.validation.modelDimensionRequired")),
+					.min(1, t("settings:codeIndex.baseUrlRequired"))
+					.url(t("settings:codeIndex.invalidBaseUrl")),
+				codebaseIndexOpenAiCompatibleApiKey: z.string().min(1, t("settings:codeIndex.apiKeyRequired")),
+				codebaseIndexEmbedderModelId: z.string().min(1, t("settings:codeIndex.modelIdRequired")),
+				codebaseIndexEmbedderModelDimension: z.number().min(1, t("settings:codeIndex.modelDimensionRequired")),
 			})
 
 		case "gemini":
 			return baseSchema.extend({
-				codebaseIndexGeminiApiKey: z.string().min(1, t("settings:codeIndex.validation.geminiApiKeyRequired")),
-				codebaseIndexEmbedderModelId: z
-					.string()
-					.min(1, t("settings:codeIndex.validation.modelSelectionRequired")),
+				codebaseIndexGeminiApiKey: z.string().min(1, t("settings:codeIndex.geminiApiKeyRequired")),
+				codebaseIndexEmbedderModelId: z.string().min(1, t("settings:codeIndex.modelSelectionRequired")),
 			})
 
 		case "mistral":
@@ -168,6 +183,8 @@ export const CodeIndexPopover: React.FC<CodeIndexPopoverProps> = ({
 	const getDefaultSettings = (): LocalCodeIndexSettings => ({
 		codebaseIndexEnabled: true,
 		codebaseIndexQdrantUrl: "",
+		codebaseIndexValkeyHostname: "",
+		codebaseIndexValkeyPort: 6379,
 		codebaseIndexEmbedderProvider: "openai",
 		codebaseIndexEmbedderBaseUrl: "",
 		codebaseIndexEmbedderModelId: "",
@@ -180,6 +197,10 @@ export const CodeIndexPopover: React.FC<CodeIndexPopoverProps> = ({
 		codebaseIndexOpenAiCompatibleApiKey: "",
 		codebaseIndexGeminiApiKey: "",
 		codebaseIndexMistralApiKey: "",
+		codebaseIndexValkeyUsername: "",
+		codeIndexValkeyPassword: "",
+		codebaseIndexValkeyUseSsl: false,
+		searchProvider: "",
 	})
 
 	// Initial settings state - stores the settings when popover opens
@@ -199,6 +220,8 @@ export const CodeIndexPopover: React.FC<CodeIndexPopoverProps> = ({
 			const settings = {
 				codebaseIndexEnabled: codebaseIndexConfig.codebaseIndexEnabled ?? true,
 				codebaseIndexQdrantUrl: codebaseIndexConfig.codebaseIndexQdrantUrl || "",
+				codebaseIndexValkeyHostname: codebaseIndexConfig.codebaseIndexValkeyHostname || "",
+				codebaseIndexValkeyPort: codebaseIndexConfig.codebaseIndexValkeyPort || 6379,
 				codebaseIndexEmbedderProvider: codebaseIndexConfig.codebaseIndexEmbedderProvider || "openai",
 				codebaseIndexEmbedderBaseUrl: codebaseIndexConfig.codebaseIndexEmbedderBaseUrl || "",
 				codebaseIndexEmbedderModelId: codebaseIndexConfig.codebaseIndexEmbedderModelId || "",
@@ -214,6 +237,10 @@ export const CodeIndexPopover: React.FC<CodeIndexPopoverProps> = ({
 				codebaseIndexOpenAiCompatibleApiKey: "",
 				codebaseIndexGeminiApiKey: "",
 				codebaseIndexMistralApiKey: "",
+				codebaseIndexValkeyUsername: codebaseIndexConfig.codebaseIndexValkeyUsername || "",
+				codeIndexValkeyPassword: codebaseIndexConfig.codebaseIndexValkeyPassword || "",
+				codebaseIndexValkeyUseSsl: codebaseIndexConfig.codebaseIndexValkeyUseSsl || false,
+				searchProvider: codebaseIndexConfig.searchProvider,
 			}
 			setInitialSettings(settings)
 			setCurrentSettings(settings)
@@ -265,7 +292,11 @@ export const CodeIndexPopover: React.FC<CodeIndexPopoverProps> = ({
 					setSaveStatus("saved")
 					// Update initial settings to match current settings after successful save
 					// This ensures hasUnsavedChanges becomes false
-					const savedSettings = { ...currentSettingsRef.current }
+					const savedSettings = {
+						...currentSettingsRef.current,
+						searchProvider: currentSettingsRef.current.searchProvider || "valkey",
+						codebaseIndexValkeyUseSsl: currentSettingsRef.current.codebaseIndexValkeyUseSsl ?? false,
+					}
 					setInitialSettings(savedSettings)
 					// Also update current settings to maintain consistency
 					setCurrentSettings(savedSettings)
@@ -322,7 +353,9 @@ export const CodeIndexPopover: React.FC<CodeIndexPopoverProps> = ({
 					if (!prev.codebaseIndexMistralApiKey || prev.codebaseIndexMistralApiKey === SECRET_PLACEHOLDER) {
 						updated.codebaseIndexMistralApiKey = secretStatus.hasMistralApiKey ? SECRET_PLACEHOLDER : ""
 					}
-
+					if (!prev.codeIndexValkeyPassword || prev.codeIndexValkeyPassword === SECRET_PLACEHOLDER) {
+						updated.codeIndexValkeyPassword = secretStatus.hasValkeyPassword ? SECRET_PLACEHOLDER : ""
+					}
 					return updated
 				}
 
@@ -348,6 +381,10 @@ export const CodeIndexPopover: React.FC<CodeIndexPopoverProps> = ({
 
 		// Use a Set to ensure unique keys
 		const uniqueKeys = Array.from(new Set(allKeys))
+
+		if (currentSettings.searchProvider !== initialSettings.searchProvider) {
+			return true
+		}
 
 		for (const key of uniqueKeys) {
 			const currentValue = currentSettings[key]
@@ -382,7 +419,11 @@ export const CodeIndexPopover: React.FC<CodeIndexPopoverProps> = ({
 
 	// Validation function
 	const validateSettings = (): boolean => {
-		const schema = createValidationSchema(currentSettings.codebaseIndexEmbedderProvider, t)
+		const schema = createValidationSchema(
+			currentSettings.codebaseIndexEmbedderProvider,
+			currentSettings.searchProvider as SearchProvider,
+			t,
+		)
 
 		// Prepare data for validation
 		const dataToValidate: any = {}
@@ -394,7 +435,8 @@ export const CodeIndexPopover: React.FC<CodeIndexPopoverProps> = ({
 					key === "codeIndexOpenAiKey" ||
 					key === "codebaseIndexOpenAiCompatibleApiKey" ||
 					key === "codebaseIndexGeminiApiKey" ||
-					key === "codebaseIndexMistralApiKey"
+					key === "codebaseIndexMistralApiKey" ||
+					key === "codebaseIndexValkeyPassword"
 				) {
 					dataToValidate[key] = "placeholder-valid"
 				}
@@ -472,20 +514,29 @@ export const CodeIndexPopover: React.FC<CodeIndexPopoverProps> = ({
 
 		// Iterate through all current settings
 		for (const [key, value] of Object.entries(currentSettings)) {
-			// For secret fields with placeholder, don't send the placeholder
-			// but also don't send an empty string - just skip the field
-			// This tells the backend to keep the existing secret
-			if (value === SECRET_PLACEHOLDER) {
-				// Skip sending placeholder values - backend will preserve existing secrets
-				continue
+			// Skip placeholder values for required secret fields
+			// Always include non-secret fields
+			if (
+				value !== SECRET_PLACEHOLDER ||
+				key === "codebaseIndexValkeyUsername" ||
+				key === "codeIndexValkeyPassword" ||
+				key === "codebaseIndexValkeyUseSsl"
+			) {
+				// For optional Valkey credentials, send empty string to clear them
+				if (
+					(key === "codebaseIndexValkeyUsername" || key === "codeIndexValkeyPassword") &&
+					value === SECRET_PLACEHOLDER
+				) {
+					settingsToSave[key] = ""
+				} else {
+					// Include all other fields
+					settingsToSave[key] = value
+				}
 			}
-
-			// Include all other fields, including empty strings (which clear secrets)
-			settingsToSave[key] = value
 		}
 
 		// Always include codebaseIndexEnabled to ensure it's persisted
-		settingsToSave.codebaseIndexEnabled = currentSettings.codebaseIndexEnabled
+		settingsToSave.codebaseIndexValkeyUseSsl = currentSettings.codebaseIndexValkeyUseSsl
 
 		// Save settings to backend
 		vscode.postMessage({
@@ -555,7 +606,9 @@ export const CodeIndexPopover: React.FC<CodeIndexPopoverProps> = ({
 							<div className="flex items-center gap-2">
 								<VSCodeCheckbox
 									checked={currentSettings.codebaseIndexEnabled}
-									onChange={(e: any) => updateSetting("codebaseIndexEnabled", e.target.checked)}>
+									onChange={(e: any) => {
+										updateSetting("codebaseIndexEnabled", e.target.checked)
+									}}>
 									<span className="font-medium">{t("settings:codeIndex.enableLabel")}</span>
 								</VSCodeCheckbox>
 								<StandardTooltip content={t("settings:codeIndex.enableDescription")}>
@@ -1034,54 +1087,197 @@ export const CodeIndexPopover: React.FC<CodeIndexPopoverProps> = ({
 										</>
 									)}
 
-									{/* Qdrant Settings */}
+									{/* Search Provider Selection */}
 									<div className="space-y-2">
 										<label className="text-sm font-medium">
-											{t("settings:codeIndex.qdrantUrlLabel")}
+											{t("settings:codeIndex.searchProviderLabel")}
 										</label>
-										<VSCodeTextField
-											value={currentSettings.codebaseIndexQdrantUrl || ""}
-											onInput={(e: any) =>
-												updateSetting("codebaseIndexQdrantUrl", e.target.value)
-											}
-											onBlur={(e: any) => {
-												// Set default Qdrant URL if field is empty
-												if (!e.target.value.trim()) {
-													currentSettings.codebaseIndexQdrantUrl = DEFAULT_QDRANT_URL
-													updateSetting("codebaseIndexQdrantUrl", DEFAULT_QDRANT_URL)
-												}
-											}}
-											placeholder={t("settings:codeIndex.qdrantUrlPlaceholder")}
-											className={cn("w-full", {
-												"border-red-500": formErrors.codebaseIndexQdrantUrl,
-											})}
-										/>
-										{formErrors.codebaseIndexQdrantUrl && (
-											<p className="text-xs text-vscode-errorForeground mt-1 mb-0">
-												{formErrors.codebaseIndexQdrantUrl}
-											</p>
-										)}
+										<Select
+											value={currentSettings.searchProvider}
+											onValueChange={(value: SearchProvider) => {
+												updateSetting("searchProvider", value)
+											}}>
+											<SelectTrigger className="w-full">
+												<SelectValue />
+											</SelectTrigger>
+											<SelectContent>
+												<SelectItem value="qdrant">
+													{t("settings:codeIndex.qdrantProvider")}
+												</SelectItem>
+												<SelectItem value="valkey">
+													{t("settings:codeIndex.valkeyProvider")}
+												</SelectItem>
+											</SelectContent>
+										</Select>
 									</div>
 
-									<div className="space-y-2">
-										<label className="text-sm font-medium">
-											{t("settings:codeIndex.qdrantApiKeyLabel")}
-										</label>
-										<VSCodeTextField
-											type="password"
-											value={currentSettings.codeIndexQdrantApiKey || ""}
-											onInput={(e: any) => updateSetting("codeIndexQdrantApiKey", e.target.value)}
-											placeholder={t("settings:codeIndex.qdrantApiKeyPlaceholder")}
-											className={cn("w-full", {
-												"border-red-500": formErrors.codeIndexQdrantApiKey,
-											})}
-										/>
-										{formErrors.codeIndexQdrantApiKey && (
-											<p className="text-xs text-vscode-errorForeground mt-1 mb-0">
-												{formErrors.codeIndexQdrantApiKey}
-											</p>
-										)}
-									</div>
+									{currentSettings.searchProvider === "qdrant" && (
+										<>
+											<div className="space-y-2">
+												<label className="text-sm font-medium">
+													{t("settings:codeIndex.qdrantUrlLabel")}
+												</label>
+												<VSCodeTextField
+													value={currentSettings.codebaseIndexQdrantUrl || ""}
+													onInput={(e: any) =>
+														updateSetting("codebaseIndexQdrantUrl", e.target.value)
+													}
+													onBlur={(e: any) => {
+														if (!e.target.value.trim()) {
+															currentSettings.codebaseIndexQdrantUrl = DEFAULT_QDRANT_URL
+															updateSetting("codebaseIndexQdrantUrl", DEFAULT_QDRANT_URL)
+														}
+													}}
+													placeholder={t("settings:codeIndex.qdrantUrlPlaceholder")}
+													className={cn("w-full", {
+														"border-red-500": formErrors.codebaseIndexQdrantUrl,
+													})}
+												/>
+												{formErrors.codebaseIndexQdrantUrl && (
+													<p className="text-xs text-vscode-errorForeground mt-1 mb-0">
+														{formErrors.codebaseIndexQdrantUrl}
+													</p>
+												)}
+											</div>
+
+											<div className="space-y-2">
+												<label className="text-sm font-medium">
+													{t("settings:codeIndex.qdrantApiKeyLabel")}
+												</label>
+												<VSCodeTextField
+													type="password"
+													value={currentSettings.codeIndexQdrantApiKey || ""}
+													onInput={(e: any) =>
+														updateSetting("codeIndexQdrantApiKey", e.target.value)
+													}
+													placeholder={t("settings:codeIndex.qdrantApiKeyPlaceholder")}
+													className={cn("w-full", {
+														"border-red-500": formErrors.codeIndexQdrantApiKey,
+													})}
+												/>
+												{formErrors.codeIndexQdrantApiKey && (
+													<p className="text-xs text-vscode-errorForeground mt-1 mb-0">
+														{formErrors.codeIndexQdrantApiKey}
+													</p>
+												)}
+											</div>
+										</>
+									)}
+
+									{currentSettings.searchProvider === "valkey" && (
+										<>
+											<div className="space-y-2">
+												<label className="text-sm font-medium">
+													{t("settings:codeIndex.valkeyUrlLabel")}
+												</label>
+												<div className="grid grid-cols-2 gap-2">
+													<VSCodeTextField
+														value={currentSettings.codebaseIndexValkeyHostname || ""}
+														onInput={(e: any) =>
+															updateSetting("codebaseIndexValkeyHostname", e.target.value)
+														}
+														onBlur={(e: any) => {
+															if (!e.target.value.trim()) {
+																currentSettings.codebaseIndexValkeyHostname =
+																	DEFAULT_VALKEY_HOST_NAME
+																updateSetting(
+																	"codebaseIndexValkeyHostname",
+																	DEFAULT_VALKEY_HOST_NAME,
+																)
+															}
+														}}
+														placeholder={t("settings:codeIndex.valkeyHostnamePlaceholder")}
+														className={cn("w-full", {
+															"border-red-500": formErrors.codebaseIndexValkeyHostname,
+														})}
+													/>
+													<VSCodeTextField
+														type="text"
+														value={
+															currentSettings.codebaseIndexValkeyPort?.toString() ||
+															`${DEFAULT_VALKEY_PORT}`
+														}
+														onInput={(e: any) => {
+															currentSettings.codebaseIndexValkeyPort =
+																DEFAULT_VALKEY_PORT
+															updateSetting(
+																"codebaseIndexValkeyPort",
+																parseInt(e.target.value) || DEFAULT_VALKEY_PORT,
+															)
+														}}
+														placeholder={t("settings:codeIndex.valkeyPortPlaceholder")}
+														className={cn("w-full", {
+															"border-red-500": formErrors.codebaseIndexValkeyPort,
+														})}
+													/>
+												</div>
+												{formErrors.codebaseIndexValkeyHostname && (
+													<p className="text-xs text-vscode-errorForeground mt-1 mb-0">
+														{formErrors.codebaseIndexValkeyHostname}
+													</p>
+												)}
+												{formErrors.codebaseIndexValkeyPort && (
+													<p className="text-xs text-vscode-errorForeground mt-1 mb-0">
+														{formErrors.codebaseIndexValkeyPort}
+													</p>
+												)}
+											</div>
+											<div className="space-y-2">
+												<label className="text-sm font-medium">
+													{t("settings:codeIndex.valkeyUsernameLabel")}
+												</label>
+												<VSCodeTextField
+													value={currentSettings.codebaseIndexValkeyUsername || ""}
+													onInput={(e: any) =>
+														updateSetting("codebaseIndexValkeyUsername", e.target.value)
+													}
+													placeholder={t("settings:codeIndex.valkeyUsernamePlaceholder")}
+													className={cn("w-full", {
+														"border-red-500": formErrors.codebaseIndexValkeyUsername,
+													})}
+												/>
+												{formErrors.codebaseIndexValkeyUsername && (
+													<p className="text-xs text-vscode-errorForeground mt-1 mb-0">
+														{formErrors.codebaseIndexValkeyUsername}
+													</p>
+												)}
+											</div>
+											<div className="space-y-2">
+												<label className="text-sm font-medium">
+													{t("settings:codeIndex.valkeyPasswordLabel")}
+												</label>
+												<VSCodeTextField
+													type="password"
+													value={currentSettings.codeIndexValkeyPassword || ""}
+													onInput={(e: any) =>
+														updateSetting("codeIndexValkeyPassword", e.target.value)
+													}
+													placeholder={t("settings:codeIndex.valkeyPasswordPlaceholder")}
+													className={cn("w-full", {
+														"border-red-500": formErrors.codeIndexValkeyPassword,
+													})}
+												/>
+												{formErrors.codeIndexValkeyPassword && (
+													<p className="text-xs text-vscode-errorForeground mt-1 mb-0">
+														{formErrors.codeIndexValkeyPassword}
+													</p>
+												)}
+											</div>
+
+											{/* SSL Configuration */}
+											<div className="space-y-2">
+												<VSCodeCheckbox
+													checked={currentSettings.codebaseIndexValkeyUseSsl}
+													onChange={(e: any) => {
+														updateSetting("codebaseIndexValkeyUseSsl", e.target.checked)
+													}}>
+													<span className="font-medium">
+														{t("settings:codeIndex.valkeyUseSslLabel")}
+													</span>
+												</VSCodeCheckbox>
+											</div>
+										</>
+									)}
 								</div>
 							)}
 						</div>

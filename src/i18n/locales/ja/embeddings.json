@@ -23,6 +23,8 @@
 		"failedToProcessBatchWithError": "{{maxRetries}}回の試行後、バッチ処理に失敗しました：{{errorMessage}}"
 	},
 	"vectorStore": {
+		"vectorError": "エラー: {{errorMessage}}",
+		"valkeyConnectionFailed": "Valkey Search に接続できませんでした。Valkey が {{valkeyUrl}} で実行中かつアクセス可能であることを確認してください。エラー: {{errorMessage}}",
 		"qdrantConnectionFailed": "Qdrantベクターデータベースへの接続に失敗しました。Qdrantが実行中で{{qdrantUrl}}でアクセス可能であることを確認してください。エラー：{{errorMessage}}",
 		"vectorDimensionMismatch": "新しいモデルのベクトルインデックスの更新に失敗しました。インデックスをクリアして再試行してください。詳細：{{errorMessage}}"
 	},
@@ -50,7 +52,7 @@
 		"invalidEmbedderType": "無効なエンベッダータイプが設定されています: {{embedderProvider}}",
 		"vectorDimensionNotDeterminedOpenAiCompatible": "プロバイダー '{{provider}}' のモデル '{{modelId}}' の埋め込み次元を決定できませんでした。OpenAI互換プロバイダー設定で「埋め込み次元」が正しく設定されていることを確認してください。",
 		"vectorDimensionNotDetermined": "プロバイダー '{{provider}}' のモデル '{{modelId}}' の埋め込み次元を決定できませんでした。モデルプロファイルまたは設定を確認してください。",
-		"qdrantUrlMissing": "ベクターストア作成のためのQdrant URLがありません",
+		"vectorUrlMissing": "ベクトルストア作成のためのURLがありません",
 		"codeIndexingNotConfigured": "サービスを作成できません: コードインデックスが正しく設定されていません"
 	},
 	"orchestrator": {

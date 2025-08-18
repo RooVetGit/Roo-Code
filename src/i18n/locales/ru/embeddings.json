@@ -23,6 +23,8 @@
 		"failedToProcessBatchWithError": "Не удалось обработать пакет после {{maxRetries}} попыток: {{errorMessage}}"
 	},
 	"vectorStore": {
+		"vectorError": "Ошибка: {{errorMessage}}",
+		"valkeyConnectionFailed": "Не удалось подключиться к Valkey Search. Убедитесь, что Valkey запущен и доступен по адресу {{valkeyUrl}}. Ошибка: {{errorMessage}}",
 		"qdrantConnectionFailed": "Не удалось подключиться к векторной базе данных Qdrant. Убедитесь, что Qdrant запущен и доступен по адресу {{qdrantUrl}}. Ошибка: {{errorMessage}}",
 		"vectorDimensionMismatch": "Не удалось обновить векторный индекс для новой модели. Попробуйте очистить индекс и начать сначала. Подробности: {{errorMessage}}"
 	},
@@ -50,7 +52,7 @@
 		"invalidEmbedderType": "Настроен недопустимый тип эмбеддера: {{embedderProvider}}",
 		"vectorDimensionNotDeterminedOpenAiCompatible": "Не удалось определить размерность вектора для модели '{{modelId}}' с провайдером '{{provider}}'. Убедитесь, что 'Размерность эмбеддинга' правильно установлена в настройках провайдера, совместимого с OpenAI.",
 		"vectorDimensionNotDetermined": "Не удалось определить размерность вектора для модели '{{modelId}}' с провайдером '{{provider}}'. Проверьте профили модели или конфигурацию.",
-		"qdrantUrlMissing": "Отсутствует URL Qdrant для создания векторного хранилища",
+		"vectorUrlMissing": "Отсутствует URL для создания векторного хранилища",
 		"codeIndexingNotConfigured": "Невозможно создать сервисы: Индексация кода не настроена должным образом"
 	},
 	"orchestrator": {

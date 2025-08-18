@@ -23,6 +23,8 @@
 		"failedToProcessBatchWithError": "No s'ha pogut processar el lot després de {{maxRetries}} intents: {{errorMessage}}"
 	},
 	"vectorStore": {
+		"vectorError": "Error: {{errorMessage}}",
+		"valkeyConnectionFailed": "No s'ha pogut connectar a Valkey Search. Assegureu-vos que Valkey estigui engegat i accessible a {{valkeyUrl}}. Error: {{errorMessage}}",
 		"qdrantConnectionFailed": "No s'ha pogut connectar a la base de dades vectorial Qdrant. Assegura't que Qdrant estigui funcionant i sigui accessible a {{qdrantUrl}}. Error: {{errorMessage}}",
 		"vectorDimensionMismatch": "No s'ha pogut actualitzar l'índex de vectors per al nou model. Prova d'esborrar l'índex i tornar a començar. Detalls: {{errorMessage}}"
 	},
@@ -50,7 +52,7 @@
 		"invalidEmbedderType": "Tipus d'embedder configurat no vàlid: {{embedderProvider}}",
 		"vectorDimensionNotDeterminedOpenAiCompatible": "No s'ha pogut determinar la dimensió del vector per al model '{{modelId}}' amb el proveïdor '{{provider}}'. Assegura't que la 'Dimensió d'incrustació' estigui configurada correctament als paràmetres del proveïdor compatible amb OpenAI.",
 		"vectorDimensionNotDetermined": "No s'ha pogut determinar la dimensió del vector per al model '{{modelId}}' amb el proveïdor '{{provider}}'. Comprova els perfils del model o la configuració.",
-		"qdrantUrlMissing": "Falta l'URL de Qdrant per crear l'emmagatzematge de vectors",
+		"vectorUrlMissing": "Falta l'URL per crear l'emmagatzematge de vectors",
 		"codeIndexingNotConfigured": "No es poden crear serveis: La indexació de codi no està configurada correctament"
 	},
 	"orchestrator": {

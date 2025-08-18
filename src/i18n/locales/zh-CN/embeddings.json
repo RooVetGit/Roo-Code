@@ -23,6 +23,8 @@
 		"failedToProcessBatchWithError": "尝试 {{maxRetries}} 次后批次处理失败：{{errorMessage}}"
 	},
 	"vectorStore": {
+		"vectorError": "错误: {{errorMessage}}",
+		"valkeyConnectionFailed": "无法连接到 Valkey Search。请确保 Valkey 正在运行且可通过 {{valkeyUrl}} 访问。错误: {{errorMessage}}",
 		"qdrantConnectionFailed": "连接 Qdrant 向量数据库失败。请确保 Qdrant 正在运行并可在 {{qdrantUrl}} 访问。错误：{{errorMessage}}",
 		"vectorDimensionMismatch": "无法更新新模型的向量索引。请尝试清除索引并重新开始。详细信息：{{errorMessage}}"
 	},
@@ -50,7 +52,7 @@
 		"invalidEmbedderType": "配置的嵌入器类型无效：{{embedderProvider}}",
 		"vectorDimensionNotDeterminedOpenAiCompatible": "无法确定提供商 '{{provider}}' 的模型 '{{modelId}}' 的向量维度。请确保在 OpenAI 兼容提供商设置中正确设置了「嵌入维度」。",
 		"vectorDimensionNotDetermined": "无法确定提供商 '{{provider}}' 的模型 '{{modelId}}' 的向量维度。请检查模型配置文件或配置。",
-		"qdrantUrlMissing": "创建向量存储缺少 Qdrant URL",
+		"vectorUrlMissing": "缺少用于创建向量存储的 URL",
 		"codeIndexingNotConfigured": "无法创建服务：代码索引未正确配置"
 	},
 	"orchestrator": {

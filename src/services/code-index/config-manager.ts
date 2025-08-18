@@ -21,6 +21,12 @@ export class CodeIndexConfigManager {
 	private mistralOptions?: { apiKey: string }
 	private qdrantUrl?: string = "http://localhost:6333"
 	private qdrantApiKey?: string
+	private searchProvider?: string
+	private valkeyHostname?: string = "localhost"
+	private valkeyPort?: number = 6379
+	private valkeyUsername?: string
+	private valkeyPassword?: string
+	private valkeyUseSsl?: boolean = false
 	private searchMinScore?: number
 	private searchMaxResults?: number
 
@@ -45,25 +51,40 @@ export class CodeIndexConfigManager {
 		const codebaseIndexConfig = this.contextProxy?.getGlobalState("codebaseIndexConfig") ?? {
 			codebaseIndexEnabled: true,
 			codebaseIndexQdrantUrl: "http://localhost:6333",
+			codebaseIndexValkeyHostname: "localhost",
+			codebaseIndexValkeyPort: 6379,
+			codebaseIndexValkeyUsername: "",
+			codebaseIndexValkeyUseSsl: false,
+			codebaseIndexValkeyPassword: "",
 			codebaseIndexEmbedderProvider: "openai",
 			codebaseIndexEmbedderBaseUrl: "",
 			codebaseIndexEmbedderModelId: "",
+			codebaseIndexEmbedderModelDimension: undefined,
 			codebaseIndexSearchMinScore: undefined,
 			codebaseIndexSearchMaxResults: undefined,
+			codebaseIndexOpenAiCompatibleBaseUrl: "",
+			searchProvider: undefined,
 		}
 
 		const {
 			codebaseIndexEnabled,
 			codebaseIndexQdrantUrl,
+			codebaseIndexValkeyHostname,
+			codebaseIndexValkeyPort,
+			codebaseIndexValkeyUsername,
+			codebaseIndexValkeyPassword,
+			codebaseIndexValkeyUseSsl,
 			codebaseIndexEmbedderProvider,
 			codebaseIndexEmbedderBaseUrl,
 			codebaseIndexEmbedderModelId,
 			codebaseIndexSearchMinScore,
 			codebaseIndexSearchMaxResults,
+			searchProvider,
 		} = codebaseIndexConfig
 
 		const openAiKey = this.contextProxy?.getSecret("codeIndexOpenAiKey") ?? ""
 		const qdrantApiKey = this.contextProxy?.getSecret("codeIndexQdrantApiKey") ?? ""
+		const valkeyPassword = this.contextProxy?.getSecret("codeIndexValkeyPassword") ?? ""
 		// Fix: Read OpenAI Compatible settings from the correct location within codebaseIndexConfig
 		const openAiCompatibleBaseUrl = codebaseIndexConfig.codebaseIndexOpenAiCompatibleBaseUrl ?? ""
 		const openAiCompatibleApiKey = this.contextProxy?.getSecret("codebaseIndexOpenAiCompatibleApiKey") ?? ""
@@ -74,8 +95,15 @@ export class CodeIndexConfigManager {
 		this.codebaseIndexEnabled = codebaseIndexEnabled ?? true
 		this.qdrantUrl = codebaseIndexQdrantUrl
 		this.qdrantApiKey = qdrantApiKey ?? ""
+		this.valkeyHostname = codebaseIndexValkeyHostname ?? "localhost"
+		this.valkeyPort = codebaseIndexValkeyPort ?? 6379
+		this.valkeyPassword = valkeyPassword
+		this.valkeyUsername = codebaseIndexValkeyUsername
+		this.valkeyUseSsl = codebaseIndexValkeyUseSsl || false
+		this.valkeyUseSsl = codebaseIndexValkeyUseSsl ?? false
 		this.searchMinScore = codebaseIndexSearchMinScore
 		this.searchMaxResults = codebaseIndexSearchMaxResults
+		this.searchProvider = searchProvider
 
 		// Validate and set model dimension
 		const rawDimension = codebaseIndexConfig.codebaseIndexEmbedderModelDimension
@@ -143,6 +171,12 @@ export class CodeIndexConfigManager {
 			mistralOptions?: { apiKey: string }
 			qdrantUrl?: string
 			qdrantApiKey?: string
+			valkeyHostname?: string
+			valkeyPort?: number
+			valkeyPassword?: string
+			valkeyUsername?: string
+			valkeyUseSsl?: boolean
+			searchProvider?: string
 			searchMinScore?: number
 		}
 		requiresRestart: boolean
@@ -161,7 +195,13 @@ export class CodeIndexConfigManager {
 			geminiApiKey: this.geminiOptions?.apiKey ?? "",
 			mistralApiKey: this.mistralOptions?.apiKey ?? "",
 			qdrantUrl: this.qdrantUrl ?? "",
+			valkeyHostname: this.valkeyHostname ?? "",
+			valkeyPort: this.valkeyPort ?? 6379,
+			valkeyUseSsl: this.valkeyUseSsl ?? false,
+			valkeyUsername: this.valkeyUsername ?? "",
+			searchProvider: this.searchProvider ?? "",
 			qdrantApiKey: this.qdrantApiKey ?? "",
+			valkeyPassword: this.valkeyPassword ?? "",
 		}
 
 		// Refresh secrets from VSCode storage to ensure we have the latest values
@@ -186,6 +226,12 @@ export class CodeIndexConfigManager {
 				mistralOptions: this.mistralOptions,
 				qdrantUrl: this.qdrantUrl,
 				qdrantApiKey: this.qdrantApiKey,
+				valkeyHostname: this.valkeyHostname,
+				valkeyPort: this.valkeyPort,
+				valkeyPassword: this.valkeyPassword,
+				valkeyUsername: this.valkeyUsername,
+				valkeyUseSsl: this.valkeyUseSsl,
+				searchProvider: this.searchProvider,
 				searchMinScore: this.currentSearchMinScore,
 			},
 			requiresRestart,
@@ -196,30 +242,26 @@ export class CodeIndexConfigManager {
 	 * Checks if the service is properly configured based on the embedder type.
 	 */
 	public isConfigured(): boolean {
+		const dbUrlPresent = this.qdrantUrl || this.valkeyHostname
 		if (this.embedderProvider === "openai") {
 			const openAiKey = this.openAiOptions?.openAiNativeApiKey
-			const qdrantUrl = this.qdrantUrl
-			return !!(openAiKey && qdrantUrl)
+			return !!(openAiKey && dbUrlPresent)
 		} else if (this.embedderProvider === "ollama") {
 			// Ollama model ID has a default, so only base URL is strictly required for config
 			const ollamaBaseUrl = this.ollamaOptions?.ollamaBaseUrl
-			const qdrantUrl = this.qdrantUrl
-			return !!(ollamaBaseUrl && qdrantUrl)
+			return !!(ollamaBaseUrl && dbUrlPresent)
 		} else if (this.embedderProvider === "openai-compatible") {
 			const baseUrl = this.openAiCompatibleOptions?.baseUrl
 			const apiKey = this.openAiCompatibleOptions?.apiKey
-			const qdrantUrl = this.qdrantUrl
-			const isConfigured = !!(baseUrl && apiKey && qdrantUrl)
+			const isConfigured = !!(baseUrl && apiKey && dbUrlPresent)
 			return isConfigured
 		} else if (this.embedderProvider === "gemini") {
 			const apiKey = this.geminiOptions?.apiKey
-			const qdrantUrl = this.qdrantUrl
-			const isConfigured = !!(apiKey && qdrantUrl)
+			const isConfigured = !!(apiKey && dbUrlPresent)
 			return isConfigured
 		} else if (this.embedderProvider === "mistral") {
 			const apiKey = this.mistralOptions?.apiKey
-			const qdrantUrl = this.qdrantUrl
-			const isConfigured = !!(apiKey && qdrantUrl)
+			const isConfigured = !!(apiKey && dbUrlPresent)
 			return isConfigured
 		}
 		return false // Should not happen if embedderProvider is always set correctly
@@ -256,7 +298,13 @@ export class CodeIndexConfigManager {
 		const prevGeminiApiKey = prev?.geminiApiKey ?? ""
 		const prevMistralApiKey = prev?.mistralApiKey ?? ""
 		const prevQdrantUrl = prev?.qdrantUrl ?? ""
+		const prevValkeyHostname = prev?.valkeyHostname ?? ""
+		const prevValkeyPort = prev?.valkeyPort ?? 6379
+		const prevSearchProvider = prev?.searchProvider ?? ""
 		const prevQdrantApiKey = prev?.qdrantApiKey ?? ""
+		const prevValkeyPassword = prev?.valkeyPassword ?? ""
+		const prevValkeyUsername = prev?.valkeyUsername ?? ""
+		const prevValkeyUseSsl = prev?.valkeyUseSsl ?? false
 
 		// 1. Transition from disabled/unconfigured to enabled/configured
 		if ((!prevEnabled || !prevConfigured) && this.codebaseIndexEnabled && nowConfigured) {
@@ -265,6 +313,10 @@ export class CodeIndexConfigManager {
 
 		// 2. Transition from enabled to disabled
 		if (prevEnabled && !this.codebaseIndexEnabled) {
+			return true
+		}
+
+		if (prevValkeyUseSsl && !this.valkeyUseSsl) {
 			return true
 		}
 
@@ -293,7 +345,13 @@ export class CodeIndexConfigManager {
 		const currentGeminiApiKey = this.geminiOptions?.apiKey ?? ""
 		const currentMistralApiKey = this.mistralOptions?.apiKey ?? ""
 		const currentQdrantUrl = this.qdrantUrl ?? ""
+		const currentValkeyHostname = this.valkeyHostname ?? ""
+		const currentValkeyPort = this.valkeyPort ?? 6379
+		const currentSearchProvider = this.searchProvider ?? ""
 		const currentQdrantApiKey = this.qdrantApiKey ?? ""
+		const currentValkeyPassword = this.valkeyPassword ?? ""
+		const currentValkeyUsername = this.valkeyUsername ?? ""
+		const currentValkeyUseSsl = this.valkeyUseSsl ?? false
 
 		if (prevOpenAiKey !== currentOpenAiKey) {
 			return true
@@ -324,6 +382,34 @@ export class CodeIndexConfigManager {
 		}
 
 		if (prevQdrantUrl !== currentQdrantUrl || prevQdrantApiKey !== currentQdrantApiKey) {
+			return true
+		}
+
+		if (prevSearchProvider !== currentSearchProvider) {
+			return true
+		}
+
+		if (prevValkeyHostname !== currentValkeyHostname || prevValkeyPort !== currentValkeyPort) {
+			return true
+		}
+
+		if (prevValkeyUseSsl !== currentValkeyUseSsl) {
+			return true
+		}
+
+		if (prevValkeyPassword !== currentValkeyPassword) {
+			return true
+		}
+
+		if (prevValkeyUsername !== currentValkeyUsername) {
+			return true
+		}
+
+		if (prevValkeyUseSsl !== currentValkeyUseSsl) {
+			return true
+		}
+
+		if (currentSearchProvider != prevSearchProvider) {
 			return true
 		}
 
@@ -377,6 +463,12 @@ export class CodeIndexConfigManager {
 			mistralOptions: this.mistralOptions,
 			qdrantUrl: this.qdrantUrl,
 			qdrantApiKey: this.qdrantApiKey,
+			searchProvider: this.searchProvider,
+			valkeyHostname: this.valkeyHostname,
+			valkeyPort: this.valkeyPort,
+			valkeyUsername: this.valkeyUsername,
+			valkeyPassword: this.valkeyPassword,
+			valkeyUseSsl: this.valkeyUseSsl,
 			searchMinScore: this.currentSearchMinScore,
 			searchMaxResults: this.currentSearchMaxResults,
 		}
