@@ -106,7 +106,7 @@ import { AutoApprovalHandler } from "./AutoApprovalHandler"
 
 const MAX_EXPONENTIAL_BACKOFF_SECONDS = 600 // 10 minutes
 const DEFAULT_USAGE_COLLECTION_TIMEOUT_MS = 5000 // 5 seconds
-const FORCED_CONTEXT_REDUCTION_PERCENT = 75 // Force 25% reduction on context window errors
+const FORCED_CONTEXT_REDUCTION_PERCENT = 75 // Keep 75% of context (remove 25%) on context window errors
 const MAX_CONTEXT_WINDOW_RETRIES = 3 // Maximum retries for context window errors
 
 export type TaskOptions = {
@@ -1390,7 +1390,7 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 		if (this.bridgeService) {
 			this.bridgeService
 				.unsubscribeFromTask(this.taskId)
-				.catch((error) => console.error("Error unsubscribing from task bridge:", error))
+				.catch((error: unknown) => console.error("Error unsubscribing from task bridge:", error))
 			this.bridgeService = null
 		}
 
@@ -2256,7 +2256,14 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 		// Get the current profile ID using the helper method
 		const currentProfileId = this.getCurrentProfileId(state)
 
-		// Force aggressive truncation by removing 25% of the conversation history
+		// Log the context window error for debugging
+		console.warn(
+			`[Task#${this.taskId}] Context window exceeded for model ${this.api.getModel().id}. ` +
+				`Current tokens: ${contextTokens}, Context window: ${contextWindow}. ` +
+				`Forcing truncation to ${FORCED_CONTEXT_REDUCTION_PERCENT}% of current context.`,
+		)
+
+		// Force aggressive truncation by keeping only 75% of the conversation history
 		const truncateResult = await truncateConversationIfNeeded({
 			messages: this.apiConversationHistory,
 			totalTokens: contextTokens || 0,
@@ -2369,6 +2376,7 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 
 			const contextWindow = modelInfo.contextWindow
 
+			// Get the current profile ID using the helper method
 			const currentProfileId = this.getCurrentProfileId(state)
 
 			const truncateResult = await truncateConversationIfNeeded({
@@ -2481,7 +2489,9 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 			// If it's a context window error and we haven't exceeded max retries for this error type
 			if (isContextWindowExceededError && retryAttempt < MAX_CONTEXT_WINDOW_RETRIES) {
 				console.warn(
-					`Context window exceeded for model ${this.api.getModel().id}. Attempting automatic truncation...`,
+					`[Task#${this.taskId}] Context window exceeded for model ${this.api.getModel().id}. ` +
+						`Retry attempt ${retryAttempt + 1}/${MAX_CONTEXT_WINDOW_RETRIES}. ` +
+						`Attempting automatic truncation...`,
 				)
 				await this.handleContextWindowExceededError()
 				// Retry the request after handling the context window error

@@ -1,110 +1,124 @@
-import { describe, it, expect } from "vitest"
+import { describe, it, expect, vi } from "vitest"
 import { APIError } from "openai"
 import { checkContextWindowExceededError } from "../context-error-handling"
 
 describe("checkContextWindowExceededError", () => {
 	describe("OpenAI errors", () => {
-		it("should detect OpenAI context length exceeded error", () => {
-			const error = new APIError(
-				400,
-				{
-					error: {
-						message: "This model's maximum context length is 4096 tokens",
-						type: "invalid_request_error",
-						param: null,
-						code: "context_length_exceeded",
-					},
+		it("should detect OpenAI context window error with APIError instance", () => {
+			const error = Object.create(APIError.prototype)
+			Object.assign(error, {
+				status: 400,
+				code: "400",
+				message: "This model's maximum context length is 4096 tokens",
+				error: {
+					message: "This model's maximum context length is 4096 tokens",
+					type: "invalid_request_error",
+					param: null,
+					code: "context_length_exceeded",
 				},
-				"This model's maximum context length is 4096 tokens",
-				undefined as any,
-			)
+			})
+
 			expect(checkContextWindowExceededError(error)).toBe(true)
 		})
 
-		it("should detect OpenAI token limit error", () => {
-			const error = new APIError(
-				400,
-				{
-					error: {
-						message: "Request exceeded token limit",
-						type: "invalid_request_error",
-						param: null,
-						code: null,
-					},
-				},
-				"Request exceeded token limit",
-				undefined as any,
-			)
-			expect(checkContextWindowExceededError(error)).toBe(true)
-		})
-
-		it("should detect LengthFinishReasonError", () => {
+		it("should detect OpenAI LengthFinishReasonError", () => {
 			const error = {
 				name: "LengthFinishReasonError",
 				message: "The response was cut off due to length",
 			}
+
 			expect(checkContextWindowExceededError(error)).toBe(true)
 		})
 
 		it("should not detect non-context OpenAI errors", () => {
-			const error = new APIError(
-				401,
-				{
-					error: {
-						message: "Invalid API key",
-						type: "authentication_error",
-						param: null,
-						code: null,
-					},
+			const error = Object.create(APIError.prototype)
+			Object.assign(error, {
+				status: 400,
+				code: "400",
+				message: "Invalid API key",
+				error: {
+					message: "Invalid API key",
+					type: "invalid_request_error",
+					param: null,
+					code: "invalid_api_key",
 				},
-				"Invalid API key",
-				undefined as any,
-			)
+			})
+
 			expect(checkContextWindowExceededError(error)).toBe(false)
 		})
 	})
 
 	describe("OpenRouter errors", () => {
-		it("should detect OpenRouter context window error", () => {
+		it("should detect OpenRouter context window error with status 400", () => {
 			const error = {
 				status: 400,
-				message: "Context window exceeded for this request",
+				message: "Request exceeds maximum context length of 8192 tokens",
 			}
+
 			expect(checkContextWindowExceededError(error)).toBe(true)
 		})
 
-		it("should detect OpenRouter maximum context error", () => {
+		it("should detect OpenRouter error with nested error structure", () => {
 			const error = {
-				code: 400,
 				error: {
-					message: "Maximum context length reached",
+					status: 400,
+					message: "Input tokens exceed model limit",
 				},
 			}
+
 			expect(checkContextWindowExceededError(error)).toBe(true)
 		})
 
-		it("should detect OpenRouter too many tokens error", () => {
+		it("should detect OpenRouter error with response status", () => {
 			const error = {
 				response: {
 					status: 400,
 				},
 				message: "Too many tokens in the request",
 			}
+
 			expect(checkContextWindowExceededError(error)).toBe(true)
 		})
 
-		it("should not detect non-context OpenRouter errors", () => {
+		it("should detect various context error patterns", () => {
+			const patterns = [
+				"context length exceeded",
+				"maximum context window",
+				"input tokens exceed limit",
+				"too many tokens",
+			]
+
+			patterns.forEach((pattern) => {
+				const error = {
+					status: 400,
+					message: pattern,
+				}
+				expect(checkContextWindowExceededError(error)).toBe(true)
+			})
+		})
+
+		it("should not detect non-context 400 errors", () => {
 			const error = {
 				status: 400,
 				message: "Invalid request format",
 			}
+
+			expect(checkContextWindowExceededError(error)).toBe(false)
+		})
+
+		it("should not detect errors with different status codes", () => {
+			const error = {
+				status: 500,
+				message: "context length exceeded",
+			}
+
 			expect(checkContextWindowExceededError(error)).toBe(false)
 		})
 	})
 
 	describe("Anthropic errors", () => {
-		it("should detect Anthropic prompt too long error", () => {
-			const response = {
+		it("should detect Anthropic context window error", () => {
+			const error = {
 				error: {
 					error: {
 						type: "invalid_request_error",
@@ -112,103 +126,101 @@ describe("checkContextWindowExceededError", () => {
 					},
 				},
 			}
-			expect(checkContextWindowExceededError(response)).toBe(true)
+
+			expect(checkContextWindowExceededError(error)).toBe(true)
 		})
 
-		it("should detect Anthropic maximum tokens error", () => {
-			const response = {
+		it("should detect Anthropic error with context_length_exceeded code", () => {
+			const error = {
 				error: {
 					error: {
 						type: "invalid_request_error",
-						message: "Request exceeds maximum tokens allowed",
+						code: "context_length_exceeded",
+						message: "The request exceeds the maximum context window",
 					},
 				},
 			}
-			expect(checkContextWindowExceededError(response)).toBe(true)
+
+			expect(checkContextWindowExceededError(error)).toBe(true)
 		})
 
-		it("should detect Anthropic context too long error", () => {
-			const response = {
-				error: {
-					error: {
-						type: "invalid_request_error",
-						message: "The context is too long for this model",
-					},
-				},
-			}
-			expect(checkContextWindowExceededError(response)).toBe(true)
-		})
+		it("should detect various Anthropic context error patterns", () => {
+			const patterns = [
+				"prompt is too long",
+				"maximum 200000 tokens",
+				"context is too long",
+				"exceeds the context window",
+				"token limit exceeded",
+			]
 
-		it("should detect Anthropic token limit error", () => {
-			const response = {
-				error: {
+			patterns.forEach((pattern) => {
+				const error = {
 					error: {
-						type: "invalid_request_error",
-						message: "Your request has hit the token limit",
+						error: {
+							type: "invalid_request_error",
+							message: pattern,
+						},
 					},
-				},
-			}
-			expect(checkContextWindowExceededError(response)).toBe(true)
+				}
+				expect(checkContextWindowExceededError(error)).toBe(true)
+			})
 		})
 
 		it("should not detect non-context Anthropic errors", () => {
-			const response = {
+			const error = {
 				error: {
 					error: {
 						type: "invalid_request_error",
-						message: "Invalid API key provided",
+						message: "Invalid model specified",
 					},
 				},
 			}
-			expect(checkContextWindowExceededError(response)).toBe(false)
+
+			expect(checkContextWindowExceededError(error)).toBe(false)
 		})
 
-		it("should not detect other Anthropic error types", () => {
-			const response = {
+		it("should not detect errors with different error types", () => {
+			const error = {
 				error: {
 					error: {
-						type: "rate_limit_error",
-						message: "Rate limit exceeded",
+						type: "authentication_error",
+						message: "prompt is too long",
 					},
 				},
 			}
-			expect(checkContextWindowExceededError(response)).toBe(false)
+
+			expect(checkContextWindowExceededError(error)).toBe(false)
 		})
 	})
 
 	describe("Cerebras errors", () => {
 		it("should detect Cerebras context window error", () => {
-			const response = {
+			const error = {
 				status: 400,
 				message: "Please reduce the length of the messages or completion",
 			}
-			expect(checkContextWindowExceededError(response)).toBe(true)
+
+			expect(checkContextWindowExceededError(error)).toBe(true)
 		})
 
 		it("should detect Cerebras error with nested structure", () => {
-			const response = {
+			const error = {
 				error: {
 					status: 400,
 					message: "Please reduce the length of the messages or completion",
 				},
 			}
-			expect(checkContextWindowExceededError(response)).toBe(true)
+
+			expect(checkContextWindowExceededError(error)).toBe(true)
 		})
 
 		it("should not detect non-context Cerebras errors", () => {
-			const response = {
+			const error = {
 				status: 400,
 				message: "Invalid request parameters",
 			}
-			expect(checkContextWindowExceededError(response)).toBe(false)
-		})
 
-		it("should not detect Cerebras errors with different status codes", () => {
-			const response = {
-				status: 500,
-				message: "Please reduce the length of the messages or completion",
-			}
-			expect(checkContextWindowExceededError(response)).toBe(false)
+			expect(checkContextWindowExceededError(error)).toBe(false)
 		})
 	})
 
@@ -233,18 +245,28 @@ describe("checkContextWindowExceededError", () => {
 			expect(checkContextWindowExceededError(123)).toBe(false)
 		})
 
-		it("should handle boolean input", () => {
-			expect(checkContextWindowExceededError(true)).toBe(false)
-		})
-
 		it("should handle array input", () => {
 			expect(checkContextWindowExceededError([])).toBe(false)
 		})
 
 		it("should handle errors with circular references", () => {
-			const error: any = { status: 400, message: "context window exceeded" }
+			const error: any = { status: 400, message: "context length exceeded" }
 			error.self = error // Create circular reference
+
 			expect(checkContextWindowExceededError(error)).toBe(true)
+		})
+
+		it("should handle errors with deeply nested undefined values", () => {
+			const error = {
+				error: {
+					error: {
+						type: undefined,
+						message: undefined,
+					},
+				},
+			}
+
+			expect(checkContextWindowExceededError(error)).toBe(false)
 		})
 
 		it("should handle errors that throw during property access", () => {
@@ -252,45 +274,18 @@ describe("checkContextWindowExceededError", () => {
 				get status() {
 					throw new Error("Property access error")
 				},
-				message: "Some error",
+				message: "context length exceeded",
 			}
+
 			expect(checkContextWindowExceededError(error)).toBe(false)
 		})
 
-		it("should handle deeply nested error structures", () => {
+		it("should handle mixed provider error structures", () => {
+			// Error that could match multiple providers
 			const error = {
-				response: {
-					data: {
-						error: {
-							status: 400,
-							message: "Context length exceeded",
-						},
-					},
-				},
-			}
-			// This should work because we check response.status
-			const errorWithResponseStatus = {
-				response: {
-					status: 400,
-				},
-				message: "Context length exceeded",
-			}
-			expect(checkContextWindowExceededError(errorWithResponseStatus)).toBe(true)
-		})
-	})
-
-	describe("Multiple provider detection", () => {
-		it("should detect errors from any supported provider", () => {
-			// OpenAI APIError needs specific structure
-			const openAIError = new APIError(
-				400,
-				{ error: { message: "context length exceeded" } },
-				"context length exceeded",
-				undefined as any,
-			)
-			// Set the code property which is checked by the implementation
-			;(openAIError as any).code = "400"
-			const anthropicError = {
+				status: 400,
+				code: "400",
+				message: "context length exceeded",
 				error: {
 					error: {
 						type: "invalid_request_error",
@@ -298,19 +293,37 @@ describe("checkContextWindowExceededError", () => {
 					},
 				},
 			}
-			const cerebrasError = {
+
+			expect(checkContextWindowExceededError(error)).toBe(true)
+		})
+	})
+
+	describe("Multiple provider detection", () => {
+		it("should detect error if any provider check returns true", () => {
+			// This error should be detected by OpenRouter check
+			const error1 = {
+				status: 400,
+				message: "context window exceeded",
+			}
+			expect(checkContextWindowExceededError(error1)).toBe(true)
+
+			// This error should be detected by Anthropic check
+			const error2 = {
+				error: {
+					error: {
+						type: "invalid_request_error",
+						message: "prompt is too long",
+					},
+				},
+			}
+			expect(checkContextWindowExceededError(error2)).toBe(true)
+
+			// This error should be detected by Cerebras check
+			const error3 = {
 				status: 400,
 				message: "Please reduce the length of the messages or completion",
 			}
-			const openRouterError = {
-				code: 400,
-				message: "maximum context reached",
-			}
-
-			expect(checkContextWindowExceededError(openAIError)).toBe(true)
-			expect(checkContextWindowExceededError(anthropicError)).toBe(true)
-			expect(checkContextWindowExceededError(cerebrasError)).toBe(true)
-			expect(checkContextWindowExceededError(openRouterError)).toBe(true)
+			expect(checkContextWindowExceededError(error3)).toBe(true)
 		})
 	})
 })

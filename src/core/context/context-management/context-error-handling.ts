@@ -65,18 +65,26 @@ function checkIsAnthropicContextWindowError(response: unknown): boolean {
 		// Use type assertions with proper checks
 		const res = response as Record<string, any>
 
-		// Check for Anthropic-specific error structure
+		// Check for Anthropic-specific error structure with more specific validation
 		if (res.error?.error?.type === "invalid_request_error") {
 			const message: string = String(res.error?.error?.message || "")
 
-			// Check if the message indicates a context window issue
+			// More specific patterns for context window errors
 			const contextWindowPatterns = [
 				/prompt is too long/i,
 				/maximum.*tokens/i,
 				/context.*too.*long/i,
 				/exceeds.*context/i,
 				/token.*limit/i,
+				/context_length_exceeded/i,
+				/max_tokens_to_sample/i,
 			]
+
+			// Additional check for Anthropic-specific error codes
+			const errorCode = res.error?.error?.code
+			if (errorCode === "context_length_exceeded" || errorCode === "invalid_request_error") {
+				return contextWindowPatterns.some((pattern) => pattern.test(message))
+			}
 
 			return contextWindowPatterns.some((pattern) => pattern.test(message))
 		}
