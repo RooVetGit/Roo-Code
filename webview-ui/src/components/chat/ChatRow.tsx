@@ -1130,7 +1130,52 @@ export const ChatRowContent = ({
 							/>
 						</div>
 					)
-				case "error":
+				case "error": {
+					const parsed = safeJsonParse<any>(message.text)
+					if (parsed?.code === "FILE_NOT_FOUND") {
+						const filePaths: string[] = Array.isArray(parsed.filePaths) ? parsed.filePaths : []
+						const isPlural = filePaths.length > 1
+						const header = isPlural
+							? t("chat:fileOperations.filesNotFound")
+							: t("chat:fileOperations.fileNotFound")
+						const description = isPlural
+							? t("chat:fileOperations.filesNotFoundMessage")
+							: t("chat:fileOperations.fileNotFoundMessage")
+
+						return (
+							<div>
+								<div style={headerStyle}>
+									<span
+										className="codicon codicon-warning"
+										style={{
+											color: "var(--vscode-editorWarning-foreground)",
+											marginBottom: "-1.5px",
+										}}
+									/>
+									<span style={{ fontWeight: "bold" }}>{header}</span>
+								</div>
+								<div
+									style={{
+										padding: "8px",
+										backgroundColor: "var(--vscode-editor-background)",
+										border: "1px solid var(--vscode-editorGroup-border)",
+										borderRadius: 4,
+									}}>
+									<p style={{ ...pStyle, color: "var(--vscode-editor-foreground)" }}>{description}</p>
+									{filePaths.length > 0 && (
+										<ul style={{ marginTop: 8, paddingLeft: 18 }}>
+											{filePaths.map((p, i) => (
+												<li key={i}>
+													<code>{p}</code>
+												</li>
+											))}
+										</ul>
+									)}
+								</div>
+							</div>
+						)
+					}
+
 					return (
 						<>
 							{title && (
@@ -1142,6 +1187,7 @@ export const ChatRowContent = ({
 							<p style={{ ...pStyle, color: "var(--vscode-errorForeground)" }}>{message.text}</p>
 						</>
 					)
+				}
 				case "completion_result":
 					return (
 						<>
