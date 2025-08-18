@@ -179,12 +179,15 @@ describe("LMStudio Fetcher", () => {
 
 			const result = await getLMStudioModels(baseUrl)
 
-			// Should only have one model, with the loaded model's runtime info taking precedence
+			// Should only have one model, with the loaded model replacing the downloaded one
 			expect(Object.keys(result)).toHaveLength(1)
 
-			// The downloaded model's path should be the key, but with loaded model's data
+			// The loaded model's key should be used, with loaded model's data
 			const expectedParsedModel = parseLMStudioModel(mockLoadedModel)
-			expect(result[mockDownloadedModel.path]).toEqual(expectedParsedModel)
+			expect(result[mockLoadedModel.modelKey]).toEqual(expectedParsedModel)
+
+			// The downloaded model should have been removed
+			expect(result[mockDownloadedModel.path]).toBeUndefined()
 		})
 
 		it("should use default baseUrl if an empty string is provided", async () => {

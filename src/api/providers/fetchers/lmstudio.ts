@@ -87,31 +87,21 @@ export async function getLMStudioModels(baseUrl = "http://localhost:1234"): Prom
 			return Promise.all(models.map((m) => m.getModelInfo()))
 		})) as Array<LLMInstanceInfo>
 
-		// Deduplicate loaded models - only add if no existing key contains the model's identifier (case-insensitive)
+		// Deduplicate: For each loaded model, check if any existing model contains its ID (case-insensitive)
+		// If found, remove the downloaded version and add the loaded model (prefer loaded over downloaded)
 		for (const lmstudioModel of loadedModels) {
-			const modelIdentifier = lmstudioModel.modelKey.toLowerCase()
+			const loadedModelId = lmstudioModel.modelKey.toLowerCase()
 
-			// Check if any existing model key contains this loaded model's identifier
-			const isDuplicate = Object.keys(models).some(
-				(existingKey) =>
-					existingKey.toLowerCase().includes(modelIdentifier) ||
-					modelIdentifier.includes(existingKey.toLowerCase()),
-			)
+			// Find if any existing model key includes the loaded model's ID
+			const existingKey = Object.keys(models).find((key) => key.toLowerCase().includes(loadedModelId))
 
-			if (!isDuplicate) {
-				// Use modelKey for loaded models to maintain consistency
-				models[lmstudioModel.modelKey] = parseLMStudioModel(lmstudioModel)
-			} else {
-				// If it's a duplicate, update the existing entry with loaded model info for better context data
-				const existingKey = Object.keys(models).find(
-					(key) => key.toLowerCase().includes(modelIdentifier) || modelIdentifier.includes(key.toLowerCase()),
-				)
-				if (existingKey) {
-					// Update with loaded model data which has more accurate runtime info
-					models[existingKey] = parseLMStudioModel(lmstudioModel)
-				}
+			if (existingKey) {
+				// Remove the downloaded version
+				delete models[existingKey]
 			}
 
+			// Add the loaded model (either as replacement or new entry)
+			models[lmstudioModel.modelKey] = parseLMStudioModel(lmstudioModel)
 			modelsWithLoadedDetails.add(lmstudioModel.modelKey)
 		}
 	} catch (error) {
