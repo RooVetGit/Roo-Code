@@ -65,7 +65,7 @@ export const shouldUseReasoningEffort = ({
 	settings?: ProviderSettings
 }): boolean => {
 	// If enableReasoningEffort is explicitly set to false, reasoning should be disabled
-	if (!settings?.enableReasoningEffort) {
+	if (settings?.enableReasoningEffort === false) {
 		return false
 	}
 
