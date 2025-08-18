@@ -46,6 +46,7 @@ export const providerNames = [
 	"sambanova",
 	"zai",
 	"fireworks",
+	"featherless",
 	"io-intelligence",
 ] as const
 
@@ -283,6 +284,10 @@ const fireworksSchema = apiModelIdProviderModelSchema.extend({
 	fireworksApiKey: z.string().optional(),
 })
 
+const featherlessSchema = apiModelIdProviderModelSchema.extend({
+	featherlessApiKey: z.string().optional(),
+})
+
 const ioIntelligenceSchema = apiModelIdProviderModelSchema.extend({
 	ioIntelligenceModelId: z.string().optional(),
 	ioIntelligenceApiKey: z.string().optional(),
@@ -323,6 +328,7 @@ export const providerSettingsSchemaDiscriminated = z.discriminatedUnion("apiProv
 	sambaNovaSchema.merge(z.object({ apiProvider: z.literal("sambanova") })),
 	zaiSchema.merge(z.object({ apiProvider: z.literal("zai") })),
 	fireworksSchema.merge(z.object({ apiProvider: z.literal("fireworks") })),
+	featherlessSchema.merge(z.object({ apiProvider: z.literal("featherless") })),
 	ioIntelligenceSchema.merge(z.object({ apiProvider: z.literal("io-intelligence") })),
 	defaultSchema,
 ])
@@ -359,6 +365,7 @@ export const providerSettingsSchema = z.object({
 	...sambaNovaSchema.shape,
 	...zaiSchema.shape,
 	...fireworksSchema.shape,
+	...featherlessSchema.shape,
 	...ioIntelligenceSchema.shape,
 	...codebaseIndexProviderSchema.shape,
 })
