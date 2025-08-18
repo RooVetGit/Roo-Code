@@ -175,7 +175,9 @@
 		},
 		"scope": {
 			"project": "dự án",
-			"global": "toàn cầu"
+			"global": "toàn cầu",
+			"projectShort": "P",
+			"globalShort": "G"
 		}
 	},
 	"marketplace": {
