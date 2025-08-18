@@ -68,6 +68,7 @@ interface LocalCodeIndexSettings {
 	codeIndexQdrantApiKey?: string
 	codebaseIndexOpenAiCompatibleBaseUrl?: string
 	codebaseIndexOpenAiCompatibleApiKey?: string
+	codebaseIndexOpenAiCompatibleUseFloatEncoding?: boolean
 	codebaseIndexGeminiApiKey?: string
 	codebaseIndexMistralApiKey?: string
 }
@@ -178,6 +179,7 @@ export const CodeIndexPopover: React.FC<CodeIndexPopoverProps> = ({
 		codeIndexQdrantApiKey: "",
 		codebaseIndexOpenAiCompatibleBaseUrl: "",
 		codebaseIndexOpenAiCompatibleApiKey: "",
+		codebaseIndexOpenAiCompatibleUseFloatEncoding: false,
 		codebaseIndexGeminiApiKey: "",
 		codebaseIndexMistralApiKey: "",
 	})
@@ -212,6 +214,8 @@ export const CodeIndexPopover: React.FC<CodeIndexPopoverProps> = ({
 				codeIndexQdrantApiKey: "",
 				codebaseIndexOpenAiCompatibleBaseUrl: codebaseIndexConfig.codebaseIndexOpenAiCompatibleBaseUrl || "",
 				codebaseIndexOpenAiCompatibleApiKey: "",
+				codebaseIndexOpenAiCompatibleUseFloatEncoding:
+					codebaseIndexConfig.codebaseIndexOpenAiCompatibleUseFloatEncoding || false,
 				codebaseIndexGeminiApiKey: "",
 				codebaseIndexMistralApiKey: "",
 			}
@@ -900,6 +904,30 @@ export const CodeIndexPopover: React.FC<CodeIndexPopoverProps> = ({
 														{formErrors.codebaseIndexEmbedderModelDimension}
 													</p>
 												)}
+											</div>
+
+											<div className="space-y-2">
+												<div className="flex items-center gap-2">
+													<VSCodeCheckbox
+														checked={
+															currentSettings.codebaseIndexOpenAiCompatibleUseFloatEncoding ||
+															false
+														}
+														onChange={(e: any) =>
+															updateSetting(
+																"codebaseIndexOpenAiCompatibleUseFloatEncoding",
+																e.target.checked,
+															)
+														}>
+														<span className="text-sm">
+															{t("settings:codeIndex.useFloatEncodingLabel")}
+														</span>
+													</VSCodeCheckbox>
+													<StandardTooltip
+														content={t("settings:codeIndex.useFloatEncodingDescription")}>
+														<span className="codicon codicon-info text-xs text-vscode-descriptionForeground cursor-help" />
+													</StandardTooltip>
+												</div>
 											</div>
 										</>
 									)}

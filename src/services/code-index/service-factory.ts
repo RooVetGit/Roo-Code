@@ -20,11 +20,23 @@ import { TelemetryEventName } from "@roo-code/types"
  * Factory class responsible for creating and configuring code indexing service dependencies.
  */
 export class CodeIndexServiceFactory {
+	private outputChannel?: vscode.OutputChannel
+
 	constructor(
 		private readonly configManager: CodeIndexConfigManager,
 		private readonly workspacePath: string,
 		private readonly cacheManager: CacheManager,
 	) {}
+
+	/**
+	 * Gets or creates the output channel for embedder logging
+	 */
+	private getOutputChannel(): vscode.OutputChannel {
+		if (!this.outputChannel) {
+			this.outputChannel = vscode.window.createOutputChannel("OpenAI Compatible Embedder")
+		}
+		return this.outputChannel
+	}
 
 	/**
 	 * Creates an embedder instance based on the current configuration.
@@ -60,6 +72,9 @@ export class CodeIndexServiceFactory {
 				config.openAiCompatibleOptions.baseUrl,
 				config.openAiCompatibleOptions.apiKey,
 				config.modelId,
+				undefined, // maxItemTokens - use default
+				config.openAiCompatibleOptions.useFloatEncoding,
+				this.getOutputChannel(),
 			)
 		} else if (provider === "gemini") {
 			if (!config.geminiOptions?.apiKey) {

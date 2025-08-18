@@ -182,6 +182,7 @@ describe("CodeIndexServiceFactory", () => {
 				openAiCompatibleOptions: {
 					baseUrl: "https://api.example.com/v1",
 					apiKey: "test-api-key",
+					useFloatEncoding: false,
 				},
 			}
 			mockConfigManager.getConfig.mockReturnValue(testConfig as any)
@@ -194,6 +195,15 @@ describe("CodeIndexServiceFactory", () => {
 				"https://api.example.com/v1",
 				"test-api-key",
 				testModelId,
+				undefined, // modelDimension
+				false, // useFloatEncoding
+				expect.objectContaining({
+					append: expect.any(Function),
+					appendLine: expect.any(Function),
+					clear: expect.any(Function),
+					dispose: expect.any(Function),
+					show: expect.any(Function),
+				}), // outputChannel
 			)
 		})
 
@@ -205,6 +215,7 @@ describe("CodeIndexServiceFactory", () => {
 				openAiCompatibleOptions: {
 					baseUrl: "https://api.example.com/v1",
 					apiKey: "test-api-key",
+					useFloatEncoding: false,
 				},
 			}
 			mockConfigManager.getConfig.mockReturnValue(testConfig as any)
@@ -217,6 +228,15 @@ describe("CodeIndexServiceFactory", () => {
 				"https://api.example.com/v1",
 				"test-api-key",
 				undefined,
+				undefined, // modelDimension
+				false, // useFloatEncoding
+				expect.objectContaining({
+					append: expect.any(Function),
+					appendLine: expect.any(Function),
+					clear: expect.any(Function),
+					dispose: expect.any(Function),
+					show: expect.any(Function),
+				}), // outputChannel
 			)
 		})
 

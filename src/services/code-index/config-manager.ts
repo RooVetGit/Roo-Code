@@ -16,7 +16,7 @@ export class CodeIndexConfigManager {
 	private modelDimension?: number
 	private openAiOptions?: ApiHandlerOptions
 	private ollamaOptions?: ApiHandlerOptions
-	private openAiCompatibleOptions?: { baseUrl: string; apiKey: string }
+	private openAiCompatibleOptions?: { baseUrl: string; apiKey: string; useFloatEncoding?: boolean }
 	private geminiOptions?: { apiKey: string }
 	private mistralOptions?: { apiKey: string }
 	private qdrantUrl?: string = "http://localhost:6333"
@@ -67,6 +67,8 @@ export class CodeIndexConfigManager {
 		// Fix: Read OpenAI Compatible settings from the correct location within codebaseIndexConfig
 		const openAiCompatibleBaseUrl = codebaseIndexConfig.codebaseIndexOpenAiCompatibleBaseUrl ?? ""
 		const openAiCompatibleApiKey = this.contextProxy?.getSecret("codebaseIndexOpenAiCompatibleApiKey") ?? ""
+		const openAiCompatibleUseFloatEncoding =
+			codebaseIndexConfig.codebaseIndexOpenAiCompatibleUseFloatEncoding ?? false
 		const geminiApiKey = this.contextProxy?.getSecret("codebaseIndexGeminiApiKey") ?? ""
 		const mistralApiKey = this.contextProxy?.getSecret("codebaseIndexMistralApiKey") ?? ""
 
@@ -119,6 +121,7 @@ export class CodeIndexConfigManager {
 				? {
 						baseUrl: openAiCompatibleBaseUrl,
 						apiKey: openAiCompatibleApiKey,
+						useFloatEncoding: openAiCompatibleUseFloatEncoding,
 					}
 				: undefined
 
@@ -158,6 +161,7 @@ export class CodeIndexConfigManager {
 			ollamaBaseUrl: this.ollamaOptions?.ollamaBaseUrl ?? "",
 			openAiCompatibleBaseUrl: this.openAiCompatibleOptions?.baseUrl ?? "",
 			openAiCompatibleApiKey: this.openAiCompatibleOptions?.apiKey ?? "",
+			openAiCompatibleUseFloatEncoding: this.openAiCompatibleOptions?.useFloatEncoding ?? false,
 			geminiApiKey: this.geminiOptions?.apiKey ?? "",
 			mistralApiKey: this.mistralOptions?.apiKey ?? "",
 			qdrantUrl: this.qdrantUrl ?? "",
@@ -252,6 +256,7 @@ export class CodeIndexConfigManager {
 		const prevOllamaBaseUrl = prev?.ollamaBaseUrl ?? ""
 		const prevOpenAiCompatibleBaseUrl = prev?.openAiCompatibleBaseUrl ?? ""
 		const prevOpenAiCompatibleApiKey = prev?.openAiCompatibleApiKey ?? ""
+		const prevOpenAiCompatibleUseFloatEncoding = prev?.openAiCompatibleUseFloatEncoding ?? false
 		const prevModelDimension = prev?.modelDimension
 		const prevGeminiApiKey = prev?.geminiApiKey ?? ""
 		const prevMistralApiKey = prev?.mistralApiKey ?? ""
@@ -289,6 +294,7 @@ export class CodeIndexConfigManager {
 		const currentOllamaBaseUrl = this.ollamaOptions?.ollamaBaseUrl ?? ""
 		const currentOpenAiCompatibleBaseUrl = this.openAiCompatibleOptions?.baseUrl ?? ""
 		const currentOpenAiCompatibleApiKey = this.openAiCompatibleOptions?.apiKey ?? ""
+		const currentOpenAiCompatibleUseFloatEncoding = this.openAiCompatibleOptions?.useFloatEncoding ?? false
 		const currentModelDimension = this.modelDimension
 		const currentGeminiApiKey = this.geminiOptions?.apiKey ?? ""
 		const currentMistralApiKey = this.mistralOptions?.apiKey ?? ""
@@ -305,7 +311,8 @@ export class CodeIndexConfigManager {
 
 		if (
 			prevOpenAiCompatibleBaseUrl !== currentOpenAiCompatibleBaseUrl ||
-			prevOpenAiCompatibleApiKey !== currentOpenAiCompatibleApiKey
+			prevOpenAiCompatibleApiKey !== currentOpenAiCompatibleApiKey ||
+			prevOpenAiCompatibleUseFloatEncoding !== currentOpenAiCompatibleUseFloatEncoding
 		) {
 			return true
 		}
