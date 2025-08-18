@@ -318,6 +318,10 @@ export class OpenAICompatibleEmbedder implements IEmbedder {
 					response = (await this.embeddingsClient.embeddings.create({
 						input: batchTexts,
 						model: model,
+						// WARNING: OpenAI package (as of v4.78.1) has a parsing issue that truncates embedding dimensions to 256
+						// when processing numeric arrays (float encoding), which breaks compatibility with models using larger dimensions.
+						// By requesting base64 encoding (the default when useFloatEncoding is false), we bypass the package's parser
+						// and handle decoding ourselves. Only use float encoding with OpenAI-compatible providers that are known to work correctly.
 						encoding_format: encodingFormat as any,
 					})) as OpenAIEmbeddingResponse
 				}
