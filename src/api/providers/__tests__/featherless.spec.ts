@@ -3,7 +3,12 @@
 import { Anthropic } from "@anthropic-ai/sdk"
 import OpenAI from "openai"
 
-import { type FeatherlessModelId, featherlessDefaultModelId, featherlessModels, DEEP_SEEK_DEFAULT_TEMPERATURE } from "@roo-code/types"
+import {
+	type FeatherlessModelId,
+	featherlessDefaultModelId,
+	featherlessModels,
+	DEEP_SEEK_DEFAULT_TEMPERATURE,
+} from "@roo-code/types"
 
 import { FeatherlessHandler } from "../featherless"
 
@@ -153,7 +158,7 @@ describe("FeatherlessHandler", () => {
 	})
 
 	it("should return specified model when valid model is provided", () => {
-		const testModelId: FeatherlessModelId = "deepseek-ai/DeepSeek-R1"
+		const testModelId: FeatherlessModelId = "deepseek-ai/DeepSeek-R1-0528"
 		const handlerWithModel = new FeatherlessHandler({
 			apiModelId: testModelId,
 			featherlessApiKey: "test-featherless-api-key",
@@ -195,7 +200,9 @@ describe("FeatherlessHandler", () => {
 	it("should handle errors in completePrompt", async () => {
 		const errorMessage = "Featherless API error"
 		mockCreate.mockRejectedValueOnce(new Error(errorMessage))
-		await expect(handler.completePrompt("test prompt")).rejects.toThrow(`Featherless completion error: ${errorMessage}`)
+		await expect(handler.completePrompt("test prompt")).rejects.toThrow(
+			`Featherless completion error: ${errorMessage}`,
+		)
 	})
 
 	it("createMessage should yield text content from stream", async () => {
@@ -278,7 +285,6 @@ describe("FeatherlessHandler", () => {
 			}),
 		)
 	})
-
 
 	it("should apply DeepSeek default temperature for R1 models", () => {
 		const testModelId: FeatherlessModelId = "deepseek-ai/DeepSeek-R1-0528"
