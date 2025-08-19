@@ -97,13 +97,22 @@ export async function presentAssistantMessage(cline: Task) {
 				// here for reference.
 				// content = content.replace(/<\/?t(?:h(?:i(?:n(?:k(?:i(?:n(?:g)?)?)?$/, "")
 				//
-				// Remove all instances of <thinking> (with optional line break
-				// after) and </thinking> (with optional line break before).
-				// - Needs to be separate since we dont want to remove the line
-				//   break before the first tag.
-				// - Needs to happen before the xml parsing below.
-				content = content.replace(/<thinking>\s?/g, "")
-				content = content.replace(/\s?<\/thinking>/g, "")
+				// Remove all instances of <thinking>...</thinking> blocks completely
+				// while preserving content outside of thinking tags.
+				// This regex matches the opening tag, any content (including newlines),
+				// and the closing tag, removing the entire block.
+				// Also handles extra whitespace to prevent double newlines.
+				content = content.replace(/<thinking>[\s\S]*?<\/thinking>/g, "")
+				
+				// Handle partial thinking tags at the end of streaming content
+				// Remove incomplete thinking tags that might appear during streaming
+				content = content.replace(/<thinking>[\s\S]*$/g, "")
+				
+				// Clean up any remaining partial closing tags
+				content = content.replace(/\s*<\/thinking>\s*$/g, "")
+				
+				// Clean up extra newlines that result from removing thinking blocks
+				content = content.replace(/\n\n\n+/g, "\n\n")
 
 				// Remove partial XML tag at the very end of the content (for
 				// tool use and thinking tags), Prevents scrollview from
@@ -213,6 +222,8 @@ export async function presentAssistantMessage(cline: Task) {
 						const modeName = getModeBySlug(mode, customModes)?.name ?? mode
 						return `[${block.name} in ${modeName} mode: '${message}']`
 					}
+					default:
+						return `[${block.name}]`
 				}
 			}
 
