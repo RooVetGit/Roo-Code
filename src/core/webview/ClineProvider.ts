@@ -776,6 +776,15 @@ export class ClineProvider
 			throw new OrganizationAllowListViolationError(t("common:errors.violated_organization_allowlist"))
 		}
 
+		// If task is being started via bridge (remote control enabled), ensure sidebar is visible
+		const enableTaskBridge = isRemoteControlEnabled(cloudUserInfo, remoteControlEnabled)
+		if (enableTaskBridge && !this.view?.visible) {
+			// Open the sidebar if it's not already visible
+			await vscode.commands.executeCommand(`${Package.name}.SidebarProvider.focus`)
+			// Wait briefly for the view to become visible
+			await delay(100)
+		}
+
 		const task = new Task({
 			provider: this,
 			apiConfiguration,
@@ -790,7 +799,7 @@ export class ClineProvider
 			parentTask,
 			taskNumber: this.clineStack.length + 1,
 			onCreated: this.taskCreationCallback,
-			enableTaskBridge: isRemoteControlEnabled(cloudUserInfo, remoteControlEnabled),
+			enableTaskBridge,
 			...options,
 		})
 
