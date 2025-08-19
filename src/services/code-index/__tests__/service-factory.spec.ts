@@ -73,10 +73,19 @@ describe("CodeIndexServiceFactory", () => {
 			factory.createEmbedder()
 
 			// Assert
-			expect(MockedOpenAiEmbedder).toHaveBeenCalledWith({
-				openAiNativeApiKey: "test-api-key",
-				openAiEmbeddingModelId: testModelId,
-			})
+			expect(MockedOpenAiEmbedder).toHaveBeenCalledWith(
+				{
+					openAiNativeApiKey: "test-api-key",
+					openAiEmbeddingModelId: testModelId,
+				},
+				expect.objectContaining({
+					append: expect.any(Function),
+					appendLine: expect.any(Function),
+					clear: expect.any(Function),
+					dispose: expect.any(Function),
+					show: expect.any(Function),
+				}), // outputChannel
+			)
 		})
 
 		it("should pass model ID to Ollama embedder when using Ollama provider", () => {
@@ -95,10 +104,19 @@ describe("CodeIndexServiceFactory", () => {
 			factory.createEmbedder()
 
 			// Assert
-			expect(MockedCodeIndexOllamaEmbedder).toHaveBeenCalledWith({
-				ollamaBaseUrl: "http://localhost:11434",
-				ollamaModelId: testModelId,
-			})
+			expect(MockedCodeIndexOllamaEmbedder).toHaveBeenCalledWith(
+				{
+					ollamaBaseUrl: "http://localhost:11434",
+					ollamaModelId: testModelId,
+				},
+				expect.objectContaining({
+					append: expect.any(Function),
+					appendLine: expect.any(Function),
+					clear: expect.any(Function),
+					dispose: expect.any(Function),
+					show: expect.any(Function),
+				}), // outputChannel
+			)
 		})
 
 		it("should handle undefined model ID for OpenAI embedder", () => {
@@ -116,10 +134,19 @@ describe("CodeIndexServiceFactory", () => {
 			factory.createEmbedder()
 
 			// Assert
-			expect(MockedOpenAiEmbedder).toHaveBeenCalledWith({
-				openAiNativeApiKey: "test-api-key",
-				openAiEmbeddingModelId: undefined,
-			})
+			expect(MockedOpenAiEmbedder).toHaveBeenCalledWith(
+				{
+					openAiNativeApiKey: "test-api-key",
+					openAiEmbeddingModelId: undefined,
+				},
+				expect.objectContaining({
+					append: expect.any(Function),
+					appendLine: expect.any(Function),
+					clear: expect.any(Function),
+					dispose: expect.any(Function),
+					show: expect.any(Function),
+				}), // outputChannel
+			)
 		})
 
 		it("should handle undefined model ID for Ollama embedder", () => {
@@ -137,10 +164,19 @@ describe("CodeIndexServiceFactory", () => {
 			factory.createEmbedder()
 
 			// Assert
-			expect(MockedCodeIndexOllamaEmbedder).toHaveBeenCalledWith({
-				ollamaBaseUrl: "http://localhost:11434",
-				ollamaModelId: undefined,
-			})
+			expect(MockedCodeIndexOllamaEmbedder).toHaveBeenCalledWith(
+				{
+					ollamaBaseUrl: "http://localhost:11434",
+					ollamaModelId: undefined,
+				},
+				expect.objectContaining({
+					append: expect.any(Function),
+					appendLine: expect.any(Function),
+					clear: expect.any(Function),
+					dispose: expect.any(Function),
+					show: expect.any(Function),
+				}), // outputChannel
+			)
 		})
 
 		it("should throw error when OpenAI API key is missing", () => {
@@ -299,7 +335,17 @@ describe("CodeIndexServiceFactory", () => {
 			factory.createEmbedder()
 
 			// Assert
-			expect(MockedGeminiEmbedder).toHaveBeenCalledWith("test-gemini-api-key", undefined)
+			expect(MockedGeminiEmbedder).toHaveBeenCalledWith(
+				"test-gemini-api-key",
+				undefined,
+				expect.objectContaining({
+					append: expect.any(Function),
+					appendLine: expect.any(Function),
+					clear: expect.any(Function),
+					dispose: expect.any(Function),
+					show: expect.any(Function),
+				}), // outputChannel
+			)
 		})
 
 		it("should create GeminiEmbedder with specified modelId", () => {
@@ -317,7 +363,17 @@ describe("CodeIndexServiceFactory", () => {
 			factory.createEmbedder()
 
 			// Assert
-			expect(MockedGeminiEmbedder).toHaveBeenCalledWith("test-gemini-api-key", "text-embedding-004")
+			expect(MockedGeminiEmbedder).toHaveBeenCalledWith(
+				"test-gemini-api-key",
+				"text-embedding-004",
+				expect.objectContaining({
+					append: expect.any(Function),
+					appendLine: expect.any(Function),
+					clear: expect.any(Function),
+					dispose: expect.any(Function),
+					show: expect.any(Function),
+				}), // outputChannel
+			)
 		})
 
 		it("should throw error when Gemini API key is missing", () => {
