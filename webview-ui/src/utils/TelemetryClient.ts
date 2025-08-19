@@ -19,6 +19,14 @@ class TelemetryClient {
 				capture_pageview: false,
 				capture_pageleave: false,
 				autocapture: false,
+				// Disable service worker to prevent registration errors in VSCode webview
+				disable_persistence: false,
+				disable_session_recording: true,
+				opt_out_capturing_by_default: false,
+				// Explicitly disable web vitals and other features that might use service workers
+				capture_performance: false,
+				// Disable any features that might attempt service worker registration
+				__preview_send_client_session_params: false,
 			})
 		} else {
 			TelemetryClient.telemetryEnabled = false
