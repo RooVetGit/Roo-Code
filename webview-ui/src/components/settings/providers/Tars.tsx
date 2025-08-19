@@ -5,10 +5,8 @@ import { type ProviderSettings, type OrganizationAllowList, tarsDefaultModelId }
 
 import type { RouterModels } from "@roo/api"
 
-import { vscode } from "@src/utils/vscode"
 import { useAppTranslation } from "@src/i18n/TranslationContext"
 import { VSCodeButtonLink } from "@src/components/common/VSCodeButtonLink"
-import { Button } from "@src/components/ui"
 
 import { inputEventTransform } from "../transforms"
 import { ModelPicker } from "../ModelPicker"
@@ -61,22 +59,10 @@ export const Tars = ({
 				{t("settings:providers.apiKeyStorageNotice")}
 			</div>
 			{!apiConfiguration?.tarsApiKey && (
-				<VSCodeButtonLink href="https://router.tetrate.ai" style={{ width: "100%" }} appearance="primary">
+				<VSCodeButtonLink href="https://router.tetrate.ai" appearance="secondary">
 					{t("settings:providers.getTarsApiKey")}
 				</VSCodeButtonLink>
 			)}
-			<Button
-				variant="outline"
-				onClick={() => {
-					vscode.postMessage({ type: "flushRouterModels", text: "tars" })
-					refetchRouterModels()
-					setDidRefetch(true)
-				}}>
-				<div className="flex items-center gap-2">
-					<span className="codicon codicon-refresh" />
-					{t("settings:providers.refreshModels.label")}
-				</div>
-			</Button>
 			{didRefetch && (
 				<div className="flex items-center text-vscode-errorForeground">
 					{t("settings:providers.refreshModels.hint")}

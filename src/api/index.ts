@@ -13,7 +13,6 @@ import {
 	VertexHandler,
 	AnthropicVertexHandler,
 	OpenAiHandler,
-	OllamaHandler,
 	LmStudioHandler,
 	GeminiHandler,
 	OpenAiNativeHandler,
@@ -33,10 +32,12 @@ import {
 	LiteLLMHandler,
 	ClaudeCodeHandler,
 	SambaNovaHandler,
+	IOIntelligenceHandler,
 	DoubaoHandler,
 	ZAiHandler,
 	FireworksHandler,
 } from "./providers"
+import { NativeOllamaHandler } from "./providers/native-ollama"
 
 export interface SingleCompletionHandler {
 	completePrompt(prompt: string): Promise<string>
@@ -45,6 +46,13 @@ export interface SingleCompletionHandler {
 export interface ApiHandlerCreateMessageMetadata {
 	mode?: string
 	taskId: string
+	previousResponseId?: string
+	/**
+	 * When true, the provider must NOT fall back to internal continuity state
+	 * (e.g., lastResponseId) if previousResponseId is absent.
+	 * Used to enforce "skip once" after a condense operation.
+	 */
+	suppressPreviousResponseId?: boolean
 }
 
 export interface ApiHandler {
@@ -88,7 +96,7 @@ export function buildApiHandler(configuration: ProviderSettings): ApiHandler {
 		case "openai":
 			return new OpenAiHandler(options)
 		case "ollama":
-			return new OllamaHandler(options)
+			return new NativeOllamaHandler(options)
 		case "lmstudio":
 			return new LmStudioHandler(options)
 		case "gemini":
@@ -133,6 +141,8 @@ export function buildApiHandler(configuration: ProviderSettings): ApiHandler {
 			return new ZAiHandler(options)
 		case "fireworks":
 			return new FireworksHandler(options)
+		case "io-intelligence":
+			return new IOIntelligenceHandler(options)
 		default:
 			apiProvider satisfies "gemini-cli" | undefined
 			return new AnthropicHandler(options)

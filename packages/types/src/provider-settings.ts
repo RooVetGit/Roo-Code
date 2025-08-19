@@ -1,7 +1,15 @@
 import { z } from "zod"
 
-import { reasoningEffortsSchema, modelInfoSchema } from "./model.js"
+import { reasoningEffortsSchema, verbosityLevelsSchema, modelInfoSchema } from "./model.js"
 import { codebaseIndexProviderSchema } from "./codebase-index.js"
+
+// Bedrock Claude Sonnet 4 model ID that supports 1M context
+export const BEDROCK_CLAUDE_SONNET_4_MODEL_ID = "anthropic.claude-sonnet-4-20250514-v1:0"
+
+// Extended schema that includes "minimal" for GPT-5 models
+export const extendedReasoningEffortsSchema = z.union([reasoningEffortsSchema, z.literal("minimal")])
+
+export type ReasoningEffortWithMinimal = z.infer<typeof extendedReasoningEffortsSchema>
 
 /**
  * ProviderName
@@ -38,6 +46,7 @@ export const providerNames = [
 	"sambanova",
 	"zai",
 	"fireworks",
+	"io-intelligence",
 	"tars",
 ] as const
 
@@ -77,9 +86,12 @@ const baseProviderSettingsSchema = z.object({
 
 	// Model reasoning.
 	enableReasoningEffort: z.boolean().optional(),
-	reasoningEffort: reasoningEffortsSchema.optional(),
+	reasoningEffort: extendedReasoningEffortsSchema.optional(),
 	modelMaxTokens: z.number().optional(),
 	modelMaxThinkingTokens: z.number().optional(),
+
+	// Model verbosity.
+	verbosity: verbosityLevelsSchema.optional(),
 })
 
 // Several of the providers share common model config properties.
@@ -91,6 +103,7 @@ const anthropicSchema = apiModelIdProviderModelSchema.extend({
 	apiKey: z.string().optional(),
 	anthropicBaseUrl: z.string().optional(),
 	anthropicUseAuthToken: z.boolean().optional(),
+	anthropicBeta1MContext: z.boolean().optional(), // Enable 'context-1m-2025-08-07' beta for 1M context window
 })
 
 const claudeCodeSchema = apiModelIdProviderModelSchema.extend({
@@ -126,6 +139,7 @@ const bedrockSchema = apiModelIdProviderModelSchema.extend({
 	awsModelContextWindow: z.number().optional(),
 	awsBedrockEndpointEnabled: z.boolean().optional(),
 	awsBedrockEndpoint: z.string().optional(),
+	awsBedrock1MContext: z.boolean().optional(), // Enable 'context-1m-2025-08-07' beta for 1M context window
 })
 
 const vertexSchema = apiModelIdProviderModelSchema.extend({
@@ -217,6 +231,7 @@ const unboundSchema = baseProviderSettingsSchema.extend({
 })
 
 const requestySchema = baseProviderSettingsSchema.extend({
+	requestyBaseUrl: z.string().optional(),
 	requestyApiKey: z.string().optional(),
 	requestyModelId: z.string().optional(),
 })
@@ -274,6 +289,11 @@ const fireworksSchema = apiModelIdProviderModelSchema.extend({
 	fireworksApiKey: z.string().optional(),
 })
 
+const ioIntelligenceSchema = apiModelIdProviderModelSchema.extend({
+	ioIntelligenceModelId: z.string().optional(),
+	ioIntelligenceApiKey: z.string().optional(),
+})
+
 const defaultSchema = z.object({
 	apiProvider: z.undefined(),
 })
@@ -310,6 +330,7 @@ export const providerSettingsSchemaDiscriminated = z.discriminatedUnion("apiProv
 	sambaNovaSchema.merge(z.object({ apiProvider: z.literal("sambanova") })),
 	zaiSchema.merge(z.object({ apiProvider: z.literal("zai") })),
 	fireworksSchema.merge(z.object({ apiProvider: z.literal("fireworks") })),
+	ioIntelligenceSchema.merge(z.object({ apiProvider: z.literal("io-intelligence") })),
 	defaultSchema,
 ])
 
@@ -346,6 +367,7 @@ export const providerSettingsSchema = z.object({
 	...sambaNovaSchema.shape,
 	...zaiSchema.shape,
 	...fireworksSchema.shape,
+	...ioIntelligenceSchema.shape,
 	...codebaseIndexProviderSchema.shape,
 })
 
@@ -371,6 +393,7 @@ export const MODEL_ID_KEYS: Partial<keyof ProviderSettings>[] = [
 	"requestyModelId",
 	"litellmModelId",
 	"huggingFaceModelId",
+	"ioIntelligenceModelId",
 ]
 
 export const getModelId = (settings: ProviderSettings): string | undefined => {
