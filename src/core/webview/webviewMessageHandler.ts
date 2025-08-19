@@ -560,7 +560,7 @@ export const webviewMessageHandler = async (
 						apiKey: apiConfiguration.syntxApiKey || "",
 						baseUrl:
 							apiConfiguration.syntxBaseUrl ||
-							"https://api.syntx.dev ",
+							"https://api.syntx.dev",
 					},
 				},
 			]
