@@ -217,4 +217,13 @@ export class AnthropicVertexHandler extends BaseProvider implements SingleComple
 			throw error
 		}
 	}
+
+	/**
+		* Override token counting to use tiktoken fallback for Vertex AI Claude models.
+		* The Vertex AI token counting API can be unreliable, so we use the base provider's
+		* tiktoken implementation which is more consistent for context tracking.
+		*/
+	override async countTokens(content: Anthropic.Messages.ContentBlockParam[]): Promise<number> {
+		return super.countTokens(content)
+	}
 }
