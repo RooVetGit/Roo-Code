@@ -168,28 +168,6 @@ describe("FeatherlessHandler", () => {
 		expect(model.info).toEqual(expect.objectContaining(featherlessModels[testModelId]))
 	})
 
-	it("should return Qwen3-Coder-480B-A35B-Instruct model with correct configuration", () => {
-		const testModelId: FeatherlessModelId = "Qwen/Qwen3-Coder-480B-A35B-Instruct"
-		const handlerWithModel = new FeatherlessHandler({
-			apiModelId: testModelId,
-			featherlessApiKey: "test-featherless-api-key",
-		})
-		const model = handlerWithModel.getModel()
-		expect(model.id).toBe(testModelId)
-		expect(model.info).toEqual(
-			expect.objectContaining({
-				maxTokens: 4096,
-				contextWindow: 32768,
-				supportsImages: false,
-				supportsPromptCache: false,
-				inputPrice: 0,
-				outputPrice: 0,
-				description: "Qwen3 Coder 480B A35B Instruct model.",
-				temperature: 0.5, // Default temperature for non-DeepSeek models
-			}),
-		)
-	})
-
 	it("completePrompt method should return text from Featherless API", async () => {
 		const expectedResponse = "This is a test response from Featherless"
 		mockCreate.mockResolvedValueOnce({ choices: [{ message: { content: expectedResponse } }] })
@@ -297,7 +275,7 @@ describe("FeatherlessHandler", () => {
 	})
 
 	it("should use default temperature for non-DeepSeek models", () => {
-		const testModelId: FeatherlessModelId = "Qwen/Qwen3-Coder-480B-A35B-Instruct"
+		const testModelId: FeatherlessModelId = "moonshotai/Kimi-K2-Instruct"
 		const handlerWithModel = new FeatherlessHandler({
 			apiModelId: testModelId,
 			featherlessApiKey: "test-featherless-api-key",
