@@ -88,6 +88,7 @@ export async function executeRipgrep({
 export async function executeRipgrepForFiles(
 	workspacePath: string,
 	limit: number = 5000,
+	respectIgnoreFiles: boolean = true,
 ): Promise<{ path: string; type: "file" | "folder"; label?: string }[]> {
 	const args = [
 		"--files",
@@ -101,8 +102,14 @@ export async function executeRipgrepForFiles(
 		"!**/out/**",
 		"-g",
 		"!**/dist/**",
-		workspacePath,
 	]
+
+	// If VSCode's search.useIgnoreFiles is disabled, add --no-ignore-vcs to ignore .gitignore files
+	if (!respectIgnoreFiles) {
+		args.push("--no-ignore-vcs")
+	}
+
+	args.push(workspacePath)
 
 	return executeRipgrep({ args, workspacePath, limit })
 }
@@ -113,8 +120,11 @@ export async function searchWorkspaceFiles(
 	limit: number = 20,
 ): Promise<{ path: string; type: "file" | "folder"; label?: string }[]> {
 	try {
+		// Check VSCode's search.useIgnoreFiles setting
+		const useIgnoreFiles = vscode.workspace.getConfiguration("search").get<boolean>("useIgnoreFiles", true)
+
 		// Get all files and directories (from our modified function)
-		const allItems = await executeRipgrepForFiles(workspacePath, 5000)
+		const allItems = await executeRipgrepForFiles(workspacePath, 5000, useIgnoreFiles)
 
 		// If no query, just return the top items
 		if (!query.trim()) {
