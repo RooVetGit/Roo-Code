@@ -35,6 +35,7 @@ import {
 	DoubaoHandler,
 	ZAiHandler,
 	FireworksHandler,
+	CopilotHandler,
 	RooHandler,
 } from "./providers"
 import { NativeOllamaHandler } from "./providers/native-ollama"
@@ -141,6 +142,8 @@ export function buildApiHandler(configuration: ProviderSettings): ApiHandler {
 			return new FireworksHandler(options)
 		case "io-intelligence":
 			return new IOIntelligenceHandler(options)
+		case "copilot":
+			return new CopilotHandler(options)
 		case "roo":
 			return new RooHandler(options)
 		default:

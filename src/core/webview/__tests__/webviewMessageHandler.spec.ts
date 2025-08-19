@@ -2,13 +2,18 @@ import type { Mock } from "vitest"
 
 // Mock dependencies - must come before imports
 vi.mock("../../../api/providers/fetchers/modelCache")
+vi.mock("../../../api/providers/fetchers/copilot")
 
 import { webviewMessageHandler } from "../webviewMessageHandler"
 import type { ClineProvider } from "../ClineProvider"
-import { getModels } from "../../../api/providers/fetchers/modelCache"
+import { flushModels, getModels } from "../../../api/providers/fetchers/modelCache"
+import { getCopilotModels, CopilotAuthenticator } from "../../../api/providers/fetchers/copilot"
 import type { ModelRecord } from "../../../shared/api"
 
 const mockGetModels = getModels as Mock<typeof getModels>
+const mockGetCopilotModels = getCopilotModels as Mock<typeof getCopilotModels>
+const mockCopilotAuthenticator = CopilotAuthenticator as any
+const mockFlushModels = flushModels as Mock<typeof flushModels>
 
 // Mock ClineProvider
 const mockClineProvider = {
@@ -183,6 +188,7 @@ describe("webviewMessageHandler - requestRouterModels", () => {
 			apiKey: "litellm-key",
 			baseUrl: "http://localhost:4000",
 		})
+		expect(mockGetModels).toHaveBeenCalledWith({ provider: "copilot" })
 
 		// Verify response was sent
 		expect(mockClineProvider.postMessageToWebview).toHaveBeenCalledWith({
@@ -195,6 +201,7 @@ describe("webviewMessageHandler - requestRouterModels", () => {
 				litellm: mockModels,
 				ollama: {},
 				lmstudio: {},
+				copilot: mockModels,
 			},
 		})
 	})
@@ -282,6 +289,7 @@ describe("webviewMessageHandler - requestRouterModels", () => {
 				litellm: {},
 				ollama: {},
 				lmstudio: {},
+				copilot: mockModels,
 			},
 		})
 	})
@@ -303,6 +311,7 @@ describe("webviewMessageHandler - requestRouterModels", () => {
 			.mockResolvedValueOnce(mockModels) // glama
 			.mockRejectedValueOnce(new Error("Unbound API error")) // unbound
 			.mockRejectedValueOnce(new Error("LiteLLM connection failed")) // litellm
+			.mockResolvedValueOnce(mockModels) // copilot success
 
 		await webviewMessageHandler(mockClineProvider, {
 			type: "requestRouterModels",
@@ -319,6 +328,7 @@ describe("webviewMessageHandler - requestRouterModels", () => {
 				litellm: {},
 				ollama: {},
 				lmstudio: {},
+				copilot: mockModels,
 			},
 		})
 
@@ -526,6 +536,278 @@ describe("webviewMessageHandler - deleteCustomMode", () => {
 		)
 		// No error response is sent anymore - we just continue with deletion
 		expect(mockClineProvider.postMessageToWebview).not.toHaveBeenCalled()
+	})
+})
+
+describe("webviewMessageHandler - requestCopilotModels", () => {
+	beforeEach(() => {
+		vi.clearAllMocks()
+	})
+
+	it("successfully fetches Copilot models", async () => {
+		const mockCopilotModels = {
+			"gpt-4o": {
+				maxTokens: 4096,
+				contextWindow: 128000,
+				supportsPromptCache: false,
+				description: "GPT-4 Omni model",
+			},
+			"gpt-3.5-turbo": {
+				maxTokens: 4096,
+				contextWindow: 16385,
+				supportsPromptCache: false,
+				description: "GPT-3.5 Turbo model",
+			},
+		}
+
+		// Mock getCopilotModels to return mock models
+		mockGetModels.mockResolvedValue(mockCopilotModels)
+
+		await webviewMessageHandler(mockClineProvider, {
+			type: "requestCopilotModels",
+		})
+
+		expect(mockFlushModels).toHaveBeenCalledTimes(1)
+		expect(mockGetModels).toHaveBeenCalledTimes(1)
+		expect(mockClineProvider.postMessageToWebview).toHaveBeenCalledWith({
+			type: "copilotModels",
+			copilotModels: mockCopilotModels,
+		})
+	})
+
+	it("handles errors when fetching Copilot models", async () => {
+		mockGetModels.mockRejectedValue(new Error("Authentication failed"))
+
+		// Spy on console.error
+		const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {})
+
+		await webviewMessageHandler(mockClineProvider, {
+			type: "requestCopilotModels",
+		})
+
+		expect(mockFlushModels).toHaveBeenCalledTimes(1)
+		expect(mockGetModels).toHaveBeenCalledTimes(1)
+		expect(consoleSpy).toHaveBeenCalledWith("Failed to fetch Copilot models:", expect.any(Error))
+		expect(mockClineProvider.postMessageToWebview).toHaveBeenCalledWith({
+			type: "copilotModels",
+			copilotModels: {},
+		})
+
+		consoleSpy.mockRestore()
+	})
+})
+
+describe("webviewMessageHandler - authenticateCopilot", () => {
+	let mockAuthenticator: any
+
+	beforeEach(() => {
+		vi.clearAllMocks()
+
+		// Mock CopilotAuthenticator
+		mockAuthenticator = {
+			setDeviceCodeCallback: vi.fn(),
+			setAuthTimeoutCallback: vi.fn(),
+			getApiKey: vi.fn(),
+		}
+
+		vi.mocked(mockCopilotAuthenticator.getInstance).mockReturnValue(mockAuthenticator)
+	})
+
+	it("successfully starts device code authentication flow", async () => {
+		mockAuthenticator.getApiKey.mockResolvedValue("test-api-key")
+
+		await webviewMessageHandler(mockClineProvider, {
+			type: "authenticateCopilot",
+		})
+
+		expect(mockAuthenticator.setDeviceCodeCallback).toHaveBeenCalledWith(expect.any(Function))
+		expect(mockAuthenticator.setAuthTimeoutCallback).toHaveBeenCalledWith(expect.any(Function))
+		expect(mockAuthenticator.getApiKey).toHaveBeenCalledTimes(1)
+		expect(mockClineProvider.postMessageToWebview).toHaveBeenCalledWith({
+			type: "copilotAuthStatus",
+			copilotAuthenticated: true,
+		})
+	})
+
+	it("handles authentication errors", async () => {
+		const error = new Error("Authentication timeout")
+		mockAuthenticator.getApiKey.mockRejectedValue(error)
+
+		// Spy on console.error
+		const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {})
+
+		await webviewMessageHandler(mockClineProvider, {
+			type: "authenticateCopilot",
+		})
+
+		expect(consoleSpy).toHaveBeenCalledWith("Failed to authenticate with Copilot:", error)
+		expect(mockClineProvider.postMessageToWebview).toHaveBeenCalledWith({
+			type: "copilotAuthError",
+			error: "Authentication timeout",
+		})
+
+		consoleSpy.mockRestore()
+	})
+
+	it("handles device code callback", async () => {
+		const mockDeviceInfo = {
+			user_code: "ABC123",
+			verification_uri: "https://github.com/login/device",
+			expires_in: 900,
+		}
+
+		mockAuthenticator.getApiKey.mockResolvedValue("test-api-key")
+
+		await webviewMessageHandler(mockClineProvider, {
+			type: "authenticateCopilot",
+		})
+
+		// Get the callback function that was set
+		const deviceCodeCallback = mockAuthenticator.setDeviceCodeCallback.mock.calls[0][0]
+
+		// Call the callback with mock device info
+		deviceCodeCallback(mockDeviceInfo)
+
+		expect(mockClineProvider.postMessageToWebview).toHaveBeenCalledWith({
+			type: "copilotDeviceCode",
+			copilotDeviceCode: {
+				user_code: "ABC123",
+				verification_uri: "https://github.com/login/device",
+				expires_in: 900,
+			},
+		})
+	})
+
+	it("handles auth timeout callback", async () => {
+		const timeoutError = "Device code expired"
+		mockAuthenticator.getApiKey.mockResolvedValue("test-api-key")
+
+		await webviewMessageHandler(mockClineProvider, {
+			type: "authenticateCopilot",
+		})
+
+		// Get the callback function that was set
+		const authTimeoutCallback = mockAuthenticator.setAuthTimeoutCallback.mock.calls[0][0]
+
+		// Call the callback with timeout error
+		authTimeoutCallback(timeoutError)
+
+		expect(mockClineProvider.postMessageToWebview).toHaveBeenCalledWith({
+			type: "copilotAuthError",
+			error: timeoutError,
+		})
+	})
+})
+
+describe("webviewMessageHandler - clearCopilotAuth", () => {
+	let mockAuthenticator: any
+
+	beforeEach(() => {
+		vi.clearAllMocks()
+
+		// Mock CopilotAuthenticator
+		mockAuthenticator = {
+			clearAuth: vi.fn(),
+		}
+
+		vi.mocked(mockCopilotAuthenticator.getInstance).mockReturnValue(mockAuthenticator)
+	})
+
+	it("successfully clears Copilot authentication", async () => {
+		mockAuthenticator.clearAuth.mockResolvedValue(undefined)
+
+		await webviewMessageHandler(mockClineProvider, {
+			type: "clearCopilotAuth",
+		})
+
+		expect(mockAuthenticator.clearAuth).toHaveBeenCalledTimes(1)
+		expect(mockClineProvider.postMessageToWebview).toHaveBeenCalledWith({
+			type: "copilotAuthStatus",
+			copilotAuthenticated: false,
+		})
+	})
+
+	it("handles errors when clearing authentication", async () => {
+		const error = new Error("Failed to clear token")
+		mockAuthenticator.clearAuth.mockRejectedValue(error)
+
+		// Spy on console.error
+		const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {})
+
+		await webviewMessageHandler(mockClineProvider, {
+			type: "clearCopilotAuth",
+		})
+
+		expect(consoleSpy).toHaveBeenCalledWith("Failed to clear Copilot authentication:", error)
+		expect(mockClineProvider.postMessageToWebview).toHaveBeenCalledWith({
+			type: "copilotAuthError",
+			error: "Failed to clear token",
+		})
+
+		consoleSpy.mockRestore()
+	})
+})
+
+describe("webviewMessageHandler - checkCopilotAuth", () => {
+	let mockAuthenticator: any
+
+	beforeEach(() => {
+		vi.clearAllMocks()
+
+		// Mock CopilotAuthenticator
+		mockAuthenticator = {
+			isAuthenticated: vi.fn(),
+		}
+
+		vi.mocked(mockCopilotAuthenticator.getInstance).mockReturnValue(mockAuthenticator)
+	})
+
+	it("returns true when user is authenticated", async () => {
+		mockAuthenticator.isAuthenticated.mockResolvedValue(true)
+
+		await webviewMessageHandler(mockClineProvider, {
+			type: "checkCopilotAuth",
+		})
+
+		expect(mockAuthenticator.isAuthenticated).toHaveBeenCalledTimes(1)
+		expect(mockClineProvider.postMessageToWebview).toHaveBeenCalledWith({
+			type: "copilotAuthStatus",
+			copilotAuthenticated: true,
+		})
+	})
+
+	it("returns false when user is not authenticated", async () => {
+		mockAuthenticator.isAuthenticated.mockResolvedValue(false)
+
+		await webviewMessageHandler(mockClineProvider, {
+			type: "checkCopilotAuth",
+		})
+
+		expect(mockAuthenticator.isAuthenticated).toHaveBeenCalledTimes(1)
+		expect(mockClineProvider.postMessageToWebview).toHaveBeenCalledWith({
+			type: "copilotAuthStatus",
+			copilotAuthenticated: false,
+		})
+	})
+
+	it("handles errors when checking authentication status", async () => {
+		const error = new Error("Network error")
+		mockAuthenticator.isAuthenticated.mockRejectedValue(error)
+
+		// Spy on console.error
+		const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {})
+
+		await webviewMessageHandler(mockClineProvider, {
+			type: "checkCopilotAuth",
+		})
+
+		expect(consoleSpy).toHaveBeenCalledWith("Failed to check Copilot authentication:", error)
+		expect(mockClineProvider.postMessageToWebview).toHaveBeenCalledWith({
+			type: "copilotAuthStatus",
+			copilotAuthenticated: false,
+		})
+
+		consoleSpy.mockRestore()
 	})
 })
 

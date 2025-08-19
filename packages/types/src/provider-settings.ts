@@ -47,6 +47,7 @@ export const providerNames = [
 	"zai",
 	"fireworks",
 	"io-intelligence",
+	"copilot",
 	"roo",
 ] as const
 
@@ -289,6 +290,10 @@ const ioIntelligenceSchema = apiModelIdProviderModelSchema.extend({
 	ioIntelligenceApiKey: z.string().optional(),
 })
 
+const copilotSchema = baseProviderSettingsSchema.extend({
+	copilotModelId: z.string().optional(),
+})
+
 const rooSchema = apiModelIdProviderModelSchema.extend({
 	// No additional fields needed - uses cloud authentication
 })
@@ -329,6 +334,7 @@ export const providerSettingsSchemaDiscriminated = z.discriminatedUnion("apiProv
 	zaiSchema.merge(z.object({ apiProvider: z.literal("zai") })),
 	fireworksSchema.merge(z.object({ apiProvider: z.literal("fireworks") })),
 	ioIntelligenceSchema.merge(z.object({ apiProvider: z.literal("io-intelligence") })),
+	copilotSchema.merge(z.object({ apiProvider: z.literal("copilot") })),
 	rooSchema.merge(z.object({ apiProvider: z.literal("roo") })),
 	defaultSchema,
 ])
@@ -366,6 +372,7 @@ export const providerSettingsSchema = z.object({
 	...zaiSchema.shape,
 	...fireworksSchema.shape,
 	...ioIntelligenceSchema.shape,
+	...copilotSchema.shape,
 	...rooSchema.shape,
 	...codebaseIndexProviderSchema.shape,
 })
@@ -393,6 +400,7 @@ export const MODEL_ID_KEYS: Partial<keyof ProviderSettings>[] = [
 	"litellmModelId",
 	"huggingFaceModelId",
 	"ioIntelligenceModelId",
+	"copilotModelId",
 ]
 
 export const getModelId = (settings: ProviderSettings): string | undefined => {
