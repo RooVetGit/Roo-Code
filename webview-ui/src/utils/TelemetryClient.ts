@@ -25,8 +25,6 @@ class TelemetryClient {
 				opt_out_capturing_by_default: false,
 				// Explicitly disable web vitals and other features that might use service workers
 				capture_performance: false,
-				// Disable any features that might attempt service worker registration
-				__preview_send_client_session_params: false,
 			})
 		} else {
 			TelemetryClient.telemetryEnabled = false
