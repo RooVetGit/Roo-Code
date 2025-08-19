@@ -2027,6 +2027,9 @@ export const webviewMessageHandler = async (
 
 			const settings = message.codeIndexSettings
 
+			// Debug logging for settings save
+			console.log("[DEBUG] saveCodeIndexSettingsAtomic called with settings:", JSON.stringify(settings, null, 2))
+
 			try {
 				// Check if embedder provider has changed
 				const currentConfig = getGlobalState("codebaseIndexConfig") || {}
@@ -2046,6 +2049,8 @@ export const webviewMessageHandler = async (
 					codebaseIndexSearchMaxResults: settings.codebaseIndexSearchMaxResults,
 					codebaseIndexSearchMinScore: settings.codebaseIndexSearchMinScore,
 				}
+
+				console.log("[DEBUG] globalStateConfig to be saved:", JSON.stringify(globalStateConfig, null, 2))
 
 				// Save global state first
 				await updateGlobalState("codebaseIndexConfig", globalStateConfig)
@@ -2076,6 +2081,8 @@ export const webviewMessageHandler = async (
 					)
 				}
 
+				console.log("[DEBUG] Secrets saved successfully")
+
 				// Send success response first - settings are saved regardless of validation
 				await provider.postMessageToWebview({
 					type: "codeIndexSettingsSaved",
@@ -2083,19 +2090,26 @@ export const webviewMessageHandler = async (
 					settings: globalStateConfig,
 				})
 
+				console.log("[DEBUG] Success response sent to webview")
+
 				// Update webview state
 				await provider.postStateToWebview()
 
 				// Then handle validation and initialization for the current workspace
 				const currentCodeIndexManager = provider.getCurrentWorkspaceCodeIndexManager()
 				if (currentCodeIndexManager) {
+					console.log("[DEBUG] CodeIndexManager found, handling settings change")
+
 					// If embedder provider changed, perform proactive validation
 					if (embedderProviderChanged) {
+						console.log("[DEBUG] Embedder provider changed, performing validation")
 						try {
 							// Force handleSettingsChange which will trigger validation
 							await currentCodeIndexManager.handleSettingsChange()
+							console.log("[DEBUG] Settings change handled successfully")
 						} catch (error) {
 							// Validation failed - the error state is already set by handleSettingsChange
+							console.log("[DEBUG] Embedder validation failed:", error)
 							provider.log(
 								`Embedder validation failed after provider change: ${error instanceof Error ? error.message : String(error)}`,
 							)
@@ -2109,10 +2123,13 @@ export const webviewMessageHandler = async (
 						}
 					} else {
 						// No provider change, just handle settings normally
+						console.log("[DEBUG] No provider change, handling settings normally")
 						try {
 							await currentCodeIndexManager.handleSettingsChange()
+							console.log("[DEBUG] Settings change handled successfully")
 						} catch (error) {
 							// Log but don't fail - settings are saved
+							console.log("[DEBUG] Settings change handling error:", error)
 							provider.log(
 								`Settings change handling error: ${error instanceof Error ? error.message : String(error)}`,
 							)
@@ -2124,11 +2141,15 @@ export const webviewMessageHandler = async (
 
 					// Auto-start indexing if now enabled and configured
 					if (currentCodeIndexManager.isFeatureEnabled && currentCodeIndexManager.isFeatureConfigured) {
+						console.log("[DEBUG] Feature enabled and configured, checking initialization")
 						if (!currentCodeIndexManager.isInitialized) {
+							console.log("[DEBUG] Manager not initialized, initializing now")
 							try {
 								await currentCodeIndexManager.initialize(provider.contextProxy)
+								console.log("[DEBUG] Code index manager initialized successfully")
 								provider.log(`Code index manager initialized after settings save`)
 							} catch (error) {
+								console.log("[DEBUG] Code index initialization failed:", error)
 								provider.log(
 									`Code index initialization failed: ${error instanceof Error ? error.message : String(error)}`,
 								)
@@ -2138,10 +2159,15 @@ export const webviewMessageHandler = async (
 									values: currentCodeIndexManager.getCurrentStatus(),
 								})
 							}
+						} else {
+							console.log("[DEBUG] Manager already initialized")
 						}
+					} else {
+						console.log("[DEBUG] Feature not enabled or not configured")
 					}
 				} else {
 					// No workspace open - send error status
+					console.log("[DEBUG] No workspace open, cannot save code index settings")
 					provider.log("Cannot save code index settings: No workspace folder open")
 					await provider.postMessageToWebview({
 						type: "indexingStatusUpdate",
@@ -2155,6 +2181,7 @@ export const webviewMessageHandler = async (
 					})
 				}
 			} catch (error) {
+				console.log("[DEBUG] Error saving code index settings:", error)
 				provider.log(`Error saving code index settings: ${error.message || error}`)
 				await provider.postMessageToWebview({
 					type: "codeIndexSettingsSaved",

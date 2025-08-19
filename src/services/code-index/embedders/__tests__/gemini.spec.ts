@@ -38,6 +38,8 @@ describe("GeminiEmbedder", () => {
 				apiKey,
 				"gemini-embedding-001",
 				2048,
+				undefined, // useFloatEncoding
+				undefined, // outputChannel
 			)
 		})
 
@@ -55,6 +57,8 @@ describe("GeminiEmbedder", () => {
 				apiKey,
 				"text-embedding-004",
 				2048,
+				undefined, // useFloatEncoding
+				undefined, // outputChannel
 			)
 		})
 

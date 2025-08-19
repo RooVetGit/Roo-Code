@@ -33,7 +33,7 @@ export class CodeIndexServiceFactory {
 	 */
 	private getOutputChannel(): vscode.OutputChannel {
 		if (!this.outputChannel) {
-			this.outputChannel = vscode.window.createOutputChannel("OpenAI Compatible Embedder")
+			this.outputChannel = vscode.window.createOutputChannel("Code Index Embedders")
 		}
 		return this.outputChannel
 	}
@@ -52,18 +52,24 @@ export class CodeIndexServiceFactory {
 			if (!apiKey) {
 				throw new Error(t("embeddings:serviceFactory.openAiConfigMissing"))
 			}
-			return new OpenAiEmbedder({
-				...config.openAiOptions,
-				openAiEmbeddingModelId: config.modelId,
-			})
+			return new OpenAiEmbedder(
+				{
+					...config.openAiOptions,
+					openAiEmbeddingModelId: config.modelId,
+				},
+				this.getOutputChannel(),
+			)
 		} else if (provider === "ollama") {
 			if (!config.ollamaOptions?.ollamaBaseUrl) {
 				throw new Error(t("embeddings:serviceFactory.ollamaConfigMissing"))
 			}
-			return new CodeIndexOllamaEmbedder({
-				...config.ollamaOptions,
-				ollamaModelId: config.modelId,
-			})
+			return new CodeIndexOllamaEmbedder(
+				{
+					...config.ollamaOptions,
+					ollamaModelId: config.modelId,
+				},
+				this.getOutputChannel(),
+			)
 		} else if (provider === "openai-compatible") {
 			if (!config.openAiCompatibleOptions?.baseUrl || !config.openAiCompatibleOptions?.apiKey) {
 				throw new Error(t("embeddings:serviceFactory.openAiCompatibleConfigMissing"))
@@ -80,12 +86,12 @@ export class CodeIndexServiceFactory {
 			if (!config.geminiOptions?.apiKey) {
 				throw new Error(t("embeddings:serviceFactory.geminiConfigMissing"))
 			}
-			return new GeminiEmbedder(config.geminiOptions.apiKey, config.modelId)
+			return new GeminiEmbedder(config.geminiOptions.apiKey, config.modelId, this.getOutputChannel())
 		} else if (provider === "mistral") {
 			if (!config.mistralOptions?.apiKey) {
 				throw new Error(t("embeddings:serviceFactory.mistralConfigMissing"))
 			}
-			return new MistralEmbedder(config.mistralOptions.apiKey, config.modelId)
+			return new MistralEmbedder(config.mistralOptions.apiKey, config.modelId, this.getOutputChannel())
 		}
 
 		throw new Error(
