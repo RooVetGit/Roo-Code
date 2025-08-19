@@ -56,7 +56,7 @@ export class SyntxHandler extends BaseProvider implements SingleCompletionHandle
 	}
 
 	private getBaseURL(): string {
-		const baseUrl = this.options.syntxBaseUrl || "https://api.syntx.dev "
+		const baseUrl = this.options.syntxBaseUrl || "https://api.syntx.dev"
 		return baseUrl.endsWith("/") ? baseUrl.slice(0, -1) : baseUrl
 	}
 
