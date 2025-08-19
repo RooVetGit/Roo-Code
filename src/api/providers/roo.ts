@@ -7,7 +7,7 @@ import { t } from "../../i18n"
 
 export class RooHandler extends BaseOpenAiCompatibleProvider<RooModelId> {
 	constructor(options: ApiHandlerOptions) {
-		// Check if CloudService is available and get the session token
+		// Check if CloudService is available and get the session token.
 		if (!CloudService.hasInstance()) {
 			throw new Error(t("common:errors.roo.authenticationRequired"))
 		}
@@ -21,7 +21,7 @@ export class RooHandler extends BaseOpenAiCompatibleProvider<RooModelId> {
 		super({
 			...options,
 			providerName: "Roo Code Cloud",
-			baseURL: "https://api.roocode.com/v1",
+			baseURL: "https://api.roocode.com/proxy/v1",
 			apiKey: sessionToken,
 			defaultProviderModelId: rooDefaultModelId,
 			providerModels: rooModels,
@@ -37,7 +37,7 @@ export class RooHandler extends BaseOpenAiCompatibleProvider<RooModelId> {
 			return { id: modelId as RooModelId, info: modelInfo }
 		}
 
-		// Return the requested model ID even if not found, with fallback info
+		// Return the requested model ID even if not found, with fallback info.
 		return {
 			id: modelId as RooModelId,
 			info: {
