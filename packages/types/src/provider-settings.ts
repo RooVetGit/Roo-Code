@@ -337,7 +337,6 @@ export const providerSettingsSchemaDiscriminated = z.discriminatedUnion("apiProv
 	fireworksSchema.merge(z.object({ apiProvider: z.literal("fireworks") })),
 	ioIntelligenceSchema.merge(z.object({ apiProvider: z.literal("io-intelligence") })),
 	rooSchema.merge(z.object({ apiProvider: z.literal("roo") })),
-	tarsSchema.merge(z.object({ apiProvider: z.literal("tars") })),
 	defaultSchema,
 ])
 
