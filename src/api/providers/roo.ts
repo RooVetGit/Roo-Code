@@ -84,7 +84,7 @@ export class RooHandler extends BaseOpenAiCompatibleProvider<RooModelId> {
 				maxTokens: 8192,
 				contextWindow: 262_144,
 				supportsImages: false,
-				supportsPromptCache: false,
+				supportsPromptCache: true,
 				inputPrice: 0,
 				outputPrice: 0,
 			},
