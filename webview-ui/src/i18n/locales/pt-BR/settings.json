@@ -461,7 +461,10 @@
 			"placeholder": "Padrão: claude",
 			"maxTokensLabel": "Tokens de saída máximos",
 			"maxTokensDescription": "Número máximo de tokens de saída para respostas do Claude Code. O padrão é 8000."
-		}
+		},
+		"tarsApiKey": "TARS API Key",
+		"getTarsApiKey": "Get TARS API Key",
+		"tarsDocumentationLink": "TARS Documentation"
 	},
 	"browser": {
 		"enable": {

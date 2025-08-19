@@ -461,7 +461,10 @@
 			"placeholder": "デフォルト：claude",
 			"maxTokensLabel": "最大出力トークン",
 			"maxTokensDescription": "Claude Codeレスポンスの最大出力トークン数。デフォルトは8000です。"
-		}
+		},
+		"tarsApiKey": "TARS API Key",
+		"getTarsApiKey": "Get TARS API Key",
+		"tarsDocumentationLink": "TARS Documentation"
 	},
 	"browser": {
 		"enable": {

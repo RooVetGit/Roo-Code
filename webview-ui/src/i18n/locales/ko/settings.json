@@ -461,7 +461,10 @@
 			"placeholder": "기본값: claude",
 			"maxTokensLabel": "최대 출력 토큰",
 			"maxTokensDescription": "Claude Code 응답의 최대 출력 토큰 수. 기본값은 8000입니다."
-		}
+		},
+		"tarsApiKey": "TARS API Key",
+		"getTarsApiKey": "Get TARS API Key",
+		"tarsDocumentationLink": "TARS Documentation"
 	},
 	"browser": {
 		"enable": {

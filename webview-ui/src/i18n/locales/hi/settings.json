@@ -461,7 +461,10 @@
 			"placeholder": "डिफ़ॉल्ट: claude",
 			"maxTokensLabel": "अधिकतम आउटपुट टोकन",
 			"maxTokensDescription": "Claude Code प्रतिक्रियाओं के लिए आउटपुट टोकन की अधिकतम संख्या। डिफ़ॉल्ट 8000 है।"
-		}
+		},
+		"tarsApiKey": "TARS API Key",
+		"getTarsApiKey": "Get TARS API Key",
+		"tarsDocumentationLink": "TARS Documentation"
 	},
 	"browser": {
 		"enable": {

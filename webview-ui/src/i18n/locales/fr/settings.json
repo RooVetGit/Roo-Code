@@ -461,7 +461,10 @@
 			"placeholder": "Défaut : claude",
 			"maxTokensLabel": "Jetons de sortie max",
 			"maxTokensDescription": "Nombre maximum de jetons de sortie pour les réponses de Claude Code. La valeur par défaut est 8000."
-		}
+		},
+		"tarsApiKey": "TARS API Key",
+		"getTarsApiKey": "Get TARS API Key",
+		"tarsDocumentationLink": "TARS Documentation"
 	},
 	"browser": {
 		"enable": {
