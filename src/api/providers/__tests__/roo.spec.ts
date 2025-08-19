@@ -404,21 +404,24 @@ describe("RooHandler", () => {
 			mockHasInstanceFn.mockReturnValue(true)
 			// Mock CloudService with undefined authService
 			const originalGetter = Object.getOwnPropertyDescriptor(CloudService, "instance")?.get
-			Object.defineProperty(CloudService, "instance", {
-				get: () => ({ authService: undefined }),
-				configurable: true,
-			})
 
-			expect(() => {
-				new RooHandler(mockOptions)
-			}).toThrow("Authentication required for Roo Code Cloud")
-
-			// Restore original getter
-			if (originalGetter) {
+			try {
 				Object.defineProperty(CloudService, "instance", {
-					get: originalGetter,
+					get: () => ({ authService: undefined }),
 					configurable: true,
 				})
+
+				expect(() => {
+					new RooHandler(mockOptions)
+				}).toThrow("Authentication required for Roo Code Cloud")
+			} finally {
+				// Always restore original getter, even if test fails
+				if (originalGetter) {
+					Object.defineProperty(CloudService, "instance", {
+						get: originalGetter,
+						configurable: true,
+					})
+				}
 			}
 		})
 
