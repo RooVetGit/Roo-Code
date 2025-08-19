@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react"
+import { useCallback } from "react"
 import { VSCodeTextField } from "@vscode/webview-ui-toolkit/react"
 
 import { type ProviderSettings, type OrganizationAllowList, tarsDefaultModelId } from "@roo-code/types"
@@ -15,7 +15,6 @@ type TarsProps = {
 	apiConfiguration: ProviderSettings
 	setApiConfigurationField: (field: keyof ProviderSettings, value: ProviderSettings[keyof ProviderSettings]) => void
 	routerModels?: RouterModels
-	refetchRouterModels: () => void
 	organizationAllowList: OrganizationAllowList
 	modelValidationError?: string
 }
@@ -24,13 +23,10 @@ export const Tars = ({
 	apiConfiguration,
 	setApiConfigurationField,
 	routerModels,
-	refetchRouterModels,
 	organizationAllowList,
 	modelValidationError,
 }: TarsProps) => {
 	const { t } = useAppTranslation()
-
-	const [didRefetch, setDidRefetch] = useState<boolean>()
 
 	const handleInputChange = useCallback(
 		<K extends keyof ProviderSettings, E>(
@@ -62,11 +58,6 @@ export const Tars = ({
 				<VSCodeButtonLink href="https://router.tetrate.ai" appearance="secondary">
 					{t("settings:providers.getTarsApiKey")}
 				</VSCodeButtonLink>
-			)}
-			{didRefetch && (
-				<div className="flex items-center text-vscode-errorForeground">
-					{t("settings:providers.refreshModels.hint")}
-				</div>
 			)}
 			<ModelPicker
 				apiConfiguration={apiConfiguration}
