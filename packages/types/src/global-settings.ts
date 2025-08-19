@@ -30,13 +30,6 @@ export const DEFAULT_WRITE_DELAY_MS = 1000
 export const DEFAULT_TERMINAL_OUTPUT_CHARACTER_LIMIT = 50_000
 
 /**
- * Default timeout for background usage collection in milliseconds.
- * This timeout prevents the background task from running indefinitely
- * when collecting usage data from streaming API responses.
- */
-export const DEFAULT_USAGE_COLLECTION_TIMEOUT_MS = 30_000
-
-/**
  * GlobalSettings
  */
 
@@ -185,6 +178,7 @@ export const SECRET_STATE_KEYS = [
 	"openAiNativeApiKey",
 	"cerebrasApiKey",
 	"deepSeekApiKey",
+	"doubaoApiKey",
 	"moonshotApiKey",
 	"mistralApiKey",
 	"unboundApiKey",
@@ -200,6 +194,7 @@ export const SECRET_STATE_KEYS = [
 	"codebaseIndexMistralApiKey",
 	"huggingFaceApiKey",
 	"sambaNovaApiKey",
+	"zaiApiKey",
 	"fireworksApiKey",
 	"ioIntelligenceApiKey",
 ] as const satisfies readonly (keyof ProviderSettings)[]

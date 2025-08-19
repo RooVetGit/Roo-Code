@@ -259,6 +259,10 @@
 		"anthropicApiKey": "Anthropic API 키",
 		"getAnthropicApiKey": "Anthropic API 키 받기",
 		"anthropicUseAuthToken": "X-Api-Key 대신 Authorization 헤더로 Anthropic API 키 전달",
+		"anthropic1MContextBetaLabel": "1M 컨텍스트 창 활성화 (베타)",
+		"anthropic1MContextBetaDescription": "Claude Sonnet 4의 컨텍스트 창을 100만 토큰으로 확장",
+		"awsBedrock1MContextBetaLabel": "1M 컨텍스트 창 활성화 (베타)",
+		"awsBedrock1MContextBetaDescription": "Claude Sonnet 4의 컨텍스트 창을 100만 토큰으로 확장",
 		"cerebrasApiKey": "Cerebras API 키",
 		"getCerebrasApiKey": "Cerebras API 키 가져오기",
 		"chutesApiKey": "Chutes API 키",
@@ -372,6 +376,10 @@
 		"humanRelay": {
 			"description": "API 키가 필요하지 않지만, 사용자가 웹 채팅 AI에 정보를 복사하여 붙여넣어야 합니다.",
 			"instructions": "사용 중에 대화 상자가 나타나고 현재 메시지가 자동으로 클립보드에 복사됩니다. 이를 웹 버전 AI(예: ChatGPT 또는 Claude)에 붙여넣은 다음, AI의 응답을 대화 상자에 복사하고 확인 버튼을 클릭해야 합니다."
+		},
+		"roo": {
+			"authenticatedMessage": "Roo Code Cloud 계정을 통해 안전하게 인증되었습니다.",
+			"connectButton": "Roo Code Cloud에 연결"
 		},
 		"openRouter": {
 			"providerRouting": {
@@ -728,6 +736,7 @@
 		"noComputerUse": "컴퓨터 사용 지원 안 함",
 		"supportsPromptCache": "프롬프트 캐시 지원",
 		"noPromptCache": "프롬프트 캐시 지원 안 함",
+		"contextWindow": "컨텍스트 창:",
 		"maxOutput": "최대 출력",
 		"inputPrice": "입력 가격",
 		"outputPrice": "출력 가격",

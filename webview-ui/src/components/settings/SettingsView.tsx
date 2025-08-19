@@ -252,7 +252,7 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 	)
 
 	const setApiConfigurationField = useCallback(
-		<K extends keyof ProviderSettings>(field: K, value: ProviderSettings[K]) => {
+		<K extends keyof ProviderSettings>(field: K, value: ProviderSettings[K], isUserAction: boolean = true) => {
 			setCachedState((prevState) => {
 				if (prevState.apiConfiguration?.[field] === value) {
 					return prevState
@@ -260,9 +260,9 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 
 				const previousValue = prevState.apiConfiguration?.[field]
 
-				// Don't treat initial sync from undefined to a defined value as a user change
-				// This prevents the dirty state when the component initializes and auto-syncs the model ID
-				const isInitialSync = previousValue === undefined && value !== undefined
+				// Only skip change detection for automatic initialization (not user actions)
+				// This prevents the dirty state when the component initializes and auto-syncs values
+				const isInitialSync = !isUserAction && previousValue === undefined && value !== undefined
 
 				const updatedApiConfiguration = { ...prevState.apiConfiguration, [field]: value }
 
@@ -385,7 +385,7 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 			vscode.postMessage({ type: "condensingApiConfigId", text: condensingApiConfigId || "" })
 			vscode.postMessage({ type: "updateCondensingPrompt", text: customCondensingPrompt || "" })
 			vscode.postMessage({ type: "updateSupportPrompt", values: customSupportPrompts || {} })
-			vscode.postMessage({ type: "includeTaskHistoryInEnhance", bool: includeTaskHistoryInEnhance ?? false })
+			vscode.postMessage({ type: "includeTaskHistoryInEnhance", bool: includeTaskHistoryInEnhance ?? true })
 			vscode.postMessage({ type: "upsertApiConfiguration", text: currentApiConfigName, apiConfiguration })
 			vscode.postMessage({ type: "telemetrySetting", text: telemetrySetting })
 			vscode.postMessage({ type: "profileThresholds", values: profileThresholds })
@@ -673,6 +673,8 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 							alwaysAllowUpdateTodoList={alwaysAllowUpdateTodoList}
 							followupAutoApproveTimeoutMs={followupAutoApproveTimeoutMs}
 							allowedCommands={allowedCommands}
+							allowedMaxRequests={allowedMaxRequests ?? undefined}
+							allowedMaxCost={allowedMaxCost ?? undefined}
 							deniedCommands={deniedCommands}
 							setCachedStateField={setCachedStateField}
 						/>

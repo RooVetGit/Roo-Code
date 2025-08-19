@@ -3,6 +3,9 @@ import { z } from "zod"
 import { reasoningEffortsSchema, verbosityLevelsSchema, modelInfoSchema } from "./model.js"
 import { codebaseIndexProviderSchema } from "./codebase-index.js"
 
+// Bedrock Claude Sonnet 4 model ID that supports 1M context
+export const BEDROCK_CLAUDE_SONNET_4_MODEL_ID = "anthropic.claude-sonnet-4-20250514-v1:0"
+
 // Extended schema that includes "minimal" for GPT-5 models
 export const extendedReasoningEffortsSchema = z.union([reasoningEffortsSchema, z.literal("minimal")])
 
@@ -44,6 +47,7 @@ export const providerNames = [
 	"zai",
 	"fireworks",
 	"io-intelligence",
+	"roo",
 ] as const
 
 export const providerNamesSchema = z.enum(providerNames)
@@ -99,6 +103,7 @@ const anthropicSchema = apiModelIdProviderModelSchema.extend({
 	apiKey: z.string().optional(),
 	anthropicBaseUrl: z.string().optional(),
 	anthropicUseAuthToken: z.boolean().optional(),
+	anthropicBeta1MContext: z.boolean().optional(), // Enable 'context-1m-2025-08-07' beta for 1M context window
 })
 
 const claudeCodeSchema = apiModelIdProviderModelSchema.extend({
@@ -134,6 +139,7 @@ const bedrockSchema = apiModelIdProviderModelSchema.extend({
 	awsModelContextWindow: z.number().optional(),
 	awsBedrockEndpointEnabled: z.boolean().optional(),
 	awsBedrockEndpoint: z.string().optional(),
+	awsBedrock1MContext: z.boolean().optional(), // Enable 'context-1m-2025-08-07' beta for 1M context window
 })
 
 const vertexSchema = apiModelIdProviderModelSchema.extend({
@@ -283,6 +289,10 @@ const ioIntelligenceSchema = apiModelIdProviderModelSchema.extend({
 	ioIntelligenceApiKey: z.string().optional(),
 })
 
+const rooSchema = apiModelIdProviderModelSchema.extend({
+	// No additional fields needed - uses cloud authentication
+})
+
 const defaultSchema = z.object({
 	apiProvider: z.undefined(),
 })
@@ -319,6 +329,7 @@ export const providerSettingsSchemaDiscriminated = z.discriminatedUnion("apiProv
 	zaiSchema.merge(z.object({ apiProvider: z.literal("zai") })),
 	fireworksSchema.merge(z.object({ apiProvider: z.literal("fireworks") })),
 	ioIntelligenceSchema.merge(z.object({ apiProvider: z.literal("io-intelligence") })),
+	rooSchema.merge(z.object({ apiProvider: z.literal("roo") })),
 	defaultSchema,
 ])
 
@@ -355,6 +366,7 @@ export const providerSettingsSchema = z.object({
 	...zaiSchema.shape,
 	...fireworksSchema.shape,
 	...ioIntelligenceSchema.shape,
+	...rooSchema.shape,
 	...codebaseIndexProviderSchema.shape,
 })
 

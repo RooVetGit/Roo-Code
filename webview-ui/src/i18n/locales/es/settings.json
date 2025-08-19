@@ -259,6 +259,10 @@
 		"anthropicApiKey": "Clave API de Anthropic",
 		"getAnthropicApiKey": "Obtener clave API de Anthropic",
 		"anthropicUseAuthToken": "Pasar la clave API de Anthropic como encabezado de autorización en lugar de X-Api-Key",
+		"anthropic1MContextBetaLabel": "Habilitar ventana de contexto de 1M (Beta)",
+		"anthropic1MContextBetaDescription": "Amplía la ventana de contexto a 1 millón de tokens para Claude Sonnet 4",
+		"awsBedrock1MContextBetaLabel": "Habilitar ventana de contexto de 1M (Beta)",
+		"awsBedrock1MContextBetaDescription": "Amplía la ventana de contexto a 1 millón de tokens para Claude Sonnet 4",
 		"cerebrasApiKey": "Clave API de Cerebras",
 		"getCerebrasApiKey": "Obtener clave API de Cerebras",
 		"chutesApiKey": "Clave API de Chutes",
@@ -372,6 +376,10 @@
 		"humanRelay": {
 			"description": "No se requiere clave API, pero el usuario necesita ayudar a copiar y pegar la información en el chat web de IA.",
 			"instructions": "Durante el uso, aparecerá un cuadro de diálogo y el mensaje actual se copiará automáticamente al portapapeles. Debe pegarlo en las versiones web de IA (como ChatGPT o Claude), luego copiar la respuesta de la IA de vuelta al cuadro de diálogo y hacer clic en el botón de confirmar."
+		},
+		"roo": {
+			"authenticatedMessage": "Autenticado de forma segura a través de tu cuenta de Roo Code Cloud.",
+			"connectButton": "Conectar a Roo Code Cloud"
 		},
 		"openRouter": {
 			"providerRouting": {
@@ -727,6 +735,7 @@
 		"noComputerUse": "No soporta uso del ordenador",
 		"supportsPromptCache": "Soporta caché de prompts",
 		"noPromptCache": "No soporta caché de prompts",
+		"contextWindow": "Ventana de contexto",
 		"maxOutput": "Salida máxima",
 		"inputPrice": "Precio de entrada",
 		"outputPrice": "Precio de salida",

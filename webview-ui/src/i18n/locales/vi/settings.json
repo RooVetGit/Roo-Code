@@ -259,6 +259,10 @@
 		"anthropicApiKey": "Khóa API Anthropic",
 		"getAnthropicApiKey": "Lấy khóa API Anthropic",
 		"anthropicUseAuthToken": "Truyền khóa API Anthropic dưới dạng tiêu đề Authorization thay vì X-Api-Key",
+		"anthropic1MContextBetaLabel": "Bật cửa sổ ngữ cảnh 1M (Beta)",
+		"anthropic1MContextBetaDescription": "Mở rộng cửa sổ ngữ cảnh lên 1 triệu token cho Claude Sonnet 4",
+		"awsBedrock1MContextBetaLabel": "Bật cửa sổ ngữ cảnh 1M (Beta)",
+		"awsBedrock1MContextBetaDescription": "Mở rộng cửa sổ ngữ cảnh lên 1 triệu token cho Claude Sonnet 4",
 		"cerebrasApiKey": "Khóa API Cerebras",
 		"getCerebrasApiKey": "Lấy khóa API Cerebras",
 		"chutesApiKey": "Khóa API Chutes",
@@ -372,6 +376,10 @@
 		"humanRelay": {
 			"description": "Không cần khóa API, nhưng người dùng cần giúp sao chép và dán thông tin vào AI trò chuyện web.",
 			"instructions": "Trong quá trình sử dụng, một hộp thoại sẽ xuất hiện và tin nhắn hiện tại sẽ được tự động sao chép vào clipboard. Bạn cần dán chúng vào các phiên bản web của AI (như ChatGPT hoặc Claude), sau đó sao chép phản hồi của AI trở lại hộp thoại và nhấp vào nút xác nhận."
+		},
+		"roo": {
+			"authenticatedMessage": "Đã xác thực an toàn thông qua tài khoản Roo Code Cloud của bạn.",
+			"connectButton": "Kết nối với Roo Code Cloud"
 		},
 		"openRouter": {
 			"providerRouting": {
@@ -728,6 +736,7 @@
 		"noComputerUse": "Không hỗ trợ sử dụng máy tính",
 		"supportsPromptCache": "Hỗ trợ bộ nhớ đệm lời nhắc",
 		"noPromptCache": "Không hỗ trợ bộ nhớ đệm lời nhắc",
+		"contextWindow": "Cửa sổ ngữ cảnh:",
 		"maxOutput": "Đầu ra tối đa",
 		"inputPrice": "Giá đầu vào",
 		"outputPrice": "Giá đầu ra",

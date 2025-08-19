@@ -263,6 +263,10 @@
 		"anthropicApiKey": "Anthropic API Key",
 		"getAnthropicApiKey": "Dapatkan Anthropic API Key",
 		"anthropicUseAuthToken": "Kirim Anthropic API Key sebagai Authorization header alih-alih X-Api-Key",
+		"anthropic1MContextBetaLabel": "Aktifkan jendela konteks 1M (Beta)",
+		"anthropic1MContextBetaDescription": "Memperluas jendela konteks menjadi 1 juta token untuk Claude Sonnet 4",
+		"awsBedrock1MContextBetaLabel": "Aktifkan jendela konteks 1M (Beta)",
+		"awsBedrock1MContextBetaDescription": "Memperluas jendela konteks menjadi 1 juta token untuk Claude Sonnet 4",
 		"cerebrasApiKey": "Cerebras API Key",
 		"getCerebrasApiKey": "Dapatkan Cerebras API Key",
 		"chutesApiKey": "Chutes API Key",
@@ -376,6 +380,10 @@
 		"humanRelay": {
 			"description": "Tidak diperlukan API key, tetapi pengguna perlu membantu menyalin dan menempel informasi ke web chat AI.",
 			"instructions": "Selama penggunaan, kotak dialog akan muncul dan pesan saat ini akan disalin ke clipboard secara otomatis. Kamu perlu menempel ini ke versi web AI (seperti ChatGPT atau Claude), lalu salin balasan AI kembali ke kotak dialog dan klik tombol konfirmasi."
+		},
+		"roo": {
+			"authenticatedMessage": "Terautentikasi dengan aman melalui akun Roo Code Cloud Anda.",
+			"connectButton": "Hubungkan ke Roo Code Cloud"
 		},
 		"openRouter": {
 			"providerRouting": {
@@ -757,6 +765,7 @@
 		"noComputerUse": "Tidak mendukung computer use",
 		"supportsPromptCache": "Mendukung prompt caching",
 		"noPromptCache": "Tidak mendukung prompt caching",
+		"contextWindow": "Jendela Konteks:",
 		"maxOutput": "Output maksimum",
 		"inputPrice": "Harga input",
 		"outputPrice": "Harga output",

@@ -17,6 +17,11 @@ import {
 	type ProviderSettings,
 	type RooCodeSettings,
 	type ProviderSettingsEntry,
+	type StaticAppProperties,
+	type DynamicAppProperties,
+	type CloudAppProperties,
+	type TaskProperties,
+	type GitProperties,
 	type TelemetryProperties,
 	type TelemetryPropertiesProvider,
 	type CodeActionId,
@@ -24,17 +29,16 @@ import {
 	type TerminalActionId,
 	type TerminalActionPromptType,
 	type HistoryItem,
-	type CloudUserInfo,
+	type ClineAsk,
 	RooCodeEventName,
 	requestyDefaultModelId,
 	openRouterDefaultModelId,
 	glamaDefaultModelId,
-	ORGANIZATION_ALLOW_ALL,
 	DEFAULT_TERMINAL_OUTPUT_CHARACTER_LIMIT,
 	DEFAULT_WRITE_DELAY_MS,
 } from "@roo-code/types"
 import { TelemetryService } from "@roo-code/telemetry"
-import { CloudService, getRooCodeApiUrl } from "@roo-code/cloud"
+import { type CloudUserInfo, CloudService, ORGANIZATION_ALLOW_ALL, getRooCodeApiUrl } from "@roo-code/cloud"
 
 import { Package } from "../../shared/package"
 import { findLast } from "../../shared/array"
@@ -106,14 +110,13 @@ export class ClineProvider
 	private codeIndexStatusSubscription?: vscode.Disposable
 	private currentWorkspaceManager?: CodeIndexManager
 	private _workspaceTracker?: WorkspaceTracker // workSpaceTracker read-only for access outside this class
-	public get workspaceTracker(): WorkspaceTracker | undefined {
-		return this._workspaceTracker
-	}
 	protected mcpHub?: McpHub // Change from private to protected
 	private marketplaceManager: MarketplaceManager
 	private mdmService?: MdmService
 	private taskCreationCallback: (task: Task) => void
 	private taskEventListeners: WeakMap<Task, Array<() => void>> = new WeakMap()
+
+	private recentTasksCache?: string[]
 
 	public isViewLaunched = false
 	public settingsImportedAt?: number
@@ -174,6 +177,8 @@ export class ClineProvider
 			const onTaskFocused = () => this.emit(RooCodeEventName.TaskFocused, instance.taskId)
 			const onTaskUnfocused = () => this.emit(RooCodeEventName.TaskUnfocused, instance.taskId)
 			const onTaskActive = (taskId: string) => this.emit(RooCodeEventName.TaskActive, taskId)
+			const onTaskInteractive = (taskId: string) => this.emit(RooCodeEventName.TaskInteractive, taskId)
+			const onTaskResumable = (taskId: string) => this.emit(RooCodeEventName.TaskResumable, taskId)
 			const onTaskIdle = (taskId: string) => this.emit(RooCodeEventName.TaskIdle, taskId)
 
 			// Attach the listeners.
@@ -183,6 +188,8 @@ export class ClineProvider
 			instance.on(RooCodeEventName.TaskFocused, onTaskFocused)
 			instance.on(RooCodeEventName.TaskUnfocused, onTaskUnfocused)
 			instance.on(RooCodeEventName.TaskActive, onTaskActive)
+			instance.on(RooCodeEventName.TaskInteractive, onTaskInteractive)
+			instance.on(RooCodeEventName.TaskResumable, onTaskResumable)
 			instance.on(RooCodeEventName.TaskIdle, onTaskIdle)
 
 			// Store the cleanup functions for later removal.
@@ -193,6 +200,8 @@ export class ClineProvider
 				() => instance.off(RooCodeEventName.TaskFocused, onTaskFocused),
 				() => instance.off(RooCodeEventName.TaskUnfocused, onTaskUnfocused),
 				() => instance.off(RooCodeEventName.TaskActive, onTaskActive),
+				() => instance.off(RooCodeEventName.TaskInteractive, onTaskInteractive),
+				() => instance.off(RooCodeEventName.TaskResumable, onTaskResumable),
 				() => instance.off(RooCodeEventName.TaskIdle, onTaskIdle),
 			])
 		}
@@ -368,7 +377,7 @@ export class ClineProvider
 
 	// returns the current cline object in the stack (the top one)
 	// if the stack is empty, returns undefined
-	getCurrentCline(): Task | undefined {
+	getCurrentTask(): Task | undefined {
 		if (this.clineStack.length === 0) {
 			return undefined
 		}
@@ -376,7 +385,7 @@ export class ClineProvider
 	}
 
 	// returns the current clineStack length (how many cline objects are in the stack)
-	getClineStackSize(): number {
+	getTaskStackSize(): number {
 		return this.clineStack.length
 	}
 
@@ -392,13 +401,65 @@ export class ClineProvider
 		// remove the last cline instance from the stack (this is the finished sub task)
 		await this.removeClineFromStack()
 		// resume the last cline instance in the stack (if it exists - this is the 'parent' calling task)
-		await this.getCurrentCline()?.resumePausedTask(lastMessage)
+		await this.getCurrentTask()?.resumePausedTask(lastMessage)
 	}
 
 	// Clear the current task without treating it as a subtask
 	// This is used when the user cancels a task that is not a subtask
 	async clearTask() {
 		await this.removeClineFromStack()
+	}
+
+	resumeTask(taskId: string): void {
+		// Use the existing showTaskWithId method which handles both current and historical tasks
+		this.showTaskWithId(taskId).catch((error) => {
+			this.log(`Failed to resume task ${taskId}: ${error.message}`)
+		})
+	}
+
+	getRecentTasks(): string[] {
+		if (this.recentTasksCache) {
+			return this.recentTasksCache
+		}
+
+		const history = this.getGlobalState("taskHistory") ?? []
+		const workspaceTasks: HistoryItem[] = []
+
+		for (const item of history) {
+			if (!item.ts || !item.task || item.workspace !== this.cwd) {
+				continue
+			}
+
+			workspaceTasks.push(item)
+		}
+
+		if (workspaceTasks.length === 0) {
+			this.recentTasksCache = []
+			return this.recentTasksCache
+		}
+
+		workspaceTasks.sort((a, b) => b.ts - a.ts)
+		let recentTaskIds: string[] = []
+
+		if (workspaceTasks.length >= 100) {
+			// If we have at least 100 tasks, return tasks from the last 7 days.
+			const sevenDaysAgo = Date.now() - 7 * 24 * 60 * 60 * 1000
+
+			for (const item of workspaceTasks) {
+				// Stop when we hit tasks older than 7 days.
+				if (item.ts < sevenDaysAgo) {
+					break
+				}
+
+				recentTaskIds.push(item.id)
+			}
+		} else {
+			// Otherwise, return the most recent 100 tasks (or all if less than 100).
+			recentTaskIds = workspaceTasks.slice(0, Math.min(100, workspaceTasks.length)).map((item) => item.id)
+		}
+
+		this.recentTasksCache = recentTaskIds
+		return this.recentTasksCache
 	}
 
 	/*
@@ -491,7 +552,7 @@ export class ClineProvider
 		}
 
 		// Check if there is a cline instance in the stack (if this provider has an active task)
-		if (visibleProvider.getCurrentCline()) {
+		if (visibleProvider.getCurrentTask()) {
 			return true
 		}
 
@@ -522,7 +583,7 @@ export class ClineProvider
 			return
 		}
 
-		await visibleProvider.initClineWithTask(prompt)
+		await visibleProvider.createTask(prompt)
 	}
 
 	public static async handleTerminalAction(
@@ -547,7 +608,7 @@ export class ClineProvider
 		}
 
 		try {
-			await visibleProvider.initClineWithTask(prompt)
+			await visibleProvider.createTask(prompt)
 		} catch (error) {
 			if (error instanceof OrganizationAllowListViolationError) {
 				// Errors from terminal commands seem to get swallowed / ignored.
@@ -562,18 +623,16 @@ export class ClineProvider
 		this.log("Resolving webview view")
 
 		this.view = webviewView
-
-		// Set panel reference according to webview type
 		const inTabMode = "onDidChangeViewState" in webviewView
+
 		if (inTabMode) {
-			// Tag page type
 			setPanel(webviewView, "tab")
 		} else if ("onDidChangeVisibility" in webviewView) {
-			// Sidebar Type
 			setPanel(webviewView, "sidebar")
 		}
 
-		// Initialize out-of-scope variables that need to receive persistent global state values
+		// Initialize out-of-scope variables that need to receive persistent
+		// global state values.
 		this.getState().then(
 			({
 				terminalShellIntegrationTimeout = Terminal.defaultShellIntegrationTimeout,
@@ -596,18 +655,15 @@ export class ClineProvider
 			},
 		)
 
-		// Initialize tts enabled state
 		this.getState().then(({ ttsEnabled }) => {
 			setTtsEnabled(ttsEnabled ?? false)
 		})
 
-		// Initialize tts speed state
 		this.getState().then(({ ttsSpeed }) => {
 			setTtsSpeed(ttsSpeed ?? 1)
 		})
 
 		webviewView.webview.options = {
-			// Allow scripts in the webview
 			enableScripts: true,
 			localResourceRoots: [this.contextProxy.extensionUri],
 		}
@@ -618,32 +674,31 @@ export class ClineProvider
 				: this.getHtmlContent(webviewView.webview)
 
 		// Sets up an event listener to listen for messages passed from the webview view context
-		// and executes code based on the message that is received
+		// and executes code based on the message that is received.
 		this.setWebviewMessageListener(webviewView.webview)
 
-		// Initialize code index status subscription for the current workspace
+		// Initialize code index status subscription for the current workspace.
 		this.updateCodeIndexStatusSubscription()
 
-		// Listen for active editor changes to update code index status for the current workspace
+		// Listen for active editor changes to update code index status for the
+		// current workspace.
 		const activeEditorSubscription = vscode.window.onDidChangeActiveTextEditor(() => {
-			// Update subscription when workspace might have changed
+			// Update subscription when workspace might have changed.
 			this.updateCodeIndexStatusSubscription()
 		})
 		this.webviewDisposables.push(activeEditorSubscription)
 
-		// Logs show up in bottom panel > Debug Console
-		//console.log("registering listener")
-
-		// Listen for when the panel becomes visible
+		// Listen for when the panel becomes visible.
 		// https://github.com/microsoft/vscode-discussions/discussions/840
 		if ("onDidChangeViewState" in webviewView) {
-			// WebviewView and WebviewPanel have all the same properties except for this visibility listener
-			// panel
+			// WebviewView and WebviewPanel have all the same properties except
+			// for this visibility listener panel.
 			const viewStateDisposable = webviewView.onDidChangeViewState(() => {
 				if (this.view?.visible) {
 					this.postMessageToWebview({ type: "action", action: "didBecomeVisible" })
 				}
 			})
+
 			this.webviewDisposables.push(viewStateDisposable)
 		} else if ("onDidChangeVisibility" in webviewView) {
 			// sidebar
@@ -652,6 +707,7 @@ export class ClineProvider
 					this.postMessageToWebview({ type: "action", action: "didBecomeVisible" })
 				}
 			})
+
 			this.webviewDisposables.push(visibilityDisposable)
 		}
 
@@ -688,17 +744,13 @@ export class ClineProvider
 		this.log("Webview view resolved")
 	}
 
-	public async initClineWithSubTask(parent: Task, task?: string, images?: string[]) {
-		return this.initClineWithTask(task, images, parent)
-	}
-
 	// When initializing a new task, (not from history but from a tool command
 	// new_task) there is no need to remove the previous task since the new
 	// task is a subtask of the previous one, and when it finishes it is removed
 	// from the stack and the caller is resumed in this way we can have a chain
 	// of tasks, each one being a sub task of the previous one until the main
 	// task is finished.
-	public async initClineWithTask(
+	public async createTask(
 		text?: string,
 		images?: string[],
 		parentTask?: Task,
@@ -751,7 +803,7 @@ export class ClineProvider
 		return task
 	}
 
-	public async initClineWithHistoryItem(historyItem: HistoryItem & { rootTask?: Task; parentTask?: Task }) {
+	public async createTaskWithHistoryItem(historyItem: HistoryItem & { rootTask?: Task; parentTask?: Task }) {
 		await this.removeClineFromStack()
 
 		// If the history item has a saved mode, restore it and its associated API configuration
@@ -840,8 +892,8 @@ export class ClineProvider
 	}
 
 	private async getHMRHtmlContent(webview: vscode.Webview): Promise<string> {
-		// Try to read the port from the file
-		let localPort = "5173" // Default fallback
+		let localPort = "5173"
+
 		try {
 			const fs = require("fs")
 			const path = require("path")
@@ -857,7 +909,6 @@ export class ClineProvider
 			}
 		} catch (err) {
 			console.error("[ClineProvider:Vite] Failed to read Vite port file:", err)
-			// Continue with default port if file reading fails
 		}
 
 		const localServerUrl = `localhost:${localPort}`
@@ -867,7 +918,6 @@ export class ClineProvider
 			await axios.get(`http://${localServerUrl}`)
 		} catch (error) {
 			vscode.window.showErrorMessage(t("common:errors.hmr_not_running"))
-
 			return this.getHtmlContent(webview)
 		}
 
@@ -1029,7 +1079,7 @@ export class ClineProvider
 	 * @param newMode The mode to switch to
 	 */
 	public async handleModeSwitch(newMode: Mode) {
-		const cline = this.getCurrentCline()
+		const cline = this.getCurrentTask()
 
 		if (cline) {
 			TelemetryService.instance.captureModeSwitch(cline.taskId, newMode)
@@ -1142,7 +1192,7 @@ export class ClineProvider
 
 				// Change the provider for the current task.
 				// TODO: We should rename `buildApiHandler` for clarity (e.g. `getProviderClient`).
-				const task = this.getCurrentCline()
+				const task = this.getCurrentTask()
 
 				if (task) {
 					task.api = buildApiHandler(providerSettings)
@@ -1203,7 +1253,7 @@ export class ClineProvider
 		}
 
 		// Change the provider for the current task.
-		const task = this.getCurrentCline()
+		const task = this.getCurrentTask()
 
 		if (task) {
 			task.api = buildApiHandler(providerSettings)
@@ -1215,7 +1265,7 @@ export class ClineProvider
 	// Task Management
 
 	async cancelTask() {
-		const cline = this.getCurrentCline()
+		const cline = this.getCurrentTask()
 
 		if (!cline) {
 			return
@@ -1232,13 +1282,13 @@ export class ClineProvider
 
 		await pWaitFor(
 			() =>
-				this.getCurrentCline()! === undefined ||
-				this.getCurrentCline()!.isStreaming === false ||
-				this.getCurrentCline()!.didFinishAbortingStream ||
+				this.getCurrentTask()! === undefined ||
+				this.getCurrentTask()!.isStreaming === false ||
+				this.getCurrentTask()!.didFinishAbortingStream ||
 				// If only the first chunk is processed, then there's no
 				// need to wait for graceful abort (closes edits, browser,
 				// etc).
-				this.getCurrentCline()!.isWaitingForFirstChunk,
+				this.getCurrentTask()!.isWaitingForFirstChunk,
 			{
 				timeout: 3_000,
 			},
@@ -1246,15 +1296,15 @@ export class ClineProvider
 			console.error("Failed to abort task")
 		})
 
-		if (this.getCurrentCline()) {
+		if (this.getCurrentTask()) {
 			// 'abandoned' will prevent this Cline instance from affecting
 			// future Cline instances. This may happen if its hanging on a
 			// streaming request.
-			this.getCurrentCline()!.abandoned = true
+			this.getCurrentTask()!.abandoned = true
 		}
 
 		// Clears task again, so we need to abortTask manually above.
-		await this.initClineWithHistoryItem({ ...historyItem, rootTask, parentTask })
+		await this.createTaskWithHistoryItem({ ...historyItem, rootTask, parentTask })
 	}
 
 	async updateCustomInstructions(instructions?: string) {
@@ -1412,10 +1462,10 @@ export class ClineProvider
 	}
 
 	async showTaskWithId(id: string) {
-		if (id !== this.getCurrentCline()?.taskId) {
+		if (id !== this.getCurrentTask()?.taskId) {
 			// Non-current task.
 			const { historyItem } = await this.getTaskWithId(id)
-			await this.initClineWithHistoryItem(historyItem) // Clears existing task.
+			await this.createTaskWithHistoryItem(historyItem) // Clears existing task.
 		}
 
 		await this.postMessageToWebview({ type: "action", action: "chatButtonClicked" })
@@ -1449,7 +1499,7 @@ export class ClineProvider
 			const { taskDirPath } = await this.getTaskWithId(id)
 
 			// remove task from stack if it's the current task
-			if (id === this.getCurrentCline()?.taskId) {
+			if (id === this.getCurrentTask()?.taskId) {
 				// if we found the taskid to delete - call finish to abort this task and allow a new task to be started,
 				// if we are deleting a subtask and parent task is still waiting for subtask to finish - it allows the parent to resume (this case should neve exist)
 				await this.finishSubTask(t("common:tasks.deleted"))
@@ -1494,6 +1544,7 @@ export class ClineProvider
 		const taskHistory = this.getGlobalState("taskHistory") ?? []
 		const updatedTaskHistory = taskHistory.filter((task) => task.id !== id)
 		await this.updateGlobalState("taskHistory", updatedTaskHistory)
+		this.recentTasksCache = undefined
 		await this.postStateToWebview()
 	}
 
@@ -1735,10 +1786,10 @@ export class ClineProvider
 			autoCondenseContext: autoCondenseContext ?? true,
 			autoCondenseContextPercent: autoCondenseContextPercent ?? 100,
 			uriScheme: vscode.env.uriScheme,
-			currentTaskItem: this.getCurrentCline()?.taskId
-				? (taskHistory || []).find((item: HistoryItem) => item.id === this.getCurrentCline()?.taskId)
+			currentTaskItem: this.getCurrentTask()?.taskId
+				? (taskHistory || []).find((item: HistoryItem) => item.id === this.getCurrentTask()?.taskId)
 				: undefined,
-			clineMessages: this.getCurrentCline()?.clineMessages || [],
+			clineMessages: this.getCurrentTask()?.clineMessages || [],
 			taskHistory: (taskHistory || [])
 				.filter((item: HistoryItem) => item.ts && item.task)
 				.sort((a: HistoryItem, b: HistoryItem) => b.ts - a.ts),
@@ -1829,7 +1880,7 @@ export class ClineProvider
 			followupAutoApproveTimeoutMs: followupAutoApproveTimeoutMs ?? 60000,
 			includeDiagnosticMessages: includeDiagnosticMessages ?? true,
 			maxDiagnosticMessages: maxDiagnosticMessages ?? 50,
-			includeTaskHistoryInEnhance: includeTaskHistoryInEnhance ?? false,
+			includeTaskHistoryInEnhance: includeTaskHistoryInEnhance ?? true,
 			remoteControlEnabled: remoteControlEnabled ?? false,
 		}
 	}
@@ -2017,7 +2068,7 @@ export class ClineProvider
 			includeDiagnosticMessages: stateValues.includeDiagnosticMessages ?? true,
 			maxDiagnosticMessages: stateValues.maxDiagnosticMessages ?? 50,
 			// Add includeTaskHistoryInEnhance setting
-			includeTaskHistoryInEnhance: stateValues.includeTaskHistoryInEnhance ?? false,
+			includeTaskHistoryInEnhance: stateValues.includeTaskHistoryInEnhance ?? true,
 			// Add remoteControlEnabled setting
 			remoteControlEnabled: stateValues.remoteControlEnabled ?? false,
 		}
@@ -2034,6 +2085,8 @@ export class ClineProvider
 		}
 
 		await this.updateGlobalState("taskHistory", history)
+		this.recentTasksCache = undefined
+
 		return history
 	}
 
@@ -2099,17 +2152,20 @@ export class ClineProvider
 		console.log(message)
 	}
 
-	// integration tests
+	// getters
+
+	public get workspaceTracker(): WorkspaceTracker | undefined {
+		return this._workspaceTracker
+	}
 
 	get viewLaunched() {
 		return this.isViewLaunched
 	}
 
 	get messages() {
-		return this.getCurrentCline()?.clineMessages || []
+		return this.getCurrentTask()?.clineMessages || []
 	}
 
-	// Add public getter
 	public getMcpHub(): McpHub | undefined {
 		return this.mcpHub
 	}
@@ -2132,12 +2188,8 @@ export class ClineProvider
 		return true
 	}
 
-	/**
-	 * Handle remote control enabled/disabled state changes
-	 * Manages UnifiedBridgeService lifecycle
-	 */
 	public async handleRemoteControlToggle(enabled: boolean) {
-		const { CloudService: CloudServiceImport, UnifiedBridgeService } = await import("@roo-code/cloud")
+		const { CloudService: CloudServiceImport, ExtensionBridgeService } = await import("@roo-code/cloud")
 
 		const userInfo = CloudServiceImport.instance.getUserInfo()
 
@@ -2148,19 +2200,19 @@ export class ClineProvider
 			return
 		}
 
-		await UnifiedBridgeService.handleRemoteControlState(
+		await ExtensionBridgeService.handleRemoteControlState(
 			userInfo,
 			enabled,
-			{ ...bridgeConfig, provider: this },
+			{ ...bridgeConfig, provider: this, sessionId: vscode.env.sessionId },
 			(message: string) => this.log(message),
 		)
 
 		if (isRemoteControlEnabled(userInfo, enabled)) {
-			const currentTask = this.getCurrentCline()
+			const currentTask = this.getCurrentTask()
 
 			if (currentTask && !currentTask.bridgeService) {
 				try {
-					currentTask.bridgeService = UnifiedBridgeService.getInstance()
+					currentTask.bridgeService = ExtensionBridgeService.getInstance()
 
 					if (currentTask.bridgeService) {
 						await currentTask.bridgeService.subscribeToTask(currentTask)
@@ -2185,22 +2237,33 @@ export class ClineProvider
 				}
 			}
 
-			UnifiedBridgeService.resetInstance()
+			ExtensionBridgeService.resetInstance()
 		}
 	}
 
-	/**
-	 * Returns properties to be included in every telemetry event
-	 * This method is called by the telemetry service to get context information
-	 * like the current mode, API provider, git repository information, etc.
-	 */
-	public async getTelemetryProperties(): Promise<TelemetryProperties> {
-		const { mode, apiConfiguration, language } = await this.getState()
-		const task = this.getCurrentCline()
+	private _appProperties?: StaticAppProperties
 
-		const packageJSON = this.context.extension?.packageJSON
+	private getAppProperties(): StaticAppProperties {
+		if (!this._appProperties) {
+			const packageJSON = this.context.extension?.packageJSON
 
-		// Get Roo Code Cloud authentication state
+			this._appProperties = {
+				appName: packageJSON?.name ?? Package.name,
+				appVersion: packageJSON?.version ?? Package.version,
+				vscodeVersion: vscode.version,
+				platform: process.platform,
+				editorName: vscode.env.appName,
+			}
+		}
+
+		return this._appProperties
+	}
+
+	public get appProperties(): StaticAppProperties {
+		return this._appProperties ?? this.getAppProperties()
+	}
+
+	private getCloudProperties(): CloudAppProperties {
 		let cloudIsAuthenticated: boolean | undefined
 
 		try {
@@ -2208,14 +2271,19 @@ export class ClineProvider
 				cloudIsAuthenticated = CloudService.instance.isAuthenticated()
 			}
 		} catch (error) {
-			// Silently handle errors to avoid breaking telemetry collection
+			// Silently handle errors to avoid breaking telemetry collection.
 			this.log(`[getTelemetryProperties] Failed to get cloud auth state: ${error}`)
 		}
 
-		// Get git repository information
-		const gitInfo = await getWorkspaceGitInfo()
+		return {
+			cloudIsAuthenticated,
+		}
+	}
 
-		// Calculate todo list statistics
+	private async getTaskProperties(): Promise<DynamicAppProperties & TaskProperties> {
+		const { language, mode, apiConfiguration } = await this.getState()
+
+		const task = this.getCurrentTask()
 		const todoList = task?.todoList
 		let todos: { total: number; completed: number; inProgress: number; pending: number } | undefined
 
@@ -2228,22 +2296,38 @@ export class ClineProvider
 			}
 		}
 
-		// Return all properties including git info - clients will filter as needed
 		return {
-			appName: packageJSON?.name ?? Package.name,
-			appVersion: packageJSON?.version ?? Package.version,
-			vscodeVersion: vscode.version,
-			platform: process.platform,
-			editorName: vscode.env.appName,
 			language,
 			mode,
+			taskId: task?.taskId,
 			apiProvider: apiConfiguration?.apiProvider,
 			modelId: task?.api?.getModel().id,
 			diffStrategy: task?.diffStrategy?.getName(),
 			isSubtask: task ? !!task.parentTask : undefined,
-			cloudIsAuthenticated,
 			...(todos && { todos }),
-			...gitInfo,
+		}
+	}
+
+	private _gitProperties?: GitProperties
+
+	private async getGitProperties(): Promise<GitProperties> {
+		if (!this._gitProperties) {
+			this._gitProperties = await getWorkspaceGitInfo()
+		}
+
+		return this._gitProperties
+	}
+
+	public get gitProperties(): GitProperties | undefined {
+		return this._gitProperties
+	}
+
+	public async getTelemetryProperties(): Promise<TelemetryProperties> {
+		return {
+			...this.getAppProperties(),
+			...this.getCloudProperties(),
+			...(await this.getTaskProperties()),
+			...(await this.getGitProperties()),
 		}
 	}
 

@@ -259,6 +259,10 @@
 		"anthropicApiKey": "Anthropic API-ключ",
 		"getAnthropicApiKey": "Получить Anthropic API-ключ",
 		"anthropicUseAuthToken": "Передавать Anthropic API-ключ как Authorization-заголовок вместо X-Api-Key",
+		"anthropic1MContextBetaLabel": "Включить контекстное окно 1M (бета)",
+		"anthropic1MContextBetaDescription": "Расширяет контекстное окно до 1 миллиона токенов для Claude Sonnet 4",
+		"awsBedrock1MContextBetaLabel": "Включить контекстное окно 1M (бета)",
+		"awsBedrock1MContextBetaDescription": "Расширяет контекстное окно до 1 миллиона токенов для Claude Sonnet 4",
 		"cerebrasApiKey": "Cerebras API-ключ",
 		"getCerebrasApiKey": "Получить Cerebras API-ключ",
 		"chutesApiKey": "Chutes API-ключ",
@@ -372,6 +376,10 @@
 		"humanRelay": {
 			"description": "API-ключ не требуется, но пользователю нужно вручную копировать и вставлять информацию в веб-чат ИИ.",
 			"instructions": "Во время использования появится диалоговое окно, и текущее сообщение будет скопировано в буфер обмена автоматически. Вам нужно вставить его в веб-версию ИИ (например, ChatGPT или Claude), затем скопировать ответ ИИ обратно в диалоговое окно и нажать кнопку подтверждения."
+		},
+		"roo": {
+			"authenticatedMessage": "Безопасно аутентифицирован через твой аккаунт Roo Code Cloud.",
+			"connectButton": "Подключиться к Roo Code Cloud"
 		},
 		"openRouter": {
 			"providerRouting": {
@@ -728,6 +736,7 @@
 		"noComputerUse": "Не поддерживает использование компьютера",
 		"supportsPromptCache": "Поддерживает кэширование подсказок",
 		"noPromptCache": "Не поддерживает кэширование подсказок",
+		"contextWindow": "Контекстное окно:",
 		"maxOutput": "Максимум вывода",
 		"inputPrice": "Цена за вход",
 		"outputPrice": "Цена за вывод",

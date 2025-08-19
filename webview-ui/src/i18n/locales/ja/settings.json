@@ -259,6 +259,10 @@
 		"anthropicApiKey": "Anthropic APIキー",
 		"getAnthropicApiKey": "Anthropic APIキーを取得",
 		"anthropicUseAuthToken": "Anthropic APIキーをX-Api-Keyの代わりにAuthorizationヘッダーとして渡す",
+		"anthropic1MContextBetaLabel": "1Mコンテキストウィンドウを有効にする（ベータ版）",
+		"anthropic1MContextBetaDescription": "Claude Sonnet 4のコンテキストウィンドウを100万トークンに拡張します",
+		"awsBedrock1MContextBetaLabel": "1Mコンテキストウィンドウを有効にする（ベータ版）",
+		"awsBedrock1MContextBetaDescription": "Claude Sonnet 4のコンテキストウィンドウを100万トークンに拡張します",
 		"cerebrasApiKey": "Cerebras APIキー",
 		"getCerebrasApiKey": "Cerebras APIキーを取得",
 		"chutesApiKey": "Chutes APIキー",
@@ -372,6 +376,10 @@
 		"humanRelay": {
 			"description": "APIキーは不要ですが、ユーザーはウェブチャットAIに情報をコピー＆ペーストする必要があります。",
 			"instructions": "使用中にダイアログボックスが表示され、現在のメッセージが自動的にクリップボードにコピーされます。これらをウェブ版のAI（ChatGPTやClaudeなど）に貼り付け、AIの返答をダイアログボックスにコピーして確認ボタンをクリックする必要があります。"
+		},
+		"roo": {
+			"authenticatedMessage": "Roo Code Cloudアカウントを通じて安全に認証されています。",
+			"connectButton": "Roo Code Cloudに接続"
 		},
 		"openRouter": {
 			"providerRouting": {
@@ -728,6 +736,7 @@
 		"noComputerUse": "コンピュータ使用をサポートしていません",
 		"supportsPromptCache": "プロンプトキャッシュをサポート",
 		"noPromptCache": "プロンプトキャッシュをサポートしていません",
+		"contextWindow": "コンテキストウィンドウ:",
 		"maxOutput": "最大出力",
 		"inputPrice": "入力価格",
 		"outputPrice": "出力価格",
