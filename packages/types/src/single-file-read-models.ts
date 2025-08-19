@@ -20,7 +20,9 @@ export function shouldUseSingleFileRead(modelId: string): boolean {
 
 	// Pattern matching for model families
 	// Check if model ID starts with any configured pattern
-	for (const pattern of SINGLE_FILE_READ_MODELS) {
+	// Using Array.from for compatibility with older TypeScript targets
+	const patterns = Array.from(SINGLE_FILE_READ_MODELS)
+	for (const pattern of patterns) {
 		if (pattern.endsWith("*") && modelId.startsWith(pattern.slice(0, -1))) {
 			return true
 		}
