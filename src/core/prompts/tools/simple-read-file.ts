@@ -31,11 +31,5 @@ Examples:
 3. Reading a markdown file:
 <read_file>
 <path>README.md</path>
-</read_file>
-
-IMPORTANT: 
-- You can only read ONE file at a time with this tool
-- If you need to read multiple files, make separate read_file requests for each file
-- The tool will show line numbers for easy reference
-- Binary files (except PDF and DOCX) may not display properly`
+</read_file>`
 }
