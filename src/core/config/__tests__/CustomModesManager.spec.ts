@@ -114,17 +114,17 @@ describe("CustomModesManager", () => {
 			expect(modes).toHaveLength(2)
 		})
 
-		it("should load modes from .roo/roo_modes directory", async () => {
+		it("should load modes from .roo/modes directory", async () => {
 			const settingsModes = [{ slug: "mode1", name: "Mode 1", roleDefinition: "Role 1", groups: ["read"] }]
 			const rooModesMode1 = { slug: "mode2", name: "Mode 2", roleDefinition: "Role 2", groups: ["read"] }
 			const rooModesMode2 = { slug: "mode3", name: "Mode 3", roleDefinition: "Role 3", groups: ["edit"] }
 
 			;(fileExistsAtPath as Mock).mockImplementation(async (path: string) => {
-				// Return true for settings path and roo_modes directories
-				return path === mockSettingsPath || path.includes("roo_modes") || path === mockRoomodes
+				// Return true for settings path and modes directories
+				return path === mockSettingsPath || path.includes("modes") || path === mockRoomodes
 			})
 			;(fs.readdir as Mock).mockImplementation(async (path: string) => {
-				if (path.includes("roo_modes")) {
+				if (path.includes("modes")) {
 					return [
 						{ name: "mode1.yaml", isFile: () => true },
 						{ name: "mode2.yml", isFile: () => true },
@@ -155,7 +155,7 @@ describe("CustomModesManager", () => {
 			expect(modes.map((m) => m.slug)).toContain("mode3")
 		})
 
-		it("should respect precedence: project .roo/roo_modes > .roomodes > global .roo/roo_modes > settings", async () => {
+		it("should respect precedence: project .roo/modes > .roomodes > global .roo/modes > settings", async () => {
 			const settingsMode = { slug: "test", name: "Settings", roleDefinition: "Settings Role", groups: ["read"] }
 			const globalRooMode = {
 				slug: "test",
@@ -175,7 +175,7 @@ describe("CustomModesManager", () => {
 				return true // All paths exist
 			})
 			;(fs.readdir as Mock).mockImplementation(async (path: string) => {
-				if (path.includes("roo_modes")) {
+				if (path.includes("modes")) {
 					return [{ name: "test.yaml", isFile: () => true }]
 				}
 				return []
@@ -187,12 +187,12 @@ describe("CustomModesManager", () => {
 				if (path === mockRoomodes) {
 					return yaml.stringify({ customModes: [roomodesMode] })
 				}
-				// Global .roo/roo_modes
-				if (path.includes("roo_modes") && !path.includes(mockWorkspacePath)) {
+				// Global .roo/modes
+				if (path.includes("modes") && !path.includes(mockWorkspacePath)) {
 					return yaml.stringify({ customModes: [globalRooMode] })
 				}
-				// Project .roo/roo_modes
-				if (path.includes("roo_modes") && path.includes(mockWorkspacePath)) {
+				// Project .roo/modes
+				if (path.includes("modes") && path.includes(mockWorkspacePath)) {
 					return yaml.stringify({ customModes: [projectRooMode] })
 				}
 				throw new Error("File not found")
@@ -202,16 +202,16 @@ describe("CustomModesManager", () => {
 
 			// Should have only one mode with the slug "test"
 			expect(modes).toHaveLength(1)
-			// Project .roo/roo_modes should take precedence
+			// Project .roo/modes should take precedence
 			expect(modes[0].name).toBe("Project Roo")
 			expect(modes[0].roleDefinition).toBe("Project Roo Role")
 		})
 
-		it("should handle empty .roo/roo_modes directory", async () => {
+		it("should handle empty .roo/modes directory", async () => {
 			const settingsModes = [{ slug: "mode1", name: "Mode 1", roleDefinition: "Role 1", groups: ["read"] }]
 
 			;(fileExistsAtPath as Mock).mockImplementation(async (path: string) => {
-				return path === mockSettingsPath || path.includes("roo_modes")
+				return path === mockSettingsPath || path.includes("modes")
 			})
 			;(fs.readdir as Mock).mockImplementation(async () => {
 				return [] // Empty directory
@@ -230,12 +230,12 @@ describe("CustomModesManager", () => {
 			expect(modes[0].slug).toBe("mode1")
 		})
 
-		it("should handle non-existent .roo/roo_modes directory", async () => {
+		it("should handle non-existent .roo/modes directory", async () => {
 			const settingsModes = [{ slug: "mode1", name: "Mode 1", roleDefinition: "Role 1", groups: ["read"] }]
 
 			;(fileExistsAtPath as Mock).mockImplementation(async (path: string) => {
-				// roo_modes directories don't exist
-				if (path.includes("roo_modes")) {
+				// modes directories don't exist
+				if (path.includes("modes")) {
 					return false
 				}
 				return path === mockSettingsPath
@@ -254,14 +254,14 @@ describe("CustomModesManager", () => {
 			expect(modes[0].slug).toBe("mode1")
 		})
 
-		it("should preserve sourceFile property for modes loaded from .roo/roo_modes", async () => {
+		it("should preserve sourceFile property for modes loaded from .roo/modes", async () => {
 			const rooModesMode = { slug: "test", name: "Test Mode", roleDefinition: "Test Role", groups: ["read"] }
 
 			;(fileExistsAtPath as Mock).mockImplementation(async (path: string) => {
-				return path === mockSettingsPath || path.includes("roo_modes")
+				return path === mockSettingsPath || path.includes("modes")
 			})
 			;(fs.readdir as Mock).mockImplementation(async (path: string) => {
-				if (path.includes("roo_modes")) {
+				if (path.includes("modes")) {
 					return [{ name: "test.yaml", isFile: () => true }]
 				}
 				return []

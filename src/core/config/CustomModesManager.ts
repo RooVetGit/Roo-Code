@@ -17,7 +17,7 @@ import { ensureSettingsDirectoryExists } from "../../utils/globalContext"
 import { t } from "../../i18n"
 
 const ROOMODES_FILENAME = ".roomodes"
-const ROO_MODES_DIR = "roo_modes"
+const ROO_MODES_DIR = "modes"
 
 // Type definitions for import/export functionality
 interface RuleFile {
@@ -323,7 +323,7 @@ export class CustomModesManager {
 		this.disposables.push(settingsWatcher.onDidDelete(handleModeFileChange))
 		this.disposables.push(settingsWatcher)
 
-		// Watch global .roo/roo_modes directory
+		// Watch global .roo/modes directory
 		const globalRooModesDir = path.join(getGlobalRooDirectory(), ROO_MODES_DIR)
 		const globalRooModesPattern = path.join(globalRooModesDir, "*.{yaml,yml}")
 		const globalRooModesWatcher = vscode.workspace.createFileSystemWatcher(globalRooModesPattern)
@@ -332,7 +332,7 @@ export class CustomModesManager {
 		this.disposables.push(globalRooModesWatcher.onDidDelete(handleModeFileChange))
 		this.disposables.push(globalRooModesWatcher)
 
-		// Watch .roomodes file and project .roo/roo_modes directory if workspace exists
+		// Watch .roomodes file and project .roo/modes directory if workspace exists
 		const workspaceFolders = vscode.workspace.workspaceFolders
 		if (workspaceFolders && workspaceFolders.length > 0) {
 			const workspaceRoot = getWorkspacePath()
@@ -345,7 +345,7 @@ export class CustomModesManager {
 			this.disposables.push(roomodesWatcher.onDidDelete(handleModeFileChange))
 			this.disposables.push(roomodesWatcher)
 
-			// Watch project .roo/roo_modes directory
+			// Watch project .roo/modes directory
 			const projectRooModesDir = path.join(workspaceRoot, ".roo", ROO_MODES_DIR)
 			const projectRooModesPattern = path.join(projectRooModesDir, "*.{yaml,yml}")
 			const projectRooModesWatcher = vscode.workspace.createFileSystemWatcher(projectRooModesPattern)
@@ -368,15 +368,15 @@ export class CustomModesManager {
 		const settingsPath = await this.getCustomModesFilePath()
 		const settingsModes = await this.loadModesFromFile(settingsPath, "global")
 
-		// Get modes from .roo/roo_modes directories (both global and project)
+		// Get modes from .roo/modes directories (both global and project)
 		const allRooModesDirModes: ModeConfig[] = []
 
-		// Load from global .roo/roo_modes
+		// Load from global .roo/modes
 		const globalRooModesDir = path.join(getGlobalRooDirectory(), ROO_MODES_DIR)
 		const globalRooModesDirModes = await this.loadModesFromDirectory(globalRooModesDir, "global")
 		allRooModesDirModes.push(...globalRooModesDirModes)
 
-		// Load from project .roo/roo_modes if workspace exists
+		// Load from project .roo/modes if workspace exists
 		const workspacePath = getWorkspacePath()
 		if (workspacePath) {
 			const projectRooModesDir = path.join(workspacePath, ".roo", ROO_MODES_DIR)
@@ -390,9 +390,9 @@ export class CustomModesManager {
 
 		// Create a map to store modes with proper precedence
 		// Precedence order (highest to lowest):
-		// 1. .roo/roo_modes (project)
+		// 1. .roo/modes (project)
 		// 2. .roomodes (project)
-		// 3. .roo/roo_modes (global)
+		// 3. .roo/modes (global)
 		// 4. settings file (global)
 		const modesMap = new Map<string, ModeConfig>()
 
@@ -402,7 +402,7 @@ export class CustomModesManager {
 			modesMap.set(mode.slug, mode)
 		}
 
-		// 3. Global .roo/roo_modes
+		// 3. Global .roo/modes
 		for (const mode of globalRooModesDirModes) {
 			modesMap.set(mode.slug, mode)
 		}
@@ -412,7 +412,7 @@ export class CustomModesManager {
 			modesMap.set(mode.slug, mode)
 		}
 
-		// 1. Project .roo/roo_modes (highest precedence)
+		// 1. Project .roo/modes (highest precedence)
 		for (const mode of allRooModesDirModes.filter((m) => m.source === "project")) {
 			modesMap.set(mode.slug, mode)
 		}
@@ -586,7 +586,7 @@ export class CustomModesManager {
 						}
 					}
 
-					// Check and delete from .roo/roo_modes directories
+					// Check and delete from .roo/modes directories
 					const rooDirectories = getRooDirectoriesForCwd(getWorkspacePath() || process.cwd())
 					for (const rooDir of rooDirectories) {
 						const rooModesDir = path.join(rooDir, ROO_MODES_DIR)
