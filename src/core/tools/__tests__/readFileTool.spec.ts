@@ -1745,11 +1745,11 @@ describe("read_file tool - FILE_NOT_FOUND unified error", () => {
 		expect(Array.isArray(payload.filePaths)).toBe(true)
 		expect(payload.filePaths).toContain(relPath)
 
-		// Assert per-file XML error was suppressed for ENOENT (no <error> block for this file)
+		// Assert per-file XML error is now included for AI model feedback
 		expect(typeof pushed).toBe("string")
 		const xml = String(pushed)
 		expect(xml).toContain("<files>")
-		// no per-file error tags for the not-found case
-		expect(xml).not.toMatch(/<error>.*File not found.*<\/error>/i)
+		// Should now include per-file error tags for the not-found case (for AI model feedback)
+		expect(xml).toContain(`<file><path>${relPath}</path><error>File not found</error></file>`)
 	})
 })

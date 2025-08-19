@@ -630,8 +630,8 @@ export async function readFileTool(
 					updateFileResult(relPath, {
 						status: "error",
 						error: "File not found",
-						// Suppress per-file XML for not-found to avoid duplicate UI signals
-						xmlContent: undefined,
+						// Include XML content for AI model feedback
+						xmlContent: `<file><path>${relPath}</path><error>File not found</error></file>`,
 					})
 					// Don't call handleError for file not found - we'll emit a unified message later
 				} else {
@@ -747,8 +747,8 @@ export async function readFileTool(
 				updateFileResult(relPath, {
 					status: "error",
 					error: "File not found",
-					// Suppress per-file XML for not-found to avoid duplicate UI signals
-					xmlContent: undefined,
+					// Include XML content for AI model feedback
+					xmlContent: `<file><path>${relPath}</path><error>File not found</error></file>`,
 				})
 			}
 			// Don't call handleError for file not found - we'll emit a unified message later
