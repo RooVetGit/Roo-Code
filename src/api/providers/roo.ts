@@ -71,7 +71,7 @@ export class RooHandler extends BaseOpenAiCompatibleProvider<RooModelId> {
 
 	override getModel() {
 		const modelId = this.options.apiModelId || rooDefaultModelId
-		const modelInfo = this.providerModels[modelId as RooModelId] ?? this.providerModels[rooDefaultModelId]
+		const modelInfo = this.providerModels[modelId as RooModelId]
 
 		if (modelInfo) {
 			return { id: modelId as RooModelId, info: modelInfo }
