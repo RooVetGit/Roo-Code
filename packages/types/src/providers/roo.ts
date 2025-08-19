@@ -10,7 +10,7 @@ export const rooModels = {
 		maxTokens: 8192,
 		contextWindow: 262_144,
 		supportsImages: false,
-		supportsPromptCache: false,
+		supportsPromptCache: true,
 		inputPrice: 0,
 		outputPrice: 0,
 		description:
