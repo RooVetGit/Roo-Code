@@ -51,7 +51,11 @@ export async function newTaskTool(
 
 			// Get the experimental setting for requiring todos
 			const provider = cline.providerRef.deref()
-			const state = await provider?.getState()
+			if (!provider) {
+				pushToolResult(formatResponse.toolError("Provider reference lost"))
+				return
+			}
+			const state = await provider.getState()
 			const requireTodos = Experiments.isEnabled(state?.experiments ?? {}, EXPERIMENT_IDS.NEW_TASK_REQUIRE_TODOS)
 
 			// Check if todos are required based on experimental setting
@@ -82,7 +86,7 @@ export async function newTaskTool(
 			const unescapedMessage = message.replace(/\\\\@/g, "\\@")
 
 			// Verify the mode exists
-			const targetMode = getModeBySlug(mode, (await cline.providerRef.deref()?.getState())?.customModes)
+			const targetMode = getModeBySlug(mode, state?.customModes)
 
 			if (!targetMode) {
 				pushToolResult(formatResponse.toolError(`Invalid mode: ${mode}`))
@@ -102,9 +106,7 @@ export async function newTaskTool(
 				return
 			}
 
-			if (!provider) {
-				return
-			}
+			// Provider is guaranteed to be defined here due to earlier check
 
 			if (cline.enableCheckpoints) {
 				cline.checkpointSave(true)
