@@ -1,4 +1,4 @@
-// npx vitest run api/providers/__tests__/chutes.spec.ts
+// npx vitest run api/providers/__tests__/featherless.spec.ts
 
 import { Anthropic } from "@anthropic-ai/sdk"
 import OpenAI from "openai"
