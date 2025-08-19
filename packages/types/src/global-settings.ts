@@ -122,6 +122,7 @@ export const globalSettingsSchema = z.object({
 	rateLimitSeconds: z.number().optional(),
 	diffEnabled: z.boolean().optional(),
 	fuzzyMatchThreshold: z.number().optional(),
+	unescapeHtmlEntitiesInDiffs: z.boolean().optional(),
 	experiments: experimentsSchema.optional(),
 
 	codebaseIndexModels: codebaseIndexModelsSchema.optional(),
@@ -275,6 +276,7 @@ export const EVALS_SETTINGS: RooCodeSettings = {
 
 	diffEnabled: true,
 	fuzzyMatchThreshold: 1,
+	unescapeHtmlEntitiesInDiffs: false,
 
 	enableCheckpoints: false,
 

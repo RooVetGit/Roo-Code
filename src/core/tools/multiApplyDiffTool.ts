@@ -418,13 +418,17 @@ Original error: ${errorMessage}`
 				let successCount = 0
 				let formattedError = ""
 
-				// Pre-process all diff items for HTML entity unescaping if needed
-				const processedDiffItems = !cline.api.getModel().id.includes("claude")
-					? diffItems.map((item) => ({
-							...item,
-							content: item.content ? unescapeHtmlEntities(item.content) : item.content,
-						}))
-					: diffItems
+				// Apply HTML entity unescaping based on user setting
+				let processedDiffItems = diffItems
+				const providerState = (await cline.providerRef.deref()?.getState()) ?? {}
+				const unescapeHtmlEntitiesInDiffs = (providerState as any).unescapeHtmlEntitiesInDiffs ?? false
+
+				if (unescapeHtmlEntitiesInDiffs && !cline.api.getModel().id.includes("claude")) {
+					processedDiffItems = diffItems.map((item) => ({
+						...item,
+						content: item.content ? unescapeHtmlEntities(item.content) : item.content,
+					}))
+				}
 
 				// Apply all diffs at once with the array-based method
 				const diffResult = (await cline.diffStrategy?.applyDiff(originalContent, processedDiffItems)) ?? {
