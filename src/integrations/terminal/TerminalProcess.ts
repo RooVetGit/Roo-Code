@@ -72,6 +72,12 @@ export class TerminalProcess extends BaseTerminalProcess {
 			return
 		}
 
+		// Detect if this is a Python command that might need special handling
+		const isPythonCommand = this.isPythonCommand(command)
+		const baseTimeout = Terminal.getShellIntegrationTimeout()
+		// Increase timeout for Python commands, especially multi-line ones
+		const adjustedTimeout = isPythonCommand ? Math.max(baseTimeout, 10000) : baseTimeout
+
 		// Create a promise that resolves when the stream becomes available
 		const streamAvailable = new Promise<AsyncIterable<string>>((resolve, reject) => {
 			const timeoutId = setTimeout(() => {
@@ -81,16 +87,14 @@ export class TerminalProcess extends BaseTerminalProcess {
 				// Emit no_shell_integration event with descriptive message
 				this.emit(
 					"no_shell_integration",
-					`VSCE shell integration stream did not start within ${Terminal.getShellIntegrationTimeout() / 1000} seconds. Terminal problem?`,
+					`VSCE shell integration stream did not start within ${adjustedTimeout / 1000} seconds. Terminal problem?`,
 				)
 
 				// Reject with descriptive error
 				reject(
-					new Error(
-						`VSCE shell integration stream did not start within ${Terminal.getShellIntegrationTimeout() / 1000} seconds.`,
-					),
+					new Error(`VSCE shell integration stream did not start within ${adjustedTimeout / 1000} seconds.`),
 				)
-			}, Terminal.getShellIntegrationTimeout())
+			}, adjustedTimeout)
 
 			// Clean up timeout if stream becomes available
 			this.once("stream_available", (stream: AsyncIterable<string>) => {
@@ -158,6 +162,7 @@ export class TerminalProcess extends BaseTerminalProcess {
 
 		let preOutput = ""
 		let commandOutputStarted = false
+		let streamEndDetected = false
 
 		/*
 		 * Extract clean output from raw accumulated output. FYI:
@@ -186,6 +191,11 @@ export class TerminalProcess extends BaseTerminalProcess {
 				}
 			}
 
+			// Check for command end markers in the current data chunk
+			if (this.containsVsceEndMarkers(data)) {
+				streamEndDetected = true
+			}
+
 			// Command output started, accumulate data without filtering.
 			// notice to future programmers: do not add escape sequence
 			// filtering here: fullOutput cannot change in length (see getUnretrievedOutput),
@@ -208,8 +218,32 @@ export class TerminalProcess extends BaseTerminalProcess {
 		// Set streamClosed immediately after stream ends.
 		this.terminal.setActiveStream(undefined)
 
-		// Wait for shell execution to complete.
-		await shellExecutionComplete
+		// For Python commands, add additional validation to ensure completion
+		if (isPythonCommand && !streamEndDetected) {
+			console.warn(
+				"[Terminal Process] Python command completed but no end markers detected, waiting briefly for shell execution complete event",
+			)
+
+			// Add a short timeout for shell execution complete for Python commands
+			const shellCompleteTimeout = new Promise<ExitCodeDetails>((resolve) => {
+				const timeoutId = setTimeout(() => {
+					console.warn(
+						"[Terminal Process] Shell execution complete timeout for Python command, proceeding anyway",
+					)
+					resolve({ exitCode: 0 }) // Assume success if no explicit exit code received
+				}, 2000) // 2 second timeout
+
+				this.once("shell_execution_complete", (details: ExitCodeDetails) => {
+					clearTimeout(timeoutId)
+					resolve(details)
+				})
+			})
+
+			await shellCompleteTimeout
+		} else {
+			// Wait for shell execution to complete.
+			await shellExecutionComplete
+		}
 
 		this.isHot = false
 
@@ -463,5 +497,36 @@ export class TerminalProcess extends BaseTerminalProcess {
 		}
 
 		return match133 !== undefined ? match133 : match633
+	}
+
+	/**
+	 * Detects if a command is a Python command that might need special handling
+	 * @param command The command string to analyze
+	 * @returns true if this appears to be a Python command
+	 */
+	private isPythonCommand(command: string): boolean {
+		const trimmedCommand = command.trim().toLowerCase()
+
+		// Check for common Python command patterns
+		const pythonPatterns = [
+			/^python\s/, // python script.py
+			/^python3\s/, // python3 script.py
+			/^uv\s+run\s+python/, // uv run python -c "..."
+			/^pipx\s+run\s+python/, // pipx run python -c "..."
+			/^poetry\s+run\s+python/, // poetry run python -c "..."
+			/^python\s+-c\s*["']/, // python -c "code"
+			/^python3\s+-c\s*["']/, // python3 -c "code"
+		]
+
+		return pythonPatterns.some((pattern) => pattern.test(trimmedCommand))
+	}
+
+	/**
+	 * Checks if the data contains VSCode shell integration end markers
+	 * @param data The data chunk to check
+	 * @returns true if end markers are found
+	 */
+	private containsVsceEndMarkers(data: string): boolean {
+		return data.includes("\x1b]633;D") || data.includes("\x1b]133;D")
 	}
 }
