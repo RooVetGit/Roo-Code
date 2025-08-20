@@ -301,58 +301,6 @@ export const webviewMessageHandler = async (
 		case "customInstructions":
 			await provider.updateCustomInstructions(message.text)
 			break
-		case "alwaysAllowReadOnly":
-			await updateGlobalState("alwaysAllowReadOnly", message.bool ?? undefined)
-			await provider.postStateToWebview()
-			break
-		case "alwaysAllowReadOnlyOutsideWorkspace":
-			await updateGlobalState("alwaysAllowReadOnlyOutsideWorkspace", message.bool ?? undefined)
-			await provider.postStateToWebview()
-			break
-		case "alwaysAllowWrite":
-			await updateGlobalState("alwaysAllowWrite", message.bool ?? undefined)
-			await provider.postStateToWebview()
-			break
-		case "alwaysAllowWriteOutsideWorkspace":
-			await updateGlobalState("alwaysAllowWriteOutsideWorkspace", message.bool ?? undefined)
-			await provider.postStateToWebview()
-			break
-		case "alwaysAllowWriteProtected":
-			await updateGlobalState("alwaysAllowWriteProtected", message.bool ?? undefined)
-			await provider.postStateToWebview()
-			break
-		case "alwaysAllowExecute":
-			await updateGlobalState("alwaysAllowExecute", message.bool ?? undefined)
-			await provider.postStateToWebview()
-			break
-		case "alwaysAllowBrowser":
-			await updateGlobalState("alwaysAllowBrowser", message.bool ?? undefined)
-			await provider.postStateToWebview()
-			break
-		case "alwaysAllowMcp":
-			await updateGlobalState("alwaysAllowMcp", message.bool)
-			await provider.postStateToWebview()
-			break
-		case "alwaysAllowModeSwitch":
-			await updateGlobalState("alwaysAllowModeSwitch", message.bool)
-			await provider.postStateToWebview()
-			break
-		case "allowedMaxRequests":
-			await updateGlobalState("allowedMaxRequests", message.value)
-			await provider.postStateToWebview()
-			break
-		case "allowedMaxCost":
-			await updateGlobalState("allowedMaxCost", message.value)
-			await provider.postStateToWebview()
-			break
-		case "alwaysAllowSubtasks":
-			await updateGlobalState("alwaysAllowSubtasks", message.bool)
-			await provider.postStateToWebview()
-			break
-		case "alwaysAllowUpdateTodoList":
-			await updateGlobalState("alwaysAllowUpdateTodoList", message.bool)
-			await provider.postStateToWebview()
-			break
 		case "askResponse":
 			provider.getCurrentTask()?.handleWebviewAskResponse(message.askResponse!, message.text, message.images)
 			break
@@ -948,40 +896,6 @@ export const webviewMessageHandler = async (
 			}
 			break
 		}
-		// playSound handler removed - now handled directly in the webview
-		case "soundEnabled":
-			const soundEnabled = message.bool ?? true
-			await updateGlobalState("soundEnabled", soundEnabled)
-			await provider.postStateToWebview()
-			break
-		case "soundVolume":
-			const soundVolume = message.value ?? 0.5
-			await updateGlobalState("soundVolume", soundVolume)
-			await provider.postStateToWebview()
-			break
-		case "ttsEnabled":
-			const ttsEnabled = message.bool ?? true
-			await updateGlobalState("ttsEnabled", ttsEnabled)
-			setTtsEnabled(ttsEnabled) // Add this line to update the tts utility
-			await provider.postStateToWebview()
-			break
-		case "ttsSpeed":
-			const ttsSpeed = message.value ?? 1.0
-			await updateGlobalState("ttsSpeed", ttsSpeed)
-			setTtsSpeed(ttsSpeed)
-			await provider.postStateToWebview()
-			break
-		case "playTts":
-			if (message.text) {
-				playTts(message.text, {
-					onStart: () => provider.postMessageToWebview({ type: "ttsStart", text: message.text }),
-					onStop: () => provider.postMessageToWebview({ type: "ttsStop", text: message.text }),
-				})
-			}
-			break
-		case "stopTts":
-			stopTts()
-			break
 		case "diffEnabled":
 			const diffEnabled = message.bool ?? true
 			await updateGlobalState("diffEnabled", diffEnabled)
@@ -1085,11 +999,6 @@ export const webviewMessageHandler = async (
 					})
 				}
 			}
-
-			break
-		case "alwaysApproveResubmit":
-			await updateGlobalState("alwaysApproveResubmit", message.bool ?? false)
-			await provider.postStateToWebview()
 			break
 		case "requestDelaySeconds":
 			await updateGlobalState("requestDelaySeconds", message.value ?? 5)
@@ -1273,10 +1182,6 @@ export const webviewMessageHandler = async (
 		case "maxWorkspaceFiles":
 			const fileCount = Math.min(Math.max(0, message.value ?? 200), 500)
 			await updateGlobalState("maxWorkspaceFiles", fileCount)
-			await provider.postStateToWebview()
-			break
-		case "alwaysAllowFollowupQuestions":
-			await updateGlobalState("alwaysAllowFollowupQuestions", message.bool ?? false)
 			await provider.postStateToWebview()
 			break
 		case "followupAutoApproveTimeoutMs":
