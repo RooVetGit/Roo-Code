@@ -1,9 +1,9 @@
 import { ToolArgs } from "./types"
 
 export function getNewTaskDescription(args: ToolArgs): string {
-	const todosRequired = args.experiments?.newTaskRequireTodos === true
+	const todosRequired = args.settings?.newTaskRequireTodos === true
 
-	// When experiment is disabled, don't show todos parameter at all
+	// When setting is disabled, don't show todos parameter at all
 	if (!todosRequired) {
 		return `## new_task
 Description: This will let you create a new task instance in the chosen mode using your provided message.
@@ -26,7 +26,7 @@ Example:
 `
 	}
 
-	// When experiment is enabled, show todos as required
+	// When setting is enabled, show todos as required
 	return `## new_task
 Description: This will let you create a new task instance in the chosen mode using your provided message and initial todo list.
 

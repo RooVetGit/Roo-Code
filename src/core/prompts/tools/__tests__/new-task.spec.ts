@@ -3,11 +3,11 @@ import { getNewTaskDescription } from "../new-task"
 import { ToolArgs } from "../types"
 
 describe("getNewTaskDescription", () => {
-	it("should not show todos parameter at all when experiment is disabled", () => {
+	it("should not show todos parameter at all when setting is disabled", () => {
 		const args: ToolArgs = {
 			cwd: "/test",
 			supportsComputerUse: false,
-			experiments: {
+			settings: {
 				newTaskRequireTodos: false,
 			},
 		}
@@ -28,11 +28,11 @@ describe("getNewTaskDescription", () => {
 		expect(description).toContain("message: (required)")
 	})
 
-	it("should show todos as required when experiment is enabled", () => {
+	it("should show todos as required when setting is enabled", () => {
 		const args: ToolArgs = {
 			cwd: "/test",
 			supportsComputerUse: false,
-			experiments: {
+			settings: {
 				newTaskRequireTodos: true,
 			},
 		}
@@ -53,11 +53,11 @@ describe("getNewTaskDescription", () => {
 		expect(description).toContain("Set up auth middleware")
 	})
 
-	it("should not show todos parameter when experiments is undefined", () => {
+	it("should not show todos parameter when settings is undefined", () => {
 		const args: ToolArgs = {
 			cwd: "/test",
 			supportsComputerUse: false,
-			experiments: undefined,
+			settings: undefined,
 		}
 
 		const description = getNewTaskDescription(args)
@@ -73,7 +73,7 @@ describe("getNewTaskDescription", () => {
 		const args: ToolArgs = {
 			cwd: "/test",
 			supportsComputerUse: false,
-			experiments: {},
+			settings: {},
 		}
 
 		const description = getNewTaskDescription(args)
@@ -85,32 +85,32 @@ describe("getNewTaskDescription", () => {
 		expect(description).not.toContain("</todos>")
 	})
 
-	it("should only include todos in example when experiment is enabled", () => {
-		const argsWithExperimentOff: ToolArgs = {
+	it("should only include todos in example when setting is enabled", () => {
+		const argsWithSettingOff: ToolArgs = {
 			cwd: "/test",
 			supportsComputerUse: false,
-			experiments: {
+			settings: {
 				newTaskRequireTodos: false,
 			},
 		}
 
-		const argsWithExperimentOn: ToolArgs = {
+		const argsWithSettingOn: ToolArgs = {
 			cwd: "/test",
 			supportsComputerUse: false,
-			experiments: {
+			settings: {
 				newTaskRequireTodos: true,
 			},
 		}
 
-		const descriptionOff = getNewTaskDescription(argsWithExperimentOff)
-		const descriptionOn = getNewTaskDescription(argsWithExperimentOn)
+		const descriptionOff = getNewTaskDescription(argsWithSettingOff)
+		const descriptionOn = getNewTaskDescription(argsWithSettingOn)
 
-		// When experiment is off, should NOT include todos in example
+		// When setting is off, should NOT include todos in example
 		const todosPattern = /<todos>\s*\[\s*\]\s*Set up auth middleware/s
 		expect(descriptionOff).not.toMatch(todosPattern)
 		expect(descriptionOff).not.toContain("<todos>")
 
-		// When experiment is on, should include todos in example
+		// When setting is on, should include todos in example
 		expect(descriptionOn).toMatch(todosPattern)
 		expect(descriptionOn).toContain("<todos>")
 	})
