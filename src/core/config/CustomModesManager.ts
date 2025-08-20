@@ -878,6 +878,11 @@ export class CustomModesManager {
 				source: "project" as const,
 			}
 
+			// Normalize sourceFile path to use forward slashes if it exists
+			if ((exportMode as any).sourceFile) {
+				;(exportMode as any).sourceFile = (exportMode as any).sourceFile.replace(/\\/g, "/")
+			}
+
 			// Merge custom prompts if provided
 			if (customPrompts) {
 				if (customPrompts.roleDefinition) exportMode.roleDefinition = customPrompts.roleDefinition
