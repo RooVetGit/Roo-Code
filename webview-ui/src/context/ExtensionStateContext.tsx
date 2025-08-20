@@ -333,6 +333,14 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 					setCommands(message.commands ?? [])
 					break
 				}
+				case "messageCreated": {
+					const clineMessage = message.clineMessage!
+					setState((prevState) => ({
+						...prevState,
+						clineMessages: [...prevState.clineMessages, clineMessage],
+					}))
+					break
+				}
 				case "messageUpdated": {
 					const clineMessage = message.clineMessage!
 					setState((prevState) => {

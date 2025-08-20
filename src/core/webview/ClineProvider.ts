@@ -888,7 +888,15 @@ export class ClineProvider
 	}
 
 	public async postMessageToWebview(message: ExtensionMessage) {
-		await this.view?.webview.postMessage(message)
+		try {
+			await this.view?.webview.postMessage(message)
+		} catch (error) {
+			// Guard against unhandled promise rejections from webview messaging
+			const errMsg =
+				error instanceof Error ? error.message : typeof error === "string" ? error : JSON.stringify(error)
+			this.log(`[postMessageToWebview] failed to post message '${message.type}': ${errMsg}`)
+			// Non-fatal: continue without throwing to avoid crashing extension host
+		}
 	}
 
 	private async getHMRHtmlContent(webview: vscode.Webview): Promise<string> {
@@ -1554,7 +1562,7 @@ export class ClineProvider
 
 		// Check MDM compliance and send user to account tab if not compliant
 		if (!this.checkMdmCompliance()) {
-			await this.postMessageToWebview({ type: "action", action: "accountButtonClicked" })
+			this.postMessageToWebview({ type: "action", action: "accountButtonClicked" })
 		}
 	}
 
