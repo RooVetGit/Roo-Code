@@ -55,6 +55,7 @@ const ALLOWED_VSCODE_SETTINGS = new Set(["terminal.integrated.inheritEnv"])
 
 import { MarketplaceManager, MarketplaceItemType } from "../../services/marketplace"
 import { setPendingTodoList } from "../tools/updateTodoListTool"
+import { WebviewMessageHandlerRegistry } from "./handler"
 
 export const webviewMessageHandler = async (
 	provider: ClineProvider,
@@ -207,6 +208,13 @@ export const webviewMessageHandler = async (
 		} else if (operation === "edit" && editedContent) {
 			await handleEditOperation(messageTs, editedContent, images)
 		}
+	}
+
+	const handlerRegister = WebviewMessageHandlerRegistry.getInstance()
+	const handler = handlerRegister.getHandler(message.type)
+	if (handler) {
+		await handler.handle(provider, message, { marketplaceManager })
+		return
 	}
 
 	switch (message.type) {
