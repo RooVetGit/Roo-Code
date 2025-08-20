@@ -30,6 +30,7 @@ import { MdmService } from "./services/mdm/MdmService"
 import { migrateSettings } from "./utils/migrateSettings"
 import { autoImportSettings } from "./utils/autoImportSettings"
 import { isRemoteControlEnabled } from "./utils/remoteControl"
+import { isCodeServerEnvironment, getEnvironmentInfo } from "./utils/environmentDetection"
 import { API } from "./extension/api"
 
 import {
@@ -59,6 +60,20 @@ export async function activate(context: vscode.ExtensionContext) {
 	outputChannel = vscode.window.createOutputChannel(Package.outputChannel)
 	context.subscriptions.push(outputChannel)
 	outputChannel.appendLine(`${Package.name} extension activated - ${JSON.stringify(Package)}`)
+
+	// Log environment information for debugging
+	const envInfo = getEnvironmentInfo()
+	outputChannel.appendLine(`Environment: ${JSON.stringify(envInfo)}`)
+
+	// Warn if running in Code-Server environment
+	if (isCodeServerEnvironment()) {
+		outputChannel.appendLine(
+			"⚠️ Code-Server environment detected. OAuth authentication may require special handling.",
+		)
+		vscode.window.showInformationMessage(
+			"Roo Code: Running in Code-Server environment. Authentication may work differently than in desktop VS Code.",
+		)
+	}
 
 	// Migrate old settings to new
 	await migrateSettings(context, outputChannel)
@@ -113,8 +128,15 @@ export async function activate(context: vscode.ExtensionContext) {
 		}
 	}
 
-	// Initialize Roo Code Cloud service.
+	// Initialize Roo Code Cloud service with Code-Server detection
 	const cloudService = await CloudService.createInstance(context, cloudLogger)
+
+	// If in Code-Server environment, configure alternative authentication
+	if (isCodeServerEnvironment()) {
+		outputChannel.appendLine("[CloudService] Configuring for Code-Server environment")
+		// The CloudService will need to handle authentication differently
+		// This will be implemented in the @roo-code/cloud package
+	}
 
 	try {
 		if (cloudService.telemetryClient) {

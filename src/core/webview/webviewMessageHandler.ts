@@ -16,6 +16,8 @@ import {
 import { CloudService } from "@roo-code/cloud"
 import { TelemetryService } from "@roo-code/telemetry"
 import { type ApiMessage } from "../task-persistence/apiMessages"
+import { isCodeServerEnvironment } from "../../utils/environmentDetection"
+import { CodeServerAuthHandler } from "../../services/cloud/codeServerAuth"
 
 import { ClineProvider } from "./ClineProvider"
 import { changeLanguage, t } from "../../i18n"
@@ -1999,7 +2001,32 @@ export const webviewMessageHandler = async (
 		case "rooCloudSignIn": {
 			try {
 				TelemetryService.instance.captureEvent(TelemetryEventName.AUTHENTICATION_INITIATED)
-				await CloudService.instance.login()
+
+				// Check if we're in Code-Server environment
+				if (isCodeServerEnvironment()) {
+					provider.log("Code-Server environment detected, using alternative authentication")
+
+					// Use manual token authentication for Code-Server
+					const token = await CodeServerAuthHandler.handleCodeServerAuth(provider.context)
+
+					if (token) {
+						// TODO: Pass the token to CloudService for authentication
+						// This would require CloudService to support token-based auth
+						// For now, we'll show a message about the limitation
+						vscode.window.showInformationMessage(
+							"Token authentication for Code-Server is being implemented. " +
+								"Please use desktop VS Code for full Roo Cloud functionality.",
+						)
+
+						// Show limitations notice
+						CodeServerAuthHandler.showCodeServerLimitations()
+					} else {
+						vscode.window.showWarningMessage("Authentication cancelled")
+					}
+				} else {
+					// Standard OAuth flow for desktop/regular VS Code
+					await CloudService.instance.login()
+				}
 			} catch (error) {
 				provider.log(`AuthService#login failed: ${error}`)
 				vscode.window.showErrorMessage("Sign in failed.")
@@ -2009,6 +2036,11 @@ export const webviewMessageHandler = async (
 		}
 		case "rooCloudSignOut": {
 			try {
+				// Clear stored token if in Code-Server environment
+				if (isCodeServerEnvironment()) {
+					await CodeServerAuthHandler.clearStoredToken(provider.context)
+				}
+
 				await CloudService.instance.logout()
 				await provider.postStateToWebview()
 				provider.postMessageToWebview({ type: "authenticatedUser", userInfo: undefined })
