@@ -1107,6 +1107,17 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 				role: "user",
 				content: [{ type: "text", text: `[new_task completed] Result: ${lastMessage}` }],
 			})
+
+			// When using GPT-5 with the responses API, we need to skip the previous_response_id
+			// for the next API call after a subtask completes, similar to what happens after
+			// a condense operation. This ensures the conversation continuity is properly maintained.
+			const modelId = this.api.getModel().id
+			if (modelId && modelId.startsWith("gpt-5")) {
+				this.skipPrevResponseIdOnce = true
+				this.providerRef
+					.deref()
+					?.log(`[GPT-5] Skipping previous_response_id for next API call after subtask completion`)
+			}
 		} catch (error) {
 			this.providerRef
 				.deref()
