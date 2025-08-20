@@ -1023,6 +1023,28 @@ export class McpHub {
 		})
 	}
 
+	/**
+	 * Compares two server configurations to determine if a restart is needed.
+	 * Excludes alwaysAllow and disabledTools from comparison as these don't require restart.
+	 * @param config1 First configuration to compare
+	 * @param config2 Second configuration to compare
+	 * @returns true if configurations are equal (no restart needed), false otherwise
+	 */
+	private configsEqualExcludingToolSettings(config1: any, config2: any): boolean {
+		// Create copies of the configs without alwaysAllow and disabledTools
+		const config1Copy = { ...config1 }
+		const config2Copy = { ...config2 }
+
+		// Remove fields that don't require server restart
+		delete config1Copy.alwaysAllow
+		delete config1Copy.disabledTools
+		delete config2Copy.alwaysAllow
+		delete config2Copy.disabledTools
+
+		// Compare the remaining fields
+		return deepEqual(config1Copy, config2Copy)
+	}
+
 	async updateServerConnections(
 		newServers: Record<string, any>,
 		source: "global" | "project" = "global",
@@ -1071,17 +1093,32 @@ export class McpHub {
 				} catch (error) {
 					this.showErrorMessage(`Failed to connect to new MCP server ${name}`, error)
 				}
-			} else if (!deepEqual(JSON.parse(currentConnection.server.config), config)) {
-				// Existing server with changed config
-				try {
-					// Only setup file watcher for enabled servers
-					if (!validatedConfig.disabled) {
-						this.setupFileWatcher(name, validatedConfig, source)
+			} else {
+				// Use smart comparison that excludes alwaysAllow and disabledTools
+				const currentConfig = JSON.parse(currentConnection.server.config)
+				const needsRestart = !this.configsEqualExcludingToolSettings(currentConfig, config)
+
+				if (needsRestart) {
+					// Existing server with changed config that requires restart
+					try {
+						// Only setup file watcher for enabled servers
+						if (!validatedConfig.disabled) {
+							this.setupFileWatcher(name, validatedConfig, source)
+						}
+						await this.deleteConnection(name, source)
+						await this.connectToServer(name, validatedConfig, source)
+					} catch (error) {
+						this.showErrorMessage(`Failed to reconnect MCP server ${name}`, error)
 					}
-					await this.deleteConnection(name, source)
-					await this.connectToServer(name, validatedConfig, source)
-				} catch (error) {
-					this.showErrorMessage(`Failed to reconnect MCP server ${name}`, error)
+				} else {
+					// Only tool settings changed, update without restart
+					// Update the stored config to reflect the new alwaysAllow/disabledTools
+					currentConnection.server.config = JSON.stringify(config)
+
+					// Refresh the tools list to reflect the new settings
+					if (currentConnection.server.status === "connected") {
+						currentConnection.server.tools = await this.fetchToolsList(name, source)
+					}
 				}
 			}
 			// If server exists with same config, do nothing
