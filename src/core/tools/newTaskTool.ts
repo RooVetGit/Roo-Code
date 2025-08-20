@@ -1,4 +1,5 @@
 import delay from "delay"
+import * as vscode from "vscode"
 
 import { RooCodeEventName, TodoItem } from "@roo-code/types"
 
@@ -8,7 +9,6 @@ import { defaultModeSlug, getModeBySlug } from "../../shared/modes"
 import { formatResponse } from "../prompts/responses"
 import { t } from "../../i18n"
 import { parseMarkdownChecklist } from "./updateTodoListTool"
-import { experiments as Experiments, EXPERIMENT_IDS } from "../../shared/experiments"
 
 export async function newTaskTool(
 	cline: Task,
@@ -49,16 +49,18 @@ export async function newTaskTool(
 				return
 			}
 
-			// Get the experimental setting for requiring todos
+			// Get the VSCode setting for requiring todos
 			const provider = cline.providerRef.deref()
 			if (!provider) {
 				pushToolResult(formatResponse.toolError("Provider reference lost"))
 				return
 			}
 			const state = await provider.getState()
-			const requireTodos = Experiments.isEnabled(state?.experiments ?? {}, EXPERIMENT_IDS.NEW_TASK_REQUIRE_TODOS)
+			const requireTodos = vscode.workspace
+				.getConfiguration("roo-cline")
+				.get<boolean>("newTaskRequireTodos", false)
 
-			// Check if todos are required based on experimental setting
+			// Check if todos are required based on VSCode setting
 			// Note: undefined means not provided, empty string is valid
 			if (requireTodos && todos === undefined) {
 				cline.consecutiveMistakeCount++
