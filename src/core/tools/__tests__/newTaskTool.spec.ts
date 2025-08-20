@@ -99,7 +99,9 @@ describe("newTaskTool", () => {
 		expect(mockCline.emit).toHaveBeenCalledWith("taskSpawned", expect.any(String)) // Assuming initCline returns a mock task ID
 		expect(mockCline.isPaused).toBe(true)
 		expect(mockCline.emit).toHaveBeenCalledWith("taskPaused")
-		expect(mockPushToolResult).toHaveBeenCalledWith(expect.stringContaining("Successfully created new task"))
+		expect(mockPushToolResult).toHaveBeenCalledWith(
+			"Successfully created new task in Code Mode mode. Waiting for subtask to complete...",
+		)
 	})
 
 	it("should not un-escape single escaped \@", async () => {

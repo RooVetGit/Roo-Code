@@ -98,7 +98,11 @@ export async function newTaskTool(
 
 			cline.emit(RooCodeEventName.TaskSpawned, newCline.taskId)
 
-			pushToolResult(`Successfully created new task in ${targetMode.name} mode with message: ${unescapedMessage}`)
+			// Don't include the original message in the tool result to avoid confusion
+			// The actual result will be provided when the subtask completes
+			pushToolResult(
+				`Successfully created new task in ${targetMode.name} mode. Waiting for subtask to complete...`,
+			)
 
 			// Set the isPaused flag to true so the parent
 			// task can wait for the sub-task to finish.
