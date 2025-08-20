@@ -510,7 +510,7 @@ export class VsCodeLmHandler extends BaseProvider implements SingleCompletionHan
 					typeof this.client.maxInputTokens === "number"
 						? Math.max(0, this.client.maxInputTokens)
 						: openAiModelInfoSaneDefaults.contextWindow,
-				supportsImages: false, // VSCode Language Model API currently doesn't support image inputs
+				supportsImages: true, // VSCode Language Model API supports image inputs
 				supportsPromptCache: true,
 				inputPrice: 0,
 				outputPrice: 0,
