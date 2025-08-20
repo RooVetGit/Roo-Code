@@ -24,6 +24,7 @@ import {
 	RequestyHandler,
 	HumanRelayHandler,
 	FakeAIHandler,
+	FeatherlessHandler,
 	XAIHandler,
 	GroqHandler,
 	HuggingFaceHandler,
@@ -143,6 +144,8 @@ export function buildApiHandler(configuration: ProviderSettings): ApiHandler {
 			return new IOIntelligenceHandler(options)
 		case "roo":
 			return new RooHandler(options)
+		case "featherless":
+			return new FeatherlessHandler(options)
 		default:
 			apiProvider satisfies "gemini-cli" | undefined
 			return new AnthropicHandler(options)

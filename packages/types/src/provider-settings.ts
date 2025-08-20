@@ -48,6 +48,7 @@ export const providerNames = [
 	"fireworks",
 	"io-intelligence",
 	"roo",
+	"featherless",
 ] as const
 
 export const providerNamesSchema = z.enum(providerNames)
@@ -293,6 +294,10 @@ const rooSchema = apiModelIdProviderModelSchema.extend({
 	// No additional fields needed - uses cloud authentication
 })
 
+const featherlessSchema = apiModelIdProviderModelSchema.extend({
+	featherlessApiKey: z.string().optional(),
+})
+
 const defaultSchema = z.object({
 	apiProvider: z.undefined(),
 })
@@ -330,6 +335,7 @@ export const providerSettingsSchemaDiscriminated = z.discriminatedUnion("apiProv
 	fireworksSchema.merge(z.object({ apiProvider: z.literal("fireworks") })),
 	ioIntelligenceSchema.merge(z.object({ apiProvider: z.literal("io-intelligence") })),
 	rooSchema.merge(z.object({ apiProvider: z.literal("roo") })),
+	featherlessSchema.merge(z.object({ apiProvider: z.literal("featherless") })),
 	defaultSchema,
 ])
 
@@ -367,6 +373,7 @@ export const providerSettingsSchema = z.object({
 	...fireworksSchema.shape,
 	...ioIntelligenceSchema.shape,
 	...rooSchema.shape,
+	...featherlessSchema.shape,
 	...codebaseIndexProviderSchema.shape,
 })
 
