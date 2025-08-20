@@ -1108,15 +1108,15 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 				content: [{ type: "text", text: `[new_task completed] Result: ${lastMessage}` }],
 			})
 
-			// When using GPT-5 with the responses API, we need to skip the previous_response_id
-			// for the next API call after a subtask completes, similar to what happens after
-			// a condense operation. This ensures the conversation continuity is properly maintained.
+			// When using OpenAI models with the responses API (GPT-5, Codex Mini, etc.), we need to skip
+			// the previous_response_id for the next API call after a subtask completes, similar to what
+			// happens after a condense operation. This ensures the conversation continuity is properly maintained.
 			const modelId = this.api.getModel().id
-			if (modelId && modelId.startsWith("gpt-5")) {
+			if (modelId && (modelId.startsWith("gpt-5") || modelId === "codex-mini-latest")) {
 				this.skipPrevResponseIdOnce = true
 				this.providerRef
 					.deref()
-					?.log(`[GPT-5] Skipping previous_response_id for next API call after subtask completion`)
+					?.log(`[Responses API] Skipping previous_response_id for next API call after subtask completion`)
 			}
 		} catch (error) {
 			this.providerRef
@@ -2346,7 +2346,7 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 			if (truncateResult.error) {
 				await this.say("condense_context_error", truncateResult.error)
 			} else if (truncateResult.summary) {
-				// A condense operation occurred; for the next GPT‑5 API call we should NOT
+				// A condense operation occurred; for the next Responses API call we should NOT
 				// send previous_response_id so the request reflects the fresh condensed context.
 				this.skipPrevResponseIdOnce = true
 
@@ -2382,12 +2382,17 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 			throw new Error("Auto-approval limit reached and user did not approve continuation")
 		}
 
-		// Determine GPT‑5 previous_response_id from last persisted assistant turn (if available),
+		// Determine previous_response_id for Responses API models from last persisted assistant turn (if available),
 		// unless a condense just occurred (skip once after condense).
 		let previousResponseId: string | undefined = undefined
 		try {
 			const modelId = this.api.getModel().id
-			if (modelId && modelId.startsWith("gpt-5") && !this.skipPrevResponseIdOnce) {
+			// Check if this is a model that uses the Responses API (GPT-5, Codex Mini, etc.)
+			if (
+				modelId &&
+				(modelId.startsWith("gpt-5") || modelId === "codex-mini-latest") &&
+				!this.skipPrevResponseIdOnce
+			) {
 				// Find the last assistant message that has a previous_response_id stored
 				const idx = findLastIndex(
 					this.clineMessages,
@@ -2563,13 +2568,15 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 	}
 
 	/**
-	 * Persist GPT-5 per-turn metadata (previous_response_id, instructions, reasoning_summary)
+	 * Persist Responses API per-turn metadata (previous_response_id, instructions, reasoning_summary)
 	 * onto the last complete assistant say("text") message.
+	 * This is used for models that use the OpenAI Responses API (GPT-5, Codex Mini, etc.)
 	 */
 	private async persistGpt5Metadata(reasoningMessage?: string): Promise<void> {
 		try {
 			const modelId = this.api.getModel().id
-			if (!modelId || !modelId.startsWith("gpt-5")) return
+			// Only persist metadata for models using the Responses API
+			if (!modelId || !(modelId.startsWith("gpt-5") || modelId === "codex-mini-latest")) return
 
 			const lastResponseId: string | undefined = (this.api as any)?.getLastResponseId?.()
 			const idx = findLastIndex(

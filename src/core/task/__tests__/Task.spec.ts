@@ -157,7 +157,7 @@ describe("Task", () => {
 
 			// Verify the log was called
 			expect(mockProvider.log).toHaveBeenCalledWith(
-				"[GPT-5] Skipping previous_response_id for next API call after subtask completion",
+				"[Responses API] Skipping previous_response_id for next API call after subtask completion",
 			)
 
 			// Verify other expected calls
@@ -169,8 +169,63 @@ describe("Task", () => {
 			})
 		})
 
-		it("should not skip previousResponseId for non-GPT-5 models", async () => {
-			// Create task with non-GPT-5 model
+		it("should skip previousResponseId for Codex Mini after subtask completion", async () => {
+			// Create task with Codex Mini model
+			const apiConfiguration = {
+				apiProvider: "openai-native",
+				apiModelId: "codex-mini-latest",
+			}
+
+			task = new Task({
+				provider: mockProvider as any,
+				apiConfiguration: apiConfiguration as any,
+				task: "Test task",
+				startTask: false,
+			})
+
+			// Mock the API to return Codex Mini model
+			task.api = {
+				getModel: vi.fn(() => ({
+					id: "codex-mini-latest",
+					info: {
+						contextWindow: 50000,
+						supportsComputerUse: false,
+					},
+				})),
+			} as any
+
+			// Spy on required methods
+			const saySpy = vi.spyOn(task, "say").mockResolvedValue(undefined)
+			const addToApiConversationHistorySpy = vi
+				.spyOn(task as any, "addToApiConversationHistory")
+				.mockResolvedValue(undefined)
+			const emitSpy = vi.spyOn(task, "emit")
+
+			// Initially, skipPrevResponseIdOnce should be false
+			expect(task["skipPrevResponseIdOnce"]).toBe(false)
+
+			// Resume the task with a subtask result
+			await task.resumePausedTask("Subtask completed successfully")
+
+			// Verify the flag was set for Codex Mini
+			expect(task["skipPrevResponseIdOnce"]).toBe(true)
+
+			// Verify the log was called
+			expect(mockProvider.log).toHaveBeenCalledWith(
+				"[Responses API] Skipping previous_response_id for next API call after subtask completion",
+			)
+
+			// Verify other expected calls
+			expect(emitSpy).toHaveBeenCalledWith(RooCodeEventName.TaskUnpaused)
+			expect(saySpy).toHaveBeenCalledWith("subtask_result", "Subtask completed successfully")
+			expect(addToApiConversationHistorySpy).toHaveBeenCalledWith({
+				role: "user",
+				content: [{ type: "text", text: "[new_task completed] Result: Subtask completed successfully" }],
+			})
+		})
+
+		it("should not skip previousResponseId for non-Responses API models", async () => {
+			// Create task with non-Responses API model (e.g., Claude)
 			const apiConfiguration = {
 				apiProvider: "anthropic",
 				apiModelId: "claude-3-5-sonnet-20241022",
@@ -210,9 +265,9 @@ describe("Task", () => {
 			// Verify the flag was NOT set for non-GPT-5 models
 			expect(task["skipPrevResponseIdOnce"]).toBe(false)
 
-			// Verify the GPT-5 specific log was NOT called
+			// Verify the Responses API specific log was NOT called
 			expect(mockProvider.log).not.toHaveBeenCalledWith(
-				"[GPT-5] Skipping previous_response_id for next API call after subtask completion",
+				"[Responses API] Skipping previous_response_id for next API call after subtask completion",
 			)
 
 			// Verify other expected calls still happened
