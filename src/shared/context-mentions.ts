@@ -1,31 +1,31 @@
 /*
 Mention regex:
-- **Purpose**: 
-  - To identify and highlight specific mentions in text that start with '@'. 
-  - These mentions can be file paths, URLs, or the exact word 'problems'.
+- **Purpose**:
+  - To identify and highlight specific mentions in text that start with '@'.
+  - These mentions can be file paths (including Unicode characters), URLs, or specific keywords.
   - Ensures that trailing punctuation marks (like commas, periods, etc.) are not included in the match, allowing punctuation to follow the mention without being part of it.
 
 - **Regex Breakdown**:
-  - `/@`: 
+  - `/@`:
 	- **@**: The mention must start with the '@' symbol.
   
   - `((?:\/|\w+:\/\/)[^\s]+?|problems\b|git-changes\b)`:
 	- **Capturing Group (`(...)`)**: Captures the part of the string that matches one of the specified patterns.
-	- `(?:\/|\w+:\/\/)`: 
+	- `(?:\/|\w+:\/\/)`:
 	  - **Non-Capturing Group (`(?:...)`)**: Groups the alternatives without capturing them for back-referencing.
-	  - `\/`: 
+	  - `\/`:
 		- **Slash (`/`)**: Indicates that the mention is a file or folder path starting with a '/'.
 	  - `|`: Logical OR.
 	  - `\w+:\/\/`:
 	    - **Protocol (`\w+://`)**: Matches URLs that start with a word character sequence followed by '://', such as 'http://', 'https://', 'ftp://', etc.
 	- `(?:[^\s\\]|\\ )+?`:
 	  - **Non-Capturing Group (`(?:...)`)**: Groups the alternatives without capturing them.
-	  - **Non-Whitespace and Non-Backslash (`[^\s\\]`)**: Matches any character that is not whitespace or a backslash.
+	  - **Non-Whitespace and Non-Backslash (`[^\s\\]`)**: Matches any character that is not whitespace or a backslash, including Unicode characters.
 	  - **OR (`|`)**: Logical OR.
 	  - **Escaped Space (`\\ `)**: Matches a backslash followed by a space (an escaped space).
 	  - **Non-Greedy (`+?`)**: Ensures the smallest possible match, preventing the inclusion of trailing punctuation.
 	- `|`: Logical OR.
-	- `problems\b`: 
+	- `problems\b`:
 	  - **Exact Word ('problems')**: Matches the exact word 'problems'.
 	  - **Word Boundary (`\b`)**: Ensures that 'problems' is matched as a whole word and not as part of another word (e.g., 'problematic').
 		- `|`: Logical OR.
@@ -34,28 +34,29 @@ Mention regex:
       - **Word Boundary (`\b`)**: Ensures that 'terminal' is matched as a whole word and not as part of another word (e.g., 'terminals').
   - `(?=[.,;:!?]?(?=[\s\r\n]|$))`:
 	- **Positive Lookahead (`(?=...)`)**: Ensures that the match is followed by specific patterns without including them in the match.
-	- `[.,;:!?]?`: 
+	- `[.,;:!?]?`:
 	  - **Optional Punctuation (`[.,;:!?]?`)**: Matches zero or one of the specified punctuation marks.
-	- `(?=[\s\r\n]|$)`: 
+	- `(?=[\s\r\n]|$)`:
 	  - **Nested Positive Lookahead (`(?=[\s\r\n]|$)`)**: Ensures that the punctuation (if present) is followed by a whitespace character, a line break, or the end of the string.
   
 - **Summary**:
   - The regex effectively matches:
-	- Mentions that are file or folder paths starting with '/' and containing any non-whitespace characters (including periods within the path).
-	- File paths can include spaces if they are escaped with a backslash (e.g., `@/path/to/file\ with\ spaces.txt`).
+	- Mentions that are file or folder paths starting with '/' and containing any non-whitespace characters, including Unicode characters like Chinese, Japanese, Korean, etc.
+	- File paths can include spaces if they are escaped with a backslash (e.g., `@/path/to/file\ with\ spaces.txt` or `@/路径/中文文件.txt`).
 	- URLs that start with a protocol (like 'http://') followed by any non-whitespace characters (including query parameters).
 	- The exact word 'problems'.
 	- The exact word 'git-changes'.
     - The exact word 'terminal'.
   - It ensures that any trailing punctuation marks (such as ',', '.', '!', etc.) are not included in the matched mention, allowing the punctuation to follow the mention naturally in the text.
+  - The 'u' flag enables full Unicode support, allowing the regex to properly match Unicode characters in file paths.
 
 - **Global Regex**:
-  - `mentionRegexGlobal`: Creates a global version of the `mentionRegex` to find all matches within a given string.
+  - `mentionRegexGlobal`: Creates a global version of the `mentionRegex` with Unicode support to find all matches within a given string.
 
 */
 export const mentionRegex =
-	/(?<!\\)@((?:\/|\w+:\/\/)(?:[^\s\\]|\\ )+?|[a-f0-9]{7,40}\b|problems\b|git-changes\b|terminal\b)(?=[.,;:!?]?(?=[\s\r\n]|$))/
-export const mentionRegexGlobal = new RegExp(mentionRegex.source, "g")
+	/(?<!\\)@((?:\/|\w+:\/\/)(?:[^\s\\]|\\ )+?|[a-f0-9]{7,40}\b|problems\b|git-changes\b|terminal\b)(?=[.,;:!?]?(?=[\s\r\n]|$))/u
+export const mentionRegexGlobal = new RegExp(mentionRegex.source, "gu")
 
 // Regex to match command mentions like /command-name anywhere in text
 export const commandRegexGlobal = /(?:^|\s)\/([a-zA-Z0-9_\.-]+)(?=\s|$)/g
