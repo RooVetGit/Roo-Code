@@ -45,7 +45,7 @@ async function getRequestyKeyInfo(baseUrl?: string, apiKey?: string) {
 type UseRequestyKeyInfoOptions = Omit<UseQueryOptions<RequestyKeyInfo | null>, "queryKey" | "queryFn">
 export const useRequestyKeyInfo = (baseUrl?: string, apiKey?: string, options?: UseRequestyKeyInfoOptions) => {
 	return useQuery<RequestyKeyInfo | null>({
-		queryKey: ["requesty-key-info", apiKey],
+		queryKey: ["requesty-key-info", baseUrl, apiKey],
 		queryFn: () => getRequestyKeyInfo(baseUrl, apiKey),
 		staleTime: 30 * 1000, // 30 seconds
 		enabled: !!apiKey,
