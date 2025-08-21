@@ -13,6 +13,7 @@ import { getReadFileToolDescription, readFileTool } from "../tools/readFileTool"
 import { getSimpleReadFileToolDescription, simpleReadFileTool } from "../tools/simpleReadFileTool"
 import { shouldUseSingleFileRead } from "@roo-code/types"
 import { writeToFileTool } from "../tools/writeToFileTool"
+import { getApplyDiffDescription } from "../tools/multiApplyDiffTool"
 import { applyDiffTool } from "../tools/multiApplyDiffTool"
 import { insertContentTool } from "../tools/insertContentTool"
 import { searchAndReplaceTool } from "../tools/searchAndReplaceTool"
@@ -169,24 +170,7 @@ export async function presentAssistantMessage(cline: Task) {
 					case "write_to_file":
 						return `[${block.name} for '${block.params.path}']`
 					case "apply_diff":
-						// Handle both legacy format and new multi-file format
-						if (block.params.path) {
-							return `[${block.name} for '${block.params.path}']`
-						} else if (block.params.args) {
-							// Try to extract first file path from args for display
-							const match = block.params.args.match(/<file>.*?<path>([^<]+)<\/path>/s)
-							if (match) {
-								const firstPath = match[1]
-								// Check if there are multiple files
-								const fileCount = (block.params.args.match(/<file>/g) || []).length
-								if (fileCount > 1) {
-									return `[${block.name} for '${firstPath}' and ${fileCount - 1} more file${fileCount > 2 ? "s" : ""}]`
-								} else {
-									return `[${block.name} for '${firstPath}']`
-								}
-							}
-						}
-						return `[${block.name}]`
+						return getApplyDiffDescription(block.name, block.params)
 					case "search_files":
 						return `[${block.name} for '${block.params.regex}'${
 							block.params.file_pattern ? ` in '${block.params.file_pattern}'` : ""

@@ -16,6 +16,62 @@ import { parseXmlForDiff } from "../../utils/xml"
 import { EXPERIMENT_IDS, experiments } from "../../shared/experiments"
 import { applyDiffToolLegacy } from "./applyDiffTool"
 
+export function getApplyDiffDescription(blockName: string, blockParams: any): string {
+	// Handle multi-file format
+	if (blockParams.args) {
+		try {
+			const parsed = parseXml(blockParams.args, ["file.diff.content"]) as any
+			const files = Array.isArray(parsed.file) ? parsed.file : [parsed.file].filter(Boolean)
+
+			// Count total SEARCH/REPLACE blocks across all files
+			let totalSearchCount = 0
+			let fileCount = 0
+
+			for (const file of files) {
+				if (!file.path || !file.diff) continue
+				fileCount++
+
+				const diffs = Array.isArray(file.diff) ? file.diff : [file.diff]
+				for (const diff of diffs) {
+					if (diff.content) {
+						const searchCount = (diff.content.match(/<<<<<<< SEARCH/g) || []).length
+						totalSearchCount += searchCount
+					}
+				}
+			}
+
+			if (fileCount === 1 && totalSearchCount === 1) {
+				const firstPath = files[0]?.path || "file"
+				return `[${blockName} for '${firstPath}'. Using multiple SEARCH/REPLACE blocks in a single request is more efficient for the LLM. If you have multiple changes to make, include them all in one apply_diff call.]`
+			} else if (fileCount > 0) {
+				return `[${blockName} for ${fileCount} file${fileCount > 1 ? "s" : ""} with ${totalSearchCount} change${totalSearchCount > 1 ? "s" : ""}]`
+			}
+
+			// If we get here but no files were found, it's likely invalid XML
+			if (fileCount === 0) {
+				return `[${blockName} with unparsable args]`
+			}
+		} catch (error) {
+			console.error("Failed to parse apply_diff args XML for description:", error)
+			return `[${blockName} with unparsable args]`
+		}
+	}
+
+	// Handle legacy format
+	if (blockParams.diff) {
+		const searchCount = (blockParams.diff.match(/<<<<<<< SEARCH/g) || []).length
+		if (searchCount === 1) {
+			return `[${blockName} for '${blockParams.path || "file"}'. Using multiple SEARCH/REPLACE blocks in a single request is more efficient for the LLM. If you have multiple changes to make, include them all in one apply_diff call.]`
+		}
+	}
+
+	// Default description
+	if (blockParams.path) {
+		return `[${blockName} for '${blockParams.path}']`
+	}
+	return `[${blockName}]`
+}
+
 interface DiffOperation {
 	path: string
 	diff: Array<{

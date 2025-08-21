@@ -99,6 +99,8 @@ If you're not confident in the exact content to search for, use the read_file to
 When applying the diffs, be extra careful to remember to change any closing brackets or other syntax that may be affected by the diff farther down in the file.
 ALWAYS make as many changes in a single 'apply_diff' request as possible using multiple SEARCH/REPLACE blocks
 
+**IMPORTANT: Using multiple SEARCH/REPLACE blocks in a single request is more efficient for the LLM. If you have multiple changes to make, include them all in one apply_diff call rather than making separate calls.**
+
 Parameters:
 - path: (required) The path of the file to modify (relative to the current workspace directory ${args.cwd})
 - diff: (required) The search/replace block defining the changes.
