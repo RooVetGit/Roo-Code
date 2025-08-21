@@ -746,6 +746,10 @@
 			"name": "Pengeditan Latar Belakang",
 			"description": "Ketika diaktifkan, mencegah gangguan fokus editor. Pengeditan file terjadi di latar belakang tanpa membuka tampilan diff atau mencuri fokus. Anda dapat terus bekerja tanpa gangguan saat Roo melakukan perubahan. File mungkin dibuka tanpa fokus untuk menangkap diagnostik atau tetap tertutup sepenuhnya."
 		},
+		"PREVENT_TERMINAL_DISRUPTION": {
+			"name": "Eksekusi Terminal Latar Belakang",
+			"description": "Ketika diaktifkan, mencegah gangguan fokus terminal. Perintah berjalan di latar belakang tanpa beralih otomatis ke terminal output. Anda dapat terus bekerja di terminal saat ini sementara Roo menjalankan perintah, mempertahankan konteks terminal dan mengontrol secara manual kapan melihat output perintah."
+		},
 		"ASSISTANT_MESSAGE_PARSER": {
 			"name": "Gunakan parser pesan baru",
 			"description": "Aktifkan parser pesan streaming eksperimental yang meningkatkan kinerja untuk respons panjang dengan memproses pesan lebih efisien."

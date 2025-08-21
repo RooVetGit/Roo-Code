@@ -717,6 +717,10 @@
 			"name": "Arka plan düzenleme",
 			"description": "Etkinleştirildiğinde editör odak kesintisini önler. Dosya düzenlemeleri diff görünümlerini açmadan veya odağı çalmadan arka planda gerçekleşir. Roo değişiklikler yaparken kesintisiz çalışmaya devam edebilirsiniz. Dosyalar tanılamayı yakalamak için odaksız açılabilir veya tamamen kapalı kalabilir."
 		},
+		"PREVENT_TERMINAL_DISRUPTION": {
+			"name": "Arka plan terminal yürütme",
+			"description": "Etkinleştirildiğinde terminal odak kesintisini önler. Komutlar çıktı terminallerine otomatik geçiş yapmadan arka planda çalışır. Roo komutları yürütürken mevcut terminalinizde çalışmaya devam edebilir, terminal bağlamını koruyabilir ve komut çıktılarını ne zaman görüntüleyeceğinizi manuel olarak kontrol edebilirsiniz."
+		},
 		"ASSISTANT_MESSAGE_PARSER": {
 			"name": "Yeni mesaj ayrıştırıcıyı kullan",
 			"description": "Uzun yanıtları daha verimli işleyerek hızlandıran deneysel akış mesaj ayrıştırıcısını etkinleştir."

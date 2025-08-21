@@ -42,6 +42,7 @@ describe("executeCommand", () => {
 			getState: vitest.fn().mockResolvedValue({
 				terminalOutputLineLimit: 500,
 				terminalShellIntegrationDisabled: false,
+				experiments: {},
 			}),
 		}
 
@@ -50,7 +51,7 @@ describe("executeCommand", () => {
 			cwd: "/test/project",
 			taskId: "test-task-123",
 			providerRef: {
-				deref: vitest.fn().mockResolvedValue(mockProvider),
+				deref: vitest.fn().mockReturnValue(mockProvider),
 			},
 			say: vitest.fn().mockResolvedValue(undefined),
 			terminalProcess: undefined,
@@ -449,6 +450,128 @@ describe("executeCommand", () => {
 
 			// Verify the terminal's getCurrentWorkingDirectory was called
 			expect(mockTerminalInstance.getCurrentWorkingDirectory).toHaveBeenCalled()
+		})
+	})
+
+	describe("PREVENT_TERMINAL_DISRUPTION experiment", () => {
+		it("should not call terminal.show() when PREVENT_TERMINAL_DISRUPTION is enabled", async () => {
+			// Setup: Enable PREVENT_TERMINAL_DISRUPTION experiment
+			mockProvider.getState.mockResolvedValue({
+				terminalOutputLineLimit: 500,
+				terminalShellIntegrationDisabled: false,
+				experiments: { preventTerminalDisruption: true },
+			})
+
+			// Create a mock Terminal instance
+			const vscodeTerminal = new Terminal(1, undefined, "/test/project")
+			const mockVSCodeTerminal = vscodeTerminal as any
+			mockVSCodeTerminal.terminal = {
+				show: vitest.fn(),
+			}
+			mockVSCodeTerminal.getCurrentWorkingDirectory = vitest.fn().mockReturnValue("/test/project")
+			mockVSCodeTerminal.runCommand = vitest
+				.fn()
+				.mockImplementation((command: string, callbacks: RooTerminalCallbacks) => {
+					setTimeout(() => {
+						callbacks.onCompleted("Command output", mockProcess)
+						callbacks.onShellExecutionComplete({ exitCode: 0 }, mockProcess)
+					}, 0)
+					return mockProcess
+				})
+			;(TerminalRegistry.getOrCreateTerminal as any).mockResolvedValue(mockVSCodeTerminal)
+
+			const options: ExecuteCommandOptions = {
+				executionId: "test-123",
+				command: "echo test",
+				terminalShellIntegrationDisabled: false,
+				terminalOutputLineLimit: 500,
+			}
+
+			// Execute
+			await executeCommand(mockTask, options)
+
+			// Verify terminal.show() was NOT called
+			expect(mockVSCodeTerminal.terminal.show).not.toHaveBeenCalled()
+		})
+
+		it("should call terminal.show() when PREVENT_TERMINAL_DISRUPTION is disabled", async () => {
+			// Setup: Disable PREVENT_TERMINAL_DISRUPTION experiment
+			mockProvider.getState.mockResolvedValue({
+				terminalOutputLineLimit: 500,
+				terminalShellIntegrationDisabled: false,
+				experiments: { preventTerminalDisruption: false },
+			})
+
+			// Create a mock Terminal instance
+			const vscodeTerminal = new Terminal(1, undefined, "/test/project")
+			const mockVSCodeTerminal = vscodeTerminal as any
+			mockVSCodeTerminal.terminal = {
+				show: vitest.fn(),
+			}
+			mockVSCodeTerminal.getCurrentWorkingDirectory = vitest.fn().mockReturnValue("/test/project")
+			mockVSCodeTerminal.runCommand = vitest
+				.fn()
+				.mockImplementation((command: string, callbacks: RooTerminalCallbacks) => {
+					setTimeout(() => {
+						callbacks.onCompleted("Command output", mockProcess)
+						callbacks.onShellExecutionComplete({ exitCode: 0 }, mockProcess)
+					}, 0)
+					return mockProcess
+				})
+			;(TerminalRegistry.getOrCreateTerminal as any).mockResolvedValue(mockVSCodeTerminal)
+
+			const options: ExecuteCommandOptions = {
+				executionId: "test-123",
+				command: "echo test",
+				terminalShellIntegrationDisabled: false,
+				terminalOutputLineLimit: 500,
+			}
+
+			// Execute
+			await executeCommand(mockTask, options)
+
+			// Verify terminal.show() was called
+			expect(mockVSCodeTerminal.terminal.show).toHaveBeenCalledWith(true)
+		})
+
+		it("should call terminal.show() when PREVENT_TERMINAL_DISRUPTION is not present in experiments", async () => {
+			// Setup: No PREVENT_TERMINAL_DISRUPTION in experiments
+			mockProvider.getState.mockResolvedValue({
+				terminalOutputLineLimit: 500,
+				terminalShellIntegrationDisabled: false,
+				experiments: {},
+			})
+
+			// Create a mock Terminal instance
+			const vscodeTerminal = new Terminal(1, undefined, "/test/project")
+			const mockVSCodeTerminal = vscodeTerminal as any
+			mockVSCodeTerminal.terminal = {
+				show: vitest.fn(),
+			}
+			mockVSCodeTerminal.getCurrentWorkingDirectory = vitest.fn().mockReturnValue("/test/project")
+			mockVSCodeTerminal.runCommand = vitest
+				.fn()
+				.mockImplementation((command: string, callbacks: RooTerminalCallbacks) => {
+					setTimeout(() => {
+						callbacks.onCompleted("Command output", mockProcess)
+						callbacks.onShellExecutionComplete({ exitCode: 0 }, mockProcess)
+					}, 0)
+					return mockProcess
+				})
+			;(TerminalRegistry.getOrCreateTerminal as any).mockResolvedValue(mockVSCodeTerminal)
+
+			const options: ExecuteCommandOptions = {
+				executionId: "test-123",
+				command: "echo test",
+				terminalShellIntegrationDisabled: false,
+				terminalOutputLineLimit: 500,
+			}
+
+			// Execute
+			await executeCommand(mockTask, options)
+
+			// Verify terminal.show() was called
+			expect(mockVSCodeTerminal.terminal.show).toHaveBeenCalledWith(true)
 		})
 	})
 })

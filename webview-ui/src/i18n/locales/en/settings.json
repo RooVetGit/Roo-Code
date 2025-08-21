@@ -715,6 +715,10 @@
 			"name": "Background editing",
 			"description": "Prevent editor focus disruption when enabled. File edits happen in the background without opening diff views or stealing focus. You can continue working uninterrupted while Roo makes changes. Files can be opened without focus to capture diagnostics or kept closed entirely."
 		},
+		"PREVENT_TERMINAL_DISRUPTION": {
+			"name": "Background terminal execution",
+			"description": "Prevent terminal focus disruption when enabled. Commands execute in the background without automatically switching to output terminals. You can continue working in your current terminal while Roo runs commands, maintaining your terminal context and manually controlling when to view command outputs."
+		},
 		"ASSISTANT_MESSAGE_PARSER": {
 			"name": "Use new message parser",
 			"description": "Enable the experimental streaming message parser that provides significant performance improvements for long assistant responses by processing messages more efficiently."

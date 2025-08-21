@@ -717,6 +717,10 @@
 			"name": "Edição em segundo plano",
 			"description": "Previne a interrupção do foco do editor quando habilitado. As edições de arquivos acontecem em segundo plano sem abrir visualizações de diferenças ou roubar o foco. Você pode continuar trabalhando sem interrupções enquanto o Roo faz alterações. Os arquivos podem ser abertos sem foco para capturar diagnósticos ou permanecer completamente fechados."
 		},
+		"PREVENT_TERMINAL_DISRUPTION": {
+			"name": "Execução de terminal em segundo plano",
+			"description": "Previne a interrupção do foco do terminal quando habilitado. Os comandos são executados em segundo plano sem alternar automaticamente para terminais de saída. Você pode continuar trabalhando no seu terminal atual enquanto o Roo executa comandos, mantendo o contexto do terminal e controlando manualmente quando visualizar as saídas dos comandos."
+		},
 		"ASSISTANT_MESSAGE_PARSER": {
 			"name": "Usar o novo parser de mensagens",
 			"description": "Ativa o parser de mensagens em streaming experimental que acelera respostas longas ao processar as mensagens de forma mais eficiente."

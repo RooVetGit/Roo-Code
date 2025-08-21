@@ -716,6 +716,10 @@
 			"name": "Edició en segon pla",
 			"description": "Quan s'activa, evita la interrupció del focus de l'editor. Les edicions de fitxers es produeixen en segon pla sense obrir la vista diff o robar el focus. Pots continuar treballant sense interrupcions mentre Roo fa canvis. Els fitxers poden obrir-se sense focus per capturar diagnòstics o romandre completament tancats."
 		},
+		"PREVENT_TERMINAL_DISRUPTION": {
+			"name": "Execució de terminal en segon pla",
+			"description": "Quan s'activa, evita la interrupció del focus del terminal. Les ordres s'executen en segon pla sense canviar automàticament als terminals de sortida. Pots continuar treballant al teu terminal actual mentre Roo executa ordres, mantenint el context del terminal i controlant manualment quan veure les sortides d'ordres."
+		},
 		"ASSISTANT_MESSAGE_PARSER": {
 			"name": "Utilitza el nou analitzador de missatges",
 			"description": "Activa l'analitzador de missatges en streaming experimental que millora el rendiment en respostes llargues processant els missatges de manera més eficient."

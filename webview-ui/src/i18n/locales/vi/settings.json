@@ -717,6 +717,10 @@
 			"name": "Chỉnh sửa nền",
 			"description": "Khi được bật, ngăn chặn gián đoạn tiêu điểm trình soạn thảo. Việc chỉnh sửa tệp diễn ra ở nền mà không mở chế độ xem diff hoặc chiếm tiêu điểm. Bạn có thể tiếp tục làm việc không bị gián đoạn trong khi Roo thực hiện thay đổi. Các tệp có thể được mở mà không có tiêu điểm để thu thập chẩn đoán hoặc giữ hoàn toàn đóng."
 		},
+		"PREVENT_TERMINAL_DISRUPTION": {
+			"name": "Thực thi terminal nền",
+			"description": "Khi được bật, ngăn chặn gián đoạn tiêu điểm terminal. Lệnh chạy ở nền mà không tự động chuyển sang terminal đầu ra. Bạn có thể tiếp tục làm việc trong terminal hiện tại trong khi Roo thực thi lệnh, duy trì ngữ cảnh terminal và kiểm soát thủ công khi nào xem đầu ra lệnh."
+		},
 		"ASSISTANT_MESSAGE_PARSER": {
 			"name": "Dùng bộ phân tích tin nhắn mới",
 			"description": "Bật bộ phân tích tin nhắn streaming thử nghiệm. Tính năng này tăng tốc phản hồi dài bằng cách xử lý tin nhắn hiệu quả hơn."

@@ -717,6 +717,10 @@
 			"name": "Modifica in background",
 			"description": "Previene l'interruzione del focus dell'editor quando abilitato. Le modifiche ai file avvengono in background senza aprire viste di differenze o rubare il focus. Puoi continuare a lavorare senza interruzioni mentre Roo effettua modifiche. I file possono essere aperti senza focus per catturare diagnostiche o rimanere completamente chiusi."
 		},
+		"PREVENT_TERMINAL_DISRUPTION": {
+			"name": "Esecuzione del terminale in background",
+			"description": "Previene l'interruzione del focus del terminal quando abilitato. I comandi vengono eseguiti in background senza passare automaticamente ai terminal di output. Puoi continuare a lavorare nel tuo terminal corrente mentre Roo esegue comandi, mantenendo il tuo contesto terminal e controllando manualmente quando visualizzare gli output dei comandi."
+		},
 		"ASSISTANT_MESSAGE_PARSER": {
 			"name": "Usa il nuovo parser dei messaggi",
 			"description": "Abilita il parser di messaggi in streaming sperimentale che migliora nettamente le risposte lunghe elaborando i messaggi in modo più efficiente."

@@ -716,6 +716,10 @@
 			"name": "Édition en arrière-plan",
 			"description": "Empêche la perturbation du focus de l'éditeur lorsqu'activé. Les modifications de fichiers se font en arrière-plan sans ouvrir de vues de différences ou voler le focus. Vous pouvez continuer à travailler sans interruption pendant que Roo effectue des changements. Les fichiers peuvent être ouverts sans focus pour capturer les diagnostics ou rester complètement fermés."
 		},
+		"PREVENT_TERMINAL_DISRUPTION": {
+			"name": "Exécution de terminal en arrière-plan",
+			"description": "Empêche la perturbation du focus du terminal lorsqu'activé. Les commandes s'exécutent en arrière-plan sans basculer automatiquement vers les terminaux de sortie. Vous pouvez continuer à travailler dans votre terminal actuel pendant que Roo exécute des commandes, en gardant votre contexte de terminal et en contrôlant manuellement quand voir les sorties de commandes."
+		},
 		"ASSISTANT_MESSAGE_PARSER": {
 			"name": "Utiliser le nouveau parseur de messages",
 			"description": "Active le parseur de messages en streaming expérimental qui accélère nettement les longues réponses en traitant les messages plus efficacement."
