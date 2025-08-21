@@ -8,7 +8,7 @@ export const deepSeekDefaultModelId: DeepSeekModelId = "deepseek-chat"
 export const deepSeekModels = {
 	"deepseek-chat": {
 		maxTokens: 8192,
-		contextWindow: 64_000,
+		contextWindow: 128_000,
 		supportsImages: false,
 		supportsPromptCache: true,
 		inputPrice: 0.27, // $0.27 per million tokens (cache miss)
@@ -19,7 +19,7 @@ export const deepSeekModels = {
 	},
 	"deepseek-reasoner": {
 		maxTokens: 8192,
-		contextWindow: 64_000,
+		contextWindow: 128_000,
 		supportsImages: false,
 		supportsPromptCache: true,
 		inputPrice: 0.55, // $0.55 per million tokens (cache miss)
