@@ -18,6 +18,7 @@ import {
 	mistralModels,
 	moonshotModels,
 	openAiNativeModels,
+	qwenCodeModels,
 	rooModels,
 	sambaNovaModels,
 	vertexModels,
@@ -63,8 +64,8 @@ export const providerNames = [
 	"fireworks",
 	"featherless",
 	"io-intelligence",
-	"roo",
 	"qwen-code",
+	"roo",
 ] as const
 
 export const providerNamesSchema = z.enum(providerNames)
@@ -510,6 +511,11 @@ export const MODELS_BY_PROVIDER: Record<
 		id: "openai-native",
 		label: "OpenAI",
 		models: Object.keys(openAiNativeModels),
+	},
+	"qwen-code": {
+		id: "qwen-code",
+		label: "Qwen Code",
+		models: Object.keys(qwenCodeModels),
 	},
 	roo: { id: "roo", label: "Roo", models: Object.keys(rooModels) },
 	sambanova: {
