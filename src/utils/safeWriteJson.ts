@@ -37,6 +37,24 @@ async function safeWriteJson(filePath: string, data: any): Promise<void> {
 		throw dirError
 	}
 
+	// Check if the file exists before attempting to acquire lock
+	// This prevents issues where lock files exist but the target file doesn't
+	const fileExists = await fs
+		.access(absoluteFilePath)
+		.then(() => true)
+		.catch(() => false)
+
+	// If file doesn't exist, create an empty file first to ensure lock can be acquired
+	if (!fileExists) {
+		try {
+			await fs.writeFile(absoluteFilePath, "", "utf8")
+		} catch (createError: any) {
+			// If we can't create the file, we can't proceed
+			console.error(`Failed to create file for locking at ${absoluteFilePath}:`, createError)
+			throw createError
+		}
+	}
+
 	// Acquire the lock before any file operations
 	try {
 		releaseLock = await lockfile.lock(absoluteFilePath, {
