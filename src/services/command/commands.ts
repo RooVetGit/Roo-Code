@@ -136,7 +136,8 @@ async function scanCommandDirectory(
 		const entries = await fs.readdir(dirPath, { withFileTypes: true })
 
 		for (const entry of entries) {
-			if (entry.isFile() && isMarkdownFile(entry.name)) {
+			// Check for both regular files and symbolic links
+			if ((entry.isFile() || entry.isSymbolicLink()) && isMarkdownFile(entry.name)) {
 				const filePath = path.join(dirPath, entry.name)
 				const commandName = getCommandNameFromFile(entry.name)
 
