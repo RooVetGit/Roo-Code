@@ -24,7 +24,9 @@
 		"connectToCloudDescription": "Inicia sessió a Roo Code Cloud per compartir tasques",
 		"sharingDisabledByOrganization": "Compartició deshabilitada per l'organització",
 		"shareSuccessOrganization": "Enllaç d'organització copiat al porta-retalls",
-		"shareSuccessPublic": "Enllaç públic copiat al porta-retalls"
+		"shareSuccessPublic": "Enllaç públic copiat al porta-retalls",
+		"collapse": "Collapse task",
+		"expand": "Expand task"
 	},
 	"unpin": "Desfixar",
 	"pin": "Fixar",
@@ -334,7 +336,8 @@
 		"wantsToSearchWithPath": "Roo vol cercar a la base de codi <code>{{query}}</code> a <code>{{path}}</code>:",
 		"didSearch_one": "S'ha trobat 1 resultat",
 		"didSearch_other": "S'han trobat {{count}} resultats",
-		"resultTooltip": "Puntuació de similitud: {{score}} (fes clic per obrir el fitxer)"
+		"resultTooltip": "Puntuació de similitud: {{score}} (fes clic per obrir el fitxer)",
+		"didSearch": "Searched codebase"
 	},
 	"read-batch": {
 		"approve": {

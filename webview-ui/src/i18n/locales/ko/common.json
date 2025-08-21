@@ -83,5 +83,9 @@
 		"months_ago": "{{count}}개월 전",
 		"year_ago": "1년 전",
 		"years_ago": "{{count}}년 전"
+	},
+	"errors": {
+		"invalid_line_limit": "잘못된 줄 제한이 지정되었습니다",
+		"invalid_character_limit": "잘못된 문자 제한이 지정되었습니다"
 	}
 }

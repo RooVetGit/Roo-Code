@@ -85,7 +85,7 @@
 			"processExitedWithError": "Tiến trình Claude Code thoát với mã {{exitCode}}. Đầu ra lỗi: {{output}}",
 			"stoppedWithReason": "Claude Code dừng lại vì lý do: {{reason}}",
 			"apiKeyModelPlanMismatch": "API keys and subscription plans allow different models. Make sure the selected model is included in your plan.",
-			"notFound": "Claude Code executable '{{claudePath}}' not found.\n\nPlease install Claude Code CLI:\n1. Visit {{installationUrl}} to download Claude Code\n2. Follow the installation instructions for your operating system\n3. Ensure the 'claude' command is available in your PATH\n4. Alternatively, configure a custom path in Roo settings under 'Claude Code Path'\n\nOriginal error: {{originalError}}"
+			"notFound": "Không tìm thấy tệp thực thi Claude Code '{{claudePath}}'.\n\nVui lòng cài đặt Claude Code CLI:\n1. Truy cập {{installationUrl}} để tải xuống Claude Code\n2. Làm theo hướng dẫn cài đặt cho hệ điều hành của bạn\n3. Đảm bảo lệnh 'claude' có sẵn trong PATH của bạn\n4. Hoặc, cấu hình đường dẫn tùy chỉnh trong cài đặt Roo dưới 'Đường dẫn Claude Code'\n\nLỗi gốc: {{originalError}}"
 		},
 		"gemini": {
 			"generate_stream": "Lỗi luồng ngữ cảnh tạo Gemini: {{error}}",

@@ -89,7 +89,7 @@
 			"processExitedWithError": "O processo Claude Code saiu com código {{exitCode}}. Saída de erro: {{output}}",
 			"stoppedWithReason": "Claude Code parou pela razão: {{reason}}",
 			"apiKeyModelPlanMismatch": "API keys and subscription plans allow different models. Make sure the selected model is included in your plan.",
-			"notFound": "Claude Code executable '{{claudePath}}' not found.\n\nPlease install Claude Code CLI:\n1. Visit {{installationUrl}} to download Claude Code\n2. Follow the installation instructions for your operating system\n3. Ensure the 'claude' command is available in your PATH\n4. Alternatively, configure a custom path in Roo settings under 'Claude Code Path'\n\nOriginal error: {{originalError}}"
+			"notFound": "Executável Claude Code '{{claudePath}}' não encontrado.\n\nPor favor, instale o Claude Code CLI:\n1. Visite {{installationUrl}} para baixar o Claude Code\n2. Siga as instruções de instalação para seu sistema operacional\n3. Certifique-se de que o comando 'claude' esteja disponível em seu PATH\n4. Alternativamente, configure um caminho personalizado nas configurações do Roo em 'Caminho do Claude Code'\n\nErro original: {{originalError}}"
 		},
 		"gemini": {
 			"generate_stream": "Erro de fluxo de contexto de geração do Gemini: {{error}}",

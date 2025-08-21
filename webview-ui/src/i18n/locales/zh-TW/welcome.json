@@ -23,5 +23,10 @@
 		"allow": "允許",
 		"deny": "拒絕"
 	},
-	"importSettings": "匯入設定"
+	"importSettings": "匯入設定",
+	"rooCloudCTA": {
+		"title": "Join Roo Cloud",
+		"description": "Get access to cloud features and enhanced capabilities",
+		"joinWaitlist": "Join Waitlist"
+	}
 }

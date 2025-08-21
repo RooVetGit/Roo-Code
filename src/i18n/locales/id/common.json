@@ -85,7 +85,7 @@
 			"processExitedWithError": "Proses Claude Code keluar dengan kode {{exitCode}}. Output error: {{output}}",
 			"stoppedWithReason": "Claude Code berhenti karena alasan: {{reason}}",
 			"apiKeyModelPlanMismatch": "API keys and subscription plans allow different models. Make sure the selected model is included in your plan.",
-			"notFound": "Claude Code executable '{{claudePath}}' not found.\n\nPlease install Claude Code CLI:\n1. Visit {{installationUrl}} to download Claude Code\n2. Follow the installation instructions for your operating system\n3. Ensure the 'claude' command is available in your PATH\n4. Alternatively, configure a custom path in Roo settings under 'Claude Code Path'\n\nOriginal error: {{originalError}}"
+			"notFound": "Executable Claude Code '{{claudePath}}' tidak ditemukan.\n\nSilakan instal Claude Code CLI:\n1. Kunjungi {{installationUrl}} untuk mengunduh Claude Code\n2. Ikuti petunjuk instalasi untuk sistem operasi Anda\n3. Pastikan perintah 'claude' tersedia di PATH Anda\n4. Alternatifnya, konfigurasikan jalur kustom di pengaturan Roo di bawah 'Claude Code Path'\n\nKesalahan asli: {{originalError}}"
 		},
 		"gemini": {
 			"generate_stream": "Kesalahan aliran konteks pembuatan Gemini: {{error}}",

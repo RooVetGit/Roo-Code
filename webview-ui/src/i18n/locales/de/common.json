@@ -83,5 +83,9 @@
 		"months_ago": "vor {{count}} Monaten",
 		"year_ago": "vor einem Jahr",
 		"years_ago": "vor {{count}} Jahren"
+	},
+	"errors": {
+		"invalid_line_limit": "Ungültiges Zeilenlimit angegeben",
+		"invalid_character_limit": "Ungültiges Zeichenlimit angegeben"
 	}
 }

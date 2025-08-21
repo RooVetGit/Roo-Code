@@ -24,7 +24,9 @@
 		"connectToCloudDescription": "작업을 공유하려면 Roo Code Cloud에 로그인하세요",
 		"sharingDisabledByOrganization": "조직에서 공유가 비활성화됨",
 		"shareSuccessOrganization": "조직 링크가 클립보드에 복사되었습니다",
-		"shareSuccessPublic": "공개 링크가 클립보드에 복사되었습니다"
+		"shareSuccessPublic": "공개 링크가 클립보드에 복사되었습니다",
+		"collapse": "Collapse task",
+		"expand": "Expand task"
 	},
 	"unpin": "고정 해제하기",
 	"pin": "고정하기",
@@ -334,7 +336,8 @@
 		"wantsToSearchWithPath": "Roo가 <code>{{path}}</code>에서 <code>{{query}}</code>을(를) 검색하고 싶어합니다:",
 		"didSearch_one": "1개의 결과를 찾았습니다",
 		"didSearch_other": "{{count}}개의 결과를 찾았습니다",
-		"resultTooltip": "유사도 점수: {{score}} (클릭하여 파일 열기)"
+		"resultTooltip": "유사도 점수: {{score}} (클릭하여 파일 열기)",
+		"didSearch": "Searched codebase"
 	},
 	"read-batch": {
 		"approve": {

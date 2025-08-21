@@ -24,7 +24,9 @@
 		"connectToCloudDescription": "Masuk ke Roo Code Cloud untuk berbagi tugas",
 		"sharingDisabledByOrganization": "Berbagi dinonaktifkan oleh organisasi",
 		"shareSuccessOrganization": "Tautan organisasi disalin ke clipboard",
-		"shareSuccessPublic": "Tautan publik disalin ke clipboard"
+		"shareSuccessPublic": "Tautan publik disalin ke clipboard",
+		"collapse": "Collapse task",
+		"expand": "Expand task"
 	},
 	"history": {
 		"title": "Riwayat"
@@ -215,7 +217,8 @@
 		"wantsToSearchWithPath": "Roo ingin mencari codebase untuk <code>{{query}}</code> di <code>{{path}}</code>:",
 		"didSearch_one": "Ditemukan 1 hasil",
 		"didSearch_other": "Ditemukan {{count}} hasil",
-		"resultTooltip": "Skor kemiripan: {{score}} (klik untuk membuka file)"
+		"resultTooltip": "Skor kemiripan: {{score}} (klik untuk membuka file)",
+		"didSearch": "Searched codebase"
 	},
 	"commandOutput": "Output Perintah",
 	"commandExecution": {

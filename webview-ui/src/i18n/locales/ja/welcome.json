@@ -23,5 +23,10 @@
 		"allow": "許可",
 		"deny": "拒否"
 	},
-	"importSettings": "設定をインポート"
+	"importSettings": "設定をインポート",
+	"rooCloudCTA": {
+		"title": "Join Roo Cloud",
+		"description": "Get access to cloud features and enhanced capabilities",
+		"joinWaitlist": "Join Waitlist"
+	}
 }

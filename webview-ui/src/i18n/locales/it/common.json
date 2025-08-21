@@ -83,5 +83,9 @@
 		"months_ago": "{{count}} mesi fa",
 		"year_ago": "un anno fa",
 		"years_ago": "{{count}} anni fa"
+	},
+	"errors": {
+		"invalid_line_limit": "Limite di righe specificato non valido",
+		"invalid_character_limit": "Limite di caratteri specificato non valido"
 	}
 }

@@ -61,5 +61,8 @@
 		"failedDuringInitialScan": "प्रारंभिक स्कैन के दौरान असफल: {{errorMessage}}",
 		"unknownError": "अज्ञात त्रुटि",
 		"indexingRequiresWorkspace": "इंडेक्सिंग के लिए एक खुला वर्कस्पेस फ़ोल्डर आवश्यक है"
+	},
+	"openai": {
+		"invalidResponseFormat": "OpenAI API से अमान्य प्रतिक्रिया प्रारूप"
 	}
 }

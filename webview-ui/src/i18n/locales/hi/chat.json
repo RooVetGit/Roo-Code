@@ -24,7 +24,9 @@
 		"connectToCloudDescription": "कार्य साझा करने के लिए Roo Code Cloud में साइन इन करें",
 		"sharingDisabledByOrganization": "संगठन द्वारा साझाकरण अक्षम किया गया",
 		"shareSuccessOrganization": "संगठन लिंक क्लिपबोर्ड में कॉपी किया गया",
-		"shareSuccessPublic": "सार्वजनिक लिंक क्लिपबोर्ड में कॉपी किया गया"
+		"shareSuccessPublic": "सार्वजनिक लिंक क्लिपबोर्ड में कॉपी किया गया",
+		"collapse": "Collapse task",
+		"expand": "Expand task"
 	},
 	"unpin": "पिन करें",
 	"pin": "अवपिन करें",
@@ -334,7 +336,8 @@
 		"wantsToSearchWithPath": "Roo <code>{{path}}</code> में कोडबेस में <code>{{query}}</code> खोजना चाहता है:",
 		"didSearch_one": "1 परिणाम मिला",
 		"didSearch_other": "{{count}} परिणाम मिले",
-		"resultTooltip": "समानता स्कोर: {{score}} (फ़ाइल खोलने के लिए क्लिक करें)"
+		"resultTooltip": "समानता स्कोर: {{score}} (फ़ाइल खोलने के लिए क्लिक करें)",
+		"didSearch": "Searched codebase"
 	},
 	"read-batch": {
 		"approve": {

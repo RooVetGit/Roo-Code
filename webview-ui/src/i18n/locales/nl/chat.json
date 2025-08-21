@@ -24,7 +24,9 @@
 		"connectToCloudDescription": "Meld je aan bij Roo Code Cloud om taken te delen",
 		"sharingDisabledByOrganization": "Delen uitgeschakeld door organisatie",
 		"shareSuccessOrganization": "Organisatielink gekopieerd naar klembord",
-		"shareSuccessPublic": "Openbare link gekopieerd naar klembord"
+		"shareSuccessPublic": "Openbare link gekopieerd naar klembord",
+		"collapse": "Collapse task",
+		"expand": "Expand task"
 	},
 	"unpin": "Losmaken",
 	"pin": "Vastmaken",
@@ -334,7 +336,8 @@
 		"wantsToSearchWithPath": "Roo wil de codebase doorzoeken op <code>{{query}}</code> in <code>{{path}}</code>:",
 		"didSearch_one": "1 resultaat gevonden",
 		"didSearch_other": "{{count}} resultaten gevonden",
-		"resultTooltip": "Gelijkenisscore: {{score}} (klik om bestand te openen)"
+		"resultTooltip": "Gelijkenisscore: {{score}} (klik om bestand te openen)",
+		"didSearch": "Searched codebase"
 	},
 	"read-batch": {
 		"approve": {

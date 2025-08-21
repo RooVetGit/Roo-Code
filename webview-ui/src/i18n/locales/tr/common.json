@@ -83,5 +83,9 @@
 		"months_ago": "{{count}} ay önce",
 		"year_ago": "bir yıl önce",
 		"years_ago": "{{count}} yıl önce"
+	},
+	"errors": {
+		"invalid_line_limit": "Geçersiz satır sınırı belirtildi",
+		"invalid_character_limit": "Geçersiz karakter sınırı belirtildi"
 	}
 }

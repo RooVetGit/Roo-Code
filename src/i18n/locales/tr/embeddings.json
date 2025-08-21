@@ -61,5 +61,8 @@
 		"failedDuringInitialScan": "İlk tarama sırasında başarısız: {{errorMessage}}",
 		"unknownError": "Bilinmeyen hata",
 		"indexingRequiresWorkspace": "İndeksleme açık bir workspace klasörü gerektirir"
+	},
+	"openai": {
+		"invalidResponseFormat": "OpenAI API'sinden geçersiz yanıt formatı"
 	}
 }

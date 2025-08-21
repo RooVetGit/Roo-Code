@@ -61,5 +61,8 @@
 		"failedDuringInitialScan": "初始扫描失败：{{errorMessage}}",
 		"unknownError": "未知错误",
 		"indexingRequiresWorkspace": "索引需要打开的工作区文件夹"
+	},
+	"openai": {
+		"invalidResponseFormat": "OpenAI API 响应格式无效"
 	}
 }

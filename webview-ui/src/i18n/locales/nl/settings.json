@@ -250,7 +250,8 @@
 			"hint": "Open de instellingen opnieuw om de nieuwste modellen te zien.",
 			"loading": "Modellenlijst wordt vernieuwd...",
 			"success": "Modellenlijst succesvol vernieuwd!",
-			"error": "Kan modellenlijst niet vernieuwen. Probeer het opnieuw."
+			"error": "Kan modellenlijst niet vernieuwen. Probeer het opnieuw.",
+			"missingConfig": "Missing configuration. Please provide API key and base URL."
 		},
 		"getRequestyApiKey": "Requesty API-sleutel ophalen",
 		"getRequestyBaseUrl": "Basis-URL",
@@ -720,6 +721,78 @@
 		"ASSISTANT_MESSAGE_PARSER": {
 			"name": "Nieuwe berichtparser gebruiken",
 			"description": "Schakel de experimentele streaming-berichtparser in die lange antwoorden sneller maakt door berichten efficiënter te verwerken."
+		},
+		"alwaysAllowEditMode": {
+			"name": "Always Allow Edit Mode",
+			"description": "Allow editing in all modes without restrictions"
+		},
+		"alwaysAllowWriteOnly": {
+			"name": "Always Allow Write Only",
+			"description": "Allow write-only operations without confirmation"
+		},
+		"autoApproveReadOnly": {
+			"name": "Auto-Approve Read Only",
+			"description": "Automatically approve read-only operations"
+		},
+		"codebaseIndexer": {
+			"name": "Codebase Indexer",
+			"description": "Enable codebase indexing for semantic search"
+		},
+		"contextOptimization": {
+			"name": "Context Optimization",
+			"description": "Optimize context window usage"
+		},
+		"customModes": {
+			"name": "Custom Modes",
+			"description": "Enable custom mode creation and management"
+		},
+		"debugMode": {
+			"name": "Debug Mode",
+			"description": "Enable debug mode for troubleshooting"
+		},
+		"diffStrategy": {
+			"name": "Diff Strategy",
+			"description": "Configure diff application strategy"
+		},
+		"mcpServers": {
+			"name": "MCP Servers",
+			"description": "Enable Model Context Protocol servers"
+		},
+		"preferredLanguage": {
+			"name": "Preferred Language",
+			"description": "Set preferred language for responses"
+		},
+		"showAskMode": {
+			"name": "Show Ask Mode",
+			"description": "Display Ask mode in mode selector"
+		},
+		"showDebugMode": {
+			"name": "Show Debug Mode",
+			"description": "Display Debug mode in mode selector"
+		},
+		"showDesignEngineerMode": {
+			"name": "Show Design Engineer Mode",
+			"description": "Display Design Engineer mode in mode selector"
+		},
+		"showDocsExtractorMode": {
+			"name": "Show Docs Extractor Mode",
+			"description": "Display Docs Extractor mode in mode selector"
+		},
+		"showIntegrationTesterMode": {
+			"name": "Show Integration Tester Mode",
+			"description": "Display Integration Tester mode in mode selector"
+		},
+		"showIssueFixer": {
+			"name": "Show Issue Fixer",
+			"description": "Display Issue Fixer mode in mode selector"
+		},
+		"showIssueInvestigatorMode": {
+			"name": "Show Issue Investigator Mode",
+			"description": "Display Issue Investigator mode in mode selector"
+		},
+		"showIssueWriterMode": {
+			"name": "Show Issue Writer Mode",
+			"description": "Display Issue Writer mode in mode selector"
 		}
 	},
 	"promptCaching": {
@@ -831,5 +904,79 @@
 	"includeMaxOutputTokensDescription": "Stuur maximale output tokens parameter in API-verzoeken. Sommige providers ondersteunen dit mogelijk niet.",
 	"limitMaxTokensDescription": "Beperk het maximale aantal tokens in het antwoord",
 	"maxOutputTokensLabel": "Maximale output tokens",
-	"maxTokensGenerateDescription": "Maximale tokens om te genereren in het antwoord"
+	"maxTokensGenerateDescription": "Maximale tokens om te genereren in het antwoord",
+	"apiKeys": {
+		"anthropic": {
+			"name": "Anthropic",
+			"description": "Configure Anthropic Claude API settings"
+		},
+		"bedrock": {
+			"name": "Amazon Bedrock",
+			"description": "Configure AWS Bedrock for Claude models"
+		},
+		"deepseek": {
+			"name": "DeepSeek",
+			"description": "Configure DeepSeek API settings"
+		},
+		"gemini": {
+			"name": "Google Gemini",
+			"description": "Configure Google Gemini API settings"
+		},
+		"glhf": {
+			"name": "GLHF",
+			"description": "Configure GLHF API settings"
+		},
+		"grok": {
+			"name": "Grok",
+			"description": "Configure xAI Grok API settings"
+		},
+		"groq": {
+			"name": "Groq",
+			"description": "Configure Groq API settings"
+		},
+		"hyperbolic": {
+			"name": "Hyperbolic",
+			"description": "Configure Hyperbolic API settings"
+		},
+		"lmstudio": {
+			"name": "LM Studio",
+			"description": "Configure local LM Studio server"
+		},
+		"mistral": {
+			"name": "Mistral",
+			"description": "Configure Mistral API settings"
+		},
+		"ollama": {
+			"name": "Ollama",
+			"description": "Configure local Ollama server"
+		},
+		"openai": {
+			"name": "OpenAI",
+			"description": "Configure OpenAI API settings"
+		},
+		"openrouter": {
+			"name": "OpenRouter",
+			"description": "Configure OpenRouter API gateway"
+		},
+		"sambanova": {
+			"name": "SambaNova",
+			"description": "Configure SambaNova API settings"
+		},
+		"together": {
+			"name": "Together AI",
+			"description": "Configure Together AI API settings"
+		},
+		"vscode-openai": {
+			"name": "VS Code OpenAI",
+			"description": "Configure VS Code OpenAI integration"
+		},
+		"xai": {
+			"name": "xAI",
+			"description": "Configure xAI API settings"
+		}
+	},
+	"customInstructions": {
+		"name": "Custom Instructions",
+		"description": "Provide custom instructions for the AI assistant"
+	}
 }

@@ -61,5 +61,8 @@
 		"failedDuringInitialScan": "Thất bại trong quá trình quét ban đầu: {{errorMessage}}",
 		"unknownError": "Lỗi không xác định",
 		"indexingRequiresWorkspace": "Lập chỉ mục yêu cầu một thư mục workspace đang mở"
+	},
+	"openai": {
+		"invalidResponseFormat": "Định dạng phản hồi không hợp lệ từ API OpenAI"
 	}
 }

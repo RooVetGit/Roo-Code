@@ -24,7 +24,9 @@
 		"connectToCloudDescription": "登录 Roo Code Cloud 以分享任务",
 		"sharingDisabledByOrganization": "组织已禁用分享功能",
 		"shareSuccessOrganization": "组织链接已复制到剪贴板",
-		"shareSuccessPublic": "公开链接已复制到剪贴板"
+		"shareSuccessPublic": "公开链接已复制到剪贴板",
+		"collapse": "Collapse task",
+		"expand": "Expand task"
 	},
 	"unpin": "取消置顶",
 	"pin": "置顶",
@@ -334,7 +336,8 @@
 		"wantsToSearchWithPath": "Roo 需要在 <code>{{path}}</code> 中搜索: <code>{{query}}</code>",
 		"didSearch_one": "找到 1 个结果",
 		"didSearch_other": "找到 {{count}} 个结果",
-		"resultTooltip": "相似度评分: {{score}} (点击打开文件)"
+		"resultTooltip": "相似度评分: {{score}} (点击打开文件)",
+		"didSearch": "Searched codebase"
 	},
 	"read-batch": {
 		"approve": {

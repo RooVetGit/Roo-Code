@@ -24,7 +24,9 @@
 		"connectToCloudDescription": "Sign in to Roo Code Cloud to share tasks",
 		"sharingDisabledByOrganization": "Sharing disabled by organization",
 		"shareSuccessOrganization": "Organization link copied to clipboard",
-		"shareSuccessPublic": "Public link copied to clipboard"
+		"shareSuccessPublic": "Public link copied to clipboard",
+		"collapse": "Collapse task",
+		"expand": "Expand task"
 	},
 	"unpin": "Unpin",
 	"pin": "Pin",
@@ -210,6 +212,7 @@
 	"codebaseSearch": {
 		"wantsToSearch": "Roo wants to search the codebase for <code>{{query}}</code>:",
 		"wantsToSearchWithPath": "Roo wants to search the codebase for <code>{{query}}</code> in <code>{{path}}</code>:",
+		"didSearch": "Searched codebase",
 		"didSearch_one": "Found 1 result",
 		"didSearch_other": "Found {{count}} results",
 		"resultTooltip": "Similarity score: {{score}} (click to open file)"
@@ -377,7 +380,7 @@
 		}
 	},
 	"queuedMessages": {
-		"title": "Queued Messages:",
+		"title": "Queued Messages",
 		"clickToEdit": "Click to edit message"
 	}
 }

@@ -24,7 +24,9 @@
 		"connectToCloudDescription": "Войди в Roo Code Cloud, чтобы делиться задачами",
 		"sharingDisabledByOrganization": "Обмен отключен организацией",
 		"shareSuccessOrganization": "Ссылка организации скопирована в буфер обмена",
-		"shareSuccessPublic": "Публичная ссылка скопирована в буфер обмена"
+		"shareSuccessPublic": "Публичная ссылка скопирована в буфер обмена",
+		"collapse": "Collapse task",
+		"expand": "Expand task"
 	},
 	"unpin": "Открепить",
 	"pin": "Закрепить",
@@ -334,7 +336,8 @@
 		"wantsToSearchWithPath": "Roo хочет выполнить поиск в кодовой базе по <code>{{query}}</code> в <code>{{path}}</code>:",
 		"didSearch_one": "Найден 1 результат",
 		"didSearch_other": "Найдено {{count}} результатов",
-		"resultTooltip": "Оценка схожести: {{score}} (нажмите, чтобы открыть файл)"
+		"resultTooltip": "Оценка схожести: {{score}} (нажмите, чтобы открыть файл)",
+		"didSearch": "Searched codebase"
 	},
 	"read-batch": {
 		"approve": {

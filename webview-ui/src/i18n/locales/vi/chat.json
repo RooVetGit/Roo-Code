@@ -24,7 +24,9 @@
 		"connectToCloudDescription": "Đăng nhập vào Roo Code Cloud để chia sẻ tác vụ",
 		"sharingDisabledByOrganization": "Chia sẻ bị tổ chức vô hiệu hóa",
 		"shareSuccessOrganization": "Liên kết tổ chức đã được sao chép vào clipboard",
-		"shareSuccessPublic": "Liên kết công khai đã được sao chép vào clipboard"
+		"shareSuccessPublic": "Liên kết công khai đã được sao chép vào clipboard",
+		"collapse": "Collapse task",
+		"expand": "Expand task"
 	},
 	"unpin": "Bỏ ghim khỏi đầu",
 	"pin": "Ghim lên đầu",
@@ -334,7 +336,8 @@
 		"wantsToSearchWithPath": "Roo muốn tìm kiếm trong cơ sở mã cho <code>{{query}}</code> trong <code>{{path}}</code>:",
 		"didSearch_one": "Đã tìm thấy 1 kết quả",
 		"didSearch_other": "Đã tìm thấy {{count}} kết quả",
-		"resultTooltip": "Điểm tương tự: {{score}} (nhấp để mở tệp)"
+		"resultTooltip": "Điểm tương tự: {{score}} (nhấp để mở tệp)",
+		"didSearch": "Searched codebase"
 	},
 	"read-batch": {
 		"approve": {

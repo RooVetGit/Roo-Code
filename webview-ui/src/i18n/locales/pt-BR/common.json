@@ -83,5 +83,9 @@
 		"months_ago": "há {{count}} meses",
 		"year_ago": "há um ano",
 		"years_ago": "há {{count}} anos"
+	},
+	"errors": {
+		"invalid_line_limit": "Limite de linhas especificado inválido",
+		"invalid_character_limit": "Limite de caracteres especificado inválido"
 	}
 }

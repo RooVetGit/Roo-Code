@@ -24,7 +24,9 @@
 		"connectToCloudDescription": "Görevleri paylaşmak için Roo Code Cloud'a giriş yap",
 		"sharingDisabledByOrganization": "Paylaşım kuruluş tarafından devre dışı bırakıldı",
 		"shareSuccessOrganization": "Organizasyon bağlantısı panoya kopyalandı",
-		"shareSuccessPublic": "Genel bağlantı panoya kopyalandı"
+		"shareSuccessPublic": "Genel bağlantı panoya kopyalandı",
+		"collapse": "Collapse task",
+		"expand": "Expand task"
 	},
 	"unpin": "Sabitlemeyi iptal et",
 	"pin": "Sabitle",
@@ -334,7 +336,8 @@
 		"wantsToSearchWithPath": "Roo <code>{{path}}</code> içinde kod tabanında <code>{{query}}</code> aramak istiyor:",
 		"didSearch_one": "1 sonuç bulundu",
 		"didSearch_other": "{{count}} sonuç bulundu",
-		"resultTooltip": "Benzerlik puanı: {{score}} (dosyayı açmak için tıklayın)"
+		"resultTooltip": "Benzerlik puanı: {{score}} (dosyayı açmak için tıklayın)",
+		"didSearch": "Searched codebase"
 	},
 	"read-batch": {
 		"approve": {

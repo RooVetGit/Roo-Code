@@ -1,11 +1,11 @@
 {
 	"errorBoundary": {
 		"title": "Something went wrong",
-		"reportText": "Please help us improve by reporting this error on",
-		"githubText": "our GitHub Issues page",
-		"copyInstructions": "Copy and paste the following error message to include it as part of your submission:",
-		"errorStack": "Error Stack:",
-		"componentStack": "Component Stack:"
+		"reportText": "Please report this error",
+		"githubText": "Report on GitHub",
+		"copyInstructions": "Copy error details to clipboard",
+		"errorStack": "Error Stack",
+		"componentStack": "Component Stack"
 	},
 	"answers": {
 		"yes": "Yes",
@@ -67,6 +67,10 @@
 		"editMessage": "Edit Message",
 		"editWarning": "Editing this message will delete all subsequent messages in the conversation. Do you want to proceed?",
 		"proceed": "Proceed"
+	},
+	"errors": {
+		"invalid_line_limit": "Invalid line limit specified",
+		"invalid_character_limit": "Invalid character limit specified"
 	},
 	"time_ago": {
 		"just_now": "just now",
