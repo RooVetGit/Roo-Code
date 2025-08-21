@@ -95,9 +95,17 @@ export class MultiFileSearchReplaceDiffStrategy implements DiffStrategy {
 
 Description: Request to apply PRECISE, TARGETED modifications to one or more files by searching for specific sections of content and replacing them. This tool is for SURGICAL EDITS ONLY - specific changes to existing code. This tool supports both single-file and multi-file operations, allowing you to make changes across multiple files in a single request.
 
+**IMPORTANT: When modifying large blocks of content, break the changes into multiple small \`apply_diff\` operations instead of attempting to modify everything at once. Make one small change at a time to improve success rate.**
+
 **IMPORTANT: You MUST use multiple files in a single operation whenever possible to maximize efficiency and minimize back-and-forth.**
 
 You can perform multiple distinct search and replace operations within a single \`apply_diff\` call by providing multiple SEARCH/REPLACE blocks in the \`diff\` parameter. This is the preferred way to make several targeted changes efficiently.
+
+**Best Practices:**
+- For large modifications: Break them into smaller, logical chunks (e.g., modify one function at a time, one section at a time)
+- Keep each SEARCH block focused and minimal - target specific lines rather than large blocks
+- Small diffs match more reliably and are easier to debug if they fail
+- Multiple small operations are better than one large operation
 
 The SEARCH section must exactly match existing content including whitespace and indentation.
 If you're not confident in the exact content to search for, use the read_file tool first to get the exact content.

@@ -168,7 +168,17 @@ Examples:
 
 ## apply_diff
 Description: Request to apply PRECISE, TARGETED modifications to an existing file by searching for specific sections of content and replacing them. This tool is for SURGICAL EDITS ONLY - specific changes to existing code.
+
+**IMPORTANT: When modifying large blocks of content, break the changes into multiple small `apply_diff` operations instead of attempting to modify everything at once. Make one small change at a time to improve success rate.**
+
 You can perform multiple distinct search and replace operations within a single `apply_diff` call by providing multiple SEARCH/REPLACE blocks in the `diff` parameter. This is the preferred way to make several targeted changes efficiently.
+
+**Best Practices:**
+- For large modifications: Break them into smaller, logical chunks (e.g., modify one function at a time, one section at a time)
+- Keep each SEARCH block focused and minimal - target specific lines rather than large blocks
+- Small diffs match more reliably and are easier to debug if they fail
+- Multiple small operations are better than one large operation
+
 The SEARCH section must exactly match existing content including whitespace and indentation.
 If you're not confident in the exact content to search for, use the read_file tool first to get the exact content.
 When applying the diffs, be extra careful to remember to change any closing brackets or other syntax that may be affected by the diff farther down in the file.
