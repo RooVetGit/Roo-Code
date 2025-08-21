@@ -85,7 +85,10 @@ export abstract class BaseOpenAiCompatibleProvider<ModelName extends string>
 			params.temperature = this.options.modelTemperature
 		}
 
-		return this.client.chat.completions.create(params)
+		return this.client.chat.completions.create(
+			params,
+			metadata?.taskId ? { headers: { "X-Roo-Task-ID": metadata.taskId } } : undefined,
+		)
 	}
 
 	override async *createMessage(
