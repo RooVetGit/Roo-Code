@@ -7,7 +7,7 @@ export const deepSeekDefaultModelId: DeepSeekModelId = "deepseek-chat"
 
 export const deepSeekModels = {
 	"deepseek-chat": {
-		maxTokens: 4096, // Default 4K, max 8K
+		maxTokens: 8192, // 8K max output
 		contextWindow: 128_000,
 		supportsImages: false,
 		supportsPromptCache: true,
@@ -18,7 +18,7 @@ export const deepSeekModels = {
 		description: `DeepSeek-V3 achieves a significant breakthrough in inference speed over previous models. It tops the leaderboard among open-source models and rivals the most advanced closed-source models globally.`,
 	},
 	"deepseek-reasoner": {
-		maxTokens: 32768, // Default 32K, max 64K for reasoning mode
+		maxTokens: 65536, // 64K max output for reasoning mode
 		contextWindow: 128_000,
 		supportsImages: false,
 		supportsPromptCache: true,
@@ -26,7 +26,7 @@ export const deepSeekModels = {
 		outputPrice: 2.19, // $2.19 per million tokens
 		cacheWritesPrice: 0.55, // $0.55 per million tokens (cache miss)
 		cacheReadsPrice: 0.14, // $0.14 per million tokens (cache hit)
-		description: `DeepSeek-R1 achieves performance comparable to OpenAI-o1 across math, code, and reasoning tasks. Supports Chain of Thought reasoning with default 32K output tokens (max 64K).`,
+		description: `DeepSeek-R1 achieves performance comparable to OpenAI-o1 across math, code, and reasoning tasks. Supports Chain of Thought reasoning with up to 64K output tokens.`,
 	},
 } as const satisfies Record<string, ModelInfo>
 
