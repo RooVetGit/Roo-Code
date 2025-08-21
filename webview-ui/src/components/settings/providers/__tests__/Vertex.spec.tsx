@@ -47,6 +47,7 @@ describe("Vertex", () => {
 		vertexRegion: "",
 		enableUrlContext: false,
 		enableGrounding: false,
+		apiModelId: "gemini-2.0-flash-001",
 	}
 
 	const mockSetApiConfigurationField = vi.fn()
@@ -113,7 +114,7 @@ describe("Vertex", () => {
 	})
 
 	describe("URL Context Checkbox", () => {
-		it("should render URL context checkbox unchecked by default", () => {
+		it("should render URL context checkbox unchecked by default for Gemini models", () => {
 			render(
 				<Vertex
 					apiConfiguration={defaultApiConfiguration}
@@ -126,8 +127,35 @@ describe("Vertex", () => {
 			expect(checkbox.checked).toBe(false)
 		})
 
-		it("should render URL context checkbox checked when enableUrlContext is true", () => {
-			const apiConfiguration = { ...defaultApiConfiguration, enableUrlContext: true }
+		it("should NOT render URL context checkbox for non-Gemini models", () => {
+			const apiConfiguration = { ...defaultApiConfiguration, apiModelId: "claude-3-opus@20240229" }
+			render(
+				<Vertex apiConfiguration={apiConfiguration} setApiConfigurationField={mockSetApiConfigurationField} />,
+			)
+
+			const urlContextCheckbox = screen.queryByTestId("checkbox-url-context")
+			expect(urlContextCheckbox).toBeNull()
+		})
+
+		it("should NOT render URL context checkbox when fromWelcomeView is true", () => {
+			render(
+				<Vertex
+					apiConfiguration={defaultApiConfiguration}
+					setApiConfigurationField={mockSetApiConfigurationField}
+					fromWelcomeView={true}
+				/>,
+			)
+
+			const urlContextCheckbox = screen.queryByTestId("checkbox-url-context")
+			expect(urlContextCheckbox).toBeNull()
+		})
+
+		it("should render URL context checkbox checked when enableUrlContext is true for Gemini models", () => {
+			const apiConfiguration = {
+				...defaultApiConfiguration,
+				enableUrlContext: true,
+				apiModelId: "gemini-2.0-flash-001",
+			}
 			render(
 				<Vertex apiConfiguration={apiConfiguration} setApiConfigurationField={mockSetApiConfigurationField} />,
 			)
@@ -156,7 +184,7 @@ describe("Vertex", () => {
 	})
 
 	describe("Grounding with Google Search Checkbox", () => {
-		it("should render grounding search checkbox unchecked by default", () => {
+		it("should render grounding search checkbox unchecked by default for Gemini models", () => {
 			render(
 				<Vertex
 					apiConfiguration={defaultApiConfiguration}
@@ -169,8 +197,35 @@ describe("Vertex", () => {
 			expect(checkbox.checked).toBe(false)
 		})
 
-		it("should render grounding search checkbox checked when enableGrounding is true", () => {
-			const apiConfiguration = { ...defaultApiConfiguration, enableGrounding: true }
+		it("should NOT render grounding search checkbox for non-Gemini models", () => {
+			const apiConfiguration = { ...defaultApiConfiguration, apiModelId: "claude-3-opus@20240229" }
+			render(
+				<Vertex apiConfiguration={apiConfiguration} setApiConfigurationField={mockSetApiConfigurationField} />,
+			)
+
+			const groundingCheckbox = screen.queryByTestId("checkbox-grounding-search")
+			expect(groundingCheckbox).toBeNull()
+		})
+
+		it("should NOT render grounding search checkbox when fromWelcomeView is true", () => {
+			render(
+				<Vertex
+					apiConfiguration={defaultApiConfiguration}
+					setApiConfigurationField={mockSetApiConfigurationField}
+					fromWelcomeView={true}
+				/>,
+			)
+
+			const groundingCheckbox = screen.queryByTestId("checkbox-grounding-search")
+			expect(groundingCheckbox).toBeNull()
+		})
+
+		it("should render grounding search checkbox checked when enableGrounding is true for Gemini models", () => {
+			const apiConfiguration = {
+				...defaultApiConfiguration,
+				enableGrounding: true,
+				apiModelId: "gemini-2.0-flash-001",
+			}
 			render(
 				<Vertex apiConfiguration={apiConfiguration} setApiConfigurationField={mockSetApiConfigurationField} />,
 			)
