@@ -54,7 +54,11 @@ export class RequestyHandler extends BaseProvider implements SingleCompletionHan
 	}
 
 	public async fetchModel() {
-		this.models = await getModels({ provider: "requesty" })
+		this.models = await getModels({
+			provider: "requesty",
+			apiKey: this.options.requestyApiKey,
+			baseUrl: this.options.requestyBaseUrl,
+		})
 		return this.getModel()
 	}
 

@@ -65,7 +65,10 @@ export const Requesty = ({
 				<div className="flex justify-between items-center mb-1">
 					<label className="block font-medium">{t("settings:providers.requestyApiKey")}</label>
 					{apiConfiguration?.requestyApiKey && (
-						<RequestyBalanceDisplay apiKey={apiConfiguration.requestyApiKey} />
+						<RequestyBalanceDisplay
+							apiKey={apiConfiguration.requestyApiKey}
+							baseUrl={apiConfiguration?.requestyBaseUrl}
+						/>
 					)}
 				</div>
 			</VSCodeTextField>
@@ -74,7 +77,16 @@ export const Requesty = ({
 			</div>
 			{!apiConfiguration?.requestyApiKey && (
 				<VSCodeButtonLink
-					href="https://app.requesty.ai/api-keys"
+					href={(() => {
+						const baseUrl = apiConfiguration?.requestyBaseUrl || "https://app.requesty.ai"
+						// Remove trailing slash if present and ensure we're using the app subdomain
+						const cleanBaseUrl = baseUrl.replace(/\/$/, "")
+						// If the base URL contains 'router' or 'api', replace with 'app' for web interface
+						const appUrl = cleanBaseUrl
+							.replace(/router\.requesty/, "app.requesty")
+							.replace(/api\.requesty/, "app.requesty")
+						return `${appUrl}/api-keys`
+					})()}
 					style={{ width: "100%" }}
 					appearance="primary">
 					{t("settings:providers.getRequestyApiKey")}

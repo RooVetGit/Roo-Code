@@ -4,7 +4,7 @@ import type { ModelInfo } from "@roo-code/types"
 
 import { parseApiPrice } from "../../../shared/cost"
 
-export async function getRequestyModels(apiKey?: string): Promise<Record<string, ModelInfo>> {
+export async function getRequestyModels(apiKey?: string, baseUrl?: string): Promise<Record<string, ModelInfo>> {
 	const models: Record<string, ModelInfo> = {}
 
 	try {
@@ -14,7 +14,9 @@ export async function getRequestyModels(apiKey?: string): Promise<Record<string,
 			headers["Authorization"] = `Bearer ${apiKey}`
 		}
 
-		const url = "https://router.requesty.ai/v1/models"
+		// Use the base URL if provided, otherwise default to the router endpoint
+		const apiUrl = baseUrl ? baseUrl.replace(/\/$/, "") : "https://router.requesty.ai"
+		const url = `${apiUrl}/v1/models`
 		const response = await axios.get(url, { headers })
 		const rawModels = response.data.data
 

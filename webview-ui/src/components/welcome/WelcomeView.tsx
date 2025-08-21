@@ -75,7 +75,7 @@ const WelcomeView = () => {
 									name: "Requesty",
 									description: t("welcome:routers.requesty.description"),
 									incentive: t("welcome:routers.requesty.incentive"),
-									authUrl: getRequestyAuthUrl(uriScheme),
+									authUrl: getRequestyAuthUrl(uriScheme, apiConfiguration?.requestyBaseUrl),
 								},
 								{
 									slug: "openrouter",
