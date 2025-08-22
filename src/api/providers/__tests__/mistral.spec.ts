@@ -137,7 +137,7 @@ describe("MistralHandler", () => {
 		})
 
 		it("should handle thinking content as reasoning chunks", async () => {
-			// Mock stream with thinking content
+			// Mock stream with thinking content matching new SDK structure
 			mockCreate.mockImplementationOnce(async (_options) => {
 				const stream = {
 					[Symbol.asyncIterator]: async function* () {
@@ -147,7 +147,10 @@ describe("MistralHandler", () => {
 									{
 										delta: {
 											content: [
-												{ type: "thinking", text: "Let me think about this..." },
+												{
+													type: "thinking",
+													thinking: [{ type: "text", text: "Let me think about this..." }],
+												},
 												{ type: "text", text: "Here's the answer" },
 											],
 										},
@@ -176,7 +179,7 @@ describe("MistralHandler", () => {
 		})
 
 		it("should handle mixed content arrays correctly", async () => {
-			// Mock stream with mixed content
+			// Mock stream with mixed content matching new SDK structure
 			mockCreate.mockImplementationOnce(async (_options) => {
 				const stream = {
 					[Symbol.asyncIterator]: async function* () {
@@ -187,7 +190,10 @@ describe("MistralHandler", () => {
 										delta: {
 											content: [
 												{ type: "text", text: "First text" },
-												{ type: "thinking", text: "Some reasoning" },
+												{
+													type: "thinking",
+													thinking: [{ type: "text", text: "Some reasoning" }],
+												},
 												{ type: "text", text: "Second text" },
 											],
 										},

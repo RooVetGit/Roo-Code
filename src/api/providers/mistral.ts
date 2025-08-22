@@ -11,18 +11,13 @@ import { ApiStream } from "../transform/stream"
 import { BaseProvider } from "./base-provider"
 import type { SingleCompletionHandler, ApiHandlerCreateMessageMetadata } from "../index"
 
-// Define TypeScript interfaces for Mistral content types
-interface MistralTextContent {
-	type: "text"
-	text: string
+// Type helper to handle thinking chunks from Mistral API
+// The SDK includes ThinkChunk but TypeScript has trouble with the discriminated union
+type ContentChunkWithThinking = {
+	type: string
+	text?: string
+	thinking?: Array<{ type: string; text?: string }>
 }
-
-interface MistralThinkingContent {
-	type: "thinking"
-	text: string
-}
-
-type MistralContent = MistralTextContent | MistralThinkingContent | string
 
 export class MistralHandler extends BaseProvider implements SingleCompletionHandler {
 	protected options: ApiHandlerOptions
@@ -61,34 +56,38 @@ export class MistralHandler extends BaseProvider implements SingleCompletionHand
 			temperature,
 		})
 
-		for await (const chunk of response) {
-			const delta = chunk.data.choices[0]?.delta
+		for await (const event of response) {
+			const delta = event.data.choices[0]?.delta
 
 			if (delta?.content) {
 				if (typeof delta.content === "string") {
 					// Handle string content as text
 					yield { type: "text", text: delta.content }
 				} else if (Array.isArray(delta.content)) {
-					// Handle array of content blocks
-					for (const c of delta.content as MistralContent[]) {
-						if (typeof c === "object" && c !== null) {
-							if (c.type === "thinking" && c.text) {
-								// Handle thinking content as reasoning chunks
-								yield { type: "reasoning", text: c.text }
-							} else if (c.type === "text" && c.text) {
-								// Handle text content normally
-								yield { type: "text", text: c.text }
+					// Handle array of content chunks
+					// The SDK v1.9.18 supports ThinkChunk with type "thinking"
+					for (const chunk of delta.content as ContentChunkWithThinking[]) {
+						if (chunk.type === "thinking" && chunk.thinking) {
+							// Handle thinking content as reasoning chunks
+							// ThinkChunk has a 'thinking' property that contains an array of text/reference chunks
+							for (const thinkingPart of chunk.thinking) {
+								if (thinkingPart.type === "text" && thinkingPart.text) {
+									yield { type: "reasoning", text: thinkingPart.text }
+								}
 							}
+						} else if (chunk.type === "text" && chunk.text) {
+							// Handle text content normally
+							yield { type: "text", text: chunk.text }
 						}
 					}
 				}
 			}
 
-			if (chunk.data.usage) {
+			if (event.data.usage) {
 				yield {
 					type: "usage",
-					inputTokens: chunk.data.usage.promptTokens || 0,
-					outputTokens: chunk.data.usage.completionTokens || 0,
+					inputTokens: event.data.usage.promptTokens || 0,
+					outputTokens: event.data.usage.completionTokens || 0,
 				}
 			}
 		}
@@ -119,9 +118,9 @@ export class MistralHandler extends BaseProvider implements SingleCompletionHand
 
 			if (Array.isArray(content)) {
 				// Only return text content, filter out thinking content for non-streaming
-				return content
-					.filter((c: any) => typeof c === "object" && c !== null && c.type === "text")
-					.map((c: any) => c.text || "")
+				return (content as ContentChunkWithThinking[])
+					.filter((c) => c.type === "text" && c.text)
+					.map((c) => c.text || "")
 					.join("")
 			}
 
