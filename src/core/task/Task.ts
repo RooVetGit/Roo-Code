@@ -104,6 +104,14 @@ import { maybeRemoveImageBlocks } from "../../api/transform/image-cleaning"
 import { restoreTodoListForTask } from "../tools/updateTodoListTool"
 import { AutoApprovalHandler } from "./AutoApprovalHandler"
 
+// Custom error class for expected control flow in partial message handling
+class PartialMessageControlFlowError extends Error {
+	constructor(message: string) {
+		super(message)
+		this.name = "PartialMessageControlFlowError"
+	}
+}
+
 const MAX_EXPONENTIAL_BACKOFF_SECONDS = 600 // 10 minutes
 const DEFAULT_USAGE_COLLECTION_TIMEOUT_MS = 5000 // 5 seconds
 const FORCED_CONTEXT_REDUCTION_PERCENT = 75 // Keep 75% of context (remove 25%) on context window errors
@@ -686,14 +694,18 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 					// saves, and only post parts of partial message instead of
 					// whole array in new listener.
 					this.updateClineMessage(lastMessage)
-					throw new Error("Current ask promise was ignored (#1)")
+					// This is expected behavior during partial message updates
+					// Return early instead of throwing to avoid confusing error logs
+					throw new PartialMessageControlFlowError("Partial message update - expected behavior")
 				} else {
 					// This is a new partial message, so add it with partial
 					// state.
 					askTs = Date.now()
 					this.lastMessageTs = askTs
 					await this.addToClineMessages({ ts: askTs, type: "ask", ask: type, text, partial, isProtected })
-					throw new Error("Current ask promise was ignored (#2)")
+					// This is expected behavior when creating a new partial message
+					// Return early instead of throwing to avoid confusing error logs
+					throw new PartialMessageControlFlowError("New partial message - expected behavior")
 				}
 			} else {
 				if (isUpdatingPreviousPartial) {
@@ -797,7 +809,9 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 			// Could happen if we send multiple asks in a row i.e. with
 			// command_output. It's important that when we know an ask could
 			// fail, it is handled gracefully.
-			throw new Error("Current ask promise was ignored")
+			// This can happen when multiple asks are sent in sequence
+			// It's a normal part of the control flow, not an error
+			throw new PartialMessageControlFlowError("Ask promise superseded - expected behavior")
 		}
 
 		const result = { response: this.askResponse!, text: this.askResponseText, images: this.askResponseImages }
