@@ -69,14 +69,21 @@ const PromptsSettings = ({
 	}, [])
 
 	const updateSupportPrompt = (type: SupportPromptType, value: string | undefined) => {
+		// Trim the value when storing, but keep empty strings
+		const trimmedValue = value?.trim()
+		const finalValue = trimmedValue === "" ? undefined : trimmedValue
+
 		if (type === "CONDENSE") {
-			setCustomCondensingPrompt(value || supportPrompt.default.CONDENSE)
+			setCustomCondensingPrompt(finalValue || supportPrompt.default.CONDENSE)
 			vscode.postMessage({
 				type: "updateCondensingPrompt",
-				text: value || supportPrompt.default.CONDENSE,
+				text: finalValue || supportPrompt.default.CONDENSE,
 			})
+			// Also update the customSupportPrompts to trigger change detection
+			const updatedPrompts = { ...customSupportPrompts, [type]: finalValue }
+			setCustomSupportPrompts(updatedPrompts)
 		} else {
-			const updatedPrompts = { ...customSupportPrompts, [type]: value }
+			const updatedPrompts = { ...customSupportPrompts, [type]: finalValue }
 			setCustomSupportPrompts(updatedPrompts)
 		}
 	}
@@ -88,6 +95,10 @@ const PromptsSettings = ({
 				type: "updateCondensingPrompt",
 				text: supportPrompt.default.CONDENSE,
 			})
+			// Also update the customSupportPrompts to trigger change detection
+			const updatedPrompts = { ...customSupportPrompts }
+			delete updatedPrompts[type]
+			setCustomSupportPrompts(updatedPrompts)
 		} else {
 			const updatedPrompts = { ...customSupportPrompts }
 			delete updatedPrompts[type]
@@ -160,10 +171,9 @@ const PromptsSettings = ({
 						value={getSupportPromptValue(activeSupportOption)}
 						onChange={(e) => {
 							const value =
-								(e as unknown as CustomEvent)?.detail?.target?.value ||
+								(e as unknown as CustomEvent)?.detail?.target?.value ??
 								((e as any).target as HTMLTextAreaElement).value
-							const trimmedValue = value.trim()
-							updateSupportPrompt(activeSupportOption, trimmedValue || undefined)
+							updateSupportPrompt(activeSupportOption, value)
 						}}
 						rows={6}
 						className="w-full"
