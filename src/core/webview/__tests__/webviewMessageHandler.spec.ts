@@ -143,6 +143,7 @@ describe("webviewMessageHandler - requestRouterModels", () => {
 			apiConfiguration: {
 				openRouterApiKey: "openrouter-key",
 				requestyApiKey: "requesty-key",
+				tarsApiKey: "tars-key",
 				glamaApiKey: "glama-key",
 				unboundApiKey: "unbound-key",
 				litellmApiKey: "litellm-key",
@@ -176,6 +177,7 @@ describe("webviewMessageHandler - requestRouterModels", () => {
 		// Verify getModels was called for each provider
 		expect(mockGetModels).toHaveBeenCalledWith({ provider: "openrouter" })
 		expect(mockGetModels).toHaveBeenCalledWith({ provider: "requesty", apiKey: "requesty-key" })
+		expect(mockGetModels).toHaveBeenCalledWith({ provider: "tars", apiKey: "tars-key" })
 		expect(mockGetModels).toHaveBeenCalledWith({ provider: "glama" })
 		expect(mockGetModels).toHaveBeenCalledWith({ provider: "unbound", apiKey: "unbound-key" })
 		expect(mockGetModels).toHaveBeenCalledWith({
@@ -190,6 +192,7 @@ describe("webviewMessageHandler - requestRouterModels", () => {
 			routerModels: {
 				openrouter: mockModels,
 				requesty: mockModels,
+				tars: mockModels,
 				glama: mockModels,
 				unbound: mockModels,
 				litellm: mockModels,
@@ -242,6 +245,7 @@ describe("webviewMessageHandler - requestRouterModels", () => {
 			apiConfiguration: {
 				openRouterApiKey: "openrouter-key",
 				requestyApiKey: "requesty-key",
+				tarsApiKey: "tars-key",
 				glamaApiKey: "glama-key",
 				unboundApiKey: "unbound-key",
 				// Missing litellm config
@@ -277,6 +281,7 @@ describe("webviewMessageHandler - requestRouterModels", () => {
 			routerModels: {
 				openrouter: mockModels,
 				requesty: mockModels,
+				tars: mockModels,
 				glama: mockModels,
 				unbound: mockModels,
 				litellm: {},
@@ -300,6 +305,7 @@ describe("webviewMessageHandler - requestRouterModels", () => {
 		mockGetModels
 			.mockResolvedValueOnce(mockModels) // openrouter
 			.mockRejectedValueOnce(new Error("Requesty API error")) // requesty
+			.mockResolvedValueOnce(mockModels) // tars
 			.mockResolvedValueOnce(mockModels) // glama
 			.mockRejectedValueOnce(new Error("Unbound API error")) // unbound
 			.mockRejectedValueOnce(new Error("LiteLLM connection failed")) // litellm
@@ -314,6 +320,7 @@ describe("webviewMessageHandler - requestRouterModels", () => {
 			routerModels: {
 				openrouter: mockModels,
 				requesty: {},
+				tars: mockModels,
 				glama: mockModels,
 				unbound: {},
 				litellm: {},
@@ -350,6 +357,7 @@ describe("webviewMessageHandler - requestRouterModels", () => {
 		mockGetModels
 			.mockRejectedValueOnce(new Error("Structured error message")) // openrouter
 			.mockRejectedValueOnce(new Error("Requesty API error")) // requesty
+			.mockRejectedValueOnce(new Error("TARS API error")) // tars
 			.mockRejectedValueOnce(new Error("Glama API error")) // glama
 			.mockRejectedValueOnce(new Error("Unbound API error")) // unbound
 			.mockRejectedValueOnce(new Error("LiteLLM connection failed")) // litellm
@@ -371,6 +379,13 @@ describe("webviewMessageHandler - requestRouterModels", () => {
 			success: false,
 			error: "Requesty API error",
 			values: { provider: "requesty" },
+		})
+
+		expect(mockClineProvider.postMessageToWebview).toHaveBeenCalledWith({
+			type: "singleRouterModelFetchResponse",
+			success: false,
+			error: "TARS API error",
+			values: { provider: "tars" },
 		})
 
 		expect(mockClineProvider.postMessageToWebview).toHaveBeenCalledWith({

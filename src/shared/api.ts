@@ -27,6 +27,7 @@ const routerNames = [
 	"ollama",
 	"lmstudio",
 	"io-intelligence",
+	"tars",
 ] as const
 
 export type RouterName = (typeof routerNames)[number]
@@ -146,6 +147,7 @@ export type GetModelsOptions =
 	| { provider: "openrouter" }
 	| { provider: "glama" }
 	| { provider: "requesty"; apiKey?: string }
+	| { provider: "tars"; apiKey?: string }
 	| { provider: "unbound"; apiKey?: string }
 	| { provider: "litellm"; apiKey: string; baseUrl: string }
 	| { provider: "ollama"; baseUrl?: string }

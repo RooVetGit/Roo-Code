@@ -36,6 +36,7 @@ describe("Model Validation Functions", () => {
 			},
 		},
 		requesty: {},
+		tars: {},
 		unbound: {},
 		litellm: {},
 		ollama: {},

@@ -2213,7 +2213,7 @@ export class ClineProvider
 		await ExtensionBridgeService.handleRemoteControlState(
 			userInfo,
 			enabled,
-			{ ...bridgeConfig, provider: this, sessionId: vscode.env.sessionId },
+			{ ...bridgeConfig, provider: this as any, sessionId: vscode.env.sessionId },
 			(message: string) => this.log(message),
 		)
 

@@ -128,8 +128,8 @@ describe("UrlContentFetcher", () => {
 		it("should launch browser with correct arguments on non-Linux platforms", async () => {
 			// Ensure we're not on Linux for this test
 			const originalPlatform = process.platform
-			Object.defineProperty(process, 'platform', {
-				value: 'darwin' // macOS
+			Object.defineProperty(process, "platform", {
+				value: "darwin", // macOS
 			})
 
 			try {
@@ -153,8 +153,8 @@ describe("UrlContentFetcher", () => {
 				})
 			} finally {
 				// Restore original platform
-				Object.defineProperty(process, 'platform', {
-					value: originalPlatform
+				Object.defineProperty(process, "platform", {
+					value: originalPlatform,
 				})
 			}
 		})
@@ -162,8 +162,8 @@ describe("UrlContentFetcher", () => {
 		it("should launch browser with Linux-specific arguments", async () => {
 			// Mock process.platform to be linux
 			const originalPlatform = process.platform
-			Object.defineProperty(process, 'platform', {
-				value: 'linux'
+			Object.defineProperty(process, "platform", {
+				value: "linux",
 			})
 
 			try {
@@ -190,8 +190,8 @@ describe("UrlContentFetcher", () => {
 				})
 			} finally {
 				// Restore original platform
-				Object.defineProperty(process, 'platform', {
-					value: originalPlatform
+				Object.defineProperty(process, "platform", {
+					value: originalPlatform,
 				})
 			}
 		})

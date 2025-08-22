@@ -34,6 +34,7 @@ type ModelIdKey = keyof Pick<
 	| "openRouterModelId"
 	| "unboundModelId"
 	| "requestyModelId"
+	| "tarsModelId"
 	| "openAiModelId"
 	| "litellmModelId"
 	| "ioIntelligenceModelId"
