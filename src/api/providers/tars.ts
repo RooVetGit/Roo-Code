@@ -35,7 +35,7 @@ export class TarsHandler extends RouterProvider implements SingleCompletionHandl
 		})
 	}
 
-	protected processUsageMetrics(usage: any, modelInfo?: ModelInfo): ApiStreamUsageChunk {
+	protected processUsageMetrics(usage: OpenAI.CompletionUsage, modelInfo?: ModelInfo): ApiStreamUsageChunk {
 		const tarsUsage = usage as TarsUsage
 		const inputTokens = tarsUsage?.prompt_tokens || 0
 		const outputTokens = tarsUsage?.completion_tokens || 0
@@ -86,7 +86,7 @@ export class TarsHandler extends RouterProvider implements SingleCompletionHandl
 		}
 
 		const stream = await this.client.chat.completions.create(completionParams)
-		let lastUsage: any = undefined
+		let lastUsage: OpenAI.CompletionUsage | undefined = undefined
 
 		for await (const chunk of stream) {
 			const delta = chunk.choices[0]?.delta

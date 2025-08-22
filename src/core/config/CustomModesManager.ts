@@ -276,7 +276,7 @@ export class CustomModesManager {
 
 				const errorMessage = t("common:customModes.errors.invalidFormat")
 
-				let config: any
+				let config: unknown
 
 				try {
 					config = this.parseYamlSafely(content, settingsPath)
