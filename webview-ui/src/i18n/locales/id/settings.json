@@ -119,7 +119,8 @@
 			"invalidRerankerUrl": "Please enter a valid URL for the reranker service",
 			"rerankerUrlRequired": "Reranker URL is required when using local provider",
 			"rerankerApiKeyRequired": "API key is required for this reranker provider",
-			"rerankerModelRequired": "Reranker model is required"
+			"rerankerModelRequired": "Reranker model is required",
+			"rerankerUrlMustBeHttps": "URL reranker harus menggunakan HTTPS untuk transmisi kunci API yang aman (pengecualian: localhost)"
 		},
 		"advancedConfigLabel": "Konfigurasi Lanjutan",
 		"searchMinScoreLabel": "Ambang Batas Skor Pencarian",

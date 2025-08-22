@@ -119,7 +119,8 @@
 			"invalidRerankerUrl": "Please enter a valid URL for the reranker service",
 			"rerankerUrlRequired": "Reranker URL is required when using local provider",
 			"rerankerApiKeyRequired": "API key is required for this reranker provider",
-			"rerankerModelRequired": "Reranker model is required"
+			"rerankerModelRequired": "Reranker model is required",
+			"rerankerUrlMustBeHttps": "URL reranker phải sử dụng HTTPS để truyền khóa API an toàn (ngoại lệ: localhost)"
 		},
 		"advancedConfigLabel": "Cấu hình nâng cao",
 		"searchMinScoreLabel": "Ngưỡng điểm tìm kiếm",
