@@ -399,7 +399,7 @@
 					"maximum": 3600,
 					"description": "%settings.apiRequestTimeout.description%"
 				},
-				"roo-cline.newTaskRequireTodos": {
+				"newTaskRequireTodos": {
 					"type": "boolean",
 					"default": false,
 					"description": "%settings.newTaskRequireTodos.description%"
