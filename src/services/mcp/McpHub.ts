@@ -151,6 +151,9 @@ export class McpHub {
 	isConnecting: boolean = false
 	private refCount: number = 0 // Reference counter for active clients
 	private configChangeDebounceTimers: Map<string, NodeJS.Timeout> = new Map()
+	private activeToolExecutions: Map<string, Set<string>> = new Map() // Track active tool executions per server
+	private pendingRestarts: Set<string> = new Set() // Track servers that need restart after tool execution
+	private toolExecutionTimeouts: Map<string, NodeJS.Timeout> = new Map() // Track timeouts for tool execution cleanup
 
 	constructor(provider: ClineProvider) {
 		this.providerRef = new WeakRef(provider)
@@ -1169,6 +1172,19 @@ export class McpHub {
 	}
 
 	async restartConnection(serverName: string, source?: "global" | "project"): Promise<void> {
+		// Check if there are active tool executions for this server
+		if (this.hasActiveToolExecutions(serverName, source)) {
+			console.log(`Deferring restart for ${serverName} - tools are currently executing`)
+			// Add to pending restarts
+			const serverKey = `${serverName}:${source || "global"}`
+			this.pendingRestarts.add(serverKey)
+			vscode.window.showInformationMessage(
+				t("mcp:info.restart_deferred", { serverName }) ||
+					`Server "${serverName}" will be restarted after tool execution completes.`,
+			)
+			return
+		}
+
 		this.isConnecting = true
 
 		// Check if MCP is globally enabled
@@ -1357,6 +1373,20 @@ export class McpHub {
 			}
 
 			const serverSource = connection.server.source || "global"
+
+			// Check if there are active tool executions for this server
+			if (this.hasActiveToolExecutions(serverName, serverSource)) {
+				// Show a warning message and don't proceed with the toggle
+				vscode.window.showWarningMessage(
+					t("mcp:errors.cannot_toggle_server_tools_running", {
+						serverName,
+						action: disabled ? "disable" : "enable",
+					}) ||
+						`Cannot ${disabled ? "disable" : "enable"} server "${serverName}" while tools are running. Please wait for tool execution to complete.`,
+				)
+				return
+			}
+
 			// Update the server config in the appropriate file
 			await this.updateServerConfig(serverName, { disabled }, serverSource)
 
@@ -1603,19 +1633,115 @@ export class McpHub {
 			timeout = 60 * 1000
 		}
 
-		return await connection.client.request(
-			{
-				method: "tools/call",
-				params: {
-					name: toolName,
-					arguments: toolArguments,
+		// Track this tool execution as active
+		const serverKey = `${serverName}:${source || "global"}`
+		if (!this.activeToolExecutions.has(serverKey)) {
+			this.activeToolExecutions.set(serverKey, new Set())
+		}
+		const executionId = `${toolName}:${Date.now()}`
+		this.activeToolExecutions.get(serverKey)!.add(executionId)
+
+		// Set up a timeout to clean up the execution tracking in case of hangs
+		const cleanupTimeout = setTimeout(() => {
+			this.cleanupToolExecution(serverKey, executionId)
+		}, timeout + 5000) // Add 5 seconds buffer after the tool timeout
+
+		// Store the timeout so we can clear it if the tool completes normally
+		const timeoutKey = `${serverKey}:${executionId}`
+		this.toolExecutionTimeouts.set(timeoutKey, cleanupTimeout)
+
+		try {
+			const result = await connection.client.request(
+				{
+					method: "tools/call",
+					params: {
+						name: toolName,
+						arguments: toolArguments,
+					},
 				},
-			},
-			CallToolResultSchema,
-			{
-				timeout,
-			},
-		)
+				CallToolResultSchema,
+				{
+					timeout,
+				},
+			)
+
+			// Clear the cleanup timeout since the tool completed successfully
+			this.clearToolExecutionTimeout(timeoutKey)
+
+			// Remove from active executions on success
+			this.cleanupToolExecution(serverKey, executionId)
+
+			return result
+		} catch (error) {
+			// Clear the cleanup timeout
+			this.clearToolExecutionTimeout(timeoutKey)
+
+			// Remove from active executions on error
+			this.cleanupToolExecution(serverKey, executionId)
+
+			throw error
+		}
+	}
+
+	/**
+	 * Clean up tool execution tracking and process pending restarts if needed
+	 * @param serverKey The server key
+	 * @param executionId The execution ID to clean up
+	 */
+	private cleanupToolExecution(serverKey: string, executionId: string): void {
+		// Remove from active executions
+		this.activeToolExecutions.get(serverKey)?.delete(executionId)
+		if (this.activeToolExecutions.get(serverKey)?.size === 0) {
+			this.activeToolExecutions.delete(serverKey)
+
+			// Check if this server has pending restarts
+			if (this.pendingRestarts.has(serverKey)) {
+				this.pendingRestarts.delete(serverKey)
+				// Extract server name and source from the key
+				const [serverName, source] = serverKey.split(":")
+				// Process the pending restart
+				this.restartConnection(serverName, source as "global" | "project").catch((error) => {
+					console.error(`Failed to process pending restart for ${serverName}:`, error)
+				})
+			}
+		}
+	}
+
+	/**
+	 * Clear a tool execution timeout
+	 * @param timeoutKey The timeout key to clear
+	 */
+	private clearToolExecutionTimeout(timeoutKey: string): void {
+		const timeout = this.toolExecutionTimeouts.get(timeoutKey)
+		if (timeout) {
+			clearTimeout(timeout)
+			this.toolExecutionTimeouts.delete(timeoutKey)
+		}
+	}
+
+	/**
+	 * Check if any tools are currently executing for a specific server
+	 * @param serverName The name of the server to check
+	 * @param source The source of the server (global or project)
+	 * @returns true if there are active tool executions, false otherwise
+	 */
+	private hasActiveToolExecutions(serverName: string, source?: "global" | "project"): boolean {
+		const serverKey = `${serverName}:${source || "global"}`
+		const activeTools = this.activeToolExecutions.get(serverKey)
+		return activeTools ? activeTools.size > 0 : false
+	}
+
+	/**
+	 * Check if any tools are currently executing across all servers
+	 * @returns true if there are any active tool executions, false otherwise
+	 */
+	private hasAnyActiveToolExecutions(): boolean {
+		for (const [, tools] of this.activeToolExecutions) {
+			if (tools.size > 0) {
+				return true
+			}
+		}
+		return false
 	}
 
 	/**
@@ -1633,6 +1759,27 @@ export class McpHub {
 		toolName: string,
 		listName: "alwaysAllow" | "disabledTools",
 		addTool: boolean,
+	): Promise<void> {
+		// Use the common implementation with restart enabled
+		await this.updateServerToolListInternal(serverName, source, toolName, listName, addTool, true)
+	}
+
+	/**
+	 * Internal implementation for updating server tool lists
+	 * @param serverName The name of the server to update
+	 * @param source Whether to update the global or project config
+	 * @param toolName The name of the tool to add or remove
+	 * @param listName The name of the list to modify ("alwaysAllow" or "disabledTools")
+	 * @param addTool Whether to add (true) or remove (false) the tool from the list
+	 * @param allowRestart Whether to allow file watchers to trigger restart
+	 */
+	private async updateServerToolListInternal(
+		serverName: string,
+		source: "global" | "project",
+		toolName: string,
+		listName: "alwaysAllow" | "disabledTools",
+		addTool: boolean,
+		allowRestart: boolean,
 	): Promise<void> {
 		// Find the connection with matching name and source
 		const connection = this.findConnection(serverName, source)
@@ -1656,7 +1803,6 @@ export class McpHub {
 		}
 
 		// Normalize path for cross-platform compatibility
-		// Use a consistent path format for both reading and writing
 		const normalizedPath = process.platform === "win32" ? configPath.replace(/\\/g, "/") : configPath
 
 		// Read the appropriate config file
@@ -1688,11 +1834,56 @@ export class McpHub {
 			targetList.splice(toolIndex, 1)
 		}
 
+		// Handle file watcher based on allowRestart flag
+		let watcherToRestore: vscode.FileSystemWatcher | undefined
+		if (!allowRestart) {
+			// Temporarily disable the watcher to prevent restart
+			if (source === "project" && this.projectMcpWatcher) {
+				watcherToRestore = this.projectMcpWatcher
+				this.projectMcpWatcher.dispose()
+				this.projectMcpWatcher = undefined
+			} else if (source === "global" && this.settingsWatcher) {
+				watcherToRestore = this.settingsWatcher
+				this.settingsWatcher.dispose()
+				this.settingsWatcher = undefined
+			}
+		}
+
 		await fs.writeFile(normalizedPath, JSON.stringify(config, null, 2))
 
 		if (connection) {
-			connection.server.tools = await this.fetchToolsList(serverName, source)
+			if (allowRestart) {
+				// Normal flow - fetch fresh tool list
+				connection.server.tools = await this.fetchToolsList(serverName, source)
+			} else {
+				// Update the in-memory tool state without restarting
+				const tools = connection.server.tools
+				if (tools) {
+					const tool = tools.find((t) => t.name === toolName)
+					if (tool) {
+						if (listName === "alwaysAllow") {
+							tool.alwaysAllow = addTool
+						} else if (listName === "disabledTools") {
+							tool.enabledForPrompt = !addTool
+						}
+					}
+				}
+			}
 			await this.notifyWebviewOfServerChanges()
+		}
+
+		// Re-enable the watcher after a short delay if it was disabled
+		if (!allowRestart && watcherToRestore) {
+			setTimeout(async () => {
+				// Check if not disposed during the timeout
+				if (!this.isDisposed) {
+					if (source === "project" && !this.projectMcpWatcher) {
+						await this.watchProjectMcpFile()
+					} else if (source === "global" && !this.settingsWatcher) {
+						await this.watchMcpSettingsFile()
+					}
+				}
+			}, 1000)
 		}
 	}
 
@@ -1703,7 +1894,15 @@ export class McpHub {
 		shouldAllow: boolean,
 	): Promise<void> {
 		try {
-			await this.updateServerToolList(serverName, source, toolName, "alwaysAllow", shouldAllow)
+			// Check if there are active tool executions for this server
+			if (this.hasActiveToolExecutions(serverName, source)) {
+				console.log(`Deferring config update for ${serverName} - tools are currently executing`)
+				// Update the config file without triggering a restart
+				await this.updateServerToolListWithoutRestart(serverName, source, toolName, "alwaysAllow", shouldAllow)
+			} else {
+				// Normal flow - update and allow restart if needed
+				await this.updateServerToolList(serverName, source, toolName, "alwaysAllow", shouldAllow)
+			}
 		} catch (error) {
 			this.showErrorMessage(
 				`Failed to toggle always allow for tool "${toolName}" on server "${serverName}" with source "${source}"`,
@@ -1711,6 +1910,21 @@ export class McpHub {
 			)
 			throw error
 		}
+	}
+
+	/**
+	 * Update server tool list without triggering a restart
+	 * This is used when tools are actively running to prevent interruption
+	 */
+	private async updateServerToolListWithoutRestart(
+		serverName: string,
+		source: "global" | "project",
+		toolName: string,
+		listName: "alwaysAllow" | "disabledTools",
+		addTool: boolean,
+	): Promise<void> {
+		// Use the common implementation
+		await this.updateServerToolListInternal(serverName, source, toolName, listName, addTool, false)
 	}
 
 	async toggleToolEnabledForPrompt(
@@ -1723,7 +1937,22 @@ export class McpHub {
 			// When isEnabled is true, we want to remove the tool from the disabledTools list.
 			// When isEnabled is false, we want to add the tool to the disabledTools list.
 			const addToolToDisabledList = !isEnabled
-			await this.updateServerToolList(serverName, source, toolName, "disabledTools", addToolToDisabledList)
+
+			// Check if there are active tool executions for this server
+			if (this.hasActiveToolExecutions(serverName, source)) {
+				console.log(`Deferring config update for ${serverName} - tools are currently executing`)
+				// Update the config file without triggering a restart
+				await this.updateServerToolListWithoutRestart(
+					serverName,
+					source,
+					toolName,
+					"disabledTools",
+					addToolToDisabledList,
+				)
+			} else {
+				// Normal flow - update and allow restart if needed
+				await this.updateServerToolList(serverName, source, toolName, "disabledTools", addToolToDisabledList)
+			}
 		} catch (error) {
 			this.showErrorMessage(`Failed to update settings for tool ${toolName}`, error)
 			throw error // Re-throw to ensure the error is properly handled
@@ -1797,6 +2026,15 @@ export class McpHub {
 			clearTimeout(timer)
 		}
 		this.configChangeDebounceTimers.clear()
+
+		// Clear all tool execution timeouts
+		for (const timeout of this.toolExecutionTimeouts.values()) {
+			clearTimeout(timeout)
+		}
+		this.toolExecutionTimeouts.clear()
+
+		// Clear pending restarts
+		this.pendingRestarts.clear()
 
 		this.removeAllFileWatchers()
 		for (const connection of this.connections) {
