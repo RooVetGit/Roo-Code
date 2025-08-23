@@ -310,6 +310,8 @@ export type ExtensionState = Pick<
 	renderContext: "sidebar" | "editor"
 	settingsImportedAt?: number
 	historyPreviewCollapsed?: boolean
+	// Whether to show the persistent badge over the version indicator (cross-session)
+	shouldShowAnnouncementBadge?: boolean
 
 	cloudUserInfo: CloudUserInfo | null
 	cloudIsAuthenticated: boolean

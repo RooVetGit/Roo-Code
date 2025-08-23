@@ -74,12 +74,16 @@ const App = () => {
 		cloudApiUrl,
 		renderContext,
 		mdmCompliant,
+		// New: persisted badge state from extension
+		shouldShowAnnouncementBadge,
 	} = useExtensionState()
 
 	// Create a persistent state manager
 	const marketplaceStateManager = useMemo(() => new MarketplaceViewStateManager(), [])
 
 	const [showAnnouncement, setShowAnnouncement] = useState(false)
+	// Badge indicator over version number that persists until user manually clicks version
+	const [hasNewAnnouncementBadge, setHasNewAnnouncementBadge] = useState(false)
 	const [tab, setTab] = useState<Tab>("chat")
 
 	const [humanRelayDialogState, setHumanRelayDialogState] = useState<HumanRelayDialogState>({
@@ -182,10 +186,23 @@ const App = () => {
 
 	useEffect(() => {
 		if (shouldShowAnnouncement) {
+			// Auto-open the announcement modal when a new announcement triggers
 			setShowAnnouncement(true)
+			// Set the badge to persist until the user manually clicks the version indicator
+			setHasNewAnnouncementBadge(true)
+			// Notify extension that the announcement was shown (to prevent re-triggering)
 			vscode.postMessage({ type: "didShowAnnouncement" })
 		}
 	}, [shouldShowAnnouncement])
+
+	// Sync local badge state from extension state for cross-session persistence
+	useEffect(() => {
+		// Only update if the extension indicates we should show the badge
+		// This allows local state to clear immediately after user clicks
+		if (shouldShowAnnouncementBadge) {
+			setHasNewAnnouncementBadge(true)
+		}
+	}, [shouldShowAnnouncementBadge])
 
 	useEffect(() => {
 		if (didHydrateState) {
@@ -262,6 +279,12 @@ const App = () => {
 				isHidden={tab !== "chat"}
 				showAnnouncement={showAnnouncement}
 				hideAnnouncement={() => setShowAnnouncement(false)}
+				hasNewAnnouncement={hasNewAnnouncementBadge}
+				onVersionIndicatorClick={() => {
+					setHasNewAnnouncementBadge(false)
+					// Persist acknowledgement so badge stays cleared across reloads
+					vscode.postMessage({ type: "didAcknowledgeAnnouncement" })
+				}}
 			/>
 			<MemoizedHumanRelayDialog
 				isOpen={humanRelayDialogState.isOpen}

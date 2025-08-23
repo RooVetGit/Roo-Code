@@ -62,6 +62,10 @@ export interface ChatViewProps {
 	isHidden: boolean
 	showAnnouncement: boolean
 	hideAnnouncement: () => void
+	// When true, shows a "NEW" badge over the version indicator until the user clicks it
+	hasNewAnnouncement?: boolean
+	// Called when the user clicks the version indicator (used to acknowledge the announcement)
+	onVersionIndicatorClick?: () => void
 }
 
 export interface ChatViewRef {
@@ -73,7 +77,7 @@ export const MAX_IMAGES_PER_MESSAGE = 20 // Anthropic limits to 20 images
 const isMac = navigator.platform.toUpperCase().indexOf("MAC") >= 0
 
 const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewProps> = (
-	{ isHidden, showAnnouncement, hideAnnouncement },
+	{ isHidden, showAnnouncement, hideAnnouncement, hasNewAnnouncement = false, onVersionIndicatorClick },
 	ref,
 ) => {
 	const isMountedRef = useRef(true)
@@ -1823,6 +1827,16 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 				</>
 			) : (
 				<div className="flex-1 min-h-0 overflow-y-auto flex flex-col gap-4 relative">
+					{/* Version indicator in top-right corner - only on welcome screen */}
+					<VersionIndicator
+						onClick={() => {
+							setShowAnnouncementModal(true)
+							onVersionIndicatorClick?.()
+						}}
+						showBadge={hasNewAnnouncement}
+						className="absolute top-2 right-3 z-10"
+					/>
+
 					{/* Moved Task Bar Header Here */}
 					{tasks.length !== 0 && (
 						<div className="flex text-vscode-descriptionForeground w-full mx-auto px-5 pt-3">
@@ -1838,12 +1852,6 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 					)}
 					<div
 						className={` w-full flex flex-col gap-4 m-auto ${isExpanded && tasks.length > 0 ? "mt-0" : ""} px-3.5 min-[370px]:px-10 pt-5 transition-all duration-300`}>
-						{/* Version indicator in top-right corner - only on welcome screen */}
-						<VersionIndicator
-							onClick={() => setShowAnnouncementModal(true)}
-							className="absolute top-2 right-3 z-10"
-						/>
-
 						<RooHero />
 						{telemetrySetting === "unset" && <TelemetryBanner />}
 

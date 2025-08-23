@@ -398,6 +398,11 @@ export const webviewMessageHandler = async (
 			await updateGlobalState("lastShownAnnouncementId", provider.latestAnnouncementId)
 			await provider.postStateToWebview()
 			break
+		case "didAcknowledgeAnnouncement":
+			// Persist user's manual acknowledgement so the badge clears across sessions
+			await updateGlobalState("lastAcknowledgedAnnouncementId", provider.latestAnnouncementId)
+			await provider.postStateToWebview()
+			break
 		case "selectImages":
 			const images = await selectImages()
 			await provider.postMessageToWebview({

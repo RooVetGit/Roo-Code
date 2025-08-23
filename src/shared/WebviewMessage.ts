@@ -52,6 +52,7 @@ export interface WebviewMessage {
 		| "terminalOperation"
 		| "clearTask"
 		| "didShowAnnouncement"
+		| "didAcknowledgeAnnouncement"
 		| "selectImages"
 		| "exportCurrentTask"
 		| "shareCurrentTask"

@@ -39,6 +39,8 @@ export const globalSettingsSchema = z.object({
 	pinnedApiConfigs: z.record(z.string(), z.boolean()).optional(),
 
 	lastShownAnnouncementId: z.string().optional(),
+	// Tracks when the user has manually acknowledged the announcement by clicking the version indicator
+	lastAcknowledgedAnnouncementId: z.string().optional(),
 	customInstructions: z.string().optional(),
 	taskHistory: z.array(historyItemSchema).optional(),
 
