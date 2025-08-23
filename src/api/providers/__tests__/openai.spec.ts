@@ -1151,39 +1151,6 @@ describe("OpenAI Compatible - Responses API", () => {
 		expect(chatArgs).not.toHaveProperty("input")
 	})
 
-	it("Manual override: force Responses or Chat regardless of URL", async () => {
-		// Force Responses
-		const forceResp = new OpenAiHandler({
-			openAiApiKey: "k",
-			openAiModelId: "gpt-5",
-			openAiBaseUrl: "https://api.openai.com/v1", // no responses segment
-			openAiStreamingEnabled: false,
-			openAiApiFlavor: "responses",
-		})
-		for await (const _ of forceResp.createMessage("sys", baseMessages)) {
-		}
-		expect(mockResponsesCreate).toHaveBeenCalled()
-		const rArgs = mockResponsesCreate.mock.calls.pop()?.[0]
-		expect(rArgs).toHaveProperty("input")
-		expect(rArgs).not.toHaveProperty("messages")
-
-		// Force Chat
-		mockResponsesCreate.mockClear()
-		mockCreate.mockClear()
-		const forceChat = new OpenAiHandler({
-			openAiApiKey: "k",
-			openAiModelId: "gpt-4o",
-			openAiBaseUrl: "https://api.openai.com/v1/responses", // would auto-detect as responses
-			openAiStreamingEnabled: false,
-			openAiApiFlavor: "chat",
-		})
-		for await (const _ of forceChat.createMessage("sys", baseMessages)) {
-		}
-		expect(mockCreate).toHaveBeenCalled()
-		const cArgs = mockCreate.mock.calls.pop()?.[0]
-		expect(cArgs).toHaveProperty("messages")
-	})
-
 	it("Reasoning effort mapping: Responses uses reasoning: { effort }, Chat uses reasoning_effort", async () => {
 		// Responses path
 		const responsesHandler = new OpenAiHandler({

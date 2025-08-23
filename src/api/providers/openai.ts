@@ -70,8 +70,8 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 			// Azure API shape slightly differs from the core API shape:
 			// https://github.com/openai/openai-node?tab=readme-ov-file#microsoft-azure-openai
 
-			// Determine if we're using the Responses API flavor for Azure
-			const flavor = this._resolveApiFlavor(this.options.openAiApiFlavor, this.options.openAiBaseUrl ?? "")
+			// Determine if we're using the Responses API flavor for Azure (auto-detect by URL only)
+			const flavor = this._resolveApiFlavor(this.options.openAiBaseUrl ?? "")
 			const isResponsesFlavor =
 				flavor === "responses" ||
 				this._isAzureOpenAiResponses(this.options.openAiBaseUrl) ||
@@ -127,8 +127,8 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 		const deepseekReasoner = modelId.includes("deepseek-reasoner") || enabledR1Format
 		const ark = modelUrl.includes(".volces.com")
 
-		// Decide API flavor (manual override > auto-detect by URL)
-		const flavor = this._resolveApiFlavor(this.options.openAiApiFlavor, modelUrl)
+		// Decide API flavor (auto-detect by URL)
+		const flavor = this._resolveApiFlavor(modelUrl)
 
 		// If Responses API is selected, use the Responses payload and endpoint
 		if (flavor === "responses") {
@@ -373,7 +373,7 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 	async completePrompt(prompt: string): Promise<string> {
 		try {
 			const isAzureAiInference = this._isAzureAiInference(this.options.openAiBaseUrl)
-			const flavor = this._resolveApiFlavor(this.options.openAiApiFlavor, this.options.openAiBaseUrl ?? "")
+			const flavor = this._resolveApiFlavor(this.options.openAiBaseUrl ?? "")
 			const model = this.getModel()
 			const modelInfo = model.info
 
@@ -644,12 +644,7 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 
 	// --- Responses helpers ---
 
-	private _resolveApiFlavor(
-		override: "auto" | "responses" | "chat" | undefined,
-		baseUrl: string,
-	): "responses" | "chat" {
-		if (override === "responses") return "responses"
-		if (override === "chat") return "chat"
+	private _resolveApiFlavor(baseUrl: string): "responses" | "chat" {
 		// Auto-detect by URL path
 		const url = this._safeParseUrl(baseUrl)
 		const path = url?.pathname || ""
