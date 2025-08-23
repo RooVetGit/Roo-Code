@@ -3,7 +3,7 @@ import { getNewTaskDescription } from "../new-task"
 import { ToolArgs } from "../types"
 
 describe("getNewTaskDescription", () => {
-	it("should not show todos parameter at all when setting is disabled", () => {
+	it("should show todos parameter as optional when setting is disabled", () => {
 		const args: ToolArgs = {
 			cwd: "/test",
 			supportsComputerUse: false,
@@ -14,14 +14,15 @@ describe("getNewTaskDescription", () => {
 
 		const description = getNewTaskDescription(args)
 
-		// Check that todos parameter is not mentioned at all
-		expect(description).not.toContain("todos:")
-		expect(description).not.toContain("todo list")
-		expect(description).not.toContain("<todos>")
-		expect(description).not.toContain("</todos>")
+		// Check that todos parameter is shown as optional
+		expect(description).toContain("todos: (optional)")
+		expect(description).toContain("The initial todo list in markdown checklist format")
 
-		// Should have a simple example without todos
+		// Should have a simple example without todos in the main example
 		expect(description).toContain("Implement a new feature for the application")
+
+		// Should also have an example with optional todos
+		expect(description).toContain("Example with optional todos:")
 
 		// Should still have mode and message as required
 		expect(description).toContain("mode: (required)")
@@ -53,7 +54,7 @@ describe("getNewTaskDescription", () => {
 		expect(description).toContain("Set up auth middleware")
 	})
 
-	it("should not show todos parameter when settings is undefined", () => {
+	it("should show todos parameter as optional when settings is undefined", () => {
 		const args: ToolArgs = {
 			cwd: "/test",
 			supportsComputerUse: false,
@@ -62,14 +63,12 @@ describe("getNewTaskDescription", () => {
 
 		const description = getNewTaskDescription(args)
 
-		// Check that todos parameter is not shown by default
-		expect(description).not.toContain("todos:")
-		expect(description).not.toContain("todo list")
-		expect(description).not.toContain("<todos>")
-		expect(description).not.toContain("</todos>")
+		// Check that todos parameter is shown as optional by default
+		expect(description).toContain("todos: (optional)")
+		expect(description).toContain("The initial todo list in markdown checklist format")
 	})
 
-	it("should not show todos parameter when newTaskRequireTodos is undefined", () => {
+	it("should show todos parameter as optional when newTaskRequireTodos is undefined", () => {
 		const args: ToolArgs = {
 			cwd: "/test",
 			supportsComputerUse: false,
@@ -78,14 +77,12 @@ describe("getNewTaskDescription", () => {
 
 		const description = getNewTaskDescription(args)
 
-		// Check that todos parameter is not shown by default
-		expect(description).not.toContain("todos:")
-		expect(description).not.toContain("todo list")
-		expect(description).not.toContain("<todos>")
-		expect(description).not.toContain("</todos>")
+		// Check that todos parameter is shown as optional by default
+		expect(description).toContain("todos: (optional)")
+		expect(description).toContain("The initial todo list in markdown checklist format")
 	})
 
-	it("should only include todos in example when setting is enabled", () => {
+	it("should include todos in main example only when setting is enabled", () => {
 		const argsWithSettingOff: ToolArgs = {
 			cwd: "/test",
 			supportsComputerUse: false,
@@ -105,13 +102,19 @@ describe("getNewTaskDescription", () => {
 		const descriptionOff = getNewTaskDescription(argsWithSettingOff)
 		const descriptionOn = getNewTaskDescription(argsWithSettingOn)
 
-		// When setting is off, should NOT include todos in example
-		const todosPattern = /<todos>\s*\[\s*\]\s*Set up auth middleware/s
-		expect(descriptionOff).not.toMatch(todosPattern)
-		expect(descriptionOff).not.toContain("<todos>")
+		// When setting is on, should include todos in main example
+		expect(descriptionOn).toContain("Implement user authentication")
+		expect(descriptionOn).toContain("[ ] Set up auth middleware")
 
-		// When setting is on, should include todos in example
-		expect(descriptionOn).toMatch(todosPattern)
-		expect(descriptionOn).toContain("<todos>")
+		// When setting is on, should NOT have "Example with optional todos" section
+		expect(descriptionOn).not.toContain("Example with optional todos:")
+
+		// When setting is off, main example should NOT include todos in Usage section
+		const usagePattern = /<new_task>\s*<mode>.*<\/mode>\s*<message>.*<\/message>\s*<\/new_task>/s
+		expect(descriptionOff).toMatch(usagePattern)
+
+		// When setting is off, should have separate "Example with optional todos" section
+		expect(descriptionOff).toContain("Example with optional todos:")
+		expect(descriptionOff).toContain("[ ] Set up auth middleware")
 	})
 })

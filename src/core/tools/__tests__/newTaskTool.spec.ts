@@ -11,6 +11,16 @@ vi.mock("vscode", () => ({
 	},
 }))
 
+// Mock Package module
+vi.mock("../../../shared/package", () => ({
+	Package: {
+		name: "roo-cline",
+		publisher: "RooVeterinaryInc",
+		version: "1.0.0",
+		outputChannel: "Roo-Code",
+	},
+}))
+
 // Mock other modules first - these are hoisted to the top
 vi.mock("../../../shared/modes", () => ({
 	getModeBySlug: vi.fn(),
@@ -589,7 +599,7 @@ describe("newTaskTool", () => {
 			expect(mockPushToolResult).toHaveBeenCalledWith(expect.stringContaining("Successfully created new task"))
 		})
 
-		it("should check VSCode setting with correct configuration key", async () => {
+		it("should check VSCode setting with Package.name configuration key", async () => {
 			const mockGet = vi.fn().mockReturnValue(false)
 			const mockGetConfiguration = vi.fn().mockReturnValue({
 				get: mockGet,
@@ -615,7 +625,7 @@ describe("newTaskTool", () => {
 				mockRemoveClosingTag,
 			)
 
-			// Verify that VSCode configuration was accessed correctly
+			// Verify that VSCode configuration was accessed with Package.name
 			expect(mockGetConfiguration).toHaveBeenCalledWith("roo-cline")
 			expect(mockGet).toHaveBeenCalledWith("newTaskRequireTodos", false)
 		})
