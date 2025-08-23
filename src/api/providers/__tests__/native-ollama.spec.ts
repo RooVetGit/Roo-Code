@@ -100,6 +100,103 @@ describe("NativeOllamaHandler", () => {
 			expect(results.some((r) => r.type === "reasoning")).toBe(true)
 			expect(results.some((r) => r.type === "text")).toBe(true)
 		})
+
+		describe("context window configuration", () => {
+			it("should use custom context window when ollamaContextWindow is provided", async () => {
+				const customContextWindow = 48000
+				const optionsWithCustomContext: ApiHandlerOptions = {
+					apiModelId: "llama2",
+					ollamaModelId: "llama2",
+					ollamaBaseUrl: "http://localhost:11434",
+					ollamaContextWindow: customContextWindow,
+				}
+				handler = new NativeOllamaHandler(optionsWithCustomContext)
+
+				// Mock the chat response
+				mockChat.mockImplementation(async function* () {
+					yield {
+						message: { content: "Test response" },
+						eval_count: 10,
+						prompt_eval_count: 5,
+					}
+				})
+
+				// Create a message to trigger the chat call
+				const generator = handler.createMessage("System prompt", [{ role: "user", content: "Test message" }])
+
+				// Consume the generator
+				const results = []
+				for await (const chunk of generator) {
+					results.push(chunk)
+				}
+
+				// Verify that chat was called with the custom context window
+				expect(mockChat).toHaveBeenCalledWith(
+					expect.objectContaining({
+						options: expect.objectContaining({
+							num_ctx: customContextWindow,
+						}),
+					}),
+				)
+			})
+
+			it("should use model's default context window when ollamaContextWindow is not provided", async () => {
+				// Mock the chat response
+				mockChat.mockImplementation(async function* () {
+					yield {
+						message: { content: "Test response" },
+						eval_count: 10,
+						prompt_eval_count: 5,
+					}
+				})
+
+				// Create a message to trigger the chat call
+				const generator = handler.createMessage("System prompt", [{ role: "user", content: "Test message" }])
+
+				// Consume the generator
+				const results = []
+				for await (const chunk of generator) {
+					results.push(chunk)
+				}
+
+				// Verify that chat was called with the model's default context window (4096)
+				expect(mockChat).toHaveBeenCalledWith(
+					expect.objectContaining({
+						options: expect.objectContaining({
+							num_ctx: 4096,
+						}),
+					}),
+				)
+			})
+
+			it("should use custom context window in completePrompt method", async () => {
+				const customContextWindow = 48000
+				const optionsWithCustomContext: ApiHandlerOptions = {
+					apiModelId: "llama2",
+					ollamaModelId: "llama2",
+					ollamaBaseUrl: "http://localhost:11434",
+					ollamaContextWindow: customContextWindow,
+				}
+				handler = new NativeOllamaHandler(optionsWithCustomContext)
+
+				// Mock the chat response
+				mockChat.mockResolvedValue({
+					message: { content: "Test response" },
+				})
+
+				// Call completePrompt
+				await handler.completePrompt("Test prompt")
+
+				// Verify that chat was called with the custom context window
+				expect(mockChat).toHaveBeenCalledWith(
+					expect.objectContaining({
+						options: expect.objectContaining({
+							num_ctx: customContextWindow,
+						}),
+					}),
+				)
+			})
+		})
 	})
 
 	describe("completePrompt", () => {
@@ -115,6 +212,7 @@ describe("NativeOllamaHandler", () => {
 				messages: [{ role: "user", content: "Tell me a joke" }],
 				stream: false,
 				options: {
+					num_ctx: 4096,
 					temperature: 0,
 				},
 			})
