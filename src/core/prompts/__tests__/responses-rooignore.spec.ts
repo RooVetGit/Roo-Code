@@ -55,6 +55,7 @@ describe("RooIgnore Response Formatting", () => {
 			expect(errorMessage).toContain("Access to secrets/api-keys.json is blocked by the .rooignore file settings")
 			expect(errorMessage).toContain("continue in the task without using this file")
 			expect(errorMessage).toContain("ask the user to update the .rooignore file")
+			expect(errorMessage).toContain("Do NOT attempt to bypass this restriction by using terminal commands")
 		})
 
 		/**
@@ -220,6 +221,7 @@ describe("RooIgnore Response Formatting", () => {
 			// Verify format and content
 			expect(instructions).toContain("# .rooignore")
 			expect(instructions).toContain(LOCK_TEXT_SYMBOL)
+			expect(instructions).toContain("Do NOT attempt to bypass these restrictions by using terminal commands")
 			expect(instructions).toContain("node_modules")
 			expect(instructions).toContain(".git")
 			expect(instructions).toContain("secrets/**")

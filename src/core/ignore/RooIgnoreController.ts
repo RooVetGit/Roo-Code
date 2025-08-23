@@ -196,6 +196,6 @@ export class RooIgnoreController {
 			return undefined
 		}
 
-		return `# .rooignore\n\n(The following is provided by a root-level .rooignore file where the user has specified files and directories that should not be accessed. When using list_files, you'll notice a ${LOCK_TEXT_SYMBOL} next to files that are blocked. Attempting to access the file's contents e.g. through read_file will result in an error.)\n\n${this.rooIgnoreContent}\n.rooignore`
+		return `# .rooignore\n\n(The following is provided by a root-level .rooignore file where the user has specified files and directories that should not be accessed. When using list_files, you'll notice a ${LOCK_TEXT_SYMBOL} next to files that are blocked. Attempting to access the file's contents e.g. through read_file will result in an error. IMPORTANT: Do NOT attempt to bypass these restrictions by using terminal commands to read the file contents - this violates the user's explicit access restrictions.)\n\n${this.rooIgnoreContent}\n.rooignore`
 	}
 }

@@ -368,6 +368,7 @@ describe("RooIgnoreController", () => {
 			// Verify instruction format
 			expect(instructions).toContain("# .rooignore")
 			expect(instructions).toContain(LOCK_TEXT_SYMBOL)
+			expect(instructions).toContain("Do NOT attempt to bypass these restrictions by using terminal commands")
 			expect(instructions).toContain("node_modules")
 			expect(instructions).toContain(".git")
 			expect(instructions).toContain("secrets/**")
