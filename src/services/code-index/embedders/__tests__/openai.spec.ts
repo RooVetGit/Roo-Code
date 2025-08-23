@@ -3,6 +3,7 @@ import type { MockedClass, MockedFunction } from "vitest"
 import { OpenAI } from "openai"
 import { OpenAiEmbedder } from "../openai"
 import { MAX_BATCH_TOKENS, MAX_ITEM_TOKENS, MAX_BATCH_RETRIES, INITIAL_RETRY_DELAY_MS } from "../../constants"
+import { Mutex } from "async-mutex"
 
 // Mock the OpenAI SDK
 vitest.mock("openai")
@@ -47,6 +48,14 @@ describe("OpenAiEmbedder", () => {
 		vitest.clearAllMocks()
 		consoleMocks.error.mockClear()
 		consoleMocks.warn.mockClear()
+
+		// Reset global rate limit state
+		;(OpenAiEmbedder as any).globalRateLimitState = {
+			isRateLimited: false,
+			rateLimitResetTime: 0,
+			rateLimitHeaders: {},
+			mutex: new Mutex(),
+		}
 
 		MockedOpenAI = OpenAI as MockedClass<typeof OpenAI>
 		mockEmbeddingsCreate = vitest.fn()
@@ -94,10 +103,18 @@ describe("OpenAiEmbedder", () => {
 		it("should create embeddings for a single text", async () => {
 			const testTexts = ["Hello world"]
 			const mockResponse = {
-				data: [{ embedding: [0.1, 0.2, 0.3] }],
-				usage: { prompt_tokens: 10, total_tokens: 15 },
+				data: {
+					data: [{ embedding: [0.1, 0.2, 0.3] }],
+					usage: { prompt_tokens: 10, total_tokens: 15 },
+				},
+				response: {
+					headers: new Headers(),
+				},
 			}
-			mockEmbeddingsCreate.mockResolvedValue(mockResponse)
+
+			// Mock withResponse() to return the expected structure
+			const mockWithResponse = vitest.fn().mockResolvedValue(mockResponse)
+			mockEmbeddingsCreate.mockReturnValue({ withResponse: mockWithResponse })
 
 			const result = await embedder.createEmbeddings(testTexts)
 
@@ -114,10 +131,18 @@ describe("OpenAiEmbedder", () => {
 		it("should create embeddings for multiple texts", async () => {
 			const testTexts = ["Hello world", "Another text"]
 			const mockResponse = {
-				data: [{ embedding: [0.1, 0.2, 0.3] }, { embedding: [0.4, 0.5, 0.6] }],
-				usage: { prompt_tokens: 20, total_tokens: 30 },
+				data: {
+					data: [{ embedding: [0.1, 0.2, 0.3] }, { embedding: [0.4, 0.5, 0.6] }],
+					usage: { prompt_tokens: 20, total_tokens: 30 },
+				},
+				response: {
+					headers: new Headers(),
+				},
 			}
-			mockEmbeddingsCreate.mockResolvedValue(mockResponse)
+
+			// Mock withResponse() to return the expected structure
+			const mockWithResponse = vitest.fn().mockResolvedValue(mockResponse)
+			mockEmbeddingsCreate.mockReturnValue({ withResponse: mockWithResponse })
 
 			const result = await embedder.createEmbeddings(testTexts)
 
@@ -138,10 +163,18 @@ describe("OpenAiEmbedder", () => {
 			const testTexts = ["Hello world"]
 			const customModel = "text-embedding-ada-002"
 			const mockResponse = {
-				data: [{ embedding: [0.1, 0.2, 0.3] }],
-				usage: { prompt_tokens: 10, total_tokens: 15 },
+				data: {
+					data: [{ embedding: [0.1, 0.2, 0.3] }],
+					usage: { prompt_tokens: 10, total_tokens: 15 },
+				},
+				response: {
+					headers: new Headers(),
+				},
 			}
-			mockEmbeddingsCreate.mockResolvedValue(mockResponse)
+
+			// Mock withResponse() to return the expected structure
+			const mockWithResponse = vitest.fn().mockResolvedValue(mockResponse)
+			mockEmbeddingsCreate.mockReturnValue({ withResponse: mockWithResponse })
 
 			await embedder.createEmbeddings(testTexts, customModel)
 
@@ -154,10 +187,18 @@ describe("OpenAiEmbedder", () => {
 		it("should handle missing usage data gracefully", async () => {
 			const testTexts = ["Hello world"]
 			const mockResponse = {
-				data: [{ embedding: [0.1, 0.2, 0.3] }],
-				usage: undefined,
+				data: {
+					data: [{ embedding: [0.1, 0.2, 0.3] }],
+					usage: undefined,
+				},
+				response: {
+					headers: new Headers(),
+				},
 			}
-			mockEmbeddingsCreate.mockResolvedValue(mockResponse)
+
+			// Mock withResponse() to return the expected structure
+			const mockWithResponse = vitest.fn().mockResolvedValue(mockResponse)
+			mockEmbeddingsCreate.mockReturnValue({ withResponse: mockWithResponse })
 
 			const result = await embedder.createEmbeddings(testTexts)
 
@@ -175,10 +216,19 @@ describe("OpenAiEmbedder", () => {
 				// Use normal sized texts that won't be skipped
 				const testTexts = ["text1", "text2", "text3"]
 
-				mockEmbeddingsCreate.mockResolvedValue({
-					data: testTexts.map((_, i) => ({ embedding: [i, i + 0.1, i + 0.2] })),
-					usage: { prompt_tokens: 30, total_tokens: 45 },
-				})
+				const mockResponse = {
+					data: {
+						data: testTexts.map((_, i) => ({ embedding: [i, i + 0.1, i + 0.2] })),
+						usage: { prompt_tokens: 30, total_tokens: 45 },
+					},
+					response: {
+						headers: new Headers(),
+					},
+				}
+
+				// Mock withResponse() to return the expected structure
+				const mockWithResponse = vitest.fn().mockResolvedValue(mockResponse)
+				mockEmbeddingsCreate.mockReturnValue({ withResponse: mockWithResponse })
 
 				const result = await embedder.createEmbeddings(testTexts)
 
@@ -193,10 +243,19 @@ describe("OpenAiEmbedder", () => {
 				const normalText = "normal text"
 				const testTexts = [normalText, oversizedText, "another normal"]
 
-				mockEmbeddingsCreate.mockResolvedValue({
-					data: [{ embedding: [0.1, 0.2, 0.3] }, { embedding: [0.4, 0.5, 0.6] }],
-					usage: { prompt_tokens: 20, total_tokens: 30 },
-				})
+				const mockResponse = {
+					data: {
+						data: [{ embedding: [0.1, 0.2, 0.3] }, { embedding: [0.4, 0.5, 0.6] }],
+						usage: { prompt_tokens: 20, total_tokens: 30 },
+					},
+					response: {
+						headers: new Headers(),
+					},
+				}
+
+				// Mock withResponse() to return the expected structure
+				const mockWithResponse = vitest.fn().mockResolvedValue(mockResponse)
+				mockEmbeddingsCreate.mockReturnValue({ withResponse: mockWithResponse })
 
 				const result = await embedder.createEmbeddings(testTexts)
 
@@ -222,21 +281,38 @@ describe("OpenAiEmbedder", () => {
 
 				// Mock responses for each batch
 				// First batch will have 12 texts (96000 tokens), second batch will have 3 texts (24000 tokens)
-				mockEmbeddingsCreate
-					.mockResolvedValueOnce({
+				const mockResponse1 = {
+					data: {
 						data: Array(12)
 							.fill(null)
 							.map((_, i) => ({ embedding: [i * 0.1, i * 0.1 + 0.1, i * 0.1 + 0.2] })),
 						usage: { prompt_tokens: 96000, total_tokens: 96000 },
-					})
-					.mockResolvedValueOnce({
+					},
+					response: {
+						headers: new Headers(),
+					},
+				}
+
+				const mockResponse2 = {
+					data: {
 						data: Array(3)
 							.fill(null)
 							.map((_, i) => ({
 								embedding: [(12 + i) * 0.1, (12 + i) * 0.1 + 0.1, (12 + i) * 0.1 + 0.2],
 							})),
 						usage: { prompt_tokens: 24000, total_tokens: 24000 },
-					})
+					},
+					response: {
+						headers: new Headers(),
+					},
+				}
+
+				// Mock withResponse() to return the expected structure
+				const mockWithResponse = vitest
+					.fn()
+					.mockResolvedValueOnce(mockResponse1)
+					.mockResolvedValueOnce(mockResponse2)
+				mockEmbeddingsCreate.mockReturnValue({ withResponse: mockWithResponse })
 
 				const result = await embedder.createEmbeddings(testTexts)
 
@@ -273,61 +349,206 @@ describe("OpenAiEmbedder", () => {
 				vitest.useRealTimers()
 			})
 
-			it("should retry on rate limit errors with exponential backoff", async () => {
+			it("should retry rate limit errors indefinitely", async () => {
 				const testTexts = ["Hello world"]
 				const rateLimitError = { status: 429, message: "Rate limit exceeded" }
 
-				mockEmbeddingsCreate
+				// Mock withResponse() to return the expected structure
+				const mockWithResponse = vitest.fn()
+				mockEmbeddingsCreate.mockReturnValue({ withResponse: mockWithResponse })
+
+				// Simulate multiple rate limit errors before success
+				mockWithResponse
+					.mockRejectedValueOnce(rateLimitError)
+					.mockRejectedValueOnce(rateLimitError)
 					.mockRejectedValueOnce(rateLimitError)
 					.mockRejectedValueOnce(rateLimitError)
 					.mockResolvedValueOnce({
-						data: [{ embedding: [0.1, 0.2, 0.3] }],
-						usage: { prompt_tokens: 10, total_tokens: 15 },
+						data: {
+							data: [{ embedding: [0.1, 0.2, 0.3] }],
+							usage: { prompt_tokens: 10, total_tokens: 15 },
+						},
+						response: {
+							headers: new Headers(),
+						},
 					})
 
 				const resultPromise = embedder.createEmbeddings(testTexts)
 
-				// Fast-forward through the delays
+				// Fast-forward through the delays (4 retries)
 				await vitest.advanceTimersByTimeAsync(INITIAL_RETRY_DELAY_MS) // First retry delay
 				await vitest.advanceTimersByTimeAsync(INITIAL_RETRY_DELAY_MS * 2) // Second retry delay
+				await vitest.advanceTimersByTimeAsync(INITIAL_RETRY_DELAY_MS * 4) // Third retry delay
+				await vitest.advanceTimersByTimeAsync(INITIAL_RETRY_DELAY_MS * 8) // Fourth retry delay
 
 				const result = await resultPromise
 
-				expect(mockEmbeddingsCreate).toHaveBeenCalledTimes(3)
+				expect(mockEmbeddingsCreate).toHaveBeenCalledTimes(5) // 1 initial + 4 retries
+				// Should only log once (on first retry) to avoid flooding logs
 				expect(console.warn).toHaveBeenCalledWith(expect.stringContaining("Rate limit hit, retrying in"))
+				expect(console.warn).toHaveBeenCalledWith(expect.stringContaining("attempt 1/∞"))
 				expect(result).toEqual({
 					embeddings: [[0.1, 0.2, 0.3]],
 					usage: { promptTokens: 10, totalTokens: 15 },
 				})
 			})
 
-			it("should not retry on non-rate-limit errors", async () => {
+			it("should use smart backoff based on rate limit headers", async () => {
+				const testTexts = ["Hello world"]
+				const rateLimitError = {
+					status: 429,
+					message: "Rate limit exceeded",
+					response: {
+						headers: new Headers({
+							"x-ratelimit-limit-requests": "60",
+							"x-ratelimit-limit-tokens": "150000",
+							"x-ratelimit-remaining-requests": "0",
+							"x-ratelimit-remaining-tokens": "0",
+							"x-ratelimit-reset-requests": "2s",
+							"x-ratelimit-reset-tokens": "30s",
+						}),
+					},
+				}
+
+				// Mock withResponse() to return the expected structure
+				const mockWithResponse = vitest.fn()
+				mockEmbeddingsCreate.mockReturnValue({ withResponse: mockWithResponse })
+
+				mockWithResponse.mockRejectedValueOnce(rateLimitError).mockResolvedValueOnce({
+					data: {
+						data: [{ embedding: [0.1, 0.2, 0.3] }],
+						usage: { prompt_tokens: 10, total_tokens: 15 },
+					},
+					response: {
+						headers: new Headers(),
+					},
+				})
+
+				const resultPromise = embedder.createEmbeddings(testTexts)
+
+				// The smart backoff should use 30s (max of 2s and 30s) + 10% buffer = 33s
+				await vitest.advanceTimersByTimeAsync(33000)
+
+				const result = await resultPromise
+
+				expect(mockEmbeddingsCreate).toHaveBeenCalledTimes(2)
+				// Should only log once (on first retry) to avoid flooding logs
+				expect(console.warn).toHaveBeenCalledTimes(2) // Once for rate limit message, once for rate limits details
+				expect(console.warn).toHaveBeenCalledWith(
+					expect.stringContaining("Rate limit hit, retrying in 33000ms"),
+				)
+				expect(console.warn).toHaveBeenCalledWith(
+					expect.stringContaining("Rate limits - Requests: 0/60, Tokens: 0/150000"),
+				)
+				expect(result).toEqual({
+					embeddings: [[0.1, 0.2, 0.3]],
+					usage: { promptTokens: 10, totalTokens: 15 },
+				})
+			})
+
+			it("should parse various reset time formats correctly", () => {
+				// Test the parseResetTime method directly
+				const testCases = [
+					{ resetTime: "1s", expectedMs: 1000 },
+					{ resetTime: "30s", expectedMs: 30000 },
+					{ resetTime: "6m0s", expectedMs: 360000 },
+					{ resetTime: "1h30m", expectedMs: 5400000 },
+					{ resetTime: "2h", expectedMs: 7200000 },
+					{ resetTime: "5m", expectedMs: 300000 },
+				]
+
+				// Access the private method for testing
+				const embedderAny = embedder as any
+
+				for (const { resetTime, expectedMs } of testCases) {
+					const result = embedderAny.parseResetTime(resetTime)
+					expect(result).toBe(expectedMs)
+				}
+			})
+
+			it("should calculate smart backoff correctly", () => {
+				// Test the calculateSmartBackoff method directly
+				const embedderAny = embedder as any
+
+				// Test with reset headers
+				const headers1 = {
+					resetRequests: "2s",
+					resetTokens: "30s",
+				}
+				// Should use max (30s) + 10% buffer = 33000ms
+				expect(embedderAny.calculateSmartBackoff(headers1, 0)).toBe(33000)
+
+				// Test with only request reset
+				const headers2 = {
+					resetRequests: "5s",
+				}
+				// Should use 5s + 10% buffer = 5500ms
+				expect(embedderAny.calculateSmartBackoff(headers2, 0)).toBe(5500)
+
+				// Test with no headers (fallback to exponential)
+				const headers3 = {}
+				// Should use exponential backoff
+				expect(embedderAny.calculateSmartBackoff(headers3, 0)).toBe(INITIAL_RETRY_DELAY_MS)
+				expect(embedderAny.calculateSmartBackoff(headers3, 1)).toBe(INITIAL_RETRY_DELAY_MS * 2)
+				expect(embedderAny.calculateSmartBackoff(headers3, 2)).toBe(INITIAL_RETRY_DELAY_MS * 4)
+			})
+
+			it("should not retry on non-rate-limit errors beyond MAX_RETRIES", async () => {
 				const testTexts = ["Hello world"]
 				const authError = new Error("Unauthorized")
 				;(authError as any).status = 401
 
-				mockEmbeddingsCreate.mockRejectedValue(authError)
+				// Mock withResponse() to return the expected structure
+				const mockWithResponse = vitest.fn()
+				mockEmbeddingsCreate.mockReturnValue({ withResponse: mockWithResponse })
+
+				// Always reject with auth error
+				mockWithResponse.mockRejectedValue(authError)
+
+				// Use real timers for this test to avoid unhandled promise rejection issues
+				vitest.useRealTimers()
 
 				await expect(embedder.createEmbeddings(testTexts)).rejects.toThrow(
 					"Failed to create embeddings: Authentication failed. Please check your OpenAI API key.",
 				)
 
-				expect(mockEmbeddingsCreate).toHaveBeenCalledTimes(1)
+				expect(mockEmbeddingsCreate).toHaveBeenCalledTimes(MAX_BATCH_RETRIES)
 				expect(console.warn).not.toHaveBeenCalledWith(expect.stringContaining("Rate limit hit"))
+
+				// Re-enable fake timers for other tests
+				vitest.useFakeTimers()
 			})
 
-			it("should throw error immediately on non-retryable errors", async () => {
+			it("should retry non-rate-limit errors up to MAX_RETRIES", async () => {
 				const testTexts = ["Hello world"]
 				const serverError = new Error("Internal server error")
 				;(serverError as any).status = 500
 
-				mockEmbeddingsCreate.mockRejectedValue(serverError)
+				// Mock withResponse() to return the expected structure
+				const mockWithResponse = vitest.fn()
+				mockEmbeddingsCreate.mockReturnValue({ withResponse: mockWithResponse })
+
+				// Fail MAX_BATCH_RETRIES times
+				for (let i = 0; i < MAX_BATCH_RETRIES; i++) {
+					mockWithResponse.mockRejectedValueOnce(serverError)
+				}
+
+				// Use real timers for this test to avoid unhandled promise rejection issues
+				vitest.useRealTimers()
 
 				await expect(embedder.createEmbeddings(testTexts)).rejects.toThrow(
 					"Failed to create embeddings after 3 attempts: HTTP 500 - Internal server error",
 				)
 
-				expect(mockEmbeddingsCreate).toHaveBeenCalledTimes(1)
+				expect(mockEmbeddingsCreate).toHaveBeenCalledTimes(MAX_BATCH_RETRIES)
+				// Check for the specific error message format
+				expect(console.warn).toHaveBeenCalledWith(
+					expect.stringContaining("OpenAI embedder error"),
+					expect.stringContaining("Internal server error"),
+				)
+
+				// Re-enable fake timers for other tests
+				vitest.useFakeTimers()
 			})
 		})
 
@@ -339,7 +560,9 @@ describe("OpenAiEmbedder", () => {
 				const testTexts = ["Hello world"]
 				const apiError = new Error("API connection failed")
 
-				mockEmbeddingsCreate.mockRejectedValue(apiError)
+				// Mock withResponse() to return the expected structure
+				const mockWithResponse = vitest.fn().mockRejectedValue(apiError)
+				mockEmbeddingsCreate.mockReturnValue({ withResponse: mockWithResponse })
 
 				await expect(embedder.createEmbeddings(testTexts)).rejects.toThrow(
 					"Failed to create embeddings after 3 attempts: API connection failed",
@@ -366,11 +589,18 @@ describe("OpenAiEmbedder", () => {
 			it("should handle malformed API responses", async () => {
 				const testTexts = ["Hello world"]
 				const malformedResponse = {
-					data: null,
-					usage: { prompt_tokens: 10, total_tokens: 15 },
+					data: {
+						data: null,
+						usage: { prompt_tokens: 10, total_tokens: 15 },
+					},
+					response: {
+						headers: new Headers(),
+					},
 				}
 
-				mockEmbeddingsCreate.mockResolvedValue(malformedResponse)
+				// Mock withResponse() to return the expected structure
+				const mockWithResponse = vitest.fn().mockResolvedValue(malformedResponse)
+				mockEmbeddingsCreate.mockReturnValue({ withResponse: mockWithResponse })
 
 				await expect(embedder.createEmbeddings(testTexts)).rejects.toThrow()
 			})
@@ -380,7 +610,9 @@ describe("OpenAiEmbedder", () => {
 				const authError = new Error("Invalid API key")
 				;(authError as any).status = 401
 
-				mockEmbeddingsCreate.mockRejectedValue(authError)
+				// Mock withResponse() to return the expected structure
+				const mockWithResponse = vitest.fn().mockRejectedValue(authError)
+				mockEmbeddingsCreate.mockReturnValue({ withResponse: mockWithResponse })
 
 				await expect(embedder.createEmbeddings(testTexts)).rejects.toThrow(
 					"Failed to create embeddings: Authentication failed. Please check your OpenAI API key.",
@@ -392,7 +624,9 @@ describe("OpenAiEmbedder", () => {
 				const httpError = new Error("Bad request")
 				;(httpError as any).status = 400
 
-				mockEmbeddingsCreate.mockRejectedValue(httpError)
+				// Mock withResponse() to return the expected structure
+				const mockWithResponse = vitest.fn().mockRejectedValue(httpError)
+				mockEmbeddingsCreate.mockReturnValue({ withResponse: mockWithResponse })
 
 				await expect(embedder.createEmbeddings(testTexts)).rejects.toThrow(
 					"Failed to create embeddings after 3 attempts: HTTP 400 - Bad request",
@@ -403,7 +637,9 @@ describe("OpenAiEmbedder", () => {
 				const testTexts = ["Hello world"]
 				const networkError = new Error("Network timeout")
 
-				mockEmbeddingsCreate.mockRejectedValue(networkError)
+				// Mock withResponse() to return the expected structure
+				const mockWithResponse = vitest.fn().mockRejectedValue(networkError)
+				mockEmbeddingsCreate.mockReturnValue({ withResponse: mockWithResponse })
 
 				await expect(embedder.createEmbeddings(testTexts)).rejects.toThrow(
 					"Failed to create embeddings after 3 attempts: Network timeout",
@@ -414,7 +650,9 @@ describe("OpenAiEmbedder", () => {
 				const testTexts = ["Hello world"]
 				const weirdError = { toString: () => "Custom error object" }
 
-				mockEmbeddingsCreate.mockRejectedValue(weirdError)
+				// Mock withResponse() to return the expected structure
+				const mockWithResponse = vitest.fn().mockRejectedValue(weirdError)
+				mockEmbeddingsCreate.mockReturnValue({ withResponse: mockWithResponse })
 
 				await expect(embedder.createEmbeddings(testTexts)).rejects.toThrow(
 					"Failed to create embeddings after 3 attempts: Custom error object",
@@ -425,7 +663,9 @@ describe("OpenAiEmbedder", () => {
 				const testTexts = ["Hello world"]
 				const unknownError = null
 
-				mockEmbeddingsCreate.mockRejectedValue(unknownError)
+				// Mock withResponse() to return the expected structure
+				const mockWithResponse = vitest.fn().mockRejectedValue(unknownError)
+				mockEmbeddingsCreate.mockReturnValue({ withResponse: mockWithResponse })
 
 				await expect(embedder.createEmbeddings(testTexts)).rejects.toThrow(
 					"Failed to create embeddings after 3 attempts: Unknown error",
@@ -436,7 +676,9 @@ describe("OpenAiEmbedder", () => {
 				const testTexts = ["Hello world"]
 				const stringError = "Something went wrong"
 
-				mockEmbeddingsCreate.mockRejectedValue(stringError)
+				// Mock withResponse() to return the expected structure
+				const mockWithResponse = vitest.fn().mockRejectedValue(stringError)
+				mockEmbeddingsCreate.mockReturnValue({ withResponse: mockWithResponse })
 
 				await expect(embedder.createEmbeddings(testTexts)).rejects.toThrow(
 					"Failed to create embeddings after 3 attempts: Something went wrong",
@@ -454,7 +696,9 @@ describe("OpenAiEmbedder", () => {
 					},
 				}
 
-				mockEmbeddingsCreate.mockRejectedValue(errorWithFailingToString)
+				// Mock withResponse() to return the expected structure
+				const mockWithResponse = vitest.fn().mockRejectedValue(errorWithFailingToString)
+				mockEmbeddingsCreate.mockReturnValue({ withResponse: mockWithResponse })
 
 				// The test framework itself throws "toString failed" when trying to
 				// display the error, so we need to expect that specific error
@@ -468,7 +712,9 @@ describe("OpenAiEmbedder", () => {
 					response: { status: 403 },
 				}
 
-				mockEmbeddingsCreate.mockRejectedValue(errorWithResponseStatus)
+				// Mock withResponse() to return the expected structure
+				const mockWithResponse = vitest.fn().mockRejectedValue(errorWithResponseStatus)
+				mockEmbeddingsCreate.mockReturnValue({ withResponse: mockWithResponse })
 
 				await expect(embedder.createEmbeddings(testTexts)).rejects.toThrow(
 					"Failed to create embeddings after 3 attempts: HTTP 403 - Request failed",
@@ -480,10 +726,18 @@ describe("OpenAiEmbedder", () => {
 	describe("validateConfiguration", () => {
 		it("should validate successfully with valid configuration", async () => {
 			const mockResponse = {
-				data: [{ embedding: [0.1, 0.2, 0.3] }],
-				usage: { prompt_tokens: 2, total_tokens: 2 },
+				data: {
+					data: [{ embedding: [0.1, 0.2, 0.3] }],
+					usage: { prompt_tokens: 2, total_tokens: 2 },
+				},
+				response: {
+					headers: new Headers(),
+				},
 			}
-			mockEmbeddingsCreate.mockResolvedValue(mockResponse)
+
+			// Mock withResponse() to return the expected structure
+			const mockWithResponse = vitest.fn().mockResolvedValue(mockResponse)
+			mockEmbeddingsCreate.mockReturnValue({ withResponse: mockWithResponse })
 
 			const result = await embedder.validateConfiguration()
 
@@ -498,7 +752,10 @@ describe("OpenAiEmbedder", () => {
 		it("should fail validation with authentication error", async () => {
 			const authError = new Error("Invalid API key")
 			;(authError as any).status = 401
-			mockEmbeddingsCreate.mockRejectedValue(authError)
+
+			// Mock withResponse() to return the expected structure
+			const mockWithResponse = vitest.fn().mockRejectedValue(authError)
+			mockEmbeddingsCreate.mockReturnValue({ withResponse: mockWithResponse })
 
 			const result = await embedder.validateConfiguration()
 
@@ -509,7 +766,10 @@ describe("OpenAiEmbedder", () => {
 		it("should fail validation with rate limit error", async () => {
 			const rateLimitError = new Error("Rate limit exceeded")
 			;(rateLimitError as any).status = 429
-			mockEmbeddingsCreate.mockRejectedValue(rateLimitError)
+
+			// Mock withResponse() to return the expected structure
+			const mockWithResponse = vitest.fn().mockRejectedValue(rateLimitError)
+			mockEmbeddingsCreate.mockReturnValue({ withResponse: mockWithResponse })
 
 			const result = await embedder.validateConfiguration()
 
@@ -519,7 +779,10 @@ describe("OpenAiEmbedder", () => {
 
 		it("should fail validation with connection error", async () => {
 			const connectionError = new Error("ECONNREFUSED")
-			mockEmbeddingsCreate.mockRejectedValue(connectionError)
+
+			// Mock withResponse() to return the expected structure
+			const mockWithResponse = vitest.fn().mockRejectedValue(connectionError)
+			mockEmbeddingsCreate.mockReturnValue({ withResponse: mockWithResponse })
 
 			const result = await embedder.validateConfiguration()
 
@@ -530,7 +793,10 @@ describe("OpenAiEmbedder", () => {
 		it("should fail validation with generic error", async () => {
 			const genericError = new Error("Unknown error")
 			;(genericError as any).status = 500
-			mockEmbeddingsCreate.mockRejectedValue(genericError)
+
+			// Mock withResponse() to return the expected structure
+			const mockWithResponse = vitest.fn().mockRejectedValue(genericError)
+			mockEmbeddingsCreate.mockReturnValue({ withResponse: mockWithResponse })
 
 			const result = await embedder.validateConfiguration()
 
