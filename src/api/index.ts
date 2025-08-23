@@ -14,6 +14,7 @@ import {
 	AnthropicVertexHandler,
 	OpenAiHandler,
 	LmStudioHandler,
+	GeminiCliHandler,
 	GeminiHandler,
 	OpenAiNativeHandler,
 	DeepSeekHandler,
@@ -102,6 +103,8 @@ export function buildApiHandler(configuration: ProviderSettings): ApiHandler {
 			return new LmStudioHandler(options)
 		case "gemini":
 			return new GeminiHandler(options)
+		case "gemini-cli":
+			return new GeminiCliHandler(options)
 		case "openai-native":
 			return new OpenAiNativeHandler(options)
 		case "deepseek":
@@ -149,7 +152,7 @@ export function buildApiHandler(configuration: ProviderSettings): ApiHandler {
 		case "featherless":
 			return new FeatherlessHandler(options)
 		default:
-			apiProvider satisfies "gemini-cli" | undefined
+			apiProvider satisfies undefined
 			return new AnthropicHandler(options)
 	}
 }

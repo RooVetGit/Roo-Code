@@ -427,6 +427,7 @@
 		"@anthropic-ai/vertex-sdk": "^0.7.0",
 		"@aws-sdk/client-bedrock-runtime": "^3.848.0",
 		"@aws-sdk/credential-providers": "^3.848.0",
+		"@google/gemini-cli-core": "^1.0.0",
 		"@google/genai": "^1.0.0",
 		"@lmstudio/sdk": "^1.1.1",
 		"@mistralai/mistralai": "^1.9.18",
