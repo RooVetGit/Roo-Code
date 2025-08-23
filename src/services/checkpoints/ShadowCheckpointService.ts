@@ -250,7 +250,8 @@ export abstract class ShadowCheckpointService extends EventEmitter {
 			}
 
 			const start = Date.now()
-			await this.git.clean("f", ["-d", "-f"])
+			// Use raw git command to avoid issues with simple-git's clean method on Windows
+			await this.git.raw(["clean", "-fd"])
 			await this.git.reset(["--hard", commitHash])
 
 			// Remove all checkpoints after the specified commitHash.
@@ -384,7 +385,8 @@ export abstract class ShadowCheckpointService extends EventEmitter {
 			try {
 				await git.raw(["config", "--unset", "core.worktree"])
 				await git.reset(["--hard"])
-				await git.clean("f", ["-d"])
+				// Use raw git command to avoid issues with simple-git's clean method on Windows
+				await git.raw(["clean", "-fd"])
 				const defaultBranch = branches.all.includes("main") ? "main" : "master"
 				await git.checkout([defaultBranch, "--force"])
 
