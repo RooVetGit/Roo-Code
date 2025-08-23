@@ -122,10 +122,31 @@ export async function searchWorkspaceFiles(
 		}
 
 		// Create search items for all files AND directories
-		const searchItems = allItems.map((item) => ({
-			original: item,
-			searchStr: `${item.path} ${item.label || ""}`,
-		}))
+		// For better matching of files with spaces, we create multiple search variations:
+		// 1. The original path as-is
+		// 2. The path with spaces removed (for matching when user types without spaces)
+		// 3. The label/basename with and without spaces
+		const searchItems = allItems.map((item) => {
+			const pathWithoutSpaces = item.path.replace(/\s+/g, "")
+			const labelWithoutSpaces = (item.label || "").replace(/\s+/g, "")
+
+			// Create a search string that includes multiple variations to improve matching
+			// This allows "testfile" to match "test file with spaces.md"
+			const searchStr = [
+				item.path,
+				pathWithoutSpaces,
+				item.label || "",
+				labelWithoutSpaces,
+				// Also include individual words from the path for better partial matching
+				...item.path.split(/[\s\-_\.\/\\]+/).filter(Boolean),
+				...(item.label || "").split(/[\s\-_\.]+/).filter(Boolean),
+			].join(" ")
+
+			return {
+				original: item,
+				searchStr,
+			}
+		})
 
 		// Run fzf search on all items
 		const fzf = new Fzf(searchItems, {
