@@ -229,7 +229,7 @@ describe("mergeExtensionState", () => {
 				concurrentFileReads: true,
 				multiFileApplyDiff: true,
 				preventFocusDisruption: false,
-				assistantMessageParser: false,
+				newTaskRequireTodos: false,
 			} as Record<ExperimentId, boolean>,
 		}
 
@@ -247,7 +247,7 @@ describe("mergeExtensionState", () => {
 			concurrentFileReads: true,
 			multiFileApplyDiff: true,
 			preventFocusDisruption: false,
-			assistantMessageParser: false,
+			newTaskRequireTodos: false,
 		})
 	})
 })
