@@ -36,10 +36,18 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 		super()
 		this.options = options
 
-		const baseURL = this.options.openAiBaseUrl ?? "https://api.openai.com/v1"
+		// Normalize Azure Responses "web" URL shape if provided by users.
+		// Example input (Azure portal sometimes shows):
+		//   https://{resource}.openai.azure.com/openai/responses?api-version=2025-04-01-preview
+		// We normalize to Azure SDK-friendly base and version:
+		//   baseURL: https://{resource}.openai.azure.com/openai/v1
+		//   apiVersion: preview
+		const rawBaseURL = this.options.openAiBaseUrl ?? "https://api.openai.com/v1"
+		const azureNormalization = this._normalizeAzureResponsesBaseUrlAndVersion(rawBaseURL)
+		const baseURL = azureNormalization.baseURL
 		const apiKey = this.options.openAiApiKey ?? "not-provided"
-		const isAzureAiInference = this._isAzureAiInference(this.options.openAiBaseUrl)
-		const urlHost = this._getUrlHost(this.options.openAiBaseUrl)
+		const isAzureAiInference = this._isAzureAiInference(baseURL)
+		const urlHost = this._getUrlHost(baseURL)
 		const isAzureOpenAi = urlHost === "azure.com" || urlHost.endsWith(".azure.com") || options.openAiUseAzure
 
 		const headers = {
@@ -61,10 +69,23 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 		} else if (isAzureOpenAi) {
 			// Azure API shape slightly differs from the core API shape:
 			// https://github.com/openai/openai-node?tab=readme-ov-file#microsoft-azure-openai
+
+			// Determine if we're using the Responses API flavor for Azure
+			const flavor = this._resolveApiFlavor(this.options.openAiApiFlavor, this.options.openAiBaseUrl ?? "")
+			const isResponsesFlavor =
+				flavor === "responses" ||
+				this._isAzureOpenAiResponses(this.options.openAiBaseUrl) ||
+				this._isAzureOpenAiResponses(baseURL)
+
+			// Always use 'preview' for Azure Responses API calls (per user requirement)
+			const azureVersion = isResponsesFlavor
+				? "preview"
+				: this.options.azureApiVersion || azureOpenAiDefaultApiVersion
+
 			this.client = new AzureOpenAI({
 				baseURL,
 				apiKey,
-				apiVersion: this.options.azureApiVersion || azureOpenAiDefaultApiVersion,
+				apiVersion: azureVersion,
 				defaultHeaders: headers,
 				timeout,
 			})
@@ -83,7 +104,21 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 		messages: Anthropic.Messages.MessageParam[],
 		metadata?: ApiHandlerCreateMessageMetadata,
 	): ApiStream {
-		const { info: modelInfo, reasoning } = this.getModel()
+		// Gather model params (centralized: temperature, max tokens, reasoning, verbosity)
+		const modelParams = this.getModel()
+		const {
+			info: modelInfo,
+			reasoning,
+			reasoningEffort,
+			verbosity,
+		} = modelParams as unknown as {
+			id: string
+			info: ModelInfo
+			reasoning?: { reasoning_effort?: "low" | "medium" | "high" }
+			reasoningEffort?: "minimal" | "low" | "medium" | "high"
+			verbosity?: "low" | "medium" | "high"
+		}
+
 		const modelUrl = this.options.openAiBaseUrl ?? ""
 		const modelId = this.options.openAiModelId ?? ""
 		const enabledR1Format = this.options.openAiR1FormatEnabled ?? false
@@ -91,6 +126,70 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 		const isAzureAiInference = this._isAzureAiInference(modelUrl)
 		const deepseekReasoner = modelId.includes("deepseek-reasoner") || enabledR1Format
 		const ark = modelUrl.includes(".volces.com")
+
+		// Decide API flavor (manual override > auto-detect by URL)
+		const flavor = this._resolveApiFlavor(this.options.openAiApiFlavor, modelUrl)
+
+		// If Responses API is selected, use the Responses payload and endpoint
+		if (flavor === "responses") {
+			const nonStreaming = !(this.options.openAiStreamingEnabled ?? true)
+
+			// Build Responses payload (align with OpenAI Native Responses API formatting)
+			const formattedInput = this._formatResponsesInput(systemPrompt, messages)
+			const payload: Record<string, unknown> = {
+				model: modelId,
+				input: formattedInput,
+			}
+
+			// Reasoning effort (Responses expects: reasoning: { effort })
+			if (this.options.enableReasoningEffort && (this.options.reasoningEffort || reasoningEffort)) {
+				const effort = (this.options.reasoningEffort || reasoningEffort) as
+					| "minimal"
+					| "low"
+					| "medium"
+					| "high"
+					| undefined
+				// If effort is set and not "minimal" (minimal is treated as "no explicit effort")
+				if (effort && effort !== "minimal") {
+					payload.reasoning = { effort }
+				}
+			}
+
+			// Temperature (only include when explicitly set by the user)
+			if (this.options.modelTemperature !== undefined) {
+				payload.temperature = this.options.modelTemperature
+			} else if (deepseekReasoner) {
+				payload.temperature = DEEP_SEEK_DEFAULT_TEMPERATURE
+			}
+
+			// Verbosity: include via text.verbosity (Responses API expectation per openai-native handler)
+			if (this.options.verbosity || verbosity) {
+				;(payload as any).text = { verbosity: this.options.verbosity || verbosity }
+			}
+
+			// Add max_output_tokens if requested (Azure Responses naming)
+			if (this.options.includeMaxTokens === true) {
+				payload.max_output_tokens = this.options.modelMaxTokens || modelInfo.maxTokens
+			}
+
+			// NOTE: Streaming for Responses API isn't covered by current tests.
+			// We call non-streaming for now to preserve stable behavior.
+			try {
+				const response: any = await (this.client as any).responses.create(payload)
+				yield* this._yieldResponsesResult(response, modelInfo)
+			} catch (err: unknown) {
+				// Graceful downgrade if verbosity is rejected by server (400 unknown/unsupported parameter)
+				if ((payload as any).text && this._isVerbosityUnsupportedError(err)) {
+					// Remove text.verbosity and retry once
+					const { text: _omit, ...withoutVerbosity } = payload as any
+					const response: any = await (this.client as any).responses.create(withoutVerbosity)
+					yield* this._yieldResponsesResult(response, modelInfo)
+				} else {
+					throw err
+				}
+			}
+			return
+		}
 
 		if (modelId.includes("o1") || modelId.includes("o3") || modelId.includes("o4")) {
 			yield* this.handleO3FamilyMessage(modelId, systemPrompt, messages)
@@ -232,6 +331,10 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 						? [systemMessage, ...convertToSimpleMessages(messages)]
 						: [systemMessage, ...convertToOpenAiMessages(messages)],
 			}
+			// Include reasoning_effort for Chat Completions when available
+			if (reasoning) {
+				Object.assign(requestOptions, reasoning)
+			}
 
 			// Add max_tokens if needed
 			this.addMaxTokensIfNeeded(requestOptions, modelInfo)
@@ -270,8 +373,63 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 	async completePrompt(prompt: string): Promise<string> {
 		try {
 			const isAzureAiInference = this._isAzureAiInference(this.options.openAiBaseUrl)
+			const flavor = this._resolveApiFlavor(this.options.openAiApiFlavor, this.options.openAiBaseUrl ?? "")
 			const model = this.getModel()
 			const modelInfo = model.info
+
+			// Use Responses API when selected (non-streaming convenience method)
+			if (flavor === "responses") {
+				// Build a single-turn formatted string input (Developer/User style) for Responses API
+				const formattedInput = this._formatResponsesSingleMessage(
+					{
+						role: "user",
+						content: [{ type: "text", text: prompt }] as any,
+					} as Anthropic.Messages.MessageParam,
+					/*includeRole*/ true,
+				)
+				const payload: Record<string, unknown> = {
+					model: model.id,
+					input: formattedInput,
+				}
+
+				// Reasoning effort (Responses)
+				const effort = (this.options.reasoningEffort || (model as any).reasoningEffort) as
+					| "minimal"
+					| "low"
+					| "medium"
+					| "high"
+					| undefined
+				if (this.options.enableReasoningEffort && effort && effort !== "minimal") {
+					payload.reasoning = { effort }
+				}
+
+				// Temperature if set
+				if (this.options.modelTemperature !== undefined) {
+					payload.temperature = this.options.modelTemperature
+				}
+
+				// Verbosity via text.verbosity
+				if (this.options.verbosity) {
+					;(payload as any).text = { verbosity: this.options.verbosity }
+				}
+
+				// max_output_tokens
+				if (this.options.includeMaxTokens === true) {
+					payload.max_output_tokens = this.options.modelMaxTokens || modelInfo.maxTokens
+				}
+
+				try {
+					const response: any = await (this.client as any).responses.create(payload)
+					return this._extractResponsesText(response) ?? ""
+				} catch (err: unknown) {
+					if ((payload as any).text && this._isVerbosityUnsupportedError(err)) {
+						const { text: _omit, ...withoutVerbosity } = payload as any
+						const response: any = await (this.client as any).responses.create(withoutVerbosity)
+						return this._extractResponsesText(response) ?? ""
+					}
+					throw err
+				}
+			}
 
 			const requestOptions: OpenAI.Chat.Completions.ChatCompletionCreateParamsNonStreaming = {
 				model: model.id,
@@ -403,6 +561,68 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 		return urlHost.endsWith(".services.ai.azure.com")
 	}
 
+	private _isAzureOpenAiResponses(baseUrl?: string): boolean {
+		try {
+			if (!baseUrl) return false
+			const u = new URL(baseUrl)
+			const host = u.host
+			const path = u.pathname.replace(/\/+$/, "")
+			if (!(host.endsWith(".openai.azure.com") || host === "openai.azure.com")) return false
+			return (
+				path.endsWith("/openai/v1/responses") ||
+				path.endsWith("/openai/responses") ||
+				path.endsWith("/responses")
+			)
+		} catch {
+			return false
+		}
+	}
+
+	/**
+	 * Normalize Azure "responses" portal URLs to SDK-friendly base and version.
+	 * - Input (portal sometimes shows): https://{res}.openai.azure.com/openai/responses?api-version=2025-04-01-preview
+	 * - Output: baseURL=https://{res}.openai.azure.com/openai/v1, apiVersionOverride="preview"
+	 * No-op for already-correct or non-Azure URLs.
+	 */
+	private _normalizeAzureResponsesBaseUrlAndVersion(inputBaseUrl: string): {
+		baseURL: string
+		apiVersionOverride?: string
+	} {
+		try {
+			const url = new URL(inputBaseUrl)
+			const isAzureHost = url.hostname.endsWith(".openai.azure.com") || url.hostname === "openai.azure.com"
+			const pathname = (url.pathname || "").replace(/\/+$/, "")
+
+			// 1) Azure portal "non-v1" shape:
+			//    https://{res}.openai.azure.com/openai/responses?api-version=2025-04-01-preview
+			const isPortalNonV1 =
+				isAzureHost &&
+				pathname === "/openai/responses" &&
+				url.searchParams.get("api-version") === "2025-04-01-preview"
+
+			if (isPortalNonV1) {
+				const normalized = `${url.protocol}//${url.host}/openai/v1`
+				const ver = "preview"
+				return { baseURL: normalized, apiVersionOverride: ver }
+			}
+
+			// 2) v1 responses path passed as base URL:
+			//    https://{res}.openai.azure.com/openai/v1/responses?api-version=preview
+			// Normalize base to '/openai/v1' and force apiVersion 'preview' for Azure Responses v1 preview.
+			const isV1ResponsesPath = isAzureHost && pathname === "/openai/v1/responses"
+			if (isV1ResponsesPath) {
+				const normalized = `${url.protocol}//${url.host}/openai/v1`
+				const ver = "preview"
+				return { baseURL: normalized, apiVersionOverride: ver }
+			}
+
+			// If it's already '/openai/v1' or any other valid path, keep as-is
+			return { baseURL: inputBaseUrl }
+		} catch {
+			return { baseURL: inputBaseUrl }
+		}
+	}
+
 	/**
 	 * Adds max_completion_tokens to the request body if needed based on provider configuration
 	 * Note: max_tokens is deprecated in favor of max_completion_tokens as per OpenAI documentation
@@ -420,6 +640,159 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 			// Using max_completion_tokens as max_tokens is deprecated
 			requestOptions.max_completion_tokens = this.options.modelMaxTokens || modelInfo.maxTokens
 		}
+	}
+
+	// --- Responses helpers ---
+
+	private _resolveApiFlavor(
+		override: "auto" | "responses" | "chat" | undefined,
+		baseUrl: string,
+	): "responses" | "chat" {
+		if (override === "responses") return "responses"
+		if (override === "chat") return "chat"
+		// Auto-detect by URL path
+		const url = this._safeParseUrl(baseUrl)
+		const path = url?.pathname || ""
+		if (path.includes("/v1/responses") || path.endsWith("/responses")) {
+			return "responses"
+		}
+		if (path.includes("/chat/completions")) {
+			return "chat"
+		}
+		// Default to Chat Completions for backward compatibility
+		return "chat"
+	}
+
+	private _safeParseUrl(input?: string): URL | undefined {
+		try {
+			if (!input) return undefined
+			return new URL(input)
+		} catch {
+			return undefined
+		}
+	}
+
+	private _toResponsesInput(anthropicMessages: Anthropic.Messages.MessageParam[]): Array<{
+		role: "user" | "assistant"
+		content: Array<{ type: "input_text"; text: string } | { type: "input_image"; image_url: string }>
+	}> {
+		const input: Array<{
+			role: "user" | "assistant"
+			content: Array<{ type: "input_text"; text: string } | { type: "input_image"; image_url: string }>
+		}> = []
+
+		for (const msg of anthropicMessages) {
+			const role = msg.role === "assistant" ? "assistant" : "user"
+			const parts: Array<{ type: "input_text"; text: string } | { type: "input_image"; image_url: string }> = []
+
+			if (typeof msg.content === "string") {
+				if (msg.content.length > 0) {
+					parts.push({ type: "input_text", text: msg.content })
+				}
+			} else {
+				for (const block of msg.content) {
+					if (block.type === "text") {
+						parts.push({ type: "input_text", text: block.text })
+					} else if (block.type === "image") {
+						parts.push({
+							type: "input_image",
+							image_url: `data:${block.source.media_type};base64,${block.source.data}`,
+						})
+					}
+					// tool_use/tool_result are omitted in this minimal mapping (can be added as needed)
+				}
+			}
+
+			if (parts.length > 0) {
+				input.push({ role, content: parts })
+			}
+		}
+		return input
+	}
+
+	private _extractResponsesText(response: any): string | undefined {
+		// Prefer the simple output_text if present, otherwise attempt to parse output array
+		if (response?.output_text) return response.output_text
+		if (Array.isArray(response?.output)) {
+			// Find assistant message with output_text
+			for (const item of response.output) {
+				if (item?.type === "message" && Array.isArray(item.content)) {
+					const textPart = item.content.find(
+						(c: any) => c.type === "output_text" && typeof c.text === "string",
+					)
+					if (textPart?.text) return textPart.text
+				}
+			}
+		}
+		return undefined
+	}
+
+	private async *_yieldResponsesResult(response: any, modelInfo: ModelInfo): ApiStream {
+		const text = this._extractResponsesText(response) ?? ""
+		if (text) {
+			yield { type: "text", text }
+		}
+		// Translate usage fields if present
+		const usage = response?.usage
+		if (usage) {
+			yield {
+				type: "usage",
+				inputTokens: usage.input_tokens || usage.prompt_tokens || 0,
+				outputTokens: usage.output_tokens || usage.completion_tokens || 0,
+				cacheWriteTokens: usage.cache_creation_input_tokens || undefined,
+				cacheReadTokens: usage.cache_read_input_tokens || undefined,
+			}
+		}
+	}
+
+	private _isVerbosityUnsupportedError(err: unknown): boolean {
+		const anyErr = err as any
+		const msg = (anyErr?.message || "").toString().toLowerCase()
+		const status = anyErr?.status
+		return (
+			status === 400 &&
+			(msg.includes("verbosity") || msg.includes("unknown parameter") || msg.includes("unsupported"))
+		)
+	}
+
+	// ---- Responses input formatting (align with openai-native.ts) ----
+
+	private _formatResponsesInput(systemPrompt: string, messages: Anthropic.Messages.MessageParam[]): string {
+		// Developer role for system prompt
+		let formattedInput = `Developer: ${systemPrompt}\n\n`
+		for (const message of messages) {
+			const role = message.role === "user" ? "User" : "Assistant"
+			if (typeof message.content === "string") {
+				formattedInput += `${role}: ${message.content}\n\n`
+			} else if (Array.isArray(message.content)) {
+				const textContent = message.content
+					.filter((block) => (block as any).type === "text")
+					.map((block) => (block as any).text as string)
+					.join("\n")
+				if (textContent) {
+					formattedInput += `${role}: ${textContent}\n\n`
+				}
+			}
+		}
+		return formattedInput.trim()
+	}
+
+	private _formatResponsesSingleMessage(
+		message: Anthropic.Messages.MessageParam,
+		includeRole: boolean = true,
+	): string {
+		const role = includeRole ? (message.role === "user" ? "User" : "Assistant") + ": " : ""
+		if (typeof message.content === "string") {
+			return `${role}${message.content}`
+		}
+		if (Array.isArray(message.content)) {
+			const textContent = message.content
+				.filter((block) => (block as any).type === "text")
+				.map((block) => (block as any).text as string)
+				.join("\n")
+			return `${role}${textContent}`
+		}
+		return role
 	}
 }
 

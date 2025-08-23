@@ -4,27 +4,51 @@ import { OpenAiHandler, getOpenAiModels } from "../openai"
 import { ApiHandlerOptions } from "../../../shared/api"
 import { Anthropic } from "@anthropic-ai/sdk"
 import OpenAI from "openai"
-import { openAiModelInfoSaneDefaults } from "@roo-code/types"
 import { Package } from "../../../shared/package"
 import axios from "axios"
 
 const mockCreate = vitest.fn()
+const mockResponsesCreate = vitest.fn()
 
 vitest.mock("openai", () => {
 	const mockConstructor = vitest.fn()
-	return {
-		__esModule: true,
-		default: mockConstructor.mockImplementation(() => ({
-			chat: {
-				completions: {
-					create: mockCreate.mockImplementation(async (options) => {
-						if (!options.stream) {
-							return {
-								id: "test-completion",
+	const makeClient = () => ({
+		chat: {
+			completions: {
+				create: mockCreate.mockImplementation(async (options) => {
+					if (!options.stream) {
+						return {
+							id: "test-completion",
+							choices: [
+								{
+									message: { role: "assistant", content: "Test response", refusal: null },
+									finish_reason: "stop",
+									index: 0,
+								},
+							],
+							usage: {
+								prompt_tokens: 10,
+								completion_tokens: 5,
+								total_tokens: 15,
+							},
+						}
+					}
+
+					return {
+						[Symbol.asyncIterator]: async function* () {
+							yield {
 								choices: [
 									{
-										message: { role: "assistant", content: "Test response", refusal: null },
-										finish_reason: "stop",
+										delta: { content: "Test response" },
+										index: 0,
+									},
+								],
+								usage: null,
+							}
+							yield {
+								choices: [
+									{
+										delta: {},
 										index: 0,
 									},
 								],
@@ -34,38 +58,30 @@ vitest.mock("openai", () => {
 									total_tokens: 15,
 								},
 							}
-						}
-
-						return {
-							[Symbol.asyncIterator]: async function* () {
-								yield {
-									choices: [
-										{
-											delta: { content: "Test response" },
-											index: 0,
-										},
-									],
-									usage: null,
-								}
-								yield {
-									choices: [
-										{
-											delta: {},
-											index: 0,
-										},
-									],
-									usage: {
-										prompt_tokens: 10,
-										completion_tokens: 5,
-										total_tokens: 15,
-									},
-								}
-							},
-						}
-					}),
-				},
+						},
+					}
+				}),
 			},
-		})),
+		},
+		responses: {
+			create: mockResponsesCreate.mockImplementation(async (options) => {
+				// Default happy-path mock for non-streaming Responses API
+				return {
+					id: "test-response",
+					output_text: "Test response",
+					usage: {
+						input_tokens: 10,
+						output_tokens: 5,
+						total_tokens: 15,
+					},
+				}
+			}),
+		},
+	})
+	return {
+		__esModule: true,
+		default: mockConstructor.mockImplementation((args: any) => makeClient()),
+		AzureOpenAI: mockConstructor.mockImplementation((args: any) => makeClient()),
 	}
 })
 
@@ -977,6 +993,56 @@ describe("getOpenAiModels", () => {
 		expect(result).toEqual([])
 	})
 
+	describe("Azure portal Responses URL normalization", () => {
+		beforeEach(() => {
+			mockCreate.mockClear()
+			mockResponsesCreate.mockClear()
+		})
+
+		it("Responses URL from Azure portal is converted to use Responses API", async () => {
+			const handler = new OpenAiHandler({
+				openAiApiKey: "test-azure",
+				openAiModelId: "my-deployment",
+				openAiBaseUrl: "https://sample-name.openai.azure.com/openai/responses?api-version=2025-04-01-preview",
+				openAiUseAzure: true,
+				openAiStreamingEnabled: false,
+				includeMaxTokens: true,
+				openAiCustomModelInfo: {
+					contextWindow: 128_000,
+					maxTokens: 64,
+					supportsPromptCache: false,
+				},
+			})
+
+			const messages: Anthropic.Messages.MessageParam[] = [
+				{ role: "user", content: [{ type: "text", text: "Hello!" }] },
+			]
+
+			const stream = handler.createMessage("You are Roo Code.", messages)
+			const chunks: any[] = []
+			for await (const ch of stream) {
+				chunks.push(ch)
+			}
+
+			// Should have used Responses API, not Chat Completions
+			expect(mockResponsesCreate).toHaveBeenCalled()
+			expect(mockCreate).not.toHaveBeenCalled()
+
+			// Payload shape sanity
+			const args = mockResponsesCreate.mock.calls[0][0]
+			expect(args).toHaveProperty("model", "my-deployment")
+			expect(args).toHaveProperty("input")
+			expect(typeof args.input).toBe("string")
+			expect(args.input).toContain("Developer: You are Roo Code.")
+			expect(args.input).toContain("User: Hello!")
+			expect(args).toHaveProperty("max_output_tokens", 64)
+
+			// Ensure returned text chunk surfaced
+			const textChunk = chunks.find((c) => c.type === "text")
+			expect(textChunk?.text).toBe("Test response")
+		})
+	})
+
 	it("should deduplicate model IDs", async () => {
 		const mockResponse = {
 			data: {
@@ -988,5 +1054,283 @@ describe("getOpenAiModels", () => {
 		const result = await getOpenAiModels("https://api.example.com/v1", "test-key")
 
 		expect(result).toEqual(["gpt-4", "gpt-3.5-turbo"])
+	})
+})
+
+// -- Added Responses API tests (TDD) --
+
+describe("OpenAI Compatible - Responses API", () => {
+	let handler: OpenAiHandler
+	const baseMessages: Anthropic.Messages.MessageParam[] = [
+		{
+			role: "user",
+			content: [
+				{
+					type: "text" as const,
+					text: "Hello!",
+				},
+			],
+		},
+	]
+
+	beforeEach(() => {
+		mockCreate.mockClear()
+		mockResponsesCreate.mockClear()
+	})
+
+	it("Azure Responses happy path uses string input (no messages) and max_output_tokens", async () => {
+		const opts: ApiHandlerOptions = {
+			openAiApiKey: "test-azure",
+			openAiModelId: "my-deployment",
+			openAiBaseUrl: "https://myres.openai.azure.com/openai/v1/responses?api-version=preview",
+			openAiStreamingEnabled: false,
+			includeMaxTokens: true,
+			openAiCustomModelInfo: {
+				contextWindow: 128_000,
+				maxTokens: 256,
+				supportsPromptCache: false,
+			},
+			enableReasoningEffort: false,
+		}
+		handler = new OpenAiHandler(opts)
+
+		const stream = handler.createMessage("You are Roo Code.", baseMessages)
+		const chunks: any[] = []
+		for await (const chunk of stream) {
+			chunks.push(chunk)
+		}
+
+		// Should have produced a text chunk
+		const textChunk = chunks.find((c) => c.type === "text")
+		expect(textChunk?.text).toBe("Test response")
+
+		// Ensure Responses API was used
+		expect(mockResponsesCreate).toHaveBeenCalled()
+		expect(mockCreate).not.toHaveBeenCalled()
+
+		const callArgs = mockResponsesCreate.mock.calls[0][0]
+		expect(callArgs).not.toHaveProperty("messages")
+		expect(callArgs).toHaveProperty("input")
+		expect(typeof callArgs.input).toBe("string")
+		expect(callArgs.input).toContain("Developer: You are Roo Code.")
+		expect(callArgs.input).toContain("User: Hello!")
+		expect(callArgs).toHaveProperty("model", "my-deployment")
+		// Azure Responses naming
+		expect(callArgs).toHaveProperty("max_output_tokens", 256)
+	})
+
+	it("Auto-detect: '/v1/responses' => Responses payload; '/chat/completions' => Chat Completions payload", async () => {
+		// Responses URL
+		const respHandler = new OpenAiHandler({
+			openAiApiKey: "test",
+			openAiModelId: "gpt-5",
+			openAiBaseUrl: "https://api.openai.com/v1/responses",
+			openAiStreamingEnabled: false,
+		})
+		for await (const _ of respHandler.createMessage("sys", baseMessages)) {
+		}
+		expect(mockResponsesCreate).toHaveBeenCalled()
+		const respArgs = mockResponsesCreate.mock.calls.pop()?.[0]
+		expect(respArgs).not.toHaveProperty("messages")
+		expect(respArgs).toHaveProperty("input")
+
+		// Chat Completions URL
+		mockResponsesCreate.mockClear()
+		mockCreate.mockClear()
+		const chatHandler = new OpenAiHandler({
+			openAiApiKey: "test",
+			openAiModelId: "gpt-4o",
+			openAiBaseUrl: "https://api.openai.com/v1/chat/completions",
+			openAiStreamingEnabled: false,
+		})
+		for await (const _ of chatHandler.createMessage("sys", baseMessages)) {
+		}
+		expect(mockCreate).toHaveBeenCalled()
+		const chatArgs = mockCreate.mock.calls.pop()?.[0]
+		expect(chatArgs).toHaveProperty("messages")
+		expect(chatArgs).not.toHaveProperty("input")
+	})
+
+	it("Manual override: force Responses or Chat regardless of URL", async () => {
+		// Force Responses
+		const forceResp = new OpenAiHandler({
+			openAiApiKey: "k",
+			openAiModelId: "gpt-5",
+			openAiBaseUrl: "https://api.openai.com/v1", // no responses segment
+			openAiStreamingEnabled: false,
+			openAiApiFlavor: "responses",
+		})
+		for await (const _ of forceResp.createMessage("sys", baseMessages)) {
+		}
+		expect(mockResponsesCreate).toHaveBeenCalled()
+		const rArgs = mockResponsesCreate.mock.calls.pop()?.[0]
+		expect(rArgs).toHaveProperty("input")
+		expect(rArgs).not.toHaveProperty("messages")
+
+		// Force Chat
+		mockResponsesCreate.mockClear()
+		mockCreate.mockClear()
+		const forceChat = new OpenAiHandler({
+			openAiApiKey: "k",
+			openAiModelId: "gpt-4o",
+			openAiBaseUrl: "https://api.openai.com/v1/responses", // would auto-detect as responses
+			openAiStreamingEnabled: false,
+			openAiApiFlavor: "chat",
+		})
+		for await (const _ of forceChat.createMessage("sys", baseMessages)) {
+		}
+		expect(mockCreate).toHaveBeenCalled()
+		const cArgs = mockCreate.mock.calls.pop()?.[0]
+		expect(cArgs).toHaveProperty("messages")
+	})
+
+	it("Reasoning effort mapping: Responses uses reasoning: { effort }, Chat uses reasoning_effort", async () => {
+		// Responses path
+		const responsesHandler = new OpenAiHandler({
+			openAiApiKey: "k",
+			openAiModelId: "gpt-5",
+			openAiBaseUrl: "https://api.openai.com/v1/responses",
+			openAiStreamingEnabled: false,
+			enableReasoningEffort: true,
+			reasoningEffort: "high",
+			openAiCustomModelInfo: {
+				contextWindow: 128_000,
+				supportsPromptCache: false,
+				supportsReasoningEffort: true,
+			},
+		})
+		for await (const _ of responsesHandler.createMessage("sys", baseMessages)) {
+		}
+		expect(mockResponsesCreate).toHaveBeenCalled()
+		const rArgs = mockResponsesCreate.mock.calls.pop()?.[0]
+		expect(rArgs).toHaveProperty("reasoning")
+		expect(rArgs.reasoning).toEqual({ effort: "high" })
+
+		// Chat path
+		mockResponsesCreate.mockClear()
+		mockCreate.mockClear()
+		const chatHandler = new OpenAiHandler({
+			openAiApiKey: "k",
+			openAiModelId: "gpt-4o",
+			openAiBaseUrl: "https://api.openai.com/v1/chat/completions",
+			openAiStreamingEnabled: false,
+			enableReasoningEffort: true,
+			reasoningEffort: "high",
+			openAiCustomModelInfo: {
+				contextWindow: 128_000,
+				supportsPromptCache: false,
+				supportsReasoningEffort: true,
+			},
+		})
+		for await (const _ of chatHandler.createMessage("sys", baseMessages)) {
+		}
+		expect(mockCreate).toHaveBeenCalled()
+		const cArgs = mockCreate.mock.calls.pop()?.[0]
+		expect(cArgs).toHaveProperty("reasoning_effort", "high")
+	})
+
+	it("Verbosity (Responses): include when set; if server rejects, retry without it (warn once)", async () => {
+		// First call throws 400 for 'verbosity', second succeeds
+		mockResponsesCreate.mockImplementationOnce((_opts: any) => {
+			const err = new Error("Unsupported parameter: 'verbosity'")
+			;(err as any).status = 400
+			throw err
+		})
+
+		const h = new OpenAiHandler({
+			openAiApiKey: "k",
+			openAiModelId: "gpt-5",
+			openAiBaseUrl: "https://api.openai.com/v1/responses",
+			openAiStreamingEnabled: false,
+			verbosity: "high",
+		})
+
+		const stream = h.createMessage("sys", baseMessages)
+		const chunks: any[] = []
+		for await (const ch of stream) {
+			chunks.push(ch)
+		}
+
+		expect(mockResponsesCreate).toHaveBeenCalledTimes(2)
+		const first = mockResponsesCreate.mock.calls[0][0]
+		const second = mockResponsesCreate.mock.calls[1][0]
+		expect(first).toHaveProperty("text")
+		expect(first.text).toEqual({ verbosity: "high" })
+		expect(second).not.toHaveProperty("text")
+
+		// Should still yield text
+		const textChunk = chunks.find((c) => c.type === "text")
+		expect(textChunk?.text).toBe("Test response")
+	})
+
+	it("Azure naming: use max_output_tokens for Responses; keep max_completion_tokens for Chat Completions", async () => {
+		// Responses + includeMaxTokens
+		const r = new OpenAiHandler({
+			openAiApiKey: "k",
+			openAiModelId: "gpt-5",
+			openAiBaseUrl: "https://api.openai.com/v1/responses",
+			openAiStreamingEnabled: false,
+			includeMaxTokens: true,
+			modelMaxTokens: 128,
+			openAiCustomModelInfo: {
+				contextWindow: 128_000,
+				maxTokens: 4096,
+				supportsPromptCache: false,
+			},
+		})
+		for await (const _ of r.createMessage("sys", baseMessages)) {
+		}
+		const rArgs = mockResponsesCreate.mock.calls.pop()?.[0]
+		expect(rArgs).toHaveProperty("max_output_tokens", 128)
+		expect(rArgs).not.toHaveProperty("max_completion_tokens")
+
+		// Chat + includeMaxTokens
+		mockResponsesCreate.mockClear()
+		mockCreate.mockClear()
+		const c = new OpenAiHandler({
+			openAiApiKey: "k",
+			openAiModelId: "gpt-4o",
+			openAiBaseUrl: "https://api.openai.com/v1/chat/completions",
+			openAiStreamingEnabled: false,
+			includeMaxTokens: true,
+			modelMaxTokens: 128,
+			openAiCustomModelInfo: {
+				contextWindow: 128_000,
+				maxTokens: 4096,
+				supportsPromptCache: false,
+			},
+		})
+		for await (const _ of c.createMessage("sys", baseMessages)) {
+		}
+		const cArgs = mockCreate.mock.calls.pop()?.[0]
+		expect(cArgs).toHaveProperty("max_completion_tokens", 128)
+		expect(cArgs).not.toHaveProperty("max_output_tokens")
+	})
+
+	it("Normalizes Azure portal responses URL to /openai/v1 with apiVersion=preview", async () => {
+		mockResponsesCreate.mockClear()
+		mockCreate.mockClear()
+
+		const portalUrl = "https://sample-name.openai.azure.com/openai/responses?api-version=2025-04-01-preview"
+
+		const handler = new OpenAiHandler({
+			openAiApiKey: "test-azure",
+			openAiModelId: "my-deployment",
+			openAiBaseUrl: portalUrl,
+			openAiStreamingEnabled: false,
+		})
+
+		for await (const _ of handler.createMessage("sys", baseMessages)) {
+		}
+
+		// Ensures Responses API path was used
+		expect(mockResponsesCreate).toHaveBeenCalled()
+
+		// Ensure SDK constructor was called with normalized baseURL and 'preview' apiVersion (per requirement)
+		// Note: AzureOpenAI and OpenAI share same mock constructor; inspect last call
+		const ctorCalls = vi.mocked(OpenAI as unknown as any).mock.calls as any[]
+		const lastCtorArgs = ctorCalls[ctorCalls.length - 1]?.[0] || {}
+		expect(lastCtorArgs.baseURL).toBe("https://sample-name.openai.azure.com/openai/v1")
+		expect(lastCtorArgs.apiVersion).toBe("preview")
 	})
 })

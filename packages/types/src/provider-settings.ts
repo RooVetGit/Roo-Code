@@ -179,6 +179,7 @@ const openAiSchema = baseProviderSettingsSchema.extend({
 	openAiStreamingEnabled: z.boolean().optional(),
 	openAiHostHeader: z.string().optional(), // Keep temporarily for backward compatibility during migration.
 	openAiHeaders: z.record(z.string(), z.string()).optional(),
+	openAiApiFlavor: z.union([z.literal("auto"), z.literal("responses"), z.literal("chat")]).optional(),
 })
 
 const ollamaSchema = baseProviderSettingsSchema.extend({
