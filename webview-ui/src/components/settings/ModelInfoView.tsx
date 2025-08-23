@@ -14,6 +14,7 @@ type ModelInfoViewProps = {
 	modelInfo?: ModelInfo
 	isDescriptionExpanded: boolean
 	setIsDescriptionExpanded: (isExpanded: boolean) => void
+	serviceTier?: "auto" | "default" | "flex"
 }
 
 export const ModelInfoView = ({
@@ -22,8 +23,35 @@ export const ModelInfoView = ({
 	modelInfo,
 	isDescriptionExpanded,
 	setIsDescriptionExpanded,
+	serviceTier,
 }: ModelInfoViewProps) => {
 	const { t } = useAppTranslation()
+
+	// Calculate effective pricing based on flex service tier for new OpenAI models GPT-5 family ,o3, o4-mini, if used.
+	const getEffectivePricing = (modelInfo: ModelInfo) => {
+		// Only apply OpenAI flex tiers when the API provider is OpenAI and the model explicitly supports it
+		if (
+			(apiProvider === "openai" || apiProvider === "openai-native") &&
+			serviceTier === "flex" &&
+			modelInfo.tiers &&
+			modelInfo.supportsOpenAiFlexTier
+		) {
+			// Only use an explicitly named 'flex' tier. Do not fall back to other tiers.
+			const named = modelInfo.tiers.find((t) => t.name === "flex")
+			if (named) {
+				return {
+					...modelInfo,
+					inputPrice: named.inputPrice ?? modelInfo.inputPrice,
+					outputPrice: named.outputPrice ?? modelInfo.outputPrice,
+					cacheReadsPrice: named.cacheReadsPrice ?? modelInfo.cacheReadsPrice,
+					cacheWritesPrice: named.cacheWritesPrice ?? modelInfo.cacheWritesPrice,
+				}
+			}
+		}
+		return modelInfo
+	}
+
+	const effectiveModelInfo = modelInfo ? getEffectivePricing(modelInfo) : modelInfo
 
 	const infoItems = [
 		typeof modelInfo?.contextWindow === "number" && modelInfo.contextWindow > 0 && (
@@ -53,28 +81,30 @@ export const ModelInfoView = ({
 			supportsLabel={t("settings:modelInfo.supportsPromptCache")}
 			doesNotSupportLabel={t("settings:modelInfo.noPromptCache")}
 		/>,
-		modelInfo?.inputPrice !== undefined && modelInfo.inputPrice > 0 && (
+		effectiveModelInfo?.inputPrice !== undefined && effectiveModelInfo.inputPrice > 0 && (
 			<>
 				<span className="font-medium">{t("settings:modelInfo.inputPrice")}:</span>{" "}
-				{formatPrice(modelInfo.inputPrice)} / 1M tokens
+				{formatPrice(effectiveModelInfo.inputPrice)} / 1M tokens
 			</>
 		),
-		modelInfo?.outputPrice !== undefined && modelInfo.outputPrice > 0 && (
+		effectiveModelInfo?.outputPrice !== undefined && effectiveModelInfo.outputPrice > 0 && (
 			<>
 				<span className="font-medium">{t("settings:modelInfo.outputPrice")}:</span>{" "}
-				{formatPrice(modelInfo.outputPrice)} / 1M tokens
+				{formatPrice(effectiveModelInfo.outputPrice)} / 1M tokens
 			</>
 		),
-		modelInfo?.supportsPromptCache && modelInfo.cacheReadsPrice && (
+		modelInfo?.supportsPromptCache && effectiveModelInfo?.cacheReadsPrice && (
 			<>
 				<span className="font-medium">{t("settings:modelInfo.cacheReadsPrice")}:</span>{" "}
-				{formatPrice(modelInfo.cacheReadsPrice || 0)} / 1M tokens
+				{formatPrice(effectiveModelInfo.cacheReadsPrice || 0, { minFractionDigits: 2, maxFractionDigits: 3 })} /
+				1M tokens
 			</>
 		),
-		modelInfo?.supportsPromptCache && modelInfo.cacheWritesPrice && (
+		modelInfo?.supportsPromptCache && effectiveModelInfo?.cacheWritesPrice && (
 			<>
 				<span className="font-medium">{t("settings:modelInfo.cacheWritesPrice")}:</span>{" "}
-				{formatPrice(modelInfo.cacheWritesPrice || 0)} / 1M tokens
+				{formatPrice(effectiveModelInfo.cacheWritesPrice || 0, { minFractionDigits: 2, maxFractionDigits: 3 })}{" "}
+				/ 1M tokens
 			</>
 		),
 		apiProvider === "gemini" && (

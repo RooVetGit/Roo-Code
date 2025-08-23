@@ -163,6 +163,15 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 				...(reasoning && reasoning),
 			}
 
+			if (this.options.serviceTier && this.options.serviceTier !== "auto") {
+				try {
+					;(requestOptions as any).service_tier = this.options.serviceTier
+				} catch (err) {
+					// Continue without service_tier if assignment fails
+					console.debug("service_tier not applied to requestOptions", err)
+				}
+			}
+
 			// Only include temperature if explicitly set
 			if (this.options.modelTemperature !== undefined) {
 				requestOptions.temperature = this.options.modelTemperature
@@ -233,6 +242,15 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 						: [systemMessage, ...convertToOpenAiMessages(messages)],
 			}
 
+			if (this.options.serviceTier && this.options.serviceTier !== "auto") {
+				try {
+					;(requestOptions as any).service_tier = this.options.serviceTier
+				} catch (err) {
+					// Continue without service_tier if assignment fails
+					console.debug("service_tier not applied to requestOptions", err)
+				}
+			}
+
 			// Add max_tokens if needed
 			this.addMaxTokensIfNeeded(requestOptions, modelInfo)
 
@@ -276,6 +294,10 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 			const requestOptions: OpenAI.Chat.Completions.ChatCompletionCreateParamsNonStreaming = {
 				model: model.id,
 				messages: [{ role: "user", content: prompt }],
+			}
+
+			if (this.options.serviceTier && this.options.serviceTier !== "auto") {
+				;(requestOptions as any).service_tier = this.options.serviceTier
 			}
 
 			// Add max_tokens if needed
@@ -322,6 +344,10 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 				temperature: undefined,
 			}
 
+			if (this.options.serviceTier && this.options.serviceTier !== "auto") {
+				;(requestOptions as any).service_tier = this.options.serviceTier
+			}
+
 			// O3 family models do not support the deprecated max_tokens parameter
 			// but they do support max_completion_tokens (the modern OpenAI parameter)
 			// This allows O3 models to limit response length when includeMaxTokens is enabled
@@ -345,6 +371,10 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 				],
 				reasoning_effort: modelInfo.reasoningEffort as "low" | "medium" | "high" | undefined,
 				temperature: undefined,
+			}
+
+			if (this.options.serviceTier && this.options.serviceTier !== "auto") {
+				;(requestOptions as any).service_tier = this.options.serviceTier
 			}
 
 			// O3 family models do not support the deprecated max_tokens parameter

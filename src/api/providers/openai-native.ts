@@ -74,6 +74,7 @@ export class OpenAiNativeHandler extends BaseProvider implements SingleCompletio
 			totalOutputTokens,
 			cacheWriteTokens || 0,
 			cacheReadTokens || 0,
+			this.options.serviceTier,
 		)
 
 		return {
@@ -147,6 +148,9 @@ export class OpenAiNativeHandler extends BaseProvider implements SingleCompletio
 			stream: true,
 			stream_options: { include_usage: true },
 			...(reasoning && reasoning),
+			// Add service_tier parameter if configured and not "auto"
+			...(this.options.serviceTier &&
+				this.options.serviceTier !== "auto" && { service_tier: this.options.serviceTier }),
 		})
 
 		yield* this.handleStreamResponse(response, model)
@@ -172,6 +176,9 @@ export class OpenAiNativeHandler extends BaseProvider implements SingleCompletio
 			stream: true,
 			stream_options: { include_usage: true },
 			...(reasoning && reasoning),
+			// Add service_tier parameter if configured and not "auto"
+			...(this.options.serviceTier &&
+				this.options.serviceTier !== "auto" && { service_tier: this.options.serviceTier }),
 		})
 
 		yield* this.handleStreamResponse(stream, model)
@@ -197,6 +204,15 @@ export class OpenAiNativeHandler extends BaseProvider implements SingleCompletio
 		// Add verbosity only if the model supports it
 		if (verbosity && model.info.supportsVerbosity) {
 			params.verbosity = verbosity
+		}
+
+		// Add service_tier parameter if configured and not "auto"
+		if (this.options.serviceTier && this.options.serviceTier !== "auto") {
+			try {
+				params.service_tier = this.options.serviceTier
+			} catch (err) {
+				console.debug("service_tier not applied to params", err)
+			}
 		}
 
 		const stream = await this.client.chat.completions.create(params)
@@ -276,6 +292,7 @@ export class OpenAiNativeHandler extends BaseProvider implements SingleCompletio
 			temperature?: number
 			max_output_tokens?: number
 			previous_response_id?: string
+			service_tier?: string
 		}
 
 		const requestBody: Gpt5RequestBody = {
@@ -294,6 +311,15 @@ export class OpenAiNativeHandler extends BaseProvider implements SingleCompletio
 			// Use the per-request reserved output computed by Roo (params.maxTokens from getModelParams).
 			...(model.maxTokens ? { max_output_tokens: model.maxTokens } : {}),
 			...(requestPreviousResponseId && { previous_response_id: requestPreviousResponseId }),
+		}
+
+		// Add service_tier parameter if configured and not "auto"
+		if (this.options.serviceTier && this.options.serviceTier !== "auto") {
+			try {
+				requestBody.service_tier = this.options.serviceTier
+			} catch (err) {
+				console.debug("service_tier not applied to requestBody", err)
+			}
 		}
 
 		try {

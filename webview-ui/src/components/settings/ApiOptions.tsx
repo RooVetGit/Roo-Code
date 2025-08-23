@@ -97,6 +97,7 @@ import { ModelInfoView } from "./ModelInfoView"
 import { ApiErrorMessage } from "./ApiErrorMessage"
 import { ThinkingBudget } from "./ThinkingBudget"
 import { Verbosity } from "./Verbosity"
+import { ServiceTier } from "./ServiceTier"
 import { DiffSettingsControl } from "./DiffSettingsControl"
 import { TodoListSettingsControl } from "./TodoListSettingsControl"
 import { TemperatureControl } from "./TemperatureControl"
@@ -661,9 +662,17 @@ const ApiOptions = ({
 						modelInfo={selectedModelInfo}
 						isDescriptionExpanded={isDescriptionExpanded}
 						setIsDescriptionExpanded={setIsDescriptionExpanded}
+						serviceTier={apiConfiguration.serviceTier}
 					/>
 				</>
 			)}
+
+			{/* Service Tier - conditional on model supporting flex pricing */}
+			<ServiceTier
+				apiConfiguration={apiConfiguration}
+				setApiConfigurationField={setApiConfigurationField}
+				modelId={selectedModelId}
+			/>
 
 			<ThinkingBudget
 				key={`${selectedProvider}-${selectedModelId}`}

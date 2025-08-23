@@ -287,7 +287,7 @@ export class GeminiHandler extends BaseProvider implements SingleCompletionHandl
 		// If there's tiered pricing then adjust the input and output token prices
 		// based on the input tokens used.
 		if (info.tiers) {
-			const tier = info.tiers.find((tier) => inputTokens <= tier.contextWindow)
+			const tier = info.tiers.find((tier) => tier.contextWindow && inputTokens <= tier.contextWindow)
 
 			if (tier) {
 				inputPrice = tier.inputPrice ?? inputPrice

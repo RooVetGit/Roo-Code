@@ -250,7 +250,7 @@ export class AnthropicHandler extends BaseProvider implements SingleCompletionHa
 			if (tier) {
 				info = {
 					...info,
-					contextWindow: tier.contextWindow,
+					contextWindow: tier.contextWindow ?? info.contextWindow,
 					inputPrice: tier.inputPrice,
 					outputPrice: tier.outputPrice,
 					cacheWritesPrice: tier.cacheWritesPrice,
