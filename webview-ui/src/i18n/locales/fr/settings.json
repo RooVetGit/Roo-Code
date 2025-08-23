@@ -77,6 +77,7 @@
 		"qdrantApiKeyPlaceholder": "Entrez votre clé API Qdrant (optionnel)",
 		"setupConfigLabel": "Configuration",
 		"startIndexingButton": "Démarrer",
+		"resumeIndexingButton": "Reprendre",
 		"clearIndexDataButton": "Effacer l'index",
 		"unsavedSettingsMessage": "Merci d'enregistrer tes paramètres avant de démarrer le processus d'indexation.",
 		"clearDataDialog": {

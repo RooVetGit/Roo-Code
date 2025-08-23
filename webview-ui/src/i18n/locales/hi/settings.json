@@ -66,6 +66,7 @@
 		"qdrantUrlLabel": "Qdrant URL",
 		"qdrantKeyLabel": "Qdrant कुंजी:",
 		"startIndexingButton": "शुरू करें",
+		"resumeIndexingButton": "Resume",
 		"clearIndexDataButton": "इंडेक्स साफ़ करें",
 		"unsavedSettingsMessage": "इंडेक्सिंग प्रक्रिया शुरू करने से पहले कृपया अपनी सेटिंग्स सहेजें।",
 		"clearDataDialog": {

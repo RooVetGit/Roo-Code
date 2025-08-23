@@ -66,6 +66,7 @@
 		"qdrantUrlLabel": "URL Qdrant",
 		"qdrantKeyLabel": "Chave Qdrant:",
 		"startIndexingButton": "Iniciar",
+		"resumeIndexingButton": "Resume",
 		"clearIndexDataButton": "Limpar Índice",
 		"unsavedSettingsMessage": "Por favor, salve suas configurações antes de iniciar o processo de indexação.",
 		"clearDataDialog": {

@@ -193,6 +193,17 @@ export class CodeIndexManager {
 	}
 
 	/**
+	 * Resumes the indexing process from where it left off after an error.
+	 */
+	public async resumeIndexing(): Promise<void> {
+		if (!this.isFeatureEnabled) {
+			return
+		}
+		this.assertInitialized()
+		await this._orchestrator!.resumeIndexing()
+	}
+
+	/**
 	 * Stops the file watcher and potentially cleans up resources.
 	 */
 	public stopWatcher(): void {

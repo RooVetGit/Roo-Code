@@ -77,6 +77,7 @@
 		"qdrantApiKeyPlaceholder": "输入你的 Qdrant API 密钥（可选）",
 		"setupConfigLabel": "设置",
 		"startIndexingButton": "开始",
+		"resumeIndexingButton": "恢复",
 		"clearIndexDataButton": "清除索引",
 		"unsavedSettingsMessage": "请先保存设置再开始索引过程。",
 		"clearDataDialog": {

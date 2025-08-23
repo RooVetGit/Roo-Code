@@ -84,6 +84,7 @@
 		"searchMaxResultsDescription": "Maximum number of search results to return when querying the codebase index. Higher values provide more context but may include less relevant results.",
 		"resetToDefault": "Reset to default",
 		"startIndexingButton": "Start Indexing",
+		"resumeIndexingButton": "Resume Indexing",
 		"clearIndexDataButton": "Clear Index Data",
 		"unsavedSettingsMessage": "Please save your settings before starting the indexing process.",
 		"clearDataDialog": {

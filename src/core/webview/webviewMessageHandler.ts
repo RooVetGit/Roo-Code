@@ -2284,6 +2284,21 @@ export const webviewMessageHandler = async (
 			}
 			break
 		}
+		case "resumeIndexing": {
+			try {
+				const manager = provider.codeIndexManager!
+				if (manager.isFeatureEnabled && manager.isFeatureConfigured) {
+					if (!manager.isInitialized) {
+						await manager.initialize(provider.contextProxy)
+					}
+
+					manager.resumeIndexing()
+				}
+			} catch (error) {
+				provider.log(`Error resuming indexing: ${error instanceof Error ? error.message : String(error)}`)
+			}
+			break
+		}
 		case "clearIndexData": {
 			try {
 				const manager = provider.getCurrentWorkspaceCodeIndexManager()

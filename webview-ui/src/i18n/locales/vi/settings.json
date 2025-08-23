@@ -66,6 +66,7 @@
 		"qdrantUrlLabel": "URL Qdrant",
 		"qdrantKeyLabel": "Khóa Qdrant:",
 		"startIndexingButton": "Bắt đầu",
+		"resumeIndexingButton": "Resume",
 		"clearIndexDataButton": "Xóa chỉ mục",
 		"unsavedSettingsMessage": "Vui lòng lưu cài đặt của bạn trước khi bắt đầu quá trình lập chỉ mục.",
 		"clearDataDialog": {
