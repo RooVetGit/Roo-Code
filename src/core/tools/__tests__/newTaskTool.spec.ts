@@ -629,6 +629,42 @@ describe("newTaskTool", () => {
 			expect(mockGetConfiguration).toHaveBeenCalledWith("roo-cline")
 			expect(mockGet).toHaveBeenCalledWith("newTaskRequireTodos", false)
 		})
+
+		it("should use current Package.name value (roo-code-nightly) when accessing VSCode configuration", async () => {
+			// Arrange: capture calls to VSCode configuration and ensure we can assert the namespace
+			const mockGet = vi.fn().mockReturnValue(false)
+			const mockGetConfiguration = vi.fn().mockReturnValue({
+				get: mockGet,
+			} as any)
+			vi.mocked(vscode.workspace.getConfiguration).mockImplementation(mockGetConfiguration)
+
+			// Mutate the mocked Package.name dynamically to simulate a different build variant
+			const pkg = await import("../../../shared/package")
+			;(pkg.Package as any).name = "roo-code-nightly"
+
+			const block: ToolUse = {
+				type: "tool_use",
+				name: "new_task",
+				params: {
+					mode: "code",
+					message: "Test message",
+				},
+				partial: false,
+			}
+
+			await newTaskTool(
+				mockCline as any,
+				block,
+				mockAskApproval,
+				mockHandleError,
+				mockPushToolResult,
+				mockRemoveClosingTag,
+			)
+
+			// Assert: configuration was read using the dynamic nightly namespace
+			expect(mockGetConfiguration).toHaveBeenCalledWith("roo-code-nightly")
+			expect(mockGet).toHaveBeenCalledWith("newTaskRequireTodos", false)
+		})
 	})
 
 	// Add more tests for error handling (invalid mode, approval denied) if needed
