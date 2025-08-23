@@ -234,11 +234,9 @@ const AutoApproveMenu = ({ style }: AutoApproveMenuProps) => {
 						{displayText}
 					</span>
 					<span
-						className={`codicon codicon-chevron-${isExpanded ? "up" : "right"}`}
-						style={{
-							flexShrink: 0,
-							marginLeft: isExpanded ? "2px" : "-2px",
-						}}
+						className={`codicon codicon-chevron-right flex-shrink-0 transition-transform duration-200 ease-in-out ${
+							isExpanded ? "-rotate-90 ml-[2px]" : "rotate-0 -ml-[2px]"
+						}`}
 					/>
 				</div>
 			</div>
