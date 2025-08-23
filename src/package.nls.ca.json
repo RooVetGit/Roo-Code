@@ -7,6 +7,7 @@
 	"command.improveCode.title": "Millorar Codi",
 	"command.addToContext.title": "Afegir al Context",
 	"command.openInNewTab.title": "Obrir en una Nova Pestanya",
+	"command.openInThisTab.title": "Obrir en Aquesta Pestanya",
 	"command.focusInput.title": "Enfocar Camp d'Entrada",
 	"command.setCustomStoragePath.title": "Establir Ruta d'Emmagatzematge Personalitzada",
 	"command.importSettings.title": "Importar Configuració",

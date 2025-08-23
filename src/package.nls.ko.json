@@ -7,6 +7,7 @@
 	"command.improveCode.title": "코드 개선",
 	"command.addToContext.title": "컨텍스트에 추가",
 	"command.openInNewTab.title": "새 탭에서 열기",
+	"command.openInThisTab.title": "이 탭에서 열기",
 	"command.focusInput.title": "입력 필드 포커스",
 	"command.setCustomStoragePath.title": "사용자 지정 저장소 경로 설정",
 	"command.importSettings.title": "설정 가져오기",

@@ -129,6 +129,7 @@ const getCommandsMap = ({ context, outputChannel, provider }: RegisterCommandOpt
 		return openClineInNewTab({ context, outputChannel })
 	},
 	openInNewTab: () => openClineInNewTab({ context, outputChannel }),
+	openInThisTab: () => openClineInThisTab({ context, outputChannel }),
 	settingsButtonClicked: () => {
 		const visibleProvider = getVisibleProviderOrLog(outputChannel)
 
@@ -223,13 +224,14 @@ const getCommandsMap = ({ context, outputChannel, provider }: RegisterCommandOpt
 	},
 })
 
-export const openClineInNewTab = async ({ context, outputChannel }: Omit<RegisterCommandOptions, "provider">) => {
-	// (This example uses webviewProvider activation event which is necessary to
-	// deserialize cached webview, but since we use retainContextWhenHidden, we
-	// don't need to use that event).
-	// https://github.com/microsoft/vscode-extension-samples/blob/main/webview-sample/src/extension.ts
+/**
+ * Common initialization for Roo Code tab panels
+ */
+async function initializeClineTabProvider(
+	context: vscode.ExtensionContext,
+	outputChannel: vscode.OutputChannel,
+): Promise<ClineProvider> {
 	const contextProxy = await ContextProxy.getInstance(context)
-	const codeIndexManager = CodeIndexManager.getInstance(context)
 
 	// Get the existing MDM service instance to ensure consistent policy enforcement
 	let mdmService: MdmService | undefined
@@ -240,7 +242,57 @@ export const openClineInNewTab = async ({ context, outputChannel }: Omit<Registe
 		mdmService = undefined
 	}
 
-	const tabProvider = new ClineProvider(context, outputChannel, "editor", contextProxy, mdmService)
+	return new ClineProvider(context, outputChannel, "editor", contextProxy, mdmService)
+}
+
+/**
+ * Common panel setup for Roo Code webview panels
+ */
+function setupClinePanel(
+	panel: vscode.WebviewPanel,
+	context: vscode.ExtensionContext,
+	tabProvider: ClineProvider,
+): void {
+	// Save as tab type panel
+	setPanel(panel, "tab")
+
+	// Set the icon
+	panel.iconPath = {
+		light: vscode.Uri.joinPath(context.extensionUri, "assets", "icons", "panel_light.png"),
+		dark: vscode.Uri.joinPath(context.extensionUri, "assets", "icons", "panel_dark.png"),
+	}
+
+	// Resolve the webview
+	tabProvider.resolveWebviewView(panel)
+
+	// Add listener for visibility changes to notify webview
+	panel.onDidChangeViewState(
+		(e) => {
+			const webviewPanel = e.webviewPanel
+			if (webviewPanel.visible) {
+				webviewPanel.webview.postMessage({ type: "action", action: "didBecomeVisible" })
+			}
+		},
+		null,
+		context.subscriptions,
+	)
+
+	// Handle panel closing events
+	panel.onDidDispose(
+		() => {
+			setPanel(undefined, "tab")
+		},
+		null,
+		context.subscriptions,
+	)
+}
+
+export const openClineInNewTab = async ({ context, outputChannel }: Omit<RegisterCommandOptions, "provider">) => {
+	// (This example uses webviewProvider activation event which is necessary to
+	// deserialize cached webview, but since we use retainContextWhenHidden, we
+	// don't need to use that event).
+	// https://github.com/microsoft/vscode-extension-samples/blob/main/webview-sample/src/extension.ts
+	const tabProvider = await initializeClineTabProvider(context, outputChannel)
 	const lastCol = Math.max(...vscode.window.visibleTextEditors.map((editor) => editor.viewColumn || 0))
 
 	// Check if there are any visible text editors, otherwise open a new group
@@ -259,42 +311,37 @@ export const openClineInNewTab = async ({ context, outputChannel }: Omit<Registe
 		localResourceRoots: [context.extensionUri],
 	})
 
-	// Save as tab type panel.
-	setPanel(newPanel, "tab")
-
-	// TODO: Use better svg icon with light and dark variants (see
-	// https://stackoverflow.com/questions/58365687/vscode-extension-iconpath).
-	newPanel.iconPath = {
-		light: vscode.Uri.joinPath(context.extensionUri, "assets", "icons", "panel_light.png"),
-		dark: vscode.Uri.joinPath(context.extensionUri, "assets", "icons", "panel_dark.png"),
-	}
-
-	await tabProvider.resolveWebviewView(newPanel)
-
-	// Add listener for visibility changes to notify webview
-	newPanel.onDidChangeViewState(
-		(e) => {
-			const panel = e.webviewPanel
-			if (panel.visible) {
-				panel.webview.postMessage({ type: "action", action: "didBecomeVisible" }) // Use the same message type as in SettingsView.tsx
-			}
-		},
-		null, // First null is for `thisArgs`
-		context.subscriptions, // Register listener for disposal
-	)
-
-	// Handle panel closing events.
-	newPanel.onDidDispose(
-		() => {
-			setPanel(undefined, "tab")
-		},
-		null,
-		context.subscriptions, // Also register dispose listener
-	)
+	await setupClinePanel(newPanel, context, tabProvider)
 
 	// Lock the editor group so clicking on files doesn't open them over the panel.
 	await delay(100)
 	await vscode.commands.executeCommand("workbench.action.lockEditorGroup")
+
+	return tabProvider
+}
+
+/**
+ * Opens Roo Code in the current active tab, replacing its content
+ */
+export const openClineInThisTab = async ({ context, outputChannel }: Omit<RegisterCommandOptions, "provider">) => {
+	const tabProvider = await initializeClineTabProvider(context, outputChannel)
+
+	// Get the active text editor's view column, or use the first column if no editor is active
+	const activeColumn = vscode.window.activeTextEditor?.viewColumn || vscode.ViewColumn.One
+
+	// Create the webview panel in the current tab/column
+	const newPanel = vscode.window.createWebviewPanel(
+		ClineProvider.tabPanelId,
+		"Roo Code",
+		{ viewColumn: activeColumn, preserveFocus: false },
+		{
+			enableScripts: true,
+			retainContextWhenHidden: true,
+			localResourceRoots: [context.extensionUri],
+		},
+	)
+
+	await setupClinePanel(newPanel, context, tabProvider)
 
 	return tabProvider
 }

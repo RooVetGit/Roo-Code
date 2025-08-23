@@ -7,6 +7,7 @@
 	"command.improveCode.title": "Mejorar Código",
 	"command.addToContext.title": "Añadir al Contexto",
 	"command.openInNewTab.title": "Abrir en Nueva Pestaña",
+	"command.openInThisTab.title": "Abrir en Esta Pestaña",
 	"command.focusInput.title": "Enfocar Campo de Entrada",
 	"command.setCustomStoragePath.title": "Establecer Ruta de Almacenamiento Personalizada",
 	"command.importSettings.title": "Importar Configuración",
