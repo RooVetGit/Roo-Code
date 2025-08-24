@@ -444,14 +444,11 @@ async function parseFile(
  * @returns The line index of the method signature
  */
 function findJavaMethodSignatureLine(lines: string[], startLine: number, endLine: number): number {
-	// Java method signature pattern:
-	// - May start with access modifiers (public, private, protected, static, final, etc.)
-	// - Followed by return type
-	// - Followed by method name
-	// - Followed by parentheses
-	// Using atomic groups and possessive quantifiers to prevent backtracking
-	const methodSignaturePattern =
-		/^\s*(?:public|private|protected|static|final|abstract|synchronized|native|strictfp|\w+)(?:\s+(?:public|private|protected|static|final|abstract|synchronized|native|strictfp|\w+))*\s+\w+\s*\(/
+	// Java method signature pattern - avoiding backtracking issues
+	// Split into separate checks to avoid complex alternations
+	const accessModifiers = /^\s*(?:public|private|protected)\s+/
+	const otherModifiers = /^\s*(?:static|final|abstract|synchronized|native|strictfp)\s+/
+	const methodPattern = /^\s*(?:\w+(?:\[\])*(?:\s*<[^>]+>)?\s+)+\w+\s*\(/
 
 	for (let i = startLine; i <= endLine; i++) {
 		const line = lines[i].trim()
@@ -461,8 +458,9 @@ function findJavaMethodSignatureLine(lines: string[], startLine: number, endLine
 			continue
 		}
 
-		// Check if this line looks like a method signature
-		if (methodSignaturePattern.test(line)) {
+		// Check if this looks like a method signature using multiple simple patterns
+		// This avoids complex alternation that can cause backtracking
+		if (accessModifiers.test(line) || otherModifiers.test(line) || methodPattern.test(line)) {
 			return i
 		}
 	}
