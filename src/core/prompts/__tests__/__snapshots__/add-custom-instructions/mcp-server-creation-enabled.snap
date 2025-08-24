@@ -379,7 +379,6 @@ Description: This will let you create a new task instance in the chosen mode usi
 Parameters:
 - mode: (required) The slug of the mode to start the new task in (e.g., "code", "debug", "architect").
 - message: (required) The initial user message or instructions for this new task.
-- todos: (optional) The initial todo list in markdown checklist format for the new task.
 
 Usage:
 <new_task>
@@ -391,18 +390,6 @@ Example:
 <new_task>
 <mode>code</mode>
 <message>Implement a new feature for the application</message>
-</new_task>
-
-Example with optional todos:
-<new_task>
-<mode>code</mode>
-<message>Implement user authentication</message>
-<todos>
-[ ] Set up auth middleware
-[ ] Create login endpoint
-[ ] Add session management
-[ ] Write tests
-</todos>
 </new_task>
 
 
