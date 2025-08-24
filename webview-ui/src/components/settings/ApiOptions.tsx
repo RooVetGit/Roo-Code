@@ -3,6 +3,7 @@ import { convertHeadersToObject } from "./utils/headers"
 import { useDebounce } from "react-use"
 import { VSCodeLink, VSCodeButton } from "@vscode/webview-ui-toolkit/react"
 import { ExternalLinkIcon } from "@radix-ui/react-icons"
+import { Checkbox } from "vscrui"
 
 import {
 	type ProviderName,
@@ -714,6 +715,20 @@ const ApiOptions = ({
 							}
 							onChange={(value) => setApiConfigurationField("consecutiveMistakeLimit", value)}
 						/>
+						{selectedProvider === "openai-native" && (
+							<div>
+								<Checkbox
+									checked={!(apiConfiguration?.openAiNativeStreamingEnabled ?? true)}
+									onChange={(checked: boolean) => {
+										setApiConfigurationField("openAiNativeStreamingEnabled", !checked)
+									}}>
+									{t("settings:modelInfo.disableStreaming")}
+								</Checkbox>
+								<div className="text-sm text-vscode-descriptionForeground ml-6 -mt-2">
+									{t("settings:modelInfo.disableStreamingDescription")}
+								</div>
+							</div>
+						)}
 						{selectedProvider === "openrouter" &&
 							openRouterModelProviders &&
 							Object.keys(openRouterModelProviders).length > 0 && (

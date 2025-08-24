@@ -1815,4 +1815,432 @@ describe("GPT-5 streaming event coverage (additional)", () => {
 			delete (global as any).fetch
 		})
 	})
+
+	describe("openAiNativeStreamingEnabled option", () => {
+		let handler: OpenAiNativeHandler
+		const systemPrompt = "You are a helpful assistant."
+		const messages: Anthropic.Messages.MessageParam[] = [
+			{
+				role: "user",
+				content: "Hello!",
+			},
+		]
+
+		beforeEach(() => {
+			mockCreate.mockClear()
+		})
+
+		it("should use streaming by default when openAiNativeStreamingEnabled is not specified", async () => {
+			handler = new OpenAiNativeHandler({
+				apiModelId: "gpt-4.1",
+				openAiNativeApiKey: "test-api-key",
+				// openAiNativeStreamingEnabled not specified, should default to true
+			})
+
+			const stream = handler.createMessage(systemPrompt, messages)
+			for await (const chunk of stream) {
+				// consume stream
+			}
+
+			expect(mockCreate).toHaveBeenCalledWith(
+				expect.objectContaining({
+					stream: true,
+					stream_options: { include_usage: true },
+				}),
+			)
+		})
+
+		it("should use streaming when openAiNativeStreamingEnabled is true", async () => {
+			handler = new OpenAiNativeHandler({
+				apiModelId: "gpt-4.1",
+				openAiNativeApiKey: "test-api-key",
+				openAiNativeStreamingEnabled: true,
+			})
+
+			const stream = handler.createMessage(systemPrompt, messages)
+			for await (const chunk of stream) {
+				// consume stream
+			}
+
+			expect(mockCreate).toHaveBeenCalledWith(
+				expect.objectContaining({
+					stream: true,
+					stream_options: { include_usage: true },
+				}),
+			)
+		})
+
+		it("should disable streaming when openAiNativeStreamingEnabled is false for standard models", async () => {
+			handler = new OpenAiNativeHandler({
+				apiModelId: "gpt-4.1",
+				openAiNativeApiKey: "test-api-key",
+				openAiNativeStreamingEnabled: false,
+			})
+
+			mockCreate.mockResolvedValueOnce({
+				id: "test-completion",
+				choices: [
+					{
+						message: { role: "assistant", content: "Non-streaming response" },
+						finish_reason: "stop",
+						index: 0,
+					},
+				],
+				usage: {
+					prompt_tokens: 10,
+					completion_tokens: 5,
+					total_tokens: 15,
+				},
+			})
+
+			const stream = handler.createMessage(systemPrompt, messages)
+			const chunks: any[] = []
+			for await (const chunk of stream) {
+				chunks.push(chunk)
+			}
+
+			// Should call create without stream parameter
+			expect(mockCreate).toHaveBeenCalledWith(
+				expect.objectContaining({
+					model: "gpt-4.1",
+					temperature: 0,
+					messages: [
+						{ role: "system", content: systemPrompt },
+						{ role: "user", content: "Hello!" },
+					],
+				}),
+			)
+			expect(mockCreate).toHaveBeenCalledWith(
+				expect.not.objectContaining({
+					stream: true,
+				}),
+			)
+
+			// Should yield text and usage from non-streaming response
+			expect(chunks).toHaveLength(2)
+			expect(chunks[0]).toMatchObject({ type: "text", text: "Non-streaming response" })
+			expect(chunks[1]).toMatchObject({
+				type: "usage",
+				inputTokens: 10,
+				outputTokens: 5,
+			})
+		})
+
+		it("should disable streaming for O1 models when openAiNativeStreamingEnabled is false", async () => {
+			handler = new OpenAiNativeHandler({
+				apiModelId: "o1",
+				openAiNativeApiKey: "test-api-key",
+				openAiNativeStreamingEnabled: false,
+			})
+
+			mockCreate.mockResolvedValueOnce({
+				id: "test-completion",
+				choices: [
+					{
+						message: { role: "assistant", content: "O1 non-streaming response" },
+						finish_reason: "stop",
+						index: 0,
+					},
+				],
+				usage: {
+					prompt_tokens: 20,
+					completion_tokens: 10,
+					total_tokens: 30,
+				},
+			})
+
+			const stream = handler.createMessage(systemPrompt, messages)
+			const chunks: any[] = []
+			for await (const chunk of stream) {
+				chunks.push(chunk)
+			}
+
+			// Should not include stream parameter for O1 models
+			expect(mockCreate).toHaveBeenCalledWith(
+				expect.objectContaining({
+					model: "o1",
+					messages: [
+						{ role: "developer", content: "Formatting re-enabled\n" + systemPrompt },
+						{ role: "user", content: "Hello!" },
+					],
+				}),
+			)
+			expect(mockCreate).toHaveBeenCalledWith(
+				expect.not.objectContaining({
+					stream: true,
+				}),
+			)
+
+			// Should yield text and usage
+			expect(chunks).toHaveLength(2)
+			expect(chunks[0]).toMatchObject({ type: "text", text: "O1 non-streaming response" })
+			expect(chunks[1]).toMatchObject({
+				type: "usage",
+				inputTokens: 20,
+				outputTokens: 10,
+			})
+		})
+
+		it("should disable streaming for O3-mini models when openAiNativeStreamingEnabled is false", async () => {
+			handler = new OpenAiNativeHandler({
+				apiModelId: "o3-mini",
+				openAiNativeApiKey: "test-api-key",
+				openAiNativeStreamingEnabled: false,
+			})
+
+			mockCreate.mockResolvedValueOnce({
+				id: "test-completion",
+				choices: [
+					{
+						message: { role: "assistant", content: "O3-mini non-streaming response" },
+						finish_reason: "stop",
+						index: 0,
+					},
+				],
+				usage: {
+					prompt_tokens: 15,
+					completion_tokens: 8,
+					total_tokens: 23,
+				},
+			})
+
+			const stream = handler.createMessage(systemPrompt, messages)
+			const chunks: any[] = []
+			for await (const chunk of stream) {
+				chunks.push(chunk)
+			}
+
+			// Should include reasoning_effort but not stream
+			expect(mockCreate).toHaveBeenCalledWith(
+				expect.objectContaining({
+					model: "o3-mini",
+					reasoning_effort: "medium",
+					messages: [
+						{ role: "developer", content: "Formatting re-enabled\n" + systemPrompt },
+						{ role: "user", content: "Hello!" },
+					],
+				}),
+			)
+			expect(mockCreate).toHaveBeenCalledWith(
+				expect.not.objectContaining({
+					stream: true,
+				}),
+			)
+
+			// Should yield text and usage
+			expect(chunks).toHaveLength(2)
+			expect(chunks[0]).toMatchObject({ type: "text", text: "O3-mini non-streaming response" })
+			expect(chunks[1]).toMatchObject({
+				type: "usage",
+				inputTokens: 15,
+				outputTokens: 8,
+			})
+		})
+
+		it("should disable streaming for GPT-5 models when openAiNativeStreamingEnabled is false", async () => {
+			// Mock fetch for non-streaming Responses API
+			const mockFetch = vitest.fn().mockResolvedValue({
+				ok: true,
+				json: async () => ({
+					response: {
+						id: "resp_001",
+						output: [
+							{
+								type: "text",
+								content: [{ type: "text", text: "GPT-5 non-streaming response" }],
+							},
+						],
+						usage: {
+							prompt_tokens: 30,
+							completion_tokens: 15,
+						},
+					},
+				}),
+			})
+			global.fetch = mockFetch as any
+
+			handler = new OpenAiNativeHandler({
+				apiModelId: "gpt-5-2025-08-07",
+				openAiNativeApiKey: "test-api-key",
+				openAiNativeStreamingEnabled: false,
+			})
+
+			const stream = handler.createMessage(systemPrompt, messages)
+			const chunks: any[] = []
+			for await (const chunk of stream) {
+				chunks.push(chunk)
+			}
+
+			// Should call Responses API without stream parameter
+			expect(mockFetch).toHaveBeenCalledWith(
+				"https://api.openai.com/v1/responses",
+				expect.objectContaining({
+					method: "POST",
+					headers: expect.objectContaining({
+						"Content-Type": "application/json",
+						Authorization: "Bearer test-api-key",
+						// No Accept: text/event-stream header for non-streaming
+					}),
+					body: expect.any(String),
+				}),
+			)
+
+			const requestBody = JSON.parse(mockFetch.mock.calls[0][1].body)
+			expect(requestBody.stream).toBe(false)
+			expect(requestBody.model).toBe("gpt-5-2025-08-07")
+
+			// Should yield text and usage
+			expect(chunks).toHaveLength(2)
+			expect(chunks[0]).toMatchObject({ type: "text", text: "GPT-5 non-streaming response" })
+			expect(chunks[1]).toMatchObject({
+				type: "usage",
+				inputTokens: 30,
+				outputTokens: 15,
+			})
+
+			// Clean up
+			delete (global as any).fetch
+		})
+
+		it("should handle cache tokens in non-streaming response", async () => {
+			handler = new OpenAiNativeHandler({
+				apiModelId: "gpt-4.1",
+				openAiNativeApiKey: "test-api-key",
+				openAiNativeStreamingEnabled: false,
+			})
+
+			mockCreate.mockResolvedValueOnce({
+				id: "test-completion",
+				choices: [
+					{
+						message: { role: "assistant", content: "Cached response" },
+						finish_reason: "stop",
+						index: 0,
+					},
+				],
+				usage: {
+					prompt_tokens: 100,
+					completion_tokens: 10,
+					prompt_tokens_details: {
+						cached_tokens: 80,
+					},
+					cache_creation_input_tokens: 20,
+				},
+			})
+
+			const stream = handler.createMessage(systemPrompt, messages)
+			const chunks: any[] = []
+			for await (const chunk of stream) {
+				chunks.push(chunk)
+			}
+
+			// Should include cache tokens in usage
+			const usageChunk = chunks.find((c) => c.type === "usage")
+			expect(usageChunk).toMatchObject({
+				type: "usage",
+				inputTokens: 100,
+				outputTokens: 10,
+				cacheReadTokens: 80,
+				cacheWriteTokens: 20,
+			})
+		})
+
+		it("should handle error in non-streaming response", async () => {
+			handler = new OpenAiNativeHandler({
+				apiModelId: "gpt-4.1",
+				openAiNativeApiKey: "test-api-key",
+				openAiNativeStreamingEnabled: false,
+			})
+
+			mockCreate.mockRejectedValueOnce(new Error("API Error"))
+
+			const stream = handler.createMessage(systemPrompt, messages)
+			await expect(async () => {
+				for await (const chunk of stream) {
+					// Should throw before yielding
+				}
+			}).rejects.toThrow("API Error")
+		})
+
+		it("should handle empty response in non-streaming mode", async () => {
+			handler = new OpenAiNativeHandler({
+				apiModelId: "gpt-4.1",
+				openAiNativeApiKey: "test-api-key",
+				openAiNativeStreamingEnabled: false,
+			})
+
+			mockCreate.mockResolvedValueOnce({
+				id: "test-completion",
+				choices: [
+					{
+						message: { role: "assistant", content: "" },
+						finish_reason: "stop",
+						index: 0,
+					},
+				],
+				usage: {
+					prompt_tokens: 10,
+					completion_tokens: 0,
+				},
+			})
+
+			const stream = handler.createMessage(systemPrompt, messages)
+			const chunks: any[] = []
+			for await (const chunk of stream) {
+				chunks.push(chunk)
+			}
+
+			// Should handle empty content gracefully
+			expect(chunks).toHaveLength(1)
+			expect(chunks[0]).toMatchObject({
+				type: "usage",
+				inputTokens: 10,
+				outputTokens: 0,
+			})
+		})
+
+		it("should handle verbosity parameter correctly in non-streaming mode for GPT-5", async () => {
+			// Mock fetch for non-streaming Responses API
+			const mockFetch = vitest.fn().mockResolvedValue({
+				ok: true,
+				json: async () => ({
+					response: {
+						id: "resp_001",
+						output: [
+							{
+								type: "text",
+								content: [{ type: "text", text: "High verbosity response" }],
+							},
+						],
+						usage: {
+							prompt_tokens: 25,
+							completion_tokens: 12,
+						},
+					},
+				}),
+			})
+			global.fetch = mockFetch as any
+
+			handler = new OpenAiNativeHandler({
+				apiModelId: "gpt-5-2025-08-07",
+				openAiNativeApiKey: "test-api-key",
+				openAiNativeStreamingEnabled: false,
+				verbosity: "high",
+			})
+
+			const stream = handler.createMessage(systemPrompt, messages)
+			const chunks: any[] = []
+			for await (const chunk of stream) {
+				chunks.push(chunk)
+			}
+
+			// Should include verbosity in request
+			const requestBody = JSON.parse(mockFetch.mock.calls[0][1].body)
+			expect(requestBody.text.verbosity).toBe("high")
+			expect(requestBody.stream).toBe(false)
+
+			// Clean up
+			delete (global as any).fetch
+		})
+	})
 })

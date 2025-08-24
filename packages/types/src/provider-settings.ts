@@ -219,6 +219,7 @@ const geminiCliSchema = apiModelIdProviderModelSchema.extend({
 const openAiNativeSchema = apiModelIdProviderModelSchema.extend({
 	openAiNativeApiKey: z.string().optional(),
 	openAiNativeBaseUrl: z.string().optional(),
+	openAiNativeStreamingEnabled: z.boolean().optional(),
 })
 
 const mistralSchema = apiModelIdProviderModelSchema.extend({
