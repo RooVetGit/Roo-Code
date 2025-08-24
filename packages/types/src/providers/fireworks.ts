@@ -65,11 +65,11 @@ export const fireworksModels = {
 	},
 	"accounts/fireworks/models/deepseek-v3p1": {
 		maxTokens: 16384,
-		contextWindow: 128000,
+		contextWindow: 163840,
 		supportsImages: false,
 		supportsPromptCache: false,
-		inputPrice: 0.9,
-		outputPrice: 0.9,
+		inputPrice: 0.56,
+		outputPrice: 1.68,
 		description:
 			"DeepSeek v3.1 is an improved version of the v3 model with enhanced performance, better reasoning capabilities, and improved code generation. This Mixture-of-Experts (MoE) model maintains the same 671B total parameters with 37B activated per token.",
 	},

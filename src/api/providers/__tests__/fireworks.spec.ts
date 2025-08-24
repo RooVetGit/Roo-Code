@@ -190,11 +190,11 @@ describe("FireworksHandler", () => {
 		expect(model.info).toEqual(
 			expect.objectContaining({
 				maxTokens: 16384,
-				contextWindow: 128000,
+				contextWindow: 163840,
 				supportsImages: false,
 				supportsPromptCache: false,
-				inputPrice: 0.9,
-				outputPrice: 0.9,
+				inputPrice: 0.56,
+				outputPrice: 1.68,
 				description: expect.stringContaining("DeepSeek v3.1 is an improved version"),
 			}),
 		)
