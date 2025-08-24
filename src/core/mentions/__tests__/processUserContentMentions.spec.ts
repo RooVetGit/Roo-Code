@@ -51,7 +51,7 @@ describe("processUserContentMentions", () => {
 				mockUrlContentFetcher,
 				mockFileContextTracker,
 				mockRooIgnoreController,
-				true,
+				false,
 				true, // includeDiagnosticMessages
 				50, // maxDiagnosticMessages
 				100,
@@ -80,7 +80,7 @@ describe("processUserContentMentions", () => {
 				mockUrlContentFetcher,
 				mockFileContextTracker,
 				mockRooIgnoreController,
-				true,
+				false,
 				true, // includeDiagnosticMessages
 				50, // maxDiagnosticMessages
 				undefined,
@@ -110,7 +110,7 @@ describe("processUserContentMentions", () => {
 				mockUrlContentFetcher,
 				mockFileContextTracker,
 				mockRooIgnoreController,
-				true,
+				false,
 				true, // includeDiagnosticMessages
 				50, // maxDiagnosticMessages
 				-1,
