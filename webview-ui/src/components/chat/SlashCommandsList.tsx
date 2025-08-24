@@ -17,6 +17,8 @@ import {
 	Button,
 } from "@/components/ui"
 import { vscode } from "@/utils/vscode"
+import { telemetryClient } from "@/utils/TelemetryClient"
+import { TelemetryEventName } from "@roo-code/types"
 
 import { SlashCommandItem } from "./SlashCommandItem"
 
@@ -82,6 +84,12 @@ export const SlashCommandsList: React.FC<SlashCommandsListProps> = ({ commands, 
 	}
 
 	const handleCommandClick = (command: Command) => {
+		// Track telemetry for slash command usage
+		telemetryClient.capture(TelemetryEventName.SLASH_COMMAND_USED, {
+			commandType: "custom",
+			commandName: command.name,
+		})
+
 		// Insert the command into the textarea
 		vscode.postMessage({
 			type: "insertTextIntoTextarea",
