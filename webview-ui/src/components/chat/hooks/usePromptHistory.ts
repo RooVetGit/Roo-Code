@@ -22,6 +22,7 @@ export interface UsePromptHistoryReturn {
 	) => boolean
 	resetHistoryNavigation: () => void
 	resetOnInputChange: () => void
+	addToLocalHistory: (message: string) => void
 }
 
 export const usePromptHistory = ({
@@ -38,6 +39,8 @@ export const usePromptHistory = ({
 	const [historyIndex, setHistoryIndex] = useState(-1)
 	const [tempInput, setTempInput] = useState("")
 	const [promptHistory, setPromptHistory] = useState<string[]>([])
+	// Local sent messages that haven't been confirmed by backend yet
+	const [localSentMessages, setLocalSentMessages] = useState<string[]>([])
 
 	// Initialize prompt history with hybrid approach: conversation messages if in task, otherwise task history
 	const filteredPromptHistory = useMemo(() => {
@@ -46,9 +49,30 @@ export const usePromptHistory = ({
 			?.filter((message) => message.type === "say" && message.say === "user_feedback" && message.text?.trim())
 			.map((message) => message.text!)
 
-		// If we have conversation messages, use those (newest first when navigating up)
+		// Combine conversation prompts with local sent messages (deduplicated)
+		const allPrompts: string[] = []
+		const seen = new Set<string>()
+
+		// Add conversation prompts first
 		if (conversationPrompts?.length) {
-			return conversationPrompts.slice(-MAX_PROMPT_HISTORY_SIZE).reverse()
+			conversationPrompts.forEach((prompt) => {
+				if (!seen.has(prompt)) {
+					seen.add(prompt)
+					allPrompts.push(prompt)
+				}
+			})
+		}
+
+		// Add local sent messages that aren't in conversation yet
+		localSentMessages.forEach((msg) => {
+			if (!seen.has(msg)) {
+				allPrompts.push(msg)
+			}
+		})
+
+		// If we have any prompts, use those (newest first when navigating up)
+		if (allPrompts.length) {
+			return allPrompts.slice(-MAX_PROMPT_HISTORY_SIZE).reverse()
 		}
 
 		// If we have clineMessages array (meaning we're in an active task), don't fall back to task history
@@ -67,7 +91,7 @@ export const usePromptHistory = ({
 			.filter((item) => item.task?.trim() && (!item.workspace || item.workspace === cwd))
 			.map((item) => item.task)
 			.slice(0, MAX_PROMPT_HISTORY_SIZE)
-	}, [clineMessages, taskHistory, cwd])
+	}, [clineMessages, taskHistory, cwd, localSentMessages])
 
 	// Update prompt history when filtered history changes and reset navigation
 	useEffect(() => {
@@ -175,6 +199,21 @@ export const usePromptHistory = ({
 		setTempInput("")
 	}, [])
 
+	// Add a message to local sent history
+	const addToLocalHistory = useCallback((message: string) => {
+		if (message?.trim()) {
+			setLocalSentMessages((prev) => [...prev, message].slice(-MAX_PROMPT_HISTORY_SIZE))
+		}
+	}, [])
+
+	// Clear local sent messages when task changes
+	useEffect(() => {
+		// When clineMessages changes significantly (new task), clear local messages
+		if (!clineMessages?.length) {
+			setLocalSentMessages([])
+		}
+	}, [clineMessages?.length])
+
 	return {
 		historyIndex,
 		setHistoryIndex,
@@ -184,5 +223,6 @@ export const usePromptHistory = ({
 		handleHistoryNavigation,
 		resetHistoryNavigation,
 		resetOnInputChange,
+		addToLocalHistory,
 	}
 }

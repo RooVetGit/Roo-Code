@@ -215,13 +215,14 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 		const [isFocused, setIsFocused] = useState(false)
 
 		// Use custom hook for prompt history navigation
-		const { handleHistoryNavigation, resetHistoryNavigation, resetOnInputChange } = usePromptHistory({
-			clineMessages,
-			taskHistory,
-			cwd,
-			inputValue,
-			setInputValue,
-		})
+		const { handleHistoryNavigation, resetHistoryNavigation, resetOnInputChange, addToLocalHistory } =
+			usePromptHistory({
+				clineMessages,
+				taskHistory,
+				cwd,
+				inputValue,
+				setInputValue,
+			})
 
 		// Fetch git commits when Git is selected or when typing a hash.
 		useEffect(() => {
@@ -465,6 +466,11 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 				if (event.key === "Enter" && !event.shiftKey && !isComposing) {
 					event.preventDefault()
 
+					// Add to local history before sending
+					if (inputValue.trim()) {
+						addToLocalHistory(inputValue.trim())
+					}
+
 					// Always call onSend - let ChatView handle queueing when disabled
 					resetHistoryNavigation()
 					onSend()
@@ -531,6 +537,7 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 				handleHistoryNavigation,
 				resetHistoryNavigation,
 				commands,
+				addToLocalHistory,
 			],
 		)
 
