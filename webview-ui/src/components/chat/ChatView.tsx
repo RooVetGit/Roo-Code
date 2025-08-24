@@ -381,7 +381,9 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 							if (!isPartial) {
 								playSound("celebration")
 							}
-							setSendingDisabled(isPartial)
+							// Keep sendingDisabled as true during completion_result to prevent message loss
+							// Messages will be queued and processed after the user starts a new task
+							setSendingDisabled(true)
 							setClineAsk("completion_result")
 							setEnableButtons(!isPartial)
 							setPrimaryButtonText(t("chat:startNewTask.title"))
@@ -648,13 +650,19 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 
 	useEffect(() => {
 		// Early return if conditions aren't met
-		// Also don't process queue if there's an API error (clineAsk === "api_req_failed")
-		if (
-			sendingDisabled ||
+		// Don't process queue if:
+		// - sending is disabled (except for completion_result which is a special case)
+		// - there's an API error
+		// - we're in the middle of streaming (except completion_result)
+		const isCompletionResult = clineAsk === "completion_result"
+		const shouldBlockQueue =
+			(sendingDisabled && !isCompletionResult) ||
 			messageQueue.length === 0 ||
 			isProcessingQueueRef.current ||
-			clineAsk === "api_req_failed"
-		) {
+			clineAsk === "api_req_failed" ||
+			(isStreaming && !isCompletionResult)
+
+		if (shouldBlockQueue) {
 			return
 		}
 
@@ -698,7 +706,7 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 		return () => {
 			isProcessingQueueRef.current = false
 		}
-	}, [sendingDisabled, messageQueue, handleSendMessage, clineAsk])
+	}, [sendingDisabled, messageQueue, handleSendMessage, clineAsk, isStreaming])
 
 	const handleSetChatBoxMessage = useCallback(
 		(text: string, images: string[]) => {
@@ -766,6 +774,13 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 				case "resume_completed_task":
 					// Waiting for feedback, but we can just present a new task button
 					startNewTask()
+					// Process any queued messages after starting new task
+					// We don't need to check messageQueue.length here as it will be
+					// processed automatically once sendingDisabled is set to false
+					// Give the new task a moment to initialize, then enable sending
+					setTimeout(() => {
+						setSendingDisabled(false)
+					}, 100)
 					break
 				case "command_output":
 					vscode.postMessage({ type: "terminalOperation", terminalOperation: "continue" })
