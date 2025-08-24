@@ -127,18 +127,8 @@ const AutoApproveMenu = ({ style }: AutoApproveMenuProps) => {
 		setIsExpanded((prev) => !prev)
 	}, [])
 
-	const enabledActionsList = Object.entries(toggles)
-		.filter(([_key, value]) => !!value)
-		.map(([key]) => t(autoApproveSettingsConfig[key as AutoApproveSetting].labelKey))
-		.join(", ")
-
-	// Update displayed text logic
-	const displayText = useMemo(() => {
-		if (!effectiveAutoApprovalEnabled || !hasEnabledOptions) {
-			return t("chat:autoApprove.none")
-		}
-		return enabledActionsList || t("chat:autoApprove.none")
-	}, [effectiveAutoApprovalEnabled, hasEnabledOptions, enabledActionsList, t])
+	// Get all icons for display and highlight based on toggle state
+	const allConfigs = useMemo(() => Object.values(autoApproveSettingsConfig), [])
 
 	const handleOpenSettings = useCallback(
 		() =>
@@ -230,8 +220,44 @@ const AutoApproveMenu = ({ style }: AutoApproveMenuProps) => {
 							whiteSpace: "nowrap",
 							flex: 1,
 							minWidth: 0,
-						}}>
-						{displayText}
+							display: "flex",
+							alignItems: "center",
+							gap: "6px",
+						}}
+						onClick={(e) => e.stopPropagation()}>
+						{allConfigs.map(({ key, icon, labelKey }) => {
+							const isEnabled = !!toggles[key]
+							return (
+								<StandardTooltip key={key} content={t(labelKey)}>
+									<button
+										className={`codicon codicon-${icon}`}
+										data-active={isEnabled ? "true" : "false"}
+										onClick={() => onAutoApproveToggle(key, !isEnabled)}
+										style={{
+											fontSize: "14px",
+											flexShrink: 0,
+											opacity: isEnabled ? 1 : 0.5,
+											color: isEnabled
+												? "var(--vscode-foreground)"
+												: "var(--vscode-descriptionForeground)",
+											background: "transparent",
+											border: "none",
+											cursor: "pointer",
+											padding: "2px",
+											borderRadius: "3px",
+											transition: "background-color 0.1s",
+										}}
+										onMouseEnter={(e) => {
+											e.currentTarget.style.backgroundColor =
+												"var(--vscode-toolbar-hoverBackground)"
+										}}
+										onMouseLeave={(e) => {
+											e.currentTarget.style.backgroundColor = "transparent"
+										}}
+									/>
+								</StandardTooltip>
+							)
+						})}
 					</span>
 					<span
 						className={`codicon codicon-chevron-right flex-shrink-0 transition-transform duration-200 ease-in-out ${
