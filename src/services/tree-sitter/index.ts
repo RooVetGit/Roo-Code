@@ -10,6 +10,12 @@ import { QueryCapture } from "web-tree-sitter"
 // Private constant
 const DEFAULT_MIN_COMPONENT_LINES_VALUE = 4
 
+// Language-specific rules
+const LANGUAGE_SKIP_RULES: Record<string, string[]> = {
+	java: ["definition.method"],
+	// Future languages can be added here
+}
+
 // Getter function for MIN_COMPONENT_LINES (for easier testing)
 let currentMinComponentLines = DEFAULT_MIN_COMPONENT_LINES_VALUE
 
@@ -25,6 +31,14 @@ export function getMinComponentLines(): number {
  */
 export function setMinComponentLines(value: number): void {
 	currentMinComponentLines = value
+}
+
+function shouldSkipLineCountCheck(lineCount: number, capture: QueryCapture, language: string) {
+	const skipRules = LANGUAGE_SKIP_RULES[language]
+	if (skipRules && skipRules.includes(capture.name)) {
+		return false
+	}
+	return lineCount < getMinComponentLines()
 }
 
 const extensions = [
@@ -310,7 +324,7 @@ function processCaptures(captures: QueryCapture[], lines: string[], language: st
 		const lineCount = endLine - startLine + 1
 
 		// Skip components that don't span enough lines
-		if (shouldSkip(lineCount, capture, language)) {
+		if (shouldSkipLineCountCheck(lineCount, capture, language)) {
 			return
 		}
 
@@ -324,9 +338,9 @@ function processCaptures(captures: QueryCapture[], lines: string[], language: st
 		}
 
 		let outputLineIdx = startLine
-		// For Java method definitions, find the first non-annotation line
+		// For Java method definitions, find the actual method signature line
 		if (language === "java" && name === "definition.method") {
-			outputLineIdx = skipJavaAnnotations(lines, startLine, endLine)
+			outputLineIdx = findJavaMethodSignatureLine(lines, startLine, endLine)
 		}
 
 		// Check if this is a valid component definition (not an HTML element)
@@ -419,84 +433,46 @@ async function parseFile(
 		return null
 	}
 }
-function shouldSkip(lineCount: number, capture: QueryCapture, language: string) {
-	if (language === "java") {
-		if (["definition.method"].includes(capture.name)) {
-			return false
-		}
-	}
-	return lineCount < getMinComponentLines()
-}
 
 /**
- * Skip Java annotations and find the first line that contains the actual method declaration
+ * Find the line containing the actual Java method signature
+ * by looking for lines that match method declaration patterns
  *
  * @param lines - Array of lines from the file
  * @param startLine - Starting line index
  * @param endLine - Ending line index
- * @returns The line index of the first non-annotation line
+ * @returns The line index of the method signature
  */
-function skipJavaAnnotations(lines: string[], startLine: number, endLine: number): number {
-	let currentLine = startLine
-	let inAnnotation = false
-	let annotationDepth = 0
+function findJavaMethodSignatureLine(lines: string[], startLine: number, endLine: number): number {
+	// Java method signature pattern:
+	// - May start with access modifiers (public, private, protected, static, final, etc.)
+	// - Followed by return type
+	// - Followed by method name
+	// - Followed by parentheses
+	const methodSignaturePattern =
+		/^\s*(public|private|protected|static|final|abstract|synchronized|native|strictfp|\w+\s+)*\w+\s*\(/
 
-	while (currentLine <= endLine) {
-		const line = lines[currentLine].trim()
+	for (let i = startLine; i <= endLine; i++) {
+		const line = lines[i].trim()
 
-		// Skip empty lines
-		if (line.length === 0) {
-			currentLine++
+		// Skip empty lines and annotation lines
+		if (line.length === 0 || line.startsWith("@")) {
 			continue
 		}
 
-		// Check if this line starts an annotation
-		if (line.startsWith("@")) {
-			inAnnotation = true
-			annotationDepth = 0
-
-			// Count opening and closing parentheses to track annotation completion
-			for (const char of line) {
-				if (char === "(") {
-					annotationDepth++
-				} else if (char === ")") {
-					annotationDepth--
-				}
-			}
-
-			// If annotation is complete on this line, mark as not in annotation
-			if (annotationDepth <= 0) {
-				inAnnotation = false
-			}
-
-			currentLine++
-			continue
+		// Check if this line looks like a method signature
+		if (methodSignaturePattern.test(line)) {
+			return i
 		}
-
-		// If we're still inside a multi-line annotation
-		if (inAnnotation) {
-			// Count parentheses to track when annotation ends
-			for (const char of line) {
-				if (char === "(") {
-					annotationDepth++
-				} else if (char === ")") {
-					annotationDepth--
-				}
-			}
-
-			// If annotation is complete, mark as not in annotation
-			if (annotationDepth <= 0) {
-				inAnnotation = false
-			}
-
-			currentLine++
-			continue
-		}
-
-		// If we're not in an annotation and this line has content, this is our target
-		return currentLine
 	}
 
-	// If we couldn't find a non-annotation line, return the start line
+	// If no method signature found, return the first non-annotation, non-empty line
+	for (let i = startLine; i <= endLine; i++) {
+		const line = lines[i].trim()
+		if (line.length > 0 && !line.startsWith("@")) {
+			return i
+		}
+	}
+
 	return startLine
 }
