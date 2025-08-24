@@ -93,7 +93,7 @@ public class TestClassDefinition<T extends Comparable<T>>
         value="test"
     )
     
-    public void testMultipleAnnotationMethod(String message, T data) {
+    void testMultipleAnnotationMethod(String message, T data) {
         System.out.println(testInterfaceDefaultMethod(message, data));
     }
 

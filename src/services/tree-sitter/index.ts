@@ -449,8 +449,9 @@ function findJavaMethodSignatureLine(lines: string[], startLine: number, endLine
 	// - Followed by return type
 	// - Followed by method name
 	// - Followed by parentheses
+	// Using atomic groups and possessive quantifiers to prevent backtracking
 	const methodSignaturePattern =
-		/^\s*(public|private|protected|static|final|abstract|synchronized|native|strictfp|\w+\s+)*\w+\s*\(/
+		/^\s*(?:public|private|protected|static|final|abstract|synchronized|native|strictfp|\w+)(?:\s+(?:public|private|protected|static|final|abstract|synchronized|native|strictfp|\w+))*\s+\w+\s*\(/
 
 	for (let i = startLine; i <= endLine; i++) {
 		const line = lines[i].trim()
