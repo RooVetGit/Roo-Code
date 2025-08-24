@@ -39,7 +39,11 @@
 		"invalidModel": "Invalid model. Please check your model configuration.",
 		"invalidResponse": "Invalid response from embedder service. Please check your configuration.",
 		"apiKeyRequired": "API key is required for this embedder",
-		"baseUrlRequired": "Base URL is required for this embedder"
+		"baseUrlRequired": "Base URL is required for this embedder",
+		"initializationFailed": "Code indexing initialization failed: {{error}}",
+		"featureDisabled": "Code indexing is disabled. Please enable it in the settings.",
+		"notConfigured": "Code indexing is not properly configured. Please check your settings.",
+		"startIndexingFailed": "Failed to start indexing: {{error}}"
 	},
 	"serviceFactory": {
 		"openAiConfigMissing": "OpenAI configuration missing for embedder creation",

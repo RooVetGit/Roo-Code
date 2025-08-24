@@ -2266,7 +2266,32 @@ export const webviewMessageHandler = async (
 				}
 				if (manager.isFeatureEnabled && manager.isFeatureConfigured) {
 					if (!manager.isInitialized) {
-						await manager.initialize(provider.contextProxy)
+						try {
+							await manager.initialize(provider.contextProxy)
+						} catch (initError) {
+							// Initialization failed - send detailed error to user
+							const errorMessage = initError instanceof Error ? initError.message : String(initError)
+							provider.log(`Code index initialization failed: ${errorMessage}`)
+
+							// Send error status to webview with user-friendly message
+							provider.postMessageToWebview({
+								type: "indexingStatusUpdate",
+								values: {
+									systemStatus: "Error",
+									message: errorMessage,
+									processedItems: 0,
+									totalItems: 0,
+									currentItemUnit: "items",
+								},
+							})
+
+							// Show error notification to user
+							vscode.window.showErrorMessage(
+								t("embeddings:validation.initializationFailed", { error: errorMessage }) ||
+									`Code indexing initialization failed: ${errorMessage}`,
+							)
+							return
+						}
 					}
 
 					// startIndexing now handles error recovery internally
@@ -2274,13 +2299,75 @@ export const webviewMessageHandler = async (
 
 					// If startIndexing recovered from error, we need to reinitialize
 					if (!manager.isInitialized) {
-						await manager.initialize(provider.contextProxy)
-						// Try starting again after initialization
-						manager.startIndexing()
+						try {
+							await manager.initialize(provider.contextProxy)
+							// Try starting again after initialization
+							manager.startIndexing()
+						} catch (reinitError) {
+							// Re-initialization failed - send detailed error to user
+							const errorMessage =
+								reinitError instanceof Error ? reinitError.message : String(reinitError)
+							provider.log(`Code index re-initialization failed: ${errorMessage}`)
+
+							// Send error status to webview
+							provider.postMessageToWebview({
+								type: "indexingStatusUpdate",
+								values: {
+									systemStatus: "Error",
+									message: errorMessage,
+									processedItems: 0,
+									totalItems: 0,
+									currentItemUnit: "items",
+								},
+							})
+
+							// Show error notification to user
+							vscode.window.showErrorMessage(
+								t("embeddings:validation.initializationFailed", { error: errorMessage }) ||
+									`Code indexing initialization failed: ${errorMessage}`,
+							)
+						}
 					}
+				} else {
+					// Feature is not enabled or not configured
+					const message = !manager.isFeatureEnabled
+						? t("embeddings:validation.featureDisabled") || "Code indexing is disabled"
+						: t("embeddings:validation.notConfigured") || "Code indexing is not properly configured"
+
+					provider.postMessageToWebview({
+						type: "indexingStatusUpdate",
+						values: {
+							systemStatus: "Error",
+							message: message,
+							processedItems: 0,
+							totalItems: 0,
+							currentItemUnit: "items",
+						},
+					})
+
+					vscode.window.showErrorMessage(message)
 				}
 			} catch (error) {
-				provider.log(`Error starting indexing: ${error instanceof Error ? error.message : String(error)}`)
+				const errorMessage = error instanceof Error ? error.message : String(error)
+				provider.log(`Error starting indexing: ${errorMessage}`)
+
+				// Send error status to webview
+				provider.postMessageToWebview({
+					type: "indexingStatusUpdate",
+					values: {
+						systemStatus: "Error",
+						message: errorMessage,
+						processedItems: 0,
+						totalItems: 0,
+						currentItemUnit: "items",
+					},
+				})
+
+				// Show error notification to user
+				vscode.window.showErrorMessage(
+					t("embeddings:validation.startIndexingFailed", { error: errorMessage }) ||
+						`Failed to start indexing: ${errorMessage}`,
+				)
 			}
 			break
 		}
