@@ -262,7 +262,7 @@ This approach allows us to focus on the most relevant parts of the code (defined
  *
  * @param captures - The captures to process
  * @param lines - The lines of the file
- * @param minComponentLines - Minimum number of lines for a component to be included
+ * @param language - The programming language of the file
  * @returns A formatted string with definitions
  */
 function processCaptures(captures: QueryCapture[], lines: string[], language: string): string | null {
@@ -310,7 +310,7 @@ function processCaptures(captures: QueryCapture[], lines: string[], language: st
 		const lineCount = endLine - startLine + 1
 
 		// Skip components that don't span enough lines
-		if (lineCount < getMinComponentLines()) {
+		if (shouldSkip(lineCount, capture, language)) {
 			return
 		}
 
@@ -323,8 +323,14 @@ function processCaptures(captures: QueryCapture[], lines: string[], language: st
 			return
 		}
 
+		let outputLineIdx = startLine
+		// For Java method definitions, find the first non-annotation line
+		if (language === "java" && name === "definition.method") {
+			outputLineIdx = skipJavaAnnotations(lines, startLine, endLine)
+		}
+
 		// Check if this is a valid component definition (not an HTML element)
-		const startLineContent = lines[startLine].trim()
+		const startLineContent = lines[outputLineIdx].trim()
 
 		// Special handling for component name definitions
 		if (name.includes("name.definition")) {
@@ -333,13 +339,13 @@ function processCaptures(captures: QueryCapture[], lines: string[], language: st
 
 			// Add component name to output regardless of HTML filtering
 			if (!processedLines.has(lineKey) && componentName) {
-				formattedOutput += `${startLine + 1}--${endLine + 1} | ${lines[startLine]}\n`
+				formattedOutput += `${outputLineIdx + 1}--${endLine + 1} | ${lines[outputLineIdx]}\n`
 				processedLines.add(lineKey)
 			}
 		}
 		// For other component definitions
 		else if (isNotHtmlElement(startLineContent)) {
-			formattedOutput += `${startLine + 1}--${endLine + 1} | ${lines[startLine]}\n`
+			formattedOutput += `${outputLineIdx + 1}--${endLine + 1} | ${lines[outputLineIdx]}\n`
 			processedLines.add(lineKey)
 
 			// If this is part of a larger definition, include its non-HTML context
@@ -412,4 +418,85 @@ async function parseFile(
 		// Return null on parsing error to avoid showing error messages in the output
 		return null
 	}
+}
+function shouldSkip(lineCount: number, capture: QueryCapture, language: string) {
+	if (language === "java") {
+		if (["definition.method"].includes(capture.name)) {
+			return false
+		}
+	}
+	return lineCount < getMinComponentLines()
+}
+
+/**
+ * Skip Java annotations and find the first line that contains the actual method declaration
+ *
+ * @param lines - Array of lines from the file
+ * @param startLine - Starting line index
+ * @param endLine - Ending line index
+ * @returns The line index of the first non-annotation line
+ */
+function skipJavaAnnotations(lines: string[], startLine: number, endLine: number): number {
+	let currentLine = startLine
+	let inAnnotation = false
+	let annotationDepth = 0
+
+	while (currentLine <= endLine) {
+		const line = lines[currentLine].trim()
+
+		// Skip empty lines
+		if (line.length === 0) {
+			currentLine++
+			continue
+		}
+
+		// Check if this line starts an annotation
+		if (line.startsWith("@")) {
+			inAnnotation = true
+			annotationDepth = 0
+
+			// Count opening and closing parentheses to track annotation completion
+			for (const char of line) {
+				if (char === "(") {
+					annotationDepth++
+				} else if (char === ")") {
+					annotationDepth--
+				}
+			}
+
+			// If annotation is complete on this line, mark as not in annotation
+			if (annotationDepth <= 0) {
+				inAnnotation = false
+			}
+
+			currentLine++
+			continue
+		}
+
+		// If we're still inside a multi-line annotation
+		if (inAnnotation) {
+			// Count parentheses to track when annotation ends
+			for (const char of line) {
+				if (char === "(") {
+					annotationDepth++
+				} else if (char === ")") {
+					annotationDepth--
+				}
+			}
+
+			// If annotation is complete, mark as not in annotation
+			if (annotationDepth <= 0) {
+				inAnnotation = false
+			}
+
+			currentLine++
+			continue
+		}
+
+		// If we're not in an annotation and this line has content, this is our target
+		return currentLine
+	}
+
+	// If we couldn't find a non-annotation line, return the start line
+	return startLine
 }
