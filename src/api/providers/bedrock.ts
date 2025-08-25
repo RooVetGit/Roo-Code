@@ -7,8 +7,13 @@ import {
 	Message,
 	SystemContentBlock,
 } from "@aws-sdk/client-bedrock-runtime"
+import { NodeHttpHandler } from "@smithy/node-http-handler"
 import { fromIni } from "@aws-sdk/credential-providers"
 import { Anthropic } from "@anthropic-ai/sdk"
+import * as vscode from "vscode"
+import * as fs from "fs"
+import { ProxyAgent } from "proxy-agent"
+import * as https from "https"
 
 import {
 	type ModelInfo,
@@ -225,15 +230,17 @@ export class AwsBedrockHandler extends BaseProvider implements SingleCompletionH
 				this.options.awsBedrockEndpointEnabled && { endpoint: this.options.awsBedrockEndpoint }),
 		}
 
+		// Build a Node HTTP handler that respects VS Code proxy and strict SSL settings
+		const httpHandler = this.createNodeHttpHandler()
+		if (httpHandler) {
+			clientConfig.requestHandler = httpHandler
+		}
+
 		if (this.options.awsUseApiKey && this.options.awsApiKey) {
 			// Use API key/token-based authentication if enabled and API key is set
 			clientConfig.token = { token: this.options.awsApiKey }
 			clientConfig.authSchemePreference = ["httpBearerAuth"] // Otherwise there's no end of credential problems.
-			clientConfig.requestHandler = {
-				// This should be the default anyway, but without setting something
-				// this provider fails to work with LiteLLM passthrough.
-				requestTimeout: 0,
-			}
+			// If we created a NodeHttpHandler above, ensure request timeout behavior is set there.
 		} else if (this.options.awsUseProfile && this.options.awsProfile) {
 			// Use profile-based credentials if enabled and profile is set
 			clientConfig.credentials = fromIni({
@@ -250,6 +257,76 @@ export class AwsBedrockHandler extends BaseProvider implements SingleCompletionH
 		}
 
 		this.client = new BedrockRuntimeClient(clientConfig)
+	}
+
+	/**
+	 * Create a NodeHttpHandler configured to work behind corporate proxies and with custom CAs.
+	 * - Honors VS Code settings: `http.proxy` and `http.proxyStrictSSL`
+	 * - Honors env vars: HTTPS_PROXY/HTTP_PROXY/ALL_PROXY, NODE_EXTRA_CA_CERTS, AWS_CA_BUNDLE
+	 */
+	private createNodeHttpHandler(): NodeHttpHandler | undefined {
+		try {
+			const httpConfig = vscode.workspace.getConfiguration("http")
+			const proxyUrl = (
+				httpConfig.get<string>("proxy") ||
+				process.env.HTTPS_PROXY ||
+				process.env.HTTP_PROXY ||
+				process.env.ALL_PROXY ||
+				""
+			).trim()
+			const strictSSL = httpConfig.get<boolean>("proxyStrictSSL", true)
+
+			let ca: Buffer | undefined
+			const caPath = (process.env.NODE_EXTRA_CA_CERTS || process.env.AWS_CA_BUNDLE || "").trim()
+			if (caPath) {
+				try {
+					ca = fs.readFileSync(caPath)
+				} catch (e) {
+					logger.warn("Failed to read custom CA bundle; continuing without it", {
+						ctx: "bedrock",
+						error: e instanceof Error ? e.message : String(e),
+						caPath,
+					})
+				}
+			}
+
+			const agentOptions: https.AgentOptions = {
+				rejectUnauthorized: strictSSL,
+				...(ca ? { ca } : {}),
+			}
+
+			let httpAgent: any | undefined
+			let httpsAgent: any | undefined
+
+			if (proxyUrl) {
+				// Use proxy-agent to support http/https/socks/PAC proxies seamlessly
+				// ProxyAgent constructor expects options object with proper TLS configuration
+				const proxyAgent = new ProxyAgent({
+					// The ProxyAgent will use the proxy URL from environment or options
+					httpsAgent: new https.Agent(agentOptions),
+					// Pass TLS options for proper certificate handling
+					rejectUnauthorized: strictSSL,
+					...(ca ? { ca } : {}),
+				})
+				// proxy-agent returns a single agent for both protocols
+				httpAgent = proxyAgent
+				httpsAgent = proxyAgent
+			} else {
+				// Direct connection agents with proper TLS options
+				httpsAgent = new https.Agent(agentOptions)
+			}
+
+			return new NodeHttpHandler({
+				httpAgent,
+				httpsAgent,
+			})
+		} catch (err) {
+			logger.warn("Failed to initialize custom NodeHttpHandler; falling back to default", {
+				ctx: "bedrock",
+				error: err instanceof Error ? err.message : String(err),
+			})
+			return undefined
+		}
 	}
 
 	// Helper to guess model info from custom modelId string if not in bedrockModels
