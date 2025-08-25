@@ -11,6 +11,7 @@ import {
 	getSingleCommandDecision,
 	CommandValidator,
 	createCommandValidator,
+	containsDangerousSubstitution,
 } from "../command-validation"
 
 describe("Command Validation", () => {
@@ -198,6 +199,109 @@ ls -la || echo "Failed"`
 		it("handles undefined/empty allowed commands", () => {
 			expect(isAutoApprovedSingleCommand("npm test", undefined as any)).toBe(false)
 			expect(isAutoApprovedSingleCommand("npm test", [])).toBe(false)
+		})
+	})
+
+	describe("containsDangerousSubstitution", () => {
+		it("detects parameter expansion with @P operator (prompt string expansion)", () => {
+			// This is the specific vulnerability from the report - @P can execute commands
+			expect(containsDangerousSubstitution('echo "${var1=aa\\140whoami\\140c}${var1@P}"')).toBe(true)
+			expect(containsDangerousSubstitution("echo ${var@P}")).toBe(true)
+			expect(containsDangerousSubstitution("result=${input@P}")).toBe(true)
+			expect(containsDangerousSubstitution("${somevar@P}")).toBe(true)
+		})
+
+		it("detects other dangerous parameter expansion operators", () => {
+			// @Q - Quote removal
+			expect(containsDangerousSubstitution("echo ${var@Q}")).toBe(true)
+			// @E - Escape sequence expansion
+			expect(containsDangerousSubstitution("echo ${var@E}")).toBe(true)
+			// @A - Assignment statement
+			expect(containsDangerousSubstitution("echo ${var@A}")).toBe(true)
+			// @a - Attribute flags
+			expect(containsDangerousSubstitution("echo ${var@a}")).toBe(true)
+		})
+
+		it("detects parameter assignments with octal escape sequences", () => {
+			// Octal \140 is backtick, which can execute commands
+			expect(containsDangerousSubstitution('echo "${var=\\140whoami\\140}"')).toBe(true)
+			expect(containsDangerousSubstitution('echo "${var:=\\140ls\\140}"')).toBe(true)
+			expect(containsDangerousSubstitution('echo "${var+\\140pwd\\140}"')).toBe(true)
+			expect(containsDangerousSubstitution('echo "${var:-\\140date\\140}"')).toBe(true)
+			expect(containsDangerousSubstitution('echo "${var:+\\140echo test\\140}"')).toBe(true)
+			expect(containsDangerousSubstitution('echo "${var:?\\140rm file\\140}"')).toBe(true)
+			// Test various octal patterns
+			expect(containsDangerousSubstitution('echo "${var=\\001\\140\\141}"')).toBe(true)
+			expect(containsDangerousSubstitution('echo "${var=\\777}"')).toBe(true)
+		})
+
+		it("detects parameter assignments with hex escape sequences", () => {
+			// Hex \x60 is backtick
+			expect(containsDangerousSubstitution('echo "${var=\\x60whoami\\x60}"')).toBe(true)
+			expect(containsDangerousSubstitution('echo "${var:=\\x60ls\\x60}"')).toBe(true)
+			expect(containsDangerousSubstitution('echo "${var+\\x60pwd\\x60}"')).toBe(true)
+			expect(containsDangerousSubstitution('echo "${var:-\\x60date\\x60}"')).toBe(true)
+			// Test various hex patterns
+			expect(containsDangerousSubstitution('echo "${var=\\x00\\x60\\x61}"')).toBe(true)
+			expect(containsDangerousSubstitution('echo "${var=\\xFF}"')).toBe(true)
+		})
+
+		it("detects indirect variable references", () => {
+			// ${!var} performs indirect expansion which can be dangerous
+			expect(containsDangerousSubstitution("echo ${!var}")).toBe(true)
+			expect(containsDangerousSubstitution("result=${!indirect}")).toBe(true)
+			expect(containsDangerousSubstitution("${!prefix*}")).toBe(true)
+			expect(containsDangerousSubstitution("${!prefix@}")).toBe(true)
+		})
+
+		it("detects here-strings with command substitution", () => {
+			expect(containsDangerousSubstitution("cat <<<$(whoami)")).toBe(true)
+			expect(containsDangerousSubstitution("read <<<`date`")).toBe(true)
+			expect(containsDangerousSubstitution("grep pattern <<< $(ls)")).toBe(true)
+			expect(containsDangerousSubstitution("sort <<< `pwd`")).toBe(true)
+		})
+
+		it("does NOT flag safe parameter expansions", () => {
+			// Regular parameter expansions without dangerous operators
+			expect(containsDangerousSubstitution("echo ${var}")).toBe(false)
+			expect(containsDangerousSubstitution("echo ${var:-default}")).toBe(false)
+			expect(containsDangerousSubstitution("echo ${var:+alternative}")).toBe(false)
+			expect(containsDangerousSubstitution("echo ${#var}")).toBe(false)
+			expect(containsDangerousSubstitution("echo ${var%pattern}")).toBe(false)
+			expect(containsDangerousSubstitution("echo ${var#pattern}")).toBe(false)
+			expect(containsDangerousSubstitution("echo ${var/old/new}")).toBe(false)
+			expect(containsDangerousSubstitution("echo ${var^^}")).toBe(false)
+			expect(containsDangerousSubstitution("echo ${var,,}")).toBe(false)
+			expect(containsDangerousSubstitution("echo ${var:0:5}")).toBe(false)
+
+			// Parameter assignments without escape sequences
+			expect(containsDangerousSubstitution('echo "${var=normal text}"')).toBe(false)
+			expect(containsDangerousSubstitution('echo "${var:-default value}"')).toBe(false)
+			expect(containsDangerousSubstitution('echo "${var:+alternative}"')).toBe(false)
+
+			// Here-strings without command substitution
+			expect(containsDangerousSubstitution("cat <<<plain_text")).toBe(false)
+			expect(containsDangerousSubstitution('read <<<"static string"')).toBe(false)
+			expect(containsDangerousSubstitution("grep <<<$var")).toBe(false) // Plain variable, not command substitution
+		})
+
+		it("handles complex combinations of dangerous patterns", () => {
+			// Multiple dangerous patterns in one command
+			expect(containsDangerousSubstitution('echo "${var1=\\140ls\\140}${var1@P}" && ${!indirect}')).toBe(true)
+			// Nested patterns
+			expect(containsDangerousSubstitution('echo "${outer=${inner@P}}"')).toBe(true)
+			// Mixed with safe patterns
+			expect(containsDangerousSubstitution("echo ${safe:-default} ${dangerous@P}")).toBe(true)
+		})
+
+		it("detects the exact exploit from the security report", () => {
+			// The exact pattern reported in the vulnerability
+			const exploit = 'echo "${var1=aa\\140whoami\\140c}${var1@P}"'
+			expect(containsDangerousSubstitution(exploit)).toBe(true)
+
+			// Variations of the exploit
+			expect(containsDangerousSubstitution('echo "${x=\\140id\\140}${x@P}"')).toBe(true)
+			expect(containsDangerousSubstitution('result="${cmd=\\x60pwd\\x60}${cmd@P}"')).toBe(true)
 		})
 	})
 })
@@ -708,6 +812,97 @@ describe("Unified Command Decision Functions", () => {
 		it("returns auto_approve for commands with all sub-commands auto-approved", () => {
 			expect(getCommandDecision("npm install", allowedCommands, deniedCommands)).toBe("auto_approve")
 			expect(getCommandDecision("npm install && echo done", allowedCommands, deniedCommands)).toBe("auto_approve")
+		})
+
+		describe("dangerous substitution handling", () => {
+			it("prevents auto-approve for commands with dangerous parameter expansion", () => {
+				// Commands that would normally be auto-approved are blocked by dangerous patterns
+				expect(getCommandDecision("echo ${var@P}", allowedCommands, deniedCommands)).toBe("ask_user")
+				expect(getCommandDecision("echo hello", allowedCommands, deniedCommands)).toBe("auto_approve") // Safe version
+
+				// Even with allowed prefix, dangerous patterns prevent auto-approval
+				expect(getCommandDecision("npm install ${var@P}", allowedCommands, deniedCommands)).toBe("ask_user")
+				expect(
+					getCommandDecision('echo "${var1=\\140whoami\\140c}${var1@P}"', allowedCommands, deniedCommands),
+				).toBe("ask_user")
+			})
+
+			it("does NOT override auto_deny decisions with dangerous patterns", () => {
+				// If a command would be denied, dangerous patterns don't change that
+				expect(getCommandDecision("npm test ${var@P}", allowedCommands, deniedCommands)).toBe("auto_deny")
+				expect(getCommandDecision('npm test "${var=\\140ls\\140}"', allowedCommands, deniedCommands)).toBe(
+					"auto_deny",
+				)
+
+				// Regular denied commands without dangerous patterns
+				expect(getCommandDecision("npm test --coverage", allowedCommands, deniedCommands)).toBe("auto_deny")
+			})
+
+			it("prevents auto-approval for various dangerous substitution types", () => {
+				// Octal escape sequences
+				expect(getCommandDecision('echo "${var=\\140ls\\140}"', allowedCommands, deniedCommands)).toBe(
+					"ask_user",
+				)
+				expect(getCommandDecision('npm run "${var:=\\140pwd\\140}"', allowedCommands, deniedCommands)).toBe(
+					"ask_user",
+				)
+
+				// Hex escape sequences
+				expect(getCommandDecision('echo "${var=\\x60whoami\\x60}"', allowedCommands, deniedCommands)).toBe(
+					"ask_user",
+				)
+
+				// Indirect variable references
+				expect(getCommandDecision("echo ${!var}", allowedCommands, deniedCommands)).toBe("ask_user")
+
+				// Here-strings with command substitution
+				expect(getCommandDecision("cat <<<$(whoami)", allowedCommands, deniedCommands)).toBe("ask_user")
+				expect(getCommandDecision("read <<<`date`", allowedCommands, deniedCommands)).toBe("ask_user")
+			})
+
+			it("allows safe parameter expansions to follow normal rules", () => {
+				// Safe parameter expansions should follow normal allowlist/denylist rules
+				expect(getCommandDecision("echo ${var}", allowedCommands, deniedCommands)).toBe("auto_approve")
+				expect(getCommandDecision("echo ${var:-default}", allowedCommands, deniedCommands)).toBe("auto_approve")
+				expect(getCommandDecision("npm install ${package_name}", allowedCommands, deniedCommands)).toBe(
+					"auto_approve",
+				)
+
+				// Here-strings without command substitution are safe
+				expect(getCommandDecision("echo test <<<$var", allowedCommands, deniedCommands)).toBe("auto_approve")
+			})
+
+			it("handles command chains correctly with dangerous patterns", () => {
+				// If any part of a chain has dangerous substitution, prevent auto-approval
+				expect(getCommandDecision("npm install && echo ${var@P}", allowedCommands, deniedCommands)).toBe(
+					"ask_user",
+				)
+				expect(
+					getCommandDecision('echo safe && echo "${var=\\140ls\\140}"', allowedCommands, deniedCommands),
+				).toBe("ask_user")
+
+				// But if chain would be denied, keep the deny decision
+				expect(getCommandDecision("npm test ${var@P} && echo safe", allowedCommands, deniedCommands)).toBe(
+					"auto_deny",
+				)
+				expect(getCommandDecision("npm install && npm test ${var@P}", allowedCommands, deniedCommands)).toBe(
+					"auto_deny",
+				)
+
+				// Safe chains should still be auto-approved
+				expect(getCommandDecision("npm install && echo done", allowedCommands, deniedCommands)).toBe(
+					"auto_approve",
+				)
+			})
+
+			it("handles the exact exploit from the security report", () => {
+				const exploit = 'echo "${var1=aa\\140whoami\\140c}${var1@P}"'
+				// Even though 'echo' is in the allowlist, the dangerous pattern prevents auto-approval
+				expect(getCommandDecision(exploit, allowedCommands, deniedCommands)).toBe("ask_user")
+
+				// But if it were a denied command, it would still be denied
+				expect(getCommandDecision(`npm test ${exploit}`, allowedCommands, deniedCommands)).toBe("auto_deny")
+			})
 		})
 
 		it("returns auto_deny for commands with any sub-command auto-denied", () => {
