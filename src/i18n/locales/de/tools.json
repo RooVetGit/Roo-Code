@@ -3,6 +3,7 @@
 		"linesRange": " (Zeilen {{start}}-{{end}})",
 		"definitionsOnly": " (nur Definitionen)",
 		"maxLines": " (maximal {{max}} Zeilen)",
+		"showingOnlyLines": "Zeige nur {{shown}} von {{total}} Zeilen insgesamt. Verwende line_range, wenn du mehr Zeilen lesen musst",
 		"imageTooLarge": "Die Bilddatei ist zu groß ({{size}} MB). Die maximal erlaubte Größe beträgt {{max}} MB.",
 		"imageWithSize": "Bilddatei ({{size}} KB)"
 	},

@@ -18,10 +18,11 @@ const outOfRangeError = (filepath: string, n: number) => {
  * @param filepath - Path to the file to read
  * @param endLine - Optional. The line number to stop reading at (inclusive). If undefined, reads to the end of file.
  * @param startLine - Optional. The line number to start reading from (inclusive). If undefined, starts from line 0.
+ * @param maxChars - Optional. Maximum number of characters to read. If specified, reading stops when this limit is reached.
  * @returns Promise resolving to a string containing the read lines joined with newlines
  * @throws {RangeError} If line numbers are invalid or out of range
  */
-export function readLines(filepath: string, endLine?: number, startLine?: number): Promise<string> {
+export function readLines(filepath: string, endLine?: number, startLine?: number, maxChars?: number): Promise<string> {
 	return new Promise((resolve, reject) => {
 		// Reject if startLine is defined but not a number
 		if (startLine !== undefined && typeof startLine !== "number") {
@@ -52,11 +53,16 @@ export function readLines(filepath: string, endLine?: number, startLine?: number
 			)
 		}
 
-		// Set up stream
-		const input = createReadStream(filepath)
+		// Set up stream - only add 'end' option when maxChars is specified to avoid reading entire file
+		const streamOptions =
+			maxChars !== undefined
+				? { end: Math.min(maxChars * 2, maxChars + 1024 * 1024) } // Read at most 2x maxChars or maxChars + 1MB
+				: undefined
+		const input = createReadStream(filepath, streamOptions)
 		let buffer = ""
 		let lineCount = 0
 		let result = ""
+		let totalCharsRead = 0
 
 		// Handle errors
 		input.on("error", reject)
@@ -73,7 +79,24 @@ export function readLines(filepath: string, endLine?: number, startLine?: number
 			while (nextNewline !== -1) {
 				// If we're in the target range, add this line to the result
 				if (lineCount >= effectiveStartLine && (endLine === undefined || lineCount <= endLine)) {
-					result += buffer.substring(pos, nextNewline + 1) // Include the newline
+					const lineToAdd = buffer.substring(pos, nextNewline + 1) // Include the newline
+
+					// Check if adding this line would exceed maxChars (only if maxChars is specified)
+					if (maxChars !== undefined && totalCharsRead + lineToAdd.length > maxChars) {
+						// Add only the portion that fits within maxChars
+						const remainingChars = maxChars - totalCharsRead
+						if (remainingChars > 0) {
+							result += lineToAdd.substring(0, remainingChars)
+						}
+						input.destroy()
+						resolve(result)
+						return
+					}
+
+					result += lineToAdd
+					if (maxChars !== undefined) {
+						totalCharsRead += lineToAdd.length
+					}
 				}
 
 				// Move position and increment line counter
@@ -100,7 +123,15 @@ export function readLines(filepath: string, endLine?: number, startLine?: number
 			// Process any remaining data in buffer (last line without newline)
 			if (buffer.length > 0) {
 				if (lineCount >= effectiveStartLine && (endLine === undefined || lineCount <= endLine)) {
-					result += buffer
+					// Check if adding this would exceed maxChars (only if maxChars is specified)
+					if (maxChars !== undefined && totalCharsRead + buffer.length > maxChars) {
+						const remainingChars = maxChars - totalCharsRead
+						if (remainingChars > 0) {
+							result += buffer.substring(0, remainingChars)
+						}
+					} else {
+						result += buffer
+					}
 				}
 				lineCount++
 			}

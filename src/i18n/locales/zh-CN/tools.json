@@ -3,6 +3,7 @@
 		"linesRange": " (第 {{start}}-{{end}} 行)",
 		"definitionsOnly": " (仅定义)",
 		"maxLines": " (最多 {{max}} 行)",
+		"showingOnlyLines": "仅显示 {{shown}} 行，共 {{total}} 行。如需阅读更多行请使用 line_range",
 		"imageTooLarge": "图片文件过大 ({{size}} MB)。允许的最大大小为 {{max}} MB。",
 		"imageWithSize": "图片文件 ({{size}} KB)"
 	},

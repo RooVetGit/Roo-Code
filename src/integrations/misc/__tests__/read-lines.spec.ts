@@ -128,5 +128,79 @@ describe("nthline", () => {
 				expect(lines).toEqual("\n\n\n")
 			})
 		})
+
+		describe("maxChars parameter", () => {
+			it("should limit output to maxChars when reading entire file", async () => {
+				const content = await readLines(testFile, undefined, undefined, 20)
+				expect(content).toEqual("Line 1\nLine 2\nLine 3")
+				expect(content.length).toBe(20)
+			})
+
+			it("should limit output to maxChars when reading a range", async () => {
+				const content = await readLines(testFile, 5, 1, 15)
+				// When maxChars cuts off in the middle of a line, we get partial content
+				expect(content).toEqual("Line 2\nLine 3\nL")
+				expect(content.length).toBe(15)
+			})
+
+			it("should return empty string when maxChars is 0", async () => {
+				const content = await readLines(testFile, undefined, undefined, 0)
+				expect(content).toEqual("")
+			})
+
+			it("should handle maxChars smaller than first line", async () => {
+				const content = await readLines(testFile, undefined, undefined, 3)
+				expect(content).toEqual("Lin")
+				expect(content.length).toBe(3)
+			})
+
+			it("should handle maxChars that cuts off in the middle of a line", async () => {
+				const content = await readLines(testFile, 2, 0, 10)
+				expect(content).toEqual("Line 1\nLin")
+				expect(content.length).toBe(10)
+			})
+
+			it("should respect both line limits and maxChars", async () => {
+				// This should read lines 2-4, but stop at 25 chars
+				const content = await readLines(testFile, 3, 1, 25)
+				expect(content).toEqual("Line 2\nLine 3\nLine 4\n")
+				expect(content.length).toBeLessThanOrEqual(25)
+			})
+
+			it("should handle maxChars with single line file", async () => {
+				await withTempFile(
+					"single-line-maxchars.txt",
+					"This is a long single line of text",
+					async (filepath) => {
+						const content = await readLines(filepath, undefined, undefined, 10)
+						expect(content).toEqual("This is a ")
+						expect(content.length).toBe(10)
+					},
+				)
+			})
+
+			it("should handle maxChars with Unicode characters", async () => {
+				await withTempFile("unicode-maxchars.txt", "Hello 😀 World\nLine 2", async (filepath) => {
+					// Note: The emoji counts as 2 chars in JavaScript strings
+					const content = await readLines(filepath, undefined, undefined, 10)
+					expect(content).toEqual("Hello 😀 W")
+					expect(content.length).toBe(10)
+				})
+			})
+
+			it("should handle maxChars larger than file size", async () => {
+				const content = await readLines(testFile, undefined, undefined, 1000)
+				const fullContent = await readLines(testFile)
+				expect(content).toEqual(fullContent)
+			})
+
+			it("should handle maxChars with empty lines", async () => {
+				await withTempFile("empty-lines-maxchars.txt", "Line 1\n\n\nLine 4\n", async (filepath) => {
+					const content = await readLines(filepath, undefined, undefined, 10)
+					expect(content).toEqual("Line 1\n\n\nL")
+					expect(content.length).toBe(10)
+				})
+			})
+		})
 	})
 })

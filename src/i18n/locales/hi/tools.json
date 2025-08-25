@@ -3,6 +3,7 @@
 		"linesRange": " (पंक्तियाँ {{start}}-{{end}})",
 		"definitionsOnly": " (केवल परिभाषाएँ)",
 		"maxLines": " (अधिकतम {{max}} पंक्तियाँ)",
+		"showingOnlyLines": "कुल {{total}} पंक्तियों में से केवल {{shown}} दिखा रहे हैं। यदि आपको अधिक पंक्तियाँ पढ़नी हैं तो line_range का उपयोग करें।",
 		"imageTooLarge": "छवि फ़ाइल बहुत बड़ी है ({{size}} MB)। अधिकतम अनुमतित आकार {{max}} MB है।",
 		"imageWithSize": "छवि फ़ाइल ({{size}} KB)"
 	},
