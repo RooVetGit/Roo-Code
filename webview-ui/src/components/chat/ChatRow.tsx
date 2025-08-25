@@ -4,7 +4,7 @@ import { McpExecution } from "./McpExecution"
 import { useSize } from "react-use"
 import { useTranslation, Trans } from "react-i18next"
 import deepEqual from "fast-deep-equal"
-import { VSCodeBadge, VSCodeButton } from "@vscode/webview-ui-toolkit/react"
+import { VSCodeBadge } from "@vscode/webview-ui-toolkit/react"
 
 import type { ClineMessage } from "@roo-code/types"
 import { Mode } from "@roo/modes"
@@ -14,7 +14,6 @@ import { COMMAND_OUTPUT_STRING } from "@roo/combineCommandSequences"
 import { safeJsonParse } from "@roo/safeJsonParse"
 import { FollowUpData, SuggestionItem } from "@roo-code/types"
 
-import { useCopyToClipboard } from "@src/utils/clipboard"
 import { useExtensionState } from "@src/context/ExtensionStateContext"
 import { findMatchingResourceOrTemplate } from "@src/utils/mcp"
 import { vscode } from "@src/utils/vscode"
@@ -28,8 +27,8 @@ import { MAX_IMAGES_PER_MESSAGE } from "./ChatView"
 import { ToolUseBlock, ToolUseBlockHeader } from "../common/ToolUseBlock"
 import UpdateTodoListToolBlock from "./UpdateTodoListToolBlock"
 import CodeAccordian from "../common/CodeAccordian"
-import CodeBlock from "../common/CodeBlock"
 import MarkdownBlock from "../common/MarkdownBlock"
+import { ErrorBanner } from "../common/ErrorBanner"
 import { ReasoningBlock } from "./ReasoningBlock"
 import Thumbnails from "../common/Thumbnails"
 import McpResourceRow from "../mcp/McpResourceRow"
@@ -116,13 +115,10 @@ export const ChatRowContent = ({
 	const { t } = useTranslation()
 	const { mcpServers, alwaysAllowMcp, currentCheckpoint, mode } = useExtensionState()
 	const [reasoningCollapsed, setReasoningCollapsed] = useState(true)
-	const [isDiffErrorExpanded, setIsDiffErrorExpanded] = useState(false)
-	const [showCopySuccess, setShowCopySuccess] = useState(false)
 	const [isEditing, setIsEditing] = useState(false)
 	const [editedContent, setEditedContent] = useState("")
 	const [editMode, setEditMode] = useState<Mode>(mode || "code")
 	const [editImages, setEditImages] = useState<string[]>([])
-	const { copyWithFeedback } = useCopyToClipboard()
 
 	// Handle message events for image selection during edit mode
 	useEffect(() => {
@@ -854,92 +850,13 @@ export const ChatRowContent = ({
 			switch (message.say) {
 				case "diff_error":
 					return (
-						<div>
-							<div
-								style={{
-									marginTop: "0px",
-									overflow: "hidden",
-									marginBottom: "8px",
-								}}>
-								<div
-									style={{
-										borderBottom: isDiffErrorExpanded
-											? "1px solid var(--vscode-editorGroup-border)"
-											: "none",
-										fontWeight: "normal",
-										fontSize: "var(--vscode-font-size)",
-										color: "var(--vscode-editor-foreground)",
-										display: "flex",
-										alignItems: "center",
-										justifyContent: "space-between",
-										cursor: "pointer",
-									}}
-									onClick={() => setIsDiffErrorExpanded(!isDiffErrorExpanded)}>
-									<div
-										style={{
-											display: "flex",
-											alignItems: "center",
-											gap: "10px",
-											flexGrow: 1,
-										}}>
-										<span
-											className="codicon codicon-warning"
-											style={{
-												color: "var(--vscode-editorWarning-foreground)",
-												opacity: 0.8,
-												fontSize: 16,
-												marginBottom: "-1.5px",
-											}}></span>
-										<span style={{ fontWeight: "bold" }}>{t("chat:diffError.title")}</span>
-									</div>
-									<div style={{ display: "flex", alignItems: "center" }}>
-										<VSCodeButton
-											appearance="icon"
-											style={{
-												padding: "3px",
-												height: "24px",
-												marginRight: "4px",
-												color: "var(--vscode-editor-foreground)",
-												display: "flex",
-												alignItems: "center",
-												justifyContent: "center",
-												background: "transparent",
-											}}
-											onClick={(e) => {
-												e.stopPropagation()
-
-												// Call copyWithFeedback and handle the Promise
-												copyWithFeedback(message.text || "").then((success) => {
-													if (success) {
-														// Show checkmark
-														setShowCopySuccess(true)
-
-														// Reset after a brief delay
-														setTimeout(() => {
-															setShowCopySuccess(false)
-														}, 1000)
-													}
-												})
-											}}>
-											<span
-												className={`codicon codicon-${showCopySuccess ? "check" : "copy"}`}></span>
-										</VSCodeButton>
-										<span
-											className={`codicon codicon-chevron-${isDiffErrorExpanded ? "up" : "down"}`}></span>
-									</div>
-								</div>
-								{isDiffErrorExpanded && (
-									<div
-										style={{
-											padding: "8px",
-											backgroundColor: "var(--vscode-editor-background)",
-											borderTop: "none",
-										}}>
-										<CodeBlock source={message.text || ""} language="xml" />
-									</div>
-								)}
-							</div>
-						</div>
+						<ErrorBanner
+							title={t("chat:diffError.title")}
+							variant="warning"
+							details={message.text || ""}
+							defaultExpanded={false}
+							detailsLanguage="xml"
+						/>
 					)
 				case "subtask_result":
 					return (
@@ -1132,15 +1049,13 @@ export const ChatRowContent = ({
 					)
 				case "error":
 					return (
-						<>
-							{title && (
-								<div style={headerStyle}>
-									{icon}
-									{title}
-								</div>
-							)}
-							<p style={{ ...pStyle, color: "var(--vscode-errorForeground)" }}>{message.text}</p>
-						</>
+						<ErrorBanner
+							title={t("chat:error")}
+							variant="error"
+							details={message.text || ""}
+							defaultExpanded={false}
+							detailsLanguage="text"
+						/>
 					)
 				case "completion_result":
 					return (
