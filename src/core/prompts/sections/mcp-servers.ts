@@ -1,5 +1,6 @@
 import { DiffStrategy } from "../../../shared/tools"
 import { McpHub } from "../../../services/mcp/McpHub"
+import { jsonSchemaToXml } from "../utils/schemaCompressor"
 
 export async function getMcpServersSection(
 	mcpHub?: McpHub,
@@ -19,14 +20,13 @@ export async function getMcpServersSection(
 						const tools = server.tools
 							?.filter((tool) => tool.enabledForPrompt !== false)
 							?.map((tool) => {
-								const schemaStr = tool.inputSchema
-									? `    Input Schema:
-		${JSON.stringify(tool.inputSchema, null, 2).split("\n").join("\n    ")}`
+								const compressedSchema = tool.inputSchema
+									? `\n  ${jsonSchemaToXml(tool.inputSchema)}`
 									: ""
 
-								return `- ${tool.name}: ${tool.description}\n${schemaStr}`
+								return `- ${tool.name}: ${tool.description || "No description"}${compressedSchema}`
 							})
-							.join("\n\n")
+							.join("\n")
 
 						const templates = server.resourceTemplates
 							?.map((template) => `- ${template.uriTemplate} (${template.name}): ${template.description}`)
