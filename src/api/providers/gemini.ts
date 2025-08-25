@@ -172,7 +172,15 @@ export class GeminiHandler extends BaseProvider implements SingleCompletionHandl
 		// reasoning model and that reasoning is required to be enabled.
 		// The actual model ID honored by Gemini's API does not have this
 		// suffix.
-		return { id: id.endsWith(":thinking") ? id.replace(":thinking", "") : id, info, ...params }
+		let apiModelId = id.endsWith(":thinking") ? id.replace(":thinking", "") : id
+
+		// The `-free` suffix indicates free tier models with rate limits.
+		// Map them to their corresponding paid models for API calls.
+		if (apiModelId.endsWith("-free")) {
+			apiModelId = apiModelId.replace("-free", "") as GeminiModelId
+		}
+
+		return { id: apiModelId, info, ...params }
 	}
 
 	private extractCitationsOnly(groundingMetadata?: GroundingMetadata): string | null {
