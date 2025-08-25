@@ -155,6 +155,12 @@ export class QdrantVectorStore implements IVectorStore {
 					vectors: {
 						size: this.vectorSize,
 						distance: this.DISTANCE_METRIC,
+						on_disk: true, // Store vectors on disk for low memory usage
+					},
+					hnsw_config: {
+						m: 64, // Increased for better precision
+						ef_construct: 512, // Increased for better precision during index construction
+						on_disk: true, // Store HNSW index on disk for low memory usage
 					},
 				})
 				created = true
@@ -244,6 +250,12 @@ export class QdrantVectorStore implements IVectorStore {
 				vectors: {
 					size: this.vectorSize,
 					distance: this.DISTANCE_METRIC,
+					on_disk: true, // Store vectors on disk for low memory usage
+				},
+				hnsw_config: {
+					m: 64, // Increased for better precision
+					ef_construct: 512, // Increased for better precision during index construction
+					on_disk: true, // Store HNSW index on disk for low memory usage
 				},
 			})
 			console.log(`[QdrantVectorStore] Successfully created new collection ${this.collectionName}`)
@@ -404,7 +416,7 @@ export class QdrantVectorStore implements IVectorStore {
 				score_threshold: minScore ?? DEFAULT_SEARCH_MIN_SCORE,
 				limit: maxResults ?? DEFAULT_MAX_SEARCH_RESULTS,
 				params: {
-					hnsw_ef: 128,
+					hnsw_ef: 256, // Increased from 128 for better search precision with on-disk storage
 					exact: false,
 				},
 				with_payload: {
@@ -491,8 +503,6 @@ export class QdrantVectorStore implements IVectorStore {
 				// Include first few file paths for debugging (avoid logging too many)
 				samplePaths: filePaths.slice(0, 3),
 			})
-
-			throw error
 		}
 	}
 
