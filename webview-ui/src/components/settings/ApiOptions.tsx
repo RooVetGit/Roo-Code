@@ -717,7 +717,9 @@ const ApiOptions = ({
 						{selectedProvider === "openrouter" &&
 							openRouterModelProviders &&
 							Object.keys(openRouterModelProviders).length > 0 && (
-								<div>
+								<div
+									className="space-y-3"
+									key={`openrouter-providers-${apiConfiguration?.openRouterFailoverEnabled}`}>
 									<div className="flex items-center gap-1">
 										<label className="block font-medium mb-1">
 											{t("settings:providers.openRouter.providerRouting.title")}
@@ -726,33 +728,122 @@ const ApiOptions = ({
 											<ExternalLinkIcon className="w-4 h-4" />
 										</a>
 									</div>
-									<Select
-										value={
-											apiConfiguration?.openRouterSpecificProvider ||
-											OPENROUTER_DEFAULT_PROVIDER_NAME
-										}
-										onValueChange={(value) =>
-											setApiConfigurationField("openRouterSpecificProvider", value)
-										}>
-										<SelectTrigger className="w-full">
-											<SelectValue placeholder={t("settings:common.select")} />
-										</SelectTrigger>
-										<SelectContent>
-											<SelectItem value={OPENROUTER_DEFAULT_PROVIDER_NAME}>
-												{OPENROUTER_DEFAULT_PROVIDER_NAME}
-											</SelectItem>
-											{Object.entries(openRouterModelProviders).map(([value, { label }]) => (
-												<SelectItem key={value} value={value}>
-													{label}
+
+									{/* Multi-provider selection */}
+									{apiConfiguration?.openRouterFailoverEnabled ? (
+										<div key="multi-provider-mode">
+											<label className="block font-medium mb-2">
+												Multiple Providers (up to 4)
+											</label>
+											{[0, 1, 2, 3].map((index) => {
+												const currentProviders = apiConfiguration?.openRouterProviders || []
+												const currentValue = currentProviders[index] || ""
+
+												return (
+													<div
+														key={`provider-${index}-${apiConfiguration?.openRouterFailoverEnabled}`}
+														className="mb-2">
+														<label className="block text-sm font-medium mb-1">
+															{index === 0
+																? "Primary Provider"
+																: index === 1
+																	? "Secondary Provider"
+																	: index === 2
+																		? "Tertiary Provider"
+																		: "Quaternary Provider"}
+														</label>
+														<Select
+															value={currentValue || OPENROUTER_DEFAULT_PROVIDER_NAME}
+															onValueChange={(value) => {
+																const newProviders = [
+																	...(apiConfiguration?.openRouterProviders || []),
+																]
+																if (value === OPENROUTER_DEFAULT_PROVIDER_NAME) {
+																	// Remove this provider and all subsequent ones
+																	newProviders.splice(index)
+																} else {
+																	// Set this provider
+																	newProviders[index] = value
+																	// Remove any subsequent empty slots
+																	while (
+																		newProviders.length > index + 1 &&
+																		!newProviders[newProviders.length - 1]
+																	) {
+																		newProviders.pop()
+																	}
+																}
+																setApiConfigurationField(
+																	"openRouterProviders",
+																	newProviders.length > 0 ? newProviders : undefined,
+																)
+															}}>
+															<SelectTrigger className="w-full">
+																<SelectValue placeholder="Select provider..." />
+															</SelectTrigger>
+															<SelectContent>
+																<SelectItem value={OPENROUTER_DEFAULT_PROVIDER_NAME}>
+																	{index === 0
+																		? OPENROUTER_DEFAULT_PROVIDER_NAME
+																		: "None"}
+																</SelectItem>
+																{Object.entries(openRouterModelProviders)
+																	.filter(([providerValue]) => {
+																		// Don't show providers already selected in previous slots
+																		const selectedProviders =
+																			apiConfiguration?.openRouterProviders || []
+																		return !selectedProviders
+																			.slice(0, index)
+																			.includes(providerValue)
+																	})
+																	.map(([value, { label }]) => (
+																		<SelectItem key={value} value={value}>
+																			{label}
+																		</SelectItem>
+																	))}
+															</SelectContent>
+														</Select>
+													</div>
+												)
+											})}
+										</div>
+									) : (
+										/* Legacy single provider selection */
+										<Select
+											key="single-provider-mode"
+											value={
+												apiConfiguration?.openRouterSpecificProvider ||
+												OPENROUTER_DEFAULT_PROVIDER_NAME
+											}
+											onValueChange={(value) =>
+												setApiConfigurationField("openRouterSpecificProvider", value)
+											}>
+											<SelectTrigger className="w-full">
+												<SelectValue placeholder={t("settings:common.select")} />
+											</SelectTrigger>
+											<SelectContent>
+												<SelectItem value={OPENROUTER_DEFAULT_PROVIDER_NAME}>
+													{OPENROUTER_DEFAULT_PROVIDER_NAME}
 												</SelectItem>
-											))}
-										</SelectContent>
-									</Select>
+												{Object.entries(openRouterModelProviders).map(([value, { label }]) => (
+													<SelectItem key={value} value={value}>
+														{label}
+													</SelectItem>
+												))}
+											</SelectContent>
+										</Select>
+									)}
+
 									<div className="text-sm text-vscode-descriptionForeground mt-1">
-										{t("settings:providers.openRouter.providerRouting.description")}{" "}
-										<a href="https://openrouter.ai/docs/features/provider-routing">
-											{t("settings:providers.openRouter.providerRouting.learnMore")}.
-										</a>
+										{apiConfiguration?.openRouterFailoverEnabled ? (
+											"Configure multiple providers in priority order. If the primary provider fails, the system will automatically try the next provider."
+										) : (
+											<>
+												{t("settings:providers.openRouter.providerRouting.description")}{" "}
+												<a href="https://openrouter.ai/docs/features/provider-routing">
+													{t("settings:providers.openRouter.providerRouting.learnMore")}.
+												</a>
+											</>
+										)}
 									</div>
 								</div>
 							)}

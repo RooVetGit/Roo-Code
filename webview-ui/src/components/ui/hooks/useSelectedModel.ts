@@ -119,15 +119,26 @@ function getSelectedModel({
 		case "openrouter": {
 			const id = apiConfiguration.openRouterModelId ?? openRouterDefaultModelId
 			let info = routerModels.openrouter[id]
-			const specificProvider = apiConfiguration.openRouterSpecificProvider
 
-			if (specificProvider && openRouterModelProviders[specificProvider]) {
-				// Overwrite the info with the specific provider info. Some
+			// Determine which provider to use for model info
+			let providerToUse: string | undefined
+
+			// Check multi-provider configuration first
+			if (apiConfiguration.openRouterProviders && apiConfiguration.openRouterProviders.length > 0) {
+				// Use the first (primary) provider from the multi-provider list
+				providerToUse = apiConfiguration.openRouterProviders[0]
+			} else {
+				// Fallback to legacy single provider
+				providerToUse = apiConfiguration.openRouterSpecificProvider
+			}
+
+			if (providerToUse && openRouterModelProviders[providerToUse]) {
+				// Overwrite the info with the selected provider info. Some
 				// fields are missing the model info for `openRouterModelProviders`
 				// so we need to merge the two.
 				info = info
-					? { ...info, ...openRouterModelProviders[specificProvider] }
-					: openRouterModelProviders[specificProvider]
+					? { ...info, ...openRouterModelProviders[providerToUse] }
+					: openRouterModelProviders[providerToUse]
 			}
 
 			return { id, info }

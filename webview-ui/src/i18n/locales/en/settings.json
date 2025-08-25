@@ -387,6 +387,17 @@
 				"title": "OpenRouter Provider Routing",
 				"description": "OpenRouter routes requests to the best available providers for your model. By default, requests are load balanced across the top providers to maximize uptime. However, you can choose a specific provider to use for this model.",
 				"learnMore": "Learn more about provider routing"
+			},
+			"multiProvider": {
+				"title": "Multiple Providers",
+				"description": "Select up to 4 providers for automatic failover",
+				"failoverEnabled": "Enable automatic failover",
+				"failoverDescription": "When enabled, automatically try backup providers if the primary provider fails",
+				"primaryProvider": "Primary Provider",
+				"secondaryProvider": "Secondary Provider",
+				"tertiaryProvider": "Tertiary Provider",
+				"quaternaryProvider": "Quaternary Provider",
+				"dragToReorder": "Drag to reorder priority"
 			}
 		},
 		"customModel": {

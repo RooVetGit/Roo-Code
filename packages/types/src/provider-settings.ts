@@ -136,7 +136,9 @@ const openRouterSchema = baseProviderSettingsSchema.extend({
 	openRouterApiKey: z.string().optional(),
 	openRouterModelId: z.string().optional(),
 	openRouterBaseUrl: z.string().optional(),
-	openRouterSpecificProvider: z.string().optional(),
+	openRouterSpecificProvider: z.string().optional(), // Keep for backward compatibility
+	openRouterProviders: z.array(z.string()).max(4).optional(), // New multi-provider support
+	openRouterFailoverEnabled: z.boolean().optional(), // Enable automatic failover
 	openRouterUseMiddleOutTransform: z.boolean().optional(),
 })
 
