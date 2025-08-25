@@ -2,6 +2,7 @@ import path from "path"
 import { isBinaryFile } from "isbinaryfile"
 
 import { Task } from "../task/Task"
+import { validateFileSizeForContext } from "./contextValidator"
 import { ClineSayTool } from "../../shared/ExtensionMessage"
 import { formatResponse } from "../prompts/responses"
 import { t } from "../../i18n"
@@ -11,6 +12,7 @@ import { isPathOutsideWorkspace } from "../../utils/pathUtils"
 import { getReadablePath } from "../../utils/path"
 import { countFileLines } from "../../integrations/misc/line-counter"
 import { readLines } from "../../integrations/misc/read-lines"
+import { readPartialContent } from "../../integrations/misc/read-partial-content"
 import { extractTextFromFile, addLineNumbers, getSupportedBinaryFormats } from "../../integrations/misc/extract-text"
 import { parseSourceCodeDefinitionsForFile } from "../../services/tree-sitter"
 import { parseXml } from "../../utils/xml"
@@ -456,6 +458,13 @@ export async function readFileTool(
 			try {
 				const [totalLines, isBinary] = await Promise.all([countFileLines(fullPath), isBinaryFile(fullPath)])
 
+				// Preemptive file size validation to prevent context overflow
+				const validation = await validateFileSizeForContext(fullPath, totalLines, maxReadFileLine, cline)
+				let validationNotice = ""
+
+				// Apply validation if maxReadFileLine is -1 (unlimited)
+				const shouldApplyValidation = validation.shouldLimit && maxReadFileLine === -1
+
 				// Handle binary files (but allow specific file types that extractTextFromFile can handle)
 				if (isBinary) {
 					const fileExtension = path.extname(relPath).toLowerCase()
@@ -550,7 +559,7 @@ export async function readFileTool(
 					try {
 						const defResult = await parseSourceCodeDefinitionsForFile(fullPath, cline.rooIgnoreController)
 						if (defResult) {
-							let xmlInfo = `<notice>Showing only ${maxReadFileLine} of ${totalLines} total lines. Use line_range if you need to read more lines</notice>\n`
+							let xmlInfo = `<notice>${t("tools:readFile.showingOnlyLines", { shown: 0, total: totalLines })}</notice>\n`
 							updateFileResult(relPath, {
 								xmlContent: `<file><path>${relPath}</path>\n<list_code_definition_names>${defResult}</list_code_definition_names>\n${xmlInfo}</file>`,
 							})
@@ -567,7 +576,66 @@ export async function readFileTool(
 					continue
 				}
 
-				// Handle files exceeding line threshold
+				// Handle files with validation limits (character-based reading)
+				if (shouldApplyValidation) {
+					const result = await readPartialContent(fullPath, validation.safeContentLimit)
+
+					// Generate line range attribute based on what was read
+					const lineRangeAttr = result.linesRead === 1 ? ` lines="1"` : ` lines="1-${result.lastLineRead}"`
+
+					const content = addLineNumbers(result.content, 1)
+					let xmlInfo = `<content${lineRangeAttr}>\n${content}</content>\n`
+
+					try {
+						const defResult = await parseSourceCodeDefinitionsForFile(fullPath, cline.rooIgnoreController)
+						if (defResult) {
+							xmlInfo += `<list_code_definition_names>${defResult}</list_code_definition_names>\n`
+						}
+
+						// Generate notice based on what was read
+						const percentRead = Math.round((result.charactersRead / result.totalCharacters) * 100)
+						if (result.linesRead === 1) {
+							// Single-line file
+							const notice = t("tools:readFile.partialReadSingleLine", {
+								charactersRead: result.charactersRead,
+								totalCharacters: result.totalCharacters,
+								percentRead,
+							})
+							xmlInfo += `<notice>${notice}</notice>\n`
+						} else {
+							// Multi-line file
+							const nextLineStart = result.lastLineRead + 1
+							const suggestedLineEnd = Math.min(result.lastLineRead + 1000, result.totalLines)
+							const notice = t("tools:readFile.partialReadMultiLine", {
+								charactersRead: result.charactersRead,
+								totalCharacters: result.totalCharacters,
+								percentRead,
+								lastLineRead: result.lastLineRead,
+								totalLines: result.totalLines,
+								path: relPath,
+								nextLineStart,
+								suggestedLineEnd,
+							})
+							xmlInfo += `<notice>${notice}</notice>\n`
+						}
+
+						const finalXml = `<file><path>${relPath}</path>\n${xmlInfo}</file>`
+						updateFileResult(relPath, {
+							xmlContent: finalXml,
+						})
+					} catch (error) {
+						if (error instanceof Error && error.message.startsWith("Unsupported language:")) {
+							console.warn(`[read_file] Warning: ${error.message}`)
+						} else {
+							console.error(
+								`[read_file] Unhandled error: ${error instanceof Error ? error.message : String(error)}`,
+							)
+						}
+					}
+					continue
+				}
+
+				// Handle files with line limits (maxReadFileLine > 0)
 				if (maxReadFileLine > 0 && totalLines > maxReadFileLine) {
 					const content = addLineNumbers(await readLines(fullPath, maxReadFileLine - 1, 0))
 					const lineRangeAttr = ` lines="1-${maxReadFileLine}"`
@@ -578,7 +646,8 @@ export async function readFileTool(
 						if (defResult) {
 							xmlInfo += `<list_code_definition_names>${defResult}</list_code_definition_names>\n`
 						}
-						xmlInfo += `<notice>Showing only ${maxReadFileLine} of ${totalLines} total lines. Use line_range if you need to read more lines</notice>\n`
+						xmlInfo += `<notice>${t("tools:readFile.showingOnlyLines", { shown: maxReadFileLine, total: totalLines })}</notice>\n`
+
 						updateFileResult(relPath, {
 							xmlContent: `<file><path>${relPath}</path>\n${xmlInfo}</file>`,
 						})
@@ -594,8 +663,9 @@ export async function readFileTool(
 					continue
 				}
 
-				// Handle normal file read
+				// Handle normal file read (no limits)
 				const content = await extractTextFromFile(fullPath)
+
 				const lineRangeAttr = ` lines="1-${totalLines}"`
 				let xmlInfo = totalLines > 0 ? `<content${lineRangeAttr}>\n${content}</content>\n` : `<content/>`
 
