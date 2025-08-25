@@ -369,7 +369,9 @@
 			"baseUrl": "Temel URL (İsteğe bağlı)",
 			"modelId": "Model Kimliği",
 			"description": "Ollama, modelleri bilgisayarınızda yerel olarak çalıştırmanıza olanak tanır. Başlamak için hızlı başlangıç kılavuzlarına bakın.",
-			"warning": "Not: Roo Code karmaşık istemler kullanır ve Claude modelleriyle en iyi şekilde çalışır. Daha az yetenekli modeller beklendiği gibi çalışmayabilir."
+			"warning": "Not: Roo Code karmaşık istemler kullanır ve Claude modelleriyle en iyi şekilde çalışır. Daha az yetenekli modeller beklendiği gibi çalışmayabilir.",
+			"apiKey": "Ollama API Key (optional)",
+			"apiKeyDescription": "Optional API key for authenticated Ollama instances or cloud services. Leave empty for local installations."
 		},
 		"unboundApiKey": "Unbound API Anahtarı",
 		"getUnboundApiKey": "Unbound API Anahtarı Al",

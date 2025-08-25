@@ -369,7 +369,9 @@
 			"baseUrl": "基礎 URL（選用）",
 			"modelId": "模型 ID",
 			"description": "Ollama 允許您在本機電腦執行模型。請參閱快速入門指南。",
-			"warning": "注意：Roo Code 使用複雜提示，與 Claude 模型搭配最佳。功能較弱的模型可能無法正常運作。"
+			"warning": "注意：Roo Code 使用複雜提示，與 Claude 模型搭配最佳。功能較弱的模型可能無法正常運作。",
+			"apiKey": "Ollama API Key (optional)",
+			"apiKeyDescription": "Optional API key for authenticated Ollama instances or cloud services. Leave empty for local installations."
 		},
 		"unboundApiKey": "Unbound API 金鑰",
 		"getUnboundApiKey": "取得 Unbound API 金鑰",

@@ -27,7 +27,7 @@ export class OllamaHandler extends BaseProvider implements SingleCompletionHandl
 
 		this.client = new OpenAI({
 			baseURL: (this.options.ollamaBaseUrl || "http://localhost:11434") + "/v1",
-			apiKey: "ollama",
+			apiKey: this.options.ollamaApiKey || "ollama",
 			timeout: getApiRequestTimeout(),
 		})
 	}

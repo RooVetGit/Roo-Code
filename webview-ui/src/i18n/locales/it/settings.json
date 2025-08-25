@@ -369,7 +369,9 @@
 			"baseUrl": "URL base (opzionale)",
 			"modelId": "ID modello",
 			"description": "Ollama ti permette di eseguire modelli localmente sul tuo computer. Per iniziare, consulta la guida rapida.",
-			"warning": "Nota: Roo Code utilizza prompt complessi e funziona meglio con i modelli Claude. I modelli con capacità inferiori potrebbero non funzionare come previsto."
+			"warning": "Nota: Roo Code utilizza prompt complessi e funziona meglio con i modelli Claude. I modelli con capacità inferiori potrebbero non funzionare come previsto.",
+			"apiKey": "Ollama API Key (optional)",
+			"apiKeyDescription": "Optional API key for authenticated Ollama instances or cloud services. Leave empty for local installations."
 		},
 		"unboundApiKey": "Chiave API Unbound",
 		"getUnboundApiKey": "Ottieni chiave API Unbound",

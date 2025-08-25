@@ -369,7 +369,9 @@
 			"baseUrl": "Basis-URL (optioneel)",
 			"modelId": "Model-ID",
 			"description": "Ollama laat je modellen lokaal op je computer draaien. Zie hun quickstart-gids voor instructies.",
-			"warning": "Let op: Roo Code gebruikt complexe prompts en werkt het beste met Claude-modellen. Minder krachtige modellen werken mogelijk niet zoals verwacht."
+			"warning": "Let op: Roo Code gebruikt complexe prompts en werkt het beste met Claude-modellen. Minder krachtige modellen werken mogelijk niet zoals verwacht.",
+			"apiKey": "Ollama API Key (optional)",
+			"apiKeyDescription": "Optional API key for authenticated Ollama instances or cloud services. Leave empty for local installations."
 		},
 		"unboundApiKey": "Unbound API-sleutel",
 		"getUnboundApiKey": "Unbound API-sleutel ophalen",

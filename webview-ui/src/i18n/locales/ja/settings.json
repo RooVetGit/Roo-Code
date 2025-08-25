@@ -369,7 +369,9 @@
 			"baseUrl": "ベースURL（オプション）",
 			"modelId": "モデルID",
 			"description": "Ollamaを使用すると、ローカルコンピューターでモデルを実行できます。始め方については、クイックスタートガイドをご覧ください。",
-			"warning": "注意：Roo Codeは複雑なプロンプトを使用し、Claudeモデルで最適に動作します。能力の低いモデルは期待通りに動作しない場合があります。"
+			"warning": "注意：Roo Codeは複雑なプロンプトを使用し、Claudeモデルで最適に動作します。能力の低いモデルは期待通りに動作しない場合があります。",
+			"apiKey": "Ollama API Key (optional)",
+			"apiKeyDescription": "Optional API key for authenticated Ollama instances or cloud services. Leave empty for local installations."
 		},
 		"unboundApiKey": "Unbound APIキー",
 		"getUnboundApiKey": "Unbound APIキーを取得",
