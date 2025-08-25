@@ -18,6 +18,7 @@ import {
 	mistralModels,
 	moonshotModels,
 	openAiNativeModels,
+	qwenCodeModels,
 	rooModels,
 	sambaNovaModels,
 	vertexModels,
@@ -447,7 +448,7 @@ export const getApiProtocol = (provider: ProviderName | undefined, modelId?: str
 }
 
 export const MODELS_BY_PROVIDER: Record<
-	Exclude<ProviderName, "fake-ai" | "human-relay" | "gemini-cli" | "lmstudio" | "openai" | "ollama" | "qwen-code">,
+	Exclude<ProviderName, "fake-ai" | "human-relay" | "gemini-cli" | "lmstudio" | "openai" | "ollama">,
 	{ id: ProviderName; label: string; models: string[] }
 > = {
 	anthropic: {
@@ -513,6 +514,7 @@ export const MODELS_BY_PROVIDER: Record<
 		label: "OpenAI",
 		models: Object.keys(openAiNativeModels),
 	},
+	"qwen-code": { id: "qwen-code", label: "Qwen Code", models: Object.keys(qwenCodeModels) },
 	roo: { id: "roo", label: "Roo", models: Object.keys(rooModels) },
 	sambanova: {
 		id: "sambanova",
