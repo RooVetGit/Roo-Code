@@ -181,7 +181,7 @@ export class NativeOllamaHandler extends BaseProvider implements SingleCompletio
 				messages: ollamaMessages,
 				stream: true,
 				options: {
-					num_ctx: modelInfo.contextWindow,
+					num_ctx: this.options.ollamaContextWindow || modelInfo.contextWindow,
 					temperature: this.options.modelTemperature ?? (useR1Format ? DEEP_SEEK_DEFAULT_TEMPERATURE : 0),
 				},
 			})
@@ -262,7 +262,7 @@ export class NativeOllamaHandler extends BaseProvider implements SingleCompletio
 	async completePrompt(prompt: string): Promise<string> {
 		try {
 			const client = this.ensureClient()
-			const { id: modelId } = await this.fetchModel()
+			const { id: modelId, info: modelInfo } = await this.fetchModel()
 			const useR1Format = modelId.toLowerCase().includes("deepseek-r1")
 
 			const response = await client.chat({
@@ -270,6 +270,7 @@ export class NativeOllamaHandler extends BaseProvider implements SingleCompletio
 				messages: [{ role: "user", content: prompt }],
 				stream: false,
 				options: {
+					num_ctx: this.options.ollamaContextWindow || modelInfo.contextWindow,
 					temperature: this.options.modelTemperature ?? (useR1Format ? DEEP_SEEK_DEFAULT_TEMPERATURE : 0),
 				},
 			})
