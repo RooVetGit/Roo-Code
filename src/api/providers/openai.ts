@@ -30,6 +30,45 @@ import { ResponseCreateParamsNonStreaming } from "openai/resources/responses/res
 // TODO: Rename this to OpenAICompatibleHandler. Also, I think the
 // `OpenAINativeHandler` can subclass from this, since it's obviously
 // compatible with the OpenAI API. We can also rename it to `OpenAIHandler`.
+/**
+ * URL auto-detection overview
+ *
+ * Decision tree (host and path based):
+ * 1) Azure AI Inference Service:
+ *    - Detected when host ends with ".services.ai.azure.com"
+ *    - Uses OpenAI Chat Completions API shape with a path override
+ *      (see OPENAI_AZURE_AI_INFERENCE_PATH) when making requests.
+ *
+ * 2) Azure OpenAI:
+ *    - Detected when host is "openai.azure.com" or ends with ".openai.azure.com"
+ *      or when options.openAiUseAzure is explicitly true.
+ *    - Within Azure OpenAI, the API "flavor" is chosen by URL path:
+ *      - Responses API:
+ *        * Path contains "/v1/responses" or ends with "/responses"
+ *        * Also auto-detected for portal-style URLs (e.g. "/openai/responses?api-version=2025-04-01-preview")
+ *          which itself is not valid in request, are normalized to "/openai/v1" with apiVersion "preview".
+ *      - Chat Completions API:
+ *        * Path contains "/chat/completions"
+ *      - Default:
+ *        * Falls back to Chat Completions if none of the above match.
+ *
+ * 3) Generic OpenAI-compatible endpoints:
+ *    - Anything else (OpenAI, OpenRouter, LM Studio, vLLM, etc.)
+ *    - Flavor is again selected by URL path as above:
+ *      - "/v1/responses" or ending with "/responses" => Responses API
+ *      - "/chat/completions" => Chat Completions
+ *      - otherwise defaults to Chat Completions for backward compatibility.
+ *
+ * Examples:
+ * - https://api.openai.com/v1                      -> Chat Completions (default)
+ * - https://api.openai.com/v1/responses            -> Responses API
+ * - https://api.openai.com/v1/chat/completions     -> Chat Completions
+ * - https://myres.openai.azure.com/openai/v1/responses?api-version=preview
+ *                                                   -> Azure OpenAI + Responses API
+ * - https://myres.openai.azure.com/openai/responses?api-version=2025-04-01-preview
+ *                                                   -> normalized to base /openai/v1 + apiVersion "preview" (Responses)
+ * - https://test.services.ai.azure.com             -> Azure AI Inference Service (Chat Completions with path override)
+ */
 export class OpenAiHandler extends BaseProvider implements SingleCompletionHandler {
 	protected options: ApiHandlerOptions
 	private client: OpenAI
@@ -773,16 +812,55 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 		}
 	}
 
+	/**
+	 * Detects Grok xAI endpoints.
+	 * - Returns true when the host contains "x.ai" (e.g., "api.x.ai").
+	 * - Used to omit stream_options for streaming requests because Grok may not support them.
+	 *
+	 * Examples:
+	 * - https://api.x.ai/v1 -> true
+	 * - https://api.openai.com/v1 -> false
+	 */
 	private _isGrokXAI(baseUrl?: string): boolean {
 		const urlHost = this._getUrlHost(baseUrl)
 		return urlHost.includes("x.ai")
 	}
 
+	/**
+	 * Detects Azure AI Inference Service endpoints (distinct from Azure OpenAI).
+	 * - Returns true when host ends with ".services.ai.azure.com".
+	 * - These endpoints require a special path override when calling the Chat Completions API.
+	 *
+	 * Examples:
+	 * - https://myenv.services.ai.azure.com -> true
+	 * - https://myres.openai.azure.com      -> false (this is Azure OpenAI, not AI Inference)
+	 */
 	private _isAzureAiInference(baseUrl?: string): boolean {
 		const urlHost = this._getUrlHost(baseUrl)
 		return urlHost.endsWith(".services.ai.azure.com")
 	}
 
+	/**
+	 * Detects Azure OpenAI "Responses API" URLs by host and path.
+	 * - Host must be "openai.azure.com" or end with ".openai.azure.com"
+	 * - Path may be one of:
+	 *   • "/openai/v1/responses" (preferred v1 path)
+	 *   • "/openai/responses"    (portal/legacy style)
+	 *   • any path ending with "/responses"
+	 * - Trailing slashes are trimmed before matching.
+	 *
+	 * This is used to favor the Responses API flavor on Azure OpenAI when the base URL already
+	 * points to a Responses path.
+	 *
+	 * Examples (true):
+	 * - https://myres.openai.azure.com/openai/v1/responses?api-version=preview
+	 * - https://myres.openai.azure.com/openai/responses?api-version=2025-04-01-preview
+	 * - https://openai.azure.com/openai/v1/responses
+	 *
+	 * Examples (false):
+	 * - https://myres.openai.azure.com/openai/v1/chat/completions
+	 * - https://api.openai.com/v1/responses         (not an Azure host)
+	 */
 	private _isAzureOpenAiResponses(baseUrl?: string): boolean {
 		try {
 			if (!baseUrl) return false
@@ -801,10 +879,36 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 	}
 
 	/**
-	 * Normalize Azure "responses" portal URLs to SDK-friendly base and version.
-	 * - Input (portal sometimes shows): https://{res}.openai.azure.com/openai/responses?api-version=2025-04-01-preview
-	 * - Output: baseURL=https://{res}.openai.azure.com/openai/v1, apiVersionOverride="preview"
-	 * No-op for already-correct or non-Azure URLs.
+	 * Normalizes Azure OpenAI "Responses" portal URLs to an SDK-friendly base and version.
+	 *
+	 * Why:
+	 * - The Azure portal often presents a non-v1 Responses endpoint such as:
+	 *   https://{res}.openai.azure.com/openai/responses?api-version=2025-04-01-preview
+	 *   which is not the ideal base for SDK clients. We convert it to:
+	 *   baseURL = https://{res}.openai.azure.com/openai/v1
+	 *   apiVersionOverride = "preview"
+	 *
+	 * What it does:
+	 * - If the input is an Azure OpenAI host and its path is exactly "/openai/responses"
+	 *   with api-version=2025-04-01-preview, we:
+	 *     • return { baseURL: "https://{host}/openai/v1", apiVersionOverride: "preview" }
+	 * - If the input is already "/openai/v1/responses", we similarly normalize the base to "/openai/v1"
+	 *   and set apiVersionOverride to "preview".
+	 * - Otherwise, returns the original URL unchanged.
+	 *
+	 * Scope:
+	 * - Only applies to Azure OpenAI hosts ("openai.azure.com" or "*.openai.azure.com").
+	 * - Non-Azure URLs or already SDK-friendly bases are returned as-is.
+	 *
+	 * Examples:
+	 * - In:  https://sample.openai.azure.com/openai/responses?api-version=2025-04-01-preview
+	 *   Out: baseURL=https://sample.openai.azure.com/openai/v1, apiVersionOverride="preview"
+	 *
+	 * - In:  https://sample.openai.azure.com/openai/v1/responses?api-version=preview
+	 *   Out: baseURL=https://sample.openai.azure.com/openai/v1, apiVersionOverride="preview"
+	 *
+	 * - In:  https://api.openai.com/v1/responses
+	 *   Out: baseURL unchanged (non-Azure)
 	 */
 	private _normalizeAzureResponsesBaseUrlAndVersion(inputBaseUrl: string): {
 		baseURL: string
@@ -866,6 +970,25 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 
 	// --- Responses helpers ---
 
+	/**
+	 * Determines which OpenAI-compatible API flavor to use based on the URL path.
+	 * - This is purely path-based and provider-agnostic (works for OpenAI, Azure OpenAI after normalization, etc.).
+	 *
+	 * Rules:
+	 * - If path contains "/v1/responses" OR ends with "/responses" => "responses"
+	 * - Else if path contains "/chat/completions"                  => "chat"
+	 * - Else default to "chat" for backward compatibility
+	 *
+	 * Notes:
+	 * - Trailing slashes are not required to match; we rely on substring checks.
+	 * - Azure "portal" style URLs are normalized beforehand where applicable.
+	 *
+	 * Examples:
+	 * - https://api.openai.com/v1/responses            -> "responses"
+	 * - https://api.openai.com/v1/chat/completions     -> "chat"
+	 * - https://myres.openai.azure.com/openai/v1       -> "chat" (default)
+	 * - https://myres.openai.azure.com/openai/v1/responses -> "responses"
+	 */
 	private _resolveApiFlavor(baseUrl: string): "responses" | "chat" {
 		// Auto-detect by URL path
 		const url = this._safeParseUrl(baseUrl)
