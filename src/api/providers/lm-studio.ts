@@ -15,6 +15,7 @@ import { BaseProvider } from "./base-provider"
 import type { SingleCompletionHandler, ApiHandlerCreateMessageMetadata } from "../index"
 import { getModels, getModelsFromCache } from "./fetchers/modelCache"
 import { getApiRequestTimeout } from "./utils/timeout-config"
+import { getToolRegistry } from "../../core/prompts/tools/schemas/tool-registry"
 
 export class LmStudioHandler extends BaseProvider implements SingleCompletionHandler {
 	protected options: ApiHandlerOptions
@@ -40,6 +41,8 @@ export class LmStudioHandler extends BaseProvider implements SingleCompletionHan
 			{ role: "system", content: systemPrompt },
 			...convertToOpenAiMessages(messages),
 		]
+		const toolCallEnabled = metadata?.tools && metadata.tools.length > 0
+		const toolRegistry = getToolRegistry()
 
 		// -------------------------
 		// Track token usage
@@ -68,7 +71,17 @@ export class LmStudioHandler extends BaseProvider implements SingleCompletionHan
 
 		let inputTokens = 0
 		try {
-			inputTokens = await this.countTokens([{ type: "text", text: systemPrompt }, ...toContentBlocks(messages)])
+			const inputMessages: Anthropic.Messages.ContentBlockParam[] = [{ type: "text", text: systemPrompt }]
+			if (toolCallEnabled) {
+				const toolSchemas: Anthropic.ToolUnion[] = toolRegistry.generateAnthropicToolSchemas(
+					metadata.tools!,
+					metadata.toolArgs,
+				)
+				const toolsText = this.convertToolSchemasToText(toolSchemas)
+				inputMessages.push({ type: "text", text: toolsText })
+			}
+			inputMessages.push(...toContentBlocks(messages))
+			inputTokens = await this.countTokens(inputMessages)
 		} catch (err) {
 			console.error("[LmStudio] Failed to count input tokens:", err)
 			inputTokens = 0
@@ -82,6 +95,10 @@ export class LmStudioHandler extends BaseProvider implements SingleCompletionHan
 				messages: openAiMessages,
 				temperature: this.options.modelTemperature ?? LMSTUDIO_DEFAULT_TEMPERATURE,
 				stream: true,
+			}
+			if (toolCallEnabled) {
+				params.tools = toolRegistry.generateFunctionCallSchemas(metadata.tools!, metadata.toolArgs)
+				params.tool_choice = "auto"
 			}
 
 			if (this.options.lmStudioSpeculativeDecodingEnabled && this.options.lmStudioDraftModelId) {
@@ -107,6 +124,9 @@ export class LmStudioHandler extends BaseProvider implements SingleCompletionHan
 					for (const processedChunk of matcher.update(delta.content)) {
 						yield processedChunk
 					}
+				}
+				if (delta?.tool_calls) {
+					yield { type: "tool_call", toolCalls: delta.tool_calls, toolCallType: "openai" }
 				}
 			}
 

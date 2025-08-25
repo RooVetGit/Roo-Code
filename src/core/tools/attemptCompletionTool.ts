@@ -129,8 +129,20 @@ export async function attemptCompletionTool(
 			})
 
 			toolResults.push(...formatResponse.imageBlocks(images))
-			cline.userMessageContent.push({ type: "text", text: `${toolDescription()} Result:` })
-			cline.userMessageContent.push(...toolResults)
+
+			const newMessage: (Anthropic.TextBlockParam | Anthropic.ImageBlockParam)[] = [
+				{ type: "text", text: `${toolDescription()} Result:` },
+				...toolResults,
+			]
+			if (cline.apiConfiguration?.toolCallEnabled === true && block.toolUseId) {
+				cline.userMessageContent.push({
+					type: "tool_result",
+					tool_use_id: block.toolUseId,
+					content: newMessage,
+				})
+			} else {
+				cline.userMessageContent.push(...newMessage)
+			}
 
 			return
 		}

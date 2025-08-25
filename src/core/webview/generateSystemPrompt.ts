@@ -9,6 +9,7 @@ import { MultiSearchReplaceDiffStrategy } from "../diff/strategies/multi-search-
 import { MultiFileSearchReplaceDiffStrategy } from "../diff/strategies/multi-file-search-replace"
 
 import { ClineProvider } from "./ClineProvider"
+import { supportToolCall } from "../../shared/tools"
 
 export const generateSystemPrompt = async (provider: ClineProvider, message: WebviewMessage) => {
 	const {
@@ -84,6 +85,8 @@ export const generateSystemPrompt = async (provider: ClineProvider, message: Web
 		{
 			maxConcurrentFileReads: maxConcurrentFileReads ?? 5,
 			todoListEnabled: apiConfiguration?.todoListEnabled ?? true,
+			toolCallEnabled:
+				(apiConfiguration?.toolCallEnabled ?? false) && supportToolCall(apiConfiguration.apiProvider),
 			useAgentRules: vscode.workspace.getConfiguration("roo-cline").get<boolean>("useAgentRules") ?? true,
 			newTaskRequireTodos: vscode.workspace
 				.getConfiguration("roo-cline")

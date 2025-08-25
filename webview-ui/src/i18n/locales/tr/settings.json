@@ -678,6 +678,10 @@
 		"todoList": {
 			"label": "Yapılacaklar listesi aracını etkinleştir",
 			"description": "Etkinleştirildiğinde, Roo görev ilerlemesini takip etmek için yapılacaklar listeleri oluşturabilir ve yönetebilir. Bu, karmaşık görevleri yönetilebilir adımlara organize etmeye yardımcı olur."
+		},
+		"toolCall": {
+			"label": "Araç çağrılarını etkinleştir",
+			"description": "Etkinleştirildiğinde, Roo XML tabanlı araç çağrı komutları yerine araç çağrılarını kullanabilir. Deneysel özellik!!!"
 		}
 	},
 	"experimental": {
