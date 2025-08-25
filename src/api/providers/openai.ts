@@ -19,11 +19,13 @@ import { convertToR1Format } from "../transform/r1-format"
 import { convertToSimpleMessages } from "../transform/simple-format"
 import { ApiStream, ApiStreamUsageChunk } from "../transform/stream"
 import { getModelParams } from "../transform/model-params"
+import { handleResponsesStream } from "../transform/responses-stream"
 
 import { DEFAULT_HEADERS } from "./constants"
 import { BaseProvider } from "./base-provider"
 import type { SingleCompletionHandler, ApiHandlerCreateMessageMetadata } from "../index"
 import { getApiRequestTimeout } from "./utils/timeout-config"
+import { ResponseCreateParamsNonStreaming } from "openai/resources/responses/responses"
 
 // TODO: Rename this to OpenAICompatibleHandler. Also, I think the
 // `OpenAINativeHandler` can subclass from this, since it's obviously
@@ -31,10 +33,15 @@ import { getApiRequestTimeout } from "./utils/timeout-config"
 export class OpenAiHandler extends BaseProvider implements SingleCompletionHandler {
 	protected options: ApiHandlerOptions
 	private client: OpenAI
+	private lastResponseId: string | undefined
 
 	constructor(options: ApiHandlerOptions) {
 		super()
 		this.options = options
+		// Default to including reasoning.summary: "auto" for Responses API (parity with native provider)
+		if (this.options.enableGpt5ReasoningSummary === undefined) {
+			this.options.enableGpt5ReasoningSummary = true
+		}
 
 		// Normalize Azure Responses "web" URL shape if provided by users.
 		// Example input (Azure portal sometimes shows):
@@ -135,13 +142,61 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 			const nonStreaming = !(this.options.openAiStreamingEnabled ?? true)
 
 			// Build Responses payload (align with OpenAI Native Responses API formatting)
-			const formattedInput = this._formatResponsesInput(systemPrompt, messages)
-			const payload: Record<string, unknown> = {
+			// Azure- and Responses-compatible multimodal handling:
+			// - Use array input ONLY when the latest user message contains images
+			// - Include the most recent assistant message as input_text to preserve continuity
+			// - Always include a Developer preface
+			const lastUserMessage = [...messages].reverse().find((m) => m.role === "user")
+			const lastUserHasImages =
+				!!lastUserMessage &&
+				Array.isArray(lastUserMessage.content) &&
+				lastUserMessage.content.some((b: unknown) => (b as { type?: string } | undefined)?.type === "image")
+
+			let inputPayload: unknown
+			if (lastUserHasImages && lastUserMessage) {
+				// Select messages to retain context in array mode:
+				// - The most recent assistant message (text-only, as input_text)
+				// - All user messages that contain images
+				// - The latest user message (even if it has no image)
+				const lastAssistantMessage = [...messages].reverse().find((m) => m.role === "assistant")
+
+				const messagesForArray = messages.filter((m) => {
+					if (m.role === "assistant") {
+						return lastAssistantMessage ? m === lastAssistantMessage : false
+					}
+					if (m.role === "user") {
+						const hasImage =
+							Array.isArray(m.content) &&
+							m.content.some((b: unknown) => (b as { type?: string } | undefined)?.type === "image")
+						return hasImage || m === lastUserMessage
+					}
+					return false
+				})
+
+				const arrayInput = this._toResponsesInput(messagesForArray)
+				const developerPreface = {
+					role: "user" as const,
+					content: [{ type: "input_text" as const, text: `Developer: ${systemPrompt}` }],
+				}
+				inputPayload = [developerPreface, ...arrayInput]
+			} else {
+				// Pure text history: use compact transcript (includes both user and assistant turns)
+				inputPayload = this._formatResponsesInput(systemPrompt, messages)
+			}
+			const usedArrayInput = Array.isArray(inputPayload)
+
+			const previousId = metadata?.suppressPreviousResponseId
+				? undefined
+				: (metadata?.previousResponseId ?? this.lastResponseId)
+
+			const basePayload: Record<string, unknown> = {
 				model: modelId,
-				input: formattedInput,
+				input: inputPayload,
+				...(previousId ? { previous_response_id: previousId } : {}),
 			}
 
-			// Reasoning effort (Responses expects: reasoning: { effort })
+			// Reasoning effort (Responses expects: reasoning: { effort, summary? })
+			// Parity with native: support "minimal" and include summary: "auto" unless explicitly disabled
 			if (this.options.enableReasoningEffort && (this.options.reasoningEffort || reasoningEffort)) {
 				const effort = (this.options.reasoningEffort || reasoningEffort) as
 					| "minimal"
@@ -149,41 +204,200 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 					| "medium"
 					| "high"
 					| undefined
-				// If effort is set and not "minimal" (minimal is treated as "no explicit effort")
-				if (effort && effort !== "minimal") {
-					payload.reasoning = { effort }
+				if (effort) {
+					;(
+						basePayload as {
+							reasoning?: { effort: "minimal" | "low" | "medium" | "high"; summary?: "auto" }
+						}
+					).reasoning = {
+						effort,
+						...(this.options.enableGpt5ReasoningSummary !== false ? { summary: "auto" as const } : {}),
+					}
 				}
 			}
 
 			// Temperature (only include when explicitly set by the user)
 			if (this.options.modelTemperature !== undefined) {
-				payload.temperature = this.options.modelTemperature
+				basePayload.temperature = this.options.modelTemperature
 			} else if (deepseekReasoner) {
-				payload.temperature = DEEP_SEEK_DEFAULT_TEMPERATURE
+				basePayload.temperature = DEEP_SEEK_DEFAULT_TEMPERATURE
 			}
 
 			// Verbosity: include via text.verbosity (Responses API expectation per openai-native handler)
-			if (this.options.verbosity || verbosity) {
-				;(payload as any).text = { verbosity: this.options.verbosity || verbosity }
+			const effectiveVerbosity = this.options.verbosity || verbosity
+			if (effectiveVerbosity) {
+				;(basePayload as { text?: { verbosity: "low" | "medium" | "high" } }).text = {
+					verbosity: effectiveVerbosity as "low" | "medium" | "high",
+				}
 			}
 
 			// Add max_output_tokens if requested (Azure Responses naming)
 			if (this.options.includeMaxTokens === true) {
-				payload.max_output_tokens = this.options.modelMaxTokens || modelInfo.maxTokens
+				basePayload.max_output_tokens = this.options.modelMaxTokens || modelInfo.maxTokens
 			}
 
-			// NOTE: Streaming for Responses API isn't covered by current tests.
-			// We call non-streaming for now to preserve stable behavior.
+			// Non-streaming path (preserves existing behavior and tests)
+			if (nonStreaming) {
+				try {
+					const response = await (
+						this.client as unknown as {
+							responses: { create: (body: Record<string, unknown>) => Promise<unknown> }
+						}
+					).responses.create(basePayload)
+					yield* this._yieldResponsesResult(response as unknown, modelInfo)
+				} catch (err: unknown) {
+					// Retry without previous_response_id if server rejects it (400 "Previous response ... not found")
+					if (previousId && this._isPreviousResponseNotFoundError(err)) {
+						const { previous_response_id: _omitPrev, ...withoutPrev } = basePayload as {
+							previous_response_id?: unknown
+							[key: string]: unknown
+						}
+						// Clear stored continuity to avoid reusing a bad id
+						this.lastResponseId = undefined
+						const response = await (
+							this.client as unknown as {
+								responses: { create: (body: Record<string, unknown>) => Promise<unknown> }
+							}
+						).responses.create(withoutPrev)
+						yield* this._yieldResponsesResult(response as unknown, modelInfo)
+					}
+					// Graceful downgrade if verbosity is rejected by server (400 unknown/unsupported parameter)
+					else if ("text" in basePayload && this._isVerbosityUnsupportedError(err)) {
+						// Remove text.verbosity and retry once
+						const { text: _omit, ...withoutVerbosity } = basePayload as { text?: unknown } & Record<
+							string,
+							unknown
+						>
+						const response = await (
+							this.client as unknown as {
+								responses: { create: (body: Record<string, unknown>) => Promise<unknown> }
+							}
+						).responses.create(withoutVerbosity)
+						yield* this._yieldResponsesResult(response as unknown, modelInfo)
+					} else if (usedArrayInput && this._isInputTextInvalidError(err)) {
+						// Azure-specific fallback: retry with string transcript when array input is rejected
+						const retryPayload: Record<string, unknown> = {
+							...basePayload,
+							input: this._formatResponsesInput(systemPrompt, messages),
+						}
+						const response = await (
+							this.client as unknown as {
+								responses: { create: (body: Record<string, unknown>) => Promise<unknown> }
+							}
+						).responses.create(retryPayload)
+						yield* this._yieldResponsesResult(response as unknown, modelInfo)
+					} else {
+						throw err
+					}
+				}
+				return
+			}
+
+			// Streaming path (auto-fallback to non-streaming result if provider ignores stream flag)
+			const streamingPayload: Record<string, unknown> = { ...basePayload, stream: true }
 			try {
-				const response: any = await (this.client as any).responses.create(payload)
-				yield* this._yieldResponsesResult(response, modelInfo)
+				const maybeStream = await (
+					this.client as unknown as {
+						responses: { create: (body: Record<string, unknown>) => Promise<unknown> }
+					}
+				).responses.create(streamingPayload)
+
+				const isAsyncIterable = (obj: unknown): obj is AsyncIterable<unknown> =>
+					typeof (obj as AsyncIterable<unknown>)[Symbol.asyncIterator] === "function"
+
+				if (isAsyncIterable(maybeStream)) {
+					for await (const chunk of handleResponsesStream(maybeStream, {
+						onResponseId: (id) => {
+							this.lastResponseId = id
+						},
+					})) {
+						yield chunk
+					}
+				} else {
+					// Some providers may ignore the stream flag and return a complete response
+					yield* this._yieldResponsesResult(maybeStream as unknown, modelInfo)
+				}
 			} catch (err: unknown) {
-				// Graceful downgrade if verbosity is rejected by server (400 unknown/unsupported parameter)
-				if ((payload as any).text && this._isVerbosityUnsupportedError(err)) {
-					// Remove text.verbosity and retry once
-					const { text: _omit, ...withoutVerbosity } = payload as any
-					const response: any = await (this.client as any).responses.create(withoutVerbosity)
-					yield* this._yieldResponsesResult(response, modelInfo)
+				// Retry without previous_response_id if server rejects it (400 "Previous response ... not found")
+				if (previousId && this._isPreviousResponseNotFoundError(err)) {
+					const { previous_response_id: _omitPrev, ...withoutPrev } = streamingPayload as {
+						previous_response_id?: unknown
+						[key: string]: unknown
+					}
+					this.lastResponseId = undefined
+					const maybeStreamRetry = await (
+						this.client as unknown as {
+							responses: { create: (body: Record<string, unknown>) => Promise<unknown> }
+						}
+					).responses.create(withoutPrev)
+
+					const isAsyncIterable = (obj: unknown): obj is AsyncIterable<unknown> =>
+						typeof (obj as AsyncIterable<unknown>)[Symbol.asyncIterator] === "function"
+
+					if (isAsyncIterable(maybeStreamRetry)) {
+						for await (const chunk of handleResponsesStream(maybeStreamRetry, {
+							onResponseId: (id) => {
+								this.lastResponseId = id
+							},
+						})) {
+							yield chunk
+						}
+					} else {
+						yield* this._yieldResponsesResult(maybeStreamRetry as unknown, modelInfo)
+					}
+				}
+				// Graceful verbosity removal on 400
+				else if ("text" in streamingPayload && this._isVerbosityUnsupportedError(err)) {
+					const { text: _omit, ...withoutVerbosity } = streamingPayload as { text?: unknown } & Record<
+						string,
+						unknown
+					>
+					const maybeStreamRetry = await (
+						this.client as unknown as {
+							responses: { create: (body: Record<string, unknown>) => Promise<unknown> }
+						}
+					).responses.create(withoutVerbosity)
+
+					const isAsyncIterable = (obj: unknown): obj is AsyncIterable<unknown> =>
+						typeof (obj as AsyncIterable<unknown>)[Symbol.asyncIterator] === "function"
+
+					if (isAsyncIterable(maybeStreamRetry)) {
+						for await (const chunk of handleResponsesStream(maybeStreamRetry, {
+							onResponseId: (id) => {
+								this.lastResponseId = id
+							},
+						})) {
+							yield chunk
+						}
+					} else {
+						yield* this._yieldResponsesResult(maybeStreamRetry as unknown, modelInfo)
+					}
+				} else if (usedArrayInput && this._isInputTextInvalidError(err)) {
+					// Azure-specific fallback for streaming: retry with string transcript while keeping stream: true
+					const retryStreamingPayload: Record<string, unknown> = {
+						...streamingPayload,
+						input: this._formatResponsesInput(systemPrompt, messages),
+					}
+					const maybeStreamRetry = await (
+						this.client as unknown as {
+							responses: { create: (body: Record<string, unknown>) => Promise<unknown> }
+						}
+					).responses.create(retryStreamingPayload)
+
+					const isAsyncIterable = (obj: unknown): obj is AsyncIterable<unknown> =>
+						typeof (obj as AsyncIterable<unknown>)[Symbol.asyncIterator] === "function"
+
+					if (isAsyncIterable(maybeStreamRetry)) {
+						for await (const chunk of handleResponsesStream(maybeStreamRetry, {
+							onResponseId: (id) => {
+								this.lastResponseId = id
+							},
+						})) {
+							yield chunk
+						}
+					} else {
+						yield* this._yieldResponsesResult(maybeStreamRetry as unknown, modelInfo)
+					}
 				} else {
 					throw err
 				}
@@ -383,17 +597,17 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 				const formattedInput = this._formatResponsesSingleMessage(
 					{
 						role: "user",
-						content: [{ type: "text", text: prompt }] as any,
+						content: [{ type: "text", text: prompt }],
 					} as Anthropic.Messages.MessageParam,
 					/*includeRole*/ true,
 				)
-				const payload: Record<string, unknown> = {
+				const payload: ResponseCreateParamsNonStreaming = {
 					model: model.id,
 					input: formattedInput,
 				}
 
 				// Reasoning effort (Responses)
-				const effort = (this.options.reasoningEffort || (model as any).reasoningEffort) as
+				const effort = (this.options.reasoningEffort || model.reasoningEffort) as
 					| "minimal"
 					| "low"
 					| "medium"
@@ -410,7 +624,7 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 
 				// Verbosity via text.verbosity
 				if (this.options.verbosity) {
-					;(payload as any).text = { verbosity: this.options.verbosity }
+					payload.text = { verbosity: this.options.verbosity }
 				}
 
 				// max_output_tokens
@@ -419,12 +633,20 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 				}
 
 				try {
-					const response: any = await (this.client as any).responses.create(payload)
+					const response = await this.client.responses.create(payload)
+					try {
+						const respId = (response as { id?: unknown } | undefined)?.id
+						if (typeof respId === "string" && respId.length > 0) {
+							this.lastResponseId = respId
+						}
+					} catch {
+						// ignore
+					}
 					return this._extractResponsesText(response) ?? ""
 				} catch (err: unknown) {
-					if ((payload as any).text && this._isVerbosityUnsupportedError(err)) {
-						const { text: _omit, ...withoutVerbosity } = payload as any
-						const response: any = await (this.client as any).responses.create(withoutVerbosity)
+					if (payload.text && this._isVerbosityUnsupportedError(err)) {
+						const { text: _omit, ...withoutVerbosity } = payload
+						const response = await this.client.responses.create(withoutVerbosity)
 						return this._extractResponsesText(response) ?? ""
 					}
 					throw err
@@ -722,7 +944,30 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 		return undefined
 	}
 
+	private _isInputTextInvalidError(err: unknown): boolean {
+		if (err == null || typeof err !== "object") return false
+		const anyErr = err as {
+			status?: unknown
+			response?: { status?: unknown }
+			message?: unknown
+			error?: { message?: unknown }
+		}
+		const statusRaw = anyErr.status ?? anyErr.response?.status
+		const status = typeof statusRaw === "number" ? statusRaw : Number(statusRaw)
+		const msgRaw = (anyErr.message ?? anyErr.error?.message ?? "").toString().toLowerCase()
+		return status === 400 && msgRaw.includes("invalid value") && msgRaw.includes("input_text")
+	}
 	private async *_yieldResponsesResult(response: any, modelInfo: ModelInfo): ApiStream {
+		// Capture response id for continuity when present
+		try {
+			const respId = (response as { id?: unknown } | undefined)?.id
+			if (typeof respId === "string" && respId.length > 0) {
+				this.lastResponseId = respId
+			}
+		} catch {
+			// ignore
+		}
+
 		const text = this._extractResponsesText(response) ?? ""
 		if (text) {
 			yield { type: "text", text }
@@ -741,13 +986,34 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 	}
 
 	private _isVerbosityUnsupportedError(err: unknown): boolean {
-		const anyErr = err as any
-		const msg = (anyErr?.message || "").toString().toLowerCase()
-		const status = anyErr?.status
+		if (err == null || typeof err !== "object") return false
+
+		// you had hasOwnProperty("message") twice — likely a typo
+		if (!("message" in err)) return false
+
+		const msg = String((err as { message?: unknown }).message ?? "").toLowerCase()
+
+		const rawStatus = "status" in err ? (err as { status?: unknown }).status : undefined
+		const status = typeof rawStatus === "number" ? rawStatus : Number(rawStatus)
+
 		return (
 			status === 400 &&
 			(msg.includes("verbosity") || msg.includes("unknown parameter") || msg.includes("unsupported"))
 		)
+	}
+
+	private _isPreviousResponseNotFoundError(err: unknown): boolean {
+		if (err == null || typeof err !== "object") return false
+		const anyErr = err as {
+			status?: unknown
+			response?: { status?: unknown }
+			message?: unknown
+			error?: { message?: unknown }
+		}
+		const statusRaw = anyErr.status ?? anyErr.response?.status
+		const status = typeof statusRaw === "number" ? statusRaw : Number(statusRaw)
+		const msg = (anyErr.message ?? anyErr.error?.message ?? "").toString().toLowerCase()
+		return status === 400 && (msg.includes("previous response") || msg.includes("not found"))
 	}
 
 	// ---- Responses input formatting (align with openai-native.ts) ----
@@ -761,8 +1027,8 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 				formattedInput += `${role}: ${message.content}\n\n`
 			} else if (Array.isArray(message.content)) {
 				const textContent = message.content
-					.filter((block) => (block as any).type === "text")
-					.map((block) => (block as any).text as string)
+					.filter((block) => block.type === "text")
+					.map((block) => block.text)
 					.join("\n")
 				if (textContent) {
 					formattedInput += `${role}: ${textContent}\n\n`
@@ -782,8 +1048,8 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 		}
 		if (Array.isArray(message.content)) {
 			const textContent = message.content
-				.filter((block) => (block as any).type === "text")
-				.map((block) => (block as any).text as string)
+				.filter((block) => block.type === "text")
+				.map((block) => block.text)
 				.join("\n")
 			return `${role}${textContent}`
 		}

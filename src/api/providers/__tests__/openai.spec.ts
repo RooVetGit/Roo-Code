@@ -1171,7 +1171,7 @@ describe("OpenAI Compatible - Responses API", () => {
 		expect(mockResponsesCreate).toHaveBeenCalled()
 		const rArgs = mockResponsesCreate.mock.calls.pop()?.[0]
 		expect(rArgs).toHaveProperty("reasoning")
-		expect(rArgs.reasoning).toEqual({ effort: "high" })
+		expect(rArgs.reasoning).toMatchObject({ effort: "high" })
 
 		// Chat path
 		mockResponsesCreate.mockClear()
@@ -1299,5 +1299,564 @@ describe("OpenAI Compatible - Responses API", () => {
 		const lastCtorArgs = ctorCalls[ctorCalls.length - 1]?.[0] || {}
 		expect(lastCtorArgs.baseURL).toBe("https://sample-name.openai.azure.com/openai/v1")
 		expect(lastCtorArgs.apiVersion).toBe("preview")
+	})
+
+	it("streams Responses API when provider returns AsyncIterable", async () => {
+		// Arrange: make responses.create return an AsyncIterable stream for this test
+		mockResponsesCreate.mockImplementationOnce(async (_opts: any) => {
+			return {
+				[Symbol.asyncIterator]: async function* () {
+					yield { type: "response.text.delta", delta: "Hello " }
+					yield { type: "response.text.delta", delta: "world" }
+					yield {
+						type: "response.completed",
+						response: { usage: { input_tokens: 7, output_tokens: 2 } },
+					}
+				},
+			}
+		})
+
+		const handler = new OpenAiHandler({
+			openAiApiKey: "k",
+			openAiModelId: "gpt-5-mini",
+			openAiBaseUrl: "https://api.openai.com/v1/responses",
+			// streaming enabled by default
+		})
+
+		const stream = handler.createMessage("You are Roo.", [
+			{ role: "user", content: [{ type: "text" as const, text: "Say hi" }] },
+		])
+
+		const chunks: any[] = []
+		for await (const ch of stream) {
+			chunks.push(ch)
+		}
+
+		// Text should be streamed and concatenated in order
+		const text = chunks
+			.filter((c) => c.type === "text")
+			.map((c) => c.text)
+			.join("")
+		expect(text).toBe("Hello world")
+
+		// Usage chunk emitted at completion
+		const usage = chunks.find((c) => c.type === "usage")
+		expect(usage).toBeDefined()
+		expect(usage.inputTokens).toBe(7)
+		expect(usage.outputTokens).toBe(2)
+
+		// Ensure stream: true was sent
+		const args = mockResponsesCreate.mock.calls.pop()?.[0]
+		expect(args).toHaveProperty("stream", true)
+	})
+})
+
+describe("OpenAI Compatible - Responses API (extended streaming)", () => {
+	it("handles reasoning deltas and output_text in message content", async () => {
+		// Arrange: make responses.create return an AsyncIterable stream for this test
+		mockResponsesCreate.mockImplementationOnce(async (_opts: any) => {
+			return {
+				[Symbol.asyncIterator]: async function* () {
+					// Reasoning delta first
+					yield { type: "response.reasoning.delta", delta: "Thinking. " }
+					// Then a message item with output_text inside content array
+					yield {
+						type: "response.output_item.added",
+						item: {
+							type: "message",
+							content: [{ type: "output_text", text: "Answer." }],
+						},
+					}
+					// Completion with usage
+					yield {
+						type: "response.completed",
+						response: { usage: { input_tokens: 3, output_tokens: 2 } },
+					}
+				},
+			}
+		})
+
+		const handler = new OpenAiHandler({
+			openAiApiKey: "k",
+			openAiModelId: "gpt-5-mini",
+			openAiBaseUrl: "https://api.openai.com/v1/responses",
+		})
+
+		const chunks: any[] = []
+		for await (const ch of handler.createMessage("sys", [
+			{ role: "user", content: [{ type: "text" as const, text: "Hi" }] },
+		])) {
+			chunks.push(ch)
+		}
+
+		const reasoning = chunks.find((c) => c.type === "reasoning")
+		expect(reasoning?.text).toBe("Thinking. ")
+
+		const text = chunks.find((c) => c.type === "text")
+		expect(text?.text).toBe("Answer.")
+
+		const usage = chunks.find((c) => c.type === "usage")
+		expect(usage).toBeDefined()
+		expect(usage.inputTokens).toBe(3)
+		expect(usage.outputTokens).toBe(2)
+
+		// Ensure stream: true was sent
+		const args = mockResponsesCreate.mock.calls.pop()?.[0]
+		expect(args).toHaveProperty("stream", true)
+	})
+
+	it("maps refusal deltas to text with prefix", async () => {
+		mockResponsesCreate.mockImplementationOnce(async (_opts: any) => {
+			return {
+				[Symbol.asyncIterator]: async function* () {
+					yield { type: "response.refusal.delta", delta: "Cannot comply" }
+					// Usage may be attached directly on the event for some implementations
+					yield { type: "response.done", usage: { prompt_tokens: 1, completion_tokens: 1 } }
+				},
+			}
+		})
+
+		const handler = new OpenAiHandler({
+			openAiApiKey: "k",
+			openAiModelId: "gpt-5-mini",
+			openAiBaseUrl: "https://api.openai.com/v1/responses",
+		})
+
+		const result: any[] = []
+		for await (const ch of handler.createMessage("sys", [
+			{ role: "user", content: [{ type: "text" as const, text: "Hi" }] },
+		])) {
+			result.push(ch)
+		}
+
+		const textChunks = result.filter((c) => c.type === "text").map((c) => c.text)
+		expect(textChunks).toContain("[Refusal] Cannot comply")
+
+		const usage = result.find((c) => c.type === "usage")
+		expect(usage).toBeDefined()
+		expect(usage.inputTokens).toBe(1)
+		expect(usage.outputTokens).toBe(1)
+	})
+})
+
+describe("OpenAI Compatible - Responses API (multimodal)", () => {
+	it("builds structured array input with images (non-streaming)", async () => {
+		// Reset mocks for clarity
+		mockResponsesCreate.mockClear()
+		mockCreate.mockClear()
+
+		const handler = new OpenAiHandler({
+			openAiApiKey: "k",
+			openAiModelId: "gpt-5-mini",
+			openAiBaseUrl: "https://api.openai.com/v1/responses",
+			openAiStreamingEnabled: false,
+			includeMaxTokens: false,
+		})
+
+		const messages: Anthropic.Messages.MessageParam[] = [
+			{
+				role: "user",
+				content: [
+					{ type: "text" as const, text: "Here is an image" },
+					{
+						type: "image" as const,
+						// Minimal Anthropic-style inline image (base64) block
+						source: { media_type: "image/png", data: "BASE64DATA" } as any,
+					},
+				],
+			},
+		]
+
+		const chunks: any[] = []
+		for await (const ch of handler.createMessage("You are Roo Code.", messages)) {
+			chunks.push(ch)
+		}
+
+		// Should have used Responses API
+		expect(mockResponsesCreate).toHaveBeenCalled()
+		const args = mockResponsesCreate.mock.calls[0][0]
+
+		// Input should be an array (structured input mode)
+		expect(Array.isArray(args.input)).toBe(true)
+		const arr = args.input as any[]
+
+		// First element should be Developer preface as input_text
+		expect(arr[0]?.role).toBe("user")
+		expect(arr[0]?.content?.[0]?.type).toBe("input_text")
+		expect(arr[0]?.content?.[0]?.text).toContain("Developer: You are Roo Code.")
+
+		// There should be at least one input_image with a data URL for the provided image
+		const hasInputImage = arr.some((item: any) => {
+			const c = item?.content
+			return (
+				Array.isArray(c) &&
+				c.some(
+					(part: any) =>
+						part?.type === "input_image" &&
+						typeof part?.image_url === "string" &&
+						part.image_url.startsWith("data:image/png;base64,BASE64DATA"),
+				)
+			)
+		})
+		expect(hasInputImage).toBe(true)
+
+		// Should still yield a text chunk and usage (from default mock)
+		const textChunk = chunks.find((c: any) => c.type === "text")
+		const usageChunk = chunks.find((c: any) => c.type === "usage")
+		expect(textChunk?.text).toBe("Test response")
+		expect(usageChunk?.inputTokens).toBe(10)
+		expect(usageChunk?.outputTokens).toBe(5)
+	})
+
+	it("streams with multimodal input using array 'input'", async () => {
+		// Make responses.create return an AsyncIterable stream for this test
+		mockResponsesCreate.mockClear()
+		mockResponsesCreate.mockImplementationOnce(async (_opts: any) => {
+			return {
+				[Symbol.asyncIterator]: async function* () {
+					yield { type: "response.text.delta", delta: "A" }
+					yield { type: "response.text.delta", delta: "B" }
+					yield {
+						type: "response.completed",
+						response: { usage: { input_tokens: 2, output_tokens: 2 } },
+					}
+				},
+			}
+		})
+
+		const handler = new OpenAiHandler({
+			openAiApiKey: "k",
+			openAiModelId: "gpt-5-mini",
+			openAiBaseUrl: "https://api.openai.com/v1/responses",
+		})
+
+		const messages: Anthropic.Messages.MessageParam[] = [
+			{
+				role: "user",
+				content: [
+					{ type: "text" as const, text: "Look at this" },
+					{
+						type: "image" as const,
+						source: { media_type: "image/jpeg", data: "IMGDATA" } as any,
+					},
+				],
+			},
+		]
+
+		const out: any[] = []
+		for await (const ch of handler.createMessage("System text", messages)) {
+			out.push(ch)
+		}
+
+		// Ensure stream: true was sent and input is array
+		expect(mockResponsesCreate).toHaveBeenCalled()
+		const args = mockResponsesCreate.mock.calls[0][0]
+		expect(args).toHaveProperty("stream", true)
+		expect(Array.isArray(args.input)).toBe(true)
+
+		// Verify streamed text concatenation and usage
+		const combined = out
+			.filter((c) => c.type === "text")
+			.map((c) => c.text)
+			.join("")
+		expect(combined).toBe("AB")
+
+		const usage = out.find((c) => c.type === "usage")
+		expect(usage?.inputTokens).toBe(2)
+		expect(usage?.outputTokens).toBe(2)
+	})
+})
+
+// --- New tests: Responses API conversation continuity (previous_response_id) ---
+describe("OpenAI Compatible - Responses API conversation continuity", () => {
+	beforeEach(() => {
+		mockCreate.mockClear()
+		mockResponsesCreate.mockClear()
+	})
+
+	it("propagates previous_response_id from first streaming response into the next request", async () => {
+		// First call will stream and include a response.id
+		mockResponsesCreate.mockImplementationOnce(async (_opts: any) => {
+			return {
+				[Symbol.asyncIterator]: async function* () {
+					yield { type: "response.text.delta", delta: "Desc " }
+					yield {
+						type: "response.completed",
+						response: { id: "resp-1", usage: { input_tokens: 5, output_tokens: 2 } },
+					}
+				},
+			}
+		})
+
+		const handler = new OpenAiHandler({
+			openAiApiKey: "k",
+			openAiModelId: "gpt-5-mini",
+			openAiBaseUrl: "https://api.openai.com/v1/responses",
+		})
+
+		// 1) First call (establish response id)
+		const firstChunks: any[] = []
+		for await (const ch of handler.createMessage("You are Roo.", [
+			{ role: "user", content: [{ type: "text" as const, text: "Describe the image" }] },
+		])) {
+			firstChunks.push(ch)
+		}
+
+		// Ensure first call was made
+		expect(mockResponsesCreate).toHaveBeenCalledTimes(1)
+		// 2) Second call - should include previous_response_id from first call
+		const secondChunks: any[] = []
+		for await (const ch of handler.createMessage("You are Roo.", [
+			{ role: "user", content: [{ type: "text" as const, text: "Continue." }] },
+		])) {
+			secondChunks.push(ch)
+		}
+
+		// Validate that a second Responses.create call was made
+		expect(mockResponsesCreate).toHaveBeenCalledTimes(2)
+		const secondArgs = mockResponsesCreate.mock.calls[1][0]
+		expect(secondArgs).toHaveProperty("previous_response_id", "resp-1")
+	})
+
+	it("omits previous_response_id when metadata.suppressPreviousResponseId is true", async () => {
+		// First call streams and returns an id
+		mockResponsesCreate.mockImplementationOnce(async (_opts: any) => {
+			return {
+				[Symbol.asyncIterator]: async function* () {
+					yield { type: "response.text.delta", delta: "First" }
+					yield {
+						type: "response.completed",
+						response: { id: "rid-xyz", usage: { input_tokens: 1, output_tokens: 1 } },
+					}
+				},
+			}
+		})
+
+		const handler = new OpenAiHandler({
+			openAiApiKey: "k",
+			openAiModelId: "gpt-5-mini",
+			openAiBaseUrl: "https://api.openai.com/v1/responses",
+		})
+
+		// First call to capture lastResponseId
+		for await (const _ of handler.createMessage("sys", [
+			{ role: "user", content: [{ type: "text" as const, text: "Turn 1" }] },
+		])) {
+		}
+
+		// Second call with suppressPreviousResponseId => should NOT include previous_response_id
+		for await (const _ of handler.createMessage(
+			"sys",
+			[{ role: "user", content: [{ type: "text" as const, text: "Turn 2" }] }],
+			{ suppressPreviousResponseId: true } as any,
+		)) {
+		}
+
+		expect(mockResponsesCreate).toHaveBeenCalledTimes(2)
+		const args = mockResponsesCreate.mock.calls[1][0]
+		expect(args).not.toHaveProperty("previous_response_id")
+	})
+})
+
+// --- New: Responses API parity improvements tests ---
+describe("OpenAI Compatible - Responses API parity improvements", () => {
+	beforeEach(() => {
+		mockCreate.mockClear()
+		mockResponsesCreate.mockClear()
+	})
+
+	it("retries without previous_response_id when server returns 400 'Previous response ... not found' (non-streaming)", async () => {
+		// First call throws 400 for previous_response_id, second succeeds
+		mockResponsesCreate
+			.mockImplementationOnce((_opts: any) => {
+				const err = new Error("Previous response rid-bad not found")
+				;(err as any).status = 400
+				throw err
+			})
+			.mockImplementationOnce(async (_opts: any) => {
+				return { id: "rid-good", output_text: "OK", usage: { input_tokens: 1, output_tokens: 1 } }
+			})
+
+		const h = new OpenAiHandler({
+			openAiApiKey: "k",
+			openAiModelId: "gpt-5",
+			openAiBaseUrl: "https://api.openai.com/v1/responses",
+			openAiStreamingEnabled: false,
+		})
+
+		const chunks: any[] = []
+		for await (const ch of h.createMessage(
+			"sys",
+			[{ role: "user", content: [{ type: "text" as const, text: "Turn" }] }],
+			{ previousResponseId: "rid-bad" } as any,
+		)) {
+			chunks.push(ch)
+		}
+
+		// Two calls made: first fails with 400, second retries without previous_response_id
+		expect(mockResponsesCreate).toHaveBeenCalledTimes(2)
+		const firstArgs = mockResponsesCreate.mock.calls[0][0]
+		expect(firstArgs).toHaveProperty("previous_response_id", "rid-bad")
+
+		const secondArgs = mockResponsesCreate.mock.calls[1][0]
+		expect(secondArgs).not.toHaveProperty("previous_response_id")
+
+		// Should still surface text
+		const textChunk = chunks.find((c: any) => c.type === "text")
+		expect(textChunk?.text).toBe("OK")
+	})
+
+	it("retries without previous_response_id when server returns 400 (streaming)", async () => {
+		// First call throws, second returns a stream
+		mockResponsesCreate
+			.mockImplementationOnce((_opts: any) => {
+				const err = new Error("Previous response not found")
+				;(err as any).status = 400
+				throw err
+			})
+			.mockImplementationOnce(async (_opts: any) => {
+				return {
+					[Symbol.asyncIterator]: async function* () {
+						yield { type: "response.text.delta", delta: "Hello" }
+						yield { type: "response.completed", response: { usage: { input_tokens: 1, output_tokens: 1 } } }
+					},
+				}
+			})
+
+		const h = new OpenAiHandler({
+			openAiApiKey: "k",
+			openAiModelId: "gpt-5",
+			openAiBaseUrl: "https://api.openai.com/v1/responses",
+			// streaming enabled by default
+		})
+
+		const out: any[] = []
+		for await (const ch of h.createMessage(
+			"sys",
+			[{ role: "user", content: [{ type: "text" as const, text: "Hi" }] }],
+			{ previousResponseId: "bad-id" } as any,
+		)) {
+			out.push(ch)
+		}
+
+		expect(mockResponsesCreate).toHaveBeenCalledTimes(2)
+		const first = mockResponsesCreate.mock.calls[0][0]
+		expect(first).toHaveProperty("previous_response_id", "bad-id")
+		const second = mockResponsesCreate.mock.calls[1][0]
+		expect(second).not.toHaveProperty("previous_response_id")
+
+		const combined = out
+			.filter((c) => c.type === "text")
+			.map((c) => c.text)
+			.join("")
+		expect(combined).toBe("Hello")
+	})
+
+	it("handles response.content_part.added by emitting text", async () => {
+		mockResponsesCreate.mockImplementationOnce(async (_opts: any) => {
+			return {
+				[Symbol.asyncIterator]: async function* () {
+					yield { type: "response.content_part.added", part: { type: "text", text: "Part" } }
+					yield { type: "response.completed", response: { usage: { input_tokens: 0, output_tokens: 0 } } }
+				},
+			}
+		})
+
+		const h = new OpenAiHandler({
+			openAiApiKey: "k",
+			openAiModelId: "gpt-5",
+			openAiBaseUrl: "https://api.openai.com/v1/responses",
+		})
+
+		const out: any[] = []
+		for await (const ch of h.createMessage("sys", [
+			{ role: "user", content: [{ type: "text" as const, text: "Hi" }] },
+		])) {
+			out.push(ch)
+		}
+
+		const texts = out.filter((c) => c.type === "text").map((c) => c.text)
+		expect(texts).toContain("Part")
+	})
+
+	it("maps response.audio_transcript.delta to text", async () => {
+		mockResponsesCreate.mockImplementationOnce(async (_opts: any) => {
+			return {
+				[Symbol.asyncIterator]: async function* () {
+					yield { type: "response.audio_transcript.delta", delta: "Transcript" }
+					yield { type: "response.completed", response: { usage: { input_tokens: 0, output_tokens: 0 } } }
+				},
+			}
+		})
+
+		const h = new OpenAiHandler({
+			openAiApiKey: "k",
+			openAiModelId: "gpt-5",
+			openAiBaseUrl: "https://api.openai.com/v1/responses",
+		})
+
+		const out: any[] = []
+		for await (const ch of h.createMessage("sys", [
+			{ role: "user", content: [{ type: "text" as const, text: "Hi" }] },
+		])) {
+			out.push(ch)
+		}
+
+		const texts = out.filter((c) => c.type === "text").map((c) => c.text)
+		expect(texts).toContain("Transcript")
+	})
+
+	it("includes reasoning: { effort: 'minimal', summary: 'auto' } when enabled (non-streaming)", async () => {
+		mockResponsesCreate.mockImplementationOnce(async (opts: any) => {
+			return { id: "rid-1", output_text: "ok", usage: { input_tokens: 1, output_tokens: 1 } }
+		})
+
+		const h = new OpenAiHandler({
+			openAiApiKey: "k",
+			openAiModelId: "gpt-5",
+			openAiBaseUrl: "https://api.openai.com/v1/responses",
+			openAiStreamingEnabled: false,
+			enableReasoningEffort: true,
+			reasoningEffort: "minimal",
+		})
+
+		for await (const _ of h.createMessage("sys", [
+			{ role: "user", content: [{ type: "text" as const, text: "Hi" }] },
+		])) {
+			// consume
+		}
+
+		expect(mockResponsesCreate).toHaveBeenCalledTimes(1)
+		const args = mockResponsesCreate.mock.calls[0][0]
+		expect(args).toHaveProperty("reasoning")
+		expect(args.reasoning).toMatchObject({ effort: "minimal", summary: "auto" })
+	})
+
+	it("omits reasoning.summary when enableGpt5ReasoningSummary is false", async () => {
+		mockResponsesCreate.mockImplementationOnce(async (opts: any) => {
+			return { id: "rid-2", output_text: "ok", usage: { input_tokens: 1, output_tokens: 1 } }
+		})
+
+		const h = new OpenAiHandler({
+			openAiApiKey: "k",
+			openAiModelId: "gpt-5",
+			openAiBaseUrl: "https://api.openai.com/v1/responses",
+			openAiStreamingEnabled: false,
+			enableReasoningEffort: true,
+			reasoningEffort: "low",
+			enableGpt5ReasoningSummary: false,
+		})
+
+		for await (const _ of h.createMessage("sys", [
+			{ role: "user", content: [{ type: "text" as const, text: "Hi" }] },
+		])) {
+			// consume
+		}
+
+		expect(mockResponsesCreate).toHaveBeenCalledTimes(1)
+		const args = mockResponsesCreate.mock.calls[0][0]
+		expect(args).toHaveProperty("reasoning")
+		expect(args.reasoning.effort).toBe("low")
+		expect(args.reasoning.summary).toBeUndefined()
 	})
 })
