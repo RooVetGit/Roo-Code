@@ -68,7 +68,7 @@ type ShellToken = string | { op: string } | { command: string }
  * - ${var@E} - Escape sequence expansion
  * - ${var@A} - Assignment statement
  * - ${var@a} - Attribute flags
- * - ${var=value} with escape sequences - Can embed commands via \140 (backtick) or \x60
+ * - ${var=value} with escape sequences - Can embed commands via \140 (backtick), \x60, or \u0060
  * - ${!var} - Indirect variable references
  * - <<<$(...) or <<<`...` - Here-strings with command substitution
  *
@@ -89,7 +89,8 @@ export function containsDangerousSubstitution(source: string): boolean {
 	// Also check for ${var+value}, ${var:-value}, ${var:+value}, ${var:?value}
 	const parameterAssignmentWithEscapes =
 		/\$\{[^}]*[=+\-?][^}]*\\[0-7]{3}[^}]*\}/.test(source) || // octal escapes
-		/\$\{[^}]*[=+\-?][^}]*\\x[0-9a-fA-F]{2}[^}]*\}/.test(source) // hex escapes
+		/\$\{[^}]*[=+\-?][^}]*\\x[0-9a-fA-F]{2}[^}]*\}/.test(source) || // hex escapes
+		/\$\{[^}]*[=+\-?][^}]*\\u[0-9a-fA-F]{4}[^}]*\}/.test(source) // unicode escapes
 
 	// Check for indirect variable references that could execute commands
 	// ${!var} performs indirect expansion which can be dangerous with crafted variable names

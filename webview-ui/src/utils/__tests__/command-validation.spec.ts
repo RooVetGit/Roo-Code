@@ -246,6 +246,17 @@ ls -la || echo "Failed"`
 			expect(containsDangerousSubstitution('echo "${var=\\xFF}"')).toBe(true)
 		})
 
+		it("detects parameter assignments with unicode escape sequences", () => {
+			// Unicode \u0060 is backtick
+			expect(containsDangerousSubstitution('echo "${var=\\u0060whoami\\u0060}"')).toBe(true)
+			expect(containsDangerousSubstitution('echo "${var:=\\u0060ls\\u0060}"')).toBe(true)
+			expect(containsDangerousSubstitution('echo "${var+\\u0060pwd\\u0060}"')).toBe(true)
+			expect(containsDangerousSubstitution('echo "${var:-\\u0060date\\u0060}"')).toBe(true)
+			// Test various unicode patterns
+			expect(containsDangerousSubstitution('echo "${var=\\u0000\\u0060\\u0061}"')).toBe(true)
+			expect(containsDangerousSubstitution('echo "${var=\\uFFFF}"')).toBe(true)
+		})
+
 		it("detects indirect variable references", () => {
 			// ${!var} performs indirect expansion which can be dangerous
 			expect(containsDangerousSubstitution("echo ${!var}")).toBe(true)
