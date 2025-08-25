@@ -678,6 +678,10 @@
 		"todoList": {
 			"label": "Abilita strumento lista di cose da fare",
 			"description": "Quando abilitato, Roo può creare e gestire liste di cose da fare per tracciare il progresso delle attività. Questo aiuta a organizzare attività complesse in passaggi gestibili."
+		},
+		"toolCall": {
+			"label": "Abilita chiamate di strumenti",
+			"description": "Quando abilitato, Roo può usare chiamate di strumenti invece di prompt di chiamata di strumenti basati su XML. Funzionalità sperimentale!!!"
 		}
 	},
 	"experimental": {

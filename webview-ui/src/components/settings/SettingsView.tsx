@@ -591,13 +591,14 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 										})
 										prevApiConfigName.current = newName
 									}}
-									onUpsertConfig={(configName: string) =>
+									onUpsertConfig={(configName: string) => {
+										const newApiConfig = { ...apiConfiguration, toolCallEnabled: false }
 										vscode.postMessage({
 											type: "upsertApiConfiguration",
 											text: configName,
-											apiConfiguration,
+											apiConfiguration: newApiConfig,
 										})
-									}
+									}}
 								/>
 								<ApiOptions
 									uriScheme={uriScheme}

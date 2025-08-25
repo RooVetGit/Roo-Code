@@ -1,10 +1,14 @@
 import { type ToolName, toolNames } from "@roo-code/types"
 
 import { TextContent, ToolUse, ToolParamName, toolParamNames } from "../../shared/tools"
+import { ToolCallParam } from "../task/tool-call-helper"
 
 export type AssistantMessageContent = TextContent | ToolUse
 
-export function parseAssistantMessage(assistantMessage: string): AssistantMessageContent[] {
+export function parseAssistantMessage(
+	assistantMessage: string,
+	toolCallParam?: ToolCallParam,
+): AssistantMessageContent[] {
 	let contentBlocks: AssistantMessageContent[] = []
 	let currentTextContent: TextContent | undefined = undefined
 	let currentTextContentStartIndex = 0
@@ -44,6 +48,9 @@ export function parseAssistantMessage(assistantMessage: string): AssistantMessag
 			const currentToolValue = accumulator.slice(currentToolUseStartIndex)
 			const toolUseClosingTag = `</${currentToolUse.name}>`
 			if (currentToolValue.endsWith(toolUseClosingTag)) {
+				if (toolCallParam?.anthropicContent && currentToolUse) {
+					currentToolUse.toolUseParam = toolCallParam.anthropicContent
+				}
 				// End of a tool use.
 				currentToolUse.partial = false
 				contentBlocks.push(currentToolUse)
@@ -103,6 +110,9 @@ export function parseAssistantMessage(assistantMessage: string): AssistantMessag
 					name: toolUseOpeningTag.slice(1, -1) as ToolName,
 					params: {},
 					partial: true,
+					toolUseId: toolCallParam && toolCallParam.toolUserId ? toolCallParam.toolUserId : undefined,
+					toolUseParam:
+						toolCallParam && toolCallParam?.anthropicContent ? toolCallParam?.anthropicContent : undefined,
 				}
 
 				currentToolUseStartIndex = accumulator.length

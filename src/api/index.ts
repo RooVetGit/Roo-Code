@@ -1,6 +1,6 @@
 import { Anthropic } from "@anthropic-ai/sdk"
 
-import type { ProviderSettings, ModelInfo } from "@roo-code/types"
+import type { ProviderSettings, ModelInfo, ToolName } from "@roo-code/types"
 
 import { ApiStream } from "./transform/stream"
 
@@ -39,6 +39,7 @@ import {
 	FeatherlessHandler,
 } from "./providers"
 import { NativeOllamaHandler } from "./providers/native-ollama"
+import { ToolArgs } from "../core/prompts/tools/types"
 
 export interface SingleCompletionHandler {
 	completePrompt(prompt: string): Promise<string>
@@ -54,6 +55,14 @@ export interface ApiHandlerCreateMessageMetadata {
 	 * Used to enforce "skip once" after a condense operation.
 	 */
 	suppressPreviousResponseId?: boolean
+	/**
+	 * tool call
+	 */
+	tools?: ToolName[]
+	/**
+	 * tool call args
+	 */
+	toolArgs?: ToolArgs
 }
 
 export interface ApiHandler {
