@@ -44,7 +44,6 @@ import { getVsCodeLmModels } from "../../api/providers/vscode-lm"
 import { openMention } from "../mentions"
 import { TelemetrySetting } from "../../shared/TelemetrySetting"
 import { getWorkspacePath } from "../../utils/path"
-import { ensureSettingsDirectoryExists } from "../../utils/globalContext"
 import { Mode, defaultModeSlug } from "../../shared/modes"
 import { getModels, flushModels } from "../../api/providers/fetchers/modelCache"
 import { GetModelsOptions } from "../../shared/api"
@@ -66,6 +65,9 @@ export const webviewMessageHandler = async (
 	const updateGlobalState = async <K extends keyof GlobalState>(key: K, value: GlobalState[K]) =>
 		await provider.contextProxy.setValue(key, value)
 
+	const getCurrentCwd = () => {
+		return provider.getCurrentTask()?.cwd || provider.cwd
+	}
 	/**
 	 * Shared utility to find message indices based on timestamp
 	 */
@@ -740,10 +742,14 @@ export const webviewMessageHandler = async (
 			saveImage(message.dataUri!)
 			break
 		case "openFile":
-			openFile(message.text!, message.values as { create?: boolean; content?: string; line?: number })
+			let filePath: string = message.text!
+			if (!path.isAbsolute(filePath)) {
+				filePath = path.join(getCurrentCwd(), filePath)
+			}
+			openFile(filePath, message.values as { create?: boolean; content?: string; line?: number })
 			break
 		case "openMention":
-			openMention(message.text)
+			openMention(getCurrentCwd(), message.text)
 			break
 		case "openExternal":
 			if (message.url) {
@@ -838,8 +844,8 @@ export const webviewMessageHandler = async (
 				return
 			}
 
-			const workspaceFolder = vscode.workspace.workspaceFolders[0]
-			const rooDir = path.join(workspaceFolder.uri.fsPath, ".roo")
+			const workspaceFolder = getCurrentCwd()
+			const rooDir = path.join(workspaceFolder, ".roo")
 			const mcpPath = path.join(rooDir, "mcp.json")
 
 			try {
@@ -1464,7 +1470,7 @@ export const webviewMessageHandler = async (
 			}
 			break
 		case "searchCommits": {
-			const cwd = provider.cwd
+			const cwd = getCurrentCwd()
 			if (cwd) {
 				try {
 					const commits = await searchCommits(message.query || "", cwd)
@@ -1482,7 +1488,7 @@ export const webviewMessageHandler = async (
 			break
 		}
 		case "searchFiles": {
-			const workspacePath = getWorkspacePath()
+			const workspacePath = getCurrentCwd()
 
 			if (!workspacePath) {
 				// Handle case where workspace path is not available
@@ -2451,7 +2457,7 @@ export const webviewMessageHandler = async (
 		case "requestCommands": {
 			try {
 				const { getCommands } = await import("../../services/command/commands")
-				const commands = await getCommands(provider.cwd || "")
+				const commands = await getCommands(getCurrentCwd())
 
 				// Convert to the format expected by the frontend
 				const commandList = commands.map((command) => ({
@@ -2480,7 +2486,7 @@ export const webviewMessageHandler = async (
 			try {
 				if (message.text) {
 					const { getCommand } = await import("../../services/command/commands")
-					const command = await getCommand(provider.cwd || "", message.text)
+					const command = await getCommand(getCurrentCwd(), message.text)
 
 					if (command && command.filePath) {
 						openFile(command.filePath)
@@ -2500,7 +2506,7 @@ export const webviewMessageHandler = async (
 			try {
 				if (message.text && message.values?.source) {
 					const { getCommand } = await import("../../services/command/commands")
-					const command = await getCommand(provider.cwd || "", message.text)
+					const command = await getCommand(getCurrentCwd(), message.text)
 
 					if (command && command.filePath) {
 						// Delete the command file
@@ -2532,8 +2538,12 @@ export const webviewMessageHandler = async (
 					const globalConfigDir = path.join(os.homedir(), ".roo")
 					commandsDir = path.join(globalConfigDir, "commands")
 				} else {
+					if (!vscode.workspace.workspaceFolders?.length) {
+						vscode.window.showErrorMessage(t("common:errors.no_workspace"))
+						return
+					}
 					// Project commands
-					const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath
+					const workspaceRoot = getCurrentCwd()
 					if (!workspaceRoot) {
 						vscode.window.showErrorMessage(t("common:errors.no_workspace_for_project_command"))
 						break
@@ -2613,7 +2623,7 @@ export const webviewMessageHandler = async (
 
 				// Refresh commands list
 				const { getCommands } = await import("../../services/command/commands")
-				const commands = await getCommands(provider.cwd || "")
+				const commands = await getCommands(getCurrentCwd() || "")
 				const commandList = commands.map((command) => ({
 					name: command.name,
 					source: command.source,
