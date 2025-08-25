@@ -1391,7 +1391,16 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 
 	const handleRowHeightChange = useCallback(
 		(isTaller: boolean) => {
+			// Only auto-scroll if we're supposed to be following the conversation
 			if (!disableAutoScrollRef.current) {
+				if (isTaller) {
+					scrollToBottomSmooth()
+				} else {
+					setTimeout(() => scrollToBottomAuto(), 0)
+				}
+			} else if (isAtBottom) {
+				// If auto-scroll is disabled but we're at the bottom,
+				// the user likely wants to follow along, so scroll anyway
 				if (isTaller) {
 					scrollToBottomSmooth()
 				} else {
@@ -1399,12 +1408,14 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 				}
 			}
 		},
-		[scrollToBottomSmooth, scrollToBottomAuto],
+		[scrollToBottomSmooth, scrollToBottomAuto, isAtBottom],
 	)
 
 	useEffect(() => {
 		let timer: ReturnType<typeof setTimeout> | undefined
-		if (!disableAutoScrollRef.current) {
+		// Auto-scroll on new messages if auto-scroll is enabled OR if we're at the bottom
+		// This ensures we follow the conversation when the user is actively reading at the bottom
+		if (!disableAutoScrollRef.current || isAtBottom) {
 			timer = setTimeout(() => scrollToBottomSmooth(), 50)
 		}
 		return () => {
@@ -1412,18 +1423,27 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 				clearTimeout(timer)
 			}
 		}
-	}, [groupedMessages.length, scrollToBottomSmooth])
+	}, [groupedMessages.length, scrollToBottomSmooth, isAtBottom])
 
-	const handleWheel = useCallback((event: Event) => {
-		const wheelEvent = event as WheelEvent
+	const handleWheel = useCallback(
+		(event: Event) => {
+			const wheelEvent = event as WheelEvent
 
-		if (wheelEvent.deltaY && wheelEvent.deltaY < 0) {
-			if (scrollContainerRef.current?.contains(wheelEvent.target as Node)) {
-				// User scrolled up
-				disableAutoScrollRef.current = true
+			if (wheelEvent.deltaY) {
+				if (scrollContainerRef.current?.contains(wheelEvent.target as Node)) {
+					if (wheelEvent.deltaY < 0) {
+						// User scrolled up - disable auto-scroll
+						disableAutoScrollRef.current = true
+					} else if (wheelEvent.deltaY > 0 && isAtBottom) {
+						// User scrolled down and we're at bottom - re-enable auto-scroll
+						// This helps when user scrolls down to catch up with messages
+						disableAutoScrollRef.current = false
+					}
+				}
 			}
-		}
-	}, [])
+		},
+		[isAtBottom],
+	)
 
 	useEvent("wheel", handleWheel, window, { passive: true }) // passive improves scrolling performance
 
@@ -1890,11 +1910,14 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 							atBottomStateChange={(isAtBottom: boolean) => {
 								setIsAtBottom(isAtBottom)
 								if (isAtBottom) {
+									// Re-enable auto-scroll when we reach the bottom
 									disableAutoScrollRef.current = false
 								}
+								// Show scroll-to-bottom button only when auto-scroll is disabled and not at bottom
 								setShowScrollToBottom(disableAutoScrollRef.current && !isAtBottom)
 							}}
-							atBottomThreshold={10}
+							// Increase threshold to be more forgiving about what counts as "at bottom"
+							atBottomThreshold={50}
 							initialTopMostItemIndex={groupedMessages.length - 1}
 						/>
 					</div>
