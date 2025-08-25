@@ -109,6 +109,30 @@ const DEFAULT_USAGE_COLLECTION_TIMEOUT_MS = 5000 // 5 seconds
 const FORCED_CONTEXT_REDUCTION_PERCENT = 75 // Keep 75% of context (remove 25%) on context window errors
 const MAX_CONTEXT_WINDOW_RETRIES = 3 // Maximum retries for context window errors
 
+export type ClineEvents = {
+	message: [{ action: "created" | "updated"; message: ClineMessage }]
+	taskStarted: []
+	taskModeSwitched: [taskId: string, mode: string]
+	taskPaused: []
+	taskUnpaused: []
+	taskAskResponded: []
+	taskAborted: []
+	taskSpawned: [taskId: string]
+	taskCompleted: [taskId: string, tokenUsage: TokenUsage, toolUsage: ToolUsage]
+	taskTokenUsageUpdated: [taskId: string, tokenUsage: TokenUsage]
+	taskToolFailed: [taskId: string, tool: ToolName, error: string]
+	[RooCodeEventName.TaskCommandExecuted]: [
+		taskId: string,
+		details: {
+			command: string
+			exitCode: number | undefined
+			output: string
+			succeeded: boolean
+			failureReason?: string
+		},
+	]
+}
+
 export type TaskOptions = {
 	provider: ClineProvider
 	apiConfiguration: ProviderSettings

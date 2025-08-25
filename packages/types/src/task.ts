@@ -120,4 +120,16 @@ export type TaskEvents = {
 	// Task Analytics
 	[RooCodeEventName.TaskToolFailed]: [taskId: string, tool: ToolName, error: string]
 	[RooCodeEventName.TaskTokenUsageUpdated]: [taskId: string, tokenUsage: TokenUsage]
+
+	// Command Execution
+	[RooCodeEventName.TaskCommandExecuted]: [
+		taskId: string,
+		details: {
+			command: string
+			exitCode: number | undefined
+			output: string
+			succeeded: boolean
+			failureReason?: string
+		},
+	]
 }
