@@ -8,9 +8,19 @@ interface QwenCodeProps {
 }
 
 export const QwenCode: React.FC<QwenCodeProps> = ({ apiConfiguration, setApiConfigurationField }) => {
+	const defaultPath = "~/.qwen/oauth_creds.json"
+
 	const handleInputChange = (e: Event | React.FormEvent<HTMLElement>) => {
 		const element = e.target as HTMLInputElement
 		setApiConfigurationField("qwenCodeOauthPath", element.value)
+	}
+
+	const handleBlur = (e: Event | React.FormEvent<HTMLElement>) => {
+		const element = e.target as HTMLInputElement
+		// If the field is empty on blur, set it to the default value
+		if (!element.value || element.value.trim() === "") {
+			setApiConfigurationField("qwenCodeOauthPath", defaultPath)
+		}
 	}
 
 	return (
@@ -21,7 +31,8 @@ export const QwenCode: React.FC<QwenCodeProps> = ({ apiConfiguration, setApiConf
 					style={{ width: "100%", marginTop: 3 }}
 					type="text"
 					onInput={handleInputChange}
-					placeholder="~/.qwen/oauth_creds.json">
+					onBlur={handleBlur}
+					placeholder={defaultPath}>
 					OAuth Credentials Path
 				</VSCodeTextField>
 
@@ -31,7 +42,7 @@ export const QwenCode: React.FC<QwenCodeProps> = ({ apiConfiguration, setApiConf
 						marginTop: 3,
 						color: "var(--vscode-descriptionForeground)",
 					}}>
-					Path to your Qwen OAuth credentials file. Use ~/.qwen/oauth_creds.json or provide a custom path.
+					Path to your Qwen OAuth credentials file. Defaults to ~/.qwen/oauth_creds.json if left empty.
 				</p>
 
 				<div style={{ fontSize: "12px", color: "var(--vscode-descriptionForeground)", marginTop: "12px" }}>
