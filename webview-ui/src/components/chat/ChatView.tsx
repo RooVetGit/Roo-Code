@@ -1279,6 +1279,18 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 		}
 
 		visibleMessages.forEach((message: ClineMessage) => {
+			// Special handling for browser_action_result - ensure it's always in a browser session
+			if (message.say === "browser_action_result" && !isInBrowserSession) {
+				isInBrowserSession = true
+				currentGroup = []
+			}
+
+			// Special handling for browser_action - ensure it's always in a browser session
+			if (message.say === "browser_action" && !isInBrowserSession) {
+				isInBrowserSession = true
+				currentGroup = []
+			}
+
 			if (message.ask === "browser_action_launch") {
 				// Complete existing browser session if any.
 				endBrowserSession()
@@ -1308,12 +1320,14 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 
 				if (isBrowserSessionMessage(message)) {
 					currentGroup.push(message)
-
-					// Check if this is a close action
-					if (message.say === "browser_action") {
-						const browserAction = JSON.parse(message.text || "{}") as ClineSayBrowserAction
-						if (browserAction.action === "close") {
-							endBrowserSession()
+					if (message.say === "browser_action_result") {
+						// Check if the previous browser_action was a close action
+						const lastBrowserAction = [...currentGroup].reverse().find((m) => m.say === "browser_action")
+						if (lastBrowserAction) {
+							const browserAction = JSON.parse(lastBrowserAction.text || "{}") as ClineSayBrowserAction
+							if (browserAction.action === "close") {
+								endBrowserSession()
+							}
 						}
 					}
 				} else {
