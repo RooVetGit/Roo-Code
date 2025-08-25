@@ -49,7 +49,7 @@ import { t } from "../../i18n"
 import { ClineApiReqCancelReason, ClineApiReqInfo } from "../../shared/ExtensionMessage"
 import { getApiMetrics } from "../../shared/getApiMetrics"
 import { ClineAskResponse } from "../../shared/WebviewMessage"
-import { defaultModeSlug } from "../../shared/modes"
+import { defaultModeSlug, getModeBySlug } from "../../shared/modes"
 import { DiffStrategy } from "../../shared/tools"
 import { EXPERIMENT_IDS, experiments } from "../../shared/experiments"
 import { getModelMaxOutputTokens } from "../../shared/api"
@@ -838,22 +838,52 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 		this.handleWebviewAskResponse("noButtonClicked", text, images)
 	}
 
-	public submitUserMessage(text: string, images?: string[]): void {
+	public submitUserMessage(text: string, images?: string[], modeSlug?: string): void {
 		try {
 			text = (text ?? "").trim()
 			images = images ?? []
 
-			if (text.length === 0 && images.length === 0) {
-				return
-			}
-
 			const provider = this.providerRef.deref()
 
-			if (provider) {
-				provider.postMessageToWebview({ type: "invoke", invoke: "sendMessage", text, images })
-			} else {
-				console.error("[Task#submitUserMessage] Provider reference lost")
-			}
+			// Run asynchronously to allow awaiting mode switch before sending the message
+			void (async () => {
+				// If a mode slug is provided, handle the mode switch first (same behavior as createTask)
+				try {
+					const modeSlugValue = (modeSlug ?? "").trim()
+					if (modeSlugValue.length > 0 && provider) {
+						const customModes = await provider.customModesManager.getCustomModes()
+						const targetMode = getModeBySlug(modeSlugValue, customModes)
+						if (targetMode) {
+							await provider.handleModeSwitch(targetMode.slug)
+							provider.log(`[Task#submitUserMessage] Applied mode from modeSlug: '${targetMode.slug}'`)
+						} else {
+							provider.log(`[Task#submitUserMessage] Ignoring invalid modeSlug: '${modeSlugValue}'.`)
+						}
+					}
+				} catch (err) {
+					provider?.log(
+						`[Task#submitUserMessage] Failed to apply modeSlug: ${
+							err instanceof Error ? err.message : String(err)
+						}`,
+					)
+				}
+
+				// If there's no content to send, exit after potential mode switch
+				if (text.length === 0 && images.length === 0) {
+					return
+				}
+
+				if (provider) {
+					await provider.postMessageToWebview({
+						type: "invoke",
+						invoke: "sendMessage",
+						text,
+						images,
+					})
+				} else {
+					console.error("[Task#submitUserMessage] Provider reference lost")
+				}
+			})()
 		} catch (error) {
 			console.error("[Task#submitUserMessage] Failed to submit user message:", error)
 		}

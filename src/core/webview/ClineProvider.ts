@@ -29,6 +29,7 @@ import {
 	type TerminalActionId,
 	type TerminalActionPromptType,
 	type HistoryItem,
+	type CreateTaskOptions,
 	type ClineAsk,
 	RooCodeEventName,
 	requestyDefaultModelId,
@@ -81,7 +82,7 @@ import { forceFullModelDetailsLoad, hasLoadedFullDetails } from "../../api/provi
 import { ContextProxy } from "../config/ContextProxy"
 import { ProviderSettingsManager } from "../config/ProviderSettingsManager"
 import { CustomModesManager } from "../config/CustomModesManager"
-import { Task, TaskOptions } from "../task/Task"
+import { Task } from "../task/Task"
 import { getSystemPromptFilePath } from "../prompts/sections/custom-system-prompt"
 
 import { webviewMessageHandler } from "./webviewMessageHandler"
@@ -750,22 +751,7 @@ export class ClineProvider
 	// from the stack and the caller is resumed in this way we can have a chain
 	// of tasks, each one being a sub task of the previous one until the main
 	// task is finished.
-	public async createTask(
-		text?: string,
-		images?: string[],
-		parentTask?: Task,
-		options: Partial<
-			Pick<
-				TaskOptions,
-				| "enableDiff"
-				| "enableCheckpoints"
-				| "fuzzyMatchThreshold"
-				| "consecutiveMistakeLimit"
-				| "experiments"
-				| "initialTodos"
-			>
-		> = {},
-	) {
+	public async createTask(text?: string, images?: string[], parentTask?: Task, options: CreateTaskOptions = {}) {
 		const {
 			apiConfiguration,
 			organizationAllowList,
@@ -779,6 +765,30 @@ export class ClineProvider
 
 		if (!ProfileValidator.isProfileAllowed(apiConfiguration, organizationAllowList)) {
 			throw new OrganizationAllowListViolationError(t("common:errors.violated_organization_allowlist"))
+		}
+
+		// Initializes task with the correct mode and associated provider profile
+		try {
+			const modeSlugFromBridge: string | undefined = (options as any)?.modeSlug
+			if (typeof modeSlugFromBridge === "string" && modeSlugFromBridge.trim().length > 0) {
+				const customModes = await this.customModesManager.getCustomModes()
+				const targetMode = getModeBySlug(modeSlugFromBridge, customModes)
+				if (targetMode) {
+					// Switch provider/global mode first so Task reads it during initialization
+					await this.handleModeSwitch(targetMode.slug)
+					this.log(`[createTask] Applied mode from bridge: '${targetMode.slug}'`)
+				} else {
+					this.log(
+						`[createTask] Ignoring invalid modeSlug from bridge: '${modeSlugFromBridge}'. Falling back to current mode.`,
+					)
+				}
+			}
+		} catch (err) {
+			this.log(
+				`[createTask] Failed to apply modeSlug from bridge: ${
+					err instanceof Error ? err.message : String(err)
+				}`,
+			)
 		}
 
 		const task = new Task({

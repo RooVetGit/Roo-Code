@@ -3,6 +3,8 @@ import { z } from "zod"
 import { RooCodeEventName } from "./events.js"
 import { type ClineMessage, type TokenUsage } from "./message.js"
 import { type ToolUsage, type ToolName } from "./tool.js"
+import { type Experiments } from "./experiment.js"
+import type { TodoItem } from "./todo.js"
 import type { StaticAppProperties, GitProperties, TelemetryProperties } from "./telemetry.js"
 
 /**
@@ -13,6 +15,15 @@ export interface TaskProviderState {
 	mode?: string
 }
 
+export interface CreateTaskOptions {
+	modeSlug?: string
+	enableDiff?: boolean
+	enableCheckpoints?: boolean
+	fuzzyMatchThreshold?: number
+	consecutiveMistakeLimit?: number
+	experiments?: Experiments
+	initialTodos?: TodoItem[]
+}
 export interface TaskProviderLike {
 	readonly cwd: string
 	readonly appProperties: StaticAppProperties
@@ -22,7 +33,7 @@ export interface TaskProviderLike {
 	getCurrentTaskStack(): string[]
 	getRecentTasks(): string[]
 
-	createTask(text?: string, images?: string[], parentTask?: TaskLike): Promise<TaskLike>
+	createTask(text?: string, images?: string[], parentTask?: TaskLike, options?: CreateTaskOptions): Promise<TaskLike>
 	cancelTask(): Promise<void>
 	clearTask(): Promise<void>
 	resumeTask(taskId: string): void
@@ -89,9 +100,10 @@ export interface TaskLike {
 	on<K extends keyof TaskEvents>(event: K, listener: (...args: TaskEvents[K]) => void | Promise<void>): this
 	off<K extends keyof TaskEvents>(event: K, listener: (...args: TaskEvents[K]) => void | Promise<void>): this
 
+	setMessageResponse(text: string, images?: string[]): void
 	approveAsk(options?: { text?: string; images?: string[] }): void
 	denyAsk(options?: { text?: string; images?: string[] }): void
-	submitUserMessage(text: string, images?: string[]): void
+	submitUserMessage(text: string, images?: string[], modeSlug?: string): void
 	abortTask(): void
 }
 
