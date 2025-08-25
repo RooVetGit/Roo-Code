@@ -655,12 +655,18 @@ importers:
       i18next:
         specifier: ^25.0.0
         version: 25.2.1(typescript@5.8.3)
+      iconv-lite:
+        specifier: ^0.6.3
+        version: 0.6.3
       ignore:
         specifier: ^7.0.3
         version: 7.0.4
       isbinaryfile:
         specifier: ^5.0.2
         version: 5.0.4
+      jschardet:
+        specifier: ^3.1.4
+        version: 3.1.4
       lodash.debounce:
         specifier: ^4.0.8
         version: 4.0.8
@@ -6852,6 +6858,10 @@ packages:
 
   jsbn@1.1.0:
     resolution: {integrity: sha512-4bYVV3aAMtDTTu4+xsDYa6sy9GyJ69/amsu9sYF2zqjiEoZA5xJi3BrfX3uY+/IekIu7MwdObdbDWpoZdBv3/A==}
+
+  jschardet@3.1.4:
+    resolution: {integrity: sha512-/kmVISmrwVwtyYU40iQUOp3SUPk2dhNCMsZBQX0R1/jZ8maaXJ/oZIzUOiyOqcgtLnETFKYChbJ5iDC/eWmFHg==}
+    engines: {node: '>=0.1.90'}
 
   jsdom@26.1.0:
     resolution: {integrity: sha512-Cvc9WUhxSMEo4McES3P7oK3QaXldCfNWp7pl2NNeiIFlCoLr3kfq9kb1fxftiwk1FLV7CvpvDfonxtzUDeSOPg==}
@@ -16748,6 +16758,8 @@ snapshots:
       argparse: 2.0.1
 
   jsbn@1.1.0: {}
+
+  jschardet@3.1.4: {}
 
   jsdom@26.1.0:
     dependencies:

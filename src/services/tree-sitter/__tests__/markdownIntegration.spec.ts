@@ -1,18 +1,32 @@
 // Mocks must come first, before imports
 
-vi.mock("fs/promises", () => ({
-	readFile: vi.fn().mockImplementation(() => Promise.resolve("")),
-	stat: vi.fn().mockImplementation(() => Promise.resolve({ isDirectory: () => false })),
-}))
+vi.mock("fs/promises", async () => {
+	const actual = await vi.importActual("fs/promises");
+	return {
+		...actual,
+		readFile: vi.fn().mockImplementation(() => Promise.resolve("")),
+		stat: vi.fn().mockImplementation(() => Promise.resolve({ isDirectory: () => false })),
+		default: {
+			readFile: vi.fn().mockImplementation(() => Promise.resolve("")),
+			stat: vi.fn().mockImplementation(() => Promise.resolve({ isDirectory: () => false })),
+		}
+	}
+})
 
 vi.mock("../../../utils/fs", () => ({
 	fileExistsAtPath: vi.fn().mockImplementation(() => Promise.resolve(true)),
 }))
 
+vi.mock("../../../utils/encoding", () => ({
+	readFileWithEncodingDetection: vi.fn().mockImplementation((filePath) => {
+		return Promise.resolve("")
+	}),
+}))
+
 // Then imports
 import * as fs from "fs/promises"
 import type { Mock } from "vitest"
-
+import { readFileWithEncodingDetection } from "../../../utils/encoding"
 import { parseSourceCodeDefinitionsForFile } from "../index"
 
 describe("Markdown Integration Tests", () => {
@@ -26,14 +40,14 @@ describe("Markdown Integration Tests", () => {
 		const markdownContent =
 			"# Main Header\n\nThis is some content under the main header.\nIt spans multiple lines to meet the minimum section length.\n\n## Section 1\n\nThis is content for section 1.\nIt also spans multiple lines.\n\n### Subsection 1.1\n\nThis is a subsection with enough lines\nto meet the minimum section length requirement.\n\n## Section 2\n\nFinal section content.\nWith multiple lines.\n"
 
-		// Mock fs.readFile to return our markdown content
-		;(fs.readFile as Mock).mockImplementation(() => Promise.resolve(markdownContent))
+		// Mock readFileWithEncodingDetection to return our markdown content
+		;(readFileWithEncodingDetection as Mock).mockImplementation(() => Promise.resolve(markdownContent))
 
 		// Call the function with a markdown file path
 		const result = await parseSourceCodeDefinitionsForFile("test.md")
 
-		// Verify fs.readFile was called with the correct path
-		expect(fs.readFile).toHaveBeenCalledWith("test.md", "utf8")
+		// Verify readFileWithEncodingDetection was called with the correct path
+		expect(readFileWithEncodingDetection).toHaveBeenCalledWith("test.md")
 
 		// Check the result formatting for definition listing
 		expect(result).toBeDefined()
@@ -48,14 +62,14 @@ describe("Markdown Integration Tests", () => {
 		// This test verifies behavior when no headers meet the minimum requirements
 		const markdownContent = "This is just some text.\nNo headers here.\nJust plain text."
 
-		// Mock fs.readFile to return our markdown content
-		;(fs.readFile as Mock).mockImplementation(() => Promise.resolve(markdownContent))
+		// Mock readFileWithEncodingDetection to return our markdown content
+		;(readFileWithEncodingDetection as Mock).mockImplementation(() => Promise.resolve(markdownContent))
 
 		// Call the function with a markdown file path
 		const result = await parseSourceCodeDefinitionsForFile("no-headers.md")
 
-		// Verify fs.readFile was called with the correct path
-		expect(fs.readFile).toHaveBeenCalledWith("no-headers.md", "utf8")
+		// Verify readFileWithEncodingDetection was called with the correct path
+		expect(readFileWithEncodingDetection).toHaveBeenCalledWith("no-headers.md")
 
 		// Check the result - should be undefined since no definitions found
 		expect(result).toBeUndefined()

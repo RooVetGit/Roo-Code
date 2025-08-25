@@ -3,6 +3,7 @@ import fs from "fs/promises"
 import path from "path"
 
 import { getReadablePath } from "../../utils/path"
+import { readFileWithEncodingDetection } from "../../utils/encoding"
 import { Task } from "../task/Task"
 import { ToolUse, AskApproval, HandleError, PushToolResult, RemoveClosingTag } from "../../shared/tools"
 import { formatResponse } from "../prompts/responses"
@@ -92,7 +93,7 @@ export async function insertContentTool(
 				return
 			}
 		} else {
-			fileContent = await fs.readFile(absolutePath, "utf8")
+			fileContent = await readFileWithEncodingDetection(absolutePath)
 		}
 
 		cline.consecutiveMistakeCount = 0

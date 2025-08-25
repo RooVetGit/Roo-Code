@@ -1,5 +1,4 @@
 import path from "path"
-import { isBinaryFile } from "isbinaryfile"
 
 import { Task } from "../task/Task"
 import { ClineSayTool } from "../../shared/ExtensionMessage"
@@ -14,6 +13,7 @@ import { readLines } from "../../integrations/misc/read-lines"
 import { extractTextFromFile, addLineNumbers, getSupportedBinaryFormats } from "../../integrations/misc/extract-text"
 import { parseSourceCodeDefinitionsForFile } from "../../services/tree-sitter"
 import { parseXml } from "../../utils/xml"
+import { isBinaryFileWithEncodingDetection } from "../../utils/encoding"
 import {
 	DEFAULT_MAX_IMAGE_FILE_SIZE_MB,
 	DEFAULT_MAX_TOTAL_IMAGE_SIZE_MB,
@@ -454,7 +454,10 @@ export async function readFileTool(
 
 			// Process approved files
 			try {
-				const [totalLines, isBinary] = await Promise.all([countFileLines(fullPath), isBinaryFile(fullPath)])
+				const [totalLines, isBinary] = await Promise.all([
+					countFileLines(fullPath),
+					isBinaryFileWithEncodingDetection(fullPath),
+				])
 
 				// Handle binary files (but allow specific file types that extractTextFromFile can handle)
 				if (isBinary) {

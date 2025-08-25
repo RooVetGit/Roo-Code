@@ -3,6 +3,8 @@ import { Ignore } from "ignore"
 import { RooIgnoreController } from "../../../core/ignore/RooIgnoreController"
 import { stat } from "fs/promises"
 import * as path from "path"
+import * as iconv from "iconv-lite"
+import { detectEncoding } from "../../../utils/encoding"
 import { generateNormalizedAbsolutePath, generateRelativeFilePath } from "../shared/get-relative-path"
 import { getWorkspacePathForContext } from "../../../utils/path"
 import { scannerExtensions } from "../shared/supported-extensions"
@@ -115,10 +117,11 @@ export class DirectoryScanner implements IDirectoryScanner {
 						return
 					}
 
-					// Read file content
-					const content = await vscode.workspace.fs
-						.readFile(vscode.Uri.file(filePath))
-						.then((buffer) => Buffer.from(buffer).toString("utf-8"))
+					// Read file content with encoding detection
+					const fileBuffer = await vscode.workspace.fs.readFile(vscode.Uri.file(filePath))
+					const buffer = Buffer.from(fileBuffer)
+					const encoding = await detectEncoding(buffer)
+					const content = iconv.decode(buffer, encoding)
 
 					// Calculate current hash
 					const currentFileHash = createHash("sha256").update(content).digest("hex")

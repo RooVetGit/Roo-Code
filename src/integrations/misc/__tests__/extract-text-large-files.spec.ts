@@ -5,26 +5,30 @@ import * as fs from "fs/promises"
 import { extractTextFromFile } from "../extract-text"
 import { countFileLines } from "../line-counter"
 import { readLines } from "../read-lines"
-import { isBinaryFile } from "isbinaryfile"
+import { isBinaryFileWithEncodingDetection, readFileWithEncodingDetection } from "../../../utils/encoding"
 
 // Mock all dependencies
 vi.mock("fs/promises")
 vi.mock("../line-counter")
 vi.mock("../read-lines")
-vi.mock("isbinaryfile")
+vi.mock("../../../utils/encoding", () => ({
+	isBinaryFileWithEncodingDetection: vi.fn(),
+	readFileWithEncodingDetection: vi.fn(),
+}))
 
 describe("extractTextFromFile - Large File Handling", () => {
 	// Type the mocks
 	const mockedFs = vi.mocked(fs)
 	const mockedCountFileLines = vi.mocked(countFileLines)
 	const mockedReadLines = vi.mocked(readLines)
-	const mockedIsBinaryFile = vi.mocked(isBinaryFile)
+	const mockedIsBinaryFileWithEncodingDetection = vi.mocked(isBinaryFileWithEncodingDetection)
+	const mockedReadFileWithEncodingDetection = vi.mocked(readFileWithEncodingDetection)
 
 	beforeEach(() => {
 		vi.clearAllMocks()
 		// Set default mock behavior
 		mockedFs.access.mockResolvedValue(undefined)
-		mockedIsBinaryFile.mockResolvedValue(false)
+		mockedIsBinaryFileWithEncodingDetection.mockResolvedValue(false)
 	})
 
 	it("should truncate files that exceed maxReadFileLine limit", async () => {
@@ -61,7 +65,7 @@ describe("extractTextFromFile - Large File Handling", () => {
 			.join("\n")
 
 		mockedCountFileLines.mockResolvedValue(50)
-		mockedFs.readFile.mockResolvedValue(smallFileContent as any)
+		mockedReadFileWithEncodingDetection.mockResolvedValue(smallFileContent)
 
 		const result = await extractTextFromFile("/test/small-file.ts", 100)
 
@@ -80,7 +84,7 @@ describe("extractTextFromFile - Large File Handling", () => {
 			.join("\n")
 
 		mockedCountFileLines.mockResolvedValue(100)
-		mockedFs.readFile.mockResolvedValue(exactFileContent as any)
+		mockedReadFileWithEncodingDetection.mockResolvedValue(exactFileContent)
 
 		const result = await extractTextFromFile("/test/exact-file.ts", 100)
 
@@ -98,7 +102,7 @@ describe("extractTextFromFile - Large File Handling", () => {
 			.map((_, i) => `Line ${i + 1}`)
 			.join("\n")
 
-		mockedFs.readFile.mockResolvedValue(largeFileContent as any)
+		mockedReadFileWithEncodingDetection.mockResolvedValue(largeFileContent)
 
 		const result = await extractTextFromFile("/test/large-file.ts", undefined)
 
@@ -111,7 +115,7 @@ describe("extractTextFromFile - Large File Handling", () => {
 	})
 
 	it("should handle empty files", async () => {
-		mockedFs.readFile.mockResolvedValue("" as any)
+		mockedReadFileWithEncodingDetection.mockResolvedValue("")
 
 		const result = await extractTextFromFile("/test/empty-file.ts", 100)
 
@@ -155,7 +159,7 @@ describe("extractTextFromFile - Large File Handling", () => {
 	it("should handle maxReadFileLine of 0 by throwing an error", async () => {
 		const fileContent = "Line 1\nLine 2\nLine 3"
 
-		mockedFs.readFile.mockResolvedValue(fileContent as any)
+		mockedReadFileWithEncodingDetection.mockResolvedValue(fileContent)
 
 		// maxReadFileLine of 0 should throw an error
 		await expect(extractTextFromFile("/test/file.ts", 0)).rejects.toThrow(
@@ -166,7 +170,7 @@ describe("extractTextFromFile - Large File Handling", () => {
 	it("should handle negative maxReadFileLine by treating as undefined", async () => {
 		const fileContent = "Line 1\nLine 2\nLine 3"
 
-		mockedFs.readFile.mockResolvedValue(fileContent as any)
+		mockedReadFileWithEncodingDetection.mockResolvedValue(fileContent)
 
 		const result = await extractTextFromFile("/test/file.ts", -1)
 
@@ -204,7 +208,7 @@ describe("extractTextFromFile - Large File Handling", () => {
 	})
 
 	it("should handle binary files by throwing an error", async () => {
-		mockedIsBinaryFile.mockResolvedValue(true)
+		mockedIsBinaryFileWithEncodingDetection.mockResolvedValue(true)
 
 		await expect(extractTextFromFile("/test/binary.bin", 100)).rejects.toThrow(
 			"Cannot read text for file type: .bin",
