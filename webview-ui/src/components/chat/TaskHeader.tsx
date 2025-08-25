@@ -1,6 +1,6 @@
 import { memo, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
-import { FoldVertical, ChevronUp, ChevronDown } from "lucide-react"
+import { FoldVertical, ChevronUp, ChevronDown, X } from "lucide-react"
 import prettyBytes from "pretty-bytes"
 
 import type { ClineMessage } from "@roo-code/types"
@@ -30,6 +30,8 @@ export interface TaskHeaderProps {
 	contextTokens: number
 	buttonsDisabled: boolean
 	handleCondenseContext: (taskId: string) => void
+	isCondensing?: boolean
+	handleCancelCondense?: () => void
 	todos?: any[]
 }
 
@@ -43,6 +45,8 @@ const TaskHeader = ({
 	contextTokens,
 	buttonsDisabled,
 	handleCondenseContext,
+	isCondensing = false,
+	handleCancelCondense,
 	todos,
 }: TaskHeaderProps) => {
 	const { t } = useTranslation()
@@ -54,7 +58,15 @@ const TaskHeader = ({
 	const textRef = useRef<HTMLDivElement>(null)
 	const contextWindow = model?.contextWindow || 1
 
-	const condenseButton = (
+	const condenseButton = isCondensing ? (
+		<StandardTooltip content={t("chat:task.cancelCondense")}>
+			<button
+				onClick={handleCancelCondense}
+				className="shrink-0 min-h-[20px] min-w-[20px] p-[2px] cursor-pointer opacity-85 hover:opacity-100 bg-transparent border-none rounded-md text-vscode-errorForeground">
+				<X size={16} />
+			</button>
+		</StandardTooltip>
+	) : (
 		<StandardTooltip content={t("chat:task.condenseContext")}>
 			<button
 				disabled={buttonsDisabled}

@@ -141,6 +141,10 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 	readonly taskNumber: number
 	readonly workspacePath: string
 
+	// Context condensing state
+	isCondensing: boolean = false
+	private condensingAbortController?: AbortController
+
 	/**
 	 * The mode associated with this task. Persisted across sessions
 	 * to maintain user context when reopening tasks from history.
@@ -868,72 +872,107 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 	}
 
 	public async condenseContext(): Promise<void> {
-		const systemPrompt = await this.getSystemPrompt()
-
-		// Get condensing configuration
-		// Using type assertion to handle the case where Phase 1 hasn't been implemented yet
-		const state = await this.providerRef.deref()?.getState()
-		const customCondensingPrompt = state ? (state as any).customCondensingPrompt : undefined
-		const condensingApiConfigId = state ? (state as any).condensingApiConfigId : undefined
-		const listApiConfigMeta = state ? (state as any).listApiConfigMeta : undefined
-
-		// Determine API handler to use
-		let condensingApiHandler: ApiHandler | undefined
-		if (condensingApiConfigId && listApiConfigMeta && Array.isArray(listApiConfigMeta)) {
-			// Using type assertion for the id property to avoid implicit any
-			const matchingConfig = listApiConfigMeta.find((config: any) => config.id === condensingApiConfigId)
-			if (matchingConfig) {
-				const profile = await this.providerRef.deref()?.providerSettingsManager.getProfile({
-					id: condensingApiConfigId,
-				})
-				// Ensure profile and apiProvider exist before trying to build handler
-				if (profile && profile.apiProvider) {
-					condensingApiHandler = buildApiHandler(profile)
-				}
-			}
+		// Prevent concurrent condensing operations
+		if (this.isCondensing) {
+			console.warn("Context condensing is already in progress")
+			return
 		}
 
-		const { contextTokens: prevContextTokens } = this.getTokenUsage()
-		const {
-			messages,
-			summary,
-			cost,
-			newContextTokens = 0,
-			error,
-		} = await summarizeConversation(
-			this.apiConversationHistory,
-			this.api, // Main API handler (fallback)
-			systemPrompt, // Default summarization prompt (fallback)
-			this.taskId,
-			prevContextTokens,
-			false, // manual trigger
-			customCondensingPrompt, // User's custom prompt
-			condensingApiHandler, // Specific handler for condensing
-		)
-		if (error) {
-			this.say(
-				"condense_context_error",
+		// Wait a bit if there was a recent abort to ensure cleanup is complete
+		if (this.condensingAbortController && this.condensingAbortController.signal.aborted) {
+			console.warn("Waiting for previous condensing operation to fully clean up")
+			// Give the previous operation time to clean up
+			await new Promise((resolve) => setTimeout(resolve, 100))
+		}
+
+		// Mark as condensing
+		this.isCondensing = true
+		this.condensingAbortController = new AbortController()
+
+		try {
+			const systemPrompt = await this.getSystemPrompt()
+
+			// Get condensing configuration
+			const state = await this.providerRef.deref()?.getState()
+			const customCondensingPrompt = state?.customCondensingPrompt
+			const condensingApiConfigId = state?.condensingApiConfigId
+			const listApiConfigMeta = state?.listApiConfigMeta
+
+			// Determine API handler to use
+			let condensingApiHandler: ApiHandler | undefined
+			if (condensingApiConfigId && listApiConfigMeta && Array.isArray(listApiConfigMeta)) {
+				const matchingConfig = listApiConfigMeta.find((config) => config.id === condensingApiConfigId)
+				if (matchingConfig) {
+					const profile = await this.providerRef.deref()?.providerSettingsManager.getProfile({
+						id: condensingApiConfigId,
+					})
+					// Ensure profile and apiProvider exist before trying to build handler
+					if (profile && profile.apiProvider) {
+						condensingApiHandler = buildApiHandler(profile)
+					}
+				}
+			}
+
+			const { contextTokens: prevContextTokens } = this.getTokenUsage()
+
+			// Pass the abort signal to summarizeConversation
+			const {
+				messages,
+				summary,
+				cost,
+				newContextTokens = 0,
 				error,
+			} = await summarizeConversation(
+				this.apiConversationHistory,
+				this.api, // Main API handler (fallback)
+				systemPrompt, // Default summarization prompt (fallback)
+				this.taskId,
+				prevContextTokens,
+				false, // manual trigger
+				customCondensingPrompt, // User's custom prompt
+				condensingApiHandler, // Specific handler for condensing
+				this.condensingAbortController.signal, // Pass abort signal
+			)
+
+			if (error) {
+				// Don't show error if it was cancelled
+				if (!this.condensingAbortController.signal.aborted) {
+					this.say(
+						"condense_context_error",
+						error,
+						undefined /* images */,
+						false /* partial */,
+						undefined /* checkpoint */,
+						undefined /* progressStatus */,
+						{ isNonInteractive: true } /* options */,
+					)
+				}
+				return
+			}
+
+			await this.overwriteApiConversationHistory(messages)
+			const contextCondense: ContextCondense = { summary, cost, newContextTokens, prevContextTokens }
+			await this.say(
+				"condense_context",
+				undefined /* text */,
 				undefined /* images */,
 				false /* partial */,
 				undefined /* checkpoint */,
 				undefined /* progressStatus */,
 				{ isNonInteractive: true } /* options */,
+				contextCondense,
 			)
-			return
+		} finally {
+			// Clean up
+			this.isCondensing = false
+			this.condensingAbortController = undefined
 		}
-		await this.overwriteApiConversationHistory(messages)
-		const contextCondense: ContextCondense = { summary, cost, newContextTokens, prevContextTokens }
-		await this.say(
-			"condense_context",
-			undefined /* text */,
-			undefined /* images */,
-			false /* partial */,
-			undefined /* checkpoint */,
-			undefined /* progressStatus */,
-			{ isNonInteractive: true } /* options */,
-			contextCondense,
-		)
+	}
+
+	public cancelCondenseContext(): void {
+		if (this.condensingAbortController) {
+			this.condensingAbortController.abort()
+		}
 	}
 
 	async say(
@@ -2331,8 +2370,7 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 		let condensingApiHandler: ApiHandler | undefined
 
 		if (condensingApiConfigId && listApiConfigMeta && Array.isArray(listApiConfigMeta)) {
-			// Using type assertion for the id property to avoid implicit any.
-			const matchingConfig = listApiConfigMeta.find((config: any) => config.id === condensingApiConfigId)
+			const matchingConfig = listApiConfigMeta.find((config) => config.id === condensingApiConfigId)
 
 			if (matchingConfig) {
 				const profile = await this.providerRef.deref()?.providerSettingsManager.getProfile({
