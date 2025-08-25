@@ -1,9 +1,17 @@
-export function getSharedToolUseSection(): string {
+export function getSharedToolUseSection(modelId?: string): string {
+	// Check if this is a GPT-5 model
+	const isGpt5Model = modelId?.toLowerCase().includes("gpt-5") || modelId?.toLowerCase().includes("gpt5")
+
+	// Add GPT-5 specific clarification about explanations with tool use
+	const toolUseIntro = isGpt5Model
+		? `You have access to a set of tools that are executed upon the user's approval. You can use one tool per message, and will receive the result of that tool use in the user's response. **IMPORTANT for GPT-5**: When using tools to make code changes, you should provide explanations of your changes alongside the tool use in the same message. The "one tool per message" rule means you can only invoke one tool's XML tags per message, but you can and should include explanatory text before or after the tool invocation to describe what you're doing and why. You use tools step-by-step to accomplish a given task, with each tool use informed by the result of the previous tool use.`
+		: `You have access to a set of tools that are executed upon the user's approval. You can use one tool per message, and will receive the result of that tool use in the user's response. You use tools step-by-step to accomplish a given task, with each tool use informed by the result of the previous tool use.`
+
 	return `====
 
 TOOL USE
 
-You have access to a set of tools that are executed upon the user's approval. You can use one tool per message, and will receive the result of that tool use in the user's response. You use tools step-by-step to accomplish a given task, with each tool use informed by the result of the previous tool use.
+${toolUseIntro}
 
 # Tool Use Formatting
 
