@@ -89,7 +89,12 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 		const enabledR1Format = this.options.openAiR1FormatEnabled ?? false
 		const enabledLegacyFormat = this.options.openAiLegacyFormat ?? false
 		const isAzureAiInference = this._isAzureAiInference(modelUrl)
-		const deepseekReasoner = modelId.includes("deepseek-reasoner") || enabledR1Format
+		// Check if this is a DeepSeek model with reasoning enabled
+		const isDeepSeekWithReasoning =
+			(modelId.toLowerCase().includes("deepseek") && reasoning) ||
+			modelId.includes("deepseek-reasoner") ||
+			enabledR1Format
+		const deepseekReasoner = isDeepSeekWithReasoning
 		const ark = modelUrl.includes(".volces.com")
 
 		if (modelId.includes("o1") || modelId.includes("o3") || modelId.includes("o4")) {

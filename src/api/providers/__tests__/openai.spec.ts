@@ -380,6 +380,55 @@ describe("OpenAiHandler", () => {
 			const callArgs = mockCreate.mock.calls[0][0]
 			expect(callArgs.temperature).toBe(0.6)
 		})
+
+		it("should detect DeepSeek V3 models with reasoning effort as reasoning models", async () => {
+			const deepseekV3Options: ApiHandlerOptions = {
+				...mockOptions,
+				openAiModelId: "deepseek-v3",
+				openAiCustomModelInfo: {
+					...openAiModelInfoSaneDefaults,
+					supportsReasoningEffort: true,
+				},
+				reasoningEffort: "medium",
+			}
+			const deepseekHandler = new OpenAiHandler(deepseekV3Options)
+			const stream = deepseekHandler.createMessage(systemPrompt, messages)
+			for await (const _chunk of stream) {
+				// consume stream
+			}
+			// Assert the mockCreate was called with R1 format messages
+			expect(mockCreate).toHaveBeenCalled()
+			const callArgs = mockCreate.mock.calls[0][0]
+			// When DeepSeek is detected as a reasoning model, it uses R1 format
+			// which combines system and user messages
+			expect(callArgs.messages[0].role).toBe("user")
+			expect(callArgs.messages[0].content).toContain("You are a helpful assistant.")
+			expect(callArgs.reasoning_effort).toBe("medium")
+		})
+
+		it("should detect DeepSeek-chat models with reasoning effort as reasoning models", async () => {
+			const deepseekChatOptions: ApiHandlerOptions = {
+				...mockOptions,
+				openAiModelId: "deepseek-chat",
+				openAiCustomModelInfo: {
+					...openAiModelInfoSaneDefaults,
+					supportsReasoningEffort: true,
+				},
+				reasoningEffort: "high",
+			}
+			const deepseekHandler = new OpenAiHandler(deepseekChatOptions)
+			const stream = deepseekHandler.createMessage(systemPrompt, messages)
+			for await (const _chunk of stream) {
+				// consume stream
+			}
+			// Assert the mockCreate was called with R1 format messages
+			expect(mockCreate).toHaveBeenCalled()
+			const callArgs = mockCreate.mock.calls[0][0]
+			// When DeepSeek is detected as a reasoning model, it uses R1 format
+			expect(callArgs.messages[0].role).toBe("user")
+			expect(callArgs.messages[0].content).toContain("You are a helpful assistant.")
+			expect(callArgs.reasoning_effort).toBe("high")
+		})
 	})
 
 	describe("error handling", () => {
