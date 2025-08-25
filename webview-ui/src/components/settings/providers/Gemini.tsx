@@ -3,11 +3,12 @@ import { Checkbox } from "vscrui"
 import { VSCodeTextField } from "@vscode/webview-ui-toolkit/react"
 
 import type { ProviderSettings } from "@roo-code/types"
+import { API_KEYS } from "@roo-code/types"
 
 import { useAppTranslation } from "@src/i18n/TranslationContext"
-import { VSCodeButtonLink } from "@src/components/common/VSCodeButtonLink"
 
 import { inputEventTransform } from "../transforms"
+import { ApiKey } from "../ApiKey"
 
 type GeminiProps = {
 	apiConfiguration: ProviderSettings
@@ -35,23 +36,16 @@ export const Gemini = ({ apiConfiguration, setApiConfigurationField, fromWelcome
 
 	return (
 		<>
-			<VSCodeTextField
-				value={apiConfiguration?.geminiApiKey || ""}
-				type="password"
-				onInput={handleInputChange("geminiApiKey")}
-				placeholder={t("settings:placeholders.apiKey")}
-				className="w-full">
-				<label className="block font-medium mb-1">{t("settings:providers.geminiApiKey")}</label>
-			</VSCodeTextField>
-			<div className="text-sm text-vscode-descriptionForeground -mt-2">
-				{t("settings:providers.apiKeyStorageNotice")}
-			</div>
-			{!apiConfiguration?.geminiApiKey && (
-				<VSCodeButtonLink href="https://ai.google.dev/" appearance="secondary">
-					{t("settings:providers.getGeminiApiKey")}
-				</VSCodeButtonLink>
-			)}
-
+			<ApiKey
+				apiKey={apiConfiguration?.geminiApiKey || ""}
+				apiKeyEnvVar={API_KEYS.GEMINI}
+				configUseEnvVars={!!apiConfiguration?.geminiConfigUseEnvVars}
+				setApiKey={(value: string) => setApiConfigurationField("geminiApiKey", value)}
+				setConfigUseEnvVars={(value: boolean) => setApiConfigurationField("geminiConfigUseEnvVars", value)}
+				apiKeyLabel={t("settings:providers.geminiApiKey")}
+				getApiKeyUrl="https://ai.google.dev/"
+				getApiKeyLabel={t("settings:providers.getGeminiApiKey")}
+			/>
 			<div>
 				<Checkbox
 					data-testid="checkbox-custom-base-url"

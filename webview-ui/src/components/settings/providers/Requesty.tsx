@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react"
 import { VSCodeCheckbox, VSCodeTextField } from "@vscode/webview-ui-toolkit/react"
 
-import { type ProviderSettings, requestyDefaultModelId } from "@roo-code/types"
+import { type ProviderSettings, requestyDefaultModelId, API_KEYS } from "@roo-code/types"
 
 import type { OrganizationAllowList } from "@roo/cloud"
 import type { RouterModels } from "@roo/api"
@@ -10,11 +10,12 @@ import { vscode } from "@src/utils/vscode"
 import { useAppTranslation } from "@src/i18n/TranslationContext"
 import { Button } from "@src/components/ui"
 
-import { inputEventTransform } from "../transforms"
 import { ModelPicker } from "../ModelPicker"
 import { RequestyBalanceDisplay } from "./RequestyBalanceDisplay"
+import { ApiKey } from "../ApiKey"
 import { getCallbackUrl } from "@/oauth/urls"
 import { toRequestyServiceUrl } from "@roo/utils/requesty"
+import { inputEventTransform } from "../transforms"
 
 type RequestyProps = {
 	apiConfiguration: ProviderSettings
@@ -38,7 +39,6 @@ export const Requesty = ({
 	const { t } = useAppTranslation()
 
 	const [didRefetch, setDidRefetch] = useState<boolean>()
-
 	const [requestyEndpointSelected, setRequestyEndpointSelected] = useState(!!apiConfiguration.requestyBaseUrl)
 
 	// This ensures that the "Use custom URL" checkbox is hidden when the user deletes the URL.
@@ -68,41 +68,23 @@ export const Requesty = ({
 
 	return (
 		<>
-			<VSCodeTextField
-				value={apiConfiguration?.requestyApiKey || ""}
-				type="password"
-				onInput={handleInputChange("requestyApiKey")}
-				placeholder={t("settings:providers.getRequestyApiKey")}
-				className="w-full">
-				<div className="flex justify-between items-center mb-1">
-					<label className="block font-medium">{t("settings:providers.requestyApiKey")}</label>
-					{apiConfiguration?.requestyApiKey && (
-						<RequestyBalanceDisplay
-							baseUrl={apiConfiguration.requestyBaseUrl}
-							apiKey={apiConfiguration.requestyApiKey}
+			<ApiKey
+				apiKey={apiConfiguration?.requestyApiKey || ""}
+				apiKeyEnvVar={API_KEYS.REQUESTY}
+				configUseEnvVars={!!apiConfiguration?.requestyConfigUseEnvVars}
+				setApiKey={(value: string) => setApiConfigurationField("requestyApiKey", value)}
+				setConfigUseEnvVars={(value: boolean) => setApiConfigurationField("requestyConfigUseEnvVars", value)}
+				apiKeyLabel={t("settings:providers.requestyApiKey")}
+				getApiKeyUrl={getApiKeyUrl()}
+				getApiKeyLabel={t("settings:providers.getRequestyApiKey")}
+				balanceDisplay={
+					apiConfiguration?.requestyApiKey && (
+						<RequestyBalanceDisplay apiKey={apiConfiguration.requestyApiKey}
+ 									baseUrl={apiConfiguration.requestyBaseUrl}
 						/>
-					)}
-				</div>
-			</VSCodeTextField>
-			<div className="text-sm text-vscode-descriptionForeground -mt-2">
-				{t("settings:providers.apiKeyStorageNotice")}
-			</div>
-			{!apiConfiguration?.requestyApiKey && (
-				<a
-					href={getApiKeyUrl()}
-					target="_blank"
-					rel="noopener noreferrer"
-					className="inline-flex items-center justify-center whitespace-nowrap text-sm font-medium focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground shadow hover:bg-primary/90 h-9 rounded-md px-3 w-full"
-					style={{
-						width: "100%",
-						textDecoration: "none",
-						color: "var(--vscode-button-foreground)",
-						backgroundColor: "var(--vscode-button-background)",
-					}}>
-					{t("settings:providers.getRequestyApiKey")}
-				</a>
-			)}
-
+					)
+				}
+			/>
 			<VSCodeCheckbox
 				checked={requestyEndpointSelected}
 				onChange={(e: any) => {
