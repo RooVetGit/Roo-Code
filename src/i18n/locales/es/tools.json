@@ -14,5 +14,11 @@
 		"errors": {
 			"policy_restriction": "No se pudo crear una nueva tarea debido a restricciones de política."
 		}
+	},
+	"agentSelector": {
+		"selectAgent": "Seleccionar Agente",
+		"currentAgent": "Agente Actual: {{agent}}",
+		"switchAgent": "Cambiar a {{agent}}",
+		"noAgentsAvailable": "No hay agentes disponibles"
 	}
 }

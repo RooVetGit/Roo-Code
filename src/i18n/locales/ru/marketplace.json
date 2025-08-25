@@ -2,7 +2,8 @@
 	"type-group": {
 		"modes": "Режимы",
 		"mcps": "MCP серверы",
-		"match": "совпадение"
+		"match": "совпадение",
+		"agents": "Агенты"
 	},
 	"item-card": {
 		"type-mode": "Режим",
@@ -14,7 +15,8 @@
 		"filter-by-tag": "Фильтровать по тегу: {{tag}}",
 		"component-details": "Детали компонента",
 		"view": "Просмотр",
-		"source": "Источник"
+		"source": "Источник",
+		"type-agent": "Агент"
 	},
 	"filters": {
 		"search": {
@@ -24,7 +26,8 @@
 			"label": "Тип",
 			"all": "Все типы",
 			"mode": "Режим",
-			"mcpServer": "MCP сервер"
+			"mcpServer": "MCP сервер",
+			"agent": "Агент"
 		},
 		"sort": {
 			"label": "Сортировать по",

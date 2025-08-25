@@ -14,5 +14,11 @@
 		"errors": {
 			"policy_restriction": "Failed to create new task due to policy restrictions."
 		}
+	},
+	"agentSelector": {
+		"selectAgent": "Select Agent",
+		"currentAgent": "Current Agent: {{agent}}",
+		"switchAgent": "Switch to {{agent}}",
+		"noAgentsAvailable": "No agents available"
 	}
 }

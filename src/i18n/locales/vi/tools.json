@@ -14,5 +14,11 @@
 		"errors": {
 			"policy_restriction": "Không thể tạo nhiệm vụ mới do hạn chế chính sách."
 		}
+	},
+	"agentSelector": {
+		"selectAgent": "Chọn Đại lý",
+		"currentAgent": "Đại lý Hiện tại: {{agent}}",
+		"switchAgent": "Chuyển sang {{agent}}",
+		"noAgentsAvailable": "Không có đại lý nào khả dụng"
 	}
 }

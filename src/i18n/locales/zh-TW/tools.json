@@ -14,5 +14,11 @@
 		"errors": {
 			"policy_restriction": "由於政策限制，無法建立新工作。"
 		}
+	},
+	"agentSelector": {
+		"selectAgent": "選擇代理",
+		"currentAgent": "目前代理: {{agent}}",
+		"switchAgent": "切換到 {{agent}}",
+		"noAgentsAvailable": "沒有可用的代理"
 	}
 }

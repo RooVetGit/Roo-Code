@@ -2,7 +2,8 @@
 	"type-group": {
 		"modes": "Mode",
 		"mcps": "Server MCP",
-		"match": "cocok"
+		"match": "cocok",
+		"agents": "Agen"
 	},
 	"item-card": {
 		"type-mode": "Mode",
@@ -14,7 +15,8 @@
 		"filter-by-tag": "Filter berdasarkan tag: {{tag}}",
 		"component-details": "Detail Komponen",
 		"view": "Lihat",
-		"source": "Sumber"
+		"source": "Sumber",
+		"type-agent": "Agen"
 	},
 	"filters": {
 		"search": {
@@ -24,7 +26,8 @@
 			"label": "Tipe",
 			"all": "Semua Tipe",
 			"mode": "Mode",
-			"mcpServer": "Server MCP"
+			"mcpServer": "Server MCP",
+			"agent": "Agen"
 		},
 		"sort": {
 			"label": "Urutkan Berdasarkan",

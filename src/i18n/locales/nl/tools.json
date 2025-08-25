@@ -14,5 +14,11 @@
 		"errors": {
 			"policy_restriction": "Kan geen nieuwe taak aanmaken vanwege beleidsbeperkingen."
 		}
+	},
+	"agentSelector": {
+		"selectAgent": "Agent selecteren",
+		"currentAgent": "Huidige Agent: {{agent}}",
+		"switchAgent": "Overschakelen naar {{agent}}",
+		"noAgentsAvailable": "Geen agenten beschikbaar"
 	}
 }

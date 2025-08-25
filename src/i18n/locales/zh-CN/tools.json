@@ -14,5 +14,11 @@
 		"errors": {
 			"policy_restriction": "由于策略限制，无法创建新任务。"
 		}
+	},
+	"agentSelector": {
+		"selectAgent": "选择代理",
+		"currentAgent": "当前代理: {{agent}}",
+		"switchAgent": "切换到 {{agent}}",
+		"noAgentsAvailable": "没有可用的代理"
 	}
 }

@@ -14,5 +14,11 @@
 		"errors": {
 			"policy_restriction": "Neue Aufgabe konnte aufgrund von Richtlinienbeschränkungen nicht erstellt werden."
 		}
+	},
+	"agentSelector": {
+		"selectAgent": "Agent auswählen",
+		"currentAgent": "Aktueller Agent: {{agent}}",
+		"switchAgent": "Zu {{agent}} wechseln",
+		"noAgentsAvailable": "Keine Agenten verfügbar"
 	}
 }

@@ -17,7 +17,8 @@
 	"confirmation": {
 		"reset_state": "Are you sure you want to reset all state and secret storage in the extension? This cannot be undone.",
 		"delete_config_profile": "Are you sure you want to delete this configuration profile?",
-		"delete_custom_mode_with_rules": "Are you sure you want to delete this {scope} mode?\n\nThis will also delete the associated rules folder at:\n{rulesFolderPath}"
+		"delete_custom_mode_with_rules": "Are you sure you want to delete this {scope} mode?\n\nThis will also delete the associated rules folder at:\n{rulesFolderPath}",
+		"delete_custom_agent_with_rules": "Are you sure you want to delete this {scope} agent?\n\nThis will also delete the associated rules folder at:\n{rulesFolderPath}"
 	},
 	"errors": {
 		"invalid_data_uri": "Invalid data URI format",
@@ -44,6 +45,7 @@
 		"update_server_timeout": "Failed to update server timeout",
 		"hmr_not_running": "Local development server is not running, HMR will not work. Please run 'npm run dev' before launching the extension to enable HMR.",
 		"retrieve_current_mode": "Error: failed to retrieve current mode from state.",
+		"retrieve_current_agent": "Error: failed to retrieve current agent from state.",
 		"failed_delete_repo": "Failed to delete associated shadow repository or branch: {{error}}",
 		"failed_remove_directory": "Failed to remove task directory: {{error}}",
 		"custom_storage_path_unusable": "Custom storage path \"{{path}}\" is unusable, will use default path",
@@ -71,6 +73,7 @@
 		"share_not_enabled": "Task sharing is not enabled for this organization.",
 		"share_task_not_found": "Task not found or access denied.",
 		"mode_import_failed": "Failed to import mode: {{error}}",
+		"agent_import_failed": "Failed to import agent: {{error}}",
 		"delete_rules_folder_failed": "Failed to delete rules folder: {{rulesFolderPath}}. Error: {{error}}",
 		"command_not_found": "Command '{{name}}' not found",
 		"open_command_file": "Failed to open command file",
@@ -124,7 +127,9 @@
 		"image_copied_to_clipboard": "Image data URI copied to clipboard",
 		"image_saved": "Image saved to {{path}}",
 		"mode_exported": "Mode '{{mode}}' exported successfully",
-		"mode_imported": "Mode imported successfully"
+		"mode_imported": "Mode imported successfully",
+		"agent_exported": "Agent '{{agent}}' exported successfully",
+		"agent_imported": "Agent imported successfully"
 	},
 	"answers": {
 		"yes": "Yes",
@@ -170,9 +175,29 @@
 			"global": "global"
 		}
 	},
+	"customAgents": {
+		"errors": {
+			"yamlParseError": "Invalid YAML in .rooagents file at line {{line}}. Please check for:\n• Proper indentation (use spaces, not tabs)\n• Matching quotes and brackets\n• Valid YAML syntax",
+			"schemaValidationError": "Invalid custom agents format in .rooagents:\n{{issues}}",
+			"invalidFormat": "Invalid custom agents format. Please ensure your settings follow the correct YAML format.",
+			"updateFailed": "Failed to update custom agent: {{error}}",
+			"deleteFailed": "Failed to delete custom agent: {{error}}",
+			"resetFailed": "Failed to reset custom agents: {{error}}",
+			"agentNotFound": "Write error: Agent not found",
+			"noWorkspaceForProject": "No workspace folder found for project-specific agent",
+			"rulesCleanupFailed": "Agent deleted successfully, but failed to delete rules folder at {{rulesFolderPath}}. You may need to delete it manually."
+		},
+		"scope": {
+			"project": "project",
+			"global": "global"
+		}
+	},
 	"marketplace": {
 		"mode": {
 			"rulesCleanupFailed": "Mode removed successfully, but failed to delete rules folder at {{rulesFolderPath}}. You may need to delete it manually."
+		},
+		"agent": {
+			"rulesCleanupFailed": "Agent removed successfully, but failed to delete rules folder at {{rulesFolderPath}}. You may need to delete it manually."
 		}
 	},
 	"mdm": {
@@ -191,6 +216,18 @@
 			"description": "Are you sure you want to delete this {{scope}} mode? This will also delete the associated rules folder at: {{rulesFolderPath}}",
 			"descriptionNoRules": "Are you sure you want to delete this custom mode?",
 			"confirm": "Delete"
+		},
+		"deleteAgent": {
+			"title": "Delete Custom Agent",
+			"description": "Are you sure you want to delete this {{scope}} agent? This will also delete the associated rules folder at: {{rulesFolderPath}}",
+			"descriptionNoRules": "Are you sure you want to delete this custom agent?",
+			"confirm": "Delete"
+		},
+		"modes": {
+			"title": "Modes"
+		},
+		"agents": {
+			"title": "Agents"
 		}
 	},
 	"commands": {

@@ -14,5 +14,11 @@
 		"errors": {
 			"policy_restriction": "Impossibile creare una nuova attività a causa di restrizioni di policy."
 		}
+	},
+	"agentSelector": {
+		"selectAgent": "Seleziona Agente",
+		"currentAgent": "Agente Corrente: {{agent}}",
+		"switchAgent": "Passa a {{agent}}",
+		"noAgentsAvailable": "Nessun agente disponibile"
 	}
 }

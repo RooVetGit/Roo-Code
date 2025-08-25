@@ -14,5 +14,11 @@
 		"errors": {
 			"policy_restriction": "Impossible de créer une nouvelle tâche en raison de restrictions de politique."
 		}
+	},
+	"agentSelector": {
+		"selectAgent": "Sélectionner un Agent",
+		"currentAgent": "Agent Actuel : {{agent}}",
+		"switchAgent": "Passer à {{agent}}",
+		"noAgentsAvailable": "Aucun agent disponible"
 	}
 }

@@ -14,5 +14,11 @@
 		"errors": {
 			"policy_restriction": "Не удалось создать новую задачу из-за ограничений политики."
 		}
+	},
+	"agentSelector": {
+		"selectAgent": "Выбрать Агента",
+		"currentAgent": "Текущий Агент: {{agent}}",
+		"switchAgent": "Переключиться на {{agent}}",
+		"noAgentsAvailable": "Нет доступных агентов"
 	}
 }

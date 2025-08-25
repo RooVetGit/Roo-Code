@@ -17,5 +17,11 @@
 		"errors": {
 			"policy_restriction": "Gagal membuat tugas baru karena pembatasan kebijakan."
 		}
+	},
+	"agentSelector": {
+		"selectAgent": "Pilih Agen",
+		"currentAgent": "Agen Saat Ini: {{agent}}",
+		"switchAgent": "Beralih ke {{agent}}",
+		"noAgentsAvailable": "Tidak ada agen tersedia"
 	}
 }
