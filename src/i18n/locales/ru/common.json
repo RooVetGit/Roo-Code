@@ -103,6 +103,9 @@
 		},
 		"roo": {
 			"authenticationRequired": "Провайдер Roo требует облачной аутентификации. Войдите в Roo Code Cloud."
+		},
+		"qwenCode": {
+			"oauthLoadFailed": "Не удалось загрузить учетные данные OAuth QwenCode: {{error}}"
 		}
 	},
 	"warnings": {

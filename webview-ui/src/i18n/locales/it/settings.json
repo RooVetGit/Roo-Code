@@ -390,6 +390,13 @@
 				"learnMore": "Scopri di più sul routing dei fornitori"
 			}
 		},
+		"qwenCode": {
+			"oauthPath": "Percorso credenziali OAuth (opzionale)",
+			"oauthPathDescription": "Percorso del file delle credenziali OAuth. Lasciare vuoto per utilizzare la posizione predefinita (~/.qwen/oauth_creds.json).",
+			"description": "Questo provider utilizza l'autenticazione OAuth dal servizio Qwen e non richiede chiavi API.",
+			"instructions": "Si prega di seguire la documentazione ufficiale per ottenere il file di autorizzazione e posizionarlo nel percorso specificato.",
+			"setupLink": "Documentazione ufficiale Qwen"
+		},
 		"customModel": {
 			"capabilities": "Configura le capacità e i prezzi del tuo modello personalizzato compatibile con OpenAI. Fai attenzione quando specifichi le capacità del modello, poiché possono influenzare le prestazioni di Roo Code.",
 			"maxTokens": {

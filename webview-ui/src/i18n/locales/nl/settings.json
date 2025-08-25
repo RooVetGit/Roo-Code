@@ -390,6 +390,13 @@
 				"learnMore": "Meer informatie over providerroutering"
 			}
 		},
+		"qwenCode": {
+			"oauthPath": "OAuth-referentiepad (optioneel)",
+			"oauthPathDescription": "Pad naar het OAuth-referentiebestand. Laat leeg om de standaardlocatie (~/.qwen/oauth_creds.json) te gebruiken.",
+			"description": "Deze provider gebruikt OAuth-authenticatie van de Qwen-service en vereist geen API-sleutels.",
+			"instructions": "Volg de officiële documentatie om het autorisatiebestand te verkrijgen en plaats het in het opgegeven pad.",
+			"setupLink": "Qwen Officiële Documentatie"
+		},
 		"customModel": {
 			"capabilities": "Stel de mogelijkheden en prijzen in voor je aangepaste OpenAI-compatibele model. Wees voorzichtig met het opgeven van de modelmogelijkheden, want deze kunnen de prestaties van Roo Code beïnvloeden.",
 			"maxTokens": {

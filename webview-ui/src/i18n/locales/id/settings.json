@@ -394,6 +394,13 @@
 				"learnMore": "Pelajari lebih lanjut tentang provider routing"
 			}
 		},
+		"qwenCode": {
+			"oauthPath": "Jalur Kredensial OAuth (opsional)",
+			"oauthPathDescription": "Jalur ke file kredensial OAuth. Biarkan kosong untuk menggunakan lokasi default (~/.qwen/oauth_creds.json).",
+			"description": "Penyedia ini menggunakan autentikasi OAuth dari layanan Qwen dan tidak memerlukan kunci API.",
+			"instructions": "Silakan ikuti dokumentasi resmi untuk mendapatkan file otorisasi dan tempatkan di jalur yang ditentukan.",
+			"setupLink": "Dokumentasi Resmi Qwen"
+		},
 		"customModel": {
 			"capabilities": "Konfigurasi kemampuan dan harga untuk model kustom yang kompatibel dengan OpenAI. Hati-hati saat menentukan kemampuan model, karena dapat mempengaruhi performa Roo Code.",
 			"maxTokens": {

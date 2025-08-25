@@ -390,6 +390,13 @@
 				"learnMore": "了解更多關於供應商路由的資訊"
 			}
 		},
+		"qwenCode": {
+			"oauthPath": "OAuth 憑證路徑（可選）",
+			"oauthPathDescription": "OAuth 憑證檔案的路徑。留空以使用預設位置 (~/.qwen/oauth_creds.json)。",
+			"description": "此供應商使用來自 Qwen 服務的 OAuth 身份驗證，不需要 API 金鑰。",
+			"instructions": "請按照官方文件取得授權檔案並將其放置在指定路徑中。",
+			"setupLink": "Qwen 官方文件"
+		},
 		"customModel": {
 			"capabilities": "設定自訂 OpenAI 相容模型的功能和定價。請謹慎設定模型功能，因為這會影響 Roo Code 的運作方式。",
 			"maxTokens": {

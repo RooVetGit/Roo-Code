@@ -34,6 +34,7 @@ import {
 	IOIntelligenceHandler,
 	DoubaoHandler,
 	ZAiHandler,
+	QwenCodeHandler,
 	FireworksHandler,
 	RooHandler,
 	FeatherlessHandler,
@@ -138,6 +139,8 @@ export function buildApiHandler(configuration: ProviderSettings): ApiHandler {
 			return new SambaNovaHandler(options)
 		case "zai":
 			return new ZAiHandler(options)
+		case "qwen-code":
+			return new QwenCodeHandler(options)
 		case "fireworks":
 			return new FireworksHandler(options)
 		case "io-intelligence":

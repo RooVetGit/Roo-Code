@@ -390,6 +390,13 @@
 				"learnMore": "Sağlayıcı yönlendirmesi hakkında daha fazla bilgi edinin"
 			}
 		},
+		"qwenCode": {
+			"oauthPath": "OAuth Kimlik Bilgileri Yolu (isteğe bağlı)",
+			"oauthPathDescription": "OAuth kimlik bilgileri dosyasının yolu. Varsayılan konumu (~/.qwen/oauth_creds.json) kullanmak için boş bırakın.",
+			"description": "Bu sağlayıcı Qwen hizmetinden OAuth kimlik doğrulaması kullanır ve API anahtarları gerektirmez.",
+			"instructions": "Lütfen yetkilendirme dosyasını almak ve belirtilen yola yerleştirmek için resmi belgeleri takip edin.",
+			"setupLink": "Qwen Resmi Belgeleri"
+		},
 		"customModel": {
 			"capabilities": "Özel OpenAI uyumlu modelinizin yeteneklerini ve fiyatlandırmasını yapılandırın. Model yeteneklerini belirtirken dikkatli olun, çünkü bunlar Roo Code'un performansını etkileyebilir.",
 			"maxTokens": {

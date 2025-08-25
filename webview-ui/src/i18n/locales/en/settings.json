@@ -389,6 +389,13 @@
 				"learnMore": "Learn more about provider routing"
 			}
 		},
+		"qwenCode": {
+			"oauthPath": "OAuth Credentials Path (optional)",
+			"oauthPathDescription": "Path to the OAuth credentials file. Leave empty to use the default location (~/.qwen/oauth_creds.json).",
+			"description": "This provider uses OAuth authentication from the Qwen service and does not require API keys.",
+			"instructions": "Please follow the official documentation to obtain the authorization file and place it in the specified path.",
+			"setupLink": "Qwen Official Documentation"
+		},
 		"customModel": {
 			"capabilities": "Configure the capabilities and pricing for your custom OpenAI-compatible model. Be careful when specifying the model capabilities, as they can affect how Roo Code performs.",
 			"maxTokens": {

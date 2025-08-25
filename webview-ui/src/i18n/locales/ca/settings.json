@@ -390,6 +390,13 @@
 				"learnMore": "Més informació sobre l'encaminament de proveïdors"
 			}
 		},
+		"qwenCode": {
+			"oauthPath": "Ruta de credencials OAuth (opcional)",
+			"oauthPathDescription": "Ruta al fitxer de credencials OAuth. Deixeu-ho buit per utilitzar la ubicació predeterminada (~/.qwen/oauth_creds.json).",
+			"description": "Aquest proveïdor utilitza autenticació OAuth del servei Qwen i no requereix claus d'API.",
+			"instructions": "Si us plau, seguiu la documentació oficial per obtenir el fitxer d'autorització i col·loqueu-lo a la ruta especificada.",
+			"setupLink": "Documentació oficial de Qwen"
+		},
 		"customModel": {
 			"capabilities": "Configureu les capacitats i preus per al vostre model personalitzat compatible amb OpenAI. Tingueu cura en especificar les capacitats del model, ja que poden afectar com funciona Roo Code.",
 			"maxTokens": {

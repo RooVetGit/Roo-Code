@@ -390,6 +390,13 @@
 				"learnMore": "Tìm hiểu thêm về định tuyến nhà cung cấp"
 			}
 		},
+		"qwenCode": {
+			"oauthPath": "Đường dẫn thông tin xác thực OAuth (tùy chọn)",
+			"oauthPathDescription": "Đường dẫn đến tệp thông tin xác thực OAuth. Để trống để sử dụng vị trí mặc định (~/.qwen/oauth_creds.json).",
+			"description": "Nhà cung cấp này sử dụng xác thực OAuth từ dịch vụ Qwen và không yêu cầu khóa API.",
+			"instructions": "Vui lòng làm theo tài liệu chính thức để lấy tệp ủy quyền và đặt nó trong đường dẫn được chỉ định.",
+			"setupLink": "Tài liệu chính thức Qwen"
+		},
 		"customModel": {
 			"capabilities": "Cấu hình các khả năng và giá cả cho mô hình tương thích OpenAI tùy chỉnh của bạn. Hãy cẩn thận khi chỉ định khả năng của mô hình, vì chúng có thể ảnh hưởng đến cách Roo Code hoạt động.",
 			"maxTokens": {

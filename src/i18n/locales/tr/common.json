@@ -103,6 +103,9 @@
 		},
 		"roo": {
 			"authenticationRequired": "Roo sağlayıcısı bulut kimlik doğrulaması gerektirir. Lütfen Roo Code Cloud'a giriş yapın."
+		},
+		"qwenCode": {
+			"oauthLoadFailed": "QwenCode OAuth kimlik bilgileri yüklenemedi: {{error}}"
 		}
 	},
 	"warnings": {

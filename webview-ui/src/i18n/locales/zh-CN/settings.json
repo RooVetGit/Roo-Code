@@ -390,6 +390,13 @@
 				"learnMore": "了解更多"
 			}
 		},
+		"qwenCode": {
+			"oauthPath": "OAuth 凭据路径（可选）",
+			"oauthPathDescription": "OAuth 凭据文件的路径。留空以使用默认位置 (~/.qwen/oauth_creds.json)。",
+			"description": "此提供商使用来自 Qwen 服务的 OAuth 身份验证，不需要 API 密钥。",
+			"instructions": "请按照官方文档获取授权文件并将其放置在指定路径中。",
+			"setupLink": "Qwen 官方文档"
+		},
 		"customModel": {
 			"capabilities": "自定义模型配置注意事项：\n• 确保兼容OpenAI接口规范\n• 错误配置可能导致功能异常\n• 价格参数影响费用统计",
 			"maxTokens": {

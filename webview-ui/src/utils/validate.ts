@@ -116,6 +116,9 @@ function validateModelsAndKeysProvided(apiConfiguration: ProviderSettings): stri
 				return i18next.t("settings:validation.apiKey")
 			}
 			break
+		case "qwen-code":
+			// OAuth-based provider, no API key validation needed
+			break
 		case "fireworks":
 			if (!apiConfiguration.fireworksApiKey) {
 				return i18next.t("settings:validation.apiKey")
