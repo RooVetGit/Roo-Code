@@ -1988,6 +1988,112 @@ export const webviewMessageHandler = async (
 				})
 			}
 			break
+		case "generateRules":
+			// Generate rules for the current workspace by spawning a new task
+			try {
+				// Import the rules generation service
+				const { handleGenerateRules } = await import("../../services/rules/rulesGenerator")
+
+				// Call the refactored function with all necessary parameters
+				await handleGenerateRules(
+					provider,
+					{
+						selectedRuleTypes: message.selectedRuleTypes,
+						addToGitignore: message.addToGitignore,
+						alwaysAllowWriteProtected: message.alwaysAllowWriteProtected,
+						apiConfigName: message.apiConfigName,
+						includeCustomRules: message.includeCustomRules,
+						customRulesText: message.customRulesText,
+					},
+					getGlobalState,
+					updateGlobalState,
+				)
+			} catch (error) {
+				// Show error message to user
+				const errorMessage = error instanceof Error ? error.message : String(error)
+				vscode.window.showErrorMessage(`Failed to generate rules: ${errorMessage}`)
+			}
+			break
+		case "checkExistingRuleFiles":
+			// Check which rule files already exist and count source files
+			try {
+				const workspacePath = getWorkspacePath()
+				if (!workspacePath) {
+					break
+				}
+
+				const { fileExistsAtPath } = await import("../../utils/fs")
+				const path = await import("path")
+				const fs = await import("fs/promises")
+
+				const ruleTypeToPath: Record<string, string> = {
+					general: path.join(workspacePath, ".roo", "rules", "coding-standards.md"),
+					code: path.join(workspacePath, ".roo", "rules-code", "implementation-rules.md"),
+					architect: path.join(workspacePath, ".roo", "rules-architect", "architecture-rules.md"),
+					debug: path.join(workspacePath, ".roo", "rules-debug", "debugging-rules.md"),
+					"docs-extractor": path.join(
+						workspacePath,
+						".roo",
+						"rules-docs-extractor",
+						"documentation-rules.md",
+					),
+				}
+
+				const existingFiles: string[] = []
+				for (const [type, filePath] of Object.entries(ruleTypeToPath)) {
+					if (await fileExistsAtPath(filePath)) {
+						existingFiles.push(type)
+					}
+				}
+
+				// Count all files in the workspace
+				let sourceFileCount = 0
+				try {
+					// Use VS Code API to count all files
+					const vscode = await import("vscode")
+
+					// Find all files (excluding common non-project files)
+					const pattern = "**/*"
+					const excludePattern =
+						"**/node_modules/**,**/.git/**,**/dist/**,**/build/**,**/.next/**,**/.nuxt/**,**/coverage/**,**/.cache/**"
+
+					const files = await vscode.workspace.findFiles(pattern, excludePattern)
+					sourceFileCount = files.length
+				} catch (error) {
+					// If counting fails, set to -1 to indicate unknown
+					sourceFileCount = -1
+				}
+
+				await provider.postMessageToWebview({
+					type: "existingRuleFiles",
+					files: existingFiles,
+					sourceFileCount,
+				})
+			} catch (error) {
+				// Silently fail - not critical
+			}
+			break
+		case "updateRulesSettings":
+			// Save rules settings to global state
+			await updateGlobalState("rulesSettings", {
+				selectedRuleTypes: message.selectedRuleTypes || ["general", "code"],
+				addToGitignore: message.addToGitignore !== undefined ? message.addToGitignore : true,
+				includeCustomRules: message.includeCustomRules || false,
+				customRulesText: message.customRulesText || "",
+			})
+			break
+		case "getRulesSettings":
+			// Send current rules settings to webview
+			const rulesSettings = getGlobalState("rulesSettings") || {
+				selectedRuleTypes: ["general", "code"],
+				addToGitignore: true,
+			}
+			await provider.postMessageToWebview({
+				type: "rulesSettings",
+				selectedRuleTypes: rulesSettings.selectedRuleTypes,
+				addToGitignore: rulesSettings.addToGitignore,
+			})
+			break
 		case "humanRelayResponse":
 			if (message.requestId && message.text) {
 				vscode.commands.executeCommand(getCommand("handleHumanRelayResponse"), {

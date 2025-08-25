@@ -680,6 +680,53 @@
 			"description": "Wanneer ingeschakeld, kan Roo takenlijsten maken en beheren om de voortgang van taken bij te houden. Dit helpt complexe taken te organiseren in beheersbare stappen."
 		}
 	},
+	"rules": {
+		"title": "Regels",
+		"description": "Regels helpen AI-agenten de conventies en best practices van je project te begrijpen!",
+		"magicGeneration": {
+			"title": "Magische regelgeneratie",
+			"description": "Analyseer automatisch je codebase en genereer uitgebreide regels die zijn afgestemd op de specifieke behoeften van je project."
+		},
+		"generateButton": "Regels genereren",
+		"generateButtonTooltip": "Maak een nieuwe taak om de codebase te analyseren en automatisch regels te genereren",
+		"selectTypes": "Selecteer regeltypen om te genereren:",
+		"noRulesSelected": "Selecteer alsjeblieft minstens één regeltype om te genereren",
+		"unsavedChangesError": "Sla je instellingen op voordat je regels genereert",
+		"types": {
+			"general": {
+				"label": "Algemene regels",
+				"description": "Algemene codeerstandaarden toegepast op alle modi"
+			},
+			"code": {
+				"label": "Code modus regels",
+				"description": "Specifieke regels voor codesyntax, implementatiedetails en best practices"
+			},
+			"architect": {
+				"label": "Architect modus regels",
+				"description": "Regels voor high-level systeemontwerp, bestandsorganisatie en architecturale patronen"
+			},
+			"debug": {
+				"label": "Debug modus regels",
+				"description": "Regels voor debugging workflows, foutafhandeling en troubleshooting benaderingen"
+			},
+			"docsExtractor": {
+				"label": "Documentatieregels",
+				"description": "Regels voor documentatie-extractie en opmaakstandaarden"
+			}
+		},
+		"fileExists": "Bestand bestaat",
+		"overwriteWarning": "Waarschuwing: De volgende regelbestanden bestaan al en worden overschreven:",
+		"addToGitignore": "Toevoegen aan .gitignore",
+		"addToGitignoreDescription": "Voeg gegenereerde regelbestanden automatisch toe aan .gitignore om te voorkomen dat ze worden gecommit naar versiebeheer",
+		"autoApproveProtected": "Automatisch goedkeuren van schrijven naar beschermde bestanden",
+		"autoApproveProtectedDescription": "Sta Roo toe om te maken en schrijven naar de .roo directory zonder handmatige goedkeuring te vereisen",
+		"selectApiConfig": "Selecteer API-configuratie",
+		"includeCustomRules": "Mijn aangepaste regels opnemen",
+		"includeCustomRulesDescription": "Voeg aangepaste instructies toe aan de regelgeneratie prompt",
+		"customRulesPlaceholder": "Voer hier je aangepaste regels of instructies in...",
+		"customRulesHint": "Deze worden opgenomen in de prompt bij het genereren van regels voor je project",
+		"smallRepoWarning": "Deze repository bevat slechts {{count}} bestanden. Met beperkte codevoorbeelden kunnen de gegenereerde regels te specifiek zijn voor je huidige implementatie. Overweeg om regels opnieuw te genereren naarmate je project groeit."
+	},
 	"experimental": {
 		"DIFF_STRATEGY_UNIFIED": {
 			"name": "Experimentele unified diff-strategie gebruiken",

@@ -724,6 +724,55 @@
 			"description": "When enabled, the new_task tool will require a todos parameter to be provided. This ensures all new tasks start with a clear list of objectives. When disabled (default), the todos parameter remains optional for backward compatibility."
 		}
 	},
+	"rules": {
+		"title": "Rules",
+		"description": "Rules help AI agents understand your project's conventions and best practices!",
+		"magicGeneration": {
+			"title": "Magic Rules Generation",
+			"description": "Automatically analyze your codebase and generate comprehensive rules tailored to your project's specific needs."
+		},
+		"generateButton": "Generate Rules",
+		"generateButtonTooltip": "Create a new task to analyze the codebase and generate rules automatically",
+		"selectTypes": "Select rule types to generate:",
+		"noRulesSelected": "Please select at least one rule type to generate",
+		"unsavedChangesError": "Please save your settings before generating rules",
+		"types": {
+			"general": {
+				"label": "General Rules",
+				"description": "General coding standards applied to all modes"
+			},
+			"code": {
+				"label": "Code Mode Rules",
+				"description": "Specific rules for code syntax, implementation details, and best practices"
+			},
+			"architect": {
+				"label": "Architect Mode Rules",
+				"description": "Rules for high-level system design, file organization, and architecture patterns"
+			},
+			"debug": {
+				"label": "Debug Mode Rules",
+				"description": "Rules for debugging workflows, error handling, and troubleshooting approaches"
+			},
+			"docsExtractor": {
+				"label": "Documentation Rules",
+				"description": "Rules for documentation extraction and formatting standards"
+			}
+		},
+		"fileExists": "File exists",
+		"overwriteWarning": "Warning: The following rule files already exist and will be overwritten:",
+		"addToGitignore": "Add to .gitignore",
+		"addToGitignoreDescription": "Automatically add the generated rule files to .gitignore to prevent them from being committed to version control",
+		"autoApproveProtected": "Auto-approve protected file writes",
+		"autoApproveProtectedDescription": "Allow Roo to make and write to .roo directory without requiring manual approval",
+		"selectApiConfig": "Select API configuration",
+		"includeCustomRules": "Include my own rules",
+		"includeCustomRulesDescription": "Add custom instructions to the rule generation prompt",
+		"customRulesPlaceholder": "Enter your custom rules or instructions here...",
+		"customRulesHint": "These will be included in the prompt when generating rules for your project",
+		"smallRepoWarning": "This repository contains only {{count}} files. With limited code examples, the generated rules may be overly specific to your current implementation. Consider regenerating rules as your project grows.",
+		"commandTitle": "Initialize rules using the chat command:",
+		"commandDescription": "Type this command in the chat to generate AI rules based on your selected preferences below."
+	},
 	"promptCaching": {
 		"label": "Disable prompt caching",
 		"description": "When checked, Roo will not use prompt caching for this model."

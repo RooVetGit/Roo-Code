@@ -206,6 +206,10 @@ export interface WebviewMessage {
 		| "checkRulesDirectoryResult"
 		| "saveCodeIndexSettingsAtomic"
 		| "requestCodeIndexSecretStatus"
+		| "generateRules"
+		| "checkExistingRuleFiles"
+		| "updateRulesSettings"
+		| "getRulesSettings"
 		| "requestCommands"
 		| "openCommandFile"
 		| "deleteCommand"
@@ -255,6 +259,13 @@ export interface WebviewMessage {
 	visibility?: ShareVisibility // For share visibility
 	hasContent?: boolean // For checkRulesDirectoryResult
 	checkOnly?: boolean // For deleteCustomMode check
+	selectedRuleTypes?: string[] // For generateRules
+	addToGitignore?: boolean // For generateRules
+	alwaysAllowWriteProtected?: boolean // For generateRules
+	apiConfigName?: string // For generateRules
+	includeCustomRules?: boolean // For generateRules
+	customRulesText?: string // For generateRules
+	files?: string[] // For existingRuleFiles response
 	codeIndexSettings?: {
 		// Global state settings
 		codebaseIndexEnabled: boolean

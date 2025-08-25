@@ -250,6 +250,12 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 		},
 		codebaseIndexModels: { ollama: {}, openai: {} },
 		alwaysAllowUpdateTodoList: true,
+		rulesSettings: {
+			selectedRuleTypes: ["general", "code", "architect", "debug", "docs-extractor"],
+			addToGitignore: true,
+			includeCustomRules: false,
+			customRulesText: "",
+		},
 		includeDiagnosticMessages: true,
 		maxDiagnosticMessages: 50,
 	})

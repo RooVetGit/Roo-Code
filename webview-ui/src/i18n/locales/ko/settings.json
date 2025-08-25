@@ -680,6 +680,53 @@
 			"description": "활성화하면 Roo가 작업 진행 상황을 추적하기 위한 할 일 목록을 만들고 관리할 수 있습니다. 이는 복잡한 작업을 관리 가능한 단계로 구성하는 데 도움이 됩니다."
 		}
 	},
+	"rules": {
+		"title": "규칙",
+		"description": "규칙은 AI 에이전트가 당신의 프로젝트 관례와 모범 사례를 이해하는 데 도움이 됩니다!",
+		"magicGeneration": {
+			"title": "마법 규칙 생성",
+			"description": "코드베이스를 자동으로 분석하고 프로젝트의 특정 요구사항에 맞춘 포괄적인 규칙을 생성합니다."
+		},
+		"generateButton": "규칙 생성",
+		"generateButtonTooltip": "코드베이스를 분석하고 자동으로 규칙을 생성하는 새 작업 생성",
+		"selectTypes": "생성할 규칙 유형 선택:",
+		"noRulesSelected": "생성할 규칙 유형을 최소 하나 선택해주세요",
+		"unsavedChangesError": "규칙을 생성하기 전에 설정을 저장해주세요",
+		"types": {
+			"general": {
+				"label": "일반 규칙",
+				"description": "모든 모드에 적용되는 일반적인 코딩 표준"
+			},
+			"code": {
+				"label": "코드 모드 규칙",
+				"description": "코드 구문, 구현 세부사항 및 모범 사례에 대한 구체적인 규칙"
+			},
+			"architect": {
+				"label": "아키텍트 모드 규칙",
+				"description": "고수준 시스템 설계, 파일 구성 및 아키텍처 패턴에 대한 규칙"
+			},
+			"debug": {
+				"label": "디버그 모드 규칙",
+				"description": "디버깅 워크플로우, 오류 처리 및 문제 해결 접근법에 대한 규칙"
+			},
+			"docsExtractor": {
+				"label": "문서 규칙",
+				"description": "문서 추출 및 형식 표준에 대한 규칙"
+			}
+		},
+		"fileExists": "파일이 존재합니다",
+		"overwriteWarning": "경고: 다음 규칙 파일들이 이미 존재하며 덮어쓰여집니다:",
+		"addToGitignore": ".gitignore에 추가",
+		"addToGitignoreDescription": "생성된 규칙 파일을 자동으로 .gitignore에 추가하여 버전 관리에 커밋되지 않도록 합니다",
+		"autoApproveProtected": "보호된 파일 쓰기 자동 승인",
+		"autoApproveProtectedDescription": "Roo가 수동 승인 없이 .roo 디렉토리를 생성하고 쓸 수 있도록 허용",
+		"selectApiConfig": "API 구성 선택",
+		"includeCustomRules": "내 규칙 포함",
+		"includeCustomRulesDescription": "규칙 생성 프롬프트에 사용자 정의 지침 추가",
+		"customRulesPlaceholder": "여기에 사용자 정의 규칙이나 지침을 입력하세요...",
+		"customRulesHint": "이것들은 프로젝트에 대한 규칙을 생성할 때 프롬프트에 포함됩니다",
+		"smallRepoWarning": "이 저장소는 {{count}}개의 파일만 포함하고 있습니다. 제한된 코드 예제로 인해 생성된 규칙이 현재 구현에 지나치게 특화될 수 있습니다. 프로젝트가 성장함에 따라 규칙을 재생성하는 것을 고려해보세요."
+	},
 	"experimental": {
 		"DIFF_STRATEGY_UNIFIED": {
 			"name": "실험적 통합 diff 전략 사용",

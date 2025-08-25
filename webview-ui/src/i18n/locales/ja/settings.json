@@ -680,6 +680,53 @@
 			"description": "有効にすると、Rooはタスクの進捗を追跡するためのToDoリストを作成・管理できます。これにより、複雑なタスクを管理しやすいステップに整理できます。"
 		}
 	},
+	"rules": {
+		"title": "ルール",
+		"description": "ルールはAIエージェントがあなたのプロジェクトの規約とベストプラクティスを理解するのに役立ちます！",
+		"magicGeneration": {
+			"title": "マジックルール生成",
+			"description": "コードベースを自動的に分析し、プロジェクトの特定のニーズに合わせた包括的なルールを生成します。"
+		},
+		"generateButton": "ルールを生成",
+		"generateButtonTooltip": "コードベースを分析してルールを自動生成する新しいタスクを作成",
+		"selectTypes": "生成するルールタイプを選択：",
+		"noRulesSelected": "生成するルールタイプを少なくとも1つ選択してください",
+		"unsavedChangesError": "ルールを生成する前に設定を保存してください",
+		"types": {
+			"general": {
+				"label": "一般ルール",
+				"description": "すべてのモードに適用される一般的なコーディング標準"
+			},
+			"code": {
+				"label": "コードモードルール",
+				"description": "コード構文、実装詳細、ベストプラクティスの具体的なルール"
+			},
+			"architect": {
+				"label": "アーキテクトモードルール",
+				"description": "高レベルシステム設計、ファイル構成、アーキテクチャパターンのルール"
+			},
+			"debug": {
+				"label": "デバッグモードルール",
+				"description": "デバッグワークフロー、エラー処理、トラブルシューティングアプローチのルール"
+			},
+			"docsExtractor": {
+				"label": "ドキュメントルール",
+				"description": "ドキュメント抽出とフォーマット標準のルール"
+			}
+		},
+		"fileExists": "ファイルが存在します",
+		"overwriteWarning": "警告：以下のルールファイルは既に存在し、上書きされます：",
+		"addToGitignore": ".gitignoreに追加",
+		"addToGitignoreDescription": "生成されたルールファイルを自動的に.gitignoreに追加して、バージョン管理にコミットされないようにします",
+		"autoApproveProtected": "保護されたファイル書き込みを自動承認",
+		"autoApproveProtectedDescription": "Rooが手動承認を必要とせずに.rooディレクトリを作成・書き込みできるようにします",
+		"selectApiConfig": "API設定を選択",
+		"includeCustomRules": "独自のルールを含める",
+		"includeCustomRulesDescription": "ルール生成プロンプトにカスタム指示を追加",
+		"customRulesPlaceholder": "ここにカスタムルールや指示を入力してください...",
+		"customRulesHint": "これらはプロジェクトのルールを生成する際にプロンプトに含まれます",
+		"smallRepoWarning": "このリポジトリには{{count}}個のファイルしか含まれていません。コード例が限られているため、生成されるルールは現在の実装に対して過度に特化している可能性があります。プロジェクトが成長するにつれてルールを再生成することを検討してください。"
+	},
 	"experimental": {
 		"DIFF_STRATEGY_UNIFIED": {
 			"name": "実験的な統合diff戦略を使用する",

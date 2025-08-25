@@ -679,6 +679,53 @@
 			"description": "Cuando está habilitado, Roo puede crear y gestionar listas de tareas para hacer seguimiento del progreso. Esto ayuda a organizar tareas complejas en pasos manejables."
 		}
 	},
+	"rules": {
+		"title": "Reglas",
+		"description": "¡Las reglas ayudan a los agentes de IA a entender las convenciones y mejores prácticas de tu proyecto!",
+		"magicGeneration": {
+			"title": "Generación mágica de reglas",
+			"description": "Analiza automáticamente tu base de código y genera reglas completas adaptadas a las necesidades específicas de tu proyecto."
+		},
+		"generateButton": "Generar reglas",
+		"generateButtonTooltip": "Crear una nueva tarea para analizar la base de código y generar reglas automáticamente",
+		"selectTypes": "Selecciona los tipos de reglas a generar:",
+		"noRulesSelected": "Por favor selecciona al menos un tipo de regla para generar",
+		"unsavedChangesError": "Por favor guarda tu configuración antes de generar reglas",
+		"types": {
+			"general": {
+				"label": "Reglas generales",
+				"description": "Estándares de codificación generales aplicados a todos los modos"
+			},
+			"code": {
+				"label": "Reglas del modo Código",
+				"description": "Reglas específicas para sintaxis de código, detalles de implementación y mejores prácticas"
+			},
+			"architect": {
+				"label": "Reglas del modo Arquitecto",
+				"description": "Reglas para diseño de sistemas de alto nivel, organización de archivos y patrones de arquitectura"
+			},
+			"debug": {
+				"label": "Reglas del modo Debug",
+				"description": "Reglas para flujos de trabajo de depuración, manejo de errores y enfoques de resolución de problemas"
+			},
+			"docsExtractor": {
+				"label": "Reglas de documentación",
+				"description": "Reglas para extracción de documentación y estándares de formato"
+			}
+		},
+		"fileExists": "El archivo existe",
+		"overwriteWarning": "Advertencia: Los siguientes archivos de reglas ya existen y serán sobrescritos:",
+		"addToGitignore": "Añadir a .gitignore",
+		"addToGitignoreDescription": "Añadir automáticamente los archivos de reglas generados a .gitignore para evitar que se confirmen en el control de versiones",
+		"autoApproveProtected": "Aprobar automáticamente escrituras de archivos protegidos",
+		"autoApproveProtectedDescription": "Permitir a Roo crear y escribir en el directorio .roo sin requerir aprobación manual",
+		"selectApiConfig": "Seleccionar configuración de API",
+		"includeCustomRules": "Incluir mis propias reglas",
+		"includeCustomRulesDescription": "Añadir instrucciones personalizadas al prompt de generación de reglas",
+		"customRulesPlaceholder": "Introduce tus reglas o instrucciones personalizadas aquí...",
+		"customRulesHint": "Estas se incluirán en el prompt al generar reglas para tu proyecto",
+		"smallRepoWarning": "Este repositorio contiene solo {{count}} archivos. Con ejemplos de código limitados, las reglas generadas pueden ser demasiado específicas para tu implementación actual. Considera regenerar reglas a medida que tu proyecto crezca."
+	},
 	"experimental": {
 		"DIFF_STRATEGY_UNIFIED": {
 			"name": "Usar estrategia de diff unificada experimental",

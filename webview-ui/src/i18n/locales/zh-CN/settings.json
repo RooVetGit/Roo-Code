@@ -680,6 +680,53 @@
 			"description": "启用后，Roo 可以创建和管理任务清单来跟踪任务进度。这有助于将复杂任务组织成可管理的步骤。"
 		}
 	},
+	"rules": {
+		"title": "规则",
+		"description": "规则帮助 AI 代理理解你项目的约定和最佳实践！",
+		"magicGeneration": {
+			"title": "智能规则生成",
+			"description": "自动分析你的代码库并生成针对项目特定需求的综合规则。"
+		},
+		"generateButton": "生成规则",
+		"generateButtonTooltip": "创建新任务来分析代码库并自动生成规则",
+		"selectTypes": "选择要生成的规则类型：",
+		"noRulesSelected": "请至少选择一种规则类型来生成",
+		"unsavedChangesError": "生成规则前请先保存设置",
+		"types": {
+			"general": {
+				"label": "通用规则",
+				"description": "适用于所有模式的通用编码标准"
+			},
+			"code": {
+				"label": "代码模式规则",
+				"description": "针对代码语法、实现细节和最佳实践的具体规则"
+			},
+			"architect": {
+				"label": "架构师模式规则",
+				"description": "用于高级系统设计、文件组织和架构模式的规则"
+			},
+			"debug": {
+				"label": "调试模式规则",
+				"description": "用于调试工作流、错误处理和故障排除方法的规则"
+			},
+			"docsExtractor": {
+				"label": "文档规则",
+				"description": "用于文档提取和格式化标准的规则"
+			}
+		},
+		"fileExists": "文件已存在",
+		"overwriteWarning": "警告：以下规则文件已存在，将被覆盖：",
+		"addToGitignore": "添加到 .gitignore",
+		"addToGitignoreDescription": "自动将生成的规则文件添加到 .gitignore 以防止提交到版本控制",
+		"autoApproveProtected": "自动批准受保护文件写入",
+		"autoApproveProtectedDescription": "允许 Roo 创建和写入 .roo 目录而无需手动批准",
+		"selectApiConfig": "选择 API 配置",
+		"includeCustomRules": "包含我的自定义规则",
+		"includeCustomRulesDescription": "向规则生成提示添加自定义指令",
+		"customRulesPlaceholder": "在此输入你的自定义规则或指令...",
+		"customRulesHint": "这些将在为你的项目生成规则时包含在提示中",
+		"smallRepoWarning": "此仓库仅包含 {{count}} 个文件。由于代码示例有限，生成的规则可能过于针对你当前的实现。建议随着项目增长重新生成规则。"
+	},
 	"experimental": {
 		"DIFF_STRATEGY_UNIFIED": {
 			"name": "启用diff更新工具",

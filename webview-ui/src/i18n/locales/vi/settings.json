@@ -680,6 +680,53 @@
 			"description": "Khi được bật, Roo có thể tạo và quản lý danh sách việc cần làm để theo dõi tiến độ công việc. Điều này giúp tổ chức các tác vụ phức tạp thành các bước có thể quản lý được."
 		}
 	},
+	"rules": {
+		"title": "Quy tắc",
+		"description": "Quy tắc giúp các AI agent hiểu các quy ước và thực hành tốt nhất của dự án bạn!",
+		"magicGeneration": {
+			"title": "Tạo quy tắc tự động",
+			"description": "Tự động phân tích codebase của bạn và tạo ra các quy tắc toàn diện được điều chỉnh theo nhu cầu cụ thể của dự án."
+		},
+		"generateButton": "Tạo quy tắc",
+		"generateButtonTooltip": "Tạo một tác vụ mới để phân tích codebase và tự động tạo quy tắc",
+		"selectTypes": "Chọn các loại quy tắc để tạo:",
+		"noRulesSelected": "Vui lòng chọn ít nhất một loại quy tắc để tạo",
+		"unsavedChangesError": "Vui lòng lưu cài đặt của bạn trước khi tạo quy tắc",
+		"types": {
+			"general": {
+				"label": "Quy tắc chung",
+				"description": "Tiêu chuẩn mã hóa chung áp dụng cho tất cả các chế độ"
+			},
+			"code": {
+				"label": "Quy tắc chế độ Code",
+				"description": "Quy tắc cụ thể cho cú pháp mã, chi tiết triển khai và thực hành tốt nhất"
+			},
+			"architect": {
+				"label": "Quy tắc chế độ Architect",
+				"description": "Quy tắc cho thiết kế hệ thống cấp cao, tổ chức tệp và mẫu kiến trúc"
+			},
+			"debug": {
+				"label": "Quy tắc chế độ Debug",
+				"description": "Quy tắc cho quy trình gỡ lỗi, xử lý lỗi và phương pháp khắc phục sự cố"
+			},
+			"docsExtractor": {
+				"label": "Quy tắc tài liệu",
+				"description": "Quy tắc cho việc trích xuất tài liệu và tiêu chuẩn định dạng"
+			}
+		},
+		"fileExists": "Tệp tồn tại",
+		"overwriteWarning": "Cảnh báo: Các tệp quy tắc sau đã tồn tại và sẽ bị ghi đè:",
+		"addToGitignore": "Thêm vào .gitignore",
+		"addToGitignoreDescription": "Tự động thêm các tệp quy tắc được tạo vào .gitignore để ngăn chúng được commit vào kiểm soát phiên bản",
+		"autoApproveProtected": "Tự động phê duyệt ghi tệp được bảo vệ",
+		"autoApproveProtectedDescription": "Cho phép Roo tạo và ghi vào thư mục .roo mà không cần phê duyệt thủ công",
+		"selectApiConfig": "Chọn cấu hình API",
+		"includeCustomRules": "Bao gồm quy tắc tùy chỉnh của tôi",
+		"includeCustomRulesDescription": "Thêm hướng dẫn tùy chỉnh vào prompt tạo quy tắc",
+		"customRulesPlaceholder": "Nhập quy tắc hoặc hướng dẫn tùy chỉnh của bạn ở đây...",
+		"customRulesHint": "Chúng sẽ được bao gồm trong prompt khi tạo quy tắc cho dự án của bạn",
+		"smallRepoWarning": "Kho lưu trữ này chỉ chứa {{count}} tệp. Với các ví dụ mã hạn chế, các quy tắc được tạo có thể quá cụ thể cho triển khai hiện tại của bạn. Hãy xem xét tạo lại quy tắc khi dự án của bạn phát triển."
+	},
 	"experimental": {
 		"DIFF_STRATEGY_UNIFIED": {
 			"name": "Sử dụng chiến lược diff thống nhất thử nghiệm",

@@ -680,6 +680,53 @@
 			"description": "啟用後，Roo 可以建立和管理待辦事項清單來追蹤任務進度。這有助於將複雜任務組織成可管理的步驟。"
 		}
 	},
+	"rules": {
+		"title": "規則",
+		"description": "規則幫助 AI 代理理解你專案的慣例和最佳實務！",
+		"magicGeneration": {
+			"title": "智慧規則產生",
+			"description": "自動分析你的程式碼庫並產生針對專案特定需求的綜合規則。"
+		},
+		"generateButton": "產生規則",
+		"generateButtonTooltip": "建立新工作來分析程式碼庫並自動產生規則",
+		"selectTypes": "選擇要產生的規則類型：",
+		"noRulesSelected": "請至少選擇一種規則類型來產生",
+		"unsavedChangesError": "產生規則前請先儲存設定",
+		"types": {
+			"general": {
+				"label": "通用規則",
+				"description": "適用於所有模式的通用程式設計標準"
+			},
+			"code": {
+				"label": "程式碼模式規則",
+				"description": "針對程式碼語法、實作細節和最佳實務的具體規則"
+			},
+			"architect": {
+				"label": "架構師模式規則",
+				"description": "用於高階系統設計、檔案組織和架構模式的規則"
+			},
+			"debug": {
+				"label": "除錯模式規則",
+				"description": "用於除錯工作流程、錯誤處理和故障排除方法的規則"
+			},
+			"docsExtractor": {
+				"label": "文件規則",
+				"description": "用於文件擷取和格式化標準的規則"
+			}
+		},
+		"fileExists": "檔案已存在",
+		"overwriteWarning": "警告：以下規則檔案已存在，將被覆寫：",
+		"addToGitignore": "新增到 .gitignore",
+		"addToGitignoreDescription": "自動將產生的規則檔案新增到 .gitignore 以防止提交到版本控制",
+		"autoApproveProtected": "自動核准受保護檔案寫入",
+		"autoApproveProtectedDescription": "允許 Roo 建立和寫入 .roo 目錄而無需手動核准",
+		"selectApiConfig": "選擇 API 設定",
+		"includeCustomRules": "包含我的自訂規則",
+		"includeCustomRulesDescription": "向規則產生提示新增自訂指令",
+		"customRulesPlaceholder": "在此輸入你的自訂規則或指令...",
+		"customRulesHint": "這些將在為你的專案產生規則時包含在提示中",
+		"smallRepoWarning": "此儲存庫僅包含 {{count}} 個檔案。由於程式碼範例有限，產生的規則可能過於針對你目前的實作。建議隨著專案成長重新產生規則。"
+	},
 	"experimental": {
 		"DIFF_STRATEGY_UNIFIED": {
 			"name": "使用實驗性統一差異比對策略",

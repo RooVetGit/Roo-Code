@@ -684,6 +684,53 @@
 			"description": "Saat diaktifkan, Roo dapat membuat dan mengelola daftar tugas untuk melacak kemajuan tugas. Ini membantu mengatur tugas kompleks menjadi langkah-langkah yang dapat dikelola."
 		}
 	},
+	"rules": {
+		"title": "Aturan",
+		"description": "Aturan membantu agen AI memahami konvensi dan praktik terbaik proyek kamu!",
+		"magicGeneration": {
+			"title": "Generasi Aturan Ajaib",
+			"description": "Secara otomatis menganalisis codebase kamu dan menghasilkan aturan komprehensif yang disesuaikan dengan kebutuhan spesifik proyek."
+		},
+		"generateButton": "Buat Aturan",
+		"generateButtonTooltip": "Buat tugas baru untuk menganalisis codebase dan secara otomatis menghasilkan aturan",
+		"selectTypes": "Pilih jenis aturan yang akan dibuat:",
+		"noRulesSelected": "Silakan pilih setidaknya satu jenis aturan untuk dibuat",
+		"unsavedChangesError": "Silakan simpan pengaturan kamu sebelum membuat aturan",
+		"types": {
+			"general": {
+				"label": "Aturan Umum",
+				"description": "Standar coding umum yang diterapkan ke semua mode"
+			},
+			"code": {
+				"label": "Aturan Mode Code",
+				"description": "Aturan spesifik untuk sintaks kode, detail implementasi, dan praktik terbaik"
+			},
+			"architect": {
+				"label": "Aturan Mode Architect",
+				"description": "Aturan untuk desain sistem tingkat tinggi, organisasi file, dan pola arsitektur"
+			},
+			"debug": {
+				"label": "Aturan Mode Debug",
+				"description": "Aturan untuk alur kerja debugging, penanganan error, dan pendekatan troubleshooting"
+			},
+			"docsExtractor": {
+				"label": "Aturan Dokumentasi",
+				"description": "Aturan untuk ekstraksi dokumentasi dan standar formatting"
+			}
+		},
+		"fileExists": "File ada",
+		"overwriteWarning": "Peringatan: File aturan berikut sudah ada dan akan ditimpa:",
+		"addToGitignore": "Tambahkan ke .gitignore",
+		"addToGitignoreDescription": "Secara otomatis menambahkan file aturan yang dihasilkan ke .gitignore untuk mencegah mereka di-commit ke version control",
+		"autoApproveProtected": "Otomatis setujui penulisan file yang dilindungi",
+		"autoApproveProtectedDescription": "Izinkan Roo untuk membuat dan menulis ke direktori .roo tanpa memerlukan persetujuan manual",
+		"selectApiConfig": "Pilih Konfigurasi API",
+		"includeCustomRules": "Sertakan aturan kustom saya",
+		"includeCustomRulesDescription": "Tambahkan instruksi kustom ke prompt generasi aturan",
+		"customRulesPlaceholder": "Masukkan aturan atau instruksi kustom kamu di sini...",
+		"customRulesHint": "Ini akan disertakan dalam prompt saat menghasilkan aturan untuk proyek kamu",
+		"smallRepoWarning": "Repository ini hanya berisi {{count}} file. Dengan contoh kode yang terbatas, aturan yang dihasilkan mungkin terlalu spesifik untuk implementasi saat ini. Pertimbangkan untuk menghasilkan ulang aturan seiring berkembangnya proyek kamu."
+	},
 	"experimental": {
 		"warning": "⚠️",
 		"autoCondenseContextPercent": {

@@ -680,6 +680,53 @@
 			"description": "Po włączeniu Roo może tworzyć i zarządzać listami zadań do śledzenia postępu zadań. Pomaga to organizować złożone zadania w łatwe do zarządzania kroki."
 		}
 	},
+	"rules": {
+		"title": "Zasady",
+		"description": "Zasady pomagają agentom AI zrozumieć konwencje i najlepsze praktyki twojego projektu!",
+		"magicGeneration": {
+			"title": "Magiczne generowanie zasad",
+			"description": "Automatycznie analizuj swoją bazę kodu i generuj kompleksowe zasady dostosowane do specyficznych potrzeb twojego projektu."
+		},
+		"generateButton": "Generuj zasady",
+		"generateButtonTooltip": "Utwórz nowe zadanie do analizy bazy kodu i automatycznego generowania zasad",
+		"selectTypes": "Wybierz typy zasad do wygenerowania:",
+		"noRulesSelected": "Proszę wybrać co najmniej jeden typ zasad do wygenerowania",
+		"unsavedChangesError": "Proszę zapisać swoje ustawienia przed generowaniem zasad",
+		"types": {
+			"general": {
+				"label": "Zasady ogólne",
+				"description": "Ogólne standardy kodowania stosowane do wszystkich trybów"
+			},
+			"code": {
+				"label": "Zasady trybu Code",
+				"description": "Specyficzne zasady dla składni kodu, szczegółów implementacji i najlepszych praktyk"
+			},
+			"architect": {
+				"label": "Zasady trybu Architect",
+				"description": "Zasady dla projektowania systemów wysokiego poziomu, organizacji plików i wzorców architektonicznych"
+			},
+			"debug": {
+				"label": "Zasady trybu Debug",
+				"description": "Zasady dla przepływów pracy debugowania, obsługi błędów i podejść do rozwiązywania problemów"
+			},
+			"docsExtractor": {
+				"label": "Zasady dokumentacji",
+				"description": "Zasady dla ekstrakcji dokumentacji i standardów formatowania"
+			}
+		},
+		"fileExists": "Plik istnieje",
+		"overwriteWarning": "Ostrzeżenie: Następujące pliki zasad już istnieją i zostaną nadpisane:",
+		"addToGitignore": "Dodaj do .gitignore",
+		"addToGitignoreDescription": "Automatycznie dodaj wygenerowane pliki zasad do .gitignore, aby zapobiec ich commitowaniu do kontroli wersji",
+		"autoApproveProtected": "Automatycznie zatwierdź pisanie chronionych plików",
+		"autoApproveProtectedDescription": "Pozwól Roo na tworzenie i pisanie do katalogu .roo bez wymagania ręcznego zatwierdzenia",
+		"selectApiConfig": "Wybierz konfigurację API",
+		"includeCustomRules": "Uwzględnij moje niestandardowe zasady",
+		"includeCustomRulesDescription": "Dodaj niestandardowe instrukcje do promptu generowania zasad",
+		"customRulesPlaceholder": "Wprowadź tutaj swoje niestandardowe zasady lub instrukcje...",
+		"customRulesHint": "Zostaną one uwzględnione w prompcie podczas generowania zasad dla twojego projektu",
+		"smallRepoWarning": "To repozytorium zawiera tylko {{count}} plików. Z ograniczonymi przykładami kodu, wygenerowane zasady mogą być zbyt specyficzne dla twojej obecnej implementacji. Rozważ ponowne generowanie zasad w miarę rozwoju twojego projektu."
+	},
 	"experimental": {
 		"DIFF_STRATEGY_UNIFIED": {
 			"name": "Użyj eksperymentalnej ujednoliconej strategii diff",

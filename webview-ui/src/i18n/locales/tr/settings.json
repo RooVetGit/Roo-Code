@@ -680,6 +680,53 @@
 			"description": "Etkinleştirildiğinde, Roo görev ilerlemesini takip etmek için yapılacaklar listeleri oluşturabilir ve yönetebilir. Bu, karmaşık görevleri yönetilebilir adımlara organize etmeye yardımcı olur."
 		}
 	},
+	"rules": {
+		"title": "Kurallar",
+		"description": "Kurallar, AI ajanlarının projenin konvansiyonlarını ve en iyi uygulamalarını anlamasına yardımcı olur!",
+		"magicGeneration": {
+			"title": "Sihirli Kural Üretimi",
+			"description": "Kod tabanını otomatik olarak analiz et ve projenin özel ihtiyaçlarına göre uyarlanmış kapsamlı kurallar üret."
+		},
+		"generateButton": "Kuralları Üret",
+		"generateButtonTooltip": "Kod tabanını analiz etmek ve otomatik olarak kurallar üretmek için yeni bir görev oluştur",
+		"selectTypes": "Üretilecek kural türlerini seç:",
+		"noRulesSelected": "Lütfen üretim için en az bir kural türü seç",
+		"unsavedChangesError": "Lütfen kuralları üretmeden önce ayarlarını kaydet",
+		"types": {
+			"general": {
+				"label": "Genel Kurallar",
+				"description": "Tüm modlara uygulanan genel kodlama standartları"
+			},
+			"code": {
+				"label": "Kod Modu Kuralları",
+				"description": "Kod sözdizimi, uygulama detayları ve en iyi uygulamalar için özel kurallar"
+			},
+			"architect": {
+				"label": "Mimar Modu Kuralları",
+				"description": "Üst düzey sistem tasarımı, dosya organizasyonu ve mimari desenler için kurallar"
+			},
+			"debug": {
+				"label": "Hata Ayıklama Modu Kuralları",
+				"description": "Hata ayıklama iş akışları, hata işleme ve sorun giderme yaklaşımları için kurallar"
+			},
+			"docsExtractor": {
+				"label": "Dokümantasyon Kuralları",
+				"description": "Dokümantasyon çıkarma ve biçimlendirme standartları için kurallar"
+			}
+		},
+		"fileExists": "Dosya mevcut",
+		"overwriteWarning": "Uyarı: Aşağıdaki kural dosyaları zaten mevcut ve üzerine yazılacak:",
+		"addToGitignore": ".gitignore'a ekle",
+		"addToGitignoreDescription": "Üretilen kural dosyalarını otomatik olarak .gitignore'a ekleyerek sürüm kontrolüne commit edilmesini önle",
+		"autoApproveProtected": "Korumalı dosya yazımını otomatik onayla",
+		"autoApproveProtectedDescription": "Roo'nun manuel onay gerektirmeden .roo dizininde oluşturma ve yazma yapmasına izin ver",
+		"selectApiConfig": "API Yapılandırması Seç",
+		"includeCustomRules": "Kendi kurallarımı dahil et",
+		"includeCustomRulesDescription": "Kural üretimi promptuna özel talimatlar ekle",
+		"customRulesPlaceholder": "Özel kurallarını veya talimatlarını buraya gir...",
+		"customRulesHint": "Bunlar projen için kurallar üretilirken prompta dahil edilecek",
+		"smallRepoWarning": "Bu depo sadece {{count}} dosya içeriyor. Sınırlı kod örnekleriyle, üretilen kurallar mevcut uygulamana çok özgü olabilir. Projen büyüdükçe kuralları yeniden üretmeyi düşün."
+	},
 	"experimental": {
 		"DIFF_STRATEGY_UNIFIED": {
 			"name": "Deneysel birleştirilmiş diff stratejisini kullan",

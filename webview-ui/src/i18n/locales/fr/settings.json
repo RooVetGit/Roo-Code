@@ -679,6 +679,53 @@
 			"description": "Lorsqu'activé, Roo peut créer et gérer des listes de tâches pour suivre la progression. Cela aide à organiser les tâches complexes en étapes gérables."
 		}
 	},
+	"rules": {
+		"title": "Règles",
+		"description": "Les règles aident les agents IA à comprendre les conventions et les meilleures pratiques de ton projet !",
+		"magicGeneration": {
+			"title": "Génération magique de règles",
+			"description": "Analyse automatiquement ta base de code et génère des règles complètes adaptées aux besoins spécifiques de ton projet."
+		},
+		"generateButton": "Générer les règles",
+		"generateButtonTooltip": "Créer une nouvelle tâche pour analyser la base de code et générer automatiquement les règles",
+		"selectTypes": "Sélectionne les types de règles à générer :",
+		"noRulesSelected": "Veuillez sélectionner au moins un type de règle à générer",
+		"unsavedChangesError": "Veuillez enregistrer tes paramètres avant de générer les règles",
+		"types": {
+			"general": {
+				"label": "Règles générales",
+				"description": "Standards de codage généraux appliqués à tous les modes"
+			},
+			"code": {
+				"label": "Règles du mode Code",
+				"description": "Règles spécifiques pour la syntaxe du code, les détails d'implémentation et les meilleures pratiques"
+			},
+			"architect": {
+				"label": "Règles du mode Architecte",
+				"description": "Règles pour la conception de systèmes de haut niveau, l'organisation des fichiers et les modèles d'architecture"
+			},
+			"debug": {
+				"label": "Règles du mode Debug",
+				"description": "Règles pour les flux de travail de débogage, la gestion des erreurs et les approches de dépannage"
+			},
+			"docsExtractor": {
+				"label": "Règles de documentation",
+				"description": "Règles pour l'extraction de documentation et les standards de formatage"
+			}
+		},
+		"fileExists": "Le fichier existe",
+		"overwriteWarning": "Attention : Les fichiers de règles suivants existent déjà et seront écrasés :",
+		"addToGitignore": "Ajouter à .gitignore",
+		"addToGitignoreDescription": "Ajouter automatiquement les fichiers de règles générés à .gitignore pour éviter qu'ils soient validés dans le contrôle de version",
+		"autoApproveProtected": "Approuver automatiquement les écritures de fichiers protégés",
+		"autoApproveProtectedDescription": "Permettre à Roo de créer et d'écrire dans le répertoire .roo sans nécessiter d'approbation manuelle",
+		"selectApiConfig": "Sélectionner la configuration API",
+		"includeCustomRules": "Inclure mes propres règles",
+		"includeCustomRulesDescription": "Ajouter des instructions personnalisées à l'invite de génération de règles",
+		"customRulesPlaceholder": "Saisis tes règles ou instructions personnalisées ici...",
+		"customRulesHint": "Celles-ci seront incluses dans l'invite lors de la génération de règles pour ton projet",
+		"smallRepoWarning": "Ce dépôt ne contient que {{count}} fichiers. Avec des exemples de code limités, les règles générées peuvent être trop spécifiques à ton implémentation actuelle. Considère régénérer les règles à mesure que ton projet grandit."
+	},
 	"experimental": {
 		"DIFF_STRATEGY_UNIFIED": {
 			"name": "Utiliser la stratégie diff unifiée expérimentale",

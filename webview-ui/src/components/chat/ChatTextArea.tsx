@@ -105,6 +105,7 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 		const [fileSearchResults, setFileSearchResults] = useState<SearchResult[]>([])
 		const [searchLoading, setSearchLoading] = useState(false)
 		const [searchRequestId, setSearchRequestId] = useState<string>("")
+		const [waitingForRulesSettings, setWaitingForRulesSettings] = useState(false)
 
 		// Close dropdown when clicking outside.
 		useEffect(() => {
@@ -191,12 +192,26 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 					if (message.requestId === searchRequestId) {
 						setFileSearchResults(message.results || [])
 					}
+				} else if (message.type === "rulesSettings") {
+					// Only trigger generation if we're waiting for it (user used /make-rules command)
+					if (waitingForRulesSettings) {
+						setWaitingForRulesSettings(false)
+						// Received rules settings, now trigger generation
+						vscode.postMessage({
+							type: "generateRules",
+							selectedRuleTypes: message.selectedRuleTypes || ["general", "code"],
+							addToGitignore: message.addToGitignore !== undefined ? message.addToGitignore : true,
+							alwaysAllowWriteProtected: false,
+							includeCustomRules: message.includeCustomRules || false,
+							customRulesText: message.customRulesText || "",
+						})
+					}
 				}
 			}
 
 			window.addEventListener("message", messageHandler)
 			return () => window.removeEventListener("message", messageHandler)
-		}, [setInputValue, searchRequestId, inputValue])
+		}, [setInputValue, searchRequestId, waitingForRulesSettings, inputValue])
 
 		const [isDraggingOver, setIsDraggingOver] = useState(false)
 		const [textAreaBaseHeight, setTextAreaBaseHeight] = useState<number | undefined>(undefined)
@@ -299,6 +314,18 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 					setInputValue("")
 					setShowContextMenu(false)
 					vscode.postMessage({ type: "mode", text: value })
+					return
+				}
+
+				if (type === ContextMenuOptionType.Rules) {
+					// Handle rules generation command
+					setInputValue("")
+					setShowContextMenu(false)
+					// Set flag to indicate we're waiting for settings
+					setWaitingForRulesSettings(true)
+					// First get the saved settings
+					vscode.postMessage({ type: "getRulesSettings" })
+					// The actual generation will be triggered when we receive the settings
 					return
 				}
 
