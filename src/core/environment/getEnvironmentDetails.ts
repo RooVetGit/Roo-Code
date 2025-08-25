@@ -228,13 +228,10 @@ export async function getEnvironmentDetails(cline: Task, includeFileDetails: boo
 	details += `<slug>${currentMode}</slug>\n`
 	details += `<name>${modeDetails.name}</name>\n`
 	details += `<model>${modelId}</model>\n`
+	details += `<role>${modeDetails.roleDefinition}</role>\n`
 
-	if (Experiments.isEnabled(experiments ?? {}, EXPERIMENT_IDS.POWER_STEERING)) {
-		details += `<role>${modeDetails.roleDefinition}</role>\n`
-
-		if (modeDetails.customInstructions) {
-			details += `<custom_instructions>${modeDetails.customInstructions}</custom_instructions>\n`
-		}
+	if (modeDetails.customInstructions) {
+		details += `<custom_instructions>${modeDetails.customInstructions}</custom_instructions>\n`
 	}
 
 	if (includeFileDetails) {

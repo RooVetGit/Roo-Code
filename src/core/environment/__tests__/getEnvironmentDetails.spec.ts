@@ -313,11 +313,21 @@ describe("getEnvironmentDetails", () => {
 		expect(mockInactiveTerminal.getCurrentWorkingDirectory).toHaveBeenCalled()
 	})
 
-	it("should include experiment-specific details when Power Steering is enabled", async () => {
+	it("should always include mode role and custom instructions regardless of Power Steering", async () => {
+		// Test with Power Steering disabled
+		mockState.experiments = { [EXPERIMENT_IDS.POWER_STEERING]: false }
+		;(experiments.isEnabled as Mock).mockReturnValue(false)
+
+		let result = await getEnvironmentDetails(mockCline as Task)
+
+		expect(result).toContain("<role>You are a code assistant</role>")
+		expect(result).toContain("<custom_instructions>Custom instructions</custom_instructions>")
+
+		// Test with Power Steering enabled
 		mockState.experiments = { [EXPERIMENT_IDS.POWER_STEERING]: true }
 		;(experiments.isEnabled as Mock).mockReturnValue(true)
 
-		const result = await getEnvironmentDetails(mockCline as Task)
+		result = await getEnvironmentDetails(mockCline as Task)
 
 		expect(result).toContain("<role>You are a code assistant</role>")
 		expect(result).toContain("<custom_instructions>Custom instructions</custom_instructions>")
