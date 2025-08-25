@@ -8,7 +8,7 @@ import {
 } from "@google/genai"
 import type { JWTInput } from "google-auth-library"
 
-import { type ModelInfo, type GeminiModelId, geminiDefaultModelId, geminiModels } from "@roo-code/types"
+import { type ModelInfo, geminiDefaultModelId, geminiModels, mapLegacyGeminiModel } from "@roo-code/types"
 
 import type { ApiHandlerOptions } from "../../shared/api"
 import { safeJsonParse } from "../../shared/safeJsonParse"
@@ -164,8 +164,14 @@ export class GeminiHandler extends BaseProvider implements SingleCompletionHandl
 
 	override getModel() {
 		const modelId = this.options.apiModelId
-		let id = modelId && modelId in geminiModels ? (modelId as GeminiModelId) : geminiDefaultModelId
+		let id = modelId ? mapLegacyGeminiModel(modelId) : geminiDefaultModelId
+
+		if (modelId && modelId !== id) {
+			this.options.apiModelId = id
+		}
+
 		let info: ModelInfo = geminiModels[id]
+
 		const params = getModelParams({ format: "gemini", modelId: id, model: info, settings: this.options })
 
 		// The `:thinking` suffix indicates that the model is a "Hybrid"

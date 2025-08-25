@@ -6,25 +6,6 @@ export type GeminiModelId = keyof typeof geminiModels
 export const geminiDefaultModelId: GeminiModelId = "gemini-2.0-flash-001"
 
 export const geminiModels = {
-	"gemini-2.5-flash-preview-04-17:thinking": {
-		maxTokens: 65_535,
-		contextWindow: 1_048_576,
-		supportsImages: true,
-		supportsPromptCache: false,
-		inputPrice: 0.15,
-		outputPrice: 3.5,
-		maxThinkingTokens: 24_576,
-		supportsReasoningBudget: true,
-		requiredReasoningBudget: true,
-	},
-	"gemini-2.5-flash-preview-04-17": {
-		maxTokens: 65_535,
-		contextWindow: 1_048_576,
-		supportsImages: true,
-		supportsPromptCache: false,
-		inputPrice: 0.15,
-		outputPrice: 0.6,
-	},
 	"gemini-2.5-flash-preview-05-20:thinking": {
 		maxTokens: 65_535,
 		contextWindow: 1_048_576,
@@ -60,6 +41,66 @@ export const geminiModels = {
 		maxThinkingTokens: 24_576,
 		supportsReasoningBudget: true,
 	},
+	"gemini-2.5-pro": {
+		maxTokens: 64_000,
+		contextWindow: 1_048_576,
+		supportsImages: true,
+		supportsPromptCache: true,
+		inputPrice: 2.5, // This is the pricing for prompts above 200k tokens.
+		outputPrice: 15,
+		cacheReadsPrice: 0.625,
+		cacheWritesPrice: 4.5,
+		maxThinkingTokens: 32_768,
+		supportsReasoningBudget: true,
+		requiredReasoningBudget: true,
+		tiers: [
+			{
+				contextWindow: 200_000,
+				inputPrice: 1.25,
+				outputPrice: 10,
+				cacheReadsPrice: 0.31,
+			},
+			{
+				contextWindow: Infinity,
+				inputPrice: 2.5,
+				outputPrice: 15,
+				cacheReadsPrice: 0.625,
+			},
+		],
+	},
+	"gemini-2.0-flash-001": {
+		maxTokens: 8192,
+		contextWindow: 1_048_576,
+		supportsImages: true,
+		supportsPromptCache: true,
+		inputPrice: 0.1,
+		outputPrice: 0.4,
+		cacheReadsPrice: 0.025,
+		cacheWritesPrice: 1.0,
+	},
+	"gemini-2.0-flash-lite-preview-02-05": {
+		maxTokens: 8192,
+		contextWindow: 1_048_576,
+		supportsImages: true,
+		supportsPromptCache: false,
+		inputPrice: 0,
+		outputPrice: 0,
+	},
+	"gemini-2.5-flash-lite-preview-06-17": {
+		maxTokens: 64_000,
+		contextWindow: 1_048_576,
+		supportsImages: true,
+		supportsPromptCache: true,
+		inputPrice: 0.1,
+		outputPrice: 0.4,
+		cacheReadsPrice: 0.025,
+		cacheWritesPrice: 1.0,
+		supportsReasoningBudget: true,
+		maxThinkingTokens: 24_576,
+	},
+} as const satisfies Record<string, ModelInfo>
+
+export const legacyGeminiModels = {
 	"gemini-2.5-pro-exp-03-25": {
 		maxTokens: 65_535,
 		contextWindow: 1_048_576,
@@ -142,83 +183,6 @@ export const geminiModels = {
 			},
 		],
 	},
-	"gemini-2.5-pro": {
-		maxTokens: 64_000,
-		contextWindow: 1_048_576,
-		supportsImages: true,
-		supportsPromptCache: true,
-		inputPrice: 2.5, // This is the pricing for prompts above 200k tokens.
-		outputPrice: 15,
-		cacheReadsPrice: 0.625,
-		cacheWritesPrice: 4.5,
-		maxThinkingTokens: 32_768,
-		supportsReasoningBudget: true,
-		requiredReasoningBudget: true,
-		tiers: [
-			{
-				contextWindow: 200_000,
-				inputPrice: 1.25,
-				outputPrice: 10,
-				cacheReadsPrice: 0.31,
-			},
-			{
-				contextWindow: Infinity,
-				inputPrice: 2.5,
-				outputPrice: 15,
-				cacheReadsPrice: 0.625,
-			},
-		],
-	},
-	"gemini-2.0-flash-001": {
-		maxTokens: 8192,
-		contextWindow: 1_048_576,
-		supportsImages: true,
-		supportsPromptCache: true,
-		inputPrice: 0.1,
-		outputPrice: 0.4,
-		cacheReadsPrice: 0.025,
-		cacheWritesPrice: 1.0,
-	},
-	"gemini-2.0-flash-lite-preview-02-05": {
-		maxTokens: 8192,
-		contextWindow: 1_048_576,
-		supportsImages: true,
-		supportsPromptCache: false,
-		inputPrice: 0,
-		outputPrice: 0,
-	},
-	"gemini-2.0-pro-exp-02-05": {
-		maxTokens: 8192,
-		contextWindow: 2_097_152,
-		supportsImages: true,
-		supportsPromptCache: false,
-		inputPrice: 0,
-		outputPrice: 0,
-	},
-	"gemini-2.0-flash-thinking-exp-01-21": {
-		maxTokens: 65_536,
-		contextWindow: 1_048_576,
-		supportsImages: true,
-		supportsPromptCache: false,
-		inputPrice: 0,
-		outputPrice: 0,
-	},
-	"gemini-2.0-flash-thinking-exp-1219": {
-		maxTokens: 8192,
-		contextWindow: 32_767,
-		supportsImages: true,
-		supportsPromptCache: false,
-		inputPrice: 0,
-		outputPrice: 0,
-	},
-	"gemini-2.0-flash-exp": {
-		maxTokens: 8192,
-		contextWindow: 1_048_576,
-		supportsImages: true,
-		supportsPromptCache: false,
-		inputPrice: 0,
-		outputPrice: 0,
-	},
 	"gemini-1.5-flash-002": {
 		maxTokens: 8192,
 		contextWindow: 1_048_576,
@@ -283,16 +247,105 @@ export const geminiModels = {
 		inputPrice: 0,
 		outputPrice: 0,
 	},
-	"gemini-2.5-flash-lite-preview-06-17": {
-		maxTokens: 64_000,
+	"gemini-2.0-pro-exp-02-05": {
+		maxTokens: 8192,
+		contextWindow: 2_097_152,
+		supportsImages: true,
+		supportsPromptCache: false,
+		inputPrice: 0,
+		outputPrice: 0,
+	},
+	"gemini-2.0-flash-thinking-exp-1219": {
+		maxTokens: 8192,
+		contextWindow: 32_767,
+		supportsImages: true,
+		supportsPromptCache: false,
+		inputPrice: 0,
+		outputPrice: 0,
+	},
+	"gemini-2.0-flash-thinking-exp-01-21": {
+		maxTokens: 65_536,
 		contextWindow: 1_048_576,
 		supportsImages: true,
-		supportsPromptCache: true,
-		inputPrice: 0.1,
-		outputPrice: 0.4,
-		cacheReadsPrice: 0.025,
-		cacheWritesPrice: 1.0,
-		supportsReasoningBudget: true,
+		supportsPromptCache: false,
+		inputPrice: 0,
+		outputPrice: 0,
+	},
+	"gemini-2.5-flash-preview-04-17:thinking": {
+		maxTokens: 65_535,
+		contextWindow: 1_048_576,
+		supportsImages: true,
+		supportsPromptCache: false,
+		inputPrice: 0.15,
+		outputPrice: 3.5,
 		maxThinkingTokens: 24_576,
+		supportsReasoningBudget: true,
+		requiredReasoningBudget: true,
+	},
+	"gemini-2.5-flash-preview-04-17": {
+		maxTokens: 65_535,
+		contextWindow: 1_048_576,
+		supportsImages: true,
+		supportsPromptCache: false,
+		inputPrice: 0.15,
+		outputPrice: 0.6,
+	},
+	"gemini-2.0-flash-exp": {
+		maxTokens: 8192,
+		contextWindow: 1_048_576,
+		supportsImages: true,
+		supportsPromptCache: false,
+		inputPrice: 0,
+		outputPrice: 0,
 	},
 } as const satisfies Record<string, ModelInfo>
+
+/**
+ * Maps legacy Gemini model IDs to current supported models
+ */
+export function mapLegacyGeminiModel(modelId: string): GeminiModelId {
+	if (modelId in geminiModels) {
+		return modelId as GeminiModelId
+	}
+
+	if (modelId in legacyGeminiModels) {
+		if (modelId.startsWith("gemini-2.5-pro-preview-")) {
+			return "gemini-2.5-pro"
+		}
+
+		if (modelId.startsWith("gemini-1.5-pro-")) {
+			return geminiDefaultModelId
+		}
+
+		if (modelId.startsWith("gemini-1.5-flash-")) {
+			return geminiDefaultModelId
+		}
+
+		if (modelId.startsWith("gemini-2.5-pro-exp-")) {
+			return "gemini-2.5-pro"
+		}
+
+		if (modelId === "gemini-exp-1206") {
+			return geminiDefaultModelId
+		}
+
+		if (modelId === "gemini-2.0-pro-exp-02-05") {
+			return "gemini-2.5-pro"
+		}
+
+		if (
+			modelId === "gemini-2.0-flash-thinking-exp-1219" ||
+			modelId === "gemini-2.0-flash-thinking-exp-01-21" ||
+			modelId === "gemini-2.5-flash-preview-04-17" ||
+			modelId === "gemini-2.5-flash-preview-04-17:thinking"
+		) {
+			return "gemini-2.5-flash-preview-05-20"
+		}
+
+		if (modelId === "gemini-2.0-flash-exp") {
+			return geminiDefaultModelId
+		}
+	}
+
+	return geminiDefaultModelId
+}

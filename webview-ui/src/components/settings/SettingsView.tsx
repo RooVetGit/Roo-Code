@@ -26,6 +26,7 @@ import {
 } from "lucide-react"
 
 import type { ProviderSettings, ExperimentId } from "@roo-code/types"
+import { mapLegacyGeminiModel, mapLegacyVertexModel } from "@roo-code/types"
 
 import { TelemetrySetting } from "@roo/TelemetrySetting"
 
@@ -218,6 +219,38 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 		})
 	}, [])
 
+	const handleLegacyGeminiModelMapping = useCallback(
+		<K extends keyof ProviderSettings>(
+			field: K,
+			previousValue: ProviderSettings[K],
+			value: ProviderSettings[K],
+			provider: string | undefined,
+			updatedApiConfiguration: ProviderSettings,
+		): boolean => {
+			if (field !== "apiModelId" || typeof previousValue !== "string" || typeof value !== "string") {
+				return false
+			}
+
+			let isLegacyMapping = false
+			if (provider === "gemini") {
+				isLegacyMapping = mapLegacyGeminiModel(previousValue) === value
+			} else if (provider === "vertex") {
+				isLegacyMapping = mapLegacyVertexModel(previousValue) === value
+			}
+
+			if (isLegacyMapping && currentApiConfigName) {
+				vscode.postMessage({
+					type: "upsertApiConfiguration",
+					text: currentApiConfigName,
+					apiConfiguration: updatedApiConfiguration,
+				})
+			}
+
+			return isLegacyMapping
+		},
+		[currentApiConfigName],
+	)
+
 	const setApiConfigurationField = useCallback(
 		<K extends keyof ProviderSettings>(field: K, value: ProviderSettings[K], isUserAction: boolean = true) => {
 			setCachedState((prevState) => {
@@ -231,13 +264,24 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 				// This prevents the dirty state when the component initializes and auto-syncs values
 				const isInitialSync = !isUserAction && previousValue === undefined && value !== undefined
 
-				if (!isInitialSync) {
+				const updatedApiConfiguration = { ...prevState.apiConfiguration, [field]: value }
+
+				const isLegacyMapping = handleLegacyGeminiModelMapping(
+					field,
+					previousValue,
+					value,
+					prevState.apiConfiguration?.apiProvider,
+					updatedApiConfiguration,
+				)
+
+				if (!isInitialSync && !isLegacyMapping) {
 					setChangeDetected(true)
 				}
-				return { ...prevState, apiConfiguration: { ...prevState.apiConfiguration, [field]: value } }
+
+				return { ...prevState, apiConfiguration: updatedApiConfiguration }
 			})
 		},
-		[],
+		[handleLegacyGeminiModelMapping],
 	)
 
 	const setExperimentEnabled: SetExperimentEnabled = useCallback((id: ExperimentId, enabled: boolean) => {

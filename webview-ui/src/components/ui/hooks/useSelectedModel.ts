@@ -40,6 +40,8 @@ import {
 	sambaNovaDefaultModelId,
 	doubaoModels,
 	doubaoDefaultModelId,
+	mapLegacyGeminiModel,
+	mapLegacyVertexModel,
 	internationalZAiDefaultModelId,
 	mainlandZAiDefaultModelId,
 	internationalZAiModels,
@@ -202,12 +204,14 @@ function getSelectedModel({
 			return { id, info: baseInfo }
 		}
 		case "vertex": {
-			const id = apiConfiguration.apiModelId ?? vertexDefaultModelId
+			const rawId = apiConfiguration.apiModelId ?? vertexDefaultModelId
+			const id = mapLegacyVertexModel(rawId)
 			const info = vertexModels[id as keyof typeof vertexModels]
 			return { id, info }
 		}
 		case "gemini": {
-			const id = apiConfiguration.apiModelId ?? geminiDefaultModelId
+			const rawId = apiConfiguration.apiModelId ?? geminiDefaultModelId
+			const id = mapLegacyGeminiModel(rawId)
 			const info = geminiModels[id as keyof typeof geminiModels]
 			return { id, info }
 		}
