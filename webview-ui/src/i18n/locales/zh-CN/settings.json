@@ -459,10 +459,17 @@
 		"setReasoningLevel": "启用推理工作量",
 		"claudeCode": {
 			"pathLabel": "Claude Code 路径",
-			"description": "您的 Claude Code CLI 的可选路径。如果未设置，则默认为 “claude”。",
+			"description": "您的 Claude Code CLI 的可选路径。如果未设置，则默认为 'claude'。",
 			"placeholder": "默认：claude",
 			"maxTokensLabel": "最大输出 Token",
 			"maxTokensDescription": "Claude Code 响应的最大输出 Token 数量。默认为 8000。"
+		},
+		"qwenCode": {
+			"oauthPath": "OAuth 凭据路径（可选）",
+			"oauthPathDescription": "OAuth 凭据文件的路径。留空以使用默认位置 (~/.qwen/oauth_creds.json)。",
+			"description": "此提供商使用来自 Qwen 服务的 OAuth 身份验证，不需要 API 密钥。",
+			"instructions": "请参照官方文档获取授权文件并将其放置在指定路径。",
+			"setupLink": "Qwen 官方文档"
 		}
 	},
 	"browser": {

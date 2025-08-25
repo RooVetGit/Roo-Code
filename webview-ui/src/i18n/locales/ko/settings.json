@@ -463,6 +463,13 @@
 			"placeholder": "기본값: claude",
 			"maxTokensLabel": "최대 출력 토큰",
 			"maxTokensDescription": "Claude Code 응답의 최대 출력 토큰 수. 기본값은 8000입니다."
+		},
+		"qwenCode": {
+			"oauthPath": "OAuth 자격 증명 경로 (선택사항)",
+			"oauthPathDescription": "OAuth 자격 증명 파일의 경로입니다. 기본 위치(~/.qwen/oauth_creds.json)를 사용하려면 비워두세요.",
+			"description": "이 공급자는 Qwen 서비스의 OAuth 인증을 사용하며 API 키가 필요하지 않습니다.",
+			"instructions": "인증 파일을 획득하고 지정된 경로에 배치하려면 공식 문서를 따르세요.",
+			"setupLink": "Qwen 공식 문서"
 		}
 	},
 	"browser": {

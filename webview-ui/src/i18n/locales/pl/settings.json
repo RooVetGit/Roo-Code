@@ -463,6 +463,13 @@
 			"placeholder": "Domyślnie: claude",
 			"maxTokensLabel": "Maksymalna liczba tokenów wyjściowych",
 			"maxTokensDescription": "Maksymalna liczba tokenów wyjściowych dla odpowiedzi Claude Code. Domyślnie 8000."
+		},
+		"qwenCode": {
+			"oauthPath": "Ścieżka poświadczeń OAuth (opcjonalnie)",
+			"oauthPathDescription": "Ścieżka do pliku poświadczeń OAuth. Pozostaw puste, aby użyć domyślnej lokalizacji (~/.qwen/oauth_creds.json).",
+			"description": "Ten dostawca używa uwierzytelniania OAuth z usługi Qwen i nie wymaga kluczy API.",
+			"instructions": "Postępuj zgodnie z oficjalną dokumentacją, aby uzyskać plik autoryzacji i umieścić go w określonej ścieżce.",
+			"setupLink": "Oficjalna dokumentacja Qwen"
 		}
 	},
 	"browser": {

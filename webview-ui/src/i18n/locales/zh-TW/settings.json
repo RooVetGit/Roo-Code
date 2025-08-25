@@ -463,6 +463,13 @@
 			"placeholder": "預設：claude",
 			"maxTokensLabel": "最大輸出 Token",
 			"maxTokensDescription": "Claude Code 回應的最大輸出 Token 數量。預設為 8000。"
+		},
+		"qwenCode": {
+			"oauthPath": "OAuth 憑證路徑（選用）",
+			"oauthPathDescription": "OAuth 憑證檔案的路徑。留空以使用預設位置 (~/.qwen/oauth_creds.json)。",
+			"description": "此供應商使用來自 Qwen 服務的 OAuth 身分驗證，不需要 API 金鑰。",
+			"instructions": "請遵循官方說明文件取得授權檔案，並將其放置在指定路徑。",
+			"setupLink": "Qwen 官方說明文件"
 		}
 	},
 	"browser": {

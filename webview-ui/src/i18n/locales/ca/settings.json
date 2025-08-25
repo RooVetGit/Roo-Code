@@ -463,6 +463,13 @@
 			"placeholder": "Per defecte: claude",
 			"maxTokensLabel": "Tokens màxims de sortida",
 			"maxTokensDescription": "Nombre màxim de tokens de sortida per a les respostes de Claude Code. El valor per defecte és 8000."
+		},
+		"qwenCode": {
+			"oauthPath": "Ruta de credencials OAuth (opcional)",
+			"oauthPathDescription": "Ruta del fitxer de credencials OAuth. Deixa-ho buit per utilitzar la ubicació per defecte (~/.qwen/oauth_creds.json).",
+			"description": "Aquest proveïdor utilitza autenticació OAuth del servei Qwen i no requereix claus API.",
+			"instructions": "Si us plau, seguiu la documentació oficial per obtenir el fitxer d'autorització i col·locar-lo en la ruta especificada.",
+			"setupLink": "Documentació oficial de Qwen"
 		}
 	},
 	"browser": {

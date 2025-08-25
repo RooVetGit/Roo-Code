@@ -10,6 +10,7 @@ import {
 	geminiModels,
 	mistralModels,
 	openAiNativeModels,
+	qwenCodeModels,
 	vertexModels,
 	xaiModels,
 	groqModels,
@@ -33,6 +34,7 @@ export const MODELS_BY_PROVIDER: Partial<Record<ProviderName, Record<string, Mod
 	gemini: geminiModels,
 	mistral: mistralModels,
 	"openai-native": openAiNativeModels,
+	"qwen-code": qwenCodeModels,
 	vertex: vertexModels,
 	xai: xaiModels,
 	groq: groqModels,
@@ -75,5 +77,6 @@ export const PROVIDERS = [
 	{ value: "fireworks", label: "Fireworks AI" },
 	{ value: "featherless", label: "Featherless AI" },
 	{ value: "io-intelligence", label: "IO Intelligence" },
+	{ value: "qwen-code", label: "Qwen Code" },
 	{ value: "roo", label: "Roo Code Cloud" },
 ].sort((a, b) => a.label.localeCompare(b.label))

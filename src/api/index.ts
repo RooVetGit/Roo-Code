@@ -15,6 +15,7 @@ import {
 	OpenAiHandler,
 	LmStudioHandler,
 	GeminiHandler,
+	QwenCodeHandler,
 	OpenAiNativeHandler,
 	DeepSeekHandler,
 	MoonshotHandler,
@@ -148,6 +149,8 @@ export function buildApiHandler(configuration: ProviderSettings): ApiHandler {
 			return new RooHandler(options)
 		case "featherless":
 			return new FeatherlessHandler(options)
+		case "qwen-code":
+			return new QwenCodeHandler(options)
 		default:
 			apiProvider satisfies "gemini-cli" | undefined
 			return new AnthropicHandler(options)

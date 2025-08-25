@@ -463,6 +463,13 @@
 			"placeholder": "デフォルト：claude",
 			"maxTokensLabel": "最大出力トークン",
 			"maxTokensDescription": "Claude Codeレスポンスの最大出力トークン数。デフォルトは8000です。"
+		},
+		"qwenCode": {
+			"oauthPath": "OAuth認証情報パス（オプション）",
+			"oauthPathDescription": "OAuth認証情報ファイルのパス。デフォルトの場所（~/.qwen/oauth_creds.json）を使用する場合は空にしてください。",
+			"description": "このプロバイダーはQwenサービスからのOAuth認証を使用し、APIキーは必要ありません。",
+			"instructions": "認証ファイルを取得し、指定されたパスに配置するには、公式ドキュメントに従ってください。",
+			"setupLink": "Qwen公式ドキュメント"
 		}
 	},
 	"browser": {

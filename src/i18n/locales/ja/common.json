@@ -103,6 +103,9 @@
 		},
 		"roo": {
 			"authenticationRequired": "Rooプロバイダーはクラウド認証が必要です。Roo Code Cloudにサインインしてください。"
+		},
+		"qwenCode": {
+			"oauthLoadFailed": "OAuth認証情報の読み込みに失敗しました。最初に認証してください: {{error}}"
 		}
 	},
 	"warnings": {

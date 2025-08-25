@@ -107,6 +107,9 @@
 		"roo": {
 			"authenticationRequired": "El proveïdor Roo requereix autenticació al núvol. Si us plau, inicieu sessió a Roo Code Cloud."
 		},
+		"qwenCode": {
+			"oauthLoadFailed": "Error en carregar les credencials OAuth. Si us plau, autentica't primer: {{error}}"
+		},
 		"mode_import_failed": "Ha fallat la importació del mode: {{error}}"
 	},
 	"warnings": {

@@ -467,6 +467,13 @@
 			"placeholder": "Default: claude",
 			"maxTokensLabel": "Token Output Maks",
 			"maxTokensDescription": "Jumlah maksimum token output untuk respons Claude Code. Default adalah 8000."
+		},
+		"qwenCode": {
+			"oauthPath": "Jalur Kredensial OAuth (opsional)",
+			"oauthPathDescription": "Jalur ke file kredensial OAuth. Biarkan kosong untuk menggunakan lokasi default (~/.qwen/oauth_creds.json).",
+			"description": "Provider ini menggunakan autentikasi OAuth dari layanan Qwen dan tidak memerlukan API key.",
+			"instructions": "Silakan ikuti dokumentasi resmi untuk memperoleh file otorisasi dan menempatkannya di jalur yang ditentukan.",
+			"setupLink": "Dokumentasi Resmi Qwen"
 		}
 	},
 	"browser": {

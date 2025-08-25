@@ -463,6 +463,13 @@
 			"placeholder": "Predefinito: claude",
 			"maxTokensLabel": "Token di output massimi",
 			"maxTokensDescription": "Numero massimo di token di output per le risposte di Claude Code. Il valore predefinito è 8000."
+		},
+		"qwenCode": {
+			"oauthPath": "Percorso credenziali OAuth (opzionale)",
+			"oauthPathDescription": "Percorso del file delle credenziali OAuth. Lascia vuoto per utilizzare la posizione predefinita (~/.qwen/oauth_creds.json).",
+			"description": "Questo provider utilizza l'autenticazione OAuth dal servizio Qwen e non richiede chiavi API.",
+			"instructions": "Segui la documentazione ufficiale per ottenere il file di autorizzazione e posizionarlo nel percorso specificato.",
+			"setupLink": "Documentazione ufficiale Qwen"
 		}
 	},
 	"browser": {

@@ -463,6 +463,13 @@
 			"placeholder": "Varsayılan: claude",
 			"maxTokensLabel": "Maksimum Çıktı Token sayısı",
 			"maxTokensDescription": "Claude Code yanıtları için maksimum çıktı token sayısı. Varsayılan 8000'dir."
+		},
+		"qwenCode": {
+			"oauthPath": "OAuth kimlik bilgileri yolu (isteğe bağlı)",
+			"oauthPathDescription": "OAuth kimlik bilgileri dosyasının yolu. Varsayılan konumu (~/.qwen/oauth_creds.json) kullanmak için boş bırakın.",
+			"description": "Bu sağlayıcı Qwen hizmetinden OAuth kimlik doğrulaması kullanır ve API anahtarı gerektirmez.",
+			"instructions": "Yetkilendirme dosyasını almak ve belirtilen yola yerleştirmek için resmi belgeleri takip edin.",
+			"setupLink": "Qwen resmi belgeleri"
 		}
 	},
 	"browser": {

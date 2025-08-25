@@ -103,6 +103,9 @@
 		},
 		"roo": {
 			"authenticationRequired": "Dostawca Roo wymaga uwierzytelnienia w chmurze. Zaloguj się do Roo Code Cloud."
+		},
+		"qwenCode": {
+			"oauthLoadFailed": "Nie udało się załadować poświadczeń OAuth. Najpierw się uwierzytelnij: {{error}}"
 		}
 	},
 	"warnings": {

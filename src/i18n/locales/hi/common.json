@@ -103,6 +103,9 @@
 		},
 		"roo": {
 			"authenticationRequired": "Roo प्रदाता को क्लाउड प्रमाणीकरण की आवश्यकता है। कृपया Roo Code Cloud में साइन इन करें।"
+		},
+		"qwenCode": {
+			"oauthLoadFailed": "OAuth क्रेडेंशियल्स लोड करने में विफल। कृपया पहले प्रमाणीकरण करें: {{error}}"
 		}
 	},
 	"warnings": {

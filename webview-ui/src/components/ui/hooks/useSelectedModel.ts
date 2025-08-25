@@ -50,6 +50,8 @@ import {
 	featherlessDefaultModelId,
 	ioIntelligenceDefaultModelId,
 	ioIntelligenceModels,
+	qwenCodeDefaultModelId,
+	qwenCodeModels,
 	rooDefaultModelId,
 	rooModels,
 	BEDROCK_CLAUDE_SONNET_4_MODEL_ID,
@@ -305,6 +307,11 @@ function getSelectedModel({
 				routerModels["io-intelligence"]?.[id] ?? ioIntelligenceModels[id as keyof typeof ioIntelligenceModels]
 			return { id, info }
 		}
+		case "qwen-code": {
+			const id = apiConfiguration.apiModelId ?? qwenCodeDefaultModelId
+			const info = qwenCodeModels[id as keyof typeof qwenCodeModels]
+			return { id, info }
+		}
 		case "roo": {
 			const id = apiConfiguration.apiModelId ?? rooDefaultModelId
 			const info = rooModels[id as keyof typeof rooModels]
@@ -314,7 +321,7 @@ function getSelectedModel({
 		// case "human-relay":
 		// case "fake-ai":
 		default: {
-			provider satisfies "anthropic" | "gemini-cli" | "human-relay" | "fake-ai"
+			provider satisfies "anthropic" | "gemini-cli" | "human-relay" | "fake-ai" | "qwen-code"
 			const id = apiConfiguration.apiModelId ?? anthropicDefaultModelId
 			const baseInfo = anthropicModels[id as keyof typeof anthropicModels]
 

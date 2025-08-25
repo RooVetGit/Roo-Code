@@ -463,6 +463,13 @@
 			"placeholder": "Mặc định: claude",
 			"maxTokensLabel": "Số token đầu ra tối đa",
 			"maxTokensDescription": "Số lượng token đầu ra tối đa cho các phản hồi của Claude Code. Mặc định là 8000."
+		},
+		"qwenCode": {
+			"oauthPath": "Đường dẫn thông tin xác thực OAuth (tùy chọn)",
+			"oauthPathDescription": "Đường dẫn đến tệp thông tin xác thực OAuth. Để trống để sử dụng vị trí mặc định (~/.qwen/oauth_creds.json).",
+			"description": "Nhà cung cấp này sử dụng xác thực OAuth từ dịch vụ Qwen và không yêu cầu khóa API.",
+			"instructions": "Vui lòng theo dõi tài liệu chính thức để lấy tệp ủy quyền và đặt nó trong đường dẫn đã chỉ định.",
+			"setupLink": "Tài liệu chính thức Qwen"
 		}
 	},
 	"browser": {

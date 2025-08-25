@@ -463,6 +463,13 @@
 			"placeholder": "Défaut : claude",
 			"maxTokensLabel": "Jetons de sortie max",
 			"maxTokensDescription": "Nombre maximum de jetons de sortie pour les réponses de Claude Code. La valeur par défaut est 8000."
+		},
+		"qwenCode": {
+			"oauthPath": "Chemin des identifiants OAuth (optionnel)",
+			"oauthPathDescription": "Chemin du fichier d'identifiants OAuth. Laissez vide pour utiliser l'emplacement par défaut (~/.qwen/oauth_creds.json).",
+			"description": "Ce fournisseur utilise l'authentification OAuth du service Qwen et ne nécessite pas de clés API.",
+			"instructions": "Veuillez suivre la documentation officielle pour obtenir le fichier d'autorisation et le placer dans le chemin spécifié.",
+			"setupLink": "Documentation officielle Qwen"
 		}
 	},
 	"browser": {

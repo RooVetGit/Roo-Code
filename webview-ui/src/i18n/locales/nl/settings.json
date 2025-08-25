@@ -463,6 +463,13 @@
 			"placeholder": "Standaard: claude",
 			"maxTokensLabel": "Max Output Tokens",
 			"maxTokensDescription": "Maximaal aantal output-tokens voor Claude Code-reacties. Standaard is 8000."
+		},
+		"qwenCode": {
+			"oauthPath": "OAuth-inloggegevens pad (optioneel)",
+			"oauthPathDescription": "Pad naar het OAuth-inloggegevens bestand. Laat leeg om de standaardlocatie (~/.qwen/oauth_creds.json) te gebruiken.",
+			"description": "Deze provider gebruikt OAuth-authenticatie van de Qwen-service en vereist geen API-sleutels.",
+			"instructions": "Volg de officiële documentatie om het autorisatiebestand te verkrijgen en het in het opgegeven pad te plaatsen.",
+			"setupLink": "Qwen officiële documentatie"
 		}
 	},
 	"browser": {

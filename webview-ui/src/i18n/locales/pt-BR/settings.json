@@ -463,6 +463,13 @@
 			"placeholder": "Padrão: claude",
 			"maxTokensLabel": "Tokens de saída máximos",
 			"maxTokensDescription": "Número máximo de tokens de saída para respostas do Claude Code. O padrão é 8000."
+		},
+		"qwenCode": {
+			"oauthPath": "Caminho das credenciais OAuth (opcional)",
+			"oauthPathDescription": "Caminho para o arquivo de credenciais OAuth. Deixe vazio para usar a localização padrão (~/.qwen/oauth_creds.json).",
+			"description": "Este provedor usa autenticação OAuth do serviço Qwen e não requer chaves de API.",
+			"instructions": "Siga a documentação oficial para obter o arquivo de autorização e colocá-lo no caminho especificado.",
+			"setupLink": "Documentação oficial do Qwen"
 		}
 	},
 	"browser": {
