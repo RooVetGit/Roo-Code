@@ -947,7 +947,8 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 									"bg-transparent border-none p-1.5",
 									"rounded-md min-w-[28px] min-h-[28px]",
 									"text-vscode-foreground opacity-85",
-									"transition-all duration-150",
+									// Fixed: Use specific transition to prevent flashing
+									"transition-opacity duration-100",
 									"hover:opacity-100 hover:bg-[rgba(255,255,255,0.03)] hover:border-[rgba(255,255,255,0.15)]",
 									"focus:outline-none focus-visible:ring-1 focus-visible:ring-vscode-focusBorder",
 									"active:bg-[rgba(255,255,255,0.1)]",
@@ -969,7 +970,8 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 								"bg-transparent border-none p-1.5",
 								"rounded-md min-w-[28px] min-h-[28px]",
 								"text-vscode-foreground opacity-85",
-								"transition-all duration-150",
+								// Fixed: Use specific transition to prevent flashing
+								"transition-opacity duration-100",
 								"hover:opacity-100 hover:bg-[rgba(255,255,255,0.03)] hover:border-[rgba(255,255,255,0.15)]",
 								"focus:outline-none focus-visible:ring-1 focus-visible:ring-vscode-focusBorder",
 								"active:bg-[rgba(255,255,255,0.1)]",
@@ -1101,8 +1103,9 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 								"relative inline-flex items-center justify-center",
 								"bg-transparent border-none p-1.5",
 								"rounded-md min-w-[28px] min-h-[28px]",
-								"opacity-60 hover:opacity-100 text-vscode-descriptionForeground hover:text-vscode-foreground",
-								"transition-all duration-150",
+								// Fixed: Consistent with send button fix to prevent flashing
+								"opacity-75 hover:opacity-100 text-vscode-descriptionForeground hover:text-vscode-foreground",
+								"transition-opacity duration-100",
 								"hover:bg-[rgba(255,255,255,0.03)] hover:border-[rgba(255,255,255,0.15)]",
 								"focus:outline-none focus-visible:ring-1 focus-visible:ring-vscode-focusBorder",
 								"active:bg-[rgba(255,255,255,0.1)]",
@@ -1124,8 +1127,12 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 									"relative inline-flex items-center justify-center",
 									"bg-transparent border-none p-1.5",
 									"rounded-md min-w-[28px] min-h-[28px]",
-									"opacity-60 hover:opacity-100 text-vscode-descriptionForeground hover:text-vscode-foreground",
-									"transition-all duration-150",
+									// Fixed: Removed opacity transitions that were causing flashing
+									// Changed from opacity-60 to opacity-75 for better visibility
+									// Removed transition-all to prevent unwanted animations
+									"opacity-75 hover:opacity-100 text-vscode-descriptionForeground hover:text-vscode-foreground",
+									// Use transition only for specific properties to avoid flashing
+									"transition-opacity duration-100",
 									"hover:bg-[rgba(255,255,255,0.03)] hover:border-[rgba(255,255,255,0.15)]",
 									"focus:outline-none focus-visible:ring-1 focus-visible:ring-vscode-focusBorder",
 									"active:bg-[rgba(255,255,255,0.1)]",
