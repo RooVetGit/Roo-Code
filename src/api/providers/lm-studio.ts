@@ -24,10 +24,12 @@ export class LmStudioHandler extends BaseProvider implements SingleCompletionHan
 		super()
 		this.options = options
 
+		const timeout = getApiRequestTimeout()
 		this.client = new OpenAI({
 			baseURL: (this.options.lmStudioBaseUrl || "http://localhost:1234") + "/v1",
 			apiKey: "noop",
-			timeout: getApiRequestTimeout(),
+			// OpenAI SDK expects undefined for no timeout, not 0
+			timeout: timeout === 0 ? undefined : timeout,
 		})
 	}
 

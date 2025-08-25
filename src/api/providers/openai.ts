@@ -48,6 +48,8 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 		}
 
 		const timeout = getApiRequestTimeout()
+		// OpenAI SDK expects undefined for no timeout, not 0
+		const clientTimeout = timeout === 0 ? undefined : timeout
 
 		if (isAzureAiInference) {
 			// Azure AI Inference Service (e.g., for DeepSeek) uses a different path structure
@@ -56,7 +58,7 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 				apiKey,
 				defaultHeaders: headers,
 				defaultQuery: { "api-version": this.options.azureApiVersion || "2024-05-01-preview" },
-				timeout,
+				timeout: clientTimeout,
 			})
 		} else if (isAzureOpenAi) {
 			// Azure API shape slightly differs from the core API shape:
@@ -66,14 +68,14 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 				apiKey,
 				apiVersion: this.options.azureApiVersion || azureOpenAiDefaultApiVersion,
 				defaultHeaders: headers,
-				timeout,
+				timeout: clientTimeout,
 			})
 		} else {
 			this.client = new OpenAI({
 				baseURL,
 				apiKey,
 				defaultHeaders: headers,
-				timeout,
+				timeout: clientTimeout,
 			})
 		}
 	}

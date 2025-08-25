@@ -125,7 +125,7 @@ describe("OpenAiHandler timeout configuration", () => {
 		)
 	})
 
-	it("should handle zero timeout (no timeout)", () => {
+	it("should handle zero timeout (no timeout) by passing undefined to OpenAI client", () => {
 		;(getApiRequestTimeout as any).mockReturnValue(0)
 
 		const options: ApiHandlerOptions = {
@@ -137,7 +137,7 @@ describe("OpenAiHandler timeout configuration", () => {
 
 		expect(mockOpenAIConstructor).toHaveBeenCalledWith(
 			expect.objectContaining({
-				timeout: 0, // No timeout
+				timeout: undefined, // OpenAI SDK expects undefined for no timeout, not 0
 			}),
 		)
 	})
