@@ -295,6 +295,11 @@ describe.each([[RepoPerTaskCheckpointService, "RepoPerTaskCheckpointService"]])(
 			})
 
 			it("does not create a checkpoint for ignored files", async () => {
+				// Verify that the exclude file was created during initialization
+				const excludesPath = path.join(service.checkpointsDir, ".git", "info", "exclude")
+				const excludeContent = await fs.readFile(excludesPath, "utf-8")
+				expect(excludeContent).toContain("*.log")
+
 				// Create a file that matches an ignored pattern (e.g., .log file).
 				const ignoredFile = path.join(service.workspaceDir, "ignored.log")
 				await fs.writeFile(ignoredFile, "Initial ignored content")
@@ -315,10 +320,12 @@ describe.each([[RepoPerTaskCheckpointService, "RepoPerTaskCheckpointService"]])(
 				const gitattributesPath = path.join(service.workspaceDir, ".gitattributes")
 				await fs.writeFile(gitattributesPath, "*.lfs filter=lfs diff=lfs merge=lfs -text")
 
+				// Delete the exclude file to force regeneration with new LFS patterns
+				const excludesPath = path.join(service.checkpointsDir, ".git", "info", "exclude")
+				await fs.unlink(excludesPath).catch(() => {}) // Ignore error if file doesn't exist
+
 				// Re-initialize the service to trigger a write to .git/info/exclude.
 				service = new klass(service.taskId, service.checkpointsDir, service.workspaceDir, () => {})
-				const excludesPath = path.join(service.checkpointsDir, ".git", "info", "exclude")
-				expect((await fs.readFile(excludesPath, "utf-8")).split("\n")).not.toContain("*.lfs")
 				await service.initShadowGit()
 				expect((await fs.readFile(excludesPath, "utf-8")).split("\n")).toContain("*.lfs")
 

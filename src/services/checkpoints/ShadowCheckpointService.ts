@@ -11,7 +11,7 @@ import { fileExistsAtPath } from "../../utils/fs"
 import { executeRipgrep } from "../../services/search/file-search"
 
 import { CheckpointDiff, CheckpointResult, CheckpointEventMap } from "./types"
-import { getExcludePatterns } from "./excludes"
+import { getExcludePatterns, getExcludePatternsWithStats } from "./excludes"
 
 export abstract class ShadowCheckpointService extends EventEmitter {
 	public readonly taskId: string
@@ -95,7 +95,12 @@ export abstract class ShadowCheckpointService extends EventEmitter {
 				)
 			}
 
-			await this.writeExcludeFile()
+			// Only regenerate exclude file if it doesn't exist
+			const excludePath = path.join(this.dotGitDir, "info", "exclude")
+			if (!(await fileExistsAtPath(excludePath))) {
+				this.log(`[${this.constructor.name}#initShadowGit] exclude file missing, regenerating`)
+				await this.writeExcludeFile()
+			}
 			this.baseHash = await git.revparse(["HEAD"])
 		} else {
 			this.log(`[${this.constructor.name}#initShadowGit] creating shadow git repo at ${this.checkpointsDir}`)
@@ -104,7 +109,8 @@ export abstract class ShadowCheckpointService extends EventEmitter {
 			await git.addConfig("commit.gpgSign", "false") // Disable commit signing for shadow repo.
 			await git.addConfig("user.name", "Roo Code")
 			await git.addConfig("user.email", "noreply@example.com")
-			await this.writeExcludeFile()
+			// Force write exclude file on initial creation (git creates a default one)
+			await this.writeExcludeFile(true)
 			await this.stageAll(git)
 			const { commit } = await git.commit("initial commit", { "--allow-empty": null })
 			this.baseHash = commit
@@ -137,10 +143,44 @@ export abstract class ShadowCheckpointService extends EventEmitter {
 	// .git/info/exclude is local to the shadow git repo, so it's not
 	// shared with the main repo - and won't conflict with user's
 	// .gitignore.
-	protected async writeExcludeFile() {
+	// Note: This is only called on initial creation or when the exclude file is missing
+	// to avoid expensive scans on every initialization.
+	protected async writeExcludeFile(forceRefresh: boolean = false) {
+		// Skip if exclude file exists and not forcing refresh
+		if (!forceRefresh) {
+			const excludePath = path.join(this.dotGitDir, "info", "exclude")
+			if (await fileExistsAtPath(excludePath)) {
+				this.log(`[${this.constructor.name}#writeExcludeFile] exclude file exists, skipping regeneration`)
+				return
+			}
+		}
+
 		await fs.mkdir(path.join(this.dotGitDir, "info"), { recursive: true })
-		const patterns = await getExcludePatterns(this.workspaceDir)
+		const { patterns, stats } = await getExcludePatternsWithStats(this.workspaceDir)
 		await fs.writeFile(path.join(this.dotGitDir, "info", "exclude"), patterns.join("\n"))
+
+		const mb = Math.round(stats.thresholdBytes / (1024 * 1024))
+
+		if (stats?.largeFilesExcluded && stats.largeFilesExcluded > 0) {
+			this.log(
+				`[${this.constructor.name}#writeExcludeFile] auto-excluding ${stats.largeFilesExcluded} large files (>= ${mb}MB) from checkpoints. Sample: ${stats.sample.join(", ")}`,
+			)
+		}
+
+		if (stats?.errorCounts && (stats.errorCounts.ripgrepErrors > 0 || stats.errorCounts.fsStatErrors > 0)) {
+			this.log(
+				`[${this.constructor.name}#writeExcludeFile] auto-exclude encountered errors (ripgrepErrors=${stats.errorCounts.ripgrepErrors}, fsStatErrors=${stats.errorCounts.fsStatErrors}). Check environment and filesystem permissions.`,
+			)
+		}
+	}
+
+	// Public method to allow manual refresh of exclude patterns if needed
+	public async refreshExcludePatterns() {
+		if (!this.git) {
+			throw new Error("Shadow git repo not initialized")
+		}
+		this.log(`[${this.constructor.name}#refreshExcludePatterns] manually refreshing exclude patterns`)
+		await this.writeExcludeFile(true)
 	}
 
 	private async stageAll(git: SimpleGit) {
