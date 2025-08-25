@@ -10,6 +10,12 @@ import { QueryCapture } from "web-tree-sitter"
 // Private constant
 const DEFAULT_MIN_COMPONENT_LINES_VALUE = 4
 
+// Language-specific rules
+const LANGUAGE_SKIP_RULES: Record<string, string[]> = {
+	java: ["definition.method"],
+	// Future languages can be added here
+}
+
 // Getter function for MIN_COMPONENT_LINES (for easier testing)
 let currentMinComponentLines = DEFAULT_MIN_COMPONENT_LINES_VALUE
 
@@ -25,6 +31,14 @@ export function getMinComponentLines(): number {
  */
 export function setMinComponentLines(value: number): void {
 	currentMinComponentLines = value
+}
+
+function shouldSkipLineCountCheck(lineCount: number, capture: QueryCapture, language: string) {
+	const skipRules = LANGUAGE_SKIP_RULES[language]
+	if (skipRules && skipRules.includes(capture.name)) {
+		return false
+	}
+	return lineCount < getMinComponentLines()
 }
 
 const extensions = [
@@ -262,7 +276,7 @@ This approach allows us to focus on the most relevant parts of the code (defined
  *
  * @param captures - The captures to process
  * @param lines - The lines of the file
- * @param minComponentLines - Minimum number of lines for a component to be included
+ * @param language - The programming language of the file
  * @returns A formatted string with definitions
  */
 function processCaptures(captures: QueryCapture[], lines: string[], language: string): string | null {
@@ -310,7 +324,7 @@ function processCaptures(captures: QueryCapture[], lines: string[], language: st
 		const lineCount = endLine - startLine + 1
 
 		// Skip components that don't span enough lines
-		if (lineCount < getMinComponentLines()) {
+		if (shouldSkipLineCountCheck(lineCount, capture, language)) {
 			return
 		}
 
@@ -323,8 +337,14 @@ function processCaptures(captures: QueryCapture[], lines: string[], language: st
 			return
 		}
 
+		let outputLineIdx = startLine
+		// For Java method definitions, find the actual method signature line
+		if (language === "java" && name === "definition.method") {
+			outputLineIdx = findJavaMethodSignatureLine(lines, startLine, endLine)
+		}
+
 		// Check if this is a valid component definition (not an HTML element)
-		const startLineContent = lines[startLine].trim()
+		const startLineContent = lines[outputLineIdx].trim()
 
 		// Special handling for component name definitions
 		if (name.includes("name.definition")) {
@@ -333,13 +353,13 @@ function processCaptures(captures: QueryCapture[], lines: string[], language: st
 
 			// Add component name to output regardless of HTML filtering
 			if (!processedLines.has(lineKey) && componentName) {
-				formattedOutput += `${startLine + 1}--${endLine + 1} | ${lines[startLine]}\n`
+				formattedOutput += `${outputLineIdx + 1}--${endLine + 1} | ${lines[outputLineIdx]}\n`
 				processedLines.add(lineKey)
 			}
 		}
 		// For other component definitions
 		else if (isNotHtmlElement(startLineContent)) {
-			formattedOutput += `${startLine + 1}--${endLine + 1} | ${lines[startLine]}\n`
+			formattedOutput += `${outputLineIdx + 1}--${endLine + 1} | ${lines[outputLineIdx]}\n`
 			processedLines.add(lineKey)
 
 			// If this is part of a larger definition, include its non-HTML context
@@ -412,4 +432,46 @@ async function parseFile(
 		// Return null on parsing error to avoid showing error messages in the output
 		return null
 	}
+}
+
+/**
+ * Find the line containing the actual Java method signature
+ * by looking for lines that match method declaration patterns
+ *
+ * @param lines - Array of lines from the file
+ * @param startLine - Starting line index
+ * @param endLine - Ending line index
+ * @returns The line index of the method signature
+ */
+function findJavaMethodSignatureLine(lines: string[], startLine: number, endLine: number): number {
+	// Java method signature pattern - avoiding backtracking issues
+	// Split into separate checks to avoid complex alternations
+	const accessModifiers = /^\s*(?:public|private|protected)\s+/
+	const otherModifiers = /^\s*(?:static|final|abstract|synchronized|native|strictfp)\s+/
+	const methodPattern = /^\s*(?:\w+(?:\[\])*(?:\s*<[^>]+>)?\s+)+\w+\s*\(/
+
+	for (let i = startLine; i <= endLine; i++) {
+		const line = lines[i].trim()
+
+		// Skip empty lines and annotation lines
+		if (line.length === 0 || line.startsWith("@")) {
+			continue
+		}
+
+		// Check if this looks like a method signature using multiple simple patterns
+		// This avoids complex alternation that can cause backtracking
+		if (accessModifiers.test(line) || otherModifiers.test(line) || methodPattern.test(line)) {
+			return i
+		}
+	}
+
+	// If no method signature found, return the first non-annotation, non-empty line
+	for (let i = startLine; i <= endLine; i++) {
+		const line = lines[i].trim()
+		if (line.length > 0 && !line.startsWith("@")) {
+			return i
+		}
+	}
+
+	return startLine
 }

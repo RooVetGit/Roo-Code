@@ -90,6 +90,8 @@ describe("parseSourceCodeDefinitionsForFile with Java", () => {
 
 	it("should parse method declarations", () => {
 		expect(parseResult).toMatch(/\d+--\d+ \|\s*void testInterfaceMethod\(/)
+		expect(parseResult).toMatch(/\d+--\d+ \|\s*public void testInterfaceMethod\(String message, T data\) {/)
+		expect(parseResult).toMatch(/\d+--\d+ \|\s*void testMultipleAnnotationMethod\(String message, T data\) {/)
 		expect(parseResult).toMatch(/\d+--\d+ \|\s*default String testInterfaceDefaultMethod\(/)
 		expect(parseResult).toMatch(/\d+--\d+ \|\s*public <R extends Comparable<R>> R testGenericMethodDefinition\(/)
 		expect(parseResult).toMatch(/\d+--\d+ \|\s*public String formatMessage\(/)
