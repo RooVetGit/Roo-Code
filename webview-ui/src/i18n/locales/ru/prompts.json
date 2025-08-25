@@ -29,7 +29,19 @@
 			"command": "Выполнять команды",
 			"mcp": "Использовать MCP"
 		},
-		"noTools": "Отсутствуют"
+		"selectMcpServers": "Выбери MCP-серверы",
+		"searchMcpServers": "Искать MCP-серверы",
+		"requiredMcpList": "Требуемые MCP-серверы",
+		"noMcpServers": "MCP-серверы не найдены",
+		"noMatchFound": "Совпадений не найдено",
+		"noTools": "Отсутствуют",
+		"mcpAll": "Все",
+		"mcpSelectedCount": "{{included}} включено",
+		"mcpDefaultDescription": "Если не выбран ни один MCP-сервер, по умолчанию будут активированы все.",
+		"buttons": {
+			"save": "Сохранить",
+			"clearAll": "Очистить всё"
+		}
 	},
 	"roleDefinition": {
 		"title": "Определение роли",

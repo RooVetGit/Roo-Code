@@ -29,7 +29,19 @@
 			"command": "运行命令",
 			"mcp": "MCP服务"
 		},
-		"noTools": "无"
+		"selectMcpServers": "选择 MCP 服务",
+		"searchMcpServers": "搜索 MCP 服务",
+		"requiredMcpList": "所需 MCP 服务",
+		"noMcpServers": "未发现 MCP 服务",
+		"noMatchFound": "无匹配结果",
+		"noTools": "无",
+		"mcpAll": "全部",
+		"mcpSelectedCount": "{{included}} 已包含",
+		"mcpDefaultDescription": "如果未选择任何 MCP 服务，将默认启用全部。",
+		"buttons": {
+			"save": "保存",
+			"clearAll": "清除全部"
+		}
 	},
 	"roleDefinition": {
 		"title": "角色定义",

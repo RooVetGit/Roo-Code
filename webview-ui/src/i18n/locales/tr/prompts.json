@@ -29,7 +29,19 @@
 			"command": "Komutları Çalıştır",
 			"mcp": "MCP Kullan"
 		},
-		"noTools": "Yok"
+		"selectMcpServers": "MCP sunucularını seç",
+		"searchMcpServers": "MCP sunucularını ara",
+		"requiredMcpList": "Gerekli MCP Sunucuları",
+		"noMcpServers": "MCP sunucusu bulunamadı",
+		"noMatchFound": "Eşleşme bulunamadı",
+		"noTools": "Yok",
+		"mcpAll": "Tümü",
+		"mcpSelectedCount": "{{included}} dahil",
+		"mcpDefaultDescription": "Hiçbir MCP sunucusu seçilmezse, varsayılan olarak tümü etkinleştirilir.",
+		"buttons": {
+			"save": "Kaydet",
+			"clearAll": "Tümünü temizle"
+		}
 	},
 	"roleDefinition": {
 		"title": "Rol Tanımı",

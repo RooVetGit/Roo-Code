@@ -29,7 +29,19 @@
 			"command": "Chạy lệnh",
 			"mcp": "Sử dụng MCP"
 		},
-		"noTools": "Không có"
+		"selectMcpServers": "Chọn máy chủ MCP",
+		"searchMcpServers": "Tìm kiếm máy chủ MCP",
+		"requiredMcpList": "Máy chủ MCP cần thiết",
+		"noMcpServers": "Không tìm thấy máy chủ MCP",
+		"noMatchFound": "Không tìm thấy kết quả phù hợp",
+		"noTools": "Không có",
+		"mcpAll": "Tất cả",
+		"mcpSelectedCount": "{{included}} đã bao gồm",
+		"mcpDefaultDescription": "Nếu không chọn máy chủ MCP nào, tất cả sẽ được bật mặc định.",
+		"buttons": {
+			"save": "Lưu",
+			"clearAll": "Xóa tất cả"
+		}
 	},
 	"roleDefinition": {
 		"title": "Định nghĩa vai trò",

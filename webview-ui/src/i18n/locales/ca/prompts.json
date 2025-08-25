@@ -29,7 +29,19 @@
 			"command": "Executar comandes",
 			"mcp": "Utilitzar MCP"
 		},
-		"noTools": "Cap"
+		"selectMcpServers": "Selecciona servidors MCP",
+		"searchMcpServers": "Cerca servidors MCP",
+		"requiredMcpList": "Servidors MCP requerits",
+		"noMcpServers": "No s'han trobat servidors MCP",
+		"noMatchFound": "No s'ha trobat cap coincidència",
+		"noTools": "Cap",
+		"mcpAll": "Tots",
+		"mcpSelectedCount": "{{included}} inclosos",
+		"mcpDefaultDescription": "Si no se selecciona cap servidor MCP, s'activaran tots per defecte.",
+		"buttons": {
+			"save": "Desa",
+			"clearAll": "Neteja-ho tot"
+		}
 	},
 	"roleDefinition": {
 		"title": "Definició de rol",

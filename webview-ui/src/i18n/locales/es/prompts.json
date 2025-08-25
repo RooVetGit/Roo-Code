@@ -29,7 +29,19 @@
 			"command": "Ejecutar comandos",
 			"mcp": "Usar MCP"
 		},
-		"noTools": "Ninguna"
+		"selectMcpServers": "Seleccionar servidores MCP",
+		"searchMcpServers": "Buscar servidores MCP",
+		"requiredMcpList": "Servidores MCP requeridos",
+		"noMcpServers": "No se encontraron servidores MCP",
+		"noMatchFound": "No se encontraron coincidencias",
+		"noTools": "Ninguna",
+		"mcpAll": "Todos",
+		"mcpSelectedCount": "{{included}} incluidos",
+		"mcpDefaultDescription": "Si no se selecciona ningún servidor MCP, se habilitarán todos por defecto.",
+		"buttons": {
+			"save": "Guardar",
+			"clearAll": "Limpiar todo"
+		}
 	},
 	"roleDefinition": {
 		"title": "Definición de rol",

@@ -170,7 +170,36 @@ const mockContext = {
 // Instead of extending McpHub, create a mock that implements just what we need
 const createMockMcpHub = (withServers: boolean = false): McpHub =>
 	({
-		getServers: () => (withServers ? [{ name: "test-server", disabled: false }] : []),
+		getServers: () =>
+			withServers
+				? [
+						{
+							name: "test-server",
+							disabled: false,
+							status: "connected",
+							config: JSON.stringify({ command: "test-command" }),
+							tools: [],
+							resourceTemplates: [],
+							resources: [],
+							instructions: undefined,
+						},
+					]
+				: [],
+		getAllServers: () =>
+			withServers
+				? [
+						{
+							name: "test-server",
+							disabled: false,
+							status: "connected",
+							config: JSON.stringify({ command: "test-command" }),
+							tools: [],
+							resourceTemplates: [],
+							resources: [],
+							instructions: undefined,
+						},
+					]
+				: [],
 		getMcpServersPath: async () => "/mock/mcp/path",
 		getMcpSettingsFilePath: async () => "/mock/settings/path",
 		dispose: async () => {},

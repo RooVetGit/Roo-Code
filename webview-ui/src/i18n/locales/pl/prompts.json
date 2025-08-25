@@ -29,7 +29,19 @@
 			"command": "Uruchamiaj polecenia",
 			"mcp": "Używaj MCP"
 		},
-		"noTools": "Brak"
+		"selectMcpServers": "Wybierz serwery MCP",
+		"searchMcpServers": "Szukaj serwerów MCP",
+		"requiredMcpList": "Wymagane serwery MCP",
+		"noMcpServers": "Nie znaleziono serwerów MCP",
+		"noMatchFound": "Brak pasujących wyników",
+		"noTools": "Brak",
+		"mcpAll": "Wszystkie",
+		"mcpSelectedCount": "{{included}} uwzględnione",
+		"mcpDefaultDescription": "Jeśli nie wybrano żadnego serwera MCP, domyślnie wszystkie będą włączone.",
+		"buttons": {
+			"save": "Zapisz",
+			"clearAll": "Wyczyść wszystko"
+		}
 	},
 	"roleDefinition": {
 		"title": "Definicja roli",

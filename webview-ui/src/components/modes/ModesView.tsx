@@ -49,6 +49,7 @@ import {
 } from "@src/components/ui"
 import { DeleteModeDialog } from "@src/components/modes/DeleteModeDialog"
 import { useEscapeKey } from "@src/hooks/useEscapeKey"
+import McpSelector from "./McpSelector"
 
 // Get all available groups that should show in prompts view
 const availableGroups = (Object.keys(TOOL_GROUPS) as ToolGroup[]).filter((group) => !TOOL_GROUPS[group].alwaysAvailable)
@@ -61,7 +62,13 @@ type ModesViewProps = {
 
 // Helper to get group name regardless of format
 function getGroupName(group: GroupEntry): ToolGroup {
-	return Array.isArray(group) ? group[0] : group
+	if (Array.isArray(group)) {
+		return group[0]
+	}
+	if (typeof group === "object" && "mcp" in group) {
+		return "mcp" as ToolGroup
+	}
+	return group as ToolGroup
 }
 
 const ModesView = ({ onDone }: ModesViewProps) => {
@@ -75,6 +82,7 @@ const ModesView = ({ onDone }: ModesViewProps) => {
 		customInstructions,
 		setCustomInstructions,
 		customModes,
+		mcpServers,
 	} = useExtensionState()
 
 	// Use a local state to track the visually active mode
@@ -1020,33 +1028,76 @@ const ModesView = ({ onDone }: ModesViewProps) => {
 											? customMode?.groups?.some((g) => getGroupName(g) === group)
 											: currentMode?.groups?.some((g) => getGroupName(g) === group)
 
+										const isMcpGroup = group === "mcp"
+
+										if (isMcpGroup) {
+											return (
+												<div
+													key={group}
+													className="col-span-2"
+													style={{ display: "flex", alignItems: "center", gap: 8 }}>
+													<VSCodeCheckbox
+														key={group}
+														checked={isGroupEnabled}
+														onChange={handleGroupChange(
+															group,
+															Boolean(isCustomMode),
+															customMode,
+														)}
+														disabled={!isCustomMode}>
+														{t(`prompts:tools.toolNames.${group}`)}
+													</VSCodeCheckbox>
+													{isGroupEnabled && isCustomMode && (
+														<McpSelector
+															group={group}
+															isEnabled={isGroupEnabled}
+															isCustomMode={Boolean(isCustomMode)}
+															mcpServers={mcpServers}
+															currentMode={currentMode}
+															visualMode={visualMode}
+															customModes={customModes}
+															findModeBySlug={findModeBySlug}
+															updateCustomMode={updateCustomMode}
+														/>
+													)}
+												</div>
+											)
+										}
+
 										return (
-											<VSCodeCheckbox
-												key={group}
-												checked={isGroupEnabled}
-												onChange={handleGroupChange(group, Boolean(isCustomMode), customMode)}
-												disabled={!isCustomMode}>
-												{t(`prompts:tools.toolNames.${group}`)}
-												{group === "edit" && (
-													<div className="text-xs text-vscode-descriptionForeground mt-0.5">
-														{t("prompts:tools.allowedFiles")}{" "}
-														{(() => {
-															const currentMode = getCurrentMode()
-															const editGroup = currentMode?.groups?.find(
-																(g) =>
-																	Array.isArray(g) &&
-																	g[0] === "edit" &&
-																	g[1]?.fileRegex,
-															)
-															if (!Array.isArray(editGroup)) return t("prompts:allFiles")
-															return (
-																editGroup[1].description ||
-																`/${editGroup[1].fileRegex}/`
-															)
-														})()}
-													</div>
-												)}
-											</VSCodeCheckbox>
+											<div key={group} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+												<VSCodeCheckbox
+													key={group}
+													checked={isGroupEnabled}
+													onChange={handleGroupChange(
+														group,
+														Boolean(isCustomMode),
+														customMode,
+													)}
+													disabled={!isCustomMode}>
+													{t(`prompts:tools.toolNames.${group}`)}
+													{group === "edit" && (
+														<div className="text-xs text-vscode-descriptionForeground mt-0.5">
+															{t("prompts:tools.allowedFiles")}{" "}
+															{(() => {
+																const currentMode = getCurrentMode()
+																const editGroup = currentMode?.groups?.find(
+																	(g) =>
+																		Array.isArray(g) &&
+																		g[0] === "edit" &&
+																		g[1]?.fileRegex,
+																)
+																if (!Array.isArray(editGroup))
+																	return t("prompts:allFiles")
+																return (
+																	editGroup[1].description ||
+																	`/${editGroup[1].fileRegex}/`
+																)
+															})()}
+														</div>
+													)}
+												</VSCodeCheckbox>
+											</div>
 										)
 									})}
 								</div>
@@ -1518,25 +1569,57 @@ const ModesView = ({ onDone }: ModesViewProps) => {
 									{t("prompts:createModeDialog.tools.description")}
 								</div>
 								<div className="grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-2">
-									{availableGroups.map((group) => (
-										<VSCodeCheckbox
-											key={group}
-											checked={newModeGroups.some((g) => getGroupName(g) === group)}
-											onChange={(e: Event | React.FormEvent<HTMLElement>) => {
-												const target =
-													(e as CustomEvent)?.detail?.target || (e.target as HTMLInputElement)
-												const checked = target.checked
-												if (checked) {
-													setNewModeGroups([...newModeGroups, group])
-												} else {
-													setNewModeGroups(
-														newModeGroups.filter((g) => getGroupName(g) !== group),
-													)
-												}
-											}}>
-											{t(`prompts:tools.toolNames.${group}`)}
-										</VSCodeCheckbox>
-									))}
+									{availableGroups.map((group) => {
+										if (group === "mcp") {
+											return (
+												<div
+													key={group}
+													className="col-span-2"
+													style={{ display: "flex", alignItems: "center", gap: 8 }}>
+													<VSCodeCheckbox
+														key={group}
+														checked={newModeGroups.some((g) => getGroupName(g) === group)}
+														onChange={(e: Event | React.FormEvent<HTMLElement>) => {
+															const target =
+																(e as CustomEvent)?.detail?.target ||
+																(e.target as HTMLInputElement)
+															const checked = target.checked
+															if (checked) {
+																setNewModeGroups([...newModeGroups, group])
+															} else {
+																setNewModeGroups(
+																	newModeGroups.filter(
+																		(g) => getGroupName(g) !== group,
+																	),
+																)
+															}
+														}}>
+														{t(`prompts:tools.toolNames.${group}`)}
+													</VSCodeCheckbox>
+												</div>
+											)
+										}
+										return (
+											<VSCodeCheckbox
+												key={group}
+												checked={newModeGroups.some((g) => getGroupName(g) === group)}
+												onChange={(e: Event | React.FormEvent<HTMLElement>) => {
+													const target =
+														(e as CustomEvent)?.detail?.target ||
+														(e.target as HTMLInputElement)
+													const checked = target.checked
+													if (checked) {
+														setNewModeGroups([...newModeGroups, group])
+													} else {
+														setNewModeGroups(
+															newModeGroups.filter((g) => getGroupName(g) !== group),
+														)
+													}
+												}}>
+												{t(`prompts:tools.toolNames.${group}`)}
+											</VSCodeCheckbox>
+										)
+									})}
 								</div>
 								{groupsError && (
 									<div className="text-xs text-vscode-errorForeground mt-1">{groupsError}</div>
