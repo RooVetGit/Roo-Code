@@ -39,16 +39,30 @@ type OllamaModelInfoResponse = z.infer<typeof OllamaModelInfoResponseSchema>
 
 export const parseOllamaModel = (rawModel: OllamaModelInfoResponse): ModelInfo => {
 	const contextKey = Object.keys(rawModel.model_info).find((k) => k.includes("context_length"))
-	const contextWindow =
+	const defaultContextWindow =
 		contextKey && typeof rawModel.model_info[contextKey] === "number" ? rawModel.model_info[contextKey] : undefined
 
+	// Parse the parameters field to check for user-configured num_ctx
+	let configuredNumCtx: number | undefined
+	if (rawModel.parameters) {
+		// The parameters field contains modelfile parameters as a string
+		// Look for num_ctx setting in the format "num_ctx <value>"
+		const numCtxMatch = rawModel.parameters.match(/num_ctx\s+(\d+)/i)
+		if (numCtxMatch && numCtxMatch[1]) {
+			configuredNumCtx = parseInt(numCtxMatch[1], 10)
+		}
+	}
+
+	// Use the configured num_ctx if available, otherwise fall back to the default
+	const actualContextWindow = configuredNumCtx || defaultContextWindow || ollamaDefaultModelInfo.contextWindow
+
 	const modelInfo: ModelInfo = Object.assign({}, ollamaDefaultModelInfo, {
-		description: `Family: ${rawModel.details.family}, Context: ${contextWindow}, Size: ${rawModel.details.parameter_size}`,
-		contextWindow: contextWindow || ollamaDefaultModelInfo.contextWindow,
+		description: `Family: ${rawModel.details.family}, Context: ${actualContextWindow}, Size: ${rawModel.details.parameter_size}`,
+		contextWindow: actualContextWindow,
 		supportsPromptCache: true,
 		supportsImages: rawModel.capabilities?.includes("vision"),
 		supportsComputerUse: false,
-		maxTokens: contextWindow || ollamaDefaultModelInfo.contextWindow,
+		maxTokens: actualContextWindow,
 	})
 
 	return modelInfo

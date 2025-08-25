@@ -181,7 +181,7 @@ export class NativeOllamaHandler extends BaseProvider implements SingleCompletio
 				messages: ollamaMessages,
 				stream: true,
 				options: {
-					num_ctx: modelInfo.contextWindow,
+					// Don't override num_ctx - let Ollama use the model's configured value
 					temperature: this.options.modelTemperature ?? (useR1Format ? DEEP_SEEK_DEFAULT_TEMPERATURE : 0),
 				},
 			})

@@ -120,6 +120,64 @@ describe("NativeOllamaHandler", () => {
 			})
 			expect(result).toBe("This is the response")
 		})
+
+		it("should not override num_ctx in options", async () => {
+			mockChat.mockResolvedValue({
+				message: { content: "Response" },
+			})
+
+			await handler.completePrompt("Test prompt")
+
+			// Verify that num_ctx is NOT in the options
+			expect(mockChat).toHaveBeenCalledWith({
+				model: "llama2",
+				messages: [{ role: "user", content: "Test prompt" }],
+				stream: false,
+				options: {
+					temperature: 0,
+					// num_ctx should NOT be present here
+				},
+			})
+
+			// Explicitly check that num_ctx is not in the options
+			const callArgs = mockChat.mock.calls[0][0]
+			expect(callArgs.options).not.toHaveProperty("num_ctx")
+		})
+	})
+
+	describe("createMessage num_ctx handling", () => {
+		it("should not set num_ctx in options for createMessage", async () => {
+			// Mock the chat response
+			mockChat.mockImplementation(async function* () {
+				yield {
+					message: { content: "Test" },
+					eval_count: 1,
+					prompt_eval_count: 1,
+				}
+			})
+
+			const stream = handler.createMessage("System", [{ role: "user" as const, content: "Test" }])
+
+			// Consume the stream
+			for await (const _ of stream) {
+				// Just consume
+			}
+
+			// Verify the call was made without num_ctx
+			expect(mockChat).toHaveBeenCalledWith({
+				model: "llama2",
+				messages: expect.any(Array),
+				stream: true,
+				options: {
+					temperature: 0,
+					// num_ctx should NOT be present
+				},
+			})
+
+			// Explicitly verify num_ctx is not in options
+			const callArgs = mockChat.mock.calls[0][0]
+			expect(callArgs.options).not.toHaveProperty("num_ctx")
+		})
 	})
 
 	describe("error handling", () => {

@@ -32,6 +32,40 @@ describe("Ollama Fetcher", () => {
 			})
 		})
 
+		it("should parse num_ctx from parameters field when present", () => {
+			const modelDataWithNumCtx = {
+				...ollamaModelsData["qwen3-2to16:latest"],
+				parameters: "num_ctx 16384\nstop_token <eos>",
+				model_info: {
+					"ollama.context_length": 40960,
+				},
+			}
+
+			const parsedModel = parseOllamaModel(modelDataWithNumCtx as any)
+
+			// Should use the configured num_ctx (16384) instead of the default context_length (40960)
+			expect(parsedModel.contextWindow).toBe(16384)
+			expect(parsedModel.maxTokens).toBe(16384)
+			expect(parsedModel.description).toBe("Family: qwen3, Context: 16384, Size: 32.8B")
+		})
+
+		it("should use default context_length when num_ctx is not in parameters", () => {
+			const modelDataWithoutNumCtx = {
+				...ollamaModelsData["qwen3-2to16:latest"],
+				parameters: "stop_token <eos>", // No num_ctx here
+				model_info: {
+					"ollama.context_length": 40960,
+				},
+			}
+
+			const parsedModel = parseOllamaModel(modelDataWithoutNumCtx as any)
+
+			// Should use the default context_length (40960)
+			expect(parsedModel.contextWindow).toBe(40960)
+			expect(parsedModel.maxTokens).toBe(40960)
+			expect(parsedModel.description).toBe("Family: qwen3, Context: 40960, Size: 32.8B")
+		})
+
 		it("should handle models with null families field", () => {
 			const modelDataWithNullFamilies = {
 				...ollamaModelsData["qwen3-2to16:latest"],
