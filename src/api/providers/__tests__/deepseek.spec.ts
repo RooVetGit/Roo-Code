@@ -260,6 +260,180 @@ describe("DeepSeekHandler", () => {
 			expect(usageChunks[0].cacheWriteTokens).toBe(8)
 			expect(usageChunks[0].cacheReadTokens).toBe(2)
 		})
+
+		it("should sanitize unwanted '极速模式' characters from response", async () => {
+			// Mock a response with unwanted characters
+			mockCreate.mockImplementationOnce(async (options) => {
+				if (!options.stream) {
+					return {
+						id: "test-completion",
+						choices: [
+							{
+								message: {
+									role: "assistant",
+									content: "Test response with 极速模式 unwanted characters",
+									refusal: null,
+								},
+								finish_reason: "stop",
+								index: 0,
+							},
+						],
+						usage: {
+							prompt_tokens: 10,
+							completion_tokens: 5,
+							total_tokens: 15,
+						},
+					}
+				}
+
+				// Return async iterator for streaming with unwanted characters
+				return {
+					[Symbol.asyncIterator]: async function* () {
+						yield {
+							choices: [
+								{
+									delta: {
+										content: "Here is 极速模式 some text with 极 unwanted 速 characters 模式",
+									},
+									index: 0,
+								},
+							],
+							usage: null,
+						}
+						yield {
+							choices: [
+								{
+									delta: {},
+									index: 0,
+								},
+							],
+							usage: {
+								prompt_tokens: 10,
+								completion_tokens: 5,
+								total_tokens: 15,
+							},
+						}
+					},
+				}
+			})
+
+			const stream = handler.createMessage(systemPrompt, messages)
+			const chunks: any[] = []
+			for await (const chunk of stream) {
+				chunks.push(chunk)
+			}
+
+			const textChunks = chunks.filter((chunk) => chunk.type === "text")
+			expect(textChunks).toHaveLength(1)
+			// The unwanted characters should be removed
+			expect(textChunks[0].text).toBe("Here is some text with unwanted characters")
+			expect(textChunks[0].text).not.toContain("极速模式")
+			expect(textChunks[0].text).not.toContain("极")
+			expect(textChunks[0].text).not.toContain("速")
+			expect(textChunks[0].text).not.toContain("模")
+			expect(textChunks[0].text).not.toContain("式")
+		})
+
+		it("should preserve legitimate Chinese text while removing artifacts", async () => {
+			// Mock a response with both legitimate Chinese text and unwanted artifacts
+			mockCreate.mockImplementationOnce(async (options) => {
+				// Return async iterator for streaming
+				return {
+					[Symbol.asyncIterator]: async function* () {
+						yield {
+							choices: [
+								{
+									delta: {
+										content: "这是正常的中文文本极速模式，不应该被删除。File path: 极 test.txt",
+									},
+									index: 0,
+								},
+							],
+							usage: null,
+						}
+						yield {
+							choices: [
+								{
+									delta: {},
+									index: 0,
+								},
+							],
+							usage: {
+								prompt_tokens: 10,
+								completion_tokens: 5,
+								total_tokens: 15,
+							},
+						}
+					},
+				}
+			})
+
+			const stream = handler.createMessage(systemPrompt, messages)
+			const chunks: any[] = []
+			for await (const chunk of stream) {
+				chunks.push(chunk)
+			}
+
+			const textChunks = chunks.filter((chunk) => chunk.type === "text")
+			expect(textChunks).toHaveLength(1)
+			// Should remove "极速模式" phrase and isolated "极" between spaces
+			expect(textChunks[0].text).toBe("这是正常的中文文本，不应该被删除。File path: test.txt")
+			expect(textChunks[0].text).toContain("这是正常的中文文本")
+			expect(textChunks[0].text).not.toContain("极速模式")
+			// The isolated "极" between spaces should be removed
+			expect(textChunks[0].text).not.toContain(" 极 ")
+		})
+
+		it("should handle reasoning content with unwanted characters", async () => {
+			// Mock a response with reasoning content containing unwanted characters
+			mockCreate.mockImplementationOnce(async (options) => {
+				return {
+					[Symbol.asyncIterator]: async function* () {
+						yield {
+							choices: [
+								{
+									delta: {
+										content: "<think>Reasoning with 极速模式 artifacts</think>Regular text",
+									},
+									index: 0,
+								},
+							],
+							usage: null,
+						}
+						yield {
+							choices: [
+								{
+									delta: {},
+									index: 0,
+								},
+							],
+							usage: {
+								prompt_tokens: 10,
+								completion_tokens: 5,
+								total_tokens: 15,
+							},
+						}
+					},
+				}
+			})
+
+			const stream = handler.createMessage(systemPrompt, messages)
+			const chunks: any[] = []
+			for await (const chunk of stream) {
+				chunks.push(chunk)
+			}
+
+			// Check both reasoning and text chunks
+			const reasoningChunks = chunks.filter((chunk) => chunk.type === "reasoning")
+			const textChunks = chunks.filter((chunk) => chunk.type === "text")
+
+			if (reasoningChunks.length > 0) {
+				expect(reasoningChunks[0].text).not.toContain("极速模式")
+			}
+			if (textChunks.length > 0) {
+				expect(textChunks[0].text).not.toContain("极速模式")
+			}
+		})
 	})
 
 	describe("processUsageMetrics", () => {
