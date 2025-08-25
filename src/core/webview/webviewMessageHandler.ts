@@ -652,6 +652,58 @@ export const webviewMessageHandler = async (
 			})
 
 			break
+		case "requestSapAiCoreModels":
+			const sapAiCoreConfig = await provider.getState().then((state) => state.apiConfiguration)
+
+			try {
+				// Import the function dynamically to avoid circular dependencies
+				const { getSapAiCoreDeployedModels } = await import("../../api/providers/sapaicore")
+
+				// Check if required configuration is provided
+				if (
+					!sapAiCoreConfig.sapAiCoreClientId ||
+					!sapAiCoreConfig.sapAiCoreClientSecret ||
+					!sapAiCoreConfig.sapAiCoreBaseUrl ||
+					!sapAiCoreConfig.sapAiCoreTokenUrl
+				) {
+					provider.postMessageToWebview({
+						type: "sapAiCoreModels",
+						sapAiCoreModels: {
+							success: false,
+							error: "SAP AI Core configuration is incomplete",
+							models: [],
+						},
+					})
+					break
+				}
+
+				const deployedModels = await getSapAiCoreDeployedModels({
+					sapAiCoreClientId: sapAiCoreConfig.sapAiCoreClientId,
+					sapAiCoreClientSecret: sapAiCoreConfig.sapAiCoreClientSecret,
+					sapAiCoreTokenUrl: sapAiCoreConfig.sapAiCoreTokenUrl,
+					sapAiCoreBaseUrl: sapAiCoreConfig.sapAiCoreBaseUrl,
+					sapAiResourceGroup: sapAiCoreConfig.sapAiResourceGroup,
+				})
+
+				provider.postMessageToWebview({
+					type: "sapAiCoreModels",
+					sapAiCoreModels: {
+						success: true,
+						models: deployedModels,
+					},
+				})
+			} catch (error) {
+				console.error("Error fetching SAP AI Core models:", error)
+				provider.postMessageToWebview({
+					type: "sapAiCoreModels",
+					sapAiCoreModels: {
+						success: false,
+						error: error instanceof Error ? error.message : "Failed to fetch SAP AI Core models",
+						models: [],
+					},
+				})
+			}
+			break
 		case "requestOllamaModels": {
 			// Specific handler for Ollama models only
 			const { apiConfiguration: ollamaApiConfig } = await provider.getState()

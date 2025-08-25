@@ -1,7 +1,7 @@
 import type { ProviderSettings } from "@roo-code/types"
 
 import type { OrganizationAllowList } from "@roo/cloud"
-import { RouterModels } from "@roo/api"
+import type { RouterModels } from "@roo/api"
 
 import { getModelValidationError, validateApiConfigurationExcludingModelErrors } from "../validate"
 
@@ -208,5 +208,36 @@ describe("Model Validation Functions", () => {
 			const result = getModelValidationError(config, mockRouterModels, allowAllOrganization)
 			expect(result).toBeUndefined()
 		})
+	})
+})
+
+describe("SAP AI Core validation", () => {
+	it("returns error for missing modelId when SAP AI Core credentials are provided", () => {
+		const config: ProviderSettings = {
+			apiProvider: "sapaicore",
+			sapAiCoreBaseUrl: "https://aicore.example.com",
+			sapAiCoreClientId: "client-id",
+			sapAiCoreClientSecret: "client-secret",
+			sapAiCoreTokenUrl: "https://auth.example.com/oauth/token",
+			// apiModelId intentionally missing
+		}
+
+		const result = validateApiConfigurationExcludingModelErrors(config, undefined, undefined)
+		// i18n returns un-namespaced keys in tests (e.g., "validation.modelId")
+		expect(result).toBe("validation.modelId")
+	})
+
+	it("returns undefined when SAP AI Core credentials and modelId are provided", () => {
+		const config: ProviderSettings = {
+			apiProvider: "sapaicore",
+			sapAiCoreBaseUrl: "https://aicore.example.com",
+			sapAiCoreClientId: "client-id",
+			sapAiCoreClientSecret: "client-secret",
+			sapAiCoreTokenUrl: "https://auth.example.com/oauth/token",
+			apiModelId: "anthropic--claude-3.5-sonnet",
+		}
+
+		const result = validateApiConfigurationExcludingModelErrors(config, undefined, undefined)
+		expect(result).toBeUndefined()
 	})
 })

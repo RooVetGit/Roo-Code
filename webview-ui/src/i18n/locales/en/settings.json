@@ -122,7 +122,11 @@
 			"mistralApiKeyRequired": "Mistral API key is required",
 			"ollamaBaseUrlRequired": "Ollama base URL is required",
 			"baseUrlRequired": "Base URL is required",
-			"modelDimensionMinValue": "Model dimension must be greater than 0"
+			"modelDimensionMinValue": "Model dimension must be greater than 0",
+			"sapAiCoreBaseUrl": "SAP AI Core Base URL is required",
+			"sapAiCoreClientId": "SAP AI Core Client ID is required",
+			"sapAiCoreClientSecret": "SAP AI Core Client Secret is required",
+			"sapAiCoreTokenUrl": "SAP AI Core Token URL is required"
 		}
 	},
 	"autoApprove": {
@@ -289,6 +293,13 @@
 		"groqApiKey": "Groq API Key",
 		"getSambaNovaApiKey": "Get SambaNova API Key",
 		"sambaNovaApiKey": "SambaNova API Key",
+		"sapAiCoreBaseUrl": "SAP AI Core Base URL",
+		"sapAiCoreClientId": "SAP AI Core Client ID",
+		"sapAiCoreClientSecret": "SAP AI Core Client Secret",
+		"sapAiCoreTokenUrl": "SAP AI Core Token URL",
+		"sapAiResourceGroup": "SAP AI Resource Group",
+		"sapAiCoreDeployedModelsHeader": "Deployed Models (Ready to Use)",
+		"sapAiCoreSupportedModelsHeader": "Not Deployed Models (Require Deployment)",
 		"getHuggingFaceApiKey": "Get Hugging Face API Key",
 		"huggingFaceApiKey": "Hugging Face API Key",
 		"huggingFaceModelId": "Model ID",
@@ -787,6 +798,10 @@
 		"modelId": "You must provide a valid model ID.",
 		"modelSelector": "You must provide a valid model selector.",
 		"openAi": "You must provide a valid base URL, API key, and model ID.",
+		"sapAiCoreBaseUrl": "SAP AI Core Base URL is required",
+		"sapAiCoreClientId": "SAP AI Core Client ID is required",
+		"sapAiCoreClientSecret": "SAP AI Core Client Secret is required",
+		"sapAiCoreTokenUrl": "SAP AI Core Token URL is required",
 		"arn": {
 			"invalidFormat": "Invalid ARN format. Please check the format requirements.",
 			"regionMismatch": "Warning: The region in your ARN ({{arnRegion}}) does not match your selected region ({{region}}). This may cause access issues. The provider will use the region from the ARN."
@@ -807,6 +822,8 @@
 		"projectId": "Enter Project ID...",
 		"customArn": "Enter ARN (e.g. arn:aws:bedrock:us-east-1:123456789012:foundation-model/my-model)",
 		"baseUrl": "Enter base URL...",
+		"clientId": "Enter Client ID...",
+		"clientSecret": "Enter Client Secret...",
 		"modelId": {
 			"lmStudio": "e.g. meta-llama-3.1-8b-instruct",
 			"lmStudioDraft": "e.g. lmstudio-community/llama-3.2-1b-instruct",
