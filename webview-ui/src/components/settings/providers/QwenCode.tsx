@@ -28,7 +28,7 @@ export const QwenCode: React.FC<QwenCodeProps> = ({ apiConfiguration, setApiConf
 			<div>
 				<VSCodeTextField
 					value={apiConfiguration?.qwenCodeOauthPath || ""}
-					style={{ width: "100%", marginTop: 3 }}
+					className="w-full mt-1"
 					type="text"
 					onInput={handleInputChange}
 					onBlur={handleBlur}
@@ -36,21 +36,16 @@ export const QwenCode: React.FC<QwenCodeProps> = ({ apiConfiguration, setApiConf
 					OAuth Credentials Path
 				</VSCodeTextField>
 
-				<p
-					style={{
-						fontSize: "12px",
-						marginTop: 3,
-						color: "var(--vscode-descriptionForeground)",
-					}}>
+				<p className="text-xs mt-1 text-vscode-descriptionForeground">
 					Path to your Qwen OAuth credentials file. Defaults to ~/.qwen/oauth_creds.json if left empty.
 				</p>
 
-				<div style={{ fontSize: "12px", color: "var(--vscode-descriptionForeground)", marginTop: "12px" }}>
+				<div className="text-xs text-vscode-descriptionForeground mt-3">
 					Qwen Code is an OAuth-based API that requires authentication through the official Qwen client.
 					You&apos;ll need to set up OAuth credentials first.
 				</div>
 
-				<div style={{ fontSize: "12px", color: "var(--vscode-descriptionForeground)", marginTop: "8px" }}>
+				<div className="text-xs text-vscode-descriptionForeground mt-2">
 					To get started:
 					<br />
 					1. Install the official Qwen client
@@ -62,12 +57,7 @@ export const QwenCode: React.FC<QwenCodeProps> = ({ apiConfiguration, setApiConf
 
 				<VSCodeLink
 					href="https://github.com/QwenLM/qwen-code/blob/main/README.md"
-					style={{
-						color: "var(--vscode-textLink-foreground)",
-						marginTop: "8px",
-						display: "inline-block",
-						fontSize: "12px",
-					}}>
+					className="text-vscode-textLink-foreground mt-2 inline-block text-xs">
 					Setup Instructions
 				</VSCodeLink>
 			</div>
