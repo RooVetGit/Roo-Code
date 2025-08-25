@@ -9,6 +9,7 @@ import OpenAI from "openai"
 import { OpenRouterHandler } from "../openrouter"
 import { ApiHandlerOptions } from "../../../shared/api"
 import { Package } from "../../../shared/package"
+import { getModels } from "../fetchers/modelCache"
 
 // Mock dependencies
 vitest.mock("openai")
@@ -43,6 +44,9 @@ vitest.mock("../fetchers/modelCache", () => ({
 			},
 		})
 	}),
+}))
+vitest.mock("../fetchers/modelEndpointCache", () => ({
+	getModelEndpoints: vitest.fn().mockResolvedValue({}),
 }))
 
 describe("OpenRouterHandler", () => {
@@ -266,6 +270,88 @@ describe("OpenRouterHandler", () => {
 
 			const generator = handler.createMessage("test", [])
 			await expect(generator.next()).rejects.toThrow("OpenRouter API Error 500: API Error")
+		})
+
+		it("passes reasoning effort and include_reasoning for GPT-5 models via OpenRouter", async () => {
+			;(getModels as any).mockResolvedValueOnce({
+				"openai/gpt-5-2025-08-07": {
+					maxTokens: 8192,
+					contextWindow: 128000,
+					supportsPromptCache: false,
+					supportsReasoningEffort: true,
+					description: "GPT-5 via OpenRouter",
+				},
+			})
+
+			const mockStream = {
+				async *[Symbol.asyncIterator]() {
+					yield {
+						id: "openai/gpt-5-2025-08-07",
+						choices: [{ delta: { reasoning: "Thinking...", content: "Hello" } }],
+						usage: { prompt_tokens: 1, completion_tokens: 2, cost: 0.0 },
+					}
+				},
+			}
+
+			const mockCreate = vitest.fn().mockResolvedValue(mockStream)
+			;(OpenAI as any).prototype.chat = { completions: { create: mockCreate } } as any
+
+			const handler = new OpenRouterHandler({
+				openRouterApiKey: "test-key",
+				openRouterModelId: "openai/gpt-5-2025-08-07",
+				enableReasoningEffort: true,
+				reasoningEffort: "minimal" as any,
+			})
+
+			const gen = handler.createMessage("sys", [{ role: "user", content: "hi" } as any])
+			for await (const _ of gen) {
+				// drain
+			}
+
+			const call = (mockCreate as any).mock.calls[0][0]
+			expect(call.model).toBe("openai/gpt-5-2025-08-07")
+			expect(call.include_reasoning).toBe(true)
+			expect(call.reasoning).toEqual({ effort: "minimal" })
+		})
+
+		it('defaults GPT-5 reasoning effort to "medium" when enabled but not specified', async () => {
+			;(getModels as any).mockResolvedValueOnce({
+				"openai/gpt-5-2025-08-07": {
+					maxTokens: 8192,
+					contextWindow: 128000,
+					supportsPromptCache: false,
+					supportsReasoningEffort: true,
+					description: "GPT-5 via OpenRouter",
+				},
+			})
+
+			const mockStream = {
+				async *[Symbol.asyncIterator]() {
+					yield {
+						id: "openai/gpt-5-2025-08-07",
+						choices: [{ delta: { content: "Hi" } }],
+						usage: { prompt_tokens: 1, completion_tokens: 2, cost: 0.0 },
+					}
+				},
+			}
+
+			const mockCreate = vitest.fn().mockResolvedValue(mockStream)
+			;(OpenAI as any).prototype.chat = { completions: { create: mockCreate } } as any
+
+			const handler = new OpenRouterHandler({
+				openRouterApiKey: "test-key",
+				openRouterModelId: "openai/gpt-5-2025-08-07",
+				enableReasoningEffort: true,
+			})
+
+			const gen = handler.createMessage("sys", [{ role: "user", content: "hi" } as any])
+			for await (const _ of gen) {
+				// drain
+			}
+
+			const call = (mockCreate as any).mock.calls[0][0]
+			expect(call.include_reasoning).toBe(true)
+			expect(call.reasoning).toEqual({ effort: "medium" })
 		})
 	})
 

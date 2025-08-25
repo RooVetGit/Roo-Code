@@ -121,6 +121,8 @@ export class OpenRouterHandler extends BaseProvider implements SingleCompletionH
 			messages: openAiMessages,
 			stream: true,
 			stream_options: { include_usage: true },
+			// For GPT-5 via OpenRouter, request reasoning content in the stream explicitly
+			...(modelId.startsWith("openai/gpt-5") && { include_reasoning: true }),
 			// Only include provider if openRouterSpecificProvider is not "[default]".
 			...(this.options.openRouterSpecificProvider &&
 				this.options.openRouterSpecificProvider !== OPENROUTER_DEFAULT_PROVIDER_NAME && {
@@ -208,7 +210,14 @@ export class OpenRouterHandler extends BaseProvider implements SingleCompletionH
 			defaultTemperature: isDeepSeekR1 ? DEEP_SEEK_DEFAULT_TEMPERATURE : 0,
 		})
 
-		return { id, info, topP: isDeepSeekR1 ? 0.95 : undefined, ...params }
+		// Apply GPT-5 defaults for OpenRouter: default reasoning effort to "medium" when enabled
+		let adjustedParams = params
+		if (id.startsWith("openai/gpt-5") && !params.reasoning && this.options.enableReasoningEffort !== false) {
+			const effort = (this.options.reasoningEffort as any) ?? "medium"
+			adjustedParams = { ...params, reasoning: { effort } as OpenRouterReasoningParams }
+		}
+
+		return { id, info, topP: isDeepSeekR1 ? 0.95 : undefined, ...adjustedParams }
 	}
 
 	async completePrompt(prompt: string) {
@@ -220,6 +229,8 @@ export class OpenRouterHandler extends BaseProvider implements SingleCompletionH
 			temperature,
 			messages: [{ role: "user", content: prompt }],
 			stream: false,
+			// For GPT-5 via OpenRouter, request reasoning details explicitly as well
+			...(modelId.startsWith("openai/gpt-5") && { include_reasoning: true }),
 			// Only include provider if openRouterSpecificProvider is not "[default]".
 			...(this.options.openRouterSpecificProvider &&
 				this.options.openRouterSpecificProvider !== OPENROUTER_DEFAULT_PROVIDER_NAME && {
