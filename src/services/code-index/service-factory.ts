@@ -4,6 +4,7 @@ import { CodeIndexOllamaEmbedder } from "./embedders/ollama"
 import { OpenAICompatibleEmbedder } from "./embedders/openai-compatible"
 import { GeminiEmbedder } from "./embedders/gemini"
 import { MistralEmbedder } from "./embedders/mistral"
+import { JinaEmbedder } from "./embedders/jina"
 import { EmbedderProvider, getDefaultModelId, getModelDimension } from "../../shared/embeddingModels"
 import { QdrantVectorStore } from "./vector-store/qdrant-client"
 import { codeParser, DirectoryScanner, FileWatcher } from "./processors"
@@ -71,6 +72,11 @@ export class CodeIndexServiceFactory {
 				throw new Error(t("embeddings:serviceFactory.mistralConfigMissing"))
 			}
 			return new MistralEmbedder(config.mistralOptions.apiKey, config.modelId)
+		} else if (provider === "jina") {
+			if (!config.jinaOptions?.apiKey) {
+				throw new Error(t("embeddings:serviceFactory.jinaConfigMissing"))
+			}
+			return new JinaEmbedder(config.jinaOptions.apiKey, config.modelId)
 		}
 
 		throw new Error(

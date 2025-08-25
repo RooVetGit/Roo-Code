@@ -2,7 +2,7 @@
  * Defines profiles for different embedding models, including their dimensions.
  */
 
-export type EmbedderProvider = "openai" | "ollama" | "openai-compatible" | "gemini" | "mistral" // Add other providers as needed
+export type EmbedderProvider = "openai" | "ollama" | "openai-compatible" | "gemini" | "mistral" | "jina" // Add other providers as needed
 
 export interface EmbeddingModelProfile {
 	dimension: number
@@ -52,6 +52,11 @@ export const EMBEDDING_MODEL_PROFILES: EmbeddingModelProfiles = {
 	},
 	mistral: {
 		"codestral-embed-2505": { dimension: 1536, scoreThreshold: 0.4 },
+	},
+	jina: {
+		"jina-embeddings-v4": { dimension: 2048, scoreThreshold: 0.4 },
+		"jina-embeddings-v3": { dimension: 1024, scoreThreshold: 0.4 },
+		"jina-clip-v2": { dimension: 1024, scoreThreshold: 0.4 },
 	},
 }
 
@@ -142,6 +147,9 @@ export function getDefaultModelId(provider: EmbedderProvider): string {
 
 		case "mistral":
 			return "codestral-embed-2505"
+
+		case "jina":
+			return "jina-embeddings-v4"
 
 		default:
 			// Fallback for unknown providers
