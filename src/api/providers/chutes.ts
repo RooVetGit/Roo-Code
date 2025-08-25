@@ -46,6 +46,7 @@ export class ChutesHandler extends BaseOpenAiCompatibleProvider<ChutesModelId> {
 
 	override async *createMessage(systemPrompt: string, messages: Anthropic.Messages.MessageParam[]): ApiStream {
 		const model = this.getModel()
+		let hasContent = false
 
 		if (model.id.includes("DeepSeek-R1")) {
 			const stream = await this.client.chat.completions.create({
@@ -66,6 +67,7 @@ export class ChutesHandler extends BaseOpenAiCompatibleProvider<ChutesModelId> {
 				const delta = chunk.choices[0]?.delta
 
 				if (delta?.content) {
+					hasContent = true
 					for (const processedChunk of matcher.update(delta.content)) {
 						yield processedChunk
 					}
@@ -82,10 +84,47 @@ export class ChutesHandler extends BaseOpenAiCompatibleProvider<ChutesModelId> {
 
 			// Process any remaining content
 			for (const processedChunk of matcher.final()) {
+				hasContent = true
 				yield processedChunk
 			}
+
+			// If no content was received, throw an error
+			if (!hasContent) {
+				throw new Error(
+					`${this.providerName} API did not return any content. This may indicate an issue with the API, model configuration, or request parameters.`,
+				)
+			}
 		} else {
-			yield* super.createMessage(systemPrompt, messages)
+			// For non-DeepSeek models, we reimplement the stream handling instead of calling
+			// super.createMessage() to ensure consistent error handling for empty responses
+			const stream = await this.createStream(systemPrompt, messages)
+
+			for await (const chunk of stream) {
+				const delta = chunk.choices[0]?.delta
+
+				if (delta?.content) {
+					hasContent = true
+					yield {
+						type: "text",
+						text: delta.content,
+					}
+				}
+
+				if (chunk.usage) {
+					yield {
+						type: "usage",
+						inputTokens: chunk.usage.prompt_tokens || 0,
+						outputTokens: chunk.usage.completion_tokens || 0,
+					}
+				}
+			}
+
+			// If no content was received, throw an error
+			if (!hasContent) {
+				throw new Error(
+					`${this.providerName} API did not return any content. This may indicate an issue with the API, model configuration, or request parameters.`,
+				)
+			}
 		}
 	}
 

@@ -363,7 +363,10 @@ describe("ChutesHandler", () => {
 		mockCreate.mockClear()
 		mockCreate.mockImplementationOnce(async () => ({
 			[Symbol.asyncIterator]: async function* () {
-				// Empty stream for this test
+				// Yield minimal content to avoid triggering the empty response error
+				yield {
+					choices: [{ delta: { content: "test" } }],
+				}
 			},
 		}))
 
@@ -398,11 +401,22 @@ describe("ChutesHandler", () => {
 
 		mockCreate.mockImplementationOnce(() => {
 			return {
-				[Symbol.asyncIterator]: () => ({
-					async next() {
-						return { done: true }
-					},
-				}),
+				[Symbol.asyncIterator]: () => {
+					let called = false
+					return {
+						async next() {
+							if (!called) {
+								called = true
+								// Return minimal content to avoid triggering the empty response error
+								return {
+									done: false,
+									value: { choices: [{ delta: { content: "test" } }] },
+								}
+							}
+							return { done: true }
+						},
+					}
+				},
 			}
 		})
 
@@ -442,5 +456,87 @@ describe("ChutesHandler", () => {
 		})
 		const model = handlerWithModel.getModel()
 		expect(model.info.temperature).toBe(0.5)
+	})
+
+	it("should throw an error when API returns no content", async () => {
+		// Mock a stream that returns no content chunks
+		const mockStream = {
+			async *[Symbol.asyncIterator]() {
+				// Only yield usage data, no content
+				yield {
+					choices: [{ delta: {} }],
+					usage: {
+						prompt_tokens: 100,
+						completion_tokens: 0,
+					},
+				}
+			},
+		}
+
+		mockCreate.mockResolvedValueOnce(mockStream)
+
+		const systemPrompt = "Test system prompt"
+		const messages: Anthropic.Messages.MessageParam[] = [{ role: "user", content: "Test message" }]
+
+		const generator = handler.createMessage(systemPrompt, messages)
+		const chunks: any[] = []
+
+		await expect(async () => {
+			for await (const chunk of generator) {
+				chunks.push(chunk)
+			}
+		}).rejects.toThrow("Chutes API did not return any content")
+
+		// Should have yielded usage before throwing
+		expect(chunks).toHaveLength(1)
+		expect(chunks[0]).toEqual({
+			type: "usage",
+			inputTokens: 100,
+			outputTokens: 0,
+		})
+	})
+
+	it("should throw an error for DeepSeek R1 models when API returns no content", async () => {
+		const modelId: ChutesModelId = "deepseek-ai/DeepSeek-R1"
+		const handlerWithModel = new ChutesHandler({
+			apiModelId: modelId,
+			chutesApiKey: "test-chutes-api-key",
+		})
+
+		// Mock a stream that returns no content chunks
+		const mockStream = {
+			async *[Symbol.asyncIterator]() {
+				// Only yield usage data, no content
+				yield {
+					choices: [{ delta: {} }],
+					usage: {
+						prompt_tokens: 100,
+						completion_tokens: 0,
+					},
+				}
+			},
+		}
+
+		mockCreate.mockResolvedValueOnce(mockStream)
+
+		const systemPrompt = "Test system prompt"
+		const messages: Anthropic.Messages.MessageParam[] = [{ role: "user", content: "Test message" }]
+
+		const generator = handlerWithModel.createMessage(systemPrompt, messages)
+		const chunks: any[] = []
+
+		await expect(async () => {
+			for await (const chunk of generator) {
+				chunks.push(chunk)
+			}
+		}).rejects.toThrow("Chutes API did not return any content")
+
+		// Should have yielded usage before throwing
+		expect(chunks).toHaveLength(1)
+		expect(chunks[0]).toEqual({
+			type: "usage",
+			inputTokens: 100,
+			outputTokens: 0,
+		})
 	})
 })
