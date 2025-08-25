@@ -470,6 +470,182 @@ describe("OpenAiNativeHandler", () => {
 			})
 		})
 
+		it("should complete prompt successfully with GPT-5 model via streaming collection", async () => {
+			// Mock fetch for Responses API
+			const mockFetch = vitest.fn().mockResolvedValue({
+				ok: true,
+				body: new ReadableStream({
+					start(controller) {
+						controller.enqueue(
+							new TextEncoder().encode('data: {"type":"response.text.delta","delta":"Enhanced "}\n\n'),
+						)
+						controller.enqueue(
+							new TextEncoder().encode('data: {"type":"response.text.delta","delta":"prompt "}\n\n'),
+						)
+						controller.enqueue(
+							new TextEncoder().encode('data: {"type":"response.text.delta","delta":"response"}\n\n'),
+						)
+						controller.enqueue(new TextEncoder().encode("data: [DONE]\n\n"))
+						controller.close()
+					},
+				}),
+			})
+			global.fetch = mockFetch as any
+
+			handler = new OpenAiNativeHandler({
+				apiModelId: "gpt-5-2025-08-07",
+				openAiNativeApiKey: "test-api-key",
+			})
+
+			const result = await handler.completePrompt("Test prompt")
+			expect(result).toBe("Enhanced prompt response")
+
+			// Verify the request was made with correct parameters
+			expect(mockFetch).toHaveBeenCalledWith(
+				"https://api.openai.com/v1/responses",
+				expect.objectContaining({
+					method: "POST",
+					headers: expect.objectContaining({
+						"Content-Type": "application/json",
+						Authorization: "Bearer test-api-key",
+						Accept: "text/event-stream",
+					}),
+					body: expect.stringContaining('"input":"User: Test prompt"'),
+				}),
+			)
+
+			const requestBody = JSON.parse(mockFetch.mock.calls[0][1].body)
+			expect(requestBody).toMatchObject({
+				model: "gpt-5-2025-08-07",
+				stream: true,
+				temperature: 1,
+			})
+
+			// Clean up
+			delete (global as any).fetch
+		})
+
+		it("should complete prompt successfully with GPT-5-mini model", async () => {
+			// Mock fetch for Responses API
+			const mockFetch = vitest.fn().mockResolvedValue({
+				ok: true,
+				body: new ReadableStream({
+					start(controller) {
+						controller.enqueue(
+							new TextEncoder().encode(
+								'data: {"type":"response.output_item.added","item":{"type":"text","text":"Mini response"}}\n\n',
+							),
+						)
+						controller.enqueue(new TextEncoder().encode("data: [DONE]\n\n"))
+						controller.close()
+					},
+				}),
+			})
+			global.fetch = mockFetch as any
+
+			handler = new OpenAiNativeHandler({
+				apiModelId: "gpt-5-mini-2025-08-07",
+				openAiNativeApiKey: "test-api-key",
+			})
+
+			const result = await handler.completePrompt("Test prompt")
+			expect(result).toBe("Mini response")
+
+			// Clean up
+			delete (global as any).fetch
+		})
+
+		it("should complete prompt successfully with GPT-5-nano model", async () => {
+			// Mock fetch for Responses API
+			const mockFetch = vitest.fn().mockResolvedValue({
+				ok: true,
+				body: new ReadableStream({
+					start(controller) {
+						controller.enqueue(
+							new TextEncoder().encode('data: {"type":"response.output_text.delta","delta":"Nano "}\n\n'),
+						)
+						controller.enqueue(
+							new TextEncoder().encode(
+								'data: {"type":"response.output_text.delta","delta":"response"}\n\n',
+							),
+						)
+						controller.enqueue(new TextEncoder().encode("data: [DONE]\n\n"))
+						controller.close()
+					},
+				}),
+			})
+			global.fetch = mockFetch as any
+
+			handler = new OpenAiNativeHandler({
+				apiModelId: "gpt-5-nano-2025-08-07",
+				openAiNativeApiKey: "test-api-key",
+			})
+
+			const result = await handler.completePrompt("Test prompt")
+			expect(result).toBe("Nano response")
+
+			// Clean up
+			delete (global as any).fetch
+		})
+
+		it("should handle GPT-5 completePrompt with reasoning response", async () => {
+			// Mock fetch for Responses API with reasoning
+			const mockFetch = vitest.fn().mockResolvedValue({
+				ok: true,
+				body: new ReadableStream({
+					start(controller) {
+						// Include reasoning in the response
+						controller.enqueue(
+							new TextEncoder().encode(
+								'data: {"type":"response.reasoning.delta","delta":"Let me think about this..."}\n\n',
+							),
+						)
+						controller.enqueue(
+							new TextEncoder().encode('data: {"type":"response.text.delta","delta":"Final answer"}\n\n'),
+						)
+						controller.enqueue(new TextEncoder().encode("data: [DONE]\n\n"))
+						controller.close()
+					},
+				}),
+			})
+			global.fetch = mockFetch as any
+
+			handler = new OpenAiNativeHandler({
+				apiModelId: "gpt-5-2025-08-07",
+				openAiNativeApiKey: "test-api-key",
+				reasoningEffort: "high",
+			})
+
+			const result = await handler.completePrompt("Complex prompt")
+			// Should return the text content (reasoning is collected but text takes priority)
+			expect(result).toBe("Final answer")
+
+			// Clean up
+			delete (global as any).fetch
+		})
+
+		it("should handle GPT-5 completePrompt API errors", async () => {
+			// Mock fetch with error response
+			const mockFetch = vitest.fn().mockResolvedValue({
+				ok: false,
+				status: 401,
+				text: async () => JSON.stringify({ error: { message: "Invalid API key" } }),
+			})
+			global.fetch = mockFetch as any
+
+			handler = new OpenAiNativeHandler({
+				apiModelId: "gpt-5-2025-08-07",
+				openAiNativeApiKey: "invalid-key",
+			})
+
+			await expect(handler.completePrompt("Test prompt")).rejects.toThrow(
+				"Failed to complete prompt via GPT-5 API: GPT-5 API request failed (401): Invalid API key",
+			)
+
+			// Clean up
+			delete (global as any).fetch
+		})
+
 		it("should complete prompt successfully with o1 model", async () => {
 			handler = new OpenAiNativeHandler({
 				apiModelId: "o1",
@@ -1679,16 +1855,49 @@ describe("GPT-5 streaming event coverage (additional)", () => {
 			delete (global as any).fetch
 		})
 
-		it("should handle codex-mini-latest non-streaming completion", async () => {
+		it("should handle codex-mini-latest non-streaming completion via streaming collection", async () => {
+			// Mock fetch for Responses API that will be used for non-streaming completion
+			const mockFetch = vitest.fn().mockResolvedValue({
+				ok: true,
+				body: new ReadableStream({
+					start(controller) {
+						controller.enqueue(
+							new TextEncoder().encode(
+								'data: {"type":"response.output_text.delta","delta":"def hello_world():"}\n\n',
+							),
+						)
+						controller.enqueue(
+							new TextEncoder().encode(
+								'data: {"type":"response.output_text.delta","delta":"\\n    print(\\"Hello, World!\\")"}\n\n',
+							),
+						)
+						controller.enqueue(new TextEncoder().encode("data: [DONE]\n\n"))
+						controller.close()
+					},
+				}),
+			})
+			global.fetch = mockFetch as any
+
 			handler = new OpenAiNativeHandler({
 				...mockOptions,
 				apiModelId: "codex-mini-latest",
 			})
 
-			// Codex Mini now uses the same Responses API as GPT-5, which doesn't support non-streaming
-			await expect(handler.completePrompt("Write a hello world function in Python")).rejects.toThrow(
-				"completePrompt is not supported for codex-mini-latest. Use createMessage (Responses API) instead.",
+			// Codex Mini now collects the streaming response for non-streaming completion
+			const result = await handler.completePrompt("Write a hello world function in Python")
+			expect(result).toBe('def hello_world():\n    print("Hello, World!")')
+
+			// Verify the request was made with correct parameters
+			expect(mockFetch).toHaveBeenCalledWith(
+				"https://api.openai.com/v1/responses",
+				expect.objectContaining({
+					method: "POST",
+					body: expect.stringContaining('"input":"User: Write a hello world function in Python"'),
+				}),
 			)
+
+			// Clean up
+			delete (global as any).fetch
 		})
 
 		it("should handle codex-mini-latest API errors", async () => {

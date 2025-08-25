@@ -1248,8 +1248,9 @@ export class OpenAiNativeHandler extends BaseProvider implements SingleCompletio
 			const isResponsesApi = this.isResponsesApiModel(id)
 
 			if (isResponsesApi) {
-				// Models that use the Responses API (GPT-5 and Codex Mini) don't support non-streaming completion
-				throw new Error(`completePrompt is not supported for ${id}. Use createMessage (Responses API) instead.`)
+				// For GPT-5 and Codex Mini models, use the Responses API with streaming
+				// and collect the stream into a complete response
+				return await this.completePromptViaResponsesApi(prompt)
 			}
 
 			const params: any = {
@@ -1275,5 +1276,255 @@ export class OpenAiNativeHandler extends BaseProvider implements SingleCompletio
 			}
 			throw error
 		}
+	}
+
+	/**
+	 * Handles non-streaming completion for models that use the Responses API (GPT-5 and Codex Mini)
+	 * by collecting the streaming response into a complete string.
+	 */
+	private async completePromptViaResponsesApi(prompt: string): Promise<string> {
+		const model = this.getModel()
+		const { verbosity } = model
+
+		// Resolve reasoning effort for GPT-5
+		const reasoningEffort = this.getGpt5ReasoningEffort(model)
+
+		// Format the prompt for the Responses API
+		// Use a simple format for single prompts without conversation history
+		const formattedInput = `User: ${prompt}`
+
+		// Build request body for the Responses API
+		interface Gpt5RequestBody {
+			model: string
+			input: string
+			stream: boolean
+			reasoning?: { effort: ReasoningEffortWithMinimal; summary?: "auto" }
+			text?: { verbosity: VerbosityLevel }
+			temperature?: number
+			max_output_tokens?: number
+		}
+
+		const requestBody: Gpt5RequestBody = {
+			model: model.id,
+			input: formattedInput,
+			stream: true, // We still use streaming but collect the results
+			...(reasoningEffort && {
+				reasoning: {
+					effort: reasoningEffort,
+					...(this.options.enableGpt5ReasoningSummary ? { summary: "auto" as const } : {}),
+				},
+			}),
+			text: { verbosity: (verbosity || "medium") as VerbosityLevel },
+			temperature: this.options.modelTemperature ?? GPT5_DEFAULT_TEMPERATURE,
+			...(model.maxTokens ? { max_output_tokens: model.maxTokens } : {}),
+		}
+
+		let collectedText = ""
+		let collectedReasoning = ""
+
+		try {
+			// Try using the SDK first
+			const stream = (await (this.client as any).responses.create(requestBody)) as AsyncIterable<any>
+
+			if (typeof (stream as any)[Symbol.asyncIterator] !== "function") {
+				// Fall back to SSE if SDK doesn't return an AsyncIterable
+				return await this.completePromptViaResponsesApiSSE(requestBody)
+			}
+
+			// Collect the streaming response
+			for await (const event of stream) {
+				// Process text deltas
+				if (event?.type === "response.text.delta" || event?.type === "response.output_text.delta") {
+					if (event?.delta) {
+						collectedText += event.delta
+					}
+				}
+				// Process reasoning deltas (include them in the response for enhanced prompts)
+				else if (
+					event?.type === "response.reasoning.delta" ||
+					event?.type === "response.reasoning_text.delta" ||
+					event?.type === "response.reasoning_summary.delta" ||
+					event?.type === "response.reasoning_summary_text.delta"
+				) {
+					if (event?.delta) {
+						collectedReasoning += event.delta
+					}
+				}
+				// Handle output item additions
+				else if (event?.type === "response.output_item.added") {
+					const item = event?.item
+					if (item) {
+						if (item.type === "text" && item.text) {
+							collectedText += item.text
+						} else if (item.type === "reasoning" && item.text) {
+							collectedReasoning += item.text
+						} else if (item.type === "message" && Array.isArray(item.content)) {
+							for (const content of item.content) {
+								if ((content?.type === "text" || content?.type === "output_text") && content?.text) {
+									collectedText += content.text
+								}
+							}
+						}
+					}
+				}
+				// Handle complete responses in initial event
+				else if (event.response && event.response.output && Array.isArray(event.response.output)) {
+					for (const outputItem of event.response.output) {
+						if (outputItem.type === "text" && outputItem.content) {
+							for (const content of outputItem.content) {
+								if (content.type === "text" && content.text) {
+									collectedText += content.text
+								}
+							}
+						}
+						// Handle reasoning summaries
+						if (outputItem.type === "reasoning" && Array.isArray(outputItem.summary)) {
+							for (const summary of outputItem.summary) {
+								if (summary?.type === "summary_text" && typeof summary.text === "string") {
+									collectedReasoning += summary.text
+								}
+							}
+						}
+					}
+				}
+			}
+		} catch (sdkErr: any) {
+			// Fall back to SSE implementation if SDK fails
+			return await this.completePromptViaResponsesApiSSE(requestBody)
+		}
+
+		// Return the collected text (and optionally include reasoning if present)
+		// For prompt enhancement, we typically want just the enhanced prompt text
+		return collectedText || collectedReasoning || ""
+	}
+
+	/**
+	 * SSE fallback for non-streaming completion via Responses API
+	 */
+	private async completePromptViaResponsesApiSSE(requestBody: any): Promise<string> {
+		const apiKey = this.options.openAiNativeApiKey ?? "not-provided"
+		const baseUrl = this.options.openAiNativeBaseUrl || "https://api.openai.com"
+		const url = `${baseUrl}/v1/responses`
+
+		let collectedText = ""
+		let collectedReasoning = ""
+
+		try {
+			const response = await fetch(url, {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+					Authorization: `Bearer ${apiKey}`,
+					Accept: "text/event-stream",
+				},
+				body: JSON.stringify(requestBody),
+			})
+
+			if (!response.ok) {
+				const errorText = await response.text()
+				let errorMessage = `GPT-5 API request failed (${response.status})`
+
+				try {
+					const errorJson = JSON.parse(errorText)
+					if (errorJson.error?.message) {
+						errorMessage += `: ${errorJson.error.message}`
+					}
+				} catch {
+					errorMessage += `: ${errorText}`
+				}
+
+				throw new Error(errorMessage)
+			}
+
+			if (!response.body) {
+				throw new Error("GPT-5 Responses API error: No response body")
+			}
+
+			// Process the SSE stream
+			const reader = response.body.getReader()
+			const decoder = new TextDecoder()
+			let buffer = ""
+
+			while (true) {
+				const { done, value } = await reader.read()
+				if (done) break
+
+				buffer += decoder.decode(value, { stream: true })
+				const lines = buffer.split("\n")
+				buffer = lines.pop() || ""
+
+				for (const line of lines) {
+					if (line.startsWith("data: ")) {
+						const data = line.slice(6).trim()
+						if (data === "[DONE]") {
+							continue
+						}
+
+						try {
+							const parsed = JSON.parse(data)
+
+							// Process text deltas
+							if (parsed.type === "response.text.delta" || parsed.type === "response.output_text.delta") {
+								if (parsed.delta) {
+									collectedText += parsed.delta
+								}
+							}
+							// Process reasoning deltas
+							else if (
+								parsed.type === "response.reasoning.delta" ||
+								parsed.type === "response.reasoning_text.delta" ||
+								parsed.type === "response.reasoning_summary.delta" ||
+								parsed.type === "response.reasoning_summary_text.delta"
+							) {
+								if (parsed.delta) {
+									collectedReasoning += parsed.delta
+								}
+							}
+							// Handle output item additions
+							else if (parsed.type === "response.output_item.added") {
+								if (parsed.item) {
+									if (parsed.item.type === "text" && parsed.item.text) {
+										collectedText += parsed.item.text
+									} else if (parsed.item.type === "reasoning" && parsed.item.text) {
+										collectedReasoning += parsed.item.text
+									}
+								}
+							}
+							// Handle complete responses
+							else if (
+								parsed.response &&
+								parsed.response.output &&
+								Array.isArray(parsed.response.output)
+							) {
+								for (const outputItem of parsed.response.output) {
+									if (outputItem.type === "text" && outputItem.content) {
+										for (const content of outputItem.content) {
+											if (content.type === "text" && content.text) {
+												collectedText += content.text
+											}
+										}
+									}
+								}
+							}
+						} catch (e) {
+							// Ignore JSON parsing errors
+							if (!(e instanceof SyntaxError)) {
+								throw e
+							}
+						}
+					}
+				}
+			}
+
+			reader.releaseLock()
+		} catch (error) {
+			if (error instanceof Error) {
+				throw new Error(`Failed to complete prompt via GPT-5 API: ${error.message}`)
+			}
+			throw new Error("Unexpected error completing prompt via GPT-5 API")
+		}
+
+		// Return the collected text
+		return collectedText || collectedReasoning || ""
 	}
 }
