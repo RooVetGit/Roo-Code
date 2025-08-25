@@ -59,65 +59,6 @@ type ShellToken = string | { op: string } | { command: string }
  */
 
 /**
- * Detect subshell usage and command substitution patterns that could be security risks.
- *
- * Subshells allow executing commands in isolated environments and can be used to bypass
- * command validation by hiding dangerous commands inside substitution patterns.
- *
- * Detected patterns:
- * - $() - command substitution: executes command and substitutes output
- * - `` - backticks (legacy command substitution): same as $() but older syntax
- * - <() - process substitution (input): creates temporary file descriptor for command output
- * - >() - process substitution (output): creates temporary file descriptor for command input
- * - $(()) - arithmetic expansion: evaluates mathematical expressions (can contain commands)
- * - $[] - arithmetic expansion (alternative syntax): same as $(()) but older syntax
- * - (cmd1; cmd2) - subshell grouping: executes multiple commands in isolated subshell
- *
- * @param source - The command string to analyze for subshell patterns
- * @returns true if any subshell patterns are detected, false otherwise
- *
- * @example
- * ```typescript
- * // Command substitution - executes 'date' and substitutes its output
- * containsSubshell("echo $(date)")     // true
- *
- * // Backtick substitution - legacy syntax for command substitution
- * containsSubshell("echo `date`")      // true
- *
- * // Process substitution - creates file descriptor for command output
- * containsSubshell("diff <(sort f1)")  // true
- *
- * // Arithmetic expansion - can contain command execution
- * containsSubshell("echo $((1+2))")    // true
- * containsSubshell("echo $[1+2]")      // true
- *
- * // Subshell grouping - executes commands in isolated environment
- * containsSubshell("(ls; rm file)")    // true
- * containsSubshell("(cd /tmp && rm -rf *)")  // true
- *
- * // Safe patterns that should NOT be flagged
- * containsSubshell("func(arg1, arg2)") // false - function call, not subshell
- * containsSubshell("echo hello")       // false - no subshell patterns
- * containsSubshell("(simple text)")    // false - no shell operators in parentheses
- * ```
- */
-export function containsSubshell(source: string): boolean {
-	// Check for command substitution, process substitution, and arithmetic expansion patterns
-	// These patterns allow executing commands and substituting their output, which can bypass validation
-	const commandSubstitutionPatterns = /(\$\()|`|(<\(|>\()|(\$\(\()|(\$\[)/.test(source)
-
-	// Check for subshell grouping: parentheses containing shell command operators
-	// Pattern explanation: \( = literal opening paren, [^)]* = any chars except closing paren,
-	// [;&|]+ = one or more shell operators (semicolon, ampersand, pipe), [^)]* = any chars except closing paren, \) = literal closing paren
-	// This detects dangerous patterns like: (cmd1; cmd2), (cmd1 && cmd2), (cmd1 || cmd2), (cmd1 | cmd2), (cmd1 & cmd2)
-	// But avoids false positives like function calls: func(arg1, arg2) - no shell operators inside
-	const subshellGroupingPattern = /\([^)]*[;&|]+[^)]*\)/.test(source)
-
-	// Return true if any subshell pattern is detected
-	return commandSubstitutionPatterns || subshellGroupingPattern
-}
-
-/**
  * Split a command string into individual sub-commands by
  * chaining operators (&&, ||, ;, |, or &) and newlines.
  *
@@ -681,10 +622,8 @@ export class CommandValidator {
 		subCommands: string[]
 		allowedMatches: Array<{ command: string; match: string | null }>
 		deniedMatches: Array<{ command: string; match: string | null }>
-		hasSubshells: boolean
 	} {
 		const subCommands = parseCommand(command)
-		const hasSubshells = containsSubshell(command)
 
 		const allowedMatches = subCommands.map((cmd) => ({
 			command: cmd,
@@ -701,7 +640,6 @@ export class CommandValidator {
 			subCommands,
 			allowedMatches,
 			deniedMatches,
-			hasSubshells,
 		}
 	}
 
