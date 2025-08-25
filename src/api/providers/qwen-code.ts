@@ -52,6 +52,7 @@ export class QwenCodeHandler extends BaseProvider implements SingleCompletionHan
 	protected options: QwenCodeHandlerOptions
 	private credentials: QwenOAuthCredentials | null = null
 	private client: OpenAI | undefined
+	private refreshPromise: Promise<QwenOAuthCredentials> | null = null
 
 	constructor(options: QwenCodeHandlerOptions) {
 		super()
@@ -84,6 +85,24 @@ export class QwenCodeHandler extends BaseProvider implements SingleCompletionHan
 	}
 
 	private async refreshAccessToken(credentials: QwenOAuthCredentials): Promise<QwenOAuthCredentials> {
+		// If a refresh is already in progress, return the existing promise
+		if (this.refreshPromise) {
+			return this.refreshPromise
+		}
+
+		// Create a new refresh promise
+		this.refreshPromise = this.doRefreshAccessToken(credentials)
+
+		try {
+			const result = await this.refreshPromise
+			return result
+		} finally {
+			// Clear the promise after completion (success or failure)
+			this.refreshPromise = null
+		}
+	}
+
+	private async doRefreshAccessToken(credentials: QwenOAuthCredentials): Promise<QwenOAuthCredentials> {
 		if (!credentials.refresh_token) {
 			throw new Error("No refresh token available in credentials.")
 		}
@@ -123,7 +142,12 @@ export class QwenCodeHandler extends BaseProvider implements SingleCompletionHan
 		}
 
 		const filePath = getQwenCachedCredentialPath(this.options.qwenCodeOauthPath)
-		await fs.writeFile(filePath, JSON.stringify(newCredentials, null, 2))
+		try {
+			await fs.writeFile(filePath, JSON.stringify(newCredentials, null, 2))
+		} catch (error) {
+			console.error("Failed to save refreshed credentials:", error)
+			// Continue with the refreshed token in memory even if file write fails
+		}
 
 		return newCredentials
 	}
