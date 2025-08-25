@@ -508,6 +508,21 @@
 			"label": "Enable text-to-speech",
 			"description": "When enabled, Roo will read aloud its responses using text-to-speech.",
 			"speedLabel": "Speed"
+		},
+		"system": {
+			"label": "Enable system notifications",
+			"description": "When enabled, Roo will show system notifications for important events and messages.",
+			"testButton": "Test System Notification",
+			"testTitle": "Roo Code",
+			"testMessage": "System notifications are working properly!",
+			"apiReqFailed": "API request error",
+			"mistakeLimitReached": "Mistake limit reached",
+			"followup": "Waiting for your follow-up reply",
+			"toolRequest": "Tool request waiting for approval",
+			"browserAction": "Browser action waiting for approval",
+			"command": "Command waiting for approval",
+			"useMcpServer": "Use MCP server for approval",
+			"completionResult": "Task Complete"
 		}
 	},
 	"contextManagement": {

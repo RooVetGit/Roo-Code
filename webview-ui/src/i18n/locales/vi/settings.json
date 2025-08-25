@@ -509,6 +509,21 @@
 			"label": "Bật chuyển văn bản thành giọng nói",
 			"description": "Khi được bật, Roo sẽ đọc to các phản hồi của nó bằng chức năng chuyển văn bản thành giọng nói.",
 			"speedLabel": "Tốc độ"
+		},
+		"system": {
+			"label": "Bật thông báo hệ thống",
+			"description": "Khi được bật, Roo sẽ hiển thị thông báo hệ thống cho các sự kiện và tin nhắn quan trọng.",
+			"testButton": "Kiểm tra thông báo hệ thống",
+			"testTitle": "Roo Code",
+			"testMessage": "Thông báo hệ thống hoạt động bình thường!",
+			"apiReqFailed": "Lỗi yêu cầu API",
+			"mistakeLimitReached": "Đã đạt giới hạn lỗi",
+			"followup": "Đang chờ phản hồi tiếp theo của bạn",
+			"toolRequest": "Yêu cầu công cụ đang chờ phê duyệt",
+			"browserAction": "Hành động trình duyệt đang chờ phê duyệt",
+			"command": "Lệnh đang chờ phê duyệt",
+			"useMcpServer": "Sử dụng máy chủ MCP để phê duyệt",
+			"completionResult": "Tác vụ hoàn thành"
 		}
 	},
 	"contextManagement": {

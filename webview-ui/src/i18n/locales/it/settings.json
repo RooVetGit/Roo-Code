@@ -509,6 +509,21 @@
 			"label": "Abilita sintesi vocale",
 			"description": "Quando abilitato, Roo leggerà ad alta voce le sue risposte utilizzando la sintesi vocale.",
 			"speedLabel": "Velocità"
+		},
+		"system": {
+			"label": "Abilita notifiche di sistema",
+			"description": "Quando abilitato, Roo mostrerà notifiche di sistema per eventi e messaggi importanti.",
+			"testButton": "Testa notifica di sistema",
+			"testTitle": "Roo Code",
+			"testMessage": "Le notifiche di sistema funzionano correttamente!",
+			"apiReqFailed": "Errore richiesta API",
+			"mistakeLimitReached": "Limite errori raggiunto",
+			"followup": "In attesa della tua risposta di follow-up",
+			"toolRequest": "Richiesta strumento in attesa di approvazione",
+			"browserAction": "Azione del browser in attesa di approvazione",
+			"command": "Comando in attesa di approvazione",
+			"useMcpServer": "Usa server MCP per approvazione",
+			"completionResult": "Attività completata"
 		}
 	},
 	"contextManagement": {

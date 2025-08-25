@@ -509,6 +509,21 @@
 			"label": "啟用文字轉語音",
 			"description": "啟用後，Roo 將使用文字轉語音功能朗讀其回應。",
 			"speedLabel": "速度"
+		},
+		"system": {
+			"label": "啟用系統通知",
+			"description": "啟用後，Roo 將為重要事件和訊息顯示系統通知。",
+			"testButton": "測試系統通知",
+			"testTitle": "Roo Code",
+			"testMessage": "系統通知運作正常！",
+			"apiReqFailed": "API 請求錯誤",
+			"mistakeLimitReached": "錯誤次數達到上限",
+			"followup": "等待你的後續回覆",
+			"toolRequest": "工具請求等待核准",
+			"browserAction": "瀏覽器動作等待核准",
+			"command": "指令等待核准",
+			"useMcpServer": "使用 MCP 伺服器進行核准",
+			"completionResult": "工作完成"
 		}
 	},
 	"contextManagement": {

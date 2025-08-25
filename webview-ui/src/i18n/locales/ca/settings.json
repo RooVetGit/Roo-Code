@@ -509,6 +509,21 @@
 			"label": "Habilitar text a veu",
 			"description": "Quan està habilitat, Roo llegirà en veu alta les seves respostes utilitzant text a veu.",
 			"speedLabel": "Velocitat"
+		},
+		"system": {
+			"label": "Habilitar notificacions del sistema",
+			"description": "Quan està habilitat, Roo mostrarà notificacions del sistema per a esdeveniments i missatges importants.",
+			"testButton": "Provar notificació del sistema",
+			"testTitle": "Roo Code",
+			"testMessage": "Les notificacions del sistema funcionen correctament!",
+			"apiReqFailed": "Error de sol·licitud d'API",
+			"mistakeLimitReached": "Límit d'errors assolit",
+			"followup": "Esperant la teva resposta de seguiment",
+			"toolRequest": "Sol·licitud d'eina esperant aprovació",
+			"browserAction": "Acció del navegador esperant aprovació",
+			"command": "Ordre esperant aprovació",
+			"useMcpServer": "Utilitzar servidor MCP per a l'aprovació",
+			"completionResult": "Tasca completada"
 		}
 	},
 	"contextManagement": {

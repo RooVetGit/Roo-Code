@@ -513,6 +513,21 @@
 			"label": "Aktifkan text-to-speech",
 			"description": "Ketika diaktifkan, Roo akan membacakan responnya menggunakan text-to-speech.",
 			"speedLabel": "Kecepatan"
+		},
+		"system": {
+			"label": "Aktifkan notifikasi sistem",
+			"description": "Ketika diaktifkan, Roo akan menampilkan notifikasi sistem untuk event dan pesan penting.",
+			"testButton": "Tes notifikasi sistem",
+			"testTitle": "Roo Code",
+			"testMessage": "Notifikasi sistem berfungsi dengan baik!",
+			"apiReqFailed": "Kesalahan permintaan API",
+			"mistakeLimitReached": "Batas kesalahan tercapai",
+			"followup": "Menunggu balasan lanjutan Anda",
+			"toolRequest": "Permintaan tool menunggu persetujuan",
+			"browserAction": "Aksi browser menunggu persetujuan",
+			"command": "Perintah menunggu persetujuan",
+			"useMcpServer": "Gunakan server MCP untuk persetujuan",
+			"completionResult": "Tugas selesai"
 		}
 	},
 	"contextManagement": {

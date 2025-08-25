@@ -509,6 +509,21 @@
 			"label": "Włącz syntezę mowy",
 			"description": "Gdy włączone, Roo będzie czytać na głos swoje odpowiedzi za pomocą syntezy mowy.",
 			"speedLabel": "Szybkość"
+		},
+		"system": {
+			"label": "Włącz powiadomienia systemowe",
+			"description": "Gdy włączone, Roo będzie wyświetlać powiadomienia systemowe dla ważnych zdarzeń i wiadomości.",
+			"testButton": "Testuj powiadomienie systemowe",
+			"testTitle": "Roo Code",
+			"testMessage": "Powiadomienia systemowe działają prawidłowo!",
+			"apiReqFailed": "Błąd żądania API",
+			"mistakeLimitReached": "Osiągnięto limit błędów",
+			"followup": "Oczekiwanie na twoją odpowiedź",
+			"toolRequest": "Żądanie narzędzia oczekuje na zatwierdzenie",
+			"browserAction": "Akcja przeglądarki oczekuje na zatwierdzenie",
+			"command": "Polecenie oczekuje na zatwierdzenie",
+			"useMcpServer": "Użyj serwera MCP do zatwierdzenia",
+			"completionResult": "Zadanie ukończone"
 		}
 	},
 	"contextManagement": {

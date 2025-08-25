@@ -509,6 +509,21 @@
 			"label": "Text-zu-Sprache aktivieren",
 			"description": "Wenn aktiviert, liest Roo seine Antworten mit Text-zu-Sprache laut vor.",
 			"speedLabel": "Geschwindigkeit"
+		},
+		"system": {
+			"label": "Systembenachrichtigungen aktivieren",
+			"description": "Wenn aktiviert, zeigt Roo Systembenachrichtigungen für wichtige Ereignisse und Nachrichten an.",
+			"testButton": "Systembenachrichtigung testen",
+			"testTitle": "Roo Code",
+			"testMessage": "Systembenachrichtigungen funktionieren ordnungsgemäß!",
+			"apiReqFailed": "API-Anfragefehler",
+			"mistakeLimitReached": "Fehlerlimit erreicht",
+			"followup": "Warte auf deine Antwort",
+			"toolRequest": "Tool-Anfrage wartet auf Genehmigung",
+			"browserAction": "Browser-Aktion wartet auf Genehmigung",
+			"command": "Befehl wartet auf Genehmigung",
+			"useMcpServer": "MCP-Server für Genehmigung verwenden",
+			"completionResult": "Aufgabe abgeschlossen"
 		}
 	},
 	"contextManagement": {

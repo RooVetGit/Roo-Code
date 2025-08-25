@@ -84,6 +84,7 @@ export interface ExtensionStateContextType extends ExtensionState {
 	setTerminalZdotdir: (value: boolean) => void
 	setTtsEnabled: (value: boolean) => void
 	setTtsSpeed: (value: number) => void
+	setSystemNotificationsEnabled: (value: boolean) => void
 	setDiffEnabled: (value: boolean) => void
 	setEnableCheckpoints: (value: boolean) => void
 	setBrowserViewportSize: (value: string) => void
@@ -441,6 +442,8 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 		setSoundVolume: (value) => setState((prevState) => ({ ...prevState, soundVolume: value })),
 		setTtsEnabled: (value) => setState((prevState) => ({ ...prevState, ttsEnabled: value })),
 		setTtsSpeed: (value) => setState((prevState) => ({ ...prevState, ttsSpeed: value })),
+		setSystemNotificationsEnabled: (value) =>
+			setState((prevState) => ({ ...prevState, systemNotificationsEnabled: value })),
 		setDiffEnabled: (value) => setState((prevState) => ({ ...prevState, diffEnabled: value })),
 		setEnableCheckpoints: (value) => setState((prevState) => ({ ...prevState, enableCheckpoints: value })),
 		setBrowserViewportSize: (value: string) =>

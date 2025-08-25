@@ -1,19 +1,24 @@
 import { HTMLAttributes } from "react"
 import { useAppTranslation } from "@/i18n/TranslationContext"
-import { VSCodeCheckbox } from "@vscode/webview-ui-toolkit/react"
+import { VSCodeCheckbox, VSCodeButton } from "@vscode/webview-ui-toolkit/react"
 import { Bell } from "lucide-react"
 
 import { SetCachedStateField } from "./types"
 import { SectionHeader } from "./SectionHeader"
 import { Section } from "./Section"
 import { Slider } from "../ui"
+import { vscode } from "../../utils/vscode"
 
 type NotificationSettingsProps = HTMLAttributes<HTMLDivElement> & {
 	ttsEnabled?: boolean
 	ttsSpeed?: number
 	soundEnabled?: boolean
 	soundVolume?: number
-	setCachedStateField: SetCachedStateField<"ttsEnabled" | "ttsSpeed" | "soundEnabled" | "soundVolume">
+	systemNotificationsEnabled?: boolean
+	setCachedStateField: SetCachedStateField<
+		"ttsEnabled" | "ttsSpeed" | "soundEnabled" | "soundVolume" | "systemNotificationsEnabled"
+	>
+	isChangeDetected: boolean
 }
 
 export const NotificationSettings = ({
@@ -21,10 +26,23 @@ export const NotificationSettings = ({
 	ttsSpeed,
 	soundEnabled,
 	soundVolume,
+	systemNotificationsEnabled,
+	isChangeDetected,
 	setCachedStateField,
 	...props
 }: NotificationSettingsProps) => {
 	const { t } = useAppTranslation()
+
+	const onTestNotificationClick = () => {
+		vscode.postMessage({
+			type: "showSystemNotification",
+			notificationOptions: {
+				title: t("settings:notifications.system.testTitle"),
+				message: t("settings:notifications.system.testMessage"),
+				force: true,
+			},
+		})
+	}
 	return (
 		<div {...props}>
 			<SectionHeader>
@@ -35,6 +53,26 @@ export const NotificationSettings = ({
 			</SectionHeader>
 
 			<Section>
+				<div>
+					<VSCodeCheckbox
+						checked={systemNotificationsEnabled}
+						onChange={(e: any) => setCachedStateField("systemNotificationsEnabled", e.target.checked)}
+						data-testid="system-notifications-enabled-checkbox">
+						<span className="font-medium">{t("settings:notifications.system.label")}</span>
+					</VSCodeCheckbox>
+					<div className="text-vscode-descriptionForeground text-sm mt-1 mb-2">
+						{t("settings:notifications.system.description")}
+					</div>
+					{systemNotificationsEnabled && !isChangeDetected && (
+						<VSCodeButton
+							appearance="secondary"
+							onClick={onTestNotificationClick}
+							data-testid="test-system-notification-button">
+							{t("settings:notifications.system.testButton")}
+						</VSCodeButton>
+					)}
+				</div>
+
 				<div>
 					<VSCodeCheckbox
 						checked={ttsEnabled}

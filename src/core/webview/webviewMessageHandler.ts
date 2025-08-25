@@ -29,6 +29,7 @@ import { checkExistKey } from "../../shared/checkExistApiConfig"
 import { experimentDefault } from "../../shared/experiments"
 import { Terminal } from "../../integrations/terminal/Terminal"
 import { openFile } from "../../integrations/misc/open-file"
+import { showSystemNotification } from "../../integrations/notifications"
 import { CodeIndexManager } from "../../services/code-index/manager"
 import { openImage, saveImage } from "../../integrations/misc/image-handler"
 import { selectImages } from "../../integrations/misc/process-images"
@@ -973,6 +974,20 @@ export const webviewMessageHandler = async (
 		case "soundVolume":
 			const soundVolume = message.value ?? 0.5
 			await updateGlobalState("soundVolume", soundVolume)
+			await provider.postStateToWebview()
+			break
+		case "showSystemNotification":
+			const isSystemNotificationsEnabled = getGlobalState("systemNotificationsEnabled") ?? false
+			if (!isSystemNotificationsEnabled) {
+				break
+			}
+			if (message.notificationOptions) {
+				showSystemNotification(message.notificationOptions)
+			}
+			break
+		case "systemNotificationsEnabled":
+			const systemNotificationsEnabled = message.bool ?? true
+			await updateGlobalState("systemNotificationsEnabled", systemNotificationsEnabled)
 			await provider.postStateToWebview()
 			break
 		case "ttsEnabled":

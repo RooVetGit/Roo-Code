@@ -509,6 +509,21 @@
 			"label": "Metinden sese özelliğini etkinleştir",
 			"description": "Etkinleştirildiğinde, Roo yanıtlarını metinden sese teknolojisi kullanarak sesli okuyacaktır.",
 			"speedLabel": "Hız"
+		},
+		"system": {
+			"label": "Sistem bildirimlerini etkinleştir",
+			"description": "Etkinleştirildiğinde, Roo önemli olaylar ve mesajlar için sistem bildirimleri gösterecektir.",
+			"testButton": "Sistem bildirimini test et",
+			"testTitle": "Roo Code",
+			"testMessage": "Sistem bildirimleri düzgün çalışıyor!",
+			"apiReqFailed": "API istek hatası",
+			"mistakeLimitReached": "Hata sınırına ulaşıldı",
+			"followup": "Takip yanıtını bekliyoruz",
+			"toolRequest": "Araç isteği onay bekliyor",
+			"browserAction": "Tarayıcı eylemi onay bekliyor",
+			"command": "Komut onay bekliyor",
+			"useMcpServer": "Onay için MCP sunucusu kullan",
+			"completionResult": "Görev tamamlandı"
 		}
 	},
 	"contextManagement": {

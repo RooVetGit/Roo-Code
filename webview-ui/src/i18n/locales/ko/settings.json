@@ -509,6 +509,21 @@
 			"label": "음성 합성 활성화",
 			"description": "활성화되면 Roo는 음성 합성을 사용하여 응답을 소리내어 읽습니다.",
 			"speedLabel": "속도"
+		},
+		"system": {
+			"label": "시스템 알림 활성화",
+			"description": "활성화되면 Roo는 중요한 이벤트와 메시지에 대한 시스템 알림을 표시합니다.",
+			"testButton": "시스템 알림 테스트",
+			"testTitle": "Roo Code",
+			"testMessage": "시스템 알림이 정상적으로 작동합니다!",
+			"apiReqFailed": "API 요청 오류",
+			"mistakeLimitReached": "오류 한도 도달",
+			"followup": "후속 답변을 기다리고 있습니다",
+			"toolRequest": "도구 요청이 승인 대기 중입니다",
+			"browserAction": "브라우저 작업이 승인 대기 중입니다",
+			"command": "명령이 승인 대기 중입니다",
+			"useMcpServer": "승인에 MCP 서버 사용",
+			"completionResult": "작업 완료"
 		}
 	},
 	"contextManagement": {

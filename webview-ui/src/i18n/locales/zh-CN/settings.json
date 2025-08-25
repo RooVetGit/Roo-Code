@@ -509,6 +509,21 @@
 			"label": "启用文本转语音",
 			"description": "启用后，Roo 将使用文本转语音功能朗读其响应。",
 			"speedLabel": "速度"
+		},
+		"system": {
+			"label": "启用系统通知",
+			"description": "启用后 Roo 将为重要事件和消息显示系统通知。",
+			"testButton": "测试系统通知",
+			"testTitle": "Roo Code",
+			"testMessage": "系统通知运行正常！",
+			"apiReqFailed": "API 请求错误",
+			"mistakeLimitReached": "错误次数达到上限",
+			"followup": "等待你的后续回复",
+			"toolRequest": "工具请求等待批准",
+			"browserAction": "浏览器操作等待批准",
+			"command": "命令等待批准",
+			"useMcpServer": "使用 MCP 服务进行批准",
+			"completionResult": "任务完成"
 		}
 	},
 	"contextManagement": {

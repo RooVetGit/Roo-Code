@@ -509,6 +509,21 @@
 			"label": "Activer la synthèse vocale",
 			"description": "Lorsque cette option est activée, Roo lira ses réponses à haute voix en utilisant la synthèse vocale.",
 			"speedLabel": "Vitesse"
+		},
+		"system": {
+			"label": "Activer les notifications système",
+			"description": "Lorsque cette option est activée, Roo affichera des notifications système pour les événements et messages importants.",
+			"testButton": "Tester la notification système",
+			"testTitle": "Roo Code",
+			"testMessage": "Les notifications système fonctionnent correctement !",
+			"apiReqFailed": "Erreur de requête API",
+			"mistakeLimitReached": "Limite d'erreurs atteinte",
+			"followup": "En attente de ta réponse de suivi",
+			"toolRequest": "Demande d'outil en attente d'approbation",
+			"browserAction": "Action du navigateur en attente d'approbation",
+			"command": "Commande en attente d'approbation",
+			"useMcpServer": "Utiliser le serveur MCP pour l'approbation",
+			"completionResult": "Tâche terminée"
 		}
 	},
 	"contextManagement": {

@@ -509,6 +509,21 @@
 			"label": "Ativar texto para fala",
 			"description": "Quando ativado, o Roo lerá em voz alta suas respostas usando texto para fala.",
 			"speedLabel": "Velocidade"
+		},
+		"system": {
+			"label": "Ativar notificações do sistema",
+			"description": "Quando ativado, o Roo mostrará notificações do sistema para eventos e mensagens importantes.",
+			"testButton": "Testar notificação do sistema",
+			"testTitle": "Roo Code",
+			"testMessage": "As notificações do sistema estão funcionando corretamente!",
+			"apiReqFailed": "Erro de solicitação da API",
+			"mistakeLimitReached": "Limite de erros alcançado",
+			"followup": "Aguardando sua resposta de acompanhamento",
+			"toolRequest": "Solicitação de ferramenta aguardando aprovação",
+			"browserAction": "Ação do navegador aguardando aprovação",
+			"command": "Comando aguardando aprovação",
+			"useMcpServer": "Usar servidor MCP para aprovação",
+			"completionResult": "Tarefa concluída"
 		}
 	},
 	"contextManagement": {

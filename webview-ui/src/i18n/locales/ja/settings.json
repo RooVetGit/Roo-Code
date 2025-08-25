@@ -509,6 +509,21 @@
 			"label": "音声合成を有効化",
 			"description": "有効にすると、Rooは音声合成を使用して応答を音声で読み上げます。",
 			"speedLabel": "速度"
+		},
+		"system": {
+			"label": "システム通知を有効化",
+			"description": "有効にすると、Rooは重要なイベントやメッセージのためにシステム通知を表示します。",
+			"testButton": "システム通知をテスト",
+			"testTitle": "Roo Code",
+			"testMessage": "システム通知が正常に動作しています！",
+			"apiReqFailed": "APIリクエストエラー",
+			"mistakeLimitReached": "エラー制限に達しました",
+			"followup": "フォローアップの返信をお待ちしています",
+			"toolRequest": "ツールリクエストが承認待ちです",
+			"browserAction": "ブラウザアクションが承認待ちです",
+			"command": "コマンドが承認待ちです",
+			"useMcpServer": "承認にMCPサーバーを使用",
+			"completionResult": "タスク完了"
 		}
 	},
 	"contextManagement": {

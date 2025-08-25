@@ -509,6 +509,21 @@
 			"label": "Tekst-naar-spraak inschakelen",
 			"description": "Indien ingeschakeld, leest Roo zijn antwoorden hardop voor via tekst-naar-spraak.",
 			"speedLabel": "Snelheid"
+		},
+		"system": {
+			"label": "Systeemmeldingen inschakelen",
+			"description": "Indien ingeschakeld, toont Roo systeemmeldingen voor belangrijke gebeurtenissen en berichten.",
+			"testButton": "Systeemmelding testen",
+			"testTitle": "Roo Code",
+			"testMessage": "Systeemmeldingen werken correct!",
+			"apiReqFailed": "API-verzoekfout",
+			"mistakeLimitReached": "Foutlimiet bereikt",
+			"followup": "Wachten op je vervolgantwoord",
+			"toolRequest": "Toolverzoek wacht op goedkeuring",
+			"browserAction": "Browseractie wacht op goedkeuring",
+			"command": "Opdracht wacht op goedkeuring",
+			"useMcpServer": "MCP-server gebruiken voor goedkeuring",
+			"completionResult": "Taak voltooid"
 		}
 	},
 	"contextManagement": {
