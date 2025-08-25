@@ -686,14 +686,14 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 					// saves, and only post parts of partial message instead of
 					// whole array in new listener.
 					this.updateClineMessage(lastMessage)
-					throw new Error("Current ask promise was ignored (#1)")
+					return Promise.reject(new Error("Current ask promise was ignored (#1)"))
 				} else {
 					// This is a new partial message, so add it with partial
 					// state.
 					askTs = Date.now()
 					this.lastMessageTs = askTs
 					await this.addToClineMessages({ ts: askTs, type: "ask", ask: type, text, partial, isProtected })
-					throw new Error("Current ask promise was ignored (#2)")
+					return Promise.reject(new Error("Current ask promise was ignored (#2)"))
 				}
 			} else {
 				if (isUpdatingPreviousPartial) {
@@ -797,7 +797,7 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 			// Could happen if we send multiple asks in a row i.e. with
 			// command_output. It's important that when we know an ask could
 			// fail, it is handled gracefully.
-			throw new Error("Current ask promise was ignored")
+			return Promise.reject(new Error("Current ask promise was ignored"))
 		}
 
 		const result = { response: this.askResponse!, text: this.askResponseText, images: this.askResponseImages }
