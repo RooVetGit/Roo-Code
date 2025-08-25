@@ -60,7 +60,7 @@ describe("LMStudio Fetcher", () => {
 				supportsPromptCache: true,
 				supportsImages: rawModel.vision,
 				supportsComputerUse: false,
-				maxTokens: rawModel.contextLength,
+				maxTokens: Math.ceil(rawModel.contextLength * 0.2), // Should be 20% of context window
 				inputPrice: 0,
 				outputPrice: 0,
 				cacheWritesPrice: 0,
@@ -69,6 +69,36 @@ describe("LMStudio Fetcher", () => {
 
 			const result = parseLMStudioModel(rawModel)
 			expect(result).toEqual(expectedModelInfo)
+		})
+
+		it("should calculate maxTokens as 20% of context window", () => {
+			const testCases = [
+				{ contextLength: 8192, expectedMaxTokens: Math.ceil(8192 * 0.2) }, // 1639
+				{ contextLength: 128000, expectedMaxTokens: Math.ceil(128000 * 0.2) }, // 25600
+				{ contextLength: 200000, expectedMaxTokens: Math.ceil(200000 * 0.2) }, // 40000
+			]
+
+			testCases.forEach(({ contextLength, expectedMaxTokens }) => {
+				const rawModel: LLMInstanceInfo = {
+					type: "llm",
+					modelKey: "test-model",
+					format: "safetensors",
+					displayName: "Test Model",
+					path: "test/model",
+					sizeBytes: 1000000,
+					architecture: "test",
+					identifier: "test/model",
+					instanceReference: "TEST123",
+					vision: false,
+					trainedForToolUse: false,
+					maxContextLength: contextLength,
+					contextLength: contextLength,
+				}
+
+				const result = parseLMStudioModel(rawModel)
+				expect(result.maxTokens).toBe(expectedMaxTokens)
+				expect(result.contextWindow).toBe(contextLength)
+			})
 		})
 	})
 

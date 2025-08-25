@@ -38,13 +38,18 @@ export const parseLMStudioModel = (rawModel: LLMInstanceInfo | LLMInfo): ModelIn
 	// Handle both LLMInstanceInfo (from loaded models) and LLMInfo (from downloaded models)
 	const contextLength = "contextLength" in rawModel ? rawModel.contextLength : rawModel.maxContextLength
 
+	// Calculate maxTokens as 20% of context window to prevent context overflow
+	// This ensures there's always room for input tokens and prevents crashes
+	// when approaching the context limit
+	const maxOutputTokens = Math.ceil(contextLength * 0.2)
+
 	const modelInfo: ModelInfo = Object.assign({}, lMStudioDefaultModelInfo, {
 		description: `${rawModel.displayName} - ${rawModel.path}`,
 		contextWindow: contextLength,
 		supportsPromptCache: true,
 		supportsImages: rawModel.vision,
 		supportsComputerUse: false,
-		maxTokens: contextLength,
+		maxTokens: maxOutputTokens,
 	})
 
 	return modelInfo
