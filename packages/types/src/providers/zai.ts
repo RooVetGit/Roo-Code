@@ -12,6 +12,7 @@ export const internationalZAiModels = {
 		contextWindow: 131_072,
 		supportsImages: false,
 		supportsPromptCache: true,
+		supportsReasoningEffort: true, // GLM-4.5 supports thinking/reasoning
 		inputPrice: 0.6,
 		outputPrice: 2.2,
 		cacheWritesPrice: 0,
@@ -24,6 +25,7 @@ export const internationalZAiModels = {
 		contextWindow: 131_072,
 		supportsImages: false,
 		supportsPromptCache: true,
+		supportsReasoningEffort: true, // GLM-4.5-Air supports thinking/reasoning
 		inputPrice: 0.2,
 		outputPrice: 1.1,
 		cacheWritesPrice: 0,
@@ -41,6 +43,7 @@ export const mainlandZAiModels = {
 		contextWindow: 131_072,
 		supportsImages: false,
 		supportsPromptCache: true,
+		supportsReasoningEffort: true, // GLM-4.5 supports thinking/reasoning
 		inputPrice: 0.29,
 		outputPrice: 1.14,
 		cacheWritesPrice: 0,
@@ -73,6 +76,7 @@ export const mainlandZAiModels = {
 		contextWindow: 131_072,
 		supportsImages: false,
 		supportsPromptCache: true,
+		supportsReasoningEffort: true, // GLM-4.5-Air supports thinking/reasoning
 		inputPrice: 0.1,
 		outputPrice: 0.6,
 		cacheWritesPrice: 0,

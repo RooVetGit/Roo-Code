@@ -11,6 +11,7 @@ export const deepSeekModels = {
 		contextWindow: 128_000,
 		supportsImages: false,
 		supportsPromptCache: true,
+		supportsReasoningEffort: true, // DeepSeek V3.1 supports thinking/reasoning
 		inputPrice: 0.27, // $0.27 per million tokens (cache miss)
 		outputPrice: 1.1, // $1.10 per million tokens
 		cacheWritesPrice: 0.27, // $0.27 per million tokens (cache miss)
@@ -22,6 +23,7 @@ export const deepSeekModels = {
 		contextWindow: 128_000,
 		supportsImages: false,
 		supportsPromptCache: true,
+		supportsReasoningEffort: true, // DeepSeek-R1 supports thinking/reasoning
 		inputPrice: 0.55, // $0.55 per million tokens (cache miss)
 		outputPrice: 2.19, // $2.19 per million tokens
 		cacheWritesPrice: 0.55, // $0.55 per million tokens (cache miss)
