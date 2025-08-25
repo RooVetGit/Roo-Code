@@ -120,6 +120,9 @@ export interface ExtensionMessage {
 		| "showEditMessageDialog"
 		| "commands"
 		| "insertTextIntoTextarea"
+		| "showModeEnableDisableDialog"
+		| "modeDisabledStatesUpdated"
+		| "modesBySource"
 	text?: string
 	payload?: any // Add a generic payload for now, can refine later
 	action?:
@@ -194,6 +197,8 @@ export interface ExtensionMessage {
 	messageTs?: number
 	context?: string
 	commands?: Command[]
+	modes?: ModeConfig[] // For showModeEnableDisableDialog
+	modesBySource?: { builtin: ModeConfig[]; global: ModeConfig[]; project: ModeConfig[] } // For modesBySource response
 }
 
 export type ExtensionState = Pick<

@@ -4,6 +4,7 @@ import { Task } from "../task/Task"
 import { ToolUse, AskApproval, HandleError, PushToolResult, RemoveClosingTag } from "../../shared/tools"
 import { formatResponse } from "../prompts/responses"
 import { defaultModeSlug, getModeBySlug } from "../../shared/modes"
+import { ModeManager } from "../../services/ModeManager"
 
 export async function switchModeTool(
 	cline: Task,
@@ -37,11 +38,34 @@ export async function switchModeTool(
 			cline.consecutiveMistakeCount = 0
 
 			// Verify the mode exists
-			const targetMode = getModeBySlug(mode_slug, (await cline.providerRef.deref()?.getState())?.customModes)
+			const provider = cline.providerRef.deref()
+			const targetMode = getModeBySlug(mode_slug, (await provider?.getState())?.customModes)
 
 			if (!targetMode) {
 				cline.recordToolError("switch_mode")
 				pushToolResult(formatResponse.toolError(`Invalid mode: ${mode_slug}`))
+				return
+			}
+
+			// Check if mode is disabled using ModeManager
+			if (!provider?.context || !provider?.customModesManager) {
+				cline.recordToolError("switch_mode")
+				pushToolResult(formatResponse.toolError("Unable to access mode configuration."))
+				return
+			}
+
+			const modeManager = new ModeManager(provider.context, provider.customModesManager)
+			const validationResult = await modeManager.validateModeSwitch(mode_slug)
+
+			if (!validationResult.isValid) {
+				cline.recordToolError("switch_mode")
+
+				// Provide helpful error message with available modes
+				const enabledModes = await modeManager.getEnabledModes()
+				const availableModesList = enabledModes.map((mode) => `- ${mode.slug}: ${mode.name}`).join("\n")
+
+				const errorMessage = `${validationResult.errorMessage}\n\nAvailable enabled modes:\n${availableModesList}`
+				pushToolResult(formatResponse.toolError(errorMessage))
 				return
 			}
 

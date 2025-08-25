@@ -471,6 +471,13 @@ const ModesView = ({ onDone }: ModesViewProps) => {
 					...prev,
 					[message.slug]: message.hasContent,
 				}))
+			} else if (message.type === "openDeleteModeInSettings") {
+				// Received forwarded request to open the delete flow for a specific mode.
+				if (message.slug && message.name) {
+					setModeToDelete({ slug: message.slug, name: message.name, source: "global" })
+					// Ask the extension to check for rules folder and return path via message
+					vscode.postMessage({ type: "deleteCustomMode", slug: message.slug, checkOnly: true })
+				}
 			} else if (message.type === "deleteCustomModeCheck") {
 				// Handle the check response
 				// Use the ref to get the current modeToDelete value
@@ -523,23 +530,7 @@ const ModesView = ({ onDone }: ModesViewProps) => {
 								</Button>
 							</StandardTooltip>
 							<div className="relative inline-block">
-								<StandardTooltip content={t("prompts:modes.editModesConfig")}>
-									<Button
-										variant="ghost"
-										size="icon"
-										className="flex"
-										onClick={(e: React.MouseEvent) => {
-											e.preventDefault()
-											e.stopPropagation()
-											setShowConfigMenu((prev) => !prev)
-										}}
-										onBlur={() => {
-											// Add slight delay to allow menu item clicks to register
-											setTimeout(() => setShowConfigMenu(false), 200)
-										}}>
-										<span className="codicon codicon-json"></span>
-									</Button>
-								</StandardTooltip>
+								{/* Single Edit modes configuration button (removed duplicate) */}
 								{showConfigMenu && (
 									<div
 										onClick={(e) => e.stopPropagation()}
@@ -577,6 +568,36 @@ const ModesView = ({ onDone }: ModesViewProps) => {
 									</div>
 								)}
 							</div>
+							<StandardTooltip content={t("prompts:modes.editModesConfig")}>
+								<Button
+									variant="ghost"
+									size="icon"
+									className="flex"
+									onClick={(e: React.MouseEvent) => {
+										e.preventDefault()
+										e.stopPropagation()
+										setShowConfigMenu((prev) => !prev)
+									}}
+									onBlur={() => {
+										// Add slight delay to allow menu item clicks to register
+										setTimeout(() => setShowConfigMenu(false), 200)
+									}}>
+									<span className="codicon codicon-json"></span>
+								</Button>
+							</StandardTooltip>
+							{/* Enable/Disable Modes button - placed between Edit config and Marketplace */}
+							<StandardTooltip content={t("prompts:modes.enableDisable")}>
+								<Button
+									variant="ghost"
+									size="icon"
+									onClick={() => {
+										// Ask the App to open the Enable/Disable dialog with current modes.
+										window.postMessage({ type: "openModeEnableDisableDialog", modes }, "*")
+									}}
+									className="flex">
+									<span className="codicon codicon-eye"></span>
+								</Button>
+							</StandardTooltip>
 							<StandardTooltip content={t("chat:modeSelector.marketplace")}>
 								<Button
 									variant="ghost"

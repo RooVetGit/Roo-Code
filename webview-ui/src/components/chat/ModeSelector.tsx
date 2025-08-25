@@ -7,7 +7,7 @@ import { IconButton } from "./IconButton"
 import { vscode } from "@/utils/vscode"
 import { useExtensionState } from "@/context/ExtensionStateContext"
 import { useAppTranslation } from "@/i18n/TranslationContext"
-import { Mode, getAllModes } from "@roo/modes"
+import { Mode, getAllModes, getEnabledModes } from "@roo/modes"
 import { ModeConfig, CustomModePrompts } from "@roo-code/types"
 import { telemetryClient } from "@/utils/TelemetryClient"
 import { TelemetryEventName } from "@roo-code/types"
@@ -58,31 +58,40 @@ export const ModeSelector = ({
 	}, [hasOpenedModeSelector, setHasOpenedModeSelector])
 
 	// Get all modes including custom modes and merge custom prompt descriptions
-	const modes = React.useMemo(() => {
-		const allModes = getAllModes(customModes)
-		return allModes.map((mode) => ({
+	const allModes = React.useMemo(() => {
+		const modes = getAllModes(customModes)
+		return modes.map((mode) => ({
 			...mode,
 			description: customModePrompts?.[mode.slug]?.description ?? mode.description,
 		}))
 	}, [customModes, customModePrompts])
 
-	// Find the selected mode
-	const selectedMode = React.useMemo(() => modes.find((mode) => mode.slug === value), [modes, value])
+	// Get only enabled modes for the dropdown
+	const enabledModes = React.useMemo(() => {
+		const modes = getEnabledModes(customModes)
+		return modes.map((mode) => ({
+			...mode,
+			description: customModePrompts?.[mode.slug]?.description ?? mode.description,
+		}))
+	}, [customModes, customModePrompts])
+
+	// Find the selected mode (search in all modes, not just enabled)
+	const selectedMode = React.useMemo(() => allModes.find((mode) => mode.slug === value), [allModes, value])
 
 	// Memoize searchable items for fuzzy search with separate name and description search
 	const nameSearchItems = React.useMemo(() => {
-		return modes.map((mode) => ({
+		return enabledModes.map((mode) => ({
 			original: mode,
 			searchStr: [mode.name, mode.slug].filter(Boolean).join(" "),
 		}))
-	}, [modes])
+	}, [enabledModes])
 
 	const descriptionSearchItems = React.useMemo(() => {
-		return modes.map((mode) => ({
+		return enabledModes.map((mode) => ({
 			original: mode,
 			searchStr: mode.description || "",
 		}))
-	}, [modes])
+	}, [enabledModes])
 
 	// Create memoized Fzf instances for name and description searches
 	const nameFzfInstance = React.useMemo(() => {
@@ -99,7 +108,7 @@ export const ModeSelector = ({
 
 	// Filter modes based on search value using fuzzy search with priority
 	const filteredModes = React.useMemo(() => {
-		if (!searchValue) return modes
+		if (!searchValue) return enabledModes
 
 		// First search in names/slugs
 		const nameMatches = nameFzfInstance.find(searchValue)
@@ -117,7 +126,7 @@ export const ModeSelector = ({
 		]
 
 		return combinedResults
-	}, [modes, searchValue, nameFzfInstance, descriptionFzfInstance])
+	}, [enabledModes, searchValue, nameFzfInstance, descriptionFzfInstance])
 
 	const onClearSearch = React.useCallback(() => {
 		setSearchValue("")
@@ -154,7 +163,7 @@ export const ModeSelector = ({
 	}, [open])
 
 	// Determine if search should be shown
-	const showSearch = !disableSearch && modes.length > SEARCH_THRESHOLD
+	const showSearch = !disableSearch && enabledModes.length > SEARCH_THRESHOLD
 
 	// Combine instruction text for tooltip
 	const instructionText = `${t("chat:modeSelector.description")} ${modeShortcutText}`
@@ -255,6 +264,14 @@ export const ModeSelector = ({
 					{/* Bottom bar with buttons on left and title on right */}
 					<div className="flex flex-row items-center justify-between px-2 py-2 border-t border-vscode-dropdown-border">
 						<div className="flex flex-row gap-1">
+							<IconButton
+								iconClass="codicon-eye"
+								title="Enable/Disable Modes"
+								onClick={() => {
+									vscode.postMessage({ type: "enableDisableModesClicked" })
+									setOpen(false)
+								}}
+							/>
 							<IconButton
 								iconClass="codicon-extensions"
 								title={t("chat:modeSelector.marketplace")}

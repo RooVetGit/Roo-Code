@@ -193,6 +193,83 @@
 	.history-item-highlight {
 		@apply underline;
 	}
+
+	/* Mode Management Styles */
+	.mode-item {
+		background-color: var(--vscode-editor-background);
+		border-color: var(--vscode-panel-border);
+
+		&:hover {
+			background-color: var(--vscode-list-hoverBackground);
+			border-color: var(--vscode-focusBorder);
+		}
+
+		&.disabled {
+			opacity: 0.6;
+			background-color: var(--vscode-editor-inactiveSelectionBackground);
+
+			.mode-name {
+				text-decoration: line-through;
+				color: var(--vscode-descriptionForeground);
+			}
+
+			.mode-description {
+				color: var(--vscode-descriptionForeground);
+				opacity: 0.8;
+			}
+		}
+	}
+
+	.mode-slug {
+		color: var(--vscode-descriptionForeground);
+		font-family: var(--vscode-editor-font-family);
+	}
+
+	.source-badge {
+		&.builtin {
+			background-color: var(--vscode-charts-blue);
+			border-color: var(--vscode-charts-blue);
+			color: var(--vscode-editor-background);
+		}
+
+		&.global {
+			background-color: var(--vscode-charts-green);
+			border-color: var(--vscode-charts-green);
+			color: var(--vscode-editor-background);
+		}
+
+		&.project {
+			background-color: var(--vscode-charts-purple);
+			border-color: var(--vscode-charts-purple);
+			color: var(--vscode-editor-background);
+		}
+	}
+
+	.status-indicator {
+		.enabled {
+			color: var(--vscode-charts-green);
+		}
+
+		.disabled {
+			color: var(--vscode-descriptionForeground);
+			opacity: 0.6;
+		}
+	}
+
+	.enable-disable-button {
+		background-color: var(--vscode-button-secondaryBackground);
+		border-color: var(--vscode-button-border);
+		color: var(--vscode-button-secondaryForeground);
+
+		&:hover:not(:disabled) {
+			background-color: var(--vscode-button-secondaryHoverBackground);
+		}
+
+		&:disabled {
+			opacity: 0.4;
+			cursor: not-allowed;
+		}
+	}
 }
 
 /* Form Element Focus States */
@@ -465,6 +542,258 @@ input[cmdk-input]:focus {
 
 .animate-pulse {
 	animation: pulse 1.5s ease-in-out infinite;
+}
+
+/**
+ * Mode Management Components
+ */
+
+/* Mode enable/disable dialog styles */
+.mode-enable-disable-dialog {
+	/* Dialog container */
+	.mode-dialog-content {
+		background-color: var(--vscode-editor-background);
+		border: 1px solid var(--vscode-widget-border, var(--vscode-panel-border));
+		border-radius: var(--radius-md);
+		box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+	}
+
+	/* Mode item container */
+	.mode-item {
+		background-color: var(--vscode-editor-background);
+		border: 1px solid var(--vscode-input-border, transparent);
+		border-radius: var(--radius-sm);
+		transition: all 0.2s ease-in-out;
+
+		&:hover {
+			border-color: var(--vscode-focusBorder);
+			background-color: var(--vscode-list-hoverBackground);
+		}
+
+		&.disabled {
+			opacity: 0.6;
+			background-color: color-mix(
+				in srgb,
+				var(--vscode-editor-background) 95%,
+				var(--vscode-descriptionForeground) 5%
+			);
+		}
+	}
+
+	/* Mode text styling */
+	.mode-name {
+		color: var(--vscode-foreground);
+		font-weight: 500;
+
+		&.disabled {
+			color: var(--vscode-descriptionForeground);
+			text-decoration: line-through;
+		}
+	}
+
+	.mode-description {
+		color: var(--vscode-descriptionForeground);
+
+		&.disabled {
+			opacity: 0.5;
+		}
+	}
+
+	.mode-slug {
+		color: var(--vscode-descriptionForeground);
+		font-size: var(--text-xs);
+		opacity: 0.7;
+	}
+
+	/* Source badges */
+	.source-badge {
+		font-size: var(--text-xs);
+		padding: 2px 6px;
+		border-radius: var(--radius-sm);
+		font-weight: 500;
+
+		&.builtin {
+			background-color: color-mix(in srgb, var(--vscode-charts-blue) 20%, transparent);
+			color: var(--vscode-charts-blue);
+			border: 1px solid color-mix(in srgb, var(--vscode-charts-blue) 30%, transparent);
+		}
+
+		&.global {
+			background-color: color-mix(in srgb, var(--vscode-charts-green) 20%, transparent);
+			color: var(--vscode-charts-green);
+			border: 1px solid color-mix(in srgb, var(--vscode-charts-green) 30%, transparent);
+		}
+
+		&.project {
+			background-color: color-mix(in srgb, var(--vscode-charts-yellow) 20%, transparent);
+			color: var(--vscode-charts-yellow);
+			border: 1px solid color-mix(in srgb, var(--vscode-charts-yellow) 30%, transparent);
+		}
+	}
+
+	/* Source group headers */
+	.source-group-header {
+		color: var(--vscode-foreground);
+		border-bottom: 1px solid var(--vscode-panel-border);
+		padding-bottom: 8px;
+		margin-bottom: 16px;
+
+		.source-count {
+			color: var(--vscode-descriptionForeground);
+			font-size: var(--text-sm);
+		}
+	}
+
+	/* Bulk action buttons */
+	.bulk-action-buttons {
+		gap: 8px;
+
+		button {
+			font-size: var(--text-sm);
+			padding: 4px 8px;
+			border-radius: var(--radius-sm);
+			transition: all 0.15s ease-in-out;
+
+			&:hover {
+				opacity: 0.8;
+			}
+		}
+	}
+
+	/* Status indicators */
+	.status-indicator {
+		.enabled {
+			color: var(--vscode-charts-green);
+		}
+
+		.disabled {
+			color: var(--vscode-descriptionForeground);
+		}
+	}
+}
+
+/* Mode selector enhancements */
+.mode-selector {
+	/* Enable/disable button styling */
+	.enable-disable-button {
+		background: transparent;
+		border: 1px solid var(--vscode-input-border, transparent);
+		color: var(--vscode-foreground);
+		border-radius: var(--radius-sm);
+		padding: 6px 10px;
+		font-size: var(--text-sm);
+		transition: all 0.15s ease-in-out;
+		cursor: pointer;
+
+		&:hover {
+			background-color: var(--vscode-list-hoverBackground);
+			border-color: var(--vscode-focusBorder);
+		}
+
+		&:focus {
+			outline: 1px solid var(--vscode-focusBorder);
+			outline-offset: 1px;
+		}
+
+		&:active {
+			opacity: 0.8;
+		}
+
+		.icon {
+			margin-right: 4px;
+			font-size: 14px;
+		}
+	}
+
+	/* Mode dropdown item enhancements for disabled modes */
+	.mode-dropdown-item {
+		&.disabled {
+			opacity: 0.5;
+
+			.mode-name {
+				text-decoration: line-through;
+				color: var(--vscode-descriptionForeground);
+			}
+
+			&:hover {
+				background-color: var(--vscode-list-hoverBackground);
+				opacity: 0.7;
+			}
+		}
+	}
+}
+
+/* System prompt visual indicators */
+.system-prompt-mode-indicator {
+	/* Indicator for modes included in system prompt */
+	.included-mode {
+		position: relative;
+
+		&::after {
+			content: "";
+			position: absolute;
+			top: 2px;
+			right: 2px;
+			width: 6px;
+			height: 6px;
+			background-color: var(--vscode-charts-green);
+			border-radius: 50%;
+		}
+	}
+
+	/* Indicator for modes excluded from system prompt */
+	.excluded-mode {
+		position: relative;
+
+		&::after {
+			content: "";
+			position: absolute;
+			top: 2px;
+			right: 2px;
+			width: 6px;
+			height: 6px;
+			background-color: var(--vscode-descriptionForeground);
+			border-radius: 50%;
+			opacity: 0.5;
+		}
+	}
+}
+
+/* Accessibility improvements */
+.mode-management-accessible {
+	/* High contrast mode support */
+	@media (prefers-contrast: high) {
+		.mode-item.disabled {
+			opacity: 0.8;
+			border-style: dashed;
+		}
+
+		.source-badge {
+			border-width: 2px;
+		}
+	}
+
+	/* Reduced motion support */
+	@media (prefers-reduced-motion: reduce) {
+		.mode-item,
+		.enable-disable-button,
+		.source-badge {
+			transition: none;
+		}
+
+		.animate-fade-in,
+		.animate-slide-in-right,
+		.animate-pulse {
+			animation: none;
+		}
+	}
+
+	/* Focus indicators for keyboard navigation */
+	.mode-item:focus-within,
+	.enable-disable-button:focus {
+		outline: 2px solid var(--vscode-focusBorder);
+		outline-offset: 2px;
+	}
 }
 
 /* Transition utilities */

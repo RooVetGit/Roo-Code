@@ -488,6 +488,8 @@ export class CustomModesManager {
 		}
 
 		settings.customModes = operation(settings.customModes)
+		// Log write operations so extension host logs show when custom modes are persisted.
+		console.info(`[CustomModesManager] Writing custom modes to: ${filePath}`)
 		await fs.writeFile(filePath, yaml.stringify(settings, { lineWidth: 0 }), "utf-8")
 	}
 
@@ -543,6 +545,10 @@ export class CustomModesManager {
 
 				// Clear cache when modes are deleted
 				this.clearCache()
+
+				// Add a small delay to ensure file operations are complete before refreshing UI
+				await new Promise((resolve) => setTimeout(resolve, 100))
+
 				await this.refreshMergedState()
 			})
 		} catch (error) {
@@ -1000,6 +1006,136 @@ export class CustomModesManager {
 	private clearCache(): void {
 		this.cachedModes = null
 		this.cachedAt = 0
+	}
+
+	/**
+	 * Set the disabled state of a mode
+	 */
+	public async setModeDisabled(slug: string, disabled: boolean): Promise<void> {
+		try {
+			const modes = await this.getCustomModes()
+			const mode = modes.find((m) => m.slug === slug)
+
+			if (!mode) {
+				throw new Error(`Mode not found: ${slug}`)
+			}
+
+			// Determine which file to update based on source
+			let targetPath: string
+			if (mode.source === "project") {
+				const roomodesPath = await this.getWorkspaceRoomodes()
+				if (!roomodesPath) {
+					throw new Error("No .roomodes file found in workspace")
+				}
+				targetPath = roomodesPath
+			} else {
+				targetPath = await this.getCustomModesFilePath()
+			}
+
+			await this.queueWrite(async () => {
+				await this.updateModesInFile(targetPath, (modes) => {
+					return modes.map((m) => (m.slug === slug ? { ...m, disabled } : m))
+				})
+			})
+
+			await this.refreshMergedState()
+		} catch (error) {
+			const errorMessage = error instanceof Error ? error.message : String(error)
+			logger.error("Failed to update mode disabled state", { slug, disabled, error: errorMessage })
+			throw error
+		}
+	}
+
+	/**
+	 * Set disabled state for multiple modes
+	 */
+	public async setMultipleModesDisabled(updates: Array<{ slug: string; disabled: boolean }>): Promise<void> {
+		try {
+			const modes = await this.getCustomModes()
+			const updatesByFile = new Map<string, Array<{ slug: string; disabled: boolean }>>()
+			// Collect built-in modes that need to be copied into the global custom modes file
+			const addsForSettings: ModeConfig[] = []
+
+			// Group updates by source/file
+			for (const update of updates) {
+				const mode = modes.find((m) => m.slug === update.slug)
+				if (!mode) {
+					// If mode isn't present in custom modes, it might be a built-in mode.
+					// Try loading built-in definitions and create a custom copy in the global file.
+					try {
+						const { modes: builtInModes } = await import("../../shared/modes")
+						const builtIn = builtInModes.find((b: any) => b.slug === update.slug)
+						if (builtIn) {
+							// Create a global-scoped custom mode based on the built-in definition
+							const modeToAdd: ModeConfig = {
+								...builtIn,
+								disabled: update.disabled,
+								source: "global",
+							}
+							addsForSettings.push(modeToAdd)
+							// Add a corresponding update entry for the settings file
+							const settingsPath = await this.getCustomModesFilePath()
+							if (!updatesByFile.has(settingsPath)) {
+								updatesByFile.set(settingsPath, [])
+							}
+							updatesByFile.get(settingsPath)!.push(update)
+							continue
+						}
+						console.warn(`Mode not found: ${update.slug}`)
+					} catch (e) {
+						console.warn(`Mode not found and failed to load built-ins: ${update.slug}`)
+					}
+					continue
+				}
+
+				let targetPath: string
+				if (mode.source === "project") {
+					const roomodesPath = await this.getWorkspaceRoomodes()
+					if (!roomodesPath) {
+						console.warn(`No .roomodes file found for project mode: ${update.slug}`)
+						continue
+					}
+					targetPath = roomodesPath
+				} else {
+					targetPath = await this.getCustomModesFilePath()
+				}
+
+				if (!updatesByFile.has(targetPath)) {
+					updatesByFile.set(targetPath, [])
+				}
+				updatesByFile.get(targetPath)!.push(update)
+			}
+
+			// Apply updates to each file
+			for (const [filePath, fileUpdates] of updatesByFile) {
+				await this.queueWrite(async () => {
+					await this.updateModesInFile(filePath, (modes) => {
+						return modes.map((m) => {
+							const update = fileUpdates.find((u) => u.slug === m.slug)
+							return update ? { ...m, disabled: update.disabled } : m
+						})
+					})
+				})
+			}
+
+			// If we found built-in modes that need to be copied to settings, add them now
+			if (addsForSettings.length > 0) {
+				const settingsPath = await this.getCustomModesFilePath()
+				await this.queueWrite(async () => {
+					await this.updateModesInFile(settingsPath, (modes) => {
+						// Remove any existing entries with the same slugs, then append new ones
+						const filtered = modes.filter((m) => !addsForSettings.some((a) => a.slug === m.slug))
+						return [...filtered, ...addsForSettings]
+					})
+				})
+			}
+
+			await this.refreshMergedState()
+		} catch (error) {
+			const errorMessage = error instanceof Error ? error.message : String(error)
+			logger.error("Failed to update multiple modes disabled state", { updates, error: errorMessage })
+			throw error
+		}
 	}
 
 	dispose(): void {

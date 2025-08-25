@@ -19,6 +19,7 @@ import McpView from "./components/mcp/McpView"
 import { MarketplaceView } from "./components/marketplace/MarketplaceView"
 import ModesView from "./components/modes/ModesView"
 import { HumanRelayDialog } from "./components/human-relay/HumanRelayDialog"
+import { ModeEnableDisableDialog } from "./components/modes/ModeEnableDisableDialog"
 import { DeleteMessageDialog, EditMessageDialog } from "./components/chat/MessageModificationConfirmationDialog"
 import ErrorBoundary from "./components/ErrorBoundary"
 import { AccountView } from "./components/account/AccountView"
@@ -100,6 +101,10 @@ const App = () => {
 		images: [],
 	})
 
+	// State for Mode Enable/Disable dialog
+	const [modeDialogOpen, setModeDialogOpen] = useState(false)
+	const [modeDialogModes, setModeDialogModes] = useState<any[]>([])
+
 	const settingsRef = useRef<SettingsViewRef>(null)
 	const chatViewRef = useRef<ChatViewRef>(null)
 
@@ -156,6 +161,27 @@ const App = () => {
 			if (message.type === "showHumanRelayDialog" && message.requestId && message.promptText) {
 				const { requestId, promptText } = message
 				setHumanRelayDialogState({ isOpen: true, requestId, promptText })
+			}
+
+			if (message.type === "showModeEnableDisableDialog" && message.modes) {
+				setModeDialogModes(message.modes as any[])
+				setModeDialogOpen(true)
+			}
+
+			// Internal request from child components to open the delete flow in Modes settings
+			if ((message as any).type === "openDeleteModeInSettingsRequest" && (message as any).slug) {
+				// Switch to modes tab so ModesView is mounted and can receive the forwarded message
+				switchTab("modes")
+				// Forward the request to ModesView to trigger its delete flow
+				window.postMessage(
+					{ type: "openDeleteModeInSettings", slug: (message as any).slug, name: (message as any).name },
+					"*",
+				)
+			}
+			// Internal request from ModesView to open the enable/disable dialog
+			if ((message as any).type === "showModeEnableDisableDialogRequest" && (message as any).modes) {
+				setModeDialogModes((message as any).modes as any[])
+				setModeDialogOpen(true)
 			}
 
 			if (message.type === "showDeleteMessageDialog" && message.messageTs) {
@@ -293,6 +319,32 @@ const App = () => {
 						images: editMessageDialogState.images,
 					})
 					setEditMessageDialogState((prev) => ({ ...prev, isOpen: false }))
+				}}
+			/>
+			<ModeEnableDisableDialog
+				open={modeDialogOpen}
+				onOpenChange={(open: boolean) => setModeDialogOpen(open)}
+				modes={modeDialogModes}
+				onSave={(updatedModes: any[]) => {
+					// Only send updates for modes whose disabled state actually changed.
+					const updates: Record<string, boolean> = {}
+					const previousModesBySlug: Record<string, any> = {}
+					for (const m of modeDialogModes) {
+						previousModesBySlug[m.slug] = m
+					}
+					for (const m of updatedModes) {
+						const prev = previousModesBySlug[m.slug]
+						const prevDisabled = !!(prev && prev.disabled)
+						const newDisabled = !!m.disabled
+						if (prevDisabled !== newDisabled) {
+							updates[m.slug] = newDisabled
+						}
+					}
+					if (Object.keys(updates).length > 0) {
+						vscode.postMessage({ type: "updateModeDisabledStates", updates })
+					}
+					// Optimistically update local dialog modes
+					setModeDialogModes(updatedModes)
 				}}
 			/>
 		</>

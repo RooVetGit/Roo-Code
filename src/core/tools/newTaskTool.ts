@@ -6,6 +6,7 @@ import { RooCodeEventName, TodoItem } from "@roo-code/types"
 import { ToolUse, AskApproval, HandleError, PushToolResult, RemoveClosingTag } from "../../shared/tools"
 import { Task } from "../task/Task"
 import { defaultModeSlug, getModeBySlug } from "../../shared/modes"
+import { ModeManager } from "../../services/ModeManager"
 import { formatResponse } from "../prompts/responses"
 import { t } from "../../i18n"
 import { parseMarkdownChecklist } from "./updateTodoListTool"
@@ -96,6 +97,26 @@ export async function newTaskTool(
 
 			if (!targetMode) {
 				pushToolResult(formatResponse.toolError(`Invalid mode: ${mode}`))
+				return
+			}
+
+			// Validate mode availability (not disabled)
+			if (!provider.context || !provider.customModesManager) {
+				pushToolResult(formatResponse.toolError("Unable to access mode configuration."))
+				return
+			}
+
+			const modeManager = new ModeManager(provider.context, provider.customModesManager)
+			const validationResult = await modeManager.validateModeSwitch(mode)
+
+			if (!validationResult.isValid) {
+				cline.recordToolError("new_task")
+				// Provide helpful error message with available modes
+				const enabledModes = await modeManager.getEnabledModes()
+				const availableModesList = enabledModes.map((m) => `- ${m.slug}: ${m.name}`).join("\n")
+
+				const errorMessage = `${validationResult.errorMessage}\n\nAvailable enabled modes:\n${availableModesList}`
+				pushToolResult(formatResponse.toolError(errorMessage))
 				return
 			}
 

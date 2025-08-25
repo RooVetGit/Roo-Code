@@ -86,6 +86,97 @@ Roo Code adapts to your needs with specialized [modes](https://docs.roocode.com/
 - **Debug Mode:** For systematic problem diagnosis
 - **[Custom Modes](https://docs.roocode.com/advanced-usage/custom-modes):** Create unlimited specialized personas for security auditing, performance optimization, documentation, or any other task
 
+## Overriding Default Modes
+
+You can override Roo Code's built-in modes (for example: `code`, `debug`, `ask`, `architect`, `orchestrator`) by creating a custom mode that uses the same slug as the built-in mode. When a custom mode uses the same slug it takes precedence according to the following order:
+
+- Project-specific override (in the workspace `.roomodes`) — highest precedence
+- Global override (in `custom_modes.yaml`) — next
+- Built-in mode — fallback
+
+Overriding Modes Globally
+To customize a default mode across all your projects:
+
+1. Open the Prompts tab in the Roo Code UI.
+2. Open the Global Prompts / Global Modes settings (click the ⋯ / settings menu) and choose "Edit Global Modes" to edit `custom_modes.yaml`.
+3. Add a custom mode entry that uses the same `slug` as the built-in you want to override.
+
+Corrected YAML example
+
+customModes:
+
+- slug: code # Matches the default 'code' mode slug
+  name: "💻 Code (Global Override)"
+  roleDefinition: "You are a software engineer with global-specific constraints."
+  whenToUse: "This globally overridden code mode is for JS/TS tasks."
+  customInstructions: "Focus on project-specific JS/TS development."
+  groups:
+    - read
+    - [ edit, { fileRegex: "\\.(js|ts)$", description: "JS/TS files only" } ]
+
+JSON example (note: escape backslashes appropriately when embedding inside other strings)
+
+{
+"customModes": [{
+"slug": "code",
+"name": "💻 Code (Global Override)",
+"roleDefinition": "You are a software engineer with global-specific constraints",
+"whenToUse": "This globally overridden code mode is for JS/TS tasks.",
+"customInstructions": "Focus on project-specific JS/TS development",
+"groups": [
+"read",
+["edit", { "fileRegex": "\\\\.(js|ts)$", "description": "JS/TS files only" }]
+]
+}]
+}
+
+Project-Specific Mode Override
+To override a default mode for just one project:
+
+1. Open the Prompts tab.
+2. Open the Project Prompts / Project Modes settings and choose "Edit Project Modes" to edit the `.roomodes` file in the workspace root.
+3. Add a `customModes` entry with the same `slug` as the built-in mode.
+
+YAML example (project override):
+
+customModes:
+
+- slug: code
+  name: "💻 Code (Project-Specific)"
+  roleDefinition: "You are a software engineer with project-specific constraints for this project."
+  whenToUse: "This project-specific code mode is for Python tasks within this project."
+  customInstructions: "Adhere to PEP8 and use type hints."
+  groups:
+    - read
+    - [ edit, { fileRegex: "\\.py$", description: "Python files only" } ]
+    - command
+
+Project-specific overrides take precedence over global overrides.
+
+## Restore built-in (delete override)
+
+Enabling/disabling an override is different from restoring the built-in mode.
+
+- Enable/Disable: Toggling enabled/disabled updates the custom override entry (preserves your customizations).
+- Restore built-in: Deletes the custom override entry (removes your customizations) so the built-in mode is used again.
+
+How to restore the original built-in mode:
+
+1. Open Prompts → Global Modes (Edit Global Modes).
+2. Find the global custom mode that uses the same slug as a built-in — a "Restore built-in" action is available for overrides.
+3. Click "Restore built-in" and confirm. The extension will delete the custom mode entry from `custom_modes.yaml` and (optionally) remove the associated rules folder. After this, the built-in mode will be used.
+
+Exact file path examples
+
+- Global custom modes file: `{user_home}/.roo/custom_modes.yaml` (the extension writes global overrides here)
+- Project overrides file: `{workspace_root}/.roomodes` (or `.roo/.roomodes` depending on workspace layout)
+
+## Rules folder and backups
+
+Custom mode rule files are stored in a rules folder (for example: `~/.roo/rules-<slug>` for global or `.roo/rules-<slug>` for project-scoped rules). When you delete a custom mode (restore built-in), the extension will attempt to remove the associated rules folder. If you want to keep your custom rules, back up the rules folder before restoring/deleting the override.
+
+Tip: When overriding default modes, test carefully. Consider backing up configurations and rules before major changes.
+
 ### Smart Tools
 
 Roo Code comes with powerful [tools](https://docs.roocode.com/basic-usage/how-tools-work) that can:

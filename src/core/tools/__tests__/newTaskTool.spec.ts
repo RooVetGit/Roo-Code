@@ -25,6 +25,32 @@ vi.mock("../../../shared/package", () => ({
 vi.mock("../../../shared/modes", () => ({
 	getModeBySlug: vi.fn(),
 	defaultModeSlug: "ask",
+	modes: [
+		{
+			slug: "code",
+			name: "Code Mode",
+			roleDefinition: "Test role definition",
+			groups: ["command", "read", "edit"],
+		},
+		{ slug: "ask", name: "Ask Mode", roleDefinition: "Test role definition", groups: ["command", "read", "edit"] },
+	],
+}))
+
+// Mock ModeManager - must be hoisted before newTaskTool import
+const mockValidateModeSwitch = vi.fn().mockResolvedValue({ isValid: true })
+const mockGetEnabledModes = vi.fn().mockResolvedValue([
+	{ slug: "code", name: "Code Mode" },
+	{ slug: "ask", name: "Ask Mode" },
+])
+
+vi.mock("../../services/ModeManager", () => ({
+	ModeManager: vi.fn().mockImplementation((context, customModesManager) => {
+		console.log("Mock ModeManager constructor called with:", { context, customModesManager })
+		return {
+			validateModeSwitch: mockValidateModeSwitch,
+			getEnabledModes: mockGetEnabledModes,
+		}
+	}),
 }))
 
 vi.mock("../../prompts/responses", () => ({
@@ -89,6 +115,13 @@ const mockCline = {
 			getState: vi.fn(() => ({ customModes: [], mode: "ask" })),
 			handleModeSwitch: vi.fn(),
 			createTask: mockCreateTask,
+			context: {
+				globalState: { get: vi.fn(), update: vi.fn() },
+				workspaceState: { get: vi.fn(), update: vi.fn() },
+			},
+			customModesManager: {
+				getCustomModes: vi.fn().mockResolvedValue([]),
+			},
 		})),
 	},
 }

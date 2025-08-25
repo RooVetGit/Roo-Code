@@ -43,6 +43,7 @@ vi.mock("@roo/modes", async () => {
 	return {
 		...actual,
 		getAllModes: () => mockModes,
+		getEnabledModes: () => mockModes.filter((mode) => !mode.disabled),
 	}
 })
 

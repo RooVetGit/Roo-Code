@@ -109,6 +109,12 @@ export function getAllModes(customModes?: ModeConfig[]): ModeConfig[] {
 	return allModes
 }
 
+// Get all enabled modes (filtered to exclude disabled modes)
+export function getEnabledModes(customModes?: ModeConfig[]): ModeConfig[] {
+	const allModes = getAllModes(customModes)
+	return allModes.filter((mode) => !mode.disabled)
+}
+
 // Check if a mode is custom or an override
 export function isCustomMode(slug: string, customModes?: ModeConfig[]): boolean {
 	return !!customModes?.some((mode) => mode.slug === slug)
@@ -288,8 +294,8 @@ export async function getAllModesWithPrompts(context: vscode.ExtensionContext): 
 	const customModes = (await context.globalState.get<ModeConfig[]>("customModes")) || []
 	const customModePrompts = (await context.globalState.get<CustomModePrompts>("customModePrompts")) || {}
 
-	const allModes = getAllModes(customModes)
-	return allModes.map((mode) => ({
+	const enabledModes = getEnabledModes(customModes)
+	return enabledModes.map((mode) => ({
 		...mode,
 		roleDefinition: customModePrompts[mode.slug]?.roleDefinition ?? mode.roleDefinition,
 		whenToUse: customModePrompts[mode.slug]?.whenToUse ?? mode.whenToUse,
