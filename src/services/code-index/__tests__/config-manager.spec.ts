@@ -173,6 +173,7 @@ describe("CodeIndexConfigManager", () => {
 				openAiCompatibleOptions: {
 					baseUrl: "https://api.example.com/v1",
 					apiKey: "test-openai-compatible-key",
+					useFloatEncoding: false,
 				},
 				qdrantUrl: "http://qdrant.local",
 				qdrantApiKey: "test-qdrant-key",
@@ -211,6 +212,7 @@ describe("CodeIndexConfigManager", () => {
 				openAiCompatibleOptions: {
 					baseUrl: "https://api.example.com/v1",
 					apiKey: "test-openai-compatible-key",
+					useFloatEncoding: false,
 				},
 				qdrantUrl: "http://qdrant.local",
 				qdrantApiKey: "test-qdrant-key",
@@ -248,6 +250,7 @@ describe("CodeIndexConfigManager", () => {
 				openAiCompatibleOptions: {
 					baseUrl: "https://api.example.com/v1",
 					apiKey: "test-openai-compatible-key",
+					useFloatEncoding: false,
 					// modelDimension is undefined when not set
 				},
 				qdrantUrl: "http://qdrant.local",
@@ -287,6 +290,7 @@ describe("CodeIndexConfigManager", () => {
 				openAiCompatibleOptions: {
 					baseUrl: "https://api.example.com/v1",
 					apiKey: "test-openai-compatible-key",
+					useFloatEncoding: false,
 				},
 				geminiOptions: undefined,
 				qdrantUrl: "http://qdrant.local",

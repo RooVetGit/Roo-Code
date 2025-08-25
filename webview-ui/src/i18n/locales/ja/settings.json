@@ -123,7 +123,9 @@
 		"searchMinScoreResetTooltip": "デフォルト値（0.4）にリセット",
 		"searchMaxResultsLabel": "最大検索結果数",
 		"searchMaxResultsDescription": "コードベースインデックスをクエリする際に返される検索結果の最大数。値を高くするとより多くのコンテキストが提供されますが、関連性の低い結果が含まれる可能性があります。",
-		"resetToDefault": "デフォルトにリセット"
+		"resetToDefault": "デフォルトにリセット",
+		"useFloatEncodingLabel": "Use Float Encoding",
+		"useFloatEncodingDescription": "Enable this option if your embedding provider returns float arrays instead of base64 encoded strings. This is required for providers that don't support base64 encoding."
 	},
 	"autoApprove": {
 		"description": "Rooが承認なしで自動的に操作を実行できるようにします。AIを完全に信頼し、関連するセキュリティリスクを理解している場合にのみ、これらの設定を有効にしてください。",

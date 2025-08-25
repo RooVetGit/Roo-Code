@@ -65,6 +65,8 @@
 		"modelDimensionLabel": "Model Dimension",
 		"openAiCompatibleModelDimensionPlaceholder": "e.g., 1536",
 		"openAiCompatibleModelDimensionDescription": "The embedding dimension (output size) for your model. Check your provider's documentation for this value. Common values: 384, 768, 1536, 3072.",
+		"useFloatEncodingLabel": "Use Float Encoding",
+		"useFloatEncodingDescription": "Enable this option if your embedding provider returns float arrays instead of base64 encoded strings. This is required for providers that don't support base64 encoding.",
 		"modelLabel": "Model",
 		"modelPlaceholder": "Enter model name",
 		"selectModel": "Select a model",

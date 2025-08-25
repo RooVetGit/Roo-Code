@@ -1,3 +1,4 @@
+import * as vscode from "vscode"
 import { OpenAI } from "openai"
 import { OpenAiNativeHandler } from "../../../api/providers/openai-native"
 import { ApiHandlerOptions } from "../../../shared/api"
@@ -20,16 +21,61 @@ import { TelemetryService } from "@roo-code/telemetry"
 export class OpenAiEmbedder extends OpenAiNativeHandler implements IEmbedder {
 	private embeddingsClient: OpenAI
 	private readonly defaultModelId: string
+	private readonly outputChannel?: vscode.OutputChannel
 
 	/**
 	 * Creates a new OpenAI embedder
 	 * @param options API handler options
+	 * @param outputChannel Optional VS Code output channel for logging
 	 */
-	constructor(options: ApiHandlerOptions & { openAiEmbeddingModelId?: string }) {
+	constructor(
+		options: ApiHandlerOptions & { openAiEmbeddingModelId?: string },
+		outputChannel?: vscode.OutputChannel,
+	) {
 		super(options)
 		const apiKey = this.options.openAiNativeApiKey ?? "not-provided"
 		this.embeddingsClient = new OpenAI({ apiKey })
 		this.defaultModelId = options.openAiEmbeddingModelId || "text-embedding-3-small"
+		this.outputChannel = outputChannel
+
+		// Log construction
+		this.log("info", "OpenAI Embedder constructed", {
+			modelId: this.defaultModelId,
+		})
+	}
+
+	/**
+	 * Logs a message to the output channel if available
+	 * @param level The log level (debug, info, warn, error)
+	 * @param message The message to log
+	 * @param data Optional structured data to include
+	 */
+	private log(level: "debug" | "info" | "warn" | "error", message: string, data?: any): void {
+		if (!this.outputChannel) return
+
+		const timestamp = new Date().toISOString()
+		const prefix = `[${timestamp}] [${level.toUpperCase()}]`
+
+		let logMessage = `${prefix} ${message}`
+		if (data) {
+			logMessage += `\n${JSON.stringify(data, null, 2)}`
+		}
+
+		this.outputChannel.appendLine(logMessage)
+	}
+
+	/**
+	 * Helper method for warning logs
+	 */
+	private logWarning(message: string, data?: any): void {
+		this.log("warn", message, data)
+	}
+
+	/**
+	 * Helper method for error logs
+	 */
+	private logError(message: string, data?: any): void {
+		this.log("error", message, data)
 	}
 
 	/**
@@ -40,6 +86,11 @@ export class OpenAiEmbedder extends OpenAiNativeHandler implements IEmbedder {
 	 */
 	async createEmbeddings(texts: string[], model?: string): Promise<EmbeddingResponse> {
 		const modelToUse = model || this.defaultModelId
+
+		this.log("debug", "Starting embedding creation", {
+			textCount: texts.length,
+			model: modelToUse,
+		})
 
 		// Apply model-specific query prefix if required
 		const queryPrefix = getModelQueryPrefix("openai", modelToUse)
@@ -52,6 +103,11 @@ export class OpenAiEmbedder extends OpenAiNativeHandler implements IEmbedder {
 					const prefixedText = `${queryPrefix}${text}`
 					const estimatedTokens = Math.ceil(prefixedText.length / 4)
 					if (estimatedTokens > MAX_ITEM_TOKENS) {
+						this.logWarning("Text with prefix exceeds token limit", {
+							index,
+							estimatedTokens,
+							maxTokens: MAX_ITEM_TOKENS,
+						})
 						console.warn(
 							t("embeddings:textWithPrefixExceedsTokenLimit", {
 								index,
@@ -80,6 +136,11 @@ export class OpenAiEmbedder extends OpenAiNativeHandler implements IEmbedder {
 				const itemTokens = Math.ceil(text.length / 4)
 
 				if (itemTokens > MAX_ITEM_TOKENS) {
+					this.logWarning("Text exceeds token limit", {
+						index: i,
+						itemTokens,
+						maxTokens: MAX_ITEM_TOKENS,
+					})
 					console.warn(
 						t("embeddings:textExceedsTokenLimit", {
 							index: i,
@@ -113,6 +174,11 @@ export class OpenAiEmbedder extends OpenAiNativeHandler implements IEmbedder {
 			}
 		}
 
+		this.log("info", "Successfully created embeddings", {
+			totalEmbeddings: allEmbeddings.length,
+			usage,
+		})
+
 		return { embeddings: allEmbeddings, usage }
 	}
 
@@ -126,6 +192,11 @@ export class OpenAiEmbedder extends OpenAiNativeHandler implements IEmbedder {
 		batchTexts: string[],
 		model: string,
 	): Promise<{ embeddings: number[][]; usage: { promptTokens: number; totalTokens: number } }> {
+		this.log("debug", "Starting batch embedding with retries", {
+			batchSize: batchTexts.length,
+			model: model,
+		})
+
 		for (let attempts = 0; attempts < MAX_RETRIES; attempts++) {
 			try {
 				const response = await this.embeddingsClient.embeddings.create({
@@ -133,8 +204,19 @@ export class OpenAiEmbedder extends OpenAiNativeHandler implements IEmbedder {
 					model: model,
 				})
 
+				const embeddings = response.data.map((item) => item.embedding)
+
+				this.log("info", "Successfully created batch embeddings", {
+					count: embeddings.length,
+					dimensions: embeddings[0]?.length,
+					usage: {
+						promptTokens: response.usage?.prompt_tokens || 0,
+						totalTokens: response.usage?.total_tokens || 0,
+					},
+				})
+
 				return {
-					embeddings: response.data.map((item) => item.embedding),
+					embeddings: embeddings,
 					usage: {
 						promptTokens: response.usage?.prompt_tokens || 0,
 						totalTokens: response.usage?.total_tokens || 0,
@@ -147,6 +229,11 @@ export class OpenAiEmbedder extends OpenAiNativeHandler implements IEmbedder {
 				const httpError = error as HttpError
 				if (httpError?.status === 429 && hasMoreAttempts) {
 					const delayMs = INITIAL_DELAY_MS * Math.pow(2, attempts)
+					this.logWarning("Rate limit hit, retrying", {
+						delayMs,
+						attempt: attempts + 1,
+						maxRetries: MAX_RETRIES,
+					})
 					console.warn(
 						t("embeddings:rateLimitRetry", {
 							delayMs,
@@ -167,6 +254,11 @@ export class OpenAiEmbedder extends OpenAiNativeHandler implements IEmbedder {
 				})
 
 				// Log the error for debugging
+				this.logError(`OpenAI embedder error (attempt ${attempts + 1}/${MAX_RETRIES})`, {
+					error: error instanceof Error ? error.message : String(error),
+					stack: error instanceof Error ? error.stack : undefined,
+					attempt: attempts + 1,
+				})
 				console.error(`OpenAI embedder error (attempt ${attempts + 1}/${MAX_RETRIES}):`, error)
 
 				// Format and throw the error
@@ -184,6 +276,8 @@ export class OpenAiEmbedder extends OpenAiNativeHandler implements IEmbedder {
 	async validateConfiguration(): Promise<{ valid: boolean; error?: string }> {
 		return withValidationErrorHandling(async () => {
 			try {
+				this.log("info", "Starting configuration validation")
+
 				// Test with a minimal embedding request
 				const response = await this.embeddingsClient.embeddings.create({
 					input: ["test"],
@@ -192,12 +286,14 @@ export class OpenAiEmbedder extends OpenAiNativeHandler implements IEmbedder {
 
 				// Check if we got a valid response
 				if (!response.data || response.data.length === 0) {
+					this.logError("Invalid response during validation - no data")
 					return {
 						valid: false,
 						error: t("embeddings:openai.invalidResponseFormat"),
 					}
 				}
 
+				this.log("info", "Configuration validation successful")
 				return { valid: true }
 			} catch (error) {
 				// Capture telemetry for validation errors

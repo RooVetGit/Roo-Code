@@ -1,3 +1,4 @@
+import * as vscode from "vscode"
 import { OpenAI } from "openai"
 import { IEmbedder, EmbeddingResponse, EmbedderInfo } from "../interfaces/embedder"
 import {
@@ -38,6 +39,8 @@ export class OpenAICompatibleEmbedder implements IEmbedder {
 	private readonly apiKey: string
 	private readonly isFullUrl: boolean
 	private readonly maxItemTokens: number
+	private readonly useFloatEncoding: boolean
+	private readonly outputChannel?: vscode.OutputChannel
 
 	// Global rate limiting state shared across all instances
 	private static globalRateLimitState = {
@@ -55,8 +58,17 @@ export class OpenAICompatibleEmbedder implements IEmbedder {
 	 * @param apiKey The API key for authentication
 	 * @param modelId Optional model identifier (defaults to "text-embedding-3-small")
 	 * @param maxItemTokens Optional maximum tokens per item (defaults to MAX_ITEM_TOKENS)
+	 * @param useFloatEncoding Whether to use float encoding instead of base64
+	 * @param outputChannel Optional VS Code output channel for logging
 	 */
-	constructor(baseUrl: string, apiKey: string, modelId?: string, maxItemTokens?: number) {
+	constructor(
+		baseUrl: string,
+		apiKey: string,
+		modelId?: string,
+		maxItemTokens?: number,
+		useFloatEncoding?: boolean,
+		outputChannel?: vscode.OutputChannel,
+	) {
 		if (!baseUrl) {
 			throw new Error(t("embeddings:validation.baseUrlRequired"))
 		}
@@ -66,6 +78,8 @@ export class OpenAICompatibleEmbedder implements IEmbedder {
 
 		this.baseUrl = baseUrl
 		this.apiKey = apiKey
+		this.useFloatEncoding = useFloatEncoding || false
+		this.outputChannel = outputChannel
 		this.embeddingsClient = new OpenAI({
 			baseURL: baseUrl,
 			apiKey: apiKey,
@@ -74,6 +88,35 @@ export class OpenAICompatibleEmbedder implements IEmbedder {
 		// Cache the URL type check for performance
 		this.isFullUrl = this.isFullEndpointUrl(baseUrl)
 		this.maxItemTokens = maxItemTokens || MAX_ITEM_TOKENS
+
+		// Log construction
+		this.log("debug", `OpenAI Compatible Embedder constructed`, {
+			baseUrl: this.baseUrl,
+			modelId: this.defaultModelId,
+			useFloatEncoding: this.useFloatEncoding,
+			isFullUrl: this.isFullUrl,
+			maxItemTokens: this.maxItemTokens,
+		})
+	}
+
+	/**
+	 * Logs a message to the output channel if available
+	 * @param level The log level (debug, info, warn, error)
+	 * @param message The message to log
+	 * @param data Optional structured data to include
+	 */
+	private log(level: "debug" | "info" | "warn" | "error", message: string, data?: any): void {
+		if (!this.outputChannel) return
+
+		const timestamp = new Date().toISOString()
+		const prefix = `[${timestamp}] [${level.toUpperCase()}]`
+
+		let logMessage = `${prefix} ${message}`
+		if (data) {
+			logMessage += `\n${JSON.stringify(data, null, 2)}`
+		}
+
+		this.outputChannel.appendLine(logMessage)
 	}
 
 	/**
@@ -207,7 +250,7 @@ export class OpenAICompatibleEmbedder implements IEmbedder {
 			body: JSON.stringify({
 				input: batchTexts,
 				model: model,
-				encoding_format: "base64",
+				encoding_format: this.useFloatEncoding ? "float" : "base64",
 			}),
 		})
 
@@ -251,6 +294,12 @@ export class OpenAICompatibleEmbedder implements IEmbedder {
 		// Use cached value for performance
 		const isFullUrl = this.isFullUrl
 
+		this.log("debug", `Starting batch embedding`, {
+			batchSize: batchTexts.length,
+			model: model,
+			useFloatEncoding: this.useFloatEncoding,
+		})
+
 		for (let attempts = 0; attempts < MAX_RETRIES; attempts++) {
 			// Check global rate limit before attempting request
 			await this.waitForGlobalRateLimit()
@@ -263,36 +312,65 @@ export class OpenAICompatibleEmbedder implements IEmbedder {
 					response = await this.makeDirectEmbeddingRequest(this.baseUrl, batchTexts, model)
 				} else {
 					// Use OpenAI SDK for base URLs
+					const encodingFormat = this.useFloatEncoding ? "float" : "base64"
+					this.log("debug", `Requesting embeddings with encoding format: ${encodingFormat}`)
+
 					response = (await this.embeddingsClient.embeddings.create({
 						input: batchTexts,
 						model: model,
-						// OpenAI package (as of v4.78.1) has a parsing issue that truncates embedding dimensions to 256
-						// when processing numeric arrays, which breaks compatibility with models using larger dimensions.
-						// By requesting base64 encoding, we bypass the package's parser and handle decoding ourselves.
-						encoding_format: "base64",
+						// WARNING: OpenAI package (as of v4.78.1) has a parsing issue that truncates embedding dimensions to 256
+						// when processing numeric arrays (float encoding), which breaks compatibility with models using larger dimensions.
+						// By requesting base64 encoding (the default when useFloatEncoding is false), we bypass the package's parser
+						// and handle decoding ourselves. Only use float encoding with OpenAI-compatible providers that are known to work correctly.
+						encoding_format: encodingFormat as any,
 					})) as OpenAIEmbeddingResponse
 				}
 
-				// Convert base64 embeddings to float32 arrays
+				// Process embeddings based on encoding format
 				const processedEmbeddings = response.data.map((item: EmbeddingItem) => {
-					if (typeof item.embedding === "string") {
-						const buffer = Buffer.from(item.embedding, "base64")
-
-						// Create Float32Array view over the buffer
-						const float32Array = new Float32Array(buffer.buffer, buffer.byteOffset, buffer.byteLength / 4)
-
-						return {
-							...item,
-							embedding: Array.from(float32Array),
+					if (this.useFloatEncoding) {
+						// When using float encoding, expect arrays directly
+						if (Array.isArray(item.embedding)) {
+							return item
+						} else {
+							this.log("warn", `Unexpected embedding format when float encoding enabled`, {
+								type: typeof item.embedding,
+								isString: typeof item.embedding === "string",
+							})
+							// Return empty embedding as fallback
+							return {
+								...item,
+								embedding: [],
+							}
 						}
+					} else {
+						// When using base64 encoding, decode the string
+						if (typeof item.embedding === "string") {
+							const buffer = Buffer.from(item.embedding, "base64")
+							// Create Float32Array view over the buffer
+							const float32Array = new Float32Array(
+								buffer.buffer,
+								buffer.byteOffset,
+								buffer.byteLength / 4,
+							)
+							return {
+								...item,
+								embedding: Array.from(float32Array),
+							}
+						}
+						return item
 					}
-					return item
 				})
 
 				// Replace the original data with processed embeddings
 				response.data = processedEmbeddings
 
 				const embeddings = response.data.map((item) => item.embedding as number[])
+
+				this.log("info", `Successfully created embeddings`, {
+					count: embeddings.length,
+					dimensions: embeddings[0]?.length,
+				})
 
 				return {
 					embeddings: embeddings,
@@ -354,6 +432,8 @@ export class OpenAICompatibleEmbedder implements IEmbedder {
 	async validateConfiguration(): Promise<{ valid: boolean; error?: string }> {
 		return withValidationErrorHandling(async () => {
 			try {
+				this.log("info", "Starting configuration validation")
+
 				// Test with a minimal embedding request
 				const testTexts = ["test"]
 				const modelToUse = this.defaultModelId
@@ -365,21 +445,26 @@ export class OpenAICompatibleEmbedder implements IEmbedder {
 					response = await this.makeDirectEmbeddingRequest(this.baseUrl, testTexts, modelToUse)
 				} else {
 					// Test using OpenAI SDK for base URLs
+					const encodingFormat = this.useFloatEncoding ? "float" : "base64"
+					this.log("debug", `Validating with encoding format: ${encodingFormat}`)
+
 					response = (await this.embeddingsClient.embeddings.create({
 						input: testTexts,
 						model: modelToUse,
-						encoding_format: "base64",
+						encoding_format: encodingFormat as any,
 					})) as OpenAIEmbeddingResponse
 				}
 
 				// Check if we got a valid response
 				if (!response?.data || response.data.length === 0) {
+					this.log("error", "Invalid response during validation - no data")
 					return {
 						valid: false,
 						error: "embeddings:validation.invalidResponse",
 					}
 				}
 
+				this.log("info", "Configuration validation successful")
 				return { valid: true }
 			} catch (error) {
 				// Capture telemetry for validation errors

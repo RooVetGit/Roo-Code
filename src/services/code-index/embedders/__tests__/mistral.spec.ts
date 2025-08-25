@@ -38,6 +38,8 @@ describe("MistralEmbedder", () => {
 				apiKey,
 				"codestral-embed-2505",
 				8191,
+				undefined, // useFloatEncoding
+				undefined, // outputChannel
 			)
 		})
 
@@ -55,6 +57,8 @@ describe("MistralEmbedder", () => {
 				apiKey,
 				"custom-embed-model",
 				8191,
+				undefined, // useFloatEncoding
+				undefined, // outputChannel
 			)
 		})
 

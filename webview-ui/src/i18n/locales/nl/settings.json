@@ -123,7 +123,9 @@
 		"searchMinScoreResetTooltip": "Reset naar standaardwaarde (0.4)",
 		"searchMaxResultsLabel": "Maximum Zoekresultaten",
 		"searchMaxResultsDescription": "Maximum aantal zoekresultaten dat wordt geretourneerd bij het doorzoeken van de codebase-index. Hogere waarden bieden meer context maar kunnen minder relevante resultaten bevatten.",
-		"resetToDefault": "Reset naar standaard"
+		"resetToDefault": "Reset naar standaard",
+		"useFloatEncodingLabel": "Use Float Encoding",
+		"useFloatEncodingDescription": "Enable this option if your embedding provider returns float arrays instead of base64 encoded strings. This is required for providers that don't support base64 encoding."
 	},
 	"autoApprove": {
 		"description": "Sta Roo toe om automatisch handelingen uit te voeren zonder goedkeuring. Schakel deze instellingen alleen in als je de AI volledig vertrouwt en de bijbehorende beveiligingsrisico's begrijpt.",

@@ -123,7 +123,9 @@
 		"searchMinScoreResetTooltip": "Ripristina al valore predefinito (0.4)",
 		"searchMaxResultsLabel": "Risultati di ricerca massimi",
 		"searchMaxResultsDescription": "Numero massimo di risultati di ricerca da restituire quando si interroga l'indice del codice. Valori più alti forniscono più contesto ma possono includere risultati meno pertinenti.",
-		"resetToDefault": "Ripristina al valore predefinito"
+		"resetToDefault": "Ripristina al valore predefinito",
+		"useFloatEncodingLabel": "Use Float Encoding",
+		"useFloatEncodingDescription": "Enable this option if your embedding provider returns float arrays instead of base64 encoded strings. This is required for providers that don't support base64 encoding."
 	},
 	"autoApprove": {
 		"description": "Permetti a Roo di eseguire automaticamente operazioni senza richiedere approvazione. Abilita queste impostazioni solo se ti fidi completamente dell'IA e comprendi i rischi di sicurezza associati.",

@@ -123,7 +123,9 @@
 		"searchMinScoreResetTooltip": "Сбросить к значению по умолчанию (0.4)",
 		"searchMaxResultsLabel": "Максимальное количество результатов поиска",
 		"searchMaxResultsDescription": "Максимальное количество результатов поиска, возвращаемых при запросе индекса кодовой базы. Более высокие значения предоставляют больше контекста, но могут включать менее релевантные результаты.",
-		"resetToDefault": "Сбросить к значению по умолчанию"
+		"resetToDefault": "Сбросить к значению по умолчанию",
+		"useFloatEncodingLabel": "Use Float Encoding",
+		"useFloatEncodingDescription": "Enable this option if your embedding provider returns float arrays instead of base64 encoded strings. This is required for providers that don't support base64 encoding."
 	},
 	"autoApprove": {
 		"description": "Разрешить Roo автоматически выполнять операции без необходимости одобрения. Включайте эти параметры только если полностью доверяете ИИ и понимаете связанные с этим риски безопасности.",

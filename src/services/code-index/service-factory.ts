@@ -20,11 +20,23 @@ import { TelemetryEventName } from "@roo-code/types"
  * Factory class responsible for creating and configuring code indexing service dependencies.
  */
 export class CodeIndexServiceFactory {
+	private outputChannel?: vscode.OutputChannel
+
 	constructor(
 		private readonly configManager: CodeIndexConfigManager,
 		private readonly workspacePath: string,
 		private readonly cacheManager: CacheManager,
 	) {}
+
+	/**
+	 * Gets or creates the output channel for embedder logging
+	 */
+	private getOutputChannel(): vscode.OutputChannel {
+		if (!this.outputChannel) {
+			this.outputChannel = vscode.window.createOutputChannel("Code Index Embedders")
+		}
+		return this.outputChannel
+	}
 
 	/**
 	 * Creates an embedder instance based on the current configuration.
@@ -40,18 +52,24 @@ export class CodeIndexServiceFactory {
 			if (!apiKey) {
 				throw new Error(t("embeddings:serviceFactory.openAiConfigMissing"))
 			}
-			return new OpenAiEmbedder({
-				...config.openAiOptions,
-				openAiEmbeddingModelId: config.modelId,
-			})
+			return new OpenAiEmbedder(
+				{
+					...config.openAiOptions,
+					openAiEmbeddingModelId: config.modelId,
+				},
+				this.getOutputChannel(),
+			)
 		} else if (provider === "ollama") {
 			if (!config.ollamaOptions?.ollamaBaseUrl) {
 				throw new Error(t("embeddings:serviceFactory.ollamaConfigMissing"))
 			}
-			return new CodeIndexOllamaEmbedder({
-				...config.ollamaOptions,
-				ollamaModelId: config.modelId,
-			})
+			return new CodeIndexOllamaEmbedder(
+				{
+					...config.ollamaOptions,
+					ollamaModelId: config.modelId,
+				},
+				this.getOutputChannel(),
+			)
 		} else if (provider === "openai-compatible") {
 			if (!config.openAiCompatibleOptions?.baseUrl || !config.openAiCompatibleOptions?.apiKey) {
 				throw new Error(t("embeddings:serviceFactory.openAiCompatibleConfigMissing"))
@@ -60,17 +78,20 @@ export class CodeIndexServiceFactory {
 				config.openAiCompatibleOptions.baseUrl,
 				config.openAiCompatibleOptions.apiKey,
 				config.modelId,
+				undefined, // maxItemTokens - use default
+				config.openAiCompatibleOptions.useFloatEncoding,
+				this.getOutputChannel(),
 			)
 		} else if (provider === "gemini") {
 			if (!config.geminiOptions?.apiKey) {
 				throw new Error(t("embeddings:serviceFactory.geminiConfigMissing"))
 			}
-			return new GeminiEmbedder(config.geminiOptions.apiKey, config.modelId)
+			return new GeminiEmbedder(config.geminiOptions.apiKey, config.modelId, this.getOutputChannel())
 		} else if (provider === "mistral") {
 			if (!config.mistralOptions?.apiKey) {
 				throw new Error(t("embeddings:serviceFactory.mistralConfigMissing"))
 			}
-			return new MistralEmbedder(config.mistralOptions.apiKey, config.modelId)
+			return new MistralEmbedder(config.mistralOptions.apiKey, config.modelId, this.getOutputChannel())
 		}
 
 		throw new Error(
