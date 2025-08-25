@@ -20,6 +20,7 @@ import {
 	fireworksModels,
 	rooModels,
 	featherlessModels,
+	sapAiCoreModels,
 } from "@roo-code/types"
 
 export const MODELS_BY_PROVIDER: Partial<Record<ProviderName, Record<string, ModelInfo>>> = {
@@ -42,6 +43,7 @@ export const MODELS_BY_PROVIDER: Partial<Record<ProviderName, Record<string, Mod
 	fireworks: fireworksModels,
 	roo: rooModels,
 	featherless: featherlessModels,
+	sapaicore: sapAiCoreModels,
 }
 
 export const PROVIDERS = [
@@ -76,4 +78,5 @@ export const PROVIDERS = [
 	{ value: "featherless", label: "Featherless AI" },
 	{ value: "io-intelligence", label: "IO Intelligence" },
 	{ value: "roo", label: "Roo Code Cloud" },
+	{ value: "sapaicore", label: "SAP AI Core" },
 ].sort((a, b) => a.label.localeCompare(b.label))

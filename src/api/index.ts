@@ -37,6 +37,7 @@ import {
 	FireworksHandler,
 	RooHandler,
 	FeatherlessHandler,
+	SapAiCoreHandler,
 } from "./providers"
 import { NativeOllamaHandler } from "./providers/native-ollama"
 
@@ -148,6 +149,8 @@ export function buildApiHandler(configuration: ProviderSettings): ApiHandler {
 			return new RooHandler(options)
 		case "featherless":
 			return new FeatherlessHandler(options)
+		case "sapaicore":
+			return new SapAiCoreHandler(options)
 		default:
 			apiProvider satisfies "gemini-cli" | undefined
 			return new AnthropicHandler(options)

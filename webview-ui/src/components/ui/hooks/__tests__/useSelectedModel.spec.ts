@@ -514,3 +514,82 @@ describe("useSelectedModel", () => {
 		})
 	})
 })
+
+describe("sapaicore provider", () => {
+	it("returns default SAP AI Core model id and info when apiModelId is not set", () => {
+		// Provide minimal router/openrouter data so the hook computes selection
+		mockUseRouterModels.mockReturnValue({
+			data: {
+				openrouter: {},
+				requesty: {},
+				glama: {},
+				unbound: {},
+				litellm: {},
+				"io-intelligence": {},
+			},
+			isLoading: false,
+			isError: false,
+		} as any)
+
+		mockUseOpenRouterModelProviders.mockReturnValue({
+			data: {},
+			isLoading: false,
+			isError: false,
+		} as any)
+
+		const apiConfiguration: ProviderSettings = {
+			apiProvider: "sapaicore",
+			// no apiModelId provided
+		}
+
+		const wrapper = createWrapper()
+		const { result } = renderHook(() => useSelectedModel(apiConfiguration), { wrapper })
+
+		// Default currently defined by sapAiCoreDefaultModelId = "anthropic--claude-3.5-sonnet"
+		expect(result.current.provider).toBe("sapaicore")
+		expect(result.current.id).toBe("anthropic--claude-3.5-sonnet")
+		// Ensure info is populated from catalog
+		expect(result.current.info).toBeDefined()
+		expect(result.current.info?.contextWindow).toBe(200000)
+		expect(result.current.info?.supportsImages).toBe(true)
+		expect(result.current.info?.supportsPromptCache).toBe(false)
+	})
+
+	it("returns explicit SAP AI Core model id and correct info when apiModelId is set", () => {
+		// Provide minimal router/openrouter data so the hook computes selection
+		mockUseRouterModels.mockReturnValue({
+			data: {
+				openrouter: {},
+				requesty: {},
+				glama: {},
+				unbound: {},
+				litellm: {},
+				"io-intelligence": {},
+			},
+			isLoading: false,
+			isError: false,
+		} as any)
+
+		mockUseOpenRouterModelProviders.mockReturnValue({
+			data: {},
+			isLoading: false,
+			isError: false,
+		} as any)
+
+		const apiConfiguration: ProviderSettings = {
+			apiProvider: "sapaicore",
+			apiModelId: "anthropic--claude-3.7-sonnet",
+		}
+
+		const wrapper = createWrapper()
+		const { result } = renderHook(() => useSelectedModel(apiConfiguration), { wrapper })
+
+		expect(result.current.provider).toBe("sapaicore")
+		expect(result.current.id).toBe("anthropic--claude-3.7-sonnet")
+		// Ensure info is populated from catalog for 3.7 Sonnet (1M ctx, prompt cache true)
+		expect(result.current.info).toBeDefined()
+		expect(result.current.info?.contextWindow).toBe(1000000)
+		expect(result.current.info?.supportsImages).toBe(true)
+		expect(result.current.info?.supportsPromptCache).toBe(true)
+	})
+})

@@ -3,7 +3,8 @@ import i18next from "i18next"
 import type { ProviderSettings } from "@roo-code/types"
 
 import type { OrganizationAllowList } from "@roo/cloud"
-import { isRouterName, RouterModels } from "@roo/api"
+import { isRouterName } from "@roo/api"
+import type { RouterModels } from "@roo/api"
 
 export function validateApiConfiguration(
 	apiConfiguration: ProviderSettings,
@@ -129,6 +130,23 @@ function validateModelsAndKeysProvided(apiConfiguration: ProviderSettings): stri
 		case "featherless":
 			if (!apiConfiguration.featherlessApiKey) {
 				return i18next.t("settings:validation.apiKey")
+			}
+			break
+		case "sapaicore":
+			if (!apiConfiguration.sapAiCoreBaseUrl) {
+				return i18next.t("settings:validation.sapAiCoreBaseUrl", "SAP AI Core Base URL is required")
+			}
+			if (!apiConfiguration.sapAiCoreClientId) {
+				return i18next.t("settings:validation.sapAiCoreClientId", "SAP AI Core Client ID is required")
+			}
+			if (!apiConfiguration.sapAiCoreClientSecret) {
+				return i18next.t("settings:validation.sapAiCoreClientSecret", "SAP AI Core Client Secret is required")
+			}
+			if (!apiConfiguration.sapAiCoreTokenUrl) {
+				return i18next.t("settings:validation.sapAiCoreTokenUrl", "SAP AI Core Token URL is required")
+			}
+			if (!apiConfiguration.apiModelId) {
+				return i18next.t("settings:validation.modelId")
 			}
 			break
 	}

@@ -20,6 +20,7 @@ import {
 	openAiNativeModels,
 	rooModels,
 	sambaNovaModels,
+	sapAiCoreModels,
 	vertexModels,
 	vscodeLlmModels,
 	xaiModels,
@@ -64,6 +65,7 @@ export const providerNames = [
 	"featherless",
 	"io-intelligence",
 	"roo",
+	"sapaicore",
 ] as const
 
 export const providerNamesSchema = z.enum(providerNames)
@@ -315,6 +317,16 @@ const rooSchema = apiModelIdProviderModelSchema.extend({
 	// No additional fields needed - uses cloud authentication
 })
 
+const sapAiCoreSchema = apiModelIdProviderModelSchema.extend({
+	sapAiCoreClientId: z.string().optional(),
+	sapAiCoreClientSecret: z.string().optional(),
+	sapAiCoreTokenUrl: z.string().optional(),
+	sapAiResourceGroup: z.string().optional(),
+	sapAiCoreBaseUrl: z.string().optional(),
+	reasoningEffort: z.string().optional(),
+	thinkingBudgetTokens: z.number().optional(),
+})
+
 const defaultSchema = z.object({
 	apiProvider: z.undefined(),
 })
@@ -353,6 +365,7 @@ export const providerSettingsSchemaDiscriminated = z.discriminatedUnion("apiProv
 	featherlessSchema.merge(z.object({ apiProvider: z.literal("featherless") })),
 	ioIntelligenceSchema.merge(z.object({ apiProvider: z.literal("io-intelligence") })),
 	rooSchema.merge(z.object({ apiProvider: z.literal("roo") })),
+	sapAiCoreSchema.merge(z.object({ apiProvider: z.literal("sapaicore") })),
 	defaultSchema,
 ])
 
@@ -391,6 +404,7 @@ export const providerSettingsSchema = z.object({
 	...featherlessSchema.shape,
 	...ioIntelligenceSchema.shape,
 	...rooSchema.shape,
+	...sapAiCoreSchema.shape,
 	...codebaseIndexProviderSchema.shape,
 })
 
@@ -511,6 +525,11 @@ export const MODELS_BY_PROVIDER: Record<
 		id: "sambanova",
 		label: "SambaNova",
 		models: Object.keys(sambaNovaModels),
+	},
+	sapaicore: {
+		id: "sapaicore",
+		label: "SAP AI Core",
+		models: Object.keys(sapAiCoreModels),
 	},
 	vertex: {
 		id: "vertex",

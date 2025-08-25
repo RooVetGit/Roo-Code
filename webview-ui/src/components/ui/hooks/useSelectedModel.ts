@@ -53,6 +53,8 @@ import {
 	rooDefaultModelId,
 	rooModels,
 	BEDROCK_CLAUDE_SONNET_4_MODEL_ID,
+	sapAiCoreDefaultModelId,
+	sapAiCoreModels,
 } from "@roo-code/types"
 
 import type { ModelRecord, RouterModels } from "@roo/api"
@@ -310,11 +312,16 @@ function getSelectedModel({
 			const info = rooModels[id as keyof typeof rooModels]
 			return { id, info }
 		}
+		case "sapaicore": {
+			const id = apiConfiguration.apiModelId ?? sapAiCoreDefaultModelId
+			const info = sapAiCoreModels[id as keyof typeof sapAiCoreModels]
+			return { id, info }
+		}
 		// case "anthropic":
 		// case "human-relay":
 		// case "fake-ai":
 		default: {
-			provider satisfies "anthropic" | "gemini-cli" | "human-relay" | "fake-ai"
+			provider satisfies "anthropic" | "gemini-cli" | "human-relay" | "fake-ai" | "sapaicore"
 			const id = apiConfiguration.apiModelId ?? anthropicDefaultModelId
 			const baseInfo = anthropicModels[id as keyof typeof anthropicModels]
 
