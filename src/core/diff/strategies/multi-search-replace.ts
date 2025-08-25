@@ -432,10 +432,17 @@ Only use a single line of '=======' between search and replacement content, beca
 				diffResults.push({
 					success: false,
 					error:
-						`Search and replace content are identical - no changes would be made\n\n` +
+						`NULL EDIT DETECTED: Search and replace content are identical - no changes would be made\n\n` +
+						`This is a common issue with AI models (especially Gemini) producing "phantom" edits.\n\n` +
 						`Debug Info:\n` +
-						`- Search and replace must be different to make changes\n` +
-						`- Use read_file to verify the content you want to change`,
+						`- The SEARCH block and REPLACE block contain exactly the same content\n` +
+						`- This means the edit would have zero effect on the file\n` +
+						`- To fix: Ensure the REPLACE block contains the actual modified content\n` +
+						`- Use read_file to verify the current file content before making changes\n\n` +
+						`Common causes:\n` +
+						`1. Model hallucination - thinking it made changes when it didn't\n` +
+						`2. Incorrect copy/paste of content between blocks\n` +
+						`3. Missing the actual modification in the REPLACE block`,
 				})
 				continue
 			}
