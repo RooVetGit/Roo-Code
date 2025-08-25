@@ -108,13 +108,14 @@ export class ClineProvider
 	private view?: vscode.WebviewView | vscode.WebviewPanel
 	private clineStack: Task[] = []
 	private codeIndexStatusSubscription?: vscode.Disposable
-	private currentWorkspaceManager?: CodeIndexManager
+	private codeIndexManager?: CodeIndexManager
 	private _workspaceTracker?: WorkspaceTracker // workSpaceTracker read-only for access outside this class
 	protected mcpHub?: McpHub // Change from private to protected
 	private marketplaceManager: MarketplaceManager
 	private mdmService?: MdmService
 	private taskCreationCallback: (task: Task) => void
 	private taskEventListeners: WeakMap<Task, Array<() => void>> = new WeakMap()
+	private currentWorkspacePath: string | undefined
 
 	private recentTasksCache?: string[]
 
@@ -210,6 +211,8 @@ export class ClineProvider
 		this.initializeCloudProfileSync().catch((error) => {
 			this.log(`Failed to initialize cloud profile sync: ${error}`)
 		})
+
+		this.currentWorkspacePath = getWorkspacePath()
 	}
 
 	/**
@@ -722,7 +725,7 @@ export class ClineProvider
 					this.log("Clearing webview resources for sidebar view")
 					this.clearWebviewResources()
 					// Reset current workspace manager reference when view is disposed
-					this.currentWorkspaceManager = undefined
+					this.codeIndexManager = undefined
 				}
 			},
 			null,
@@ -780,7 +783,6 @@ export class ClineProvider
 		if (!ProfileValidator.isProfileAllowed(apiConfiguration, organizationAllowList)) {
 			throw new OrganizationAllowListViolationError(t("common:errors.violated_organization_allowlist"))
 		}
-
 		const task = new Task({
 			provider: this,
 			apiConfiguration,
@@ -797,6 +799,7 @@ export class ClineProvider
 			onCreated: this.taskCreationCallback,
 			enableTaskBridge: isRemoteControlEnabled(cloudUserInfo, remoteControlEnabled),
 			initialTodos: options.initialTodos,
+			workspacePath: this.currentWorkspacePath,
 			...options,
 		})
 
@@ -880,6 +883,7 @@ export class ClineProvider
 			rootTask: historyItem.rootTask,
 			parentTask: historyItem.parentTask,
 			taskNumber: historyItem.number,
+			workspacePath: historyItem.workspace,
 			onCreated: this.taskCreationCallback,
 			enableTaskBridge,
 		})
@@ -1554,6 +1558,10 @@ export class ClineProvider
 		await this.postStateToWebview()
 	}
 
+	async refreshWorkspace() {
+		this.currentWorkspacePath = getWorkspacePath()
+	}
+
 	async postStateToWebview() {
 		const state = await this.getStateToPostToWebview()
 		this.postMessageToWebview({ type: "state", state })
@@ -2131,7 +2139,7 @@ export class ClineProvider
 	// cwd
 
 	get cwd() {
-		return getWorkspacePath()
+		return this.currentWorkspacePath || getWorkspacePath()
 	}
 
 	// dev
@@ -2357,7 +2365,7 @@ export class ClineProvider
 		const currentManager = this.getCurrentWorkspaceCodeIndexManager()
 
 		// If the manager hasn't changed, no need to update subscription
-		if (currentManager === this.currentWorkspaceManager) {
+		if (currentManager === this.codeIndexManager) {
 			return
 		}
 
@@ -2368,7 +2376,7 @@ export class ClineProvider
 		}
 
 		// Update the current workspace manager reference
-		this.currentWorkspaceManager = currentManager
+		this.codeIndexManager = currentManager
 
 		// Subscribe to the new manager's progress updates if it exists
 		if (currentManager) {
